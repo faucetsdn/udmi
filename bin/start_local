@@ -81,8 +81,13 @@ $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS >> $UDMIS_LOG 2>&1 || true
 $MOSQUITTO_CTRL addClientRole $SERV_USER service >> $UDMIS_LOG 2>&1 || true
 $MOSQUITTO_CTRL addClientRole $SERV_USER uufi >> $UDMIS_LOG 2>&1 || true
 
-# Setup device client security (for Pubber DUT)
-$UDMI_ROOT/bin/mosquctl_device $site_model AHU-1 >> $UDMIS_LOG 2>&1
+# Setup device client security (for all devices in the site model)
+for device_dir in $site_model/devices/*; do
+    if [[ -d $device_dir ]]; then
+        device_id=$(basename $device_dir)
+        $UDMI_ROOT/bin/mosquctl_device $site_model $device_id >> $UDMIS_LOG 2>&1
+    fi
+done
 
 echo Starting initializing site $site_model | tee -a $UDMIS_LOG
 $UDMI_ROOT/bin/mosquctl_site $site_model >> $UDMIS_LOG 2>&1

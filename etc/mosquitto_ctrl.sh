@@ -7,6 +7,19 @@ fi
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
     ETC_DIR=var/mosquitto
     NEED_SUDO=""
+elif [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
+    ETC_DIR=/var/mosquitto_isolated
+    NEED_SUDO=""
+    if [[ ! -d /var/mosquitto_isolated ]]; then
+        mkdir -p /var/mosquitto_isolated
+        if [[ -d /etc/mosquitto ]]; then
+            cp -r /etc/mosquitto/* /var/mosquitto_isolated/ 2>/dev/null || true
+        fi
+        chown -R mosquitto:mosquitto /var/mosquitto_isolated || true
+        ln -sf /var/mosquitto_isolated /var/mosquitto
+        mkdir -p var
+        ln -sf /var/mosquitto_isolated var/mosquitto
+    fi
 else
     ETC_DIR=/etc/mosquitto
     NEED_SUDO=

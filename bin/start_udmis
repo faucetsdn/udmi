@@ -34,7 +34,11 @@ else
     fi
 fi
 
-POD_READY=${UDMI_POD_READY:-var/pod_ready.txt}
+if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
+    POD_READY=${UDMI_POD_READY:-/tmp/pod_ready.txt}
+else
+    POD_READY=${UDMI_POD_READY:-var/pod_ready.txt}
+fi
 export UDMI_POD_READY=$(realpath $POD_READY)
 rm -f $POD_READY
 
@@ -56,7 +60,11 @@ else
     export MOSQUITTO_LOG_PATH=/var/log/mosquitto/mosquitto.log
 fi
 
-UDMIS_DIR=$UDMI_ROOT/udmis
+if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
+    UDMIS_DIR=/root
+else
+    UDMIS_DIR=$UDMI_ROOT/udmis
+fi
 
 # Default config preprocessing
 if [[ -z ${UDMIS_CONFIG:-} ]]; then

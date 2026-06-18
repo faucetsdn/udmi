@@ -61,6 +61,12 @@ else
     $SUDO chown -R mosquitto:mosquitto /var/lib/mosquitto || true
 fi
 
+    PLUGIN_FILE=/usr/lib/mosquitto_dynamic_security.so
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/mosquitto/mosquitto_dynamic_security.so
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/x86_64-linux-gnu/mosquitto_dynamic_security.so
+    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=$(find /usr -name mosquitto_dynamic_security.so 2>/dev/null | head -1)
+    [[ -n $PLUGIN_FILE ]] || fail "mosquitto_dynamic_security.so not found."
+
 if [[ ! -f $UDMI_FILE ]]; then
     echo Creating new $UDMI_FILE from template...
     $SUDO mkdir -p $(dirname $UDMI_FILE)
@@ -74,21 +80,15 @@ if [[ ! -f $UDMI_FILE ]]; then
     else
         $SUDO cp $UDMI_ROOT/etc/mosquitto_udmi.conf $UDMI_FILE
     fi
-    PLUGIN_FILE=/usr/lib/mosquitto_dynamic_security.so
-    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/mosquitto/mosquitto_dynamic_security.so
-    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/x86_64-linux-gnu/mosquitto_dynamic_security.so
-    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=$(find /usr -name mosquitto_dynamic_security.so 2>/dev/null | head -1)
-    [[ -n $PLUGIN_FILE ]] || fail "mosquitto_dynamic_security.so not found."
-    ls -l "$PLUGIN_FILE"
-    echo Configuring dynamic security plugin $PLUGIN_FILE
-    $SUDO sed -i "s%plugin dynsec%plugin $PLUGIN_FILE%" $UDMI_FILE
-    $SUDO sed -i "s%plugin_opt_config_file dynsec%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
-    [[ $(whoami) == root ]] && echo user root >> $UDMI_FILE
 fi
 
-if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-    $SUDO sed -i "s%listener [0-9]*%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
-fi
+# Always ensure correct dynamic security plugin, password file, and config file paths are set
+echo Configuring dynamic security plugin $PLUGIN_FILE
+$SUDO sed -i "s%plugin .*%plugin $PLUGIN_FILE%" $UDMI_FILE
+$SUDO sed -i "s%plugin_opt_config_file .*%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
+$SUDO sed -i "s%password_file .*%password_file $PASS_FILE%" $UDMI_FILE
+$SUDO sed -i "s%listener [0-9]*%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
+[[ $(whoami) == root ]] && ! grep -q "^user root" $UDMI_FILE && echo "user root" >> $UDMI_FILE
 
 # Ensure the mosquitto group can write to the config directory (required for atomic configuration saves)
 if [[ -n $SUDO ]]; then
@@ -132,7 +132,7 @@ elif command -v systemctl >/dev/null 2>&1; then
     sudo systemctl restart mosquitto
 else
     # Raw mode for running (e.g.) in a docker container
-    mosquitto -c $ETC_DIR/mosquitto.conf > $MOSQUITTO_LOG 2>&1 &
+    (cd / && mosquitto -c $ETC_DIR/mosquitto.conf) > $MOSQUITTO_LOG 2>&1 &
     MOSQUITTO_PID=$!
     echo Waiting 10s for background mosquitto to start...
     sleep 10
