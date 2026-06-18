@@ -120,13 +120,33 @@ if [[ -n $SUDO ]]; then
     $SUDO chmod 0600 $PASS_FILE || true
 fi
 
+function mosquitto_diag {
+    echo "=== MOSQUITTO DIAGNOSTICS ==="
+    echo "Current user: $(id)"
+    echo "ETC_DIR is: $ETC_DIR"
+    echo "MOSQUITTO_LOG is: $MOSQUITTO_LOG"
+    echo "Is /etc/mosquitto a directory/symlink?"
+    ls -ld /etc/mosquitto || true
+    echo "Contents of /etc/mosquitto:"
+    ls -la /etc/mosquitto || true
+    echo "Is $ETC_DIR a directory/symlink?"
+    ls -ld $ETC_DIR || true
+    echo "Contents of $ETC_DIR:"
+    ls -la $ETC_DIR || true
+    if [[ -f $ETC_DIR/mosquitto.conf ]]; then
+        echo "=== Content of $ETC_DIR/mosquitto.conf ==="
+        cat $ETC_DIR/mosquitto.conf || true
+    fi
+    echo "=== END MOSQUITTO DIAGNOSTICS ==="
+}
+
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
     # Raw mode for running without sudo
     mosquitto -c $ETC_DIR/mosquitto.conf > $MOSQUITTO_LOG 2>&1 &
     MOSQUITTO_PID=$!
     echo Waiting 10s for background mosquitto to start...
     sleep 10
-    [[ -d /proc/$MOSQUITTO_PID ]] || (cat $MOSQUITTO_LOG && fail starting mosquitto)
+    [[ -d /proc/$MOSQUITTO_PID ]] || (mosquitto_diag && cat $MOSQUITTO_LOG && fail starting mosquitto)
     echo Completed mosquitto startup.
 elif command -v systemctl >/dev/null 2>&1; then
     sudo systemctl restart mosquitto
@@ -136,7 +156,7 @@ else
     MOSQUITTO_PID=$!
     echo Waiting 10s for background mosquitto to start...
     sleep 10
-    [[ -d /proc/$MOSQUITTO_PID ]] || (cat $MOSQUITTO_LOG && fail starting mosquitto)
+    [[ -d /proc/$MOSQUITTO_PID ]] || (mosquitto_diag && cat $MOSQUITTO_LOG && fail starting mosquitto)
     echo Completed mosquitto startup.
 fi
 
