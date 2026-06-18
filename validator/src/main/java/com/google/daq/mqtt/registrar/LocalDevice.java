@@ -46,6 +46,7 @@ import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
+import com.google.daq.mqtt.util.providers.FamilyProvider;
 import com.google.udmi.util.ErrorMap;
 import com.google.udmi.util.ErrorMap.ErrorMapException;
 import com.google.udmi.util.ExceptionMap;
@@ -189,6 +190,7 @@ class LocalDevice implements SiteDevice {
   private final ExceptionMap exceptionMap;
   private final String generation;
   private final List<Credential> deviceCredentials = new ArrayList<>();
+  private final List<String> pointsWithInputUrl = new ArrayList<>();
   private ConfigManager config;
   private final DeviceExceptionManager exceptionManager;
   private final SiteModel siteModel;
@@ -228,8 +230,96 @@ class LocalDevice implements SiteDevice {
 
   public void initialize() {
     prepareOutDir();
+    populatePointUrls();
     ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
     configure();
+  }
+
+  private void populatePointUrls() {
+    if (metadata == null || metadata.pointset == null || metadata.pointset.points == null) {
+      return;
+    }
+
+    boolean isProxiedDevice = catchToFalse(() -> {
+      boolean explicit = catchToNull(() -> metadata.cloud.resource_type)
+          == udmi.schema.CloudModel.Resource_type.PROXIED;
+      boolean implicit = catchToNull(() -> metadata.gateway.gateway_id) != null;
+      return explicit || implicit;
+    });
+
+    if (!isProxiedDevice) {
+      return;
+    }
+
+    String rawFamily = catchToNull(() -> metadata.gateway.target.family);
+    String defaultFamily = "vendor";
+    String family = ofNullable(rawFamily).orElse(defaultFamily);
+
+    Map<String, FamilyProvider> namedFamilies = FamilyProvider.NAMED_FAMILIES;
+
+    String localAddr = catchToNull(() -> metadata.localnet.families.get(family).addr);
+    String gatewayAddr = catchToNull(() -> metadata.gateway.target.addr);
+
+    if (localAddr != null && gatewayAddr != null) {
+      exceptionMap.put(ExceptionCategory.validation, new RuntimeException(
+          format("both gateway.target.addr and localnet.families.%s.addr "
+              + "should not be defined", family)));
+      return;
+    }
+
+    String deviceAddr = ofNullable(localAddr).orElse(gatewayAddr);
+    List<Exception> validationErrors = new ArrayList<>();
+
+    boolean isVendorRef = metadata.gateway != null
+        && metadata.gateway.target != null
+        && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
+
+    for (Map.Entry<String, PointPointsetModel> entry : metadata.pointset.points.entrySet()) {
+      PointPointsetModel pointModel = entry.getValue();
+      if (pointModel == null) {
+        continue;
+      }
+      String pointRef = pointModel.ref;
+      if (pointRef == null) {
+        continue;
+      }
+
+      String fullUrl;
+      if (pointRef.contains("://")) {
+        fullUrl = pointRef;
+      } else {
+        fullUrl = FamilyProvider.constructUrl(family, deviceAddr, pointRef);
+      }
+
+      pointModel.url = fullUrl;
+
+      if (!isVendorRef) {
+        try {
+          String targetFamily = "vendor";
+          if (fullUrl.contains("://")) {
+            targetFamily = fullUrl.substring(0, fullUrl.indexOf("://"));
+          }
+
+          if (namedFamilies.containsKey(targetFamily)) {
+            namedFamilies.get(targetFamily).validateUrl(fullUrl);
+          } else {
+            throw new RuntimeException("Unknown protocol family in URL: " + targetFamily);
+          }
+        } catch (Exception e) {
+          validationErrors.add(new RuntimeException(
+              format("While validating URL for point %s: %s", entry.getKey(), e.getMessage()), e));
+        }
+      }
+    }
+
+    if (!validationErrors.isEmpty()) {
+      if (validationErrors.size() == 1) {
+        exceptionMap.put(ExceptionCategory.validation, validationErrors.get(0));
+      } else {
+        exceptionMap.put(ExceptionCategory.validation,
+            new com.google.udmi.util.ExceptionList(validationErrors));
+      }
+    }
   }
 
   void configure() {
@@ -312,6 +402,14 @@ class LocalDevice implements SiteDevice {
       throw new ValidationError(format("Found point names not matching allowed pattern %s: %s",
           POINT_NAME_ALLOWABLE.pattern(), CSV_JOINER.join(pointNameErrors)));
     }
+    if (metadataObject != null && metadataObject.localnet != null
+        && metadataObject.localnet.families != null) {
+      metadataObject.localnet.families.forEach((family, familyModel) -> {
+        if (FamilyProvider.NAMED_FAMILIES.containsKey(family)) {
+          FamilyProvider.NAMED_FAMILIES.get(family).validateModel(familyModel);
+        }
+      });
+    }
   }
 
   private Metadata readMetadata() {
@@ -322,6 +420,19 @@ class LocalDevice implements SiteDevice {
             metadataException.exception);
       }
       baseVersion = ofNullable(deviceMetadata.upgraded_from).orElse(deviceMetadata.version);
+      if (deviceMetadata != null && deviceMetadata.pointset != null
+          && deviceMetadata.pointset.points != null) {
+        deviceMetadata.pointset.points.forEach((pointName, pointModel) -> {
+          if (pointModel != null && pointModel.url != null) {
+            pointsWithInputUrl.add(pointName);
+          }
+        });
+      }
+      if (!pointsWithInputUrl.isEmpty()) {
+        throw new ValidationError(format(
+            "Points %s have defined url field, which is only allowed in generated %s",
+            CSV_JOINER.join(pointsWithInputUrl), NORMALIZED_JSON));
+      }
       return deviceMetadata;
     } catch (Exception exception) {
       exceptionMap.put(ExceptionCategory.loading, exception);

@@ -1,3 +1,10 @@
 Exceptions for AHU-22
   While converting device config
     bacnet scan_addr 0x65 does not match expression [1-9][0-9]*
+  List of 3 exceptions
+    While validating URL for point filter_differential_pressure: bacnet scan_addr 0x65 does not match expression [1-9][0-9]*
+      bacnet scan_addr 0x65 does not match expression [1-9][0-9]*
+    While validating URL for point filter_alarm_pressure_status: bacnet scan_addr 0x65 does not match expression [1-9][0-9]*
+      bacnet scan_addr 0x65 does not match expression [1-9][0-9]*
+    While validating URL for point filter_differential_pressure_sensor: bacnet scan_addr 0x65 does not match expression [1-9][0-9]*
+      bacnet scan_addr 0x65 does not match expression [1-9][0-9]*

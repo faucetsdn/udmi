@@ -97,7 +97,7 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       error("MessagePipe.from returned null for component %s", configuration.name);
     }
     projectId = variableSubstitution(configuration.hostname, "project_id/hostname not defined");
-    info("Initialized MessageDispatcherImpl for component %s with pipe %s", 
+    info("Initialized MessageDispatcherImpl for component %s with pipe %s",
         configuration.name, messagePipe);
   }
 

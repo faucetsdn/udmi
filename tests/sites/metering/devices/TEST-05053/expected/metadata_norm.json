@@ -25,10 +25,12 @@
     "points": {
       "HOLDING_REGISTER_153": {
         "ref": "281",
+        "url": "iot://TEST-05053/281",
         "writable": true
       },
       "HOLDING_REGISTER_53": {
         "ref": "181",
+        "url": "iot://TEST-05053/181",
         "writable": true
       }
     }
