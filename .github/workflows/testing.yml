@@ -450,7 +450,8 @@ jobs:
       - name: Start UDMIS container
         run: |
           mkdir -p out
-          docker run -d --rm --net udminet --name udmis -p 8883:8883 \
+          docker rm -f udmis || true
+          docker run -d --net udminet --name udmis -p 8883:8883 \
             -v $PWD/site_model:/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
@@ -463,6 +464,17 @@ jobs:
             (docker ps | fgrep -q udmis) || break
             sleep 1
           done
+          if [[ ! -f var/tmp/pod_ready.txt ]]; then
+            echo "=== DIAGNOSTIC LOGS FOR UDMIS STARTUP FAILURE ==="
+            echo "Host working directory: $PWD"
+            echo "Host var/tmp/ contents:"
+            ls -la var/tmp || true
+            echo "Docker container status:"
+            docker ps -a || true
+            echo "Docker logs for udmis:"
+            docker logs udmis || true
+            echo "=== END DIAGNOSTIC LOGS ==="
+          fi
           ls -l var/tmp/pod_ready.txt 2>&1
       - name: E2E Tests
         # This runs as sudo because docker containers in Github CI run as root.
