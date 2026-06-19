@@ -47,6 +47,10 @@ EOF
     fi
 fi
 
+if [[ -f $ETC_DIR/mosquitto.conf ]]; then
+    $SUDO sed -i "s|/etc/mosquitto|$ETC_DIR|g" $ETC_DIR/mosquitto.conf
+fi
+
 GROUP=mosquitto
 UDMI_FILE=$ETC_DIR/conf.d/udmi.conf
 PASS_FILE=$ETC_DIR/mosquitto.passwd
