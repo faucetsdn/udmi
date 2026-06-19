@@ -74,16 +74,15 @@ fi
 if [[ ! -f $UDMI_FILE ]]; then
     echo Creating new $UDMI_FILE from template...
     $SUDO mkdir -p $(dirname $UDMI_FILE)
+    $SUDO cp $UDMI_ROOT/etc/mosquitto_udmi.conf $UDMI_FILE
     if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-        $SUDO cp $UDMI_ROOT/etc/mosquitto_udmi.conf $UDMI_FILE
-        # Replace hardcoded listener and paths in local mode
+        # Replace hardcoded listener in local mode
         $SUDO sed -i "s%listener 8883%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
-        $SUDO sed -i "s%/etc/mosquitto/mosquitto.passwd%$PASS_FILE%" $UDMI_FILE
-        $SUDO sed -i "s%plugin_opt_config_file dynsec%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
-        $SUDO sed -i "s%/etc/mosquitto/certs/%$CERT_DIR/%" $UDMI_FILE
-    else
-        $SUDO cp $UDMI_ROOT/etc/mosquitto_udmi.conf $UDMI_FILE
     fi
+    # Always normalize password file, dynamic security file, and certificate paths
+    $SUDO sed -i "s%/etc/mosquitto/mosquitto.passwd%$PASS_FILE%" $UDMI_FILE
+    $SUDO sed -i "s%plugin_opt_config_file dynsec%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
+    $SUDO sed -i "s%/etc/mosquitto/certs/%$CERT_DIR/%" $UDMI_FILE
 fi
 
 # Always ensure correct dynamic security plugin, password file, and config file paths are set
