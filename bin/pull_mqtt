@@ -39,11 +39,45 @@ $SUDO mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter_udmi -t $topic_filt
 
         readarray -d '/' -t array <<< "${topic}/"
 
-        registryId=${array[2]:-}  # Use :- to substute default empty to prevent script termination-on-undefined
-        deviceId=${array[4]:-}
-        subType=${array[5]:-}
-        subFolder=${array[6]:-}
+        # Dynamically scan the array to identify key specifiers (r, d, c) in standard or UUFI formats
+        r_idx=-1
+        d_idx=-1
+        c_idx=-1
+        for i in "${!array[@]}"; do
+            part=$(echo "${array[i]}" | xargs)
+            if [[ $part == "r" ]]; then
+                r_idx=$i
+            elif [[ $part == "d" ]]; then
+                d_idx=$i
+            elif [[ $part == "c" ]]; then
+                c_idx=$i
+            fi
+        done
 
+        registryId=""
+        deviceId=""
+        subType=""
+        subFolder=""
+
+        if [[ $r_idx -ge 0 ]]; then
+            registryId=${array[r_idx+1]:-}
+        fi
+        if [[ $d_idx -ge 0 ]]; then
+            deviceId=${array[d_idx+1]:-}
+        fi
+
+        if [[ $c_idx -ge 0 ]]; then
+            subType=${array[c_idx+1]:-}
+            subFolder=${array[c_idx+2]:-}
+        else
+            if [[ $d_idx -ge 0 ]]; then
+                subType=${array[d_idx+2]:-}
+                subFolder=${array[d_idx+3]:-}
+            elif [[ $r_idx -ge 0 ]]; then
+                subType=${array[r_idx+2]:-}
+                subFolder=${array[r_idx+3]:-}
+            fi
+        fi
 
         subFolder=$(echo $subFolder | xargs)  # Trim whitespace
         [[ -n $subFolder ]] || subFolder=update
