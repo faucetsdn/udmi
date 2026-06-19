@@ -103,6 +103,13 @@ done
 
 if [ $GOT_STATE -eq 0 ]; then
     echo "Timed out waiting for State Update reply"
+    if [[ -f "$STATE_REPLY_FILE" && -s "$STATE_REPLY_FILE" ]]; then
+        echo "=== DIAGNOSTIC: Last received state update ==="
+        cat "$STATE_REPLY_FILE"
+        echo "=============================================="
+    else
+        echo "DIAGNOSTIC: No state update replies were received at all."
+    fi
     kill $SUB_STATE_PID 2>/dev/null || true
     exit 1
 fi

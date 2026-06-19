@@ -19,7 +19,15 @@ trap "pkill -f pubber || true" EXIT
 
 # 2. Run Comprehensive Test
 echo "Starting UUFI Test Client on port ${MQTT_PORT:-8883}..."
+set +e
 $UDMI_ROOT/bin/uufi_test_client localhost ${MQTT_PORT:-8883} rocket monkey $SITE_MODEL
 TEST_EXIT=$?
+set -e
+
+if [[ $TEST_EXIT -ne 0 ]]; then
+    echo "=== DIAGNOSTIC: pubber log (out/pubber.log) ==="
+    cat out/pubber.log || echo "pubber.log not found"
+    echo "================================================"
+fi
 
 exit $TEST_EXIT
