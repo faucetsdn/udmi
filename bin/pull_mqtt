@@ -6,6 +6,9 @@ UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
 trap 'echo "pull_mqtt (PID $$) exited with status $? at $(date -u -Is)"' EXIT
+trap 'echo "pull_mqtt (PID $$) received SIGTERM at $(date -u -Is)"' SIGTERM
+trap 'echo "pull_mqtt (PID $$) received SIGPIPE at $(date -u -Is)"' SIGPIPE
+trap 'echo "pull_mqtt (PID $$) received SIGINT at $(date -u -Is)"' SIGINT
 
 [[ $# == 1 ]] || usage project_spec
 

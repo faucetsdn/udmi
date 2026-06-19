@@ -39,7 +39,13 @@ $MOSQUITTO_CTRL deleteClient $CLNT_USER
 $MOSQUITTO_CTRL createClient $CLNT_USER -p $CLNT_PASS -c $CLNT_ID
 $MOSQUITTO_CTRL addClientRole $CLNT_USER service
 
+echo "DEBUG: Listing all mosquitto_sub processes before setup killall:"
+ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
+
 killall mosquitto_sub || true
+
+echo "DEBUG: Listing all mosquitto_sub processes after setup killall:"
+ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
 
 topic=/r/mqtt/d/test
 
@@ -133,7 +139,14 @@ if [[ -z "$operational_line" ]]; then
 fi
 
 echo Cleanup subscribers and clients...
+echo "DEBUG: Listing all mosquitto_sub processes before cleanup killall:"
+ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
+
 killall mosquitto_sub || true
+
+echo "DEBUG: Listing all mosquitto_sub processes after cleanup killall:"
+ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
+
 $MOSQUITTO_CTRL deleteClient $dev_id || true
 role_name="role_${dev_id//\//_}"
 $MOSQUITTO_CTRL deleteRole $role_name || true
