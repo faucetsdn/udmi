@@ -12,6 +12,20 @@ cat out/message_capture.log
 
 echo Captured $(wc -l out/message_capture.log) messages.
 
+if [[ ! -d out/registries ]]; then
+    echo "DIAGNOSTIC ERROR: Directory out/registries/ does not exist!"
+    if [[ -f out/message_capture.log ]]; then
+        echo "=== out/message_capture.log tail (last 30 lines) ==="
+        tail -n 30 out/message_capture.log
+        echo "====================================================="
+    else
+        echo "out/message_capture.log does not exist."
+    fi
+    echo "Checking for running mosquitto_sub processes:"
+    ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
+    fail "Expected 269 system operations, but out/registries/ is missing."
+fi
+
 systems=$(find out/registries/ -name \*update_model.json | xargs jq .system | fgrep -v null | wc -l) || true
 [[ $systems == 274 ]] || fail Expected 269 system operations, found $systems
 
