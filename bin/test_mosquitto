@@ -39,12 +39,7 @@ $MOSQUITTO_CTRL deleteClient $CLNT_USER
 $MOSQUITTO_CTRL createClient $CLNT_USER -p $CLNT_PASS -c $CLNT_ID
 $MOSQUITTO_CTRL addClientRole $CLNT_USER service
 
-echo "DEBUG: Listing all mosquitto_sub processes before setup killall:"
-ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
-
-killall mosquitto_sub || true
-
-echo "DEBUG: Listing all mosquitto_sub processes after setup killall:"
+echo "DEBUG: Listing all mosquitto_sub processes at start of test_mosquitto:"
 ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
 
 topic=/r/mqtt/d/test
@@ -52,6 +47,7 @@ topic=/r/mqtt/d/test
 
 echo Subscribing to all topics in the background...
 $MOSQUITTO_SUB $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' > out/mosquitto.sub &
+sub_pid=$!
 
 sleep 1
 
@@ -139,12 +135,12 @@ if [[ -z "$operational_line" ]]; then
 fi
 
 echo Cleanup subscribers and clients...
-echo "DEBUG: Listing all mosquitto_sub processes before cleanup killall:"
+echo "DEBUG: Listing all mosquitto_sub processes before target kill:"
 ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
 
-killall mosquitto_sub || true
+kill $sub_pid || true
 
-echo "DEBUG: Listing all mosquitto_sub processes after cleanup killall:"
+echo "DEBUG: Listing all mosquitto_sub processes after target kill:"
 ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
 
 $MOSQUITTO_CTRL deleteClient $dev_id || true
