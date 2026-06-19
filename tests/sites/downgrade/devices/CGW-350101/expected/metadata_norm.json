@@ -16,15 +16,18 @@
     "points": {
       "valve_command_43": {
         "ref": "BO:1.present_value",
-        "units": ""
+        "units": "",
+        "url": "vendor://null/BO:1.present_value"
       },
       "valve_command_44": {
         "ref": "BO:2.present_value",
-        "units": ""
+        "units": "",
+        "url": "vendor://null/BO:2.present_value"
       },
       "valve_command_45": {
         "ref": "BO:3.present_value",
-        "units": ""
+        "units": "",
+        "url": "vendor://null/BO:3.present_value"
       }
     }
   },

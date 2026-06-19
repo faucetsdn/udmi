@@ -137,7 +137,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
    */
   public ImplicitIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
-    
+
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     usePassword = options.get(USE_PASSWORD_KEY);
 

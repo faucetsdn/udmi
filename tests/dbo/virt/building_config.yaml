@@ -1,0 +1,157 @@
+009773d7-67ba-4a1f-b773-ae87063ecee2:
+  code: US-MTV-40-1-135A
+  connections:
+    0a84a996-1120-4178-91ca-e118500d5463:
+    - CONTAINS
+    12dac17e-dda6-41bb-a757-e81fcf701482:
+    - CONTAINS
+  type: FACILITIES/ROOM
+0102e12d-b120-4fe2-b9be-2c73110fae50:
+  cloud_device_id: '2654759764601422'
+  code: device2720802
+  connections:
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
+  type: UNTYPED/TYPELESS
+01148e74-91fd-4688-b357-ab6326e8ae49:
+  cloud_device_id: '110284116715833'
+  code: power-meter-MatrixRoom
+  connections:
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
+  display_name: power-meter-MatrixRoom
+  translation:
+    apparent_power_sensor:
+      present_value: points.apparent_power_sensor.present_value
+      units:
+        key: pointset.points.apparent_power_sensor.units
+        values:
+          kilo-volt-amperes: kilo-volt-amperes
+    energy_accumulator:
+      present_value: points.energy_accumulator.present_value
+      units:
+        key: pointset.points.energy_accumulator.units
+        values:
+          kilowatt-hours: kilowatt-hours
+  type: METERS/EM_PWM_AVCM_PLPM_PVCM
+023ae699-65b3-472b-8a16-7d0665db9b26:
+  cloud_device_id: '134561687553915'
+  code: RH 2-4-3
+  connections:
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
+  display_name: VAVRH 2-4-3
+  translation:
+    discharge_air_temperature_sensor:
+      present_value: points.discharge_air_temperature_sensor.present_value
+      units:
+        key: pointset.points.discharge_air_temperature_sensor.units
+        values:
+          degrees-fahrenheit: degrees-fahrenheit
+    discharge_air_temperature_setpoint:
+      present_value: points.discharge_air_temperature_setpoint.present_value
+      units:
+        key: pointset.points.discharge_air_temperature_setpoint.units
+        values:
+          degrees-fahrenheit: degrees-fahrenheit
+    heating_water_valve_percentage_command:
+      present_value: points.heating_water_valve_percentage_command.present_value
+      units:
+        key: pointset.points.heating_water_valve_percentage_command.units
+        values:
+          percent: percent
+  type: HVAC/VAV_SD_DSP_HWDC
+05ed8d20-bbdb-4d69-a968-1075d110d025:
+  cloud_device_id: '379681902947616'
+  code: onboarding-mtv12
+  connections:
+    0a84a996-1120-4178-91ca-e118500d5463: CONTAINS
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
+  type: INFO_TECH/PRNTR
+0a84a996-1120-4178-91ca-e118500d5463:
+  code: US-MTV-40-1
+  type: FACILITIES/FLOOR
+107959bc-29f3-464a-848f-9e5985d45a5a:
+  cloud_device_id: '270504150275150'
+  code: US-MTV-40:FCU:CRAC 1 UPS
+  connections:
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
+    14986412-1310-42cc-9db1-47dc6378b6e0: CONTAINS
+  display_name: CRAC 1 UPS
+  links:
+    11e21f30-bc86-46bd-819d-4b48180113ee:
+      compressor_run_status: compressor_run_status_2
+      compressor_speed_percentage_command: compressor_speed_percentage_command_2
+      zone_air_temperature_sensor: zone_air_temperature_sensor_2
+      zone_air_temperature_setpoint: zone_air_temperature_setpoint_2
+  type: HVAC/FCU_DFSS_ZTC_ZHDHC_DXZTC
+11e21f30-bc86-46bd-819d-4b48180113ee:
+  cloud_device_id: '66214312817216'
+  code: Liebert CRAC 1 / UPS
+  connections:
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
+  translation:
+    compressor_run_status_1:
+      present_value: points.compressor_run_status_1.present_value
+      states:
+        'OFF': '0.0'
+        'ON': '1.0'
+    compressor_run_status_2:
+      present_value: points.compressor_run_status_2.present_value
+      states:
+        'OFF': '0.0'
+        'ON': '1.0'
+    compressor_speed_percentage_command_1:
+      present_value: points.compressor_speed_percentage_command_1.present_value
+      units:
+        key: pointset.points.compressor_speed_percentage_command_1.units
+        values:
+          percent: percent
+    compressor_speed_percentage_command_2:
+      present_value: points.compressor_speed_percentage_command_2.present_value
+      units:
+        key: pointset.points.compressor_speed_percentage_command_2.units
+        values:
+          percent: percent
+    zone_air_temperature_sensor_1:
+      present_value: points.zone_air_temperature_sensor_1.present_value
+      units:
+        key: pointset.points.zone_air_temperature_sensor_1.units
+        values:
+          degrees-fahrenheit: degrees-fahrenheit
+    zone_air_temperature_sensor_2:
+      present_value: points.zone_air_temperature_sensor_2.present_value
+      units:
+        key: pointset.points.zone_air_temperature_sensor_2.units
+        values:
+          degrees-fahrenheit: degrees-fahrenheit
+    zone_air_temperature_setpoint_1:
+      present_value: points.zone_air_temperature_setpoint_1.present_value
+      units:
+        key: pointset.points.zone_air_temperature_setpoint_1.units
+        values:
+          degrees-fahrenheit: degrees-fahrenheit
+    zone_air_temperature_setpoint_2:
+      present_value: points.zone_air_temperature_setpoint_2.present_value
+      units:
+        key: pointset.points.zone_air_temperature_setpoint_2.units
+        values:
+          degrees-fahrenheit: degrees-fahrenheit
+  type: GATEWAYS/PASSTHROUGH
+12dac17e-dda6-41bb-a757-e81fcf701482:
+  code: US-MTV-40
+  type: FACILITIES/BUILDING
+14986412-1310-42cc-9db1-47dc6378b6e0:
+  code: US-MTV-40-G-G40D
+  type: FACILITIES/ROOM
+acb48500-fde1-4ef5-ab57-c3aa7ee8d8ad:
+  cloud_device_id: '215427101056132'
+  code: US-MTV-40:FCU:CRAC 2
+  connections:
+    12dac17e-dda6-41bb-a757-e81fcf701482: CONTAINS
+    14986412-1310-42cc-9db1-47dc6378b6e0: CONTAINS
+  display_name: CRAC 2
+  links:
+    11e21f30-bc86-46bd-819d-4b48180113ee:
+      compressor_run_status: compressor_run_status_1
+      compressor_speed_percentage_command: compressor_speed_percentage_command_1
+      zone_air_temperature_sensor: zone_air_temperature_sensor_1
+      zone_air_temperature_setpoint: zone_air_temperature_setpoint_1
+  type: HVAC/FCU_DFSS_ZTC_ZHDHC_DXZTC

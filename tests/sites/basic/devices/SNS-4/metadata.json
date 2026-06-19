@@ -52,8 +52,7 @@
     "gateway_id": "GAT-123",
     "target": {
       "family": "modbus",
-      "addr": "2",
-      "network_id": "modbus_rtu_1"
+      "addr": "modbus_rtu_1/2"
     }
   },
   "version": "1.5.2",

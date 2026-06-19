@@ -279,7 +279,7 @@ public class UdmiServicePod extends ContainerBase {
 
   @Override
   public void shutdown() {
-    notice("Starting shutdown of container components (triggered by " 
+    notice("Starting shutdown of container components (triggered by "
         + Thread.currentThread().getName() + ")");
     forAllComponents(UdmiComponent::shutdown);
     notice("Finished shutdown of container components");
