@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 ROOT=$(realpath $(dirname $0)/..)
+source $ROOT/etc/shell_common.sh
 
 if (( $# < 2 || $# > 3 )); then
     echo Usage: $0 SITE_MODEL PROJECT_ID [IMAGE_TAG]
