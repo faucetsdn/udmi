@@ -55,10 +55,10 @@ if [[ $project_id =~ ^// ]]; then
     iot_provider=\"${no_prefix%%/*}\"
     no_provider=${no_prefix#*/}
     project_id=${no_provider%/*}
+    udmi_namespace=${no_provider#$project_id}
     if [[ $project_id == *:* ]]; then
         project_id=${project_id%:*}
     fi
-    udmi_namespace=${no_provider#$project_id}
     [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
 elif [[ $project_id =~ @ ]]; then
     iot_provider=\"jwt\"
