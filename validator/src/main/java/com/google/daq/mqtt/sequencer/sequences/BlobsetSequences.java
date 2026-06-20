@@ -98,6 +98,7 @@ public class BlobsetSequences extends SequenceBase {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
     endpointConfiguration.protocol = Protocol.MQTT;
     endpointConfiguration.hostname = hostname;
+    endpointConfiguration.port = getAlternateEndpointPort();
     endpointConfiguration.client_id = generateEndpointConfigClientId(registryId);
     if (isMqttProvider()) {
       endpointConfiguration.topic_prefix = endpointConfiguration.client_id;

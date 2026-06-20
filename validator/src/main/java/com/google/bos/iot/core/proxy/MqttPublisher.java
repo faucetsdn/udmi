@@ -726,6 +726,22 @@ public class MqttPublisher implements MessagePublisher {
     return providerHostname;
   }
 
+  /**
+   * Get the bridge port.
+   *
+   * @return The bridge port integer.
+   */
+  public Integer getBridgePort() {
+    String host = providerHostname;
+    String envPort = System.getenv("MQTT_PORT");
+    String port = envPort != null ? envPort : BRIDGE_PORT;
+    if (host != null && host.contains(":")) {
+      int colonIndex = host.indexOf(":");
+      port = host.substring(colonIndex + 1);
+    }
+    return Integer.parseInt(port);
+  }
+
   public void shutdown() {
     shutdown = true;
   }

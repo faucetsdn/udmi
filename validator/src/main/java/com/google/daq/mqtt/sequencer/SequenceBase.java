@@ -737,6 +737,10 @@ public class SequenceBase {
     return altClient.getBridgeHost();
   }
 
+  protected static Integer getAlternateEndpointPort() {
+    return altClient == null ? null : altClient.getBridgePort();
+  }
+
   /**
    * Set the extra field test capability for device config. Used for change tracking.
    *

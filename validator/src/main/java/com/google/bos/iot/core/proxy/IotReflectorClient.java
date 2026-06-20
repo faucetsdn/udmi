@@ -665,6 +665,15 @@ public class IotReflectorClient implements MessagePublisher {
     return publisher.getBridgeHost();
   }
 
+  /**
+   * Get the bridge port.
+   *
+   * @return The bridge port integer.
+   */
+  public Integer getBridgePort() {
+    return publisher.getBridgePort();
+  }
+
   public String getSessionPrefix() {
     return sessionPrefix;
   }
