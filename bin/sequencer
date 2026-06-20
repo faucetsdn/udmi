@@ -133,6 +133,9 @@ if [[ $project_spec =~ ^// ]]; then
     iot_provider=\"${no_prefix%%/*}\"
     no_provider=${no_prefix#*/}
     project_id=${no_provider%/*}
+    if [[ $project_id == *:* ]]; then
+        project_id=${project_id%:*}
+    fi
     udmi_namespace=${no_provider#$project_id}
 elif [[ $project_spec == -- ]]; then
     echo Configuring for mock project use...
