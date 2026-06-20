@@ -13,21 +13,23 @@ project_id=$2
 device_id=$3
 shift 3
 REFLECTOR_CONFIG=/tmp/reflector_config.json
+src_config=""
+config_file=""
 
-if [[ -n $UDMI_REGISTRY_SUFFIX ]]; then
+if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
     registry_suffix=\"$UDMI_REGISTRY_SUFFIX\"
 else
     registry_suffix=null
 fi
 
-if [[ -n $1 ]]; then
+if [[ -n ${1:-} ]]; then
    test_name=$1
    src_config=${site_dir}/out/devices/${device_id}/tests/${test_name}/config_update.json
    ls -l $src_config && shift
 fi
    
-if [[ -n $1 ]]; then
+if [[ -n ${1:-} ]]; then
     config_file=$1
     src_config=${site_dir}/devices/${device_id}/config/${config_file}
     ls -l $src_config

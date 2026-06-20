@@ -85,7 +85,8 @@ pubber_bg AHU-1 extraField=prlagle skewClock fastWrite
 pubber_bg GAT-123 emptyMissing extraPoint=llama fixedSampleRate=2 fastWrite
 
 echo Waiting for system to run for a bit...
-cat $VALIDATOR_LOG && timeout 60s tail -f $VALIDATOR_LOG || true
+sleep 15
+cat $VALIDATOR_LOG && timeout 45s tail -f $VALIDATOR_LOG || true
 
 echo Killing running pubber/validator instances...
 ps ax | fgrep pubber | fgrep java | awk '{print $1}' | xargs kill || true
