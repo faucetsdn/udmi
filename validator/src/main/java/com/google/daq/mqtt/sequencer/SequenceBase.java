@@ -737,6 +737,10 @@ public class SequenceBase {
     return altClient.getBridgeHost();
   }
 
+  protected static Integer getAlternateEndpointPort() {
+    return altClient == null ? null : altClient.getBridgePort();
+  }
+
   /**
    * Set the extra field test capability for device config. Used for change tracking.
    *
@@ -911,7 +915,7 @@ public class SequenceBase {
     deviceConfig.blobset = null;
   }
 
-  private static boolean deviceSupportsState() {
+  protected static boolean deviceSupportsState() {
     ifNullThen(stateSupported,
         () -> stateSupported =
             !isTrue(GeneralUtils.catchToNull(() -> deviceMetadata.testing.nostate)));

@@ -18,6 +18,7 @@
   - [Modbus](modbus.md)
 - [Sequences](sequences/) (device-to-cloud API)
 - [Subblocks](subblocks.md) (core-to-apps API)
+- [UUFI](uufi.md) (app-to-system API)
 - [Blob Updates](blob_updates.md)
 - [Categories](categories.md)
 - [Log/Status Entries](entries.md)

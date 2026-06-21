@@ -3,7 +3,8 @@
 UDMI_ROOT=$(realpath $(dirname $0)/..)
 source $UDMI_ROOT/etc/shell_common.sh
 
-ENDPOINT_TMP=/tmp/endpoint.json
+mkdir -p out
+ENDPOINT_TMP=out/endpoint.json
 
 function cleanup {
     if [[ -n ${PUB_PID:-} && -d /proc/$PUB_PID ]]; then
@@ -68,8 +69,8 @@ else
     registry_suffix=
 fi
 
-echo Cleaning output directory $UDMI_ROOT/pubber/out/$serial_no
-rm -rf $UDMI_ROOT/pubber/out/$serial_no
+echo Cleaning output directory pubber/out/$serial_no
+rm -rf pubber/out/$serial_no
 
 echo Building pubber...
 [[ ! -d $UDMI_ROOT/pubber/src ]] || $UDMI_ROOT/pubber/bin/build
@@ -118,6 +119,13 @@ elif [[ -z ${iot_provider:-} ]]; then
     iot_provider=gbos
 fi
 
+if [[ $project_target == *:* ]]; then
+    project_target=${project_target%:*}
+fi
+if [[ $broker_hostname == *:* ]]; then
+    broker_hostname=${broker_hostname%:*}
+fi
+
 [[ ${registry_id:-null} == null ]] && fail registry_id not defined
 registry_actual=${udmi_prefix}${registry_id}${registry_suffix}
 if [[ ! -f $ENDPOINT_TMP ]]; then
@@ -153,6 +161,10 @@ fi
 
 if [[ ! -f $ENDPOINT_TMP ]]; then
     echo Constructing new $ENDPOINT_TMP
+    port_line=""
+    if [[ -n ${MQTT_PORT:-} ]]; then
+        port_line="\"port\": $MQTT_PORT,"
+    fi
     cat <<EOF > $ENDPOINT_TMP
 {
     "protocol": "mqtt",
@@ -160,12 +172,17 @@ if [[ ! -f $ENDPOINT_TMP ]]; then
     "client_id": $client_id,
     "topic_prefix": $topic_prefix,
     "auth_provider": $auth_provider,
+    $port_line
     "hostname": "$broker_hostname"
 }
 EOF
+else
+    if [[ -n ${MQTT_PORT:-} ]]; then
+        jq ".port = $MQTT_PORT" $ENDPOINT_TMP | sponge $ENDPOINT_TMP
+    fi
 fi
 
-tmp_config=/tmp/pubber_config.json
+tmp_config=out/pubber_config.json
 if [[ -n ${site_model:-} ]]; then
     cat <<EOF > $tmp_config
 {
@@ -181,7 +198,9 @@ elif [[ $options_json != null ]]; then
     echo Inserting command line options into json file.
     jq ".options=$options_json" $config_file > $tmp_config
 else
-    [[ $config_file != $tmp_config ]] && cp $config_file $tmp_config
+    if [[ ! "$config_file" -ef "$tmp_config" ]]; then
+        cp "$config_file" "$tmp_config"
+    fi
 fi
 
 jq --slurpfile endpoint $ENDPOINT_TMP '.endpoint = $endpoint[0]' $tmp_config | sponge $tmp_config

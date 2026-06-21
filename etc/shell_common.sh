@@ -7,6 +7,20 @@
 set -eu
 set -o pipefail
 
+# Auto-detect isolated mode from any command-line arguments or variables matching localhost:<port>
+for arg in "${@:-}" "${TARGET_PROJECT:-}" "${project_spec:-}" "${project_id:-}"; do
+    if [[ -n $arg && $arg =~ localhost:([0-9]+) ]]; then
+        export MQTT_PORT="${BASH_REMATCH[1]}"
+        export ETCD_PORT=$((MQTT_PORT + 1))
+        export UDMI_NO_SUDO=true
+        break
+    fi
+done
+
+if [[ -n ${MQTT_PORT:-} && $MQTT_PORT != 8883 ]]; then
+    export UDMI_NO_SUDO=true
+fi
+
 if [[ $(id -u) == 0 ]]; then
     sudo() { "$@"; }
 fi
@@ -56,11 +70,11 @@ function pubber_bg {
 
     device_dir=$site_path/devices/$device_id
 
-    echo bin/keygen CERT $device_dir
-    bin/keygen CERT $device_dir || true
+    echo $UDMI_ROOT/bin/keygen CERT $device_dir
+    $UDMI_ROOT/bin/keygen CERT $device_dir || true
 
     echo Writing pubber output to $outfile, serial no $serial_no
-    cmd="bin/pubber $site_path $project_spec $device_id $serial_no $@"
+    cmd="$UDMI_ROOT/bin/pubber $site_path $project_spec $device_id $serial_no $@"
     echo $cmd
 
     date > $outfile
