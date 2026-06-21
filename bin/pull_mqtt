@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
-# cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 

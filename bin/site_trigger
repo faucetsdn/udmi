@@ -69,14 +69,17 @@ host = url.hostname or "localhost"
 port = url.port or 1883
 
 # Build model update payload
+from datetime import datetime, timezone
+now_utc_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
 payload = {
     "projectId": "vibrant",
     "transactionId": f"TXN-{os.urandom(4).hex()}",
-    "publishTime": "2026-06-12T16:00:00Z",
+    "publishTime": now_utc_str,
     "source": "site_trigger",
     "payload": {
         "version": "1.5.2",
-        "timestamp": "2026-06-12T16:00:00Z",
+        "timestamp": now_utc_str,
         "op": "UPDATE",
         "detail": {
             site_id: {
