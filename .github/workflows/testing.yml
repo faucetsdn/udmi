@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   pull_request:
   schedule:
-    - cron: '0 13 * * *'
+    - cron: '13 * * * *'
 
 concurrency:
   group: ci-${{ github.repository }}
@@ -76,7 +76,7 @@ jobs:
     timeout-minutes: 10
     if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -125,7 +125,7 @@ jobs:
     timeout-minutes: 20
     needs: automapping
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
@@ -176,7 +176,7 @@ jobs:
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
       MATRIX_SHARD_COUNT: 10
@@ -214,6 +214,9 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat out/udmis.log
+      - name: message capture log
+        if: ${{ !cancelled() }}
+        run: cat out/message_capture.log || true
       - name: itemized test post-process
         if: ${{ !cancelled() }}
         run: egrep ' test .* after .*s ' out/sequencer.log-* | tee out/timing_itemized.out
@@ -233,6 +236,8 @@ jobs:
     name: UDMIS Local Setup
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -246,18 +251,20 @@ jobs:
           bin/registrar sites/udmi_site_model
       - name: local setup
         run: |
-          bin/start_local sites/udmi_site_model //mqtt/localhost
-          bin/pull_messages //mqtt/localhost > out/message_capture.log 2>&1 &
+          bin/start_local sites/udmi_site_model $TARGET_PROJECT
+          bin/pull_messages $TARGET_PROJECT > out/message_capture.log 2>&1 &
       - name: bin/test_etcd_prerun
         run: bin/test_etcd_prerun
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_regclean
-        run: bin/test_regclean //mqtt/localhost
+        run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_runlocal
         run: bin/test_runlocal
       - name: bin/test_sequencer
-        run: bin/test_sequencer local full //mqtt/localhost $(< etc/local_tests.txt)
+        run: bin/test_sequencer local full $TARGET_PROJECT $(< etc/local_tests.txt)
+      - name: bin/test_uufi
+        run: bin/test_uufi
       - name: bin/test_udmis
         run: bin/test_udmis
       - name: bin/test_etcd_postrun
@@ -270,6 +277,18 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: cat out/udmis*.log
+      - name: message capture log
+        if: ${{ !cancelled() }}
+        run: cat out/message_capture.log || true
+      - name: registrar log
+        if: ${{ !cancelled() }}
+        run: cat out/registrar.log || true
+      - name: mosquitto state
+        if: ${{ !cancelled() }}
+        run: |
+          source etc/mosquitto_ctrl.sh
+          $MOSQUITTO_CTRL listClients || true
+          $MOSQUITTO_CTRL listRoles || true
       - name: mosquitto logs
         if: ${{ !cancelled() }}
         run: cat /var/log/mosquitto/mosquitto.log || true
@@ -289,7 +308,7 @@ jobs:
     timeout-minutes: 15
     env:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
-      TARGET_PROJECT: //mqtt/localhost
+      TARGET_PROJECT: //mqtt/localhost:9001
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -325,7 +344,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
       UDMI_REGISTRY_SUFFIX: _BU
     steps:
       - uses: actions/checkout@v6
@@ -363,7 +382,7 @@ jobs:
     needs: [ baseline, sequencer, endpoint, runlocal, blobupdates ]
     if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost' }}
+      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
@@ -431,7 +450,8 @@ jobs:
       - name: Start UDMIS container
         run: |
           mkdir -p out
-          docker run -d --rm --net udminet --name udmis -p 8883:8883 \
+          docker rm -f udmis || true
+          docker run -d --net udminet --name udmis -p 8883:8883 \
             -v $PWD/site_model:/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
@@ -444,6 +464,32 @@ jobs:
             (docker ps | fgrep -q udmis) || break
             sleep 1
           done
+          if [[ ! -f var/tmp/pod_ready.txt ]]; then
+            echo "=== DIAGNOSTIC LOGS FOR UDMIS STARTUP FAILURE ==="
+            echo "Host working directory: $PWD"
+            echo "Host var/tmp/ contents:"
+            ls -la var/tmp || true
+            echo "Docker container status:"
+            docker ps -a || true
+            echo "Docker logs for udmis:"
+            docker logs udmis || true
+            echo "Empirically searching container for log files and ready signals..."
+            temp_img=$(docker commit udmis 2>/dev/null)
+            if [[ -n "$temp_img" ]]; then
+              docker run --rm "$temp_img" sh -c '
+                echo "=== Listing all log files and status files found inside the container ==="
+                find / -name "*.log" -o -name "*ready.txt" 2>/dev/null | grep -v "/proc" | grep -v "/sys" | while read -r filepath; do
+                  echo ""
+                  echo "--- CONTENT OF $filepath ---"
+                  cat "$filepath" 2>/dev/null || echo "[could not read file]"
+                done
+              ' || true
+              docker rmi "$temp_img" >/dev/null 2>&1 || true
+            else
+              echo "Could not commit container to inspect filesystem."
+            fi
+            echo "=== END DIAGNOSTIC LOGS ==="
+          fi
           ls -l var/tmp/pod_ready.txt 2>&1
       - name: E2E Tests
         # This runs as sudo because docker containers in Github CI run as root.
@@ -458,8 +504,12 @@ jobs:
       - name: udmis log
         if: ${{ !cancelled() }}
         run: |
-          docker logs udmis
-          more out/udmis.log
+          echo "=== out/udmis.log ==="
+          cat out/udmis.log || true
+          echo "=== out/etcd.log ==="
+          cat out/etcd.log || true
+          echo "=== docker logs ==="
+          docker logs udmis || true
   udmilp:
     name: Python Library Tests
     runs-on: ubuntu-24.04
@@ -482,12 +532,13 @@ jobs:
         id: cache-deps
         uses: actions/cache@v5
         with:
-          path: .venv
-          key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ hashFiles('poetry.lock') }}
+          path: clientlib/python/.venv
+          key: ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ hashFiles('clientlib/python/poetry.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.python-version }}-venv-
       - name: Install dependencies
         run: |
+          cd clientlib/python
           poetry install --with dev
       - name: Run tests with pytest
         run: |
@@ -499,27 +550,27 @@ jobs:
           cd clientlib/python
           poetry run pylint src
 
-  # bridgehead:
-  #   name: Bridgehead Test
-  #   runs-on: ubuntu-24.04
-  #   timeout-minutes: 20
-  #   steps:
-  #     - uses: actions/checkout@v6
-  #     - uses: actions/setup-java@v5
-  #       with:
-  #         distribution: 'temurin'
-  #         java-version: '21'
-  #     - name: Setup Base
-  #       run: bin/setup_base
-  #     - name: Run Bridgehead Test
-  #       run: |
-  #         bridgehead/tests/test_bridgehead
-  #     - name: Upload logs
-  #       if: ${{ !cancelled() }}
-  #       uses: actions/upload-artifact@v7
-  #       with:
-  #         name: bridgehead-logs
-  #         path: |
-  #           bridgehead/var/mosquitto/log/
-  #           bridgehead/var/tmp/udmis.log
+  bridgehead:
+    name: Bridgehead Test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Setup Base
+        run: bin/setup_base
+      - name: Run Bridgehead Test
+        run: |
+          bridgehead/tests/test_bridgehead
+      - name: Upload logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: bridgehead-logs
+          path: |
+            bridgehead/var/mosquitto/log/
+            bridgehead/var/tmp/udmis.log
 

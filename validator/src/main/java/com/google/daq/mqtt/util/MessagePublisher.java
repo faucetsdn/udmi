@@ -74,6 +74,15 @@ public interface MessagePublisher {
     throw new RuntimeException("getBridgeHost not implemented");
   }
 
+  /**
+   * Get the bridge port.
+   *
+   * @return The bridge port integer.
+   */
+  default Integer getBridgePort() {
+    return null;
+  }
+
   default Credential getCredential() {
     throw new RuntimeException("getCredential not implemented");
   }

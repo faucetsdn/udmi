@@ -1,0 +1,30 @@
+{
+  "gateway": {
+    "target": {
+      "addr": "1",
+      "family": "modbus",
+      "network": "modbus_1",
+      "vendor_ref": true
+    }
+  },
+  "localnet": {
+    "families": {
+      "modbus": {}
+    }
+  },
+  "pointset": {
+    "points": {
+      "temp": {
+        "ref": "40001"
+      }
+    },
+    "sample_rate_sec": 300
+  },
+  "system": {
+    "metrics_rate_sec": 10,
+    "min_loglevel": 300,
+    "operation": {}
+  },
+  "timestamp": "2020-05-01T13:39:07Z",
+  "version": "1.5.3"
+}

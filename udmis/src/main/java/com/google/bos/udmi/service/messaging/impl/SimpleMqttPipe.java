@@ -13,6 +13,7 @@ import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.nullAsNull;
+import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
@@ -21,7 +22,10 @@ import static java.util.Optional.ofNullable;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.common.base.Strings;
 import com.google.udmi.util.CertManager;
+import com.google.udmi.util.JsonUtil;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -158,6 +162,35 @@ public class SimpleMqttPipe extends MessageBase {
     return toStringMap(envelope);
   }
 
+  private static boolean isUufiTopic(String topic) {
+    if (topic == null) {
+      return false;
+    }
+    String[] parts = topic.split("/", 12);
+    int start = Strings.isNullOrEmpty(parts[0]) ? 1 : 0;
+    return parts.length > start && "uufi".equals(parts[start]);
+  }
+
+  private static Map<String, String> parseUufiTopic(String topic) {
+    String[] parts = topic.split("/", 12);
+    int start = Strings.isNullOrEmpty(parts[0]) ? 1 : 0;
+    Envelope envelope = new Envelope();
+
+    // UUFI topic: [/namespace]/uufi/[r/REG/d/DEV/]c/TYPE/FOLDER
+    int base = start + 1;
+    if ("r".equals(parts[base])) {
+      envelope.deviceRegistryId = nullAsNull(parts[base + 1]);
+      checkState("d".equals(parts[base + 2]), "expected devices");
+      envelope.deviceId = nullAsNull(parts[base + 3]);
+      base += 4;
+    }
+    checkState("c".equals(parts[base]), "expected commands");
+    envelope.subType = convertSubType(parts[base + 1]);
+    envelope.subFolder = convertSubFolder(parts[base + 2]);
+    envelope.gatewayId = "uufi";
+    return toStringMap(envelope);
+  }
+
   private static Map<String, String> parseImplicitTopic(String topic) {
     if (topic == null) {
       throw new IllegalArgumentException("Topic cannot be null");
@@ -202,7 +235,9 @@ public class SimpleMqttPipe extends MessageBase {
    */
   public static Map<String, String> parseEnvelopeTopic(String topic) {
     try {
-      if (isLegacyTopic(topic)) {
+      if (isUufiTopic(topic)) {
+        return parseUufiTopic(topic);
+      } else if (isLegacyTopic(topic)) {
         return parseLegacyTopic(topic);
       } else if (topic != null && topic.startsWith(IMPLICIT_TOPIC_PREFIX)) {
         return parseImplicitTopic(topic);
@@ -215,14 +250,17 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   @Override
-  protected void publishRaw(Bundle bundle) {
-    if (!publishMessages) {
+  public void publishRaw(Bundle bundle) {
+    if (endpoint.send_id == null && !"uufi".equals(bundle.envelope.gatewayId)) {
       trace("Dropping message because no send_id");
       return;
     }
     try {
       String topic = makeMqttTopic(bundle);
       MqttMessage message = makeMqttMessage(bundle);
+      String payload = new String(message.getPayload());
+      captureMessage(topic, payload, false);
+      debug("MQTT publish from %s to %s: %s", clientId, topic, payload);
       mqttClient.publish(topic, message);
 
 
@@ -232,6 +270,16 @@ public class SimpleMqttPipe extends MessageBase {
           debug("Client has %d inFlight tokens, from %s", tokens, topic));
     } catch (Exception e) {
       throw new RuntimeException("While publishing to mqtt client " + clientId, e);
+    }
+  }
+
+  private void captureMessage(String topic, String message, boolean incoming) {
+    File captureFile = new File("out/udmis_messages.log");
+    try (PrintWriter out = new PrintWriter(new FileOutputStream(captureFile, true))) {
+      String direction = incoming ? "<<<" : ">>>";
+      out.printf("%s %s %s %s: %s%n", JsonUtil.currentIsoMs(), clientId, direction, topic, message);
+    } catch (Exception e) {
+      // Ignore errors writing to capture log
     }
   }
 
@@ -253,11 +301,10 @@ public class SimpleMqttPipe extends MessageBase {
           options.setUserName(checkNotNull(basicAuth.username, "MQTT username not defined"));
           options.setPassword(
               checkNotNull(basicAuth.password, "MQTT password not defined").toCharArray());
-          debug("Set MQTT basic auth username/password as %s/%s", basicAuth.username,
-              basicAuth.password);
+          info("Set MQTT basic auth username as %s for client %s", basicAuth.username, clientId);
         });
 
-        debug("Attempting mqtt connection as %s", clientId);
+        info("Attempting mqtt connection for %s to %s", clientId, mqttClient.getServerURI());
         mqttClient.connect(options);
         info("Established mqtt connection as %s", clientId);
         subscribeToMessages();
@@ -314,6 +361,19 @@ public class SimpleMqttPipe extends MessageBase {
   }
 
   private String makeTopic(Envelope envelope) {
+    if ("uufi".equals(envelope.gatewayId)) {
+      String topic = isNotEmpty(namespace) && !"default".equals(namespace) ? "/" + namespace : "";
+      topic += "/uufi";
+      if (envelope.deviceRegistryId != null) {
+        topic += "/r/" + envelope.deviceRegistryId;
+        if (envelope.deviceId != null) {
+          topic += "/d/" + envelope.deviceId;
+        }
+      }
+      topic += "/c/" + envelope.subType + "/" + envelope.subFolder;
+      return topic;
+    }
+
     String topic = "";
     if (envelope.gatewayId != null) {
       topic = "/" + envelope.gatewayId + topic;
@@ -345,7 +405,7 @@ public class SimpleMqttPipe extends MessageBase {
       info("No recv_id defined, not subscribing for component " + endpoint.name);
       return;
     }
-    String subscribeTopic = format(SUB_BASE_FORMAT, recvId);
+    String subscribeTopic = recvId.startsWith("/") ? recvId : format(SUB_BASE_FORMAT, recvId);
     try {
       synchronized (mqttClient) {
         boolean connected = mqttClient.isConnected();
@@ -405,14 +465,18 @@ public class SimpleMqttPipe extends MessageBase {
 
     @Override
     public void messageArrived(String topic, MqttMessage message) {
+      String payload = new String(message.getPayload());
+      captureMessage(topic, payload, true);
       try {
+        debug("MQTT message arrived on %s: %s", topic, payload);
         Map<String, String> envelopeMap = parseEnvelopeTopic(topic);
         envelopeMap.put(PUBLISH_TIME_KEY, isoConvert());
         envelopeMap.put(TRANSACTION_KEY, makeTransactionId());
         envelopeMap.put(SOURCE_KEY, IMPLICIT_CHANNEL);
-        receiveMessage(envelopeMap, new String(message.getPayload()));
+        receiveMessage(envelopeMap, payload);
       } catch (Exception e) {
         error("Exception receiving message on %s: %s", clientId, friendlyStackTrace(e));
+        debug("Full error details for %s: %s", topic, stackTraceString(e));
       }
     }
   }

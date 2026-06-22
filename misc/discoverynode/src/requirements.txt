@@ -9,7 +9,7 @@ packaging==26.0
 paho-mqtt==2.1.0
 pluggy==1.6.0
 pygments==2.20.0
-pyjwt==2.11.0
+pyjwt==2.13.0
 pytest==9.0.3
 python-dotenv==1.2.2
 pytz==2025.2

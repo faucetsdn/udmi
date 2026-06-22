@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "AHU M1",
+    "location": {
+      "site": "US-MTV-RLS1"
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "d212c227-4cb9-4a18-842c-8e2748274acf",
+      "type": "HVAC/AHU_SFVSC2X_EFVSC_CHWSC_ECON2X_BSPC_SSPC_FDPM",
+      "label": "AHU M1 RF1 VFD Interface, AHU M1 SF1 VFD Interface, AHU M1 SF2 VFD Interface, AHU-M-1 / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "210628044959834"
+  },
+  "pointset": {
+    "points": {
+      "building_air_static_pressure_sensor": {
+        "units": "inches-of-water"
+      },
+      "building_air_static_pressure_setpoint": {
+        "units": "inches-of-water"
+      },
+      "chilled_water_valve_percentage_command": {
+        "units": "percent"
+      },
+      "cooling_request_count": {
+        "units": "no-units"
+      },
+      "economizer_mode": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      },
+      "exhaust_air_damper_percentage_command": {
+        "units": "percent"
+      },
+      "exhaust_fan_current_sensor": {
+        "units": "amperes"
+      },
+      "failed_exhaust_fan_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "failed_supply_fan_alarm_1": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "supply_air_static_pressure_setpoint": {
+        "units": "inches-of-water"
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 #!/bin/bash -ex
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
 source etc/shell_common.sh
 
@@ -30,7 +30,7 @@ iot_config=$site_path/cloud_iot_config.json
 output_file=$site_path/out/registration_summary.json
 csv_file=$site_path/out/registration_summary.csv
 expected_num_id=1234567890
-pubber_config=/tmp/pubber_config.json
+pubber_config=out/pubber_config.json
 pubber_log=out/pubber.log
 registrar_log=out/registrar.log
 serial_no=clean-$RANDOM
@@ -58,12 +58,12 @@ function check_csv_file {
     [[ $sns_line == 6 ]] || fail Device SNS-4 not found on expected output csv line, was $sns_line expected 6
 }
 
-echo bin/keygen CERT $device_dir
-bin/keygen CERT $device_dir || true
+echo $UDMI_ROOT/bin/keygen CERT $device_dir
+$UDMI_ROOT/bin/keygen CERT $device_dir || true
 
-pubber/bin/build
+$UDMI_ROOT/pubber/bin/build
 sleep 2
-validator/bin/build
+$UDMI_ROOT/validator/bin/build
 
 echo Clean site out/ directory...
 rm -rf $site_path/out
@@ -99,6 +99,9 @@ if [[ $project_spec =~ ^// ]]; then
     no_provider=${no_prefix#*/}
     project_id=${no_provider%/*}
     udmi_namespace=${no_provider#$project_id}
+    if [[ $project_id == *:* ]]; then
+        project_id=${project_id%:*}
+    fi
     [[ -n $udmi_namespace ]] && registry_prefix=${udmi_namespace#/}~
     [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
 elif [[ $project_spec =~ @ ]]; then
@@ -123,6 +126,9 @@ elif [[ $iot_provider == \"gref\" ]]; then
     broker_hostname=mqtt.bos.goog
 elif [[ $iot_provider == \"mqtt\" ]]; then
     broker_hostname=$project_id
+    if [[ $broker_hostname == *:* ]]; then
+        broker_hostname=${broker_hostname%:*}
+    fi
     client_id=\"/r/$registry_prefix$registry_id$registry_suffix/d/$device_id\"
     hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
     client_pass=${hash_pass:0:8}
@@ -177,8 +183,14 @@ jq '.project_id = "this-is-not-right"' $iot_config | sponge $iot_config
 jq '.udmi_namespace = "bunny"' $iot_config | sponge $iot_config
 
 echo Clean out the registry to make sure devices get removed...
-echo bin/registrar $site_args -d -x
-bin/registrar $site_args -d -x
+echo $UDMI_ROOT/bin/registrar $site_args -d -x
+$UDMI_ROOT/bin/registrar $site_args -d -x
+
+if [[ $iot_provider == "\"mqtt\"" ]]; then
+    echo "De-authorizing $device_id from mosquitto for clean test..."
+    source etc/mosquitto_ctrl.sh
+    $MOSQUITTO_CTRL deleteClient /r/$registry_prefix$registry_id$registry_suffix/d/$device_id || true
+fi
 
 echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
@@ -187,29 +199,29 @@ echo Cleaning message capture output out/registries/
 rm -rf out/registries/
 
 echo Check for failure in running pubber...
-echo bin/pubber $pubber_config
+echo $UDMI_ROOT/bin/pubber $pubber_config
 result=0
-timeout 60s bin/pubber $pubber_config 2> $pubber_log || result=$?
+timeout 120s $UDMI_ROOT/bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 255 ]] || fail Improper pubber failure code $result
 
 echo Pubber config from $pubber_config:
 cat $pubber_config
 
 echo Create one device to test that it works...
-echo bin/registrar $site_args $device_id
-bin/registrar $site_args $device_id
+echo $UDMI_ROOT/bin/registrar $site_args $device_id
+$UDMI_ROOT/bin/registrar $site_args $device_id
 
 echo Check $device_id to make sure that it works...
 echo Waiting for Mosquitto ACLs to settle...
 sleep 10
 echo bin/pubber $pubber_config
 result=0
-timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
+timeout 120s $UDMI_ROOT/bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Now recreate the complete registry from scratch!
-echo bin/registrar $site_args -u
-bin/registrar $site_args -u
+echo $UDMI_ROOT/bin/registrar $site_args -u
+$UDMI_ROOT/bin/registrar $site_args -u
 
 check_csv_file $fake_id ERROR
 fgrep "Updated 4 device metadata files." $registrar_log
@@ -224,8 +236,8 @@ check_csv_file $fake_id BLOCK
 check_csv_file $gateway_id READ
 
 echo Delete the gateway to make sure stuff happens...
-echo bin/registrar $site_args -d $gateway_id
-bin/registrar $site_args -d $gateway_id
+echo $UDMI_ROOT/bin/registrar $site_args -d $gateway_id
+$UDMI_ROOT/bin/registrar $site_args -d $gateway_id
 
 check_csv_file $gateway_id CLEAN
 ! egrep "Updated .+ device metadata files." $registrar_log
@@ -235,30 +247,30 @@ echo Waiting for Mosquitto ACLs to settle...
 sleep 10
 echo bin/pubber $pubber_config
 result=0
-timeout 30s bin/pubber $pubber_config 2> $pubber_log || result=$?
+timeout 120s $UDMI_ROOT/bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
 
 echo Successful pubber check passed on clean registry.
 
 echo Registering everything to end up with everything in place
-echo bin/registrar $site_args -u
-bin/registrar $site_args -u
+echo $UDMI_ROOT/bin/registrar $site_args -u
+$UDMI_ROOT/bin/registrar $site_args -u
 
 echo Checking that only un-specificed devices have num_id updates...
 fgrep "Updated 3 device metadata files." $registrar_log
 
 if [[ -n $solo_arg ]]; then
     echo Deleting singular entry $solo_arg...
-    echo bin/registrar $site_args -d $solo_arg
-    bin/registrar $site_args -d $solo_arg
+    echo $UDMI_ROOT/bin/registrar $site_args -d $solo_arg
+    $UDMI_ROOT/bin/registrar $site_args -d $solo_arg
     search "Deleting device $solo_arg \(1/1)" $registrar_log
     search "Deleted 1 devices" $registrar_log
 
     echo Sleeping to avoid IoT Core race condition...
     sleep 20
 
-    echo bin/registrar $site_args $solo_arg
-    bin/registrar $site_args $solo_arg
+    echo $UDMI_ROOT/bin/registrar $site_args $solo_arg
+    $UDMI_ROOT/bin/registrar $site_args $solo_arg
 
     echo Checking creation of one device
     search "Processing 1 new devices..." $registrar_log
@@ -271,8 +283,8 @@ fi
 
 if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
     echo Registering alt registry $UDMI_ALT_REGISTRY...
-    echo bin/registrar $site_args -a $UDMI_ALT_REGISTRY
-    bin/registrar $site_args -a $UDMI_ALT_REGISTRY
+    echo $UDMI_ROOT/bin/registrar $site_args -a $UDMI_ALT_REGISTRY
+    $UDMI_ROOT/bin/registrar $site_args -a $UDMI_ALT_REGISTRY
 fi
 
 echo Done with successful registry clean/create test

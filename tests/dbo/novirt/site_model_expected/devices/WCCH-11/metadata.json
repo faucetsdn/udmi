@@ -1,0 +1,51 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "CH M1",
+    "location": {
+      "site": "US-MTV-RLS1"
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "08ec4c1b-7055-4366-a6fa-db56b2c5fa2b",
+      "type": "HVAC/CH_VSC_CHWDT_CWDT_CHDXSC_CHWSWISOVPM_CWSWISOVPM_REFPM_REFSM_OTPM_IGM",
+      "label": "Chiller M-1 Integration / 100 Mayfield, Chiller M-2 Integration / 100 Mayfield, Chiller Plant / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "47157504651765"
+  },
+  "pointset": {
+    "points": {
+      "chilled_return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "chilled_supply_water_isolation_valve_percentage_command": {
+        "units": "percent"
+      },
+      "chilled_supply_water_isolation_valve_percentage_sensor": {
+        "units": "percent"
+      },
+      "chilled_supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "condensing_supply_water_isolation_valve_percentage_command": {
+        "units": "percent"
+      },
+      "failed_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "run_status": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      }
+    }
+  }
+}

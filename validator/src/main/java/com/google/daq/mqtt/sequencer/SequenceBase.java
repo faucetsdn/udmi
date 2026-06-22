@@ -737,6 +737,10 @@ public class SequenceBase {
     return altClient.getBridgeHost();
   }
 
+  protected static Integer getAlternateEndpointPort() {
+    return altClient == null ? null : altClient.getBridgePort();
+  }
+
   /**
    * Set the extra field test capability for device config. Used for change tracking.
    *
@@ -839,6 +843,7 @@ public class SequenceBase {
    */
   @Before
   public void setUp() {
+    System.err.println("<<<< Starting test " + testName);
     checkNotNull(activeInstance, "Active sequencer instance not setup, aborting");
 
     assumeTrue(format("Feature bucket %s not enabled", testBucket.key()),
@@ -910,7 +915,7 @@ public class SequenceBase {
     deviceConfig.blobset = null;
   }
 
-  private static boolean deviceSupportsState() {
+  protected static boolean deviceSupportsState() {
     ifNullThen(stateSupported,
         () -> stateSupported =
             !isTrue(GeneralUtils.catchToNull(() -> deviceMetadata.testing.nostate)));
@@ -1312,6 +1317,7 @@ public class SequenceBase {
    */
   @After
   public void tearDown() {
+    System.err.println(">>>> Finished test " + testName + " with result " + testResult);
     if (activeInstance == null) {
       return;
     }

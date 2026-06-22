@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
@@ -32,7 +32,7 @@ SERV_ID=$SERV_USER
 echo Configuring registry $SERV_ID
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER
-$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS -c $SERV_ID
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS
 $MOSQUITTO_CTRL addClientRole $SERV_USER service
 
 echo Registered sites:

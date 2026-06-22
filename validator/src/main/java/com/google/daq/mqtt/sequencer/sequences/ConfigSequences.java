@@ -91,6 +91,10 @@ public class ConfigSequences extends SequenceBase {
             format("apply log took until %s, expected before %s", isoConvert(logFinished),
                 isoConvert(expectedFinish))));
 
+    if (!deviceSupportsState()) {
+      sleepFor("rapid config processing delay", Duration.ofSeconds(5));
+    }
+
     deviceConfig.system.min_loglevel = Level.WARNING.value();
     updateConfig("warning loglevel");
 

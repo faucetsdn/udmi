@@ -1,28 +1,39 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
+
+trap 'echo "pull_mqtt (PID $$) exited with status $? at $(date -u -Is)"' EXIT
+trap 'echo "pull_mqtt (PID $$) received SIGTERM at $(date -u -Is)"' SIGTERM
+trap 'echo "pull_mqtt (PID $$) received SIGPIPE at $(date -u -Is)"' SIGPIPE
+trap 'echo "pull_mqtt (PID $$) received SIGINT at $(date -u -Is)"' SIGINT
 
 [[ $# == 1 ]] || usage project_spec
 
 project_spec=$1
 shift
 
-msg_file=/tmp/message_captured.json
+mkdir -p out
+msg_file=out/message_captured.json
 
 registry_id=${project_spec##*%}
 [[ $registry_id != $project_spec ]] || registry_id=+
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
-topic_filter="/r/${registry_id}/d/+/#"
-OUT_BASE=$UDMI_ROOT/out/registries
+topic_filter_udmi="/r/${registry_id}/d/+/#"
+topic_filter_uufi="/uufi/#"
+OUT_BASE=out/registries
 
-echo Starting mqtt message capture at $(date -u -Is) on topic $topic_filter, capture to $OUT_BASE
+echo Starting mqtt message capture at $(date -u -Is) on topics $topic_filter_udmi and $topic_filter_uufi, capture to $OUT_BASE
 
-sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
+SUDO=sudo
+if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
+    SUDO=""
+fi
+
+$SUDO mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter_udmi -t $topic_filter_uufi |
     while read -r mqtt_message; do
         echo $mqtt_message > $msg_file
         topic=$(jq -r .topic <<< "$mqtt_message")
@@ -32,11 +43,45 @@ sudo mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter |
 
         readarray -d '/' -t array <<< "${topic}/"
 
-        registryId=${array[2]:-}  # Use :- to substute default empty to prevent script termination-on-undefined
-        deviceId=${array[4]:-}
-        subType=${array[5]:-}
-        subFolder=${array[6]:-}
+        # Dynamically scan the array to identify key specifiers (r, d, c) in standard or UUFI formats
+        r_idx=-1
+        d_idx=-1
+        c_idx=-1
+        for i in "${!array[@]}"; do
+            part=$(echo "${array[i]}" | xargs)
+            if [[ $part == "r" ]]; then
+                r_idx=$i
+            elif [[ $part == "d" ]]; then
+                d_idx=$i
+            elif [[ $part == "c" ]]; then
+                c_idx=$i
+            fi
+        done
 
+        registryId=""
+        deviceId=""
+        subType=""
+        subFolder=""
+
+        if [[ $r_idx -ge 0 ]]; then
+            registryId=${array[r_idx+1]:-}
+        fi
+        if [[ $d_idx -ge 0 ]]; then
+            deviceId=${array[d_idx+1]:-}
+        fi
+
+        if [[ $c_idx -ge 0 ]]; then
+            subType=${array[c_idx+1]:-}
+            subFolder=${array[c_idx+2]:-}
+        else
+            if [[ $d_idx -ge 0 ]]; then
+                subType=${array[d_idx+2]:-}
+                subFolder=${array[d_idx+3]:-}
+            elif [[ $r_idx -ge 0 ]]; then
+                subType=${array[r_idx+2]:-}
+                subFolder=${array[r_idx+3]:-}
+            fi
+        fi
 
         subFolder=$(echo $subFolder | xargs)  # Trim whitespace
         [[ -n $subFolder ]] || subFolder=update

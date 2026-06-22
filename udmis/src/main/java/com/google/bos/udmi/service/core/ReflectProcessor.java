@@ -8,6 +8,7 @@ import static com.google.udmi.util.Common.CONDENSER_STRING;
 import static com.google.udmi.util.Common.DETAIL_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.ERROR_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
@@ -77,7 +78,6 @@ import udmi.schema.UdmiState;
 @ComponentName("reflect")
 public class ReflectProcessor extends ProcessorBase {
 
-  public static final String PAYLOAD_KEY = "payload";
   private static final Date START_TIME = new Date();
   private static final String LEGACY_METADATA_STRING = "{ }";
   private static final String REFLECTOR_TXN_PREFIX = "RC:";
@@ -98,6 +98,16 @@ public class ReflectProcessor extends ProcessorBase {
     MessageContinuation continuation = getContinuation(message);
     Envelope reflect = continuation.getEnvelope();
     Map<String, Object> objectMap = toMap(message);
+    String principal = ofNullable(reflect.principal).orElse((String) objectMap.get("principal"));
+
+    // Loopback protection using instance ID
+    if (UdmiServicePod.INSTANCE_ID.equals(principal)) {
+      debug("Ignoring loopback of message from this instance: " + UdmiServicePod.INSTANCE_ID);
+      return;
+    }
+
+    info("ReflectProcessor received message for %s/%s, folder %s, type %s",
+        reflect.deviceRegistryId, reflect.deviceId, reflect.subFolder, reflect.subType);
     try {
       boolean isCommand = objectMap.containsKey(PAYLOAD_KEY);
       if (reflect.subFolder == null && !isCommand) {
@@ -233,6 +243,8 @@ public class ReflectProcessor extends ProcessorBase {
     message.put(DETAIL_KEY, detailString);
     Envelope envelope = new Envelope();
     envelope.subFolder = SubFolder.ERROR;
+    envelope.subType = catchToNull(
+        () -> SubType.fromValue((String) objectMap.get(SUBTYPE_PROPERTY_KEY)));
     envelope.deviceId = (String) objectMap.get(DEVICE_ID_KEY);
     envelope.transactionId = transactionId;
     sendReflectCommand(reflection, envelope, message);
@@ -422,10 +434,15 @@ public class ReflectProcessor extends ProcessorBase {
     final String registryId = envelope.deviceRegistryId;
     final String deviceId = envelope.deviceId;
 
+    info("Processing reflector state for %s/%s", registryId, deviceId);
+
     // Ensure source is encoded in the distribution (not always send in some mechanisms).
     toolState.source = envelope.source;
 
-    ifNotNullThen(distributor, d -> catchToElse(() -> d.publish(envelope, toolState, containerId),
+    ifNotNullThen(distributor, d -> catchToElse(() -> {
+      info("Distributing tool state for %s/%s", registryId, deviceId);
+      d.publish(envelope, toolState, containerId);
+    },
         e -> error("Error handling update: %s %s", friendlyStackTrace(e), envelope.transactionId)));
     updateAwareness(envelope, toolState);
 
@@ -435,7 +452,7 @@ public class ReflectProcessor extends ProcessorBase {
     configMap.put(SubFolder.UDMI.value(), udmiConfig);
     configMap.put(TIMESTAMP_KEY, isoConvert());
     String contents = stringifyTerse(configMap);
-    debug("Setting reflector config %s %s: %s", registryId, deviceId, contents);
+    info("Setting reflector config %s %s: %s", registryId, deviceId, contents);
     iotAccess.modifyConfig(envelope, previous -> contents);
   }
 
@@ -451,8 +468,9 @@ public class ReflectProcessor extends ProcessorBase {
     message.source = reflection.source;
 
     String deviceRegistry = reflection.deviceId;
-    iotAccess.sendCommand(makeReflectEnvelope(deviceRegistry, reflection.source), SubFolder.UDMI,
-        stringify(message));
+    iotAccess.sendCommand(
+        makeReflectEnvelope(deviceRegistry, reflection.source, reflection.principal),
+        SubFolder.UDMI, stringify(message));
   }
 
   private void updateProviderAffinity(Envelope envelope, String source) {
@@ -470,8 +488,10 @@ public class ReflectProcessor extends ProcessorBase {
 
   @Override
   public void activate() {
+    info("Activating ReflectProcessor...");
     debug("Deployment configuration: " + stringifyTerse(UdmiServicePod.getDeployedConfig()));
     super.activate();
+    info("ReflectProcessor activated.");
   }
 
   void updateAwareness(Envelope envelope, UdmiState toolState) {
