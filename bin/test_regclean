@@ -212,9 +212,7 @@ echo $UDMI_ROOT/bin/registrar $site_args $device_id
 $UDMI_ROOT/bin/registrar $site_args $device_id
 
 echo Check $device_id to make sure that it works...
-echo Waiting for Mosquitto ACLs to settle...
-sleep 10
-echo bin/pubber $pubber_config
+echo $UDMI_ROOT/bin/pubber $pubber_config
 result=0
 timeout 120s $UDMI_ROOT/bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
@@ -243,9 +241,7 @@ check_csv_file $gateway_id CLEAN
 ! egrep "Updated .+ device metadata files." $registrar_log
 
 echo Check $device_id again, but this time with success...
-echo Waiting for Mosquitto ACLs to settle...
-sleep 10
-echo bin/pubber $pubber_config
+echo $UDMI_ROOT/bin/pubber $pubber_config
 result=0
 timeout 120s $UDMI_ROOT/bin/pubber $pubber_config 2> $pubber_log || result=$?
 [[ $result == 0 ]] || fail Improper pubber failure code $result
