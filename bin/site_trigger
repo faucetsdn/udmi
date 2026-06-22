@@ -67,7 +67,8 @@ site_id = os.path.basename(os.path.abspath(site_path))
 # Parse connection spec
 url = urlparse(conn_spec)
 host = url.hostname or "localhost"
-port = url.port or 1883
+is_ssl = url.scheme in ("ssl", "mqtts", "tcps", "wss")
+port = url.port or (8883 if is_ssl else 1883)
 
 # Build model update payload
 now_utc_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -114,8 +115,8 @@ if url.username:
 if url.password:
   cmd.extend(["-P", url.password])
 
-# Add CA cert if SSL is used (port 8883)
-if port == 8883:
+# Add CA cert if SSL is used
+if is_ssl:
   ca_cert = os.path.join(site_path, "reflector", "ca.crt")
   if os.path.exists(ca_cert):
     cmd.extend(["--cafile", ca_cert])
