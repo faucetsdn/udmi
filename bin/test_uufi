@@ -1,0 +1,33 @@
+#!/bin/bash -e
+# UUFI Verification Script (assumes backend is already running)
+
+UDMI_ROOT=$(dirname $0)/..
+# cd $UDMI_ROOT
+source $UDMI_ROOT/etc/shell_common.sh
+
+SITE_MODEL=${1:-sites/udmi_site_model}
+PROJECT_ID=${2:-${TARGET_PROJECT:-//mqtt/localhost}}
+DEVICE_ID=AHU-1
+
+# 1. Start DUT
+echo "Starting DUT (Pubber) for UUFI test..."
+$UDMI_ROOT/bin/start_dut $SITE_MODEL $PROJECT_ID $DEVICE_ID "uufi-serial"
+
+# Ensure cleanup on exit
+# We don't remove the device directory because it's part of the base site model
+trap "pkill -f pubber || true" EXIT
+
+# 2. Run Comprehensive Test
+echo "Starting UUFI Test Client on port ${MQTT_PORT:-8883}..."
+set +e
+$UDMI_ROOT/bin/uufi_test_client localhost ${MQTT_PORT:-8883} rocket monkey $SITE_MODEL
+TEST_EXIT=$?
+set -e
+
+if [[ $TEST_EXIT -ne 0 ]]; then
+    echo "=== DIAGNOSTIC: pubber log (out/pubber.log) ==="
+    cat out/pubber.log || echo "pubber.log not found"
+    echo "================================================"
+fi
+
+exit $TEST_EXIT

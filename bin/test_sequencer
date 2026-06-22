@@ -1,9 +1,9 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
-source etc/shell_common.sh
+source $UDMI_ROOT/etc/shell_common.sh
 
 debug_opts=-v
 seq_opts=
@@ -87,13 +87,7 @@ echo Using pubber with serial $serial_no
 
 PUBBER_LOG=out/pubber.log
 
-pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'` || true
-if [[ -n $pids ]]; then
-    echo Killing pubber pids $pids
-    kill $pids
-fi
-
-bin/clone_model # Clone, and check that version is correct.
+$UDMI_ROOT/bin/clone_model # Clone, and check that version is correct.
 
 if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
@@ -106,39 +100,12 @@ if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
     jq ".alt_registry = \"$alt_registry\"" $iot_config | sponge $iot_config
 fi
 
-bin/reset_config $site_path $project_id $device_id
-
-# Clean out the persistant data store to ensure a clean state each time.
-rm -rf $site_out/devices/${device_id}/persistent_data.json
-
-pubber/bin/build
-
-echo Writing pubber output to $PUBBER_LOG
-echo bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
-bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
-
-WAITING=30
-for i in `seq 1 $WAITING`; do
-    echo Waiting for pubber startup $((WAITING - i))...
-    sleep 1
-    if fgrep "Connection complete" $PUBBER_LOG; then
-        break
-    fi
-done
-
-if [[ $i -eq $WAITING ]]; then
-    echo Pubber log $PUBBER_LOG:
-    cat $PUBBER_LOG
-    fail Pubber startup failed.
-fi
-
-# Augment the device metadata to that tests know what to expect...
-bin/augment_metadata $site_path $device_id $pubber_opts
+$UDMI_ROOT/bin/start_dut $site_path $project_id $device_id $serial_no "$pubber_opts"
 
 # Run in debug mode for fail-fast when things go wrong!
-echo bin/sequencer $debug_opts $seq_opts -s $serial_no $site_path $project_id $device_id $targets
+echo $UDMI_ROOT/bin/sequencer $debug_opts $seq_opts -s $serial_no $site_path $project_id $device_id $targets
 seq_fail=0
-bin/sequencer $debug_opts $seq_opts -s $serial_no $site_path $project_id $device_id $targets || seq_fail=$?
+$UDMI_ROOT/bin/sequencer $debug_opts $seq_opts -s $serial_no $site_path $project_id $device_id $targets || seq_fail=$?
 echo Completed execution of sequencer test run, exit code $seq_fail
 
 echo Reported cloud version info: $(jq .cloud_version.udmi_ref $output_file)
@@ -167,7 +134,7 @@ if [[ -n $out_check && -z $targets ]]; then
         rm -rf validator/sequences
     fi
 
-    bin/test_sequcheck $suffix
+    $UDMI_ROOT/bin/test_sequcheck $suffix
 elif [[ -n ${MATRIX_SHARD_COUNT:-} ]]; then
     echo Copying results to out-seq for matrix reconciliation...
     mkdir -p $site_path/out-seq
@@ -191,7 +158,7 @@ result_count=$(cat out/expected.out | wc -l)
 target_count=$(fgrep "Running target" out/sequencer$suffix.log.save | wc -l) || true
 [[ $result_count == $target_count ]] || warn Found $result_count results for $target_count targets.
 
-GOLDEN_FILE=etc/sequencer${suffix}.out
+GOLDEN_FILE=$UDMI_ROOT/etc/sequencer${suffix}.out
 echo Checking for completed tests in $GOLDEN_FILE...
 while read result; do
     echo Checking $GOLDEN_FILE for expected result: $result

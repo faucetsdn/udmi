@@ -14,6 +14,7 @@ ADD build/udmi_bin/ udmi/bin/
 ADD bin/ bin/
 
 RUN bin/etcdctl version
+RUN find / -name "*mosquitto_dynamic_security*" || true
 
 ADD build/libs/udmis-1.0-SNAPSHOT-all.jar build/libs/udmis-1.0-SNAPSHOT-all.jar
 

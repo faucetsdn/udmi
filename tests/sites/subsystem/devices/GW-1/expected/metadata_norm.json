@@ -11,7 +11,8 @@
     "networks": {
       "bacnet_1": {
         "addr": "19233",
-        "family": "bacnet"
+        "family": "bacnet",
+        "network": "9288"
       },
       "modbus_1": {
         "addr": "COM1",

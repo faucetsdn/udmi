@@ -1,0 +1,44 @@
+#!/bin/bash -eu
+
+UDMI_ROOT=$(dirname $0)/..
+# cd $UDMI_ROOT
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+if [[ $# != 2 ]]; then
+    echo Usage: $0 site_model device_id
+    false
+fi
+
+site_path=$1
+device_id=$2
+
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+
+site_config=$site_path/cloud_iot_config.json
+registry_id=$(jq -r .registry_id $site_config)
+
+# Find the private key file
+if [[ -f $site_path/devices/$device_id/rsa_private.pkcs8 ]]; then
+    key_file=$site_path/devices/$device_id/rsa_private.pkcs8
+elif [[ -f $site_path/devices/$device_id/ec_private.pkcs8 ]]; then
+    key_file=$site_path/devices/$device_id/ec_private.pkcs8
+else
+    warn "No private key found for device $device_id, generating..."
+    mkdir -p $site_path/devices/$device_id
+    $UDMI_ROOT/bin/keygen RS256 $site_path/devices/$device_id
+    key_file=$site_path/devices/$device_id/rsa_private.pkcs8
+fi
+
+hash_pass=$(sha256sum < $key_file)
+DEV_PASS=${hash_pass:0:8}
+DEV_USER=/r/$registry_id/d/$device_id
+DEV_ID=$DEV_USER
+
+echo Configuring device $device_id as $DEV_ID with password $DEV_PASS
+
+$MOSQUITTO_CTRL deleteClient $DEV_USER || true
+$MOSQUITTO_CTRL createClient $DEV_USER -p $DEV_PASS -c $DEV_ID
+$MOSQUITTO_CTRL addClientRole $DEV_USER service
+
+echo Registered devices for $device_id

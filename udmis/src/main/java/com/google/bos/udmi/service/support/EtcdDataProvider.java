@@ -120,7 +120,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private Client initializeClient() {
     String target = variableSubstitution(config.project_id, "undefined project_id");
     try (Client tmpClient = Client.builder().target(target).build()) {
-      debug("Connecting to target %s to glean client list", target);
+      info("Connecting to etcd target %s to glean client list", target);
       List<Member> members =
           tmpClient.getClusterClient().listMember().get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS)
               .getMembers();
@@ -132,12 +132,13 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       String collected = uris.stream().map(uri -> uri.substring(EXPECTED_PREFIX.length()))
           .collect(Collectors.joining(","));
       String targets = RESULTING_PREFIX + collected;
-      debug("Gleaned client targets " + targets);
+      info("Gleaned etcd client targets %s", targets);
       Client client = Client.builder().target(targets).connectTimeout(CONNECT_TIMEOUT).build();
       updateConnectedKey(client);
       reapConnectedKeys(client);
       return client;
     } catch (Exception e) {
+      error("Failed to connect to etcd at %s: %s", target, friendlyStackTrace(e));
       throw new RuntimeException("While connecting initial client " + target, e);
     }
   }

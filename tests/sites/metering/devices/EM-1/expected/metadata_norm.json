@@ -48,7 +48,8 @@
             "ref": "100"
           }
         },
-        "units": "kwH"
+        "units": "kwH",
+        "url": "vendor://xxx/2983"
       }
     }
   },

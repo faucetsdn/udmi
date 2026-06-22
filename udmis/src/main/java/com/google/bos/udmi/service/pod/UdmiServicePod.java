@@ -25,15 +25,16 @@ import com.google.bos.udmi.service.core.ProvisioningEngine;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
+import com.google.bos.udmi.service.core.UufiProcessor;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
@@ -53,13 +54,23 @@ public class UdmiServicePod extends ContainerBase {
   public static final String DEPLOY_FILE = "var/deployed_version.json";
   public static final String UDMI_VERSION = requireNonNull(getDeployedConfig().udmi_version);
   public static final int FATAL_ERROR_CODE = -1;
-  static final File READY_INDICATOR = new File("/tmp/pod_ready.txt");
+  public static final String INSTANCE_ID = format("%08x", (long) (Math.random() * 0x100000000L));
+  static final File READY_INDICATOR = new File(
+      System.getenv("UDMI_POD_READY") != null
+          ? System.getenv("UDMI_POD_READY")
+          : "/tmp/pod_ready.txt");
   private static final Map<String, UdmiComponent> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class,
-      ProvisioningEngine.class, BitboxAdapter.class, DistributorPipe.class);
-  private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS =
-      PROCESSOR_CLASSES.stream().collect(Collectors.toMap(ContainerBase::getName, clazz -> clazz));
+      ProvisioningEngine.class, BitboxAdapter.class, DistributorPipe.class, UufiProcessor.class);
+  private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = new HashMap<>();
+
+  static {
+    PROCESSOR_CLASSES.forEach(clazz -> PROCESSORS.put(ContainerBase.getName(clazz), clazz));
+    PROCESSORS.put("uufi_out", UufiProcessor.class);
+    PROCESSORS.put("uufi_state", UufiProcessor.class);
+    PROCESSORS.put("uufi_events", UufiProcessor.class);
+  }
 
   /**
    * Core pod to instantiate all the other components as necessary based on configuration.
@@ -141,10 +152,21 @@ public class UdmiServicePod extends ContainerBase {
       UdmiServicePod udmiServicePod = new UdmiServicePod(args);
       Runtime.getRuntime().addShutdownHook(new Thread(udmiServicePod::shutdown));
       udmiServicePod.activate();
+      udmiServicePod.block();
     } catch (Exception e) {
       System.err.println("Exception activating pod: " + friendlyStackTrace(e));
       e.printStackTrace();
       System.exit(FATAL_ERROR_CODE);
+    }
+  }
+
+  private void block() {
+    try {
+      while (true) {
+        Thread.sleep(1000);
+      }
+    } catch (InterruptedException e) {
+      notice("Pod main thread interrupted");
     }
   }
 
@@ -258,12 +280,10 @@ public class UdmiServicePod extends ContainerBase {
     return podConfiguration;
   }
 
-  /**
-   * Shutdown all processors and bridges in the pod.
-   */
   @Override
   public void shutdown() {
-    notice("Starting shutdown of container components");
+    notice("Starting shutdown of container components (triggered by "
+        + Thread.currentThread().getName() + ")");
     forAllComponents(UdmiComponent::shutdown);
     notice("Finished shutdown of container components");
     super.shutdown();

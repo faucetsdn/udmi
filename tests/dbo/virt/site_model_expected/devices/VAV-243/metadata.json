@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "VAVRH 2-4-3",
+    "location": {
+      "site": "US-MTV-40"
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "023ae699-65b3-472b-8a16-7d0665db9b26",
+      "type": "HVAC/VAV_SD_DSP_HWDC",
+      "label": "RH 2-4-3"
+    }
+  },
+  "cloud": {
+    "num_id": "134561687553915"
+  },
+  "pointset": {
+    "points": {
+      "discharge_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_air_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "heating_water_valve_percentage_command": {
+        "units": "percent"
+      }
+    }
+  }
+}

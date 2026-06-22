@@ -1,0 +1,21 @@
+{
+  "floor-guid": {
+    "code": "US-MTV-BASIC-1",
+    "connections": {
+      "site-guid": "CONTAINS"
+    },
+    "type": "FACILITIES/FLOOR"
+  },
+  "room-guid": {
+    "code": "US-MTV-BASIC-1-R1",
+    "connections": {
+      "floor-guid": "CONTAINS",
+      "site-guid": "CONTAINS"
+    },
+    "type": "FACILITIES/ROOM"
+  },
+  "site-guid": {
+    "code": "US-MTV-BASIC",
+    "type": "FACILITIES/BUILDING"
+  }
+}

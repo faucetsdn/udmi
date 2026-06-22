@@ -2,23 +2,36 @@
 
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
+source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
-CERT_DIR=/etc/mosquitto/certs/
-sudo rm -f $CERT_DIR/*
+SUDO=sudo
+if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
+    SUDO=""
+fi
+
+$SUDO mkdir -p $CERT_DIR
+$SUDO rm -f $CERT_DIR/*
 
 [[ $# != 2 ]] && fail $0 site_model hostname
 
 site_model=$(realpath $1)
 target=$2
 
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
-bin/keygen CA/$target $site_model/reflector
-bin/keygen CERT/$target $site_model/reflector
+mkdir -p $site_model/reflector
+if [[ ! -f $site_model/reflector/rsa_private.pem ]]; then
+    $UDMI_ROOT/bin/keygen RS256 $site_model/reflector
+fi
+
+$UDMI_ROOT/bin/keygen CA/$target $site_model/reflector
+$UDMI_ROOT/bin/keygen CERT/$target $site_model/reflector
 
 echo Importing server certs from $site_model...
-sudo cp $site_model/reflector/ca.* $CERT_DIR/
-sudo cp $site_model/reflector/rsa_private.* $CERT_DIR/
-sudo chgrp -R mosquitto $CERT_DIR
-sudo chmod 0644 $CERT_DIR/rsa_private.*
+$SUDO cp $site_model/reflector/ca.* $CERT_DIR/
+$SUDO cp $site_model/reflector/rsa_private.* $CERT_DIR/
+if [[ -n $SUDO ]]; then
+    $SUDO chgrp -R mosquitto $CERT_DIR
+fi
+$SUDO chmod 0644 $CERT_DIR/rsa_private.*
 ls -l $CERT_DIR

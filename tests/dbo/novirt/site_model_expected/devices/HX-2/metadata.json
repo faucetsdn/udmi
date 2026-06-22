@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "HX M2",
+    "location": {
+      "site": "US-MTV-RLS1"
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "213738f3-883a-4762-a41e-2bf5cad2522d",
+      "type": "HVAC/HX_CHWDT_PRWDT_CHWDPM_PWDPM_CHWRWISOVPM",
+      "label": "Process Cooling Water PCW-30"
+    }
+  },
+  "cloud": {
+    "num_id": "93040828861837"
+  },
+  "pointset": {
+    "points": {
+      "chilled_return_water_isolation_valve_percentage_command": {
+        "units": "percent"
+      },
+      "chilled_return_water_isolation_valve_percentage_sensor": {
+        "units": "percent"
+      },
+      "chilled_return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "failed_chilled_return_water_isolation_valve_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "failed_chilled_return_water_temperature_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      }
+    }
+  }
+}

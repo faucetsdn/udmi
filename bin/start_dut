@@ -1,0 +1,59 @@
+#!/bin/bash -e
+# Start a Pubber DUT for testing
+
+UDMI_ROOT=$(dirname $0)/..
+# cd $UDMI_ROOT
+source $UDMI_ROOT/etc/shell_common.sh
+
+if [[ $# -lt 3 ]]; then
+    fail "Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO] [PUBBER_OPTS]"
+fi
+
+site_path=$1
+project_id=$2
+device_id=$3
+serial_no=${4:-dut-$RANDOM}
+pubber_opts=${5:-}
+
+PUBBER_LOG=out/pubber.log
+mkdir -p out
+
+pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'` || true
+if [[ -n $pids ]]; then
+    echo Killing existing pubber pids $pids
+    kill $pids || true
+fi
+
+$UDMI_ROOT/bin/reset_config $site_path $project_id $device_id
+
+# Clean out the persistant data store to ensure a clean state each time.
+rm -rf $site_path/out/devices/${device_id}/persistent_data.json
+
+# Delete existing certificate to force regeneration with current CA
+rm -f $site_path/devices/${device_id}/*.crt
+
+$UDMI_ROOT/pubber/bin/build
+
+echo Writing pubber output to $PUBBER_LOG
+echo $UDMI_ROOT/bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
+$UDMI_ROOT/bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
+
+WAITING=30
+for i in `seq 1 $WAITING`; do
+    echo Waiting for pubber startup $((WAITING - i))...
+    sleep 1
+    if fgrep "Connection complete" $PUBBER_LOG; then
+        break
+    fi
+done
+
+if [[ $i -eq $WAITING ]]; then
+    echo Pubber log $PUBBER_LOG:
+    cat $PUBBER_LOG
+    fail Pubber startup failed.
+fi
+
+# Augment the device metadata so that tests know what to expect...
+$UDMI_ROOT/bin/augment_metadata $site_path $device_id $pubber_opts
+
+echo "DUT $device_id (serial $serial_no) started and ready."
