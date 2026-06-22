@@ -435,6 +435,8 @@ public class Registrar {
     checkNotNull(projectId, "can't update metadata: cloud project not defined");
 
     CloudModel registeredDevice = cloudModels.get(deviceId);
+    System.err.printf("REGISTRAR_DEBUG: updateDeviceMetadata %s - registeredDevice present: %b%n",
+        deviceId, registeredDevice != null);
     if (registeredDevice == null) {
       return;
     }
@@ -443,6 +445,8 @@ public class Registrar {
       localMetadata.cloud = new CloudModel();
     }
     String registeredId = registeredDevice.num_id;
+    System.err.printf("REGISTRAR_DEBUG: Device %s - Cloud ID (registeredId): '%s', Local ID (localMetadata): '%s'%n",
+        deviceId, registeredId, localMetadata.cloud.num_id);
     if (!Common.EMPTY_RETURN_RECEIPT.equals(registeredId)
         && !registeredId.equals(localMetadata.cloud.num_id)) {
       System.err.printf("Updating device %s num_id %s -> %s%n",
@@ -666,6 +670,9 @@ public class Registrar {
       initializeLocalDevices();
       updateExplicitDevices(explicitDevices, workingDevices);
       cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new ConcurrentHashMap<>(devices));
+      System.err.printf("REGISTRAR_DEBUG: Loaded %d cloud models: %s%n",
+          cloudModels == null ? 0 : cloudModels.size(),
+          cloudModels == null ? "null" : cloudModels.keySet().toString());
       if (deleteDevices || expungeDevices) {
         deleteCloudDevices();
         return;
