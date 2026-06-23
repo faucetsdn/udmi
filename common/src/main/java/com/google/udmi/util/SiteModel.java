@@ -103,7 +103,7 @@ public class SiteModel {
   private static final Pattern MQTT_PATTERN = Pattern.compile("/r/(.*)/d/(.*)");
   private static final String CLOUD_IOT_CONFIG_JSON = "cloud_iot_config.json";
   private static final Pattern SPEC_PATTERN = Pattern.compile(
-      "(//([a-z]+)/)?(([a-z-]+))(/([a-z0-9]+))?(\\+([a-z0-9-]+))?");
+      "(//([a-z]+)/)?(([a-z0-9:-]+))(/([a-z0-9]+))?(\\+([a-z0-9-]+))?");
   private static final int SPEC_PROVIDER_GROUP = 2;
   private static final int SPEC_PROJECT_GROUP = SPEC_PROVIDER_GROUP + 2;
   private static final int SPEC_NAMESPACE_GROUP = SPEC_PROJECT_GROUP + 2;
@@ -207,7 +207,13 @@ public class SiteModel {
     EndpointConfiguration endpoint = new EndpointConfiguration();
     endpoint.client_id = getClientId(iotProject,
         executionConfig.cloud_region, getRegistryActual(executionConfig), deviceId);
-    endpoint.hostname = getEndpointHostname(executionConfig);
+    String host = getEndpointHostname(executionConfig);
+    if (host != null && host.contains(":")) {
+      int colonIndex = host.indexOf(":");
+      endpoint.port = Integer.parseInt(host.substring(colonIndex + 1));
+      host = host.substring(0, colonIndex);
+    }
+    endpoint.hostname = host;
     return endpoint;
   }
 

@@ -7,7 +7,6 @@ import static com.google.daq.mqtt.util.TimePeriodConstants.TWO_MINUTES_MS;
 import static com.google.udmi.util.CleanDateFormat.dateEquals;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.JsonUtil.isoConvert;
-import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
 import static udmi.schema.Bucket.SYSTEM;
 import static udmi.schema.Category.SYSTEM_CONFIG_APPLY;
@@ -92,7 +91,9 @@ public class ConfigSequences extends SequenceBase {
             format("apply log took until %s, expected before %s", isoConvert(logFinished),
                 isoConvert(expectedFinish))));
 
-    safeSleep(2000);
+    if (!deviceSupportsState()) {
+      sleepFor("rapid config processing delay", Duration.ofSeconds(5));
+    }
 
     deviceConfig.system.min_loglevel = Level.WARNING.value();
     updateConfig("warning loglevel");

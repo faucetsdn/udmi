@@ -1,25 +1,29 @@
 #!/bin/bash -e
 
 ROOT=$(dirname $0)/..
-cd $ROOT
+# cd $ROOT
 
 echo Stopping any running udmis process...
-bin/start_udmis stop
+$ROOT/bin/start_udmis stop
 
-echo Checking for properly configured mosquitto...
-sudo fgrep -q scrumptious /etc/mosquitto/dynamic_security.json || (echo mosquitto dynamic security not configured; false)
+source $ROOT/etc/shell_common.sh
 
-echo Checking that mqtt broker is running
-BROKER=$(sudo netstat -nlpa | fgrep :1883) || true
+if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+    echo Checking for properly configured mosquitto...
+    sudo fgrep -q scrumptious /etc/mosquitto/dynamic_security.json || (echo mosquitto dynamic security not configured; false)
 
-if [[ -n $BROKER ]]; then
-    # This is the local address of the previously configured MQTT broker
-    export MQTT_TEST_BROKER=tcp://localhost:1883
-    echo Using MQTT broker at $MQTT_TEST_BROKER
+    echo Checking that mqtt broker is running
+    BROKER=$(sudo netstat -nlpa | fgrep :1883) || true
+
+    if [[ -n $BROKER ]]; then
+        # This is the local address of the previously configured MQTT broker
+        export MQTT_TEST_BROKER=tcp://localhost:1883
+        echo Using MQTT broker at $MQTT_TEST_BROKER
+    fi
 fi
 
 # This is the local address for PubSub emulation, created by bin/start_pubsub
-source out/pubsub.env || true
-echo Using PubSub emulator at $PUBSUB_EMULATOR_HOST
+[[ ! -f out/pubsub.env ]] || source out/pubsub.env || true
+echo Using PubSub emulator at ${PUBSUB_EMULATOR_HOST:-localhost}
 
-udmis/bin/build check
+$ROOT/udmis/bin/build check
