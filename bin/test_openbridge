@@ -1,4 +1,4 @@
-#!/bin/bash -euo pipefail
+#!/bin/bash
 set -euo pipefail
 
 # Ensure the script runs from the repository root
@@ -212,6 +212,9 @@ fi
 echo "Making mosquitto files readable..."
 docker run --rm -v "$(pwd)/bridgehead/var:/var_dir" alpine chmod -R a+rX /var_dir
 
+echo "Making site model files writable..."
+docker run --rm -v "$(pwd)/sites/udmi_site_model:/site_model" alpine chmod -R a+rwX /site_model
+
 # 9. Start Pub/Sub Emulator
 echo "Starting Pub/Sub Emulator..."
 docker run -d --name pubsub-emulator -p 8085:8085 gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
@@ -265,6 +268,10 @@ curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_re
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reply"}'
 
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"projects/udmis/topics/udmi_reply"}'
+
 echo "Verifying topics in Pub/Sub Emulator..."
 curl -f -v "http://127.0.0.1:8085/v1/projects/udmis/topics"
 echo
@@ -282,24 +289,27 @@ export UDMI_NAMESPACE=""
 echo "Generating Udmis Host Pub/Sub config..."
 jq '.flows.reflect.send_id = "udmi_reply" |
     .flows.distributor.enabled = "false" |
-    .iot_access."iot-access".provider = "implicit" |
-    .iot_access."iot-access".project_id = "" |
-    .iot_access."iot-access".options = "enabled=${ETCD_CLUSTER}" |
-    .iot_access."iot-access".endpoint = {
-      "protocol": "mqtt",
-      "transport": "ssl",
-      "hostname": "localhost",
-      "port": 8883,
-      "ca_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/ca.crt",
-      "cert_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.crt",
-      "key_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.pem",
-      "auth_provider": {
-        "basic": {
-          "username": "scrumptious",
-          "password": "aardvark"
+    .iot_access.implicit = {
+      "provider": "implicit",
+      "options": "enabled=${ETCD_CLUSTER}",
+      "endpoint": {
+        "protocol": "mqtt",
+        "transport": "ssl",
+        "hostname": "localhost",
+        "port": 8883,
+        "ca_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/ca.crt",
+        "cert_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.crt",
+        "key_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.pem",
+        "auth_provider": {
+          "basic": {
+            "username": "scrumptious",
+            "password": "aardvark"
+          }
         }
       }
     } |
+    .iot_access."iot-access".provider = "dynamic" |
+    .iot_access."iot-access".project_id = "implicit, pubsub" |
     .bridges.reply_bridge = {
       "enabled": "true",
       "from": {
@@ -429,7 +439,7 @@ fi
 echo "Bridges are running."
 
 echo "Registering devices via All-Pub/Sub Pipeline..."
-bin/registrar "$SITE_MODEL" //mqtt/localhost
+bin/registrar "$SITE_MODEL" //gref/udmis
 
 # 15. Run Pubber
 echo "Starting Pubber..."
