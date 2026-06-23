@@ -1,5 +1,8 @@
 {
   "families" : {
+    "bacnet" : {
+      "addr" : "27312"
+    },
     "ether" : {
       "addr" : "42:01:ac:11:23:ac"
     },
@@ -8,9 +11,6 @@
     },
     "vendor" : {
       "addr" : "28179023"
-    },
-    "bacnet" : {
-      "addr" : "27312"
     }
   },
   "timestamp" : "TIMESTAMP",

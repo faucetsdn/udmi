@@ -3,8 +3,8 @@
   "last_config" : "TIMESTAMP",
   "logentries" : [ ],
   "metrics" : {
-    "mem_total_mb" : 112.0,
-    "mem_free_mb" : 80.04035949707031
+    "mem_free_mb" : 79.78291320800781,
+    "mem_total_mb" : 112.0
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

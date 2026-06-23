@@ -109,11 +109,9 @@ import java.io.PrintWriter;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -125,6 +123,7 @@ import java.util.SortedMap;
 import java.util.Stack;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -300,8 +299,7 @@ public class SequenceBase {
   private static File resultSummary;
   private static MessagePublisher client;
   private static SequenceBase activeInstance;
-  private static final int MESSAGE_QUEUE_SIZE = 32;
-  private static final Deque<MessageBundle> messageQueue = new ArrayDeque<>(MESSAGE_QUEUE_SIZE);
+  private static final Queue<MessageBundle> messageQueue = new ConcurrentLinkedQueue<>();
   private static final ExecutorService executorService = Executors.newFixedThreadPool(4,
       runnable -> {
         Thread thread = Executors.defaultThreadFactory().newThread(runnable);
@@ -1919,9 +1917,14 @@ public class SequenceBase {
   }
 
   private static void messageSucker(MessagePublisher reflector) {
-    while (true) {
-      MessageBundle nextMessageBundle = getNextMessageBundle(reflector);
-      ifNotNullThen(nextMessageBundle, bundle -> messageQueue.add(bundle));
+    try {
+      while (true) {
+        MessageBundle nextMessageBundle = getNextMessageBundle(reflector);
+        ifNotNullThen(nextMessageBundle, messageQueue::add);
+      }
+    } catch (Exception e) {
+      activeInstance.error("Message sucker exception: " + friendlyStackTrace(e));
+      throw e;
     }
   }
 
