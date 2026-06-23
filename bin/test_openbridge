@@ -335,7 +335,11 @@ export PUBSUB_EMULATOR_HOST=127.0.0.1:8085
 export UDMI_NAMESPACE=""
 
 echo "Generating Udmis Host Pub/Sub config..."
-jq '.flows.reflect.send_id = "udmi_reply" |
+jq --arg auth_user "$AUTH_USER" \
+   --arg auth_pass "$AUTH_PASS" \
+   --arg serv_user "$SERV_USER" \
+   --arg serv_pass "$SERV_PASS" \
+   '.flows.reflect.send_id = "udmi_reply" |
     .flows.distributor.enabled = "false" |
     .iot_access.implicit = {
       "provider": "implicit",
@@ -350,8 +354,8 @@ jq '.flows.reflect.send_id = "udmi_reply" |
         "key_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.pem",
         "auth_provider": {
           "basic": {
-            "username": "scrumptious",
-            "password": "aardvark"
+            "username": $auth_user,
+            "password": $auth_pass
           }
         }
       }
@@ -375,8 +379,8 @@ jq '.flows.reflect.send_id = "udmi_reply" |
         "key_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.pem",
         "auth_provider": {
           "basic": {
-            "username": "rocket",
-            "password": "monkey"
+            "username": $serv_user,
+            "password": $serv_pass
           }
         }
       }
