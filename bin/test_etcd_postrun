@@ -6,6 +6,17 @@ ROOT=$(dirname $0)/..
 
 source $ROOT/etc/shell_common.sh
 
+# Skip if not a mqtt run
+project_spec=${TARGET_PROJECT:-}
+if [[ -n $project_spec ]]; then
+    iot_provider=${project_spec%/*}
+    iot_provider=${iot_provider#//}
+    if [[ $iot_provider != mqtt ]]; then
+        echo "Target project provider is $iot_provider (not mqtt), skipping etcd check."
+        exit 0
+    fi
+fi
+
 # Print everything for debug
 $ROOT/udmis/bin/etcdctl get --prefix ""
 more sites/udmi_site_model/devices/AHU-1/* | cat
