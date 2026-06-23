@@ -102,8 +102,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     try {
       byte[] bytes = objectMapper.writeValueAsBytes(cmd);
       CompletableFuture<Void> future = new CompletableFuture<>();
-      return getDynSecService().enqueueCommand(new MosquittoDynamicSecurityService.CommandRequest(
-          commandName, bytes, future));
+      return getDynSecService().enqueueCommand(
+          new MosquittoDynamicSecurityService.CommandRequest(commandName, bytes, future));
     } catch (Exception e) {
       CompletableFuture<Void> future = new CompletableFuture<>();
       future.completeExceptionally(e);

@@ -390,8 +390,6 @@ public class SimpleMqttPipe extends MessageBase {
 
 
 
-  
-
   private String makeTransactionId() {
     return format("MP:%08x", (long) (Math.random() * 0x100000000L));
   }

@@ -92,34 +92,15 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     public final String commandName;
     public final byte[] serializedPayload;
     public final CompletableFuture<Void> future;
-    public final String username;
-    public final String password;
-    public final String clientId;
-    public final boolean isFallbackSupported;
-    public int retryCount = 0;
-    public Consumer<Map<String, Object>> responseConsumer = null;
 
     /**
      * Constructor.
      */
     public CommandRequest(String commandName, byte[] serializedPayload,
-        CompletableFuture<Void> future, String username, String password,
-        String clientId, boolean isFallbackSupported) {
+        CompletableFuture<Void> future) {
       this.commandName = commandName;
       this.serializedPayload = serializedPayload;
       this.future = future;
-      this.username = username;
-      this.password = password;
-      this.clientId = clientId;
-      this.isFallbackSupported = isFallbackSupported;
-    }
-
-    /**
-     * Legacy constructor for simple command requests.
-     */
-    public CommandRequest(String commandName, byte[] serializedPayload,
-        CompletableFuture<Void> future) {
-      this(commandName, serializedPayload, future, null, null, null, false);
     }
   }
 
@@ -254,7 +235,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     log.info("Enqueuing dynamic security command: {}", req.commandName);
     if (!commandQueue.offer(req)) {
       // Completing exceptionally here allows callers (like ImplicitIotAccessProvider) to
-      // handle it in whenComplete and apply backpressure via safeSleep without crashing background workers.
+      // handle it in whenComplete and apply backpressure via safeSleep without crashing
+      // background workers.
       req.future.completeExceptionally(new QueueFullException(
           "Dynamic security queue is full. Size: " + commandQueue.size()));
       return req.future;
@@ -457,45 +439,11 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         if (error == null && (status == null || status == 0)) {
           log.info("[Batch {}] Dynamic security command {} completed successfully",
               batchId, req.commandName);
-          if (req.responseConsumer != null) {
-            try {
-              req.responseConsumer.accept(resp);
-            } catch (Exception ex) {
-              log.error("[Batch {}] Error in response consumer for command {}",
-                  batchId, req.commandName, ex);
-            }
-          }
           req.future.complete(null);
         } else if (isBenignError(req.commandName, error)) {
           log.info("[Batch {}] Dynamic security command {} completed with benign broker error: {}",
               batchId, req.commandName, error);
           req.future.complete(null);
-        } else if ("createClient".equals(req.commandName)
-            && error != null
-            && error.contains("exists")
-            && req.isFallbackSupported) {
-          log.info("[Batch {}] Client already exists. Triggering modifyClient fallback for {}",
-              batchId, req.username);
-          triggerFallback(req, "modifyClient");
-        } else if ("modifyClient".equals(req.commandName)
-            && error != null
-            && error.contains("not found")
-            && req.isFallbackSupported) {
-          log.info("[Batch {}] Client not found. Triggering createClient fallback for {}",
-              batchId, req.username);
-          triggerFallback(req, "createClient");
-        } else if ("addClientRole".equals(req.commandName)
-            && error != null
-            && error.contains("Internal error")) {
-          log.info("[Batch {}] addClientRole failed with Internal error for {}. Querying current roles to verify...",
-              batchId, req.username);
-          triggerAddRoleVerification(req);
-        } else if (error != null && error.contains("Internal error")
-            && req.retryCount < MAX_RETRIES) {
-          req.retryCount++;
-          log.info("[Batch {}] Internal error from broker. Retrying command {} for {} (attempt {})",
-              batchId, req.commandName, req.username, req.retryCount);
-          enqueueCommand(req);
         } else {
           log.error("[Batch {}] Dynamic security command {} failed with broker error: {}",
               batchId, req.commandName, error);
@@ -512,121 +460,6 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     }
   }
 
-  private void triggerFallback(CommandRequest originalReq, String fallbackCommand) {
-    Map<String, Object> cmd = new HashMap<>();
-    cmd.put("command", fallbackCommand);
-    cmd.put("username", originalReq.username);
-    if (originalReq.password != null) {
-      cmd.put("password", originalReq.password);
-    }
-    if (originalReq.clientId != null) {
-      cmd.put("clientid", originalReq.clientId);
-    }
-
-    try {
-      byte[] bytes = objectMapper.writeValueAsBytes(cmd);
-      CompletableFuture<Void> fallbackFuture = new CompletableFuture<>();
-      CommandRequest fallbackReq = new CommandRequest(
-          fallbackCommand,
-          bytes,
-          fallbackFuture,
-          originalReq.username,
-          originalReq.password,
-          originalReq.clientId,
-          false
-      );
-
-      enqueueCommand(fallbackReq);
-
-      fallbackFuture.whenComplete((res, ex) -> {
-        if (ex != null) {
-          originalReq.future.completeExceptionally(ex);
-        } else {
-          originalReq.future.complete(null);
-        }
-      });
-    } catch (Exception e) {
-      originalReq.future.completeExceptionally(e);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private void triggerAddRoleVerification(CommandRequest originalReq) {
-    Map<String, Object> queryCmd = new HashMap<>();
-    queryCmd.put("command", "getClient");
-    queryCmd.put("username", originalReq.username);
-
-    try {
-      String roleName;
-      try {
-        Map<String, Object> originalCmd =
-            objectMapper.readValue(originalReq.serializedPayload, Map.class);
-        roleName = (String) originalCmd.get("rolename");
-      } catch (Exception e) {
-        originalReq.future.completeExceptionally(
-            new RuntimeException("Failed to parse original command payload to find rolename", e));
-        return;
-      }
-
-      byte[] payload = objectMapper.writeValueAsBytes(queryCmd);
-      CompletableFuture<Void> queryFuture = new CompletableFuture<>();
-      CommandRequest queryReq = new CommandRequest(
-          "getClient",
-          payload,
-          queryFuture,
-          originalReq.username,
-          null,
-          null,
-          false
-      );
-
-      queryReq.responseConsumer = resp -> {
-        try {
-          Map<String, Object> data = (Map<String, Object>) resp.get("data");
-          Map<String, Object> client =
-              data != null ? (Map<String, Object>) data.get("client") : null;
-          List<Map<String, Object>> roles =
-              client != null ? (List<Map<String, Object>>) client.get("roles") : null;
-          boolean hasRole = false;
-          if (roles != null) {
-            for (Map<String, Object> roleMap : roles) {
-              String existingRole = (String) roleMap.get("rolename");
-              if (roleName.equals(existingRole)) {
-                hasRole = true;
-                break;
-              }
-            }
-          }
-          if (hasRole) {
-            log.info("Verification succeeded: Client {} already has role {}. "
-                + "Completing addClientRole as successful.", originalReq.username, roleName);
-            originalReq.future.complete(null);
-          } else {
-            log.warn("Verification failed: Client {} does not have role {}. "
-                + "Failing addClientRole with original Internal error.",
-                originalReq.username, roleName);
-            originalReq.future.completeExceptionally(
-                new RuntimeException("Broker error: Internal error"));
-          }
-        } catch (Exception e) {
-          log.error("Failed to parse verification query response", e);
-          originalReq.future.completeExceptionally(e);
-        }
-      };
-
-      enqueueCommand(queryReq);
-
-      queryFuture.whenComplete((v, ex) -> {
-        if (ex != null) {
-          log.error("Verification query getClient failed exceptionally", ex);
-          originalReq.future.completeExceptionally(
-              new RuntimeException("Broker error: Internal error", ex));
-        }
-      });
-    } catch (Exception e) {
-      originalReq.future.completeExceptionally(e);
-    }
-  }
   private boolean isBenignError(String command, String error) {
     if (error == null) {
       return false;
