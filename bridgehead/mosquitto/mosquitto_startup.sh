@@ -22,11 +22,12 @@ registry_id=$(jq -r .registry_id $site_config)
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR
 
-if [[ -n "$HOST_IP" ]]; then
-    sed -i -e "s|IP:127.0.0.1,|IP:127.0.0.1, IP:${HOST_IP},|" bin/keygen
+if [[ ! -f $CERT_DIR/ca.crt ]]; then
+    if [[ -n "$HOST_IP" ]]; then
+        sed -i -e "s|IP:127.0.0.1,|IP:127.0.0.1, IP:${HOST_IP},|" bin/keygen
+    fi
+    bin/setup_ca $site_model mosquitto  
 fi
-
-bin/setup_ca $site_model mosquitto  
 bin/start_mosquitto
 
 $MOSQUITTO_CTRL deleteClient $SERV_USER

@@ -64,8 +64,7 @@ cleanup() {
   
   if [ "$TEST_PASSED" = false ]; then
     echo "Test failed. Saving Docker logs to out/..." >&2
-    # Make sure all files in bridgehead/var are readable before copying
-    docker run --rm -v "$(pwd)/bridgehead/var:/var_dir" alpine chmod -R a+rX /var_dir || true
+    # Files should be readable as they are in pre-created directories
     if [ -f bridgehead/var/mosquitto/log/mosquitto.log ]; then
       echo "Saving Mosquitto broker log..." >&2
       cp bridgehead/var/mosquitto/log/mosquitto.log out/mosquitto.log
@@ -95,13 +94,18 @@ cleanup() {
   docker compose -f bridgehead/docker-compose.yml --env-file bridgehead/.env down || true
 
   echo "Initializing and cleaning bridgehead/var..."
-  mkdir -p bridgehead/var
-  docker run --rm -v "$(pwd)/bridgehead/var:/var_dir" alpine sh -c "
-    find /var_dir -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} +
-    rm -rf /var_dir/tmp/* /var_dir/tmp/.* 2>/dev/null || true
-    mkdir -p /var_dir/tmp
-    chmod 777 /var_dir/tmp
-  "
+  if [ -d bridgehead/var ]; then
+    # Clean var contents except tmp on host (safe because we own the directories)
+    find bridgehead/var -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} +
+    rm -rf bridgehead/var/tmp/* bridgehead/var/tmp/.* 2>/dev/null || true
+  fi
+
+  # Pre-create directories so they are owned by the host user
+  mkdir -p bridgehead/var/mosquitto/data
+  mkdir -p bridgehead/var/mosquitto/log
+  mkdir -p bridgehead/var/mosquitto/certs
+  mkdir -p bridgehead/var/etcd
+  mkdir -p bridgehead/var/tmp
 
   if [ "$CREATED_SYMLINK" = true ]; then
     echo "Removing created symlink bridgehead/udmi_site_model..."
@@ -119,13 +123,29 @@ docker compose -f bridgehead/docker-compose.yml --env-file bridgehead/.env down 
 docker rm -f pubsub-emulator >/dev/null 2>&1 || true
 
 echo "Initializing and cleaning bridgehead/var..."
-mkdir -p bridgehead/var
-docker run --rm -v "$(pwd)/bridgehead/var:/var_dir" alpine sh -c "
-  find /var_dir -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} +
-  rm -rf /var_dir/tmp/* /var_dir/tmp/.* 2>/dev/null || true
-  mkdir -p /var_dir/tmp
-  chmod 777 /var_dir/tmp
-"
+if [ -d bridgehead/var ]; then
+  # Clean var contents except tmp on host
+  find bridgehead/var -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} +
+  rm -rf bridgehead/var/tmp/* bridgehead/var/tmp/.* 2>/dev/null || true
+fi
+
+# Pre-create directories so they are owned by the host user
+mkdir -p bridgehead/var/mosquitto/data
+mkdir -p bridgehead/var/mosquitto/log
+mkdir -p bridgehead/var/mosquitto/certs
+mkdir -p bridgehead/var/etcd
+mkdir -p bridgehead/var/tmp
+
+echo "Generating and copying Mosquitto certs on host..."
+# Generate CA and server certs in site model reflector if not present
+if [ ! -f sites/udmi_site_model/reflector/ca.crt ]; then
+  bin/keygen CA/mosquitto sites/udmi_site_model/reflector
+  bin/keygen CERT/mosquitto sites/udmi_site_model/reflector
+fi
+# Copy to mosquitto certs dir
+cp sites/udmi_site_model/reflector/ca.crt bridgehead/var/mosquitto/certs/
+cp sites/udmi_site_model/reflector/rsa_private.crt bridgehead/var/mosquitto/certs/
+cp sites/udmi_site_model/reflector/rsa_private.pem bridgehead/var/mosquitto/certs/
 
 # 4. Port Check
 echo "Checking ports..."
@@ -209,11 +229,7 @@ if [ $timeout -le 0 ]; then
   exit 1
 fi
 
-echo "Making mosquitto files readable..."
-docker run --rm -v "$(pwd)/bridgehead/var:/var_dir" alpine chmod -R a+rX /var_dir
-
-echo "Making site model files writable..."
-docker run --rm -v "$(pwd)/sites/udmi_site_model:/site_model" alpine chmod -R a+rwX /site_model
+# No chmod needed as files are pre-created on host with correct permissions
 
 # 9. Start Pub/Sub Emulator
 echo "Starting Pub/Sub Emulator..."
