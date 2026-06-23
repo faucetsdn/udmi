@@ -109,6 +109,23 @@ cmd = [
     "-m", json.dumps(payload)
 ]
 
+# Try to extract registry_id for dynamic security client ID binding
+registry_id = None
+site_config_file = os.path.join(site_path, "cloud_iot_config.json")
+if os.path.exists(site_config_file):
+  try:
+    with open(site_config_file, "r", encoding="utf-8") as f:
+      site_config = json.load(f)
+      registry_id = site_config.get("registry_id")
+  except (OSError, json.JSONDecodeError) as e:
+    print(
+        f"Warning: Could not read cloud_iot_config.json: {e}",
+        file=sys.stderr,
+    )
+
+if registry_id:
+  cmd.extend(["-i", f"{registry_id}/client"])
+
 # Add credentials if username/password are in conn_spec
 if url.username:
   cmd.extend(["-u", url.username])
