@@ -132,14 +132,14 @@ public class PubSubReflector implements MessagePublisher {
       ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(projectId,
           subscriptionId);
       this.flushSubscription = reset;
-      String emu = System.getenv("PUBSUB_EMULATOR_HOST");
+      String pubsubEmulatorHost = System.getenv("PUBSUB_EMULATOR_HOST");
       if (reset) {
-        resetSubscription(subscriptionName, emu);
+        resetSubscription(subscriptionName, pubsubEmulatorHost);
       }
       Subscriber.Builder subscriberBuilder =
           Subscriber.newBuilder(subscriptionName, new MessageProcessor());
-      if (emu != null) {
-        subscriberBuilder.setChannelProvider(getTransportChannelProvider(emu));
+      if (pubsubEmulatorHost != null) {
+        subscriberBuilder.setChannelProvider(getTransportChannelProvider(pubsubEmulatorHost));
         subscriberBuilder.setCredentialsProvider(NoCredentialsProvider.create());
       }
       subscriber = subscriberBuilder.build();
@@ -149,8 +149,8 @@ public class PubSubReflector implements MessagePublisher {
         ProjectTopicName topicName = ProjectTopicName.of(projectId, updateTopic);
         System.err.println("Sending reflector messages to " + topicName);
         Publisher.Builder publisherBuilder = Publisher.newBuilder(topicName);
-        if (emu != null) {
-          publisherBuilder.setChannelProvider(getTransportChannelProvider(emu));
+        if (pubsubEmulatorHost != null) {
+          publisherBuilder.setChannelProvider(getTransportChannelProvider(pubsubEmulatorHost));
           publisherBuilder.setCredentialsProvider(NoCredentialsProvider.create());
         }
         publisher = publisherBuilder.build();
@@ -314,11 +314,12 @@ public class PubSubReflector implements MessagePublisher {
     return subscriber.getSubscriptionNameString();
   }
 
-  private void resetSubscription(ProjectSubscriptionName subscriptionName, String emuHost) {
+  private void resetSubscription(ProjectSubscriptionName subscriptionName,
+      String pubsubEmulatorHost) {
     SubscriptionAdminSettings.Builder settingsBuilder = SubscriptionAdminSettings.newBuilder();
-    if (emuHost != null) {
-      settingsBuilder.setEndpoint(emuHost);
-      settingsBuilder.setTransportChannelProvider(getTransportChannelProvider(emuHost));
+    if (pubsubEmulatorHost != null) {
+      settingsBuilder.setEndpoint(pubsubEmulatorHost);
+      settingsBuilder.setTransportChannelProvider(getTransportChannelProvider(pubsubEmulatorHost));
       settingsBuilder.setCredentialsProvider(NoCredentialsProvider.create());
     }
     try (SubscriptionAdminClient subscriptionAdminClient =

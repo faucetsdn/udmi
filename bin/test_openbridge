@@ -59,6 +59,34 @@ kill_process() {
   fi
 }
 
+clean_var_directory() {
+  echo "Initializing and cleaning bridgehead/var..."
+  # 1. Try host-side cleanup first (works for files owned by us)
+  if [ -d bridgehead/var ]; then
+    find bridgehead/var -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} + 2>/dev/null || true
+    rm -rf bridgehead/var/tmp/* bridgehead/var/tmp/.* 2>/dev/null || true
+  fi
+
+  # 2. If there are still files left (e.g. root-owned), try using our docker image if it exists
+  if [ -d bridgehead/var ] && [ "$(ls -A bridgehead/var 2>/dev/null | grep -v '^tmp$')" ]; then
+    if docker image inspect bridgehead-mosquitto:latest &>/dev/null; then
+      echo "Using bridgehead-mosquitto image to clean root-owned files..."
+      docker run --rm --entrypoint "" -v "$(pwd)/bridgehead/var:/var_dir" bridgehead-mosquitto sh -c "
+        find /var_dir -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} +
+      " || true
+    else
+      echo "Warning: Some files in bridgehead/var could not be cleaned (permission denied) and bridgehead-mosquitto image is not built yet." >&2
+    fi
+  fi
+
+  # 3. Pre-create directories so they are owned by the host user
+  mkdir -p bridgehead/var/mosquitto/data
+  mkdir -p bridgehead/var/mosquitto/log
+  mkdir -p bridgehead/var/mosquitto/certs
+  mkdir -p bridgehead/var/etcd
+  mkdir -p bridgehead/var/tmp
+}
+
 cleanup() {
   trap - EXIT INT TERM
   
@@ -93,19 +121,7 @@ cleanup() {
   echo "Stopping compose services..."
   docker compose -f bridgehead/docker-compose.yml --env-file bridgehead/.env down || true
 
-  echo "Initializing and cleaning bridgehead/var..."
-  if [ -d bridgehead/var ]; then
-    # Clean var contents except tmp on host (safe because we own the directories)
-    find bridgehead/var -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} +
-    rm -rf bridgehead/var/tmp/* bridgehead/var/tmp/.* 2>/dev/null || true
-  fi
-
-  # Pre-create directories so they are owned by the host user
-  mkdir -p bridgehead/var/mosquitto/data
-  mkdir -p bridgehead/var/mosquitto/log
-  mkdir -p bridgehead/var/mosquitto/certs
-  mkdir -p bridgehead/var/etcd
-  mkdir -p bridgehead/var/tmp
+  clean_var_directory
 
   if [ "$CREATED_SYMLINK" = true ]; then
     echo "Removing created symlink bridgehead/udmi_site_model..."
@@ -122,19 +138,7 @@ echo "Cleaning up prior runs..."
 docker compose -f bridgehead/docker-compose.yml --env-file bridgehead/.env down || true
 docker rm -f pubsub-emulator >/dev/null 2>&1 || true
 
-echo "Initializing and cleaning bridgehead/var..."
-if [ -d bridgehead/var ]; then
-  # Clean var contents except tmp on host
-  find bridgehead/var -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} +
-  rm -rf bridgehead/var/tmp/* bridgehead/var/tmp/.* 2>/dev/null || true
-fi
-
-# Pre-create directories so they are owned by the host user
-mkdir -p bridgehead/var/mosquitto/data
-mkdir -p bridgehead/var/mosquitto/log
-mkdir -p bridgehead/var/mosquitto/certs
-mkdir -p bridgehead/var/etcd
-mkdir -p bridgehead/var/tmp
+clean_var_directory
 
 echo "Generating and copying Mosquitto certs on host..."
 # Generate CA and server certs in site model reflector if not present
