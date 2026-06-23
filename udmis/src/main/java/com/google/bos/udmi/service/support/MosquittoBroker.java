@@ -98,7 +98,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     return dynSecService;
   }
 
-  private CompletableFuture<Void> enqueueCommand(String commandName, Map<String, Object> cmd) {
+  private CompletableFuture<Void> enqueueCommandInternal(String commandName, Map<String, Object> cmd) {
     try {
       byte[] bytes = objectMapper.writeValueAsBytes(cmd);
       CompletableFuture<Void> future = new CompletableFuture<>();
@@ -109,6 +109,29 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
       future.completeExceptionally(e);
       return future;
     }
+  }
+
+  private CompletableFuture<Void> enqueueCommand(String commandName, Map<String, Object> cmd) {
+    return enqueueCommandWithRetry(commandName, cmd, 0);
+  }
+
+  private CompletableFuture<Void> enqueueCommandWithRetry(
+      String commandName, Map<String, Object> cmd, int retryCount) {
+    return enqueueCommandInternal(commandName, cmd)
+        .exceptionallyCompose(ex -> {
+          Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+          String msg = cause.getMessage();
+          if (msg != null && msg.contains("Internal error") && retryCount < 3) {
+            long delay = 500 * (long) Math.pow(2, retryCount);
+            warn("Command %s failed with Internal error, retrying in %dms (attempt %d/3)...",
+                commandName, delay, retryCount + 1);
+            return CompletableFuture.runAsync(() -> {},
+                CompletableFuture.delayedExecutor(
+                    delay, java.util.concurrent.TimeUnit.MILLISECONDS))
+                .thenCompose(v -> enqueueCommandWithRetry(commandName, cmd, retryCount + 1));
+          }
+          return CompletableFuture.failedFuture(ex);
+        });
   }
 
   private boolean isReflectRegistry(String id) {
