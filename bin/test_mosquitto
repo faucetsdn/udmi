@@ -46,7 +46,7 @@ topic=/r/mqtt/d/test
 
 
 echo Subscribing to all topics in the background...
-$MOSQUITTO_SUB $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' > out/mosquitto.sub &
+$MOSQUITTO_SUB $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' -t '/uufi/#' > out/mosquitto.sub &
 sub_pid=$!
 
 sleep 1
@@ -162,6 +162,34 @@ expected_topic=/r/$registry_id/d/$device_id/state
 [[ $received_topic != $expected_topic ]] && fail Unexpected received topic $received_topic != $expected_topic
 
 [[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
+
+echo "Testing site_trigger utility..."
+# Back up metadata.json
+cp sites/udmi_site_model/devices/AHU-1/metadata.json sites/udmi_site_model/devices/AHU-1/metadata.json.bak
+
+# Set up cleanup trap for metadata.json
+trap 'mv sites/udmi_site_model/devices/AHU-1/metadata.json.bak sites/udmi_site_model/devices/AHU-1/metadata.json 2>/dev/null || true' EXIT
+
+# Run site_trigger
+bin/site_trigger update sites/udmi_site_model AHU-1 pubber_module v2 "mqtts://kiwi:possum@localhost:8883"
+
+# Verify file was updated on disk
+updated_version=$(jq -r '.system.software.pubber_module' sites/udmi_site_model/devices/AHU-1/metadata.json)
+if [[ "$updated_version" != "v2" ]]; then
+    fail "site_trigger failed to update metadata.json on disk"
+fi
+
+# Wait for message to be received by the subscriber
+sleep 2
+
+# Verify message was published and received
+fgrep site_trigger out/mosquitto.sub || fail "did not find expected site_trigger message in out/mosquitto.sub"
+
+# Restore metadata.json and clear trap
+mv sites/udmi_site_model/devices/AHU-1/metadata.json.bak sites/udmi_site_model/devices/AHU-1/metadata.json
+trap - EXIT
+
+echo "site_trigger test successful!"
 
 echo export MQTT_TEST_BROKER=tcp://localhost:${MQTT_PORT:-8883}
 echo Done with mosquitto pubber check.

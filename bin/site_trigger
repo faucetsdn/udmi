@@ -120,6 +120,12 @@ if is_ssl:
   ca_cert = os.path.join(site_path, "reflector", "ca.crt")
   if os.path.exists(ca_cert):
     cmd.extend(["--cafile", ca_cert])
+  client_cert = os.path.join(site_path, "reflector", "rsa_private.crt")
+  if os.path.exists(client_cert):
+    cmd.extend(["--cert", client_cert])
+  client_key = os.path.join(site_path, "reflector", "rsa_private.pem")
+  if os.path.exists(client_key):
+    cmd.extend(["--key", client_key])
   cmd.extend(["--insecure"])
 
 print(f"Publishing model/cloud update to {topic}...")
