@@ -85,6 +85,16 @@ clean_var_directory() {
   mkdir -p bridgehead/var/mosquitto/certs
   mkdir -p bridgehead/var/etcd
   mkdir -p bridgehead/var/tmp
+
+  # Explicitly set permissions to ensure they remain readable/traversable by host
+  # even after container chowns them to mosquitto (1883) or root
+  chmod 755 bridgehead/var
+  chmod 755 bridgehead/var/mosquitto
+  chmod 755 bridgehead/var/mosquitto/data
+  chmod 755 bridgehead/var/mosquitto/log
+  chmod 755 bridgehead/var/mosquitto/certs
+  chmod 755 bridgehead/var/etcd
+  chmod 777 bridgehead/var/tmp
 }
 
 cleanup() {
@@ -99,7 +109,11 @@ cleanup() {
     fi
     if [ -f bridgehead/var/mosquitto/dynamic_security.json ]; then
       echo "Saving Mosquitto dynamic security config..." >&2
-      cp bridgehead/var/mosquitto/dynamic_security.json out/dynamic_security.json
+      docker run --rm --entrypoint "" \
+        -v "$(pwd)/bridgehead/var:/var_dir" \
+        -v "$(pwd)/out:/out_dir" \
+        bridgehead-mosquitto \
+        cp /var_dir/mosquitto/dynamic_security.json /out_dir/dynamic_security.json 2>/dev/null || true
     fi
     docker compose -f bridgehead/docker-compose.yml logs mosquitto > out/mosquitto_docker.log 2>&1 || true
     docker compose -f bridgehead/docker-compose.yml logs etcd > out/etcd_docker.log 2>&1 || true
@@ -233,7 +247,21 @@ if [ $timeout -le 0 ]; then
   exit 1
 fi
 
-# No chmod needed as files are pre-created on host with correct permissions
+echo "Waiting for Mosquitto log file to be readable on host..."
+timeout=30
+while [ $timeout -gt 0 ]; do
+  if [ -r "bridgehead/var/mosquitto/log/mosquitto.log" ]; then
+    echo "Mosquitto log file is readable."
+    break
+  fi
+  sleep 1
+  timeout=$((timeout - 1))
+done
+if [ $timeout -le 0 ]; then
+  echo "Error: Timeout waiting for Mosquitto log file to be readable." >&2
+  ls -la bridgehead/var/mosquitto/log/ || true
+  exit 1
+fi
 
 # 9. Start Pub/Sub Emulator
 echo "Starting Pub/Sub Emulator..."
