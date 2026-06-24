@@ -17,6 +17,7 @@ class Role(DataModel):
 @dataclass
 class Client(DataModel):
     username: Optional[str] = None
+    clientid: Optional[str] = None
     roles: Optional[List[Role]] = None
 
 

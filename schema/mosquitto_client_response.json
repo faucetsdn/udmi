@@ -26,6 +26,9 @@
             "username": {
               "type": "string"
             },
+            "clientid": {
+              "type": "string"
+            },
             "roles": {
               "type": "array",
               "items": {

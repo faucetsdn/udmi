@@ -11,9 +11,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -22,7 +20,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import org.eclipse.paho.mqttv5.client.IMqttToken;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
 import org.eclipse.paho.mqttv5.client.MqttClient;
@@ -436,7 +433,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         Integer status = (Integer) resp.get("status");
         String error = (String) resp.get("error");
 
-        udmi.schema.MosquittoClientResponse respObj = objectMapper.convertValue(resp, udmi.schema.MosquittoClientResponse.class);
+        udmi.schema.MosquittoClientResponse respObj = 
+            objectMapper.convertValue(resp, udmi.schema.MosquittoClientResponse.class);
 
         if (error == null && (status == null || status == 0)) {
           log.info("[Batch {}] Dynamic security command {} completed successfully",

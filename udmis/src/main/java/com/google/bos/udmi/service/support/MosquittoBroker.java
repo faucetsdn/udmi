@@ -12,7 +12,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
@@ -99,7 +98,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     return dynSecService;
   }
 
-  private CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommandInternal(String commandName, Map<String, Object> cmd) {
+  private CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommandInternal(
+      String commandName, Map<String, Object> cmd) {
     try {
       byte[] bytes = objectMapper.writeValueAsBytes(cmd);
       CompletableFuture<udmi.schema.MosquittoClientResponse> future = new CompletableFuture<>();
@@ -139,7 +139,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     return id != null && id.contains("/" + reflectRegistry + "/");
   }
 
-  private CompletableFuture<Void> deprovisionClient(String clientId, String clientUser, String roleName) {
+  private CompletableFuture<Void> deprovisionClient(
+      String clientId, String clientUser, String roleName) {
     CompletableFuture<Void> f1 = deleteClient(clientUser);
     CompletableFuture<Void> f2 = deleteRole(roleName);
     return CompletableFuture.allOf(f1, f2)
@@ -270,7 +271,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private CompletableFuture<Void> ensureClientHasRole(String clientUser, String roleName) {
     return getClient(clientUser).thenCompose(resp -> {
       boolean hasRole = false;
-      if (resp != null && resp.data != null && resp.data.client != null && resp.data.client.roles != null) {
+      if (resp != null && resp.data != null && resp.data.client != null 
+          && resp.data.client.roles != null) {
         hasRole = resp.data.client.roles.stream().anyMatch(r -> roleName.equals(r.rolename));
       }
       if (hasRole) {

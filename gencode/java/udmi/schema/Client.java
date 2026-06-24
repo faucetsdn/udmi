@@ -11,6 +11,8 @@ public class Client {
 
     @JsonProperty("username")
     public String username;
+    @JsonProperty("clientid")
+    public String clientid;
     @JsonProperty("roles")
     public List<Role> roles;
 
@@ -18,6 +20,7 @@ public class Client {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.username == null)? 0 :this.username.hashCode()));
+        result = ((result* 31)+((this.clientid == null)? 0 :this.clientid.hashCode()));
         result = ((result* 31)+((this.roles == null)? 0 :this.roles.hashCode()));
         return result;
     }
@@ -31,7 +34,7 @@ public class Client {
             return false;
         }
         Client rhs = ((Client) other);
-        return (((this.username == rhs.username)||((this.username!= null)&&this.username.equals(rhs.username)))&&((this.roles == rhs.roles)||((this.roles!= null)&&this.roles.equals(rhs.roles))));
+        return ((((this.username == rhs.username)||((this.username!= null)&&this.username.equals(rhs.username)))&&((this.clientid == rhs.clientid)||((this.clientid!= null)&&this.clientid.equals(rhs.clientid))))&&((this.roles == rhs.roles)||((this.roles!= null)&&this.roles.equals(rhs.roles))));
     }
 
 }
