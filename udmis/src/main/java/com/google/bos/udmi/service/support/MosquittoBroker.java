@@ -143,9 +143,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     String roleName = "role_" + clientId.replace("/", "_");
 
     if ("--".equals(clientPass)) {
-      CompletableFuture<Void> f1 = deleteClient(clientUser);
-      CompletableFuture<Void> f2 = deleteRole(roleName);
-      return CompletableFuture.allOf(f1, f2)
+      return deleteClient(clientUser)
+          .thenCompose(v -> deleteRole(roleName))
           .thenRun(() -> info("Device %s deleted correctly.", clientId));
     } else {
       CompletableFuture<Void> clientFuture =
@@ -154,24 +153,15 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
       return CompletableFuture.allOf(clientFuture, roleFuture)
           .thenCompose(v -> addClientRole(clientUser, roleName))
-          .thenCompose(v -> {
-            CompletableFuture<Void> a1 =
-                addRoleAcl(roleName, "subscribePattern", clientId + "/config", true);
-            CompletableFuture<Void> a2 =
-                addRoleAcl(roleName, "subscribePattern", clientId + "/commands/#", true);
-            CompletableFuture<Void> a3 =
-                addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true);
-            CompletableFuture<Void> a4 =
-                addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true);
-            CompletableFuture<Void> a5 =
-                addRoleAcl(roleName, "publishClientSend", clientId + "/state", true);
-            if (isReflectRegistry(clientId)) {
-              CompletableFuture<Void> a6 =
-                  addRoleAcl(roleName, "publishClientSend", clientId + "/reflect", true);
-              return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6);
-            }
-            return CompletableFuture.allOf(a1, a2, a3, a4, a5);
-          }).thenRun(() -> info("Device %s registered correctly.", clientId));
+          .thenCompose(v -> addRoleAcl(roleName, "subscribePattern", clientId + "/config", true))
+          .thenCompose(v -> addRoleAcl(roleName, "subscribePattern", clientId + "/commands/#", true))
+          .thenCompose(v -> addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true))
+          .thenCompose(v -> addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true))
+          .thenCompose(v -> addRoleAcl(roleName, "publishClientSend", clientId + "/state", true))
+          .thenCompose(v -> isReflectRegistry(clientId) ? 
+              addRoleAcl(roleName, "publishClientSend", clientId + "/reflect", true) : 
+              CompletableFuture.completedFuture(null))
+          .thenRun(() -> info("Device %s registered correctly.", clientId));
     }
   }
 
@@ -352,26 +342,15 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   public CompletableFuture<Void> bindGateway(String gatewayId, String deviceId) {
     String roleName = "role_" + gatewayId.replace("/", "_");
 
-    CompletableFuture<Void> a1 =
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/config", true);
-    CompletableFuture<Void> a2 =
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#", true);
-    CompletableFuture<Void> a3 =
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", true);
-    CompletableFuture<Void> a4 =
-        addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", true);
-    CompletableFuture<Void> a5 =
-        addRoleAcl(roleName, "publishClientSend", deviceId + "/state", true);
-    CompletableFuture<Void> a6 =
-        addRoleAcl(roleName, "publishClientSend", deviceId + "/attach", true);
-
-    if (isReflectRegistry(deviceId)) {
-      CompletableFuture<Void> a7 =
-          addRoleAcl(roleName, "publishClientSend", deviceId + "/reflect", true);
-      return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6, a7);
-    }
-
-    return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6);
+    return addRoleAcl(roleName, "subscribePattern", deviceId + "/config", true)
+        .thenCompose(v -> addRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#", true))
+        .thenCompose(v -> addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", true))
+        .thenCompose(v -> addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", true))
+        .thenCompose(v -> addRoleAcl(roleName, "publishClientSend", deviceId + "/state", true))
+        .thenCompose(v -> addRoleAcl(roleName, "publishClientSend", deviceId + "/attach", true))
+        .thenCompose(v -> isReflectRegistry(deviceId) ? 
+            addRoleAcl(roleName, "publishClientSend", deviceId + "/reflect", true) : 
+            CompletableFuture.completedFuture(null));
   }
 
   @Override
@@ -379,26 +358,15 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     info("Unbind device Id: %s from gateway Id: %s", deviceId, gatewayId);
     String roleName = "role_" + gatewayId.replace("/", "_");
 
-    CompletableFuture<Void> a1 =
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/config");
-    CompletableFuture<Void> a2 =
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#");
-    CompletableFuture<Void> a3 =
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors");
-    CompletableFuture<Void> a4 =
-        removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#");
-    CompletableFuture<Void> a5 =
-        removeRoleAcl(roleName, "publishClientSend", deviceId + "/state");
-    CompletableFuture<Void> a6 =
-        removeRoleAcl(roleName, "publishClientSend", deviceId + "/attach");
-
-    if (isReflectRegistry(deviceId)) {
-      CompletableFuture<Void> a7 =
-          removeRoleAcl(roleName, "publishClientSend", deviceId + "/reflect");
-      return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6, a7);
-    }
-
-    return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6);
+    return removeRoleAcl(roleName, "subscribePattern", deviceId + "/config")
+        .thenCompose(v -> removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#"))
+        .thenCompose(v -> removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors"))
+        .thenCompose(v -> removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#"))
+        .thenCompose(v -> removeRoleAcl(roleName, "publishClientSend", deviceId + "/state"))
+        .thenCompose(v -> removeRoleAcl(roleName, "publishClientSend", deviceId + "/attach"))
+        .thenCompose(v -> isReflectRegistry(deviceId) ? 
+            removeRoleAcl(roleName, "publishClientSend", deviceId + "/reflect") : 
+            CompletableFuture.completedFuture(null));
   }
 
   private CompletableFuture<Void> removeRoleAcl(String roleName, String type, String pattern) {
