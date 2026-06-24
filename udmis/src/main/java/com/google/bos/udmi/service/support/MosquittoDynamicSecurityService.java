@@ -6,6 +6,7 @@ import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.udmi.util.CertManager;
+import com.google.udmi.util.JsonUtil;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -60,7 +61,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private final MqttClient mqttClient;
   private final ExecutorService executor;
   private final ScheduledExecutorService scheduler;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonUtil.OBJECT_MAPPER;
 
   private final int batchSizeLimit;
   private final long batchBytesLimit;

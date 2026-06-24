@@ -8,6 +8,7 @@ import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.udmi.util.JsonUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.util.Date;
@@ -40,7 +41,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private Process tailProcess;
 
   private MosquittoDynamicSecurityService dynSecService;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonUtil.OBJECT_MAPPER;
 
   /**
    * Create a new broker connection provider.
