@@ -121,9 +121,9 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
         .exceptionallyCompose(ex -> {
           Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
           String msg = cause.getMessage();
-          if (msg != null && msg.contains("Internal error") && retryCount < 3) {
-            long delay = 500 * (long) Math.pow(2, retryCount);
-            warn("Command %s failed with Internal error, retrying in %dms (attempt %d/3)...",
+          if (msg != null && msg.contains("Internal error") && retryCount < 20) {
+            long delay = 250;
+            warn("Command %s failed with Internal error, retrying in %dms (attempt %d/20)...",
                 commandName, delay, retryCount + 1);
             return CompletableFuture.runAsync(() -> {},
                 CompletableFuture.delayedExecutor(
@@ -152,25 +152,26 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
           createClientWithFallback(clientUser, clientPass, clientId);
       CompletableFuture<Void> roleFuture = createRole(roleName);
 
-      return CompletableFuture.allOf(clientFuture, roleFuture).thenCompose(v -> {
-        CompletableFuture<Void> r1 = addClientRole(clientUser, roleName);
-        CompletableFuture<Void> a1 =
-            addRoleAcl(roleName, "subscribePattern", clientId + "/config", true);
-        CompletableFuture<Void> a2 =
-            addRoleAcl(roleName, "subscribePattern", clientId + "/commands/#", true);
-        CompletableFuture<Void> a3 =
-            addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true);
-        CompletableFuture<Void> a4 =
-            addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true);
-        CompletableFuture<Void> a5 =
-            addRoleAcl(roleName, "publishClientSend", clientId + "/state", true);
-        if (isReflectRegistry(clientId)) {
-          CompletableFuture<Void> a6 =
-              addRoleAcl(roleName, "publishClientSend", clientId + "/reflect", true);
-          return CompletableFuture.allOf(r1, a1, a2, a3, a4, a5, a6);
-        }
-        return CompletableFuture.allOf(r1, a1, a2, a3, a4, a5);
-      }).thenRun(() -> info("Device %s registered correctly.", clientId));
+      return CompletableFuture.allOf(clientFuture, roleFuture)
+          .thenCompose(v -> addClientRole(clientUser, roleName))
+          .thenCompose(v -> {
+            CompletableFuture<Void> a1 =
+                addRoleAcl(roleName, "subscribePattern", clientId + "/config", true);
+            CompletableFuture<Void> a2 =
+                addRoleAcl(roleName, "subscribePattern", clientId + "/commands/#", true);
+            CompletableFuture<Void> a3 =
+                addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true);
+            CompletableFuture<Void> a4 =
+                addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true);
+            CompletableFuture<Void> a5 =
+                addRoleAcl(roleName, "publishClientSend", clientId + "/state", true);
+            if (isReflectRegistry(clientId)) {
+              CompletableFuture<Void> a6 =
+                  addRoleAcl(roleName, "publishClientSend", clientId + "/reflect", true);
+              return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6);
+            }
+            return CompletableFuture.allOf(a1, a2, a3, a4, a5);
+          }).thenRun(() -> info("Device %s registered correctly.", clientId));
     }
   }
 
