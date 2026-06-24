@@ -271,7 +271,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private CompletableFuture<Void> ensureClientHasRole(String clientUser, String roleName) {
     return getClient(clientUser).thenCompose(resp -> {
       boolean hasRole = false;
-      if (resp != null && resp.data != null && resp.data.client != null 
+      if (resp != null && resp.data != null && resp.data.client != null
           && resp.data.client.roles != null) {
         hasRole = resp.data.client.roles.stream().anyMatch(r -> roleName.equals(r.rolename));
       }

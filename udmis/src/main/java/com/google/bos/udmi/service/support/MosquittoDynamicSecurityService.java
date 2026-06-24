@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -433,7 +434,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         Integer status = (Integer) resp.get("status");
         String error = (String) resp.get("error");
 
-        udmi.schema.MosquittoClientResponse respObj = 
+        udmi.schema.MosquittoClientResponse respObj =
             objectMapper.convertValue(resp, udmi.schema.MosquittoClientResponse.class);
 
         if (error == null && (status == null || status == 0)) {

@@ -156,7 +156,7 @@ class MosquittoDynamicSecurityServiceTest {
     // Simulate broker response
     String responseJson = "{\"responses\":[{\"status\":0},{\"status\":0}]}";
     MqttMessage responseMsg = new MqttMessage(responseJson.getBytes(StandardCharsets.UTF_8));
-    
+
     // Call messageArrived (simulated callback from MQTT client)
     service.messageArrived("$CONTROL/dynamic-security/v1/response", responseMsg);
 
@@ -237,11 +237,13 @@ class MosquittoDynamicSecurityServiceTest {
 
   @Test
   void testShutdownClearsPendingAndInFlightFutures() throws Exception {
-    CompletableFuture<udmi.schema.MosquittoClientResponse> inFlightFuture = new CompletableFuture<>();
+    CompletableFuture<udmi.schema.MosquittoClientResponse> inFlightFuture =
+        new CompletableFuture<>();
     CommandRequest req1 = new CommandRequest(
         "createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), inFlightFuture);
 
-    CompletableFuture<udmi.schema.MosquittoClientResponse> pendingFuture = new CompletableFuture<>();
+    CompletableFuture<udmi.schema.MosquittoClientResponse> pendingFuture =
+        new CompletableFuture<>();
     CommandRequest req2 = new CommandRequest(
         "createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), pendingFuture);
 
