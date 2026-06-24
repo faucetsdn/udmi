@@ -123,11 +123,11 @@ class MosquittoDynamicSecurityServiceTest {
 
   @Test
   void testEnqueueAndSuccessfulResponse() throws Exception {
-    CompletableFuture<Void> future1 = new CompletableFuture<>();
+    CompletableFuture<udmi.schema.MosquittoClientResponse> future1 = new CompletableFuture<>();
     CommandRequest req1 = new CommandRequest(
         "createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), future1);
 
-    CompletableFuture<Void> future2 = new CompletableFuture<>();
+    CompletableFuture<udmi.schema.MosquittoClientResponse> future2 = new CompletableFuture<>();
     CommandRequest req2 = new CommandRequest(
         "createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), future2);
 
@@ -172,7 +172,7 @@ class MosquittoDynamicSecurityServiceTest {
 
   @Test
   void testBatchTimeoutAndRecovery() throws Exception {
-    CompletableFuture<Void> future1 = new CompletableFuture<>();
+    CompletableFuture<udmi.schema.MosquittoClientResponse> future1 = new CompletableFuture<>();
     CommandRequest req1 = new CommandRequest(
         "createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), future1);
 
@@ -199,7 +199,7 @@ class MosquittoDynamicSecurityServiceTest {
     }
 
     // Verify queue is recovered and we can publish again
-    CompletableFuture<Void> future2 = new CompletableFuture<>();
+    CompletableFuture<udmi.schema.MosquittoClientResponse> future2 = new CompletableFuture<>();
     CommandRequest req2 = new CommandRequest(
         "createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), future2);
     service.enqueueCommand(req2);
@@ -211,13 +211,13 @@ class MosquittoDynamicSecurityServiceTest {
   @Test
   void testQueueFullException() {
     // Enqueue until the queue is full and we get an exceptionally completed future
-    CompletableFuture<Void> lastFuture = null;
+    CompletableFuture<udmi.schema.MosquittoClientResponse> lastFuture = null;
     int count = 0;
     // Safety limit of 100,000 to prevent infinite loops in case of queue sizing issues
     while (count < 100000) {
-      CompletableFuture<Void> f = new CompletableFuture<>();
+      CompletableFuture<udmi.schema.MosquittoClientResponse> f = new CompletableFuture<>();
       CommandRequest req = new CommandRequest("test", new byte[0], f);
-      CompletableFuture<Void> res = service.enqueueCommand(req);
+      CompletableFuture<udmi.schema.MosquittoClientResponse> res = service.enqueueCommand(req);
       if (res.isCompletedExceptionally()) {
         lastFuture = res;
         break;
@@ -237,11 +237,11 @@ class MosquittoDynamicSecurityServiceTest {
 
   @Test
   void testShutdownClearsPendingAndInFlightFutures() throws Exception {
-    CompletableFuture<Void> inFlightFuture = new CompletableFuture<>();
+    CompletableFuture<udmi.schema.MosquittoClientResponse> inFlightFuture = new CompletableFuture<>();
     CommandRequest req1 = new CommandRequest(
         "createClient", "{\"cmd\":\"1\"}".getBytes(StandardCharsets.UTF_8), inFlightFuture);
 
-    CompletableFuture<Void> pendingFuture = new CompletableFuture<>();
+    CompletableFuture<udmi.schema.MosquittoClientResponse> pendingFuture = new CompletableFuture<>();
     CommandRequest req2 = new CommandRequest(
         "createRole", "{\"cmd\":\"2\"}".getBytes(StandardCharsets.UTF_8), pendingFuture);
 

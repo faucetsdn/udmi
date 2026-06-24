@@ -91,13 +91,13 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
     public final String commandName;
     public final byte[] serializedPayload;
-    public final CompletableFuture<Void> future;
+    public final CompletableFuture<udmi.schema.MosquittoClientResponse> future;
 
     /**
      * Constructor.
      */
     public CommandRequest(String commandName, byte[] serializedPayload,
-        CompletableFuture<Void> future) {
+        CompletableFuture<udmi.schema.MosquittoClientResponse> future) {
       this.commandName = commandName;
       this.serializedPayload = serializedPayload;
       this.future = future;
@@ -231,7 +231,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   /**
    * Enqueues a command request to the service non-blockingly.
    */
-  public CompletableFuture<Void> enqueueCommand(CommandRequest req) {
+  public CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommand(CommandRequest req) {
     log.info("Enqueuing dynamic security command: {}", req.commandName);
     if (!commandQueue.offer(req)) {
       // Completing exceptionally here allows callers (like ImplicitIotAccessProvider) to
@@ -436,14 +436,16 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
         Integer status = (Integer) resp.get("status");
         String error = (String) resp.get("error");
 
+        udmi.schema.MosquittoClientResponse respObj = objectMapper.convertValue(resp, udmi.schema.MosquittoClientResponse.class);
+
         if (error == null && (status == null || status == 0)) {
           log.info("[Batch {}] Dynamic security command {} completed successfully",
               batchId, req.commandName);
-          req.future.complete(null);
+          req.future.complete(respObj);
         } else if (isBenignError(req.commandName, error)) {
           log.info("[Batch {}] Dynamic security command {} completed with benign broker error: {}",
               batchId, req.commandName, error);
-          req.future.complete(null);
+          req.future.complete(respObj);
         } else {
           log.error("[Batch {}] Dynamic security command {} failed with broker error: {}",
               batchId, req.commandName, error);
