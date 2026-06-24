@@ -18,6 +18,9 @@ import re
 import concurrent.futures
 from typing import Iterable
 
+DEVICE_BACNET_ID = 4194300
+DEVICE_OBJECT_NAME = "DiscoveryNode"
+
 BAC0.log_level("silence")
 for name in logging.getLogger().manager.loggerDict:
   if name.startswith("BAC0"):
@@ -76,7 +79,12 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.result_producer_thread = None
     self.resolver_dispatcher_thread = None
    
-    self.bacnet = BAC0.lite(ip=bacnet_ip, port=bacnet_port)
+    self.bacnet = BAC0.lite(
+        ip=bacnet_ip,
+        port=bacnet_port,
+        boid=DEVICE_BACNET_ID,
+        localObjName=DEVICE_OBJECT_NAME
+    )
     
     super().__init__(state, publisher)
 
