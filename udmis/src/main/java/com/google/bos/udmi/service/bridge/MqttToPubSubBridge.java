@@ -1,7 +1,5 @@
 package com.google.bos.udmi.service.bridge;
 
-import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
-
 import com.google.api.core.ApiFuture;
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.GrpcTransportChannel;
@@ -31,11 +29,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.net.ssl.KeyManagerFactory;
@@ -212,7 +208,8 @@ public final class MqttToPubSubBridge {
       startCircuitBreaker(mqttClient, executor);
 
       // Set up MQTT Message Callback
-      setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute, sharedSubscription);
+      setupBridge(mqttClient, publisher, mqttSubscriptionTopic,
+          etcdProvider, sourceAttribute, sharedSubscription);
 
       // Keep the application running
       while (true) {
@@ -317,14 +314,19 @@ public final class MqttToPubSubBridge {
     setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute, null);
   }
 
+  /**
+   * Sets up the bridge between MQTT and Pub/Sub with a custom source attribute value.
+   */
   public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
       String sharedSubscription)
       throws MqttException {
-    
+
     final String actualSubscriptionTopic;
-    if (sharedSubscription != null && !sharedSubscription.isEmpty() && !mqttSubscriptionTopic.startsWith("$share/")) {
-      actualSubscriptionTopic = String.format("$share/%s/%s", sharedSubscription, mqttSubscriptionTopic);
+    if (sharedSubscription != null && !sharedSubscription.isEmpty()
+        && !mqttSubscriptionTopic.startsWith("$share/")) {
+      actualSubscriptionTopic = String.format("$share/%s/%s", sharedSubscription,
+          mqttSubscriptionTopic);
     } else {
       actualSubscriptionTopic = mqttSubscriptionTopic;
     }
@@ -365,8 +367,8 @@ public final class MqttToPubSubBridge {
               executor.submit(() -> {
                 try {
                   byte[] payload = message.getPayload();
-                  logger.debug(
-                      "MQTT Message Received - Topic: {}, Payload Length: {}", topic, payload.length);
+                  logger.debug("MQTT Message Received - Topic: {}, Payload Length: {}",
+                      topic, payload.length);
 
                   String parsedTopic = topic;
                   // Automatically strip the shared subscription prefix if present
@@ -430,8 +432,8 @@ public final class MqttToPubSubBridge {
                       break; // success
                     } catch (Exception e) {
                       // Note: Poison pills (e.g., consistently failing serialization) could
-                      // permanently block this thread since we retry indefinitely, but
-                      // schema validation happens earlier in the pipeline so it is not a concern here.
+                      // permanently block this thread since we retry indefinitely,
+                      // but schema validation happens earlier in the pipeline.
                       logger.warn("Error publishing to Pub/Sub, retrying in {} ms", backoff, e);
                       try {
                         Thread.sleep(backoff);
@@ -448,7 +450,7 @@ public final class MqttToPubSubBridge {
                 }
               });
             } catch (RejectedExecutionException e) {
-              logger.error("Execution rejected, queue is full! Dropping MQTT connection to mitigate stall.", e);
+              logger.error("Execution rejected, queue full! Dropping MQTT connection.", e);
               try {
                 mqttClient.disconnectForcibly();
               } catch (MqttException me) {
@@ -612,8 +614,9 @@ public final class MqttToPubSubBridge {
       }
       return numId;
     } catch (Exception e) {
-      // The logic for etcd to return a device ID is CLEAN for a NULL/No Value - this is not an error case!!!
-      logger.debug("No numId value or error reading from etcd for device {}/{}", registryId, deviceId);
+      // etcd returning a device ID is CLEAN for a NULL/No Value - not an error case
+      logger.debug("No numId value or error reading from etcd for device {}/{}",
+          registryId, deviceId);
       return null;
     }
   }

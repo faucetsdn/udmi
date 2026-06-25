@@ -329,7 +329,8 @@ class MqttToPubSubBridgeTest {
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
 
     // Call setupBridge with shared subscription
-    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, originalTopic, null, "bridge", sharedSubscriptionName);
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, originalTopic, null,
+        "bridge", sharedSubscriptionName);
 
     // Verify it subscribed to the shared subscription filter
     verify(mockMqttClient).subscribe(expectedFilter, 1);
