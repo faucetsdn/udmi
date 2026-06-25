@@ -167,7 +167,8 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       } catch (Exception e) {
         publisherQueueSize.decrementAndGet();
         throttleQueue();
-        throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
+        throw new RuntimeException(
+            "While publishing bundle to " + publisher.getTopicNameString(), e);
       }
 
       ApiFutures.addCallback(publish, new ApiFutureCallback<String>() {
@@ -208,9 +209,9 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
           && e.getMessage() != null
           && e.getMessage().contains("While publishing bundle");
       if (!alreadyHandled) {
-         // Only throttle/decrement if the exception happened BEFORE publisher.publish()
-         publisherQueueSize.decrementAndGet();
-         throttleQueue();
+        // Only throttle/decrement if the exception happened BEFORE publisher.publish()
+        publisherQueueSize.decrementAndGet();
+        throttleQueue();
       }
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     }
