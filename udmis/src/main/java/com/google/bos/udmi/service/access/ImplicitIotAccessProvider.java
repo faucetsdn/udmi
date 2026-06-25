@@ -12,7 +12,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.GeneralUtils.requireNull;
-import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -26,7 +25,6 @@ import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
-import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
@@ -79,10 +77,13 @@ import udmi.schema.IotAccess.IotProvider;
  *
  * <p>Supported options:
  * <ul>
- * <li><code>use_password</code>: Sets the password for all devices to the specified value.
- * This is used when authentication is handled by an external proxy, and Mosquitto
+ * <li><code>use_password</code>: Sets the password for all devices to the
+ * specified value.
+ * This is used when authentication is handled by an external proxy, and
+ * Mosquitto
  * still needs to enforce ACLs based on username.</li>
- * <li><code>disable_logging</code>: If set to true, disables tailing the mosquitto log file.</li>
+ * <li><code>disable_logging</code>: If set to true, disables tailing the
+ * mosquitto log file.</li>
  * </ul>
  */
 public class ImplicitIotAccessProvider extends IotAccessBase {
@@ -121,7 +122,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private final ConnectionBroker broker;
   private final Future<Void> connLogger;
   private IotDataProvider database;
-  private ReflectProcessor reflect;
+
   private final Map<String, Integer> configPublished = new ConcurrentHashMap<>();
   private final String brokerHost;
   private final String brokerPort;
@@ -145,10 +146,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       endpointConfig = deepCopy(iotAccess.endpoint);
       brokerUser = endpointConfig.auth_provider != null
           && endpointConfig.auth_provider.basic != null
-          ? endpointConfig.auth_provider.basic.username : null;
+              ? endpointConfig.auth_provider.basic.username
+              : null;
       brokerPass = endpointConfig.auth_provider != null
           && endpointConfig.auth_provider.basic != null
-          ? endpointConfig.auth_provider.basic.password : null;
+              ? endpointConfig.auth_provider.basic.password
+              : null;
       brokerHost = ofNullable(endpointConfig.hostname).orElse("localhost");
       brokerPort = ofNullable(endpointConfig.port).map(Object::toString).orElse("8883");
     } else {
@@ -178,7 +181,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   /**
-   * Create pseudo device numerical id that can be used for operation verification.
+   * Create pseudo device numerical id that can be used for operation
+   * verification.
    */
   public static String hashedDeviceId(String registryId, String deviceId) {
     return String.valueOf(Math.abs(Objects.hash(registryId, deviceId)));
@@ -285,33 +289,81 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void deleteDevice(String registryId, String deviceId, CloudModel cloudModel) {
+    info("Deleting device %s/%s", registryId, deviceId);
     DataRef properties = registryDeviceRef(registryId, deviceId);
+
+    // If this device is a gateway, unbind all its bound devices first!
+    if (GATEWAY.toString().equals(properties.get(RESOURCE_TYPE_PROPERTY))) {
+      unbindGatewayDevices(registryId, deviceId);
+    }
+
     String gatewayId = properties.get(BOUND_TO_KEY);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
     CompletableFuture<Void> f1 = null;
     if (gatewayId == null) {
+      info("Revoking broker credentials/authorization for device %s/%s", registryId, deviceId);
       f1 = withQueueRetry(() -> broker.authorize(clientId(registryId, deviceId), null));
     }
 
     CompletableFuture<Void> f2 = null;
     if (gatewayId != null) {
+      info("Unbinding device %s/%s from gateway %s in database and broker",
+          registryId, deviceId, gatewayId);
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
       f2 = withQueueRetry(() -> broker.unbindGateway(clientId(registryId, gatewayId),
           clientId(registryId, deviceId)));
     }
     if (f1 != null) {
+      info("Waiting for broker credential revocation to complete for %s/%s...",
+          registryId, deviceId);
       f1.join();
+      info("Successfully revoked broker credentials/authorization for device %s/%s",
+          registryId, deviceId);
     }
     if (f2 != null) {
+      info("Waiting for broker unbind to complete for %s/%s...", registryId, deviceId);
       f2.join();
+      info("Successfully unbound device %s/%s from gateway %s in broker",
+          registryId, deviceId, gatewayId);
+    }
+  }
+
+  private void unbindGatewayDevices(String registryId, String gatewayId) {
+    try {
+      Map<String, CloudModel> boundDevices = listBoundDevices(registryId, gatewayId);
+      info("Unbinding %d devices from gateway %s on gateway deletion",
+          boundDevices.size(), gatewayId);
+      List<CompletableFuture<Void>> futures = new ArrayList<>();
+      boundDevices.keySet().forEach(deviceId -> {
+        // Clear database entries for the bound device
+        registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
+        registryDeviceRef(registryId, deviceId).delete(BIND_STATUS_KEY);
+        gatewayBoundRef(registryId, gatewayId).delete(deviceId);
+
+        // Unbind in the broker
+        info("Queueing unbind of device %s from gateway %s in broker...", deviceId, gatewayId);
+        futures.add(withQueueRetry(() -> broker.unbindGateway(
+            clientId(registryId, gatewayId),
+            clientId(registryId, deviceId))));
+      });
+      if (!futures.isEmpty()) {
+        info("Waiting for %d unbind operations to complete for gateway %s...",
+            futures.size(), gatewayId);
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        info("Successfully unbound all %d devices from gateway %s on deletion",
+            futures.size(), gatewayId);
+      }
+    } catch (Exception e) {
+      error("Error unbinding devices from gateway %s on deletion: %s",
+          gatewayId, friendlyStackTrace(e));
     }
   }
 
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
       String deleteId) {
-    String numId =
-        deleteId != null ? deleteId : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+    String numId = deleteId != null ? deleteId
+        : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
     CloudModel reply = new CloudModel();
     reply.operation = requireNonNull(request.operation, "missing operation");
     reply.num_id = requireNonNull(numId, "missing num_id");
@@ -473,7 +525,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public void activate() {
     database = UdmiServicePod.getComponent(IMPLICIT_DATABASE_COMPONENT);
-    reflect = UdmiServicePod.getComponent(ReflectProcessor.class);
     super.activate();
     if (isPublishEnabled()) {
       connectMqttClient();
@@ -483,7 +534,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private void connectMqttClient() {
     info("Initializing SimpleMqttPipe for ImplicitIotAccessProvider");
     try {
-
 
       if (endpointConfig.send_id == null) {
         endpointConfig.send_id = "implicit";
@@ -640,9 +690,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     ModelOperation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
     checkState(type == DIRECT || type == GATEWAY, "unexpected resource type " + type);
+    info("Processing modelDevice %s for %s/%s (type: %s)", operation, registryId, deviceId, type);
     try {
-      String deleteNumId =
-          operation != DELETE ? null : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+      String deleteNumId = operation != DELETE ? null
+          : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
       switch (operation) {
         case CREATE -> createDevice(registryId, deviceId, cloudModel);
         case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
@@ -653,6 +704,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         case BLOCK -> blockDevice(registryId, deviceId, cloudModel);
         default -> throw new RuntimeException("Unknown device operation " + operation);
       }
+      info("Completed modelDevice %s for %s/%s", operation, registryId, deviceId);
       return getReply(registryId, deviceId, cloudModel, deleteNumId);
     } catch (Exception e) {
       error("Error during modelDevice %s for %s/%s: %s",
@@ -686,12 +738,20 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void sendCommandBase(Envelope baseEnvelope, SubFolder folder, String message) {
+    if (mqttPipe == null) {
+      warn("MQTT pipe not initialized, unable to send command");
+      return;
+    }
     try {
       Envelope envelope = deepCopy(baseEnvelope);
       envelope.subFolder = folder;
       envelope.subType = SubType.COMMANDS;
       envelope.source = IotProvider.IMPLICIT.value();
-      reflect.getDispatcher().withEnvelope(envelope).publish(asMap(message));
+
+      Bundle bundle = new Bundle(envelope, MessageDispatcher.rawString(message));
+      mqttPipe.publish(bundle);
+      debug("Published command to pipe for %s/%s",
+          baseEnvelope.deviceRegistryId, baseEnvelope.deviceId);
     } catch (Exception e) {
       error("Failed to send command for %s/%s: %s",
           baseEnvelope.deviceRegistryId, baseEnvelope.deviceId, friendlyStackTrace(e));
