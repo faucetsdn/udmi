@@ -161,7 +161,14 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
 
       long publishStartTime = System.currentTimeMillis();
       long sleepTime = publishDelaySec * MS_PER_SEC;
-      ApiFuture<String> publish = publisher.publish(message);
+      ApiFuture<String> publish;
+      try {
+        publish = publisher.publish(message);
+      } catch (Exception e) {
+        publisherQueueSize.decrementAndGet();
+        throttleQueue();
+        throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
+      }
 
       ApiFutures.addCallback(publish, new ApiFutureCallback<String>() {
         @Override
@@ -188,12 +195,23 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
         }
       }, MoreExecutors.directExecutor());
 
-      if (sleepTime > 0) {
-        Thread.sleep(sleepTime);
+      try {
+        if (sleepTime > 0) {
+          Thread.sleep(sleepTime);
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new RuntimeException("Interrupted while waiting for publish delay", e);
       }
     } catch (Exception e) {
-      publisherQueueSize.decrementAndGet();
-      throttleQueue();
+      boolean alreadyHandled = e instanceof RuntimeException
+          && e.getMessage() != null
+          && e.getMessage().contains("While publishing bundle");
+      if (!alreadyHandled) {
+         // Only throttle/decrement if the exception happened BEFORE publisher.publish()
+         publisherQueueSize.decrementAndGet();
+         throttleQueue();
+      }
       throw new RuntimeException("While publishing bundle to " + publisher.getTopicNameString(), e);
     }
   }
