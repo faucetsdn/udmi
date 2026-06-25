@@ -18,8 +18,9 @@ import re
 import concurrent.futures
 from typing import Iterable
 
-DEVICE_BACNET_ID = 4194300
-DEVICE_OBJECT_NAME = "DiscoveryNode"
+BACNET_DEVICE_ID = 4194300
+BACNET_MODEL_NAME = "DiscoveryNode"
+BACNET_
 
 BAC0.log_level("silence")
 for name in logging.getLogger().manager.loggerDict:
@@ -72,6 +73,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       *,
       bacnet_ip: str = None,
       bacnet_port: int = None,
+      bacnet_device_name = None,
+      bacnet_firmware_version = None,
   ):
     self.devices_published = set()
     self.targetted_devices_found = set()
@@ -82,8 +85,12 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.bacnet = BAC0.lite(
         ip=bacnet_ip,
         port=bacnet_port,
-        boid=DEVICE_BACNET_ID,
-        localObjName=DEVICE_OBJECT_NAME
+        deviceId=BACNET_DEVICE_ID,
+        modelName=BACNET_MODEL_NAME,
+        localObjName=bacnet_device_name,
+        firmwareRevision=bacnet_firmware_version,
+        location=None,
+        description=None
     )
     
     super().__init__(state, publisher)
