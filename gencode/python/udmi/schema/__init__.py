@@ -77,6 +77,7 @@ from .model_testing_target import *
 from .model_testing_update import *
 from .monitoring import *
 from .monitoring_metric import *
+from .mosquitto_client_response import *
 from .options_pubber import *
 from .persistent_device import *
 from .properties import *

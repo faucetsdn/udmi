@@ -161,7 +161,7 @@ public class IotReflectorClient implements MessagePublisher {
     this.enforceUdmiVersion = isTrue(iotConfig.enforce_version);
     this.messageFilter = ofNullable(messageFilter).orElse(this::userMessageFilter);
     registryId = SiteModel.getRegistryActual(iotConfig);
-    projectId = iotConfig.project_id;
+    projectId = iotConfig.project_id == null ? null : iotConfig.project_id.split(":")[0];
     udmiVersion = ofNullable(iotConfig.udmi_version).orElseGet(Common::getUdmiVersion);
     updateVersion = iotConfig.update_to;
     iotProvider = ofNullable(iotConfig.iot_provider).orElse(IotProvider.GBOS);
@@ -663,6 +663,15 @@ public class IotReflectorClient implements MessagePublisher {
 
   public String getBridgeHost() {
     return publisher.getBridgeHost();
+  }
+
+  /**
+   * Get the bridge port.
+   *
+   * @return The bridge port integer.
+   */
+  public Integer getBridgePort() {
+    return publisher.getBridgePort();
   }
 
   public String getSessionPrefix() {

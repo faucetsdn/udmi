@@ -1,0 +1,66 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "FC S-14",
+    "location": {
+      "site": "US-MTV-RLS1"
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "d26c31b5-b4f8-4678-8fc5-7ad08ff9a322",
+      "type": "HVAC/FCU_DFVSC_DSP_GDC_HWDC_DSPZDHC",
+      "label": "FC S-14 / 15 & VAVCO S1-1-68 Clean Room"
+    }
+  },
+  "cloud": {
+    "num_id": "22387964625741"
+  },
+  "pointset": {
+    "points": {
+      "cooling_request_count": {
+        "units": "no-units"
+      },
+      "discharge_air_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_air_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      },
+      "discharge_fan_current_sensor": {
+        "units": "amperes"
+      },
+      "discharge_fan_run_command": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      },
+      "discharge_fan_run_status": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      },
+      "discharge_fan_speed_percentage_command": {
+        "units": "percent"
+      },
+      "failed_discharge_fan_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "failed_humidifier_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "zone_air_cooling_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  }
+}

@@ -20,6 +20,7 @@ BAMBI
 bcd
 BCD
 blobset
+Blobset
 blobsets
 BMS
 boolean
@@ -36,6 +37,8 @@ CoAP
 cognisant
 comms
 config
+Config
+conn
 contextualise
 coreutils
 CoV
@@ -50,6 +53,8 @@ designator
 deterministically
 dev
 Dev
+deviceId
+deviceRegistryId
 directionality
 distroless
 DNS
@@ -106,6 +111,7 @@ IPv
 JDK
 JS
 json
+JSON
 JUnit
 JVM
 JWT
@@ -116,6 +122,7 @@ kube
 kubectl
 Kubernetes
 lifecycle
+Lifecycle
 localhost
 localnet
 logentry
@@ -147,6 +154,7 @@ Onboarding
 OPC
 optionality
 Optionality
+orchestrators
 OSS
 oversized
 pagent
@@ -162,12 +170,15 @@ prepend
 prepended
 prepending
 programmatically
+projectId
 provisioner
 proxied
 Proxied
 proxying
 PUBACKs
 pubber
+Pubber
+publishTime
 pubsub
 PubSub
 QoS
@@ -206,6 +217,7 @@ subdirectory
 subflows
 subfolder
 subFolder
+subFolders
 subType
 subTypes
 swapped
@@ -219,6 +231,7 @@ TODO
 topologies
 Topologies
 transactional
+transactionId
 transpile
 transpiles
 txt
@@ -228,9 +241,11 @@ UDMI
 udmif
 UDMIF
 UDMI's
+udmis
 UDMIS
 UI
 uint
+unbuffered
 unconfigured
 underspecified
 unencoded
@@ -247,6 +262,8 @@ uri
 URI
 URIs
 url
+uufi
+Uufi
 UUFI
 validator
 varchar

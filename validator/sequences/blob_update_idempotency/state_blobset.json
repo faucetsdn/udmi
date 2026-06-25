@@ -1,8 +1,8 @@
 {
   "blobs" : {
     "pubber_module" : {
-      "phase" : "final",
-      "generation" : "TIMESTAMP"
+      "generation" : "TIMESTAMP",
+      "phase" : "final"
     }
   },
   "timestamp" : "TIMESTAMP",
