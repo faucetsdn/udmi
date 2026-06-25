@@ -1,0 +1,221 @@
+/* ==========================================================================
+   UDMI WORKBENCH - MANTIS MICRO-FRONTEND STYLES
+   ========================================================================== */
+
+/* 1. Page & Layout Structure */
+.tool-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-app);
+}
+
+.local-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--toolbar-height);
+  padding: 0 24px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 10;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.tool-main {
+  flex: 1;
+  overflow: hidden;
+  padding: 24px;
+}
+
+/* 2. Mantis Dual-Pane Layout */
+.mantis-layout {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  gap: 24px;
+  height: 100%;
+}
+
+.mantis-tree-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mantis-tree-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 10px;
+  position: relative;
+}
+
+/* Vertical transition path line */
+.mantis-tree-container::before {
+  content: '';
+  position: absolute;
+  left: 31px;
+  top: 40px;
+  bottom: 40px;
+  width: 2px;
+  background-color: var(--border-color);
+  z-index: 1;
+}
+
+.state-node-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.node-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: var(--bg-surface);
+  border: 2px solid var(--border-color);
+  transition: var(--transition-fast);
+}
+
+.state-node-item:hover .node-indicator {
+  border-color: var(--text-muted);
+  transform: scale(1.05);
+}
+
+.state-node-item.active .node-indicator {
+  border-color: var(--color-primary);
+  background-color: #e8f0fe;
+  box-shadow: 0 0 0 4px rgba(11, 87, 208, 0.15);
+}
+
+.node-indicator .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.node-indicator.success {
+  color: var(--color-tertiary);
+  border-color: var(--color-tertiary);
+}
+
+.node-indicator.pending {
+  color: var(--color-warning);
+  border-color: var(--color-warning);
+}
+
+.node-indicator.failed {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.node-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background-color: var(--bg-surface-container);
+  padding: 10px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  flex: 1;
+  transition: var(--transition-fast);
+}
+
+.state-node-item:hover .node-content {
+  background-color: var(--bg-surface-high);
+}
+
+.state-node-item.active .node-content {
+  background-color: var(--bg-surface);
+  border-color: var(--border-color-active);
+}
+
+.node-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.node-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.node-timestamp {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.node-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 3. Right MQTT Payload Inspector */
+.mantis-inspector-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.inspector-title-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.inspector-title-bar .material-symbols-outlined {
+  color: var(--color-primary);
+}
+
+.topic-name {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.inspector-body {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 4. Shared Forms & Utilities */
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.control-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sequencer Tool</title>
+
+  <!-- Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../shared/theme.css?v=1.4">
+  <link rel="stylesheet" href="style.css?v=1.4">
+</head>
+
+<body>
+
+  <!-- Sequencer Tool Layout -->
+  <div class="tool-layout">
+
+    <!-- Local Header Toolbar (Specialized controls) -->
+    <header class="local-toolbar">
+      <div class="toolbar-left">
+        <!-- Device Under Test (DUT) Select -->
+        <div class="control-group">
+          <label for="device-select" class="control-label">Device Under Test</label>
+          <select id="device-select" class="form-select" style="width: 160px;" aria-label="Select DUT" disabled>
+            <option value="">-- Enter site path --</option>
+          </select>
+        </div>
+
+        <!-- Target Project Input -->
+        <div class="control-group">
+          <label for="project-input" class="control-label">Target Project</label>
+          <input type="text" id="project-input" class="form-input" style="width: 180px;" value="//mqtt/localhost"
+            aria-label="Target Project" />
+        </div>
+
+        <!-- Version Input -->
+        <div class="control-group">
+          <label for="model-input" class="control-label">Sequencer Version</label>
+          <input type="text" id="model-input" class="form-input" style="width: 100px;" value="16f16bd2" disabled
+            aria-label="Abbreviated Git Commit Hash" />
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <button id="btn-settings" class="btn btn-outlined btn-icon" aria-label="Advanced settings" title="Advanced execution settings">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+        <button id="btn-run" class="btn btn-primary" disabled>
+          <span class="material-symbols-outlined">play_arrow</span>
+          Run Tests
+        </button>
+        <button id="btn-stop" class="btn btn-danger-outlined" disabled>
+          <span class="material-symbols-outlined">stop</span>
+          Stop
+        </button>
+      </div>
+
+      <!-- Floating Advanced Settings Popover -->
+      <div id="advanced-settings-popover" class="advanced-settings-card card">
+        <div class="settings-header">
+          <h4>Advanced Settings</h4>
+        </div>
+        <div class="settings-body">
+          <div class="settings-row">
+            <label for="select-log-level" class="settings-label">Log Level</label>
+            <select id="select-log-level" class="form-select w-full">
+              <option value="INFO">INFO (Default)</option>
+              <option value="DEBUG">DEBUG (-v)</option>
+              <option value="TRACE">TRACE (-vv)</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label for="select-test-stage" class="settings-label">Min Test Stage</label>
+            <select id="select-test-stage" class="form-select w-full">
+              <option value="PREVIEW">PREVIEW (Default)</option>
+              <option value="ALPHA">ALPHA (-a)</option>
+              <option value="ALPHA_ONLY">ALPHA ONLY (-x)</option>
+            </select>
+          </div>
+          <div class="settings-row">
+            <label for="input-serial-no" class="settings-label">Serial Number</label>
+            <input type="text" id="input-serial-no" class="form-input w-full" placeholder="Optional override (-s)" aria-label="Serial Number override" />
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="tool-main">
+      <div class="sequencer-grid">
+
+        <!-- Left Grid: Test Cases Selector -->
+        <div class="card test-suite-card">
+          <div class="card-header">
+            <h3>Test Suite Compliance</h3>
+            <div class="search-box">
+              <span class="material-symbols-outlined search-icon">search</span>
+              <input type="text" id="test-search" class="search-input" placeholder="Search test cases..."
+                aria-label="Search test cases" />
+            </div>
+            <div class="test-suite-actions">
+              <button id="btn-select-all" class="btn-link-sm" aria-label="Select all test cases">Select All</button>
+              <span class="action-divider">|</span>
+              <button id="btn-deselect-all" class="btn-link-sm" aria-label="Deselect all test cases">Deselect All</button>
+            </div>
+          </div>
+
+          <div class="test-cases-list">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <!-- Right Grid: Execution Details (Split View) -->
+        <div class="sequencer-workspace">
+          <!-- Top: Log Terminal -->
+          <div class="card log-terminal-card">
+            <div id="sequencer-logs" style="height: 100%;"></div>
+          </div>
+
+          <!-- Bottom: Progress Stats Card -->
+          <div class="card progress-stats-card">
+            <div class="stats-header">
+              <h3>Test Suite Progress</h3>
+              <span id="suite-status" class="badge badge-neutral">Idle</span>
+            </div>
+
+            <div class="stats-grid">
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" style="width: 0%;"></div>
+              </div>
+
+              <div class="stats-metrics">
+                <div class="metric-item">
+                  <span class="metric-label">Tests Passed</span>
+                  <span id="metric-passed" class="metric-value text-success">0</span>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-label">Tests Skipped</span>
+                  <span id="metric-skipped" class="metric-value text-muted">0</span>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-label">Tests Failed</span>
+                  <span id="metric-failed" class="metric-value text-error">0</span>
+                </div>
+                <div class="metric-item">
+                  <span class="metric-label">Elapsed Time</span>
+                  <span id="metric-time" class="metric-value">00:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script type="module" src="main.js"></script>
+</body>
+
+</html>

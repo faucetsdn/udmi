@@ -1,0 +1,405 @@
+/* ==========================================================================
+   UDMI WORKBENCH - SEQUENCER MICRO-FRONTEND STYLES
+   ========================================================================== */
+
+/* 1. Page & Layout Structure */
+.tool-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-app);
+}
+
+.local-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--toolbar-height);
+  padding: 0 24px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 10;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tool-main {
+  flex: 1;
+  overflow: hidden;
+  padding: 24px;
+}
+
+/* 2. Grid & Workspace Layout */
+.sequencer-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
+  height: 100%;
+  min-height: 0; /* Protect layout from expanding beyond viewport */
+}
+
+/* 3. Checklist Card Styles */
+.test-suite-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  background-color: var(--bg-surface-container-low);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0 10px;
+  gap: 8px;
+}
+
+.search-icon {
+  font-size: 18px;
+  color: var(--text-muted);
+}
+
+.search-input {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.search-input:focus {
+  outline: none;
+}
+
+.test-suite-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-link-sm {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.btn-link-sm:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.btn-link-sm:disabled {
+  color: var(--text-disabled);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+.action-divider {
+  font-size: 10px;
+  color: var(--border-color);
+}
+
+.test-cases-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.test-case-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--bg-surface-container-low);
+  transition: background-color var(--transition-fast);
+}
+
+.test-case-item:hover {
+  background-color: var(--bg-surface-container-low);
+}
+
+.test-case-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.test-case-checkbox {
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+.test-case-checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.test-case-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.test-case-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.test-case-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.test-case-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 10px;
+  flex-shrink: 0;
+}
+
+/* 4. Status Icons & Spinner Animation */
+.status-icon {
+  font-size: 20px;
+  transition: color var(--transition-fast);
+}
+
+.status-icon.idle {
+  color: var(--text-disabled);
+}
+
+.status-icon.running {
+  color: var(--color-primary);
+  animation: rotateSpinner 1.2s linear infinite;
+}
+
+.status-icon.pass {
+  color: var(--color-tertiary);
+}
+
+.status-icon.skip {
+  color: var(--text-muted);
+}
+
+.status-icon.fail {
+  color: var(--color-error);
+}
+
+@keyframes rotateSpinner {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 5. Right Workspace & Log Terminal */
+.sequencer-workspace {
+  display: grid;
+  grid-template-rows: 1fr 160px;
+  gap: 24px;
+  height: 100%;
+  min-height: 0; /* Lock grid height to viewport */
+}
+
+.log-terminal-card {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  overflow: hidden;
+  min-height: 0; /* Force terminal scrolling */
+}
+
+/* 6. Progress Stats Card */
+.progress-stats-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px;
+  overflow: hidden;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stats-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.progress-bar-container {
+  height: 6px;
+  background-color: var(--bg-surface-container-high);
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.stats-metrics {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.text-success { color: var(--color-tertiary); }
+.text-error { color: var(--color-error); }
+.text-muted { color: var(--text-muted); }
+
+/* 7. Advanced Settings Popover */
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.control-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.advanced-settings-card {
+  position: absolute;
+  top: calc(var(--toolbar-height) - 4px);
+  right: 24px;
+  width: 320px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  display: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.advanced-settings-card.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.settings-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.settings-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.w-full {
+  width: 100%;
+}
