@@ -162,7 +162,7 @@ class UDMICore:
           self.state,
           self.publish_discovery,
           bacnet_ip=self.config.get("bacnet", {}).get("ip"),
-          bacnet_device_name=self.config.get("device_id"),
+          bacnet_device_name=self.config.get("mqtt", {}).get("device_id"),
           bacnet_firmware_version=self.state.system.software.version 
       )
 

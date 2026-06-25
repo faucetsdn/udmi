@@ -20,7 +20,6 @@ from typing import Iterable
 
 BACNET_DEVICE_ID = 4194300
 BACNET_MODEL_NAME = "DiscoveryNode"
-BACNET_
 
 BAC0.log_level("silence")
 for name in logging.getLogger().manager.loggerDict:
