@@ -30,7 +30,12 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.net.ssl.KeyManagerFactory;
@@ -58,14 +63,16 @@ import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
+import org.eclipse.paho.mqttv5.client.IMqttClient;
+import org.eclipse.paho.mqttv5.client.IMqttToken;
+import org.eclipse.paho.mqttv5.client.MqttCallback;
+import org.eclipse.paho.mqttv5.client.MqttClient;
+import org.eclipse.paho.mqttv5.client.MqttConnectionOptions;
+import org.eclipse.paho.mqttv5.client.MqttDisconnectResponse;
+import org.eclipse.paho.mqttv5.client.persist.MemoryPersistence;
+import org.eclipse.paho.mqttv5.common.MqttException;
+import org.eclipse.paho.mqttv5.common.MqttMessage;
+import org.eclipse.paho.mqttv5.common.packet.MqttProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.IotAccess;
@@ -78,6 +85,50 @@ public final class MqttToPubSubBridge {
 
   private static final Pattern TOPIC_PATTERN = Pattern.compile("/r/([^/]+)/d/([^/]+)/?(.*)");
   private static final Logger logger = LoggerFactory.getLogger(MqttToPubSubBridge.class);
+
+  private static final int MAX_QUEUE_SIZE = 99;
+  private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors() * 2;
+  // Change rejection policy to AbortPolicy to throw RejectedExecutionException when queue is full.
+  private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(
+      NUM_THREADS, NUM_THREADS,
+      0L, TimeUnit.MILLISECONDS,
+      new ArrayBlockingQueue<>(MAX_QUEUE_SIZE),
+      new ThreadPoolExecutor.AbortPolicy());
+
+  private static volatile boolean tripped = false;
+
+  private static void startCircuitBreaker(IMqttClient mqttClient, ThreadPoolExecutor executor) {
+    Thread monitor = new Thread(() -> {
+      long fullStartTime = 0;
+      while (!tripped) {
+        try {
+          Thread.sleep(1000);
+          // Check if we've received the maximum number of inflight messages (100)
+          if (executor.getActiveCount() + executor.getQueue().size() >= 100) {
+            if (fullStartTime == 0) {
+              fullStartTime = System.currentTimeMillis();
+            } else if (System.currentTimeMillis() - fullStartTime >= 60000) {
+              tripped = true;
+              logger.error("Queue saturated for 60 seconds! Tripping circuit breaker.");
+              try {
+                mqttClient.disconnect();
+              } catch (Exception e) {
+                logger.error("Error disconnecting during circuit breaker trip", e);
+              }
+              System.exit(1);
+            }
+          } else {
+            fullStartTime = 0; // reset
+          }
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          break;
+        }
+      }
+    });
+    monitor.setDaemon(true);
+    monitor.start();
+  }
 
   /**
    * Main entry point for the bridge.
@@ -111,6 +162,7 @@ public final class MqttToPubSubBridge {
     String etcdTarget = commandLine.getOptionValue("etcd_target");
     String etcdOptions = commandLine.getOptionValue("etcd_options");
     String sourceAttribute = commandLine.getOptionValue("source_attribute", "bridge");
+    String sharedSubscription = commandLine.getOptionValue("shared_subscription");
 
     if (gcpProjectId == null || pubsubTopicId == null) {
       logger.error("gcp_project_id and pubsub_topic_id are required.");
@@ -126,19 +178,25 @@ public final class MqttToPubSubBridge {
       publisher = createPublisher(gcpProjectId, pubsubTopicId);
 
       // Initialize MQTT Client
+      String mqttClientId = System.getenv("MQTT_CLIENT_ID");
+      if (mqttClientId == null || mqttClientId.isEmpty()) {
+        mqttClientId = java.util.UUID.randomUUID().toString();
+      }
 
-      // Initialize MQTT Client
       mqttClient =
-          new MqttClient(mqttBrokerUrl, MqttClient.generateClientId(), new MemoryPersistence());
-      MqttConnectOptions connOpts = new MqttConnectOptions();
-      connOpts.setCleanSession(true);
+          new MqttClient(
+              mqttBrokerUrl, mqttClientId, new MemoryPersistence());
+      MqttConnectionOptions connOpts = new MqttConnectionOptions();
+      connOpts.setCleanStart(false);
+      connOpts.setSessionExpiryInterval(0xFFFFFFFFL); // No session expiry
       connOpts.setAutomaticReconnect(true);
+      connOpts.setReceiveMaximum(100);
 
       if (mqttUsername != null && !mqttUsername.isEmpty()) {
         connOpts.setUserName(mqttUsername);
       }
       if (mqttPassword != null && !mqttPassword.isEmpty()) {
-        connOpts.setPassword(mqttPassword.toCharArray());
+        connOpts.setPassword(mqttPassword.getBytes(StandardCharsets.UTF_8));
       }
 
       if (mqttTls) {
@@ -146,12 +204,15 @@ public final class MqttToPubSubBridge {
             getSocketFactory(mqttCaPath, mqttClientCertPath, mqttClientKeyPath, ""));
       }
 
-      logger.info("Connecting to MQTT broker: {}", mqttBrokerUrl);
+      logger.debug("Connecting to MQTT broker: {}", mqttBrokerUrl);
       mqttClient.connect(connOpts);
-      logger.info("Connected to MQTT broker.");
+      logger.debug("Connected to MQTT broker.");
+
+      // Start the circuit breaker monitor
+      startCircuitBreaker(mqttClient, executor);
 
       // Set up MQTT Message Callback
-      setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute);
+      setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute, sharedSubscription);
 
       // Keep the application running
       while (true) {
@@ -174,7 +235,7 @@ public final class MqttToPubSubBridge {
       if (etcdProvider != null) {
         try {
           etcdProvider.shutdown();
-          logger.info("EtcdDataProvider shut down.");
+          logger.debug("EtcdDataProvider shut down.");
         } catch (Exception e) {
           logger.warn("Error shutting down EtcdDataProvider", e);
         }
@@ -182,7 +243,7 @@ public final class MqttToPubSubBridge {
       if (mqttClient != null && mqttClient.isConnected()) {
         try {
           mqttClient.disconnect();
-          logger.info("MQTT client disconnected.");
+          logger.debug("MQTT client disconnected.");
         } catch (MqttException e) {
           logger.warn("Error disconnecting MQTT client", e);
         }
@@ -190,7 +251,7 @@ public final class MqttToPubSubBridge {
       if (publisher != null) {
         try {
           publisher.shutdown();
-          logger.info("Pub/Sub Publisher shut down.");
+          logger.debug("Pub/Sub Publisher shut down.");
         } catch (Exception e) {
           logger.warn("Error shutting down Pub/Sub publisher", e);
         }
@@ -213,6 +274,7 @@ public final class MqttToPubSubBridge {
     options.addOption(null, "etcd_target", true, "etcd endpoint URL.");
     options.addOption(null, "etcd_options", true, "etcd provider options (comma-separated).");
     options.addOption(null, "source_attribute", true, "Value for the source attribute.");
+    options.addOption(null, "shared_subscription", true, "Shared subscription name.");
     options.addOption("h", "help", false, "Print usage info.");
 
     CommandLineParser parser = new DefaultParser();
@@ -237,7 +299,7 @@ public final class MqttToPubSubBridge {
    */
   public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider) throws MqttException {
-    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, "bridge");
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, "bridge", null);
   }
 
   /**
@@ -252,101 +314,159 @@ public final class MqttToPubSubBridge {
   public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute)
       throws MqttException {
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute, null);
+  }
+
+  public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
+      String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
+      String sharedSubscription)
+      throws MqttException {
+    
+    final String actualSubscriptionTopic;
+    if (sharedSubscription != null && !sharedSubscription.isEmpty() && !mqttSubscriptionTopic.startsWith("$share/")) {
+      actualSubscriptionTopic = String.format("$share/%s/%s", sharedSubscription, mqttSubscriptionTopic);
+    } else {
+      actualSubscriptionTopic = mqttSubscriptionTopic;
+    }
+
+    mqttClient.setManualAcks(true);
     mqttClient.setCallback(
-        new MqttCallbackExtended() {
+        new MqttCallback() {
           @Override
           public void connectComplete(boolean reconnect, String serverUri) {
             if (reconnect) {
-              logger.info("MQTT automatically reconnected to broker: {}", serverUri);
+              logger.debug("MQTT automatically reconnected to broker: {}", serverUri);
               try {
-                mqttClient.subscribe(mqttSubscriptionTopic);
-                logger.info("Successfully re-subscribed to topic: {}", mqttSubscriptionTopic);
+                mqttClient.subscribe(actualSubscriptionTopic, 1);
+                logger.debug("Successfully re-subscribed to topic: {}", actualSubscriptionTopic);
               } catch (MqttException e) {
                 logger.error("Failed to re-subscribe to topic {} after auto-reconnect",
                     mqttSubscriptionTopic, e);
               }
             } else {
-              logger.info("Initial MQTT connection established to broker: {}", serverUri);
+              logger.debug("Initial MQTT connection established to broker: {}", serverUri);
             }
           }
 
           @Override
-          public void connectionLost(Throwable cause) {
-            logger.warn("MQTT connection lost", cause);
+          public void disconnected(MqttDisconnectResponse disconnectResponse) {
+            logger.warn("MQTT connection lost", disconnectResponse.getException());
+          }
+
+          @Override
+          public void mqttErrorOccurred(MqttException exception) {
+            logger.warn("MQTT error occurred", exception);
           }
 
           @Override
           public void messageArrived(String topic, MqttMessage message) {
             try {
-              byte[] payload = message.getPayload();
-              logger.info(
-                  "MQTT Message Received - Topic: {}, Payload Length: {}", topic, payload.length);
+              final String recieveTime = java.time.Instant.now().toString();
+              executor.submit(() -> {
+                try {
+                  byte[] payload = message.getPayload();
+                  logger.debug(
+                      "MQTT Message Received - Topic: {}, Payload Length: {}", topic, payload.length);
 
-              Matcher matcher = TOPIC_PATTERN.matcher(topic);
-              String registryId = "unknown";
-              String deviceId = "unknown";
-              String topicSuffix = "";
-              if (matcher.matches()) {
-                registryId = matcher.group(1);
-                deviceId = matcher.group(2);
-                topicSuffix = matcher.group(3);
-              } else {
-                logger.warn("Could not parse registry/device from topic: {}", topic);
-              }
-
-              // Prepare Pub/Sub message
-              Map<String, String> attributes = new HashMap<>();
-              attributes.put("mqttTopic", topic);
-              attributes.put("deviceId", deviceId);
-              attributes.put("deviceRegistryId", registryId);
-              if (sourceAttribute != null) {
-                attributes.put("source", sourceAttribute);
-              }
-
-              String numId = getDeviceNumId(etcdProvider, registryId, deviceId);
-              if (numId != null) {
-                attributes.put("deviceNumId", numId);
-              }
-
-              if (topicSuffix != null && topicSuffix.startsWith("events/")) {
-                List<String> parts = Splitter.on('/').splitToList(topicSuffix);
-                if (parts.size() >= 2) {
-                  attributes.put("subFolder", parts.get(1));
-                }
-              }
-
-              ByteString data = ByteString.copyFrom(payload);
-              PubsubMessage.Builder pubsubMessageBuilder =
-                  PubsubMessage.newBuilder().setData(data);
-
-              PubsubMessage pubsubMessage =
-                  pubsubMessageBuilder.putAllAttributes(attributes).build();
-
-              // Publish to Pub/Sub
-              ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-              messageIdFuture.addListener(
-                  () -> {
-                    try {
-                      logger.info(
-                          "Published to Pub/Sub with message ID: {}", messageIdFuture.get());
-                    } catch (InterruptedException | ExecutionException e) {
-                      logger.warn("Error publishing to Pub/Sub", e);
+                  String parsedTopic = topic;
+                  // Automatically strip the shared subscription prefix if present
+                  if (parsedTopic.startsWith("$share/")) {
+                    parsedTopic = parsedTopic.replaceFirst("^\\$share/[^/]+/", "");
+                    if (!parsedTopic.startsWith("/")) {
+                      parsedTopic = "/" + parsedTopic;
                     }
-                  },
-                  directExecutor());
+                  }
 
-            } catch (RuntimeException e) {
-              logger.warn("Error processing MQTT message", e);
+                  Matcher matcher = TOPIC_PATTERN.matcher(parsedTopic);
+                  String registryId = "unknown";
+                  String deviceId = "unknown";
+                  String topicSuffix = "";
+                  if (matcher.matches()) {
+                    registryId = matcher.group(1);
+                    deviceId = matcher.group(2);
+                    topicSuffix = matcher.group(3);
+                  } else {
+                    logger.warn("Could not parse registry/device from topic: {}", parsedTopic);
+                  }
+
+                  // Prepare Pub/Sub message
+                  Map<String, String> attributes = new HashMap<>();
+                  attributes.put("mqttTopic", parsedTopic);
+                  attributes.put("deviceId", deviceId);
+                  attributes.put("deviceRegistryId", registryId);
+                  attributes.put("recieveTime", recieveTime);
+                  attributes.put("distributeClientId", mqttClient.getClientId());
+                  if (sourceAttribute != null) {
+                    attributes.put("source", sourceAttribute);
+                  }
+
+                  String numId = getDeviceNumId(etcdProvider, registryId, deviceId);
+                  if (numId != null) {
+                    attributes.put("deviceNumId", numId);
+                  }
+
+                  if (topicSuffix != null && topicSuffix.startsWith("events/")) {
+                    List<String> parts = Splitter.on('/').splitToList(topicSuffix);
+                    if (parts.size() >= 2) {
+                      attributes.put("subFolder", parts.get(1));
+                    }
+                  }
+
+                  ByteString data = ByteString.copyFrom(payload);
+                  PubsubMessage.Builder pubsubMessageBuilder =
+                      PubsubMessage.newBuilder().setData(data);
+
+                  PubsubMessage pubsubMessage =
+                      pubsubMessageBuilder.putAllAttributes(attributes).build();
+
+                  // Publish to Pub/Sub with local retries
+                  long backoff = 100;
+                  while (!tripped) {
+                    try {
+                      ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
+                      String msgId = messageIdFuture.get(); // blocks until complete
+                      logger.debug("Published to Pub/Sub with message ID: {}", msgId);
+                      mqttClient.messageArrivedComplete(message.getId(), message.getQos());
+                      break; // success
+                    } catch (Exception e) {
+                      // Note: Poison pills (e.g., consistently failing serialization) could
+                      // permanently block this thread since we retry indefinitely, but
+                      // schema validation happens earlier in the pipeline so it is not a concern here.
+                      logger.warn("Error publishing to Pub/Sub, retrying in {} ms", backoff, e);
+                      try {
+                        Thread.sleep(backoff);
+                      } catch (InterruptedException ie) {
+                        Thread.currentThread().interrupt();
+                        break;
+                      }
+                      backoff = Math.min(backoff * 2, 10000);
+                    }
+                  }
+
+                } catch (RuntimeException e) {
+                  logger.warn("Error processing MQTT message", e);
+                }
+              });
+            } catch (RejectedExecutionException e) {
+              logger.error("Execution rejected, queue is full! Dropping MQTT connection to mitigate stall.", e);
+              try {
+                mqttClient.disconnectForcibly();
+              } catch (MqttException me) {
+                logger.error("Error while forcing disconnect", me);
+              }
             }
           }
 
           @Override
-          public void deliveryComplete(IMqttDeliveryToken token) {}
+          public void deliveryComplete(IMqttToken token) {}
+
+          @Override
+          public void authPacketArrived(int reasonCode, MqttProperties properties) {}
         });
 
-    logger.info("Subscribing to MQTT topic: {}", mqttSubscriptionTopic);
-    mqttClient.subscribe(mqttSubscriptionTopic);
-    logger.info("Subscribed. Waiting for messages...");
+    logger.debug("Subscribing to MQTT topic: {}", actualSubscriptionTopic);
+    mqttClient.subscribe(actualSubscriptionTopic, 1);
+    logger.debug("Subscribed. Waiting for messages...");
   }
 
   private static SSLSocketFactory getSocketFactory(
@@ -448,7 +568,7 @@ public final class MqttToPubSubBridge {
     iotAccess.project_id = target;
     iotAccess.options = options;
     EtcdDataProvider provider = new EtcdDataProvider(iotAccess);
-    logger.info("EtcdDataProvider initialized for target: {}", target);
+    logger.debug("EtcdDataProvider initialized for target: {}", target);
     return provider;
   }
 
@@ -464,11 +584,11 @@ public final class MqttToPubSubBridge {
       publisherBuilder.setChannelProvider(
           FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel)));
       publisherBuilder.setCredentialsProvider(NoCredentialsProvider.create());
-      logger.info("Routing Pub/Sub Publisher to emulator host: {}", useHost);
+      logger.debug("Routing Pub/Sub Publisher to emulator host: {}", useHost);
     }
     try {
       Publisher publisher = publisherBuilder.build();
-      logger.info("Pub/Sub Publisher initialized for topic: {}", topicName);
+      logger.debug("Pub/Sub Publisher initialized for topic: {}", topicName);
       return publisher;
     } catch (IOException e) {
       throw new RuntimeException("Failed to build Pub/Sub Publisher", e);
@@ -486,13 +606,14 @@ public final class MqttToPubSubBridge {
           .device(deviceId)
           .get("num_id");
       if (numId != null) {
-        logger.info("Found numId {} in etcd for device {}/{}", numId, registryId, deviceId);
+        logger.debug("Found numId {} in etcd for device {}/{}", numId, registryId, deviceId);
       } else {
-        logger.warn("numId not found in etcd for device {}/{}", registryId, deviceId);
+        logger.debug("numId not found in etcd for device {}/{}", registryId, deviceId);
       }
       return numId;
     } catch (Exception e) {
-      logger.warn("Error reading numId from etcd for device {}/{}", registryId, deviceId, e);
+      // The logic for etcd to return a device ID is CLEAN for a NULL/No Value - this is not an error case!!!
+      logger.debug("No numId value or error reading from etcd for device {}/{}", registryId, deviceId);
       return null;
     }
   }

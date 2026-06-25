@@ -12,9 +12,9 @@ import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.PubsubMessage;
 import java.util.Map;
-import org.eclipse.paho.client.mqttv3.IMqttClient;
-import org.eclipse.paho.client.mqttv3.MqttCallbackExtended;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.mqttv5.client.IMqttClient;
+import org.eclipse.paho.mqttv5.client.MqttCallback;
+import org.eclipse.paho.mqttv5.common.MqttMessage;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
@@ -23,6 +23,7 @@ class MqttToPubSubBridgeTest {
   @Test
   void testSetupBridge() throws Exception {
     IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
     Publisher mockPublisher = mock(Publisher.class);
     String testTopic = "/r/my-registry/d/my-device/events";
     String payloadStr = "Hello World";
@@ -36,13 +37,13 @@ class MqttToPubSubBridgeTest {
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
 
     // Verify subscription
-    verify(mockMqttClient).subscribe(testTopic);
+    verify(mockMqttClient).subscribe(testTopic, 1);
 
     // Capture callback
-    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
-        ArgumentCaptor.forClass(MqttCallbackExtended.class);
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallbackExtended callback = callbackCaptor.getValue();
+    MqttCallback callback = callbackCaptor.getValue();
 
     // Simulate message arrival
     callback.messageArrived(testTopic, mqttMessage);
@@ -50,7 +51,7 @@ class MqttToPubSubBridgeTest {
     // Verify Pub/Sub publish
     ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
         ArgumentCaptor.forClass(PubsubMessage.class);
-    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     assertEquals(payloadStr, pubsubMessage.getData().toStringUtf8());
@@ -60,11 +61,14 @@ class MqttToPubSubBridgeTest {
     assertEquals("my-device", attributes.get("deviceId"));
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
     assertEquals("bridge", attributes.get("source"));
+    org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("recieveTime"));
+    assertEquals("test-client", attributes.get("distributeClientId"));
   }
 
   @Test
   void testSetupBridgeWithSubFolder() throws Exception {
     IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
     Publisher mockPublisher = mock(Publisher.class);
     String testTopic = "/r/my-registry/d/my-device/events/subfolder_name";
     String payloadStr = "Hello World";
@@ -75,16 +79,16 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
 
-    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
-        ArgumentCaptor.forClass(MqttCallbackExtended.class);
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallbackExtended callback = callbackCaptor.getValue();
+    MqttCallback callback = callbackCaptor.getValue();
 
     callback.messageArrived(testTopic, mqttMessage);
 
     ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
         ArgumentCaptor.forClass(PubsubMessage.class);
-    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     Map<String, String> attributes = pubsubMessage.getAttributesMap();
@@ -92,11 +96,14 @@ class MqttToPubSubBridgeTest {
     assertEquals("my-device", attributes.get("deviceId"));
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
     assertEquals("subfolder_name", attributes.get("subFolder"));
+    org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("recieveTime"));
+    assertEquals("test-client", attributes.get("distributeClientId"));
   }
 
   @Test
   void testSetupBridgeUnrecognizedTopic() throws Exception {
     IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
     Publisher mockPublisher = mock(Publisher.class);
     String testTopic = "invalid/topic/structure";
     String payloadStr = "Hello World";
@@ -107,27 +114,30 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
 
-    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
-        ArgumentCaptor.forClass(MqttCallbackExtended.class);
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallbackExtended callback = callbackCaptor.getValue();
+    MqttCallback callback = callbackCaptor.getValue();
 
     callback.messageArrived(testTopic, mqttMessage);
 
     ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
         ArgumentCaptor.forClass(PubsubMessage.class);
-    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     Map<String, String> attributes = pubsubMessage.getAttributesMap();
     assertEquals(testTopic, attributes.get("mqttTopic"));
     assertEquals("unknown", attributes.get("deviceId"));
     assertEquals("unknown", attributes.get("deviceRegistryId"));
+    org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("recieveTime"));
+    assertEquals("test-client", attributes.get("distributeClientId"));
   }
 
   @Test
   void testSetupBridgeWithEtcd() throws Exception {
     final IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
     final Publisher mockPublisher = mock(Publisher.class);
     final EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
     final DataRef mockDataRef = mock(DataRef.class);
@@ -147,16 +157,16 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
 
-    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
-        ArgumentCaptor.forClass(MqttCallbackExtended.class);
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallbackExtended callback = callbackCaptor.getValue();
+    MqttCallback callback = callbackCaptor.getValue();
 
     callback.messageArrived(testTopic, mqttMessage);
 
     ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
         ArgumentCaptor.forClass(PubsubMessage.class);
-    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     Map<String, String> attributes = pubsubMessage.getAttributesMap();
@@ -166,6 +176,7 @@ class MqttToPubSubBridgeTest {
   @Test
   void testSetupBridgeWithEtcdNullResult() throws Exception {
     final IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
     final Publisher mockPublisher = mock(Publisher.class);
     final EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
     final DataRef mockDataRef = mock(DataRef.class);
@@ -185,16 +196,16 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
 
-    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
-        ArgumentCaptor.forClass(MqttCallbackExtended.class);
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallbackExtended callback = callbackCaptor.getValue();
+    MqttCallback callback = callbackCaptor.getValue();
 
     callback.messageArrived(testTopic, mqttMessage);
 
     ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
         ArgumentCaptor.forClass(PubsubMessage.class);
-    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     Map<String, String> attributes = pubsubMessage.getAttributesMap();
@@ -204,6 +215,7 @@ class MqttToPubSubBridgeTest {
   @Test
   void testSetupBridgeWithEtcdFailure() throws Exception {
     final IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
     final Publisher mockPublisher = mock(Publisher.class);
     final EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
     final DataRef mockDataRef = mock(DataRef.class);
@@ -223,17 +235,17 @@ class MqttToPubSubBridgeTest {
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
 
-    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
-        ArgumentCaptor.forClass(MqttCallbackExtended.class);
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallbackExtended callback = callbackCaptor.getValue();
+    MqttCallback callback = callbackCaptor.getValue();
 
     // This should not throw exception and message should still be published
     callback.messageArrived(testTopic, mqttMessage);
 
     ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
         ArgumentCaptor.forClass(PubsubMessage.class);
-    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     Map<String, String> attributes = pubsubMessage.getAttributesMap();
@@ -243,18 +255,20 @@ class MqttToPubSubBridgeTest {
   @Test
   void testSetupBridgeAutoReconnect() throws Exception {
     final IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
     final Publisher mockPublisher = mock(Publisher.class);
     final String testTopic = "/r/my-registry/d/my-device/events";
 
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
 
     // Verify initial subscription
-    verify(mockMqttClient).subscribe(testTopic);
+    verify(mockMqttClient).subscribe(testTopic, 1);
 
-    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
-        ArgumentCaptor.forClass(MqttCallbackExtended.class);
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallbackExtended callback = callbackCaptor.getValue();
+    verify(mockMqttClient).setManualAcks(true);
+    MqttCallback callback = callbackCaptor.getValue();
 
     // Simulate initial connection completed (reconnect = false)
     callback.connectComplete(false, "tcp://localhost:1883");
@@ -264,12 +278,13 @@ class MqttToPubSubBridgeTest {
     // Simulate automatic reconnection completed (reconnect = true)
     callback.connectComplete(true, "tcp://localhost:1883");
     // Verify re-subscribed
-    verify(mockMqttClient, org.mockito.Mockito.times(2)).subscribe(testTopic);
+    verify(mockMqttClient, org.mockito.Mockito.times(2)).subscribe(testTopic, 1);
   }
 
   @Test
   void testSetupBridgeWithCustomSource() throws Exception {
     IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
     Publisher mockPublisher = mock(Publisher.class);
     String testTopic = "/r/my-registry/d/my-device/events";
     String payloadStr = "Hello World";
@@ -281,22 +296,64 @@ class MqttToPubSubBridgeTest {
     // Call 5-parameter setupBridge with custom source attribute
     MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null, "custom-source");
 
-    verify(mockMqttClient).subscribe(testTopic);
+    verify(mockMqttClient).subscribe(testTopic, 1);
 
-    ArgumentCaptor<MqttCallbackExtended> callbackCaptor =
-        ArgumentCaptor.forClass(MqttCallbackExtended.class);
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
-    MqttCallbackExtended callback = callbackCaptor.getValue();
+    MqttCallback callback = callbackCaptor.getValue();
 
     callback.messageArrived(testTopic, mqttMessage);
 
     ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
         ArgumentCaptor.forClass(PubsubMessage.class);
-    verify(mockPublisher).publish(pubsubMessageCaptor.capture());
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
 
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     Map<String, String> attributes = pubsubMessage.getAttributesMap();
     assertEquals("custom-source", attributes.get("source"));
   }
 
+  @Test
+  void testSetupBridgeWithSharedSubscription() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String originalTopic = "/r/my-registry/d/my-device/events";
+    String sharedSubscriptionName = "my-group";
+    String expectedFilter = "$share/my-group//r/my-registry/d/my-device/events";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    // Call setupBridge with shared subscription
+    MqttToPubSubBridge.setupBridge(mockMqttClient, mockPublisher, originalTopic, null, "bridge", sharedSubscriptionName);
+
+    // Verify it subscribed to the shared subscription filter
+    verify(mockMqttClient).subscribe(expectedFilter, 1);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    // The broker will typically send the original topic without the $share prefix
+    // but we'll test the automatic topic parsing by passing the $share prefixed topic
+    callback.messageArrived(expectedFilter, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+
+    // Should correctly strip $share/my-group/ and parse the registry and device
+    assertEquals(originalTopic, attributes.get("mqttTopic"));
+    assertEquals("my-device", attributes.get("deviceId"));
+    assertEquals("my-registry", attributes.get("deviceRegistryId"));
+  }
 }
+
