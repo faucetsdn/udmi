@@ -403,3 +403,28 @@
 .w-full {
   width: 100%;
 }
+
+/* 8. Mantis AI Triage Button */
+.btn-diagnose {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-diagnose:hover {
+  background-color: var(--bg-surface-container-high);
+  color: var(--color-primary-hover);
+}
+
+.btn-diagnose span {
+  font-size: 20px;
+}

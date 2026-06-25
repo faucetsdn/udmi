@@ -6,9 +6,9 @@ metadata:
 pipeline:
   default_model: "gemini-3.1-pro-preview"
   flash: "gemini-2.5-flash-lite"
-  max_loops: 25
-  max_revisions: 1
-  concurrency: 3
+  max_loops: 15
+  max_revisions: 10
+  concurrency: 2
   enable_condensation: false
   enable_history_compaction: true
   skills:

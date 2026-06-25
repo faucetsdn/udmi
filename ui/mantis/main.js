@@ -1,4 +1,5 @@
 import { JSONViewer } from '../shared/components/json-viewer.js';
+import { LogViewer } from '../shared/components/log-viewer.js';
 
 // --- HELPER: DYNAMIC ENDPOINT FETCH ---
 async function fetchDirectoryList(targetPath) {
@@ -34,10 +35,17 @@ class MantisController {
     // Parent state (Synced via postMessage)
     this.siteModel = '';
     this.device = '';
+    this.projectSpec = ''; // Piped dynamically from Sequencer
 
     // Local state
+    this.activeTab = 'trace'; // 'trace' or 'diagnostics'
     this.activeTraceNodes = [];
     this.currentSelectedNodePayload = null;
+    
+    // Triage Subprocess State
+    this.isTriageRunning = false;
+    this.triageLogOffset = 0;
+    this.triagePollInterval = null;
 
     this.initElements();
     this.initComponents();
@@ -45,42 +53,91 @@ class MantisController {
   }
 
   initElements() {
-    // Local Controls
+    // Local Selection Controls
     this.deviceSelect = document.getElementById('device-select');
     this.scenarioSelect = document.getElementById('scenario-select');
-    this.btnCopyPayload = document.getElementById('btn-copy-payload');
     
-    // Layout Elements
+    // Tab Headers & Pages
+    this.tabBtnTrace = document.getElementById('tab-btn-trace');
+    this.tabBtnDiagnostics = document.getElementById('tab-btn-diagnostics');
+    this.tabPageTrace = document.getElementById('tab-page-trace');
+    this.tabPageDiagnostics = document.getElementById('tab-page-diagnostics');
+    
+    // Trace Tab Elements
     this.mantisTreeContainer = document.querySelector('.mantis-tree-container');
     this.mqttTopicLabel = document.getElementById('mqtt-topic');
+    this.btnCopyPayload = document.getElementById('btn-copy-payload');
+    
+    // Diagnostics Tab Elements
+    this.playbookSelect = document.getElementById('playbook-select');
+    this.btnRunTriage = document.getElementById('btn-run-triage');
+    this.btnStopTriage = document.getElementById('btn-stop-triage');
+    this.triageStatusBadge = document.getElementById('triage-status-badge');
+    this.triageTerminalContainer = document.getElementById('triage-terminal-container');
+    this.rcaReportBody = document.getElementById('rca-report-body');
+    this.btnCopyReport = document.getElementById('btn-copy-report');
+    
+    // Layout Container (for sliding panels animation)
+    this.diagnosticsLayout = document.querySelector('.diagnostics-layout');
   }
 
   initComponents() {
-    // Initialize JSONViewer
+    // Initialize JSONViewer (Trace tab)
     this.jsonViewer = new JSONViewer(document.getElementById('mqtt-json-viewer'));
     this.jsonViewer.render({ message: "Waiting for Site Model selection from parent shell..." });
+
+    // Initialize LogViewer (Diagnostics tab)
+    this.triageLogViewer = new LogViewer(this.triageTerminalContainer);
   }
 
   initEvents() {
     // --- 1. POSTMESSAGE LISTENER (State Sync from Shell) ---
     window.addEventListener('message', (event) => {
-      if (event.data && event.data.type === 'udmi_state_change') {
-        this.handleGlobalStateChange(event.data.siteModel);
+      if (event.data) {
+        if (event.data.type === 'udmi_state_change') {
+          this.handleGlobalStateChange(event.data.siteModel);
+        } else if (event.data.type === 'load_diagnose') {
+          this.handleLoadDiagnose(event.data);
+        }
       }
     });
 
-    // Local Device Select Trigger
+    // Local Device / Scenario Dropdowns
     this.deviceSelect.addEventListener('change', (e) => {
       this.handleDeviceChange(e.target.value);
     });
 
-    // Local dropdown trigger
     this.scenarioSelect.addEventListener('change', (e) => {
       this.handleScenarioChange(e.target.value);
     });
 
-    // Copy to clipboard trigger
+    // Copy to clipboard triggers
     this.btnCopyPayload.addEventListener('click', () => this.copyPayloadToClipboard());
+    this.btnCopyReport.addEventListener('click', () => this.copyReportToClipboard());
+
+    // Tab buttons triggers
+    this.tabBtnTrace.addEventListener('click', () => this.switchLocalTab('trace'));
+    this.tabBtnDiagnostics.addEventListener('click', () => this.switchLocalTab('diagnostics'));
+
+    // Triage run controls
+    this.btnRunTriage.addEventListener('click', () => this.startAITriage());
+    this.btnStopTriage.addEventListener('click', () => this.stopAITriage());
+  }
+
+  // --- TAB SWITCHING MACHINERY ---
+  switchLocalTab(tabId) {
+    this.activeTab = tabId;
+    
+    // Toggle button active states (primary vs outlined)
+    this.tabBtnTrace.classList.toggle('btn-primary', tabId === 'trace');
+    this.tabBtnTrace.classList.toggle('btn-outlined', tabId !== 'trace');
+    
+    this.tabBtnDiagnostics.classList.toggle('btn-primary', tabId === 'diagnostics');
+    this.tabBtnDiagnostics.classList.toggle('btn-outlined', tabId !== 'diagnostics');
+    
+    // Toggle page visibility
+    this.tabPageTrace.classList.toggle('active', tabId === 'trace');
+    this.tabPageDiagnostics.classList.toggle('active', tabId === 'diagnostics');
   }
 
   // --- STATE SYNC & SCENARIO DISCOVERY ---
@@ -166,6 +223,7 @@ class MantisController {
           this.scenarioSelect.appendChild(opt);
         });
         this.scenarioSelect.disabled = false;
+        this.btnRunTriage.disabled = false; // Enable AI triage trigger
       } else {
         this.scenarioSelect.innerHTML = '<option value="">-- No test runs found --</option>';
       }
@@ -292,6 +350,437 @@ class MantisController {
     }
   }
 
+  // --- CROSS-IFRAME AUTO-TRIAGE REDIRECTION (PostMessage) ---
+  async handleLoadDiagnose(data) {
+    const { testId, deviceId, siteModel, projectSpec } = data;
+    console.log(`Mantis Screen: Received load_diagnose payload for test ${testId} on device ${deviceId}`);
+    
+    this.siteModel = siteModel;
+    this.projectSpec = projectSpec || ''; // Pipe target project specification
+    
+    // Set device select and trigger downstream loading
+    this.deviceSelect.value = deviceId;
+    await this.handleDeviceChange(deviceId);
+    
+    // Set scenario select and load sequence flow
+    this.scenarioSelect.value = testId;
+    await this.handleScenarioChange(testId);
+    
+    // Switch to diagnostics tab and auto-boot triage!
+    this.switchLocalTab('diagnostics');
+    this.startAITriage();
+  }
+
+  // --- MANTIS AI TRIAGE EXECUTION LOOP ---
+  async startAITriage() {
+    if (this.isTriageRunning) return;
+
+    const deviceId = this.device;
+    const testId = this.scenarioSelect.value;
+
+    if (!deviceId || !testId) {
+      alert('Please select a Device and Scenario before running diagnostics.');
+      return;
+    }
+
+    // Request Desktop Notification permission if default
+    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    this.isTriageRunning = true;
+    this.triageLogOffset = 0;
+
+    // Trigger panel sliding: expand console to 60% wide
+    this.diagnosticsLayout.classList.remove('complete');
+    this.diagnosticsLayout.classList.add('running');
+
+    // Adjust button controls
+    this.btnRunTriage.disabled = true;
+    this.btnStopTriage.style.display = 'inline-flex';
+    this.deviceSelect.disabled = true;
+    this.scenarioSelect.disabled = true;
+    this.playbookSelect.disabled = true;
+    
+    // Update badge state
+    this.triageStatusBadge.textContent = 'Running';
+    this.triageStatusBadge.className = 'badge badge-running';
+
+    // Clear views
+    this.triageLogViewer.clear();
+    this.triageLogViewer.append(`🤖 Starting Mantis AI Triage Agent...\nDevice: ${deviceId}\nTest ID: ${testId}\nPlaybook: ${this.playbookSelect.value.toUpperCase()}\n------------------------------------------------\n`, 'info');
+    
+    this.rcaReportBody.innerHTML = `
+      <div class="rca-placeholder-message">
+        <div class="loader" style="margin-bottom: 24px;"></div>
+        <span style="font-weight: 500; color: var(--text-secondary); max-width: 480px;">Mantis AI is digesting compliance logs, scanning codebase references, and compiling the Root Cause Analysis...</span>
+      </div>
+    `;
+    this.btnCopyReport.disabled = true;
+
+    // Trigger API
+    const playbook = this.playbookSelect.value;
+    const projectSpec = this.projectSpec || '//mqtt/localhost';
+    const runUrl = `/api/run_triage?device_id=${encodeURIComponent(deviceId)}&test_id=${encodeURIComponent(testId)}&playbook=${playbook}&site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(projectSpec)}`;
+    
+    try {
+      const res = await fetch(runUrl);
+      const startData = await res.json();
+      if (!res.ok) {
+        throw new Error(startData.error || `HTTP ${res.status}`);
+      }
+
+      // Start Polling
+      this.triagePollInterval = setInterval(() => this.pollTriageStatus(), 500);
+    } catch (err) {
+      this.triageLogViewer.append(`\n❌ Error starting triage: ${err.message}\n`, 'error');
+      this.stopAITriage(true); // Terminate with error
+    }
+  }
+
+  async stopAITriage(hasError = false) {
+    // Clear poll loop
+    if (this.triagePollInterval) {
+      clearInterval(this.triagePollInterval);
+      this.triagePollInterval = null;
+    }
+
+    if (this.isTriageRunning && !hasError) {
+      // Direct request to stop subprocess
+      try {
+        await fetch('/api/stop_triage');
+      } catch {}
+      this.triageLogViewer.append('\n🛑 Triage process terminated by user.\n', 'error');
+    }
+
+    this.isTriageRunning = false;
+
+    // Reset panel sliding to default
+    this.diagnosticsLayout.classList.remove('running', 'complete');
+
+    // Restore buttons and controls
+    this.btnRunTriage.disabled = false;
+    this.btnStopTriage.style.display = 'none';
+    this.deviceSelect.disabled = false;
+    this.scenarioSelect.disabled = false;
+    this.playbookSelect.disabled = false;
+
+    if (hasError) {
+      this.triageStatusBadge.textContent = 'Error';
+      this.triageStatusBadge.className = 'badge badge-error';
+      this.rcaReportBody.innerHTML = `
+        <div class="rca-placeholder-message" style="color:var(--color-error)">
+          <span class="material-symbols-outlined" style="font-size:48px;">error</span>
+          <span>Diagnostics aborted due to execution failure. Review the console logs on the left.</span>
+        </div>
+      `;
+    } else if (this.triageStatusBadge.textContent === 'Running') {
+      this.triageStatusBadge.textContent = 'Aborted';
+      this.triageStatusBadge.className = 'badge badge-error';
+      this.rcaReportBody.innerHTML = `
+        <div class="rca-placeholder-message">
+          <span class="material-symbols-outlined" style="font-size:48px;">cancel</span>
+          <span>AI Triage run was manually aborted.</span>
+        </div>
+      `;
+    }
+  }
+
+  async pollTriageStatus() {
+    const url = `/api/triage_status?offset=${this.triageLogOffset}`;
+    try {
+      const response = await fetch(url);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}`);
+      }
+
+      // Stream stdout/stderr character-by-character
+      if (data.log) {
+        this.triageLogViewer.append(data.log);
+      }
+      this.triageLogOffset = data.offset;
+
+      // Handle process exit
+      if (data.running === false) {
+        clearInterval(this.triagePollInterval);
+        this.triagePollInterval = null;
+        this.isTriageRunning = false;
+
+        this.btnRunTriage.disabled = false;
+        this.btnStopTriage.style.display = 'none';
+        this.deviceSelect.disabled = false;
+        this.scenarioSelect.disabled = false;
+        this.playbookSelect.disabled = false;
+
+        if (data.exit_code === 0) {
+          this.triageStatusBadge.textContent = 'Complete';
+          this.triageStatusBadge.className = 'badge badge-success';
+          this.triageLogViewer.append('\n✨ Triage complete! Root Cause Analysis generated successfully.\n', 'info');
+          
+          // Trigger panel sliding: shrink console to 280px sidebar, expand RCA report!
+          this.diagnosticsLayout.classList.remove('running');
+          this.diagnosticsLayout.classList.add('complete');
+
+          // Show Desktop Notification
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            new Notification("Mantis AI Triage Complete", {
+              body: `Root Cause Analysis for '${this.scenarioSelect.value}' on device '${this.device}' is ready!`,
+              tag: 'mantis-triage'
+            });
+          }
+
+          // Load the rich Markdown report!
+          await this.loadTriageReport();
+        } else {
+          this.triageStatusBadge.textContent = `Failed (${data.exit_code})`;
+          this.triageStatusBadge.className = 'badge badge-error';
+          this.triageLogViewer.append(`\n❌ AI Diagnostics failed with exit code ${data.exit_code}.\n`, 'error');
+          
+          // Reset panel sliding to default on failure
+          this.diagnosticsLayout.classList.remove('running', 'complete');
+
+          // Show Failure Desktop Notification
+          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+            new Notification("Mantis AI Triage Failed", {
+              body: `Diagnostics for '${this.scenarioSelect.value}' on device '${this.device}' failed (Exit Code: ${data.exit_code}).`,
+              tag: 'mantis-triage'
+            });
+          }
+
+          this.rcaReportBody.innerHTML = `
+            <div class="rca-placeholder-message" style="color:var(--color-error)">
+              <span class="material-symbols-outlined" style="font-size:48px;">error</span>
+              <span>Diagnostics completed with errors (Exit Code: ${data.exit_code}). Review console logs on the left.</span>
+            </div>
+          `;
+        }
+      }
+    } catch (err) {
+      this.triageLogViewer.append(`\n⚠️ Poll connection error: ${err.message}\n`, 'error');
+      this.stopAITriage(true);
+    }
+  }
+
+  async loadTriageReport() {
+    const projectSpec = this.projectSpec || '//mqtt/localhost';
+    const url = `/api/triage_report?site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(projectSpec)}&device_id=${encodeURIComponent(this.device)}&test_id=${encodeURIComponent(this.scenarioSelect.value)}`;
+    
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Report not found (Status ${response.status})`);
+      }
+      const markdown = await response.text();
+      
+      // Render report beautifully
+      this.rcaReportBody.innerHTML = this.parseMarkdownToHTML(markdown);
+      this.btnCopyReport.disabled = false;
+      this.btnCopyReport.setAttribute('data-raw-markdown', markdown);
+    } catch (err) {
+      this.rcaReportBody.innerHTML = `
+        <div class="rca-placeholder-message" style="color:var(--color-error)">
+          <span class="material-symbols-outlined" style="font-size:48px;">error</span>
+          <span>Failed to load diagnostic report: ${err.message}</span>
+        </div>
+      `;
+    }
+  }
+
+  // --- PREMIUM HYBRID BLOCK-BASED MARKDOWN RENDERER ---
+  parseMarkdownToHTML(md) {
+    if (!md) return '';
+    
+    // 1. Escape HTML tags to protect the dashboard
+    let escaped = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    
+    // 2. Pre-process block elements: Fenced code blocks
+    // Temporarily replace fenced code blocks with placeholders to protect them from inline parsing
+    const codeBlocks = [];
+    escaped = escaped.replace(/```([\s\S]*?)```/g, (match, code) => {
+      const placeholder = `__CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
+      codeBlocks.push(`<pre class="markdown-code-block"><code>${code.trim()}</code></pre>`);
+      return placeholder;
+    });
+
+    // 3. Split into lines to parse line-level structures (lists, blockquotes, headings, tables)
+    const lines = escaped.split('\n');
+    const processedLines = [];
+    
+    let inList = false;
+    let listType = null; // 'ul' or 'ol'
+    let inTable = false;
+    
+    const closeListIfNeeded = () => {
+      if (inList) {
+        processedLines.push(`</${listType}>`);
+        inList = false;
+        listType = null;
+      }
+    };
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
+      
+      // Match Table Rows: starts and ends with |
+      const isTableRow = line.trim().startsWith('|') && line.trim().endsWith('|');
+      if (isTableRow) {
+        if (!inTable) {
+          // Peek at next line to see if it is a markdown separator (e.g. | :--- | :--- |)
+          const nextLine = lines[i + 1] || '';
+          const isSeparator = nextLine.trim().startsWith('|') && nextLine.includes('---');
+          if (isSeparator) {
+            closeListIfNeeded();
+            inTable = true;
+            processedLines.push('<table class="markdown-table"><thead>');
+            
+            // Extract columns, filtering out the first and last empty elements
+            const cols = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
+            processedLines.push('<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>');
+            processedLines.push('</thead><tbody>');
+            
+            i++; // Skip the separator line
+            continue;
+          }
+        } else {
+          // Render table body row
+          const cols = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
+          processedLines.push('<tr>' + cols.map(c => `<td>${c}</td>`).join('') + '</tr>');
+          continue;
+        }
+      } else {
+        if (inTable) {
+          processedLines.push('</tbody></table>');
+          inTable = false;
+        }
+      }
+
+      // Match Headings: # Header, ## Header, etc.
+      const headingMatch = line.match(/^(#{1,6})\s+(.*?)$/);
+      if (headingMatch) {
+        closeListIfNeeded();
+        const level = headingMatch[1].length;
+        processedLines.push(`<h${level}>${headingMatch[2]}</h${level}>`);
+        continue;
+      }
+      
+      // Match GitHub Alerts: &gt; [!NOTE] text
+      const alertMatch = line.match(/^&gt;\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(.*?)$/i);
+      if (alertMatch) {
+        closeListIfNeeded();
+        const type = alertMatch[1].toLowerCase();
+        const content = alertMatch[2];
+        const icon = this.getAlertIcon(type);
+        processedLines.push(`<div class="markdown-alert alert-${type}"><span class="material-symbols-outlined alert-icon">${icon}</span><div class="alert-content">${content}</div></div>`);
+        continue;
+      }
+      
+      // Match Standard Blockquotes: &gt; text
+      const quoteMatch = line.match(/^&gt;\s*(.*?)$/);
+      if (quoteMatch) {
+        closeListIfNeeded();
+        processedLines.push(`<blockquote>${quoteMatch[1]}</blockquote>`);
+        continue;
+      }
+      
+      // Match Unordered Lists: - item or * item
+      const ulMatch = line.match(/^\s*[-*]\s+(.*?)$/);
+      if (ulMatch) {
+        if (!inList || listType !== 'ul') {
+          closeListIfNeeded();
+          processedLines.push('<ul>');
+          inList = true;
+          listType = 'ul';
+        }
+        processedLines.push(`<li>${ulMatch[1]}</li>`);
+        continue;
+      }
+      
+      // Match Ordered Lists: 1. item
+      const olMatch = line.match(/^\s*(\d+)\.\s+(.*?)$/);
+      if (olMatch) {
+        if (!inList || listType !== 'ol') {
+          closeListIfNeeded();
+          processedLines.push('<ol>');
+          inList = true;
+          listType = 'ol';
+        }
+        processedLines.push(`<li>${olMatch[2]}</li>`);
+        continue;
+      }
+      
+      // Empty line
+      if (line.trim() === '') {
+        closeListIfNeeded();
+        processedLines.push(''); // keeps empty line for paragraph splitting
+        continue;
+      }
+      
+      // Regular text line (inside list or paragraph)
+      processedLines.push(line);
+    }
+    
+    // Close any open lists or tables at end of string
+    closeListIfNeeded();
+    if (inTable) {
+      processedLines.push('</tbody></table>');
+      inTable = false;
+    }
+
+    // Join processed lines back
+    let processedText = processedLines.join('\n');
+
+    // 4. Parse inline elements (Bold, Inline Code)
+    // Bold: **text**
+    processedText = processedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Inline code: `code`
+    processedText = processedText.replace(/`(.*?)`/g, '<code class="markdown-inline-code">$1</code>');
+
+    // 5. Build Paragraphs: split by double newlines, wrap non-HTML blocks in <p>
+    const blocks = processedText.split(/\n\n+/);
+    const finalBlocks = blocks.map(block => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      
+      // If it starts with an HTML block tag, do not wrap in <p>
+      if (trimmed.startsWith('<h') || 
+          trimmed.startsWith('<ul') || 
+          trimmed.startsWith('<ol') || 
+          trimmed.startsWith('<blockquote') || 
+          trimmed.startsWith('<table') || 
+          trimmed.startsWith('<div class="markdown-alert') ||
+          trimmed.startsWith('__CODE_BLOCK_PLACEHOLDER_')) {
+        return trimmed;
+      }
+      
+      // Wrap plain text blocks in <p>
+      // Replace single newlines within the paragraph with a space for standard Markdown flow
+      const cleanParagraph = trimmed.replace(/\n/g, ' ');
+      return `<p>${cleanParagraph}</p>`;
+    });
+    
+    let finalHtml = finalBlocks.filter(b => b).join('\n');
+
+    // 6. Restore Code Blocks
+    codeBlocks.forEach((codeBlock, idx) => {
+      finalHtml = finalHtml.replace(`__CODE_BLOCK_PLACEHOLDER_${idx}__`, codeBlock);
+    });
+
+    return finalHtml;
+  }
+
+  getAlertIcon(type) {
+    switch (type) {
+      case 'note': return 'info';
+      case 'tip': return 'lightbulb';
+      case 'important': return 'priority_high';
+      case 'warning': return 'warning';
+      case 'caution': return 'report';
+      default: return 'info';
+    }
+  }
+
   // --- HELPERS ---
   resetMantisWorkspace() {
     if (!this.mantisTreeContainer) return;
@@ -301,6 +790,24 @@ class MantisController {
     this.btnCopyPayload.disabled = true;
     this.currentSelectedNodePayload = null;
     this.activeTraceNodes = [];
+    
+    // Reset diagnostics tab pages if not running
+    if (!this.isTriageRunning) {
+      // Reset panel sliding to default
+      if (this.diagnosticsLayout) {
+        this.diagnosticsLayout.classList.remove('running', 'complete');
+      }
+      this.rcaReportBody.innerHTML = `
+        <div class="rca-placeholder-message">
+          Select a device and scenario, then click "Run AI Triage" to generate diagnostics.
+        </div>
+      `;
+      this.btnCopyReport.disabled = true;
+      this.btnCopyReport.removeAttribute('data-raw-markdown');
+      this.triageLogViewer.clear();
+      this.triageStatusBadge.textContent = 'Idle';
+      this.triageStatusBadge.className = 'badge badge-idle';
+    }
   }
 
   getMantisIconName(subType) {
@@ -327,6 +834,19 @@ class MantisController {
         this.btnCopyPayload.innerHTML = '<span class="material-symbols-outlined" style="color:var(--color-tertiary)">check</span>';
         setTimeout(() => {
           this.btnCopyPayload.innerHTML = oldIcon;
+        }, 1500);
+      });
+  }
+
+  copyReportToClipboard() {
+    const markdown = this.btnCopyReport.getAttribute('data-raw-markdown');
+    if (!markdown) return;
+    navigator.clipboard.writeText(markdown)
+      .then(() => {
+        const oldIcon = this.btnCopyReport.innerHTML;
+        this.btnCopyReport.innerHTML = '<span class="material-symbols-outlined" style="color:var(--color-tertiary)">check</span>';
+        setTimeout(() => {
+          this.btnCopyReport.innerHTML = oldIcon;
         }, 1500);
       });
   }

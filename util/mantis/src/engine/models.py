@@ -76,7 +76,7 @@ async def extract_structured_report(
     target_id: str,
     markdown_report: str,
     status: str = "SUCCESS",
-    model_name: str = "gemini-3.1-flash"
+    model_name: str = "gemini-2.5-flash"
 ) -> TriageReportModel:
     """
     Uses Gemini structured extraction to parse an unstructured markdown triage report

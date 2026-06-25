@@ -27,8 +27,8 @@
   <div class="tool-layout">
 
     <!-- Local Header Toolbar (Specialized controls) -->
-    <header class="local-toolbar">
-      <div class="toolbar-left">
+    <header class="local-toolbar" style="display: flex; align-items: center; justify-content: space-between;">
+      <div class="toolbar-left" style="display: flex; align-items: center; gap: 20px;">
         <!-- Device Select -->
         <div class="control-group">
           <label for="device-select" class="control-label">Device</label>
@@ -45,41 +45,119 @@
           </select>
         </div>
       </div>
+      
+      <!-- Tab Buttons (Multi-view orchestration) -->
+      <div class="toolbar-right" style="display: flex; gap: 8px;">
+        <button id="tab-btn-trace" class="btn btn-primary" data-tab="trace">
+          <span class="material-symbols-outlined">timeline</span>
+          <span>Timeline Trace</span>
+        </button>
+        <button id="tab-btn-diagnostics" class="btn btn-outlined" data-tab="diagnostics">
+          <span class="material-symbols-outlined">psychology</span>
+          <span>AI Diagnostics</span>
+        </button>
+      </div>
     </header>
 
     <!-- Main Workspace Grid -->
     <main class="tool-main">
-      <div class="mantis-layout">
-
-        <!-- Left Pane: State Transition Graph/Tree -->
-        <div class="card mantis-tree-card">
-          <div class="card-header">
-            <h3>Debug Sequence Flow</h3>
-            <span class="badge badge-info">Active Stream</span>
-          </div>
-          <div class="mantis-tree-container">
-            <!-- Dynamically populated transitions flow -->
-          </div>
-        </div>
-
-        <!-- Right Pane: MQTT Payload Inspector -->
-        <div class="card mantis-inspector-card">
-          <div class="card-header border-bottom">
-            <div class="inspector-title-bar">
-              <span class="material-symbols-outlined">topic</span>
-              <span id="mqtt-topic" class="topic-name">Select a state node to inspect MQTT payload</span>
+      
+      <!-- Tab Page 1: Timeline Trace -->
+      <div id="tab-page-trace" class="tab-page active">
+        <div class="mantis-layout">
+          <!-- Left Pane: State Transition Graph/Tree -->
+          <div class="card mantis-tree-card">
+            <div class="card-header">
+              <h3>Debug Sequence Flow</h3>
+              <span class="badge badge-info">Active Stream</span>
             </div>
-            <button id="btn-copy-payload" class="btn btn-outlined btn-icon" disabled
-              aria-label="Copy payload to clipboard">
-              <span class="material-symbols-outlined">content_copy</span>
-            </button>
+            <div class="mantis-tree-container">
+              <!-- Dynamically populated transitions flow -->
+            </div>
           </div>
-          <div class="inspector-body">
-            <div id="mqtt-json-viewer" style="height: 100%;"></div>
+
+          <!-- Right Pane: MQTT Payload Inspector -->
+          <div class="card mantis-inspector-card">
+            <div class="card-header border-bottom">
+              <div class="inspector-title-bar">
+                <span class="material-symbols-outlined">topic</span>
+                <span id="mqtt-topic" class="topic-name">Select a state node to inspect MQTT payload</span>
+              </div>
+              <button id="btn-copy-payload" class="btn btn-outlined btn-icon" disabled
+                aria-label="Copy payload to clipboard">
+                <span class="material-symbols-outlined">content_copy</span>
+              </button>
+            </div>
+            <div class="inspector-body">
+              <div id="mqtt-json-viewer" style="height: 100%;"></div>
+            </div>
           </div>
         </div>
-
       </div>
+
+      <!-- Tab Page 2: AI Diagnostics -->
+      <div id="tab-page-diagnostics" class="tab-page">
+        <div class="diagnostics-layout">
+          
+          <!-- Left Column: Live Progress Terminal & Actions -->
+          <div class="diagnostics-sidebar">
+            
+            <!-- Playbook Mode Card -->
+            <div class="card playbook-card" style="margin-bottom: 20px;">
+              <div class="card-header">
+                <h3>Diagnostic Settings</h3>
+              </div>
+              <div class="card-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
+                <div class="control-group">
+                  <label for="playbook-select" class="control-label">Diagnostic Playbook</label>
+                  <select id="playbook-select" class="form-select w-full">
+                    <option value="oem">OEM Compliance Auditor (Standard)</option>
+                    <option value="swe">SWE Code Debugger (Advanced)</option>
+                  </select>
+                </div>
+                <button id="btn-run-triage" class="btn btn-primary w-full" style="margin-top: 8px;" disabled>
+                  <span class="material-symbols-outlined">psychology</span>
+                  <span>Run AI Triage</span>
+                </button>
+                <button id="btn-stop-triage" class="btn btn-outlined w-full text-error" style="display: none;">
+                  <span class="material-symbols-outlined">stop</span>
+                  <span>Stop Triage</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Live Progress Terminal -->
+            <div class="card terminal-card" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+              <div class="card-header border-bottom">
+                <h3>AI Agent Thoughts</h3>
+                <span id="triage-status-badge" class="badge badge-idle">Idle</span>
+              </div>
+              <div id="triage-terminal-container" style="flex: 1; min-height: 0;"></div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: Pristine Markdown RCA Report -->
+          <div class="card rca-report-card">
+            <div class="card-header border-bottom">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: var(--color-primary);">description</span>
+                <h3 style="margin: 0;">AI Root Cause Analysis (RCA)</h3>
+              </div>
+              <button id="btn-copy-report" class="btn btn-outlined btn-icon" title="Copy report markdown" disabled>
+                <span class="material-symbols-outlined">content_copy</span>
+              </button>
+            </div>
+            <div id="rca-report-body" class="rca-body">
+              <div class="rca-placeholder-message">
+                Select a device and scenario, then click "Run AI Triage" to generate diagnostics.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </main>
 
   </div>

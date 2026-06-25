@@ -200,6 +200,13 @@ class ShellOrchestrator {
         this.loadBrowserPath(e.target.value.trim());
       }
     });
+
+    // --- 5. CROSS-IFRAME TRIAGE REDIRECTION (Sequencer -> Mantis) ---
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.type === 'trigger_diagnose') {
+        this.handleTriggerDiagnose(event.data);
+      }
+    });
   }
 
   // --- STATE SYNCING VIA POSTMESSAGE ---
@@ -243,6 +250,34 @@ class ShellOrchestrator {
     const brandSubtitle = document.getElementById('app-subtitle');
     if (brandSubtitle) {
       brandSubtitle.textContent = `/ ${tabId.charAt(0).toUpperCase() + tabId.slice(1)}`;
+    }
+  }
+
+  handleTriggerDiagnose(data) {
+    const { testId, deviceId, siteModel } = data;
+    console.log(`Parent Shell: Intercepted trigger_diagnose for test ${testId} on device ${deviceId}`);
+    
+    // 1. Switch to the Mantis tab
+    this.switchTab('mantis');
+    
+    // 2. Locate the Mantis iframe and pipe the event
+    const iframeMantis = document.getElementById('iframe-mantis');
+    if (iframeMantis) {
+      const sendPayload = () => {
+        iframeMantis.contentWindow.postMessage({
+          type: 'load_diagnose',
+          testId,
+          deviceId,
+          siteModel
+        }, '*');
+      };
+      
+      // Defensively check if the iframe is already loaded. If not, wait for it!
+      if (iframeMantis.contentDocument && iframeMantis.contentDocument.readyState === 'complete') {
+        sendPayload();
+      } else {
+        iframeMantis.addEventListener('load', sendPayload, { once: true });
+      }
     }
   }
 

@@ -29,6 +29,29 @@ def _get_response_text(response: Any) -> str:
     return ""
 
 
+def _clean_error_message(e: Exception) -> str:
+    """Parses massive Google GenAI raw JSON tracebacks into a concise, single-line error summary."""
+    import re
+    err_str = str(e)
+    # Match standard Google API error status (e.g. 429 RESOURCE_EXHAUSTED)
+    status_match = re.search(r'^(\d+\s+[A-Z_]+)', err_str)
+    # Match the 'message' field in the JSON payload (handling both single and double quotes)
+    msg_match = re.search(r"['\"]message['\"]:\s*['\"](.*?)['\"]", err_str)
+    
+    if status_match:
+        status = status_match.group(1)
+        msg = msg_match.group(1) if msg_match else "API Error"
+        if len(msg) > 120:
+            msg = msg[:117] + "..."
+        return f"{status} - {msg}"
+    
+    # Fallback to the first line or a truncated string
+    first_line = err_str.split('\n')[0].strip()
+    if len(first_line) > 120:
+        return first_line[:117] + "..."
+    return first_line
+
+
 class AsyncTriageEngine:
     """
     A high-performance, asynchronous GenAI orchestration engine for log triage.
@@ -87,7 +110,7 @@ class AsyncTriageEngine:
                     ])
                     if is_transient and attempt < self.max_retries - 1:
                         wait_time = self.base_wait_seconds * (2 ** attempt)
-                        print(color_text(f"[Transient GenAI Error]: {e}. Retrying in {wait_time}s...", YELLOW))
+                        print(color_text(f"[Transient GenAI Error]: {_clean_error_message(e)}. Retrying in {wait_time}s...", YELLOW))
                         await asyncio.sleep(wait_time)
                     else:
                         raise e
@@ -111,7 +134,7 @@ class AsyncTriageEngine:
             )
             # Using standard flash-lite for safe, cheap, high-speed token distillation
             response = await self._call_generate_content_with_retry(
-                model="gemini-3.1-flash-lite",
+                model="gemini-2.5-flash-lite",
                 contents=summary_prompt,
                 config=types.GenerateContentConfig(temperature=0.1)
             )
@@ -147,7 +170,7 @@ class AsyncTriageEngine:
             temp_history.append(types.Content(role="user", parts=[types.Part.from_text(text=compaction_prompt)]))
 
             response = await self._call_generate_content_with_retry(
-                model="gemini-3.1-flash-lite",
+                model="gemini-2.5-flash-lite",
                 contents=temp_history,
                 config=types.GenerateContentConfig(temperature=0.1)
             )

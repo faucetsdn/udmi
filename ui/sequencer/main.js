@@ -289,7 +289,12 @@ class SequencerController {
             <div class="test-case-desc">${tc.desc}</div>
           </div>
         </div>
-        <div class="test-case-status">
+        <div class="test-case-status" style="display: flex; align-items: center;">
+          ${tc.status === 'fail' ? `
+            <button class="btn-diagnose" title="Diagnose failure with Mantis AI" aria-label="Diagnose with Mantis">
+              <span class="material-symbols-outlined">psychology</span>
+            </button>
+          ` : ''}
           <span class="material-symbols-outlined status-icon ${tc.status}">
             ${this.getSequencerStatusIconName(tc.status)}
           </span>
@@ -301,6 +306,20 @@ class SequencerController {
         tc.checked = e.target.checked;
         this.validateInputs();
       });
+
+      const diagnoseBtn = itemEl.querySelector('.btn-diagnose');
+      if (diagnoseBtn) {
+        diagnoseBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.parent.postMessage({
+            type: 'trigger_diagnose',
+            testId: tc.id,
+            deviceId: this.deviceSelect.value,
+            siteModel: this.siteModel,
+            projectSpec: this.projectInput.value
+          }, '*');
+        });
+      }
 
       this.testCasesList.appendChild(itemEl);
     });

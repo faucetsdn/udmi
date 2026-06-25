@@ -13,8 +13,9 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 # Global registry of active server-enforced features (default to both)
 ALLOWED_FEATURES = {'sequencer', 'mantis'}
 
-# Global process handle
+# Global process handles
 sequencer_process = None
+triage_process = None
 
 class UDMIRequestHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -46,6 +47,14 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.handle_stop_sequencer()
         elif parsed_url.path == '/api/sequencer_status':
             self.handle_sequencer_status(parsed_url.query)
+        elif parsed_url.path == '/api/run_triage':
+            self.handle_run_triage(parsed_url.query)
+        elif parsed_url.path == '/api/stop_triage':
+            self.handle_stop_triage()
+        elif parsed_url.path == '/api/triage_status':
+            self.handle_triage_status(parsed_url.query)
+        elif parsed_url.path == '/api/triage_report':
+            self.handle_triage_report(parsed_url.query)
         else:
             # Regular static file serving
             super().do_GET()
@@ -289,6 +298,236 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(response_data)
+
+    def handle_run_triage(self, query_string):
+        global triage_process
+        params = urllib.parse.parse_qs(query_string)
+        device_id = params.get('device_id', [None])[0]
+        test_id = params.get('test_id', [None])[0]
+        playbook = params.get('playbook', [None])[0]
+        project_spec = params.get('project_spec', [None])[0]
+        site_model = params.get('site_model', [None])[0]
+
+        if not device_id or not test_id:
+            self.send_error_response(400, "Missing required parameters: device_id, test_id")
+            return
+
+        # 1. Resolve virtualenv python binary
+        python_bin = os.path.join(ROOT_DIR, 'venv', 'bin', 'python3')
+        if not os.path.exists(python_bin):
+            python_bin = sys.executable # Fallback to current if virtualenv is missing
+
+        # 2. Setup out/ directory and verify file existence for the manifest
+        out_dir = os.path.join(ROOT_DIR, 'out')
+        os.makedirs(out_dir, exist_ok=True)
+
+        site_id = os.path.basename(os.path.normpath(site_model)) if site_model else "udmi_site_model"
+        
+        # Resolve relative and absolute paths for the logs
+        seq_log_rel = f"sites/{site_id}/out/devices/{device_id}/tests/{test_id}/sequence.log"
+        seq_md_rel = f"sites/{site_id}/out/devices/{device_id}/tests/{test_id}/sequence.md"
+        pubber_log_rel = "out/pubber.log"
+        udmis_log_rel = "out/udmis.log"
+
+        seq_log_abs = os.path.join(ROOT_DIR, seq_log_rel)
+
+        # Strict Guardrail: If sequence_log is absent, do not trigger the run at all!
+        if not os.path.exists(seq_log_abs):
+            self.send_error_response(412, f"Triage aborted: Sequencer log not found for '{test_id}'. Please run the compliance test case first to generate logs.")
+            return
+
+        # Dynamically compile the logs dictionary, including only files that exist on disk
+        failed_run_logs = {
+            "sequence_log": seq_log_rel
+        }
+
+        if os.path.exists(os.path.join(ROOT_DIR, seq_md_rel)):
+            failed_run_logs["sequence_md"] = seq_md_rel
+        if os.path.exists(os.path.join(ROOT_DIR, pubber_log_rel)):
+            failed_run_logs["pubber_log"] = pubber_log_rel
+        if os.path.exists(os.path.join(ROOT_DIR, udmis_log_rel)):
+            failed_run_logs["udmis_log"] = udmis_log_rel
+
+        manifest_data = {
+            "metadata": {
+                "target_project": project_spec or "//mqtt/localhost",
+                "site_id": site_id
+            },
+            "failures": [
+                {
+                    "test_name": test_id,
+                    "device_id": device_id,
+                    "suite": "both",
+                    "category": "unknown",
+                    "run_directory": "out",
+                    "logs": {
+                        "failed_run": failed_run_logs
+                    }
+                }
+            ]
+        }
+
+        manifest_path = os.path.join(out_dir, 'triage_manifest.json')
+        try:
+            with open(manifest_path, 'w', encoding='utf-8') as fm:
+                json.dump(manifest_data, fm, indent=2)
+        except Exception as e:
+            print(f"Warning: failed to write triage_manifest.json: {e}")
+
+        # 3. Build the Mantis triage command in Manifest Mode:
+        # python3 -u -m mantis.src.app.main -m out/triage_manifest.json -d DEVICE_ID -t TEST_ID [--playbook PLAYBOOK_PATH]
+        manifest_relative_path = os.path.join('out', 'triage_manifest.json')
+        cmd = [python_bin, "-u", "-m", "mantis.src.app.main", "-m", manifest_relative_path, "-d", device_id, "-t", test_id]
+
+        if playbook == "swe":
+            playbook_path = os.path.join(ROOT_DIR, 'util', 'mantis', 'config', 'playbook_swe.yaml')
+            cmd.extend(["--playbook", playbook_path])
+
+        # 4. Setup PYTHONPATH so it can resolve tools, util/ (for mantis namespace), and util/mantis/src
+        env = os.environ.copy()
+        mantis_src = os.path.join(ROOT_DIR, 'util', 'mantis', 'src')
+        util_dir = os.path.join(ROOT_DIR, 'util')
+        tools_dir = os.path.join(ROOT_DIR, 'tools')
+        env['PYTHONPATH'] = f"{tools_dir}:{mantis_src}:{util_dir}:{env.get('PYTHONPATH', '')}"
+
+        log_path = os.path.join(out_dir, 'triage.log')
+        if os.path.exists(log_path):
+            try:
+                os.remove(log_path)
+            except:
+                pass
+
+        try:
+            # Spawn the process in a new process group so we can kill its children
+            triage_process = subprocess.Popen(
+                cmd,
+                cwd=ROOT_DIR,
+                env=env,
+                stdout=open(log_path, 'wb', buffering=0),
+                stderr=subprocess.STDOUT,
+                preexec_fn=os.setsid
+            )
+            
+            response_data = json.dumps({
+                "status": "Started",
+                "pid": triage_process.pid,
+                "cmd": cmd
+            }).encode('utf-8')
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(response_data)
+        except Exception as e:
+            self.send_error_response(500, f"Failed to start Mantis triage: {str(e)}")
+
+    def handle_stop_triage(self):
+        global triage_process
+        if triage_process is None or triage_process.poll() is not None:
+            response_data = json.dumps({"status": "Not running"}).encode('utf-8')
+        else:
+            try:
+                pgid = os.getpgid(triage_process.pid)
+                os.killpg(pgid, signal.SIGTERM)
+                triage_process.wait(timeout=2)
+                triage_process = None
+                response_data = json.dumps({"status": "Stopped"}).encode('utf-8')
+            except Exception as e:
+                try:
+                    triage_process.kill()
+                    triage_process = None
+                    response_data = json.dumps({"status": "Stopped (fallback)", "error": str(e)}).encode('utf-8')
+                except Exception as ex:
+                    self.send_error_response(500, f"Failed to stop triage process: {str(ex)}")
+                    return
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
+
+    def handle_triage_status(self, query_string):
+        global triage_process
+        params = urllib.parse.parse_qs(query_string)
+        offset_param = params.get('offset', [0])[0]
+        
+        try:
+            offset = int(offset_param)
+        except:
+            offset = 0
+
+        is_running = triage_process is not None and triage_process.poll() is None
+        exit_code = triage_process.poll() if triage_process else None
+
+        log_content = ""
+        new_offset = offset
+        log_path = os.path.join(ROOT_DIR, 'out', 'triage.log')
+
+        if os.path.exists(log_path):
+            try:
+                with open(log_path, 'r') as f:
+                    f.seek(0, os.SEEK_END)
+                    file_size = f.tell()
+                    
+                    if offset < file_size:
+                        f.seek(offset)
+                        log_content = f.read()
+                        new_offset = f.tell()
+            except Exception as e:
+                log_content = f"[Server Error reading log: {str(e)}]\n"
+
+        response_data = json.dumps({
+            "running": is_running,
+            "exit_code": exit_code,
+            "log": log_content,
+            "offset": new_offset
+        }).encode('utf-8')
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
+
+    def handle_triage_report(self, query_string):
+        params = urllib.parse.parse_qs(query_string)
+        site_model = params.get('site_model', [None])[0]
+        project_spec = params.get('project_spec', [None])[0]
+        device_id = params.get('device_id', [None])[0]
+        test_id = params.get('test_id', [None])[0]
+
+        if not all([site_model, project_spec, device_id, test_id]):
+            self.send_error_response(400, "Missing required parameters: site_model, project_spec, device_id, test_id")
+            return
+
+        # Resolve path dynamically using target project spec and site model
+        clean_target = project_spec.replace("/", "_").replace("+", "_").strip("_")
+        site_model_resolved = os.path.expanduser(site_model)
+        site_id = os.path.basename(os.path.normpath(site_model_resolved))
+        report_path = os.path.join(ROOT_DIR, 'out', 'diagnose', clean_target, site_id, device_id, test_id, 'triage_analysis.md')
+
+        if not os.path.exists(report_path):
+            self.send_error_response(404, f"Diagnostic report not found for test '{test_id}'. It may still be running.")
+            return
+
+        try:
+            with open(report_path, 'r', encoding='utf-8') as f:
+                report_content = f.read()
+            
+            response_data = report_content.encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/markdown; charset=utf-8')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(response_data)
+        except Exception as e:
+            self.send_error_response(500, f"Error reading diagnostic report: {str(e)}")
 
     def send_error_response(self, code, message):
         response_data = json.dumps({"error": message}).encode('utf-8')
