@@ -66,12 +66,12 @@ public class AlarmsetState {
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this.alarms == null)? 0 :this.alarms.hashCode()));
         result = ((result* 31)+((this.upgraded_from == null)? 0 :this.upgraded_from.hashCode()));
         result = ((result* 31)+((this.state_etag == null)? 0 :this.state_etag.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
+        result = ((result* 31)+((this.alarms == null)? 0 :this.alarms.hashCode()));
         return result;
     }
 
@@ -84,7 +84,7 @@ public class AlarmsetState {
             return false;
         }
         AlarmsetState rhs = ((AlarmsetState) other);
-        return (((((((this.alarms == rhs.alarms)||((this.alarms!= null)&&this.alarms.equals(rhs.alarms)))&&((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from))))&&((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((this.upgraded_from == rhs.upgraded_from)||((this.upgraded_from!= null)&&this.upgraded_from.equals(rhs.upgraded_from)))&&((this.state_etag == rhs.state_etag)||((this.state_etag!= null)&&this.state_etag.equals(rhs.state_etag))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))))&&((this.alarms == rhs.alarms)||((this.alarms!= null)&&this.alarms.equals(rhs.alarms))));
     }
 
 }
