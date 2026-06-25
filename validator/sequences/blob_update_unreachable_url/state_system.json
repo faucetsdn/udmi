@@ -5,22 +5,21 @@
   },
   "last_config" : "TIMESTAMP",
   "operation" : {
-    "operational" : true,
     "last_start" : "TIMESTAMP",
-    "restart_count" : 1,
-    "mode" : "initial"
+    "mode" : "initial",
+    "operational" : true,
+    "restart_count" : 1
   },
-  "serial_no" : "sequencer-17735",
+  "serial_no" : "sequencer-8854",
   "software" : {
     "firmware" : "v1",
     "pubber_module" : "v1"
   },
   "status" : {
-    "message" : "No fetcher registered for scheme: http",
-    "detail" : "java.lang.IllegalArgumentException: No fetcher registered for scheme: http;",
-    "category" : "blobset.blob.fetch",
-    "timestamp" : "TIMESTAMP",
-    "level" : 500
+    "category" : "system.config.apply",
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

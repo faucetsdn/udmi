@@ -9,6 +9,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
+import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.Common;
 import java.util.Arrays;
 import java.util.Date;
@@ -49,6 +50,19 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private String determineProvider(String registryId) {
+    // TODO: In the future, different registries might be governed by different backends
+    // using the same set of providers, so inheriting affinity from the reflector like
+    // this might need to be re-evaluated.
+    // For now, we assume the only active backend is Mosquitto (ImplicitIotAccessProvider),
+    // and inheriting the reflector's affinity is necessary to resolve the cold-start
+    // deadlock where the device hasn't sent a message yet but needs its config.
+    String reflectorKey = getProviderKey(ContainerBase.REFLECT_BASE, registryId);
+    String reflectorAffinity = registryProviders.get(reflectorKey);
+    if (reflectorAffinity != null) {
+      debug("Registry affinity mapping for %s inherited from reflector %s: %s",
+          registryId, reflectorKey, reflectorAffinity);
+      return reflectorAffinity;
+    }
     getProviders();
     TreeMap<String, String> sortedMap = getProviders().entrySet().stream()
         .filter(access -> access.getValue().isEnabled())
@@ -70,6 +84,26 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     IotAccessProvider provider = getProviders().get(providerKey);
     return requireNonNull(provider,
         format("Could not determine provider for %s from %s", providerKey, entryKey));
+  }
+
+  private IotAccessProvider getRegistryProvider(Envelope envelope) {
+    return getRegistryProvider(envelope.deviceRegistryId, envelope.deviceId);
+  }
+
+  private IotAccessProvider getRegistryProvider(String registryId, String deviceId) {
+    IotAccessProvider provider = getProviderFor(registryId, deviceId);
+    if (provider instanceof PubSubIotAccessProvider) {
+      IotAccessProvider fallback = getProviders().values().stream()
+          .filter(p -> !(p instanceof PubSubIotAccessProvider))
+          .findFirst()
+          .orElse(null);
+      if (fallback != null) {
+        debug("PubSub provider does not support registry operations, falling back to %s",
+            fallback.getClass().getSimpleName());
+        return fallback;
+      }
+    }
+    return provider;
   }
 
   private Map<String, IotAccessProvider> getProviders() {
@@ -111,22 +145,22 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel fetchDevice(String registryId, String deviceId) {
-    return getProviderFor(registryId, deviceId).fetchDevice(registryId, deviceId);
+    return getRegistryProvider(registryId, deviceId).fetchDevice(registryId, deviceId);
   }
 
   @Override
   public String fetchRegistryMetadata(String registryId, String metadataKey) {
-    return getProviderFor(registryId, null).fetchRegistryMetadata(registryId, metadataKey);
+    return getRegistryProvider(registryId, null).fetchRegistryMetadata(registryId, metadataKey);
   }
 
   @Override
   public String fetchState(String registryId, String deviceId) {
-    return getProviderFor(registryId, deviceId).fetchState(registryId, deviceId);
+    return getRegistryProvider(registryId, deviceId).fetchState(registryId, deviceId);
   }
 
   @Override
   public void saveState(String registryId, String deviceId, String stateBlob) {
-    getProviderFor(registryId, deviceId).saveState(registryId, deviceId, stateBlob);
+    getRegistryProvider(registryId, deviceId).saveState(registryId, deviceId, stateBlob);
   }
 
   @Override
@@ -147,7 +181,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public CloudModel listDevices(String registryId, Consumer<String> progress) {
-    return getProviderFor(registryId, null).listDevices(registryId, progress);
+    return getRegistryProvider(registryId, null).listDevices(registryId, progress);
   }
 
   @Override
@@ -155,13 +189,14 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       Consumer<String> progress) {
     debug("%s iot device %s/%s, %s %s", cloudModel.operation, registryId, deviceId,
         cloudModel.blocked, cloudModel.num_id);
-    return getProviderFor(registryId, deviceId).modelDevice(registryId, deviceId, cloudModel,
+    return getRegistryProvider(registryId, deviceId).modelDevice(registryId, deviceId, cloudModel,
         progress);
   }
 
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
-    return getProviderFor(registryId, deviceId).modelRegistry(registryId, deviceId, cloudModel);
+    return getRegistryProvider(registryId, deviceId)
+        .modelRegistry(registryId, deviceId, cloudModel);
   }
 
   @Override
@@ -175,16 +210,50 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     getProviderFor(envelope).sendCommandBase(envelope, folder, message);
   }
 
+  /**
+   * Sets the provider affinity for a given registry and device.
+   *
+   * <p>If a client specifies a provider source (e.g., native PubSub source "pubsub/user"),
+   * we cache the parsed affinity (e.g., "pubsub") to ensure all subsequent downlink
+   * replies/commands are routed back through that same provider.
+   *
+   * <p>If the client does not specify a source (e.g., a proxied MQTT connection where the
+   * proxy does not propagate the source attribute, resulting in a null providerId), we
+   * explicitly clear the cached affinity. This prevents UDMIS from getting permanently
+   * stuck on a previous client's affinity (like a sticky "pubsub" mapping) and allows it
+   * to correctly fall back to the default configured provider for that registry (like
+   * "implicit" Mosquitto MQTT).
+   */
   @Override
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
+    String providerKey = getProviderKey(registryId, deviceId);
     if (providerId != null) {
       int index = providerId.indexOf(Common.SOURCE_SEPARATOR);
-      String affinity = providerId.substring(0, index < 0 ? providerId.length() : index);
-      String providerKey = getProviderKey(registryId, deviceId);
+      String transport = providerId.substring(0, index < 0 ? providerId.length() : index);
+      String source = index < 0 ? null : providerId.substring(index + 1);
+
+      String affinity = transport;
+      if (source != null) {
+        if ("bridge".equals(source)) {
+          affinity = "implicit";
+        } else if (getProviders().containsKey(source)) {
+          affinity = source;
+        }
+      } else {
+        if ("bridge".equals(transport)) {
+          affinity = "implicit";
+        }
+      }
+
       String previous = registryProviders.put(providerKey, affinity);
       if (!affinity.equals(previous)) {
         debug(format("Switched registry affinity for %s from %s -> %s", providerKey, previous,
             affinity));
+      }
+    } else {
+      String previous = registryProviders.remove(providerKey);
+      if (previous != null) {
+        debug(format("Cleared registry affinity for %s (was %s)", providerKey, previous));
       }
     }
     super.setProviderAffinity(registryId, deviceId, providerId);

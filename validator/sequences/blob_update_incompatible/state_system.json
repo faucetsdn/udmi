@@ -5,21 +5,22 @@
   },
   "last_config" : "TIMESTAMP",
   "operation" : {
-    "operational" : true,
     "last_start" : "TIMESTAMP",
-    "restart_count" : 1,
-    "mode" : "initial"
+    "mode" : "initial",
+    "operational" : true,
+    "restart_count" : 1
   },
-  "serial_no" : "sequencer-23097",
+  "serial_no" : "sequencer-10987",
   "software" : {
     "firmware" : "v1",
     "pubber_module" : "v1"
   },
   "status" : {
-    "message" : "success",
-    "category" : "system.config.apply",
-    "timestamp" : "TIMESTAMP",
-    "level" : 300
+    "category" : "blobset.blob.parse",
+    "detail" : "udmi.lib.base.UdmiException: Simulated incompatibility for pubber_module;",
+    "level" : 500,
+    "message" : "Simulated incompatibility for pubber_module",
+    "timestamp" : "TIMESTAMP"
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"
