@@ -11,6 +11,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$WORKSPACE_DIR"
 
+# Create or update the ui/version.txt file using git on startup
+if command -v git > /dev/null 2>&1 && git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  git rev-parse --short HEAD > ui/version.txt
+else
+  if [ ! -f ui/version.txt ]; then
+    echo "HEAD" > ui/version.txt
+  fi
+fi
+
 # Parse arguments
 FEATURE="all"
 if [ "$#" -gt 0 ]; then

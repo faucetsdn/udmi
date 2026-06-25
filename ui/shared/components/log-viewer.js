@@ -75,7 +75,6 @@ export class LogViewer {
           flex: 1;
           overflow-y: auto;
           padding: 12px;
-          scroll-behavior: smooth;
         }
         .log-line {
           white-space: pre-wrap;

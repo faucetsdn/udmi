@@ -85,4 +85,8 @@ tests/dbo/basic/test_site_model/
 /tools/mantis/test_bundles/
 /tools/mantis/src/mantis.egg-info
 
+# UDMI Workbench generated files
+/ui/version.txt
+
+
 

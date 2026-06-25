@@ -197,9 +197,12 @@ class SequencerController {
       if (res.ok) {
         const version = (await res.text()).trim();
         this.modelInput.value = version;
+      } else {
+        this.modelInput.value = 'HEAD';
       }
     } catch (err) {
-      console.error('Failed to load version.txt', err);
+      console.error('Failed to load version.txt, falling back to HEAD:', err);
+      this.modelInput.value = 'HEAD';
     }
   }
 
