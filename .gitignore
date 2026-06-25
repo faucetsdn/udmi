@@ -79,3 +79,6 @@ wordlist.dic
 # Test output directories
 tests/dbo/basic/test_site_model/
 
+# Bridgehead local environment file
+bridgehead/.env
+

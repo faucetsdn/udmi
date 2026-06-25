@@ -22,7 +22,10 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 
 3. **Get default site model:** In your terminal, run `git clone https://github.com/faucetsdn/udmi_site_model.git`.
 
-4. **Edit Environment Variables:** Open the `.env` file in your chosen editor.
+4. **Edit Environment Variables:** Copy the template `env.txt` to `.env` and open it in your chosen editor:
+    ```bash
+    cp env.txt .env
+    ```
    1. AUTH_USER & AUTH_PASS: This client is configured to allow you to administer the dynamic security plugin only. It does not have access to publish messages to normal topics.
    2. SERV_USER & SERV_PASS: Service User.
    3. HOST_IP: This is required in order to allow connections to the broker externally from the docker compose environment. You can get your host ip address using: `hostname -I`.
