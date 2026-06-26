@@ -22,11 +22,11 @@ if ! docker compose version &>/dev/null; then
   exit 1
 fi
 
-SITE_MODEL="$(pwd)/sites/udmi_site_model"
-if [ ! -d "$SITE_MODEL" ]; then
-  echo "Error: $SITE_MODEL directory does not exist." >&2
-  exit 1
+if [ ! -d "sites/udmi_site_model" ]; then
+  echo "Site model directory missing. Cloning..."
+  bin/clone_model
 fi
+SITE_MODEL="$(pwd)/sites/udmi_site_model"
 
 REGISTRY_ID=$(jq -r .registry_id "$SITE_MODEL/cloud_iot_config.json")
 DEVICE_ID=$(jq -r .device_id "$SITE_MODEL/cloud_iot_config.json")
