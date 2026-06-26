@@ -47,9 +47,9 @@ Format: `scheme://[user@]host[:port][/path]`
   - **Uniqueness and Nonces:** To ensure absolute uniqueness and prevent session hijacking or connection drops when multiple clients share a broker, implementations MAY append a random, unique alphanumeric suffix (e.g., `_sess123` or a secure random nonce) to the formatted Client ID.
 - **Project Identity:** For the MQTT transport, the `projectId` field in the envelope SHOULD be treated as a general environment or project identifier. All components within a single UUFI session MUST use a consistent `projectId` (default: `vibrant`) to avoid ambiguity in message processing.
 - **Cloud Model Service:**
-  - **Discovery:** Clients publish a `query/cloud` message to `[/{prefix}]/uufi/c/query/cloud`.
-  - **Response:** System publishes the model to `[/{prefix}]/uufi/c/model/cloud`. Sourcing model updates from `[/{prefix}]/uufi/c/config/cloud` is strictly prohibited.
-  - **Structure:** Uses nested **Registries** (Section 5.1).
+  - **Discovery (Query):** Clients publish a `query/cloud` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/cloud`.
+  - **Response (Model Reply):** System publishes the device cloud model to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/cloud`. Sourcing model updates from `[/{prefix}]/uufi/c/config/cloud` or other un-scoped/registry-less topics is strictly prohibited.
+  - **Structure:** Uses standard flat **CloudModel** payloads addressed via device-scoped envelope attributes and topic paths (Section 5.1).
 - **State Query Service:**
   - **Discovery:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
   - **Response:** System (the gateway/processor caching the state) immediately replies by publishing the last known cached device State report on the device's state topic `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/state/blobset` (or the corresponding state topic matching the query's subFolder).
@@ -136,29 +136,17 @@ To ensure protocol compatibility, data integrity, and protection against replay 
 
 ## 5. Cloud Model Operations
 
-### 5.1. Schema
+### 5.1. Schema and Addressing
 - **Operation:** `READ`, `CREATE`, `UPDATE`, `DELETE`, `BIND`, `UNBIND`.
-- **Registries:** Map of `{registry_id}` to a map of `{device_id}` to a map of `{subsystem_id}` to subsystem state.
-- **Detail:** Optional parameters.
-
-- **Cloud Model Update Payload Structure (Standard Root Key & Nesting Hierarchy):**
-  All cloud model updates published over the UUFI bus (specifically on the `/uufi/c/model/cloud` topic suffix) MUST utilize a standard flattened format where the `"registries"` key resides directly at the payload root.
-  The payload under `"registries"` MUST follow a nested registry-to-device hierarchy:
-  ```json
-  {
-    "registries": {
-      "<registry_id>": {
-        "devices": {
-          "<device_id>": <device_model_data>
-        }
-      }
-    }
-  }
-  ```
+- **Addressing (Topic & Envelope Attributes):**
+  To ensure consistent routing and avoid parsing complexity, all cloud model updates, queries, and replies MUST NOT use a nested JSON registries hierarchy (such as `"registries"` or `"devices"`) inside the payload. Instead, the registry ID and device ID MUST be specified strictly as message attributes (envelope level) or MQTT topic path segments:
+  - **MQTT Topic:** `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/cloud`
+  - **PubSub Attributes:** Envelope attributes MUST include `deviceRegistryId` and `deviceId` (along with `subFolder` set to `"cloud"` and `subType` set to `"model"` or `"query"`).
+- **Payload Structure:**
+  The inner message payload MUST follow the flat, unnested `CloudModel` schema representing only the specified device (conforming directly to `model_cloud.json`).
 - **Prohibited Formats:** 
-  - Wrapping the model update payload inside a `"cloud"` root sub-object is strictly prohibited.
-  - Publishing flat device schemas directly at the root (e.g., `{"devices": ...}`) is strictly prohibited and MUST be rejected as non-compliant.
-  - Sourcing updates from `/uufi/c/config/cloud` is strictly prohibited.
+  - Nested payload hierarchies (e.g., nesting under a `"registries"`, `"devices"`, or `"cloud"` root key inside the JSON payload) are strictly prohibited.
+  - Sourcing or publishing cloud model updates from `/uufi/c/config/cloud` or any other un-scoped/registry-less topics is strictly prohibited.
 
 ### 5.2. Update Semantics (Partial Merge)
 The `UPDATE` operation for the `cloud` subfolder is a partial merge at the device subsystem level. Existing fields not in the payload MUST NOT be modified.
@@ -178,9 +166,9 @@ To configure a device's expected or desired software subsystem version, implemen
 | State Event | `state` | *varies* | Receive | |
 | Telemetry | `events` | `pointset` | Receive | |
 | Discovery | `events` | `discovery` | Receive | |
-| Model Query | `query` | `cloud` | Publish | |
-| Model Update | `model` | `cloud` | Publish | Under `"registries"` root key |
-| Model Reply | `model` | `cloud` | Receive | Under `"registries"` root key (config/cloud is prohibited) |
+| Model Query | `query` | `cloud` | Publish | Registry and device-scoped |
+| Model Update | `model` | `cloud` | Publish | Registry and device-scoped |
+| Model Reply | `model` | `cloud` | Receive | Registry and device-scoped (config/cloud is prohibited) |
 | State Query | `query` | `state` | Publish | |
 | Blobset Config | `config` | `blobset` | Publish | |
 | Blobset State | `state` | `blobset` | Receive | |
@@ -545,7 +533,9 @@ This appendix references the formal JSON schemas and provides message examples f
   "subType": "model",
   "transactionId": "UUFI:sess123:004",
   "source": "orchestrator",
-  "principal": "orchestrator"
+  "principal": "orchestrator",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1"
 }
 ```
 
@@ -554,16 +544,12 @@ This appendix references the formal JSON schemas and provides message examples f
 {
   "version": "1.5.2",
   "timestamp": "2026-04-29T10:15:00Z",
-  "registries": {
-    "reg-1": {
-      "devices": {
-        "dev-1": {
-          "system": {
-            "software": {
-              "system": "2.1.0"
-            }
-          }
-        }
+  "auth_type": "RS256",
+  "blocked": false,
+  "config": {
+    "system": {
+      "software": {
+        "system": "2.1.0"
       }
     }
   }
@@ -572,7 +558,7 @@ This appendix references the formal JSON schemas and provides message examples f
 
 ### A.1.8. Cloud Model Update (MQTT)
 
-**Topic:** `/uufi/c/model/cloud`
+**Topic:** `/uufi/r/reg-1/d/dev-1/c/model/cloud`
 
 **Payload:**
 ```json
@@ -585,16 +571,12 @@ This appendix references the formal JSON schemas and provides message examples f
   "payload": {
     "version": "1.5.2",
     "timestamp": "2026-04-29T10:15:00Z",
-    "registries": {
-      "reg-1": {
-        "devices": {
-          "dev-1": {
-            "system": {
-              "software": {
-                "system": "2.1.0"
-              }
-            }
-          }
+    "auth_type": "RS256",
+    "blocked": false,
+    "config": {
+      "system": {
+        "software": {
+          "system": "2.1.0"
         }
       }
     }
