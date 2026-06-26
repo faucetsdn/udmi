@@ -25,6 +25,7 @@ import static udmi.schema.Category.BLOBSET_BLOB_PARSE;
 import static udmi.schema.Category.BLOBSET_BLOB_RECEIVE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
+import com.google.daq.mqtt.sequencer.DefaultLogLevel;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
@@ -491,6 +492,7 @@ public class BlobsetSequences extends SequenceBase {
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates a successful blob update where the device fetches, applies, "
       + "and reports the new version.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_success() {
     verifyBlobUpdateSequence("success", true,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -501,6 +503,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates tamper protection by providing a valid URL but an incorrect SHA-256 hash.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_invalid_hash() {
     verifyBlobUpdateSequence("fail_hash", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -511,6 +514,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates network resilience by providing an unreachable or 404 URL.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_unreachable_url() {
     verifyBlobUpdateSequence("fail_fetch", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -521,6 +525,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates format and signature checking by providing a dummy payload.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_invalid_payload() {
     verifyBlobUpdateSequence("fail_parse", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -531,6 +536,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates reporting of incompatibility for a blob update.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_incompatible() {
     verifyBlobUpdateSequence("fail_incompatible", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -541,6 +547,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates reporting of an oversized payload fetch failure.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_oversize() {
     verifyBlobUpdateSequence("fail_oversize", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -552,6 +559,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates that a previously applied blob config is not reapplied.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_idempotency() {
     // Standard successful update
     verifyBlobUpdateSequence("success", true,
