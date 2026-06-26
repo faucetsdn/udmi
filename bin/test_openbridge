@@ -109,11 +109,12 @@ cleanup() {
     fi
     if [ -f bridgehead/var/mosquitto/dynamic_security.json ]; then
       echo "Saving Mosquitto dynamic security config..." >&2
+      # Run cp and chmod inside the container to ensure the copied file is readable by the host runner user
       docker run --rm --entrypoint "" \
         -v "$(pwd)/bridgehead/var:/var_dir" \
         -v "$(pwd)/out:/out_dir" \
         bridgehead-mosquitto \
-        cp /var_dir/mosquitto/dynamic_security.json /out_dir/dynamic_security.json 2>/dev/null || true
+        sh -c "cp /var_dir/mosquitto/dynamic_security.json /out_dir/dynamic_security.json && chmod 644 /out_dir/dynamic_security.json" 2>/dev/null || true
     fi
     docker compose -f bridgehead/docker-compose.yml logs mosquitto > out/mosquitto_docker.log 2>&1 || true
     docker compose -f bridgehead/docker-compose.yml logs etcd > out/etcd_docker.log 2>&1 || true
@@ -333,6 +334,26 @@ export GCP_PROJECT=udmis
 export ETCD_CLUSTER=127.0.0.1
 export PUBSUB_EMULATOR_HOST=127.0.0.1:8085
 export UDMI_NAMESPACE=""
+
+# Ensure the var directory exists and contains the required deployed_version.json
+# UDMIS expects this file to exist and contain version info when running
+# We calculate these dynamically to match how bin/container does it in production
+mkdir -p udmis/var
+(
+  current_user="${USER:-runner}@$(hostname)"
+  revparse=$(git rev-parse HEAD 2>/dev/null || echo "unknown_commit")
+  udmi_commit=${revparse:0:9}
+  built_at=$(date --utc +%Y-%m-%dT%H:%M:%SZ)
+  
+  cat <<EOF > udmis/var/deployed_version.json
+{
+  "built_at" : "$built_at",
+  "built_by" : "$current_user",
+  "udmi_ref" : "g$udmi_commit",
+  "udmi_version" : "1.4.1"
+}
+EOF
+)
 
 echo "Generating Udmis Host Pub/Sub config..."
 jq --arg auth_user "$AUTH_USER" \
