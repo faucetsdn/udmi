@@ -106,3 +106,12 @@ URL="http://localhost:8080/ui/index.html?features=${FEATURES_PARAM}"
 echo "Opening UDMI Workbench (${FEATURE}) in your default browser..."
 echo "Workbench running at: ${URL}"
 
+if command -v xdg-open > /dev/null 2>&1; then
+  xdg-open "$URL" > /dev/null 2>&1 &
+elif command -v open > /dev/null 2>&1; then
+  open "$URL" > /dev/null 2>&1 &
+elif command -v python3 > /dev/null 2>&1; then
+  python3 -m webbrowser "$URL" > /dev/null 2>&1 &
+fi
+
+
