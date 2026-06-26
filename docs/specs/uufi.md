@@ -39,11 +39,16 @@ Format: `scheme://[user@]host[:port][/path]`
 - **Host/Port:** Standard network mapping.
 - **Topic Structure:** `[/{prefix}]/uufi/[r/{deviceRegistryId}/[d/{deviceId}/]]c/{subType}/{subFolder}`
   - The `prefix` is the optional path component of the connection string, representing one or more path segments. Implementations MUST strip any leading or trailing slashes from the path component before using it as a `prefix`. In UDMI environments, the `prefix` often corresponds to the `UDMI_PREFIX` environment variable, which isolates multiple UDMI installations on the same messaging backbone.
-- **Prefix Isolation:** The `prefix` MUST be used to isolate different environments sharing the same broker. If provided, it MUST be the leading part of the topic path (e.g. matching all segments of the path provided in the connection string). Implementations MUST support multi-segment prefixes and MUST NOT omit the prefix if provided in the connection string. All active subscriptions (including those for traffic observation) MUST be scoped to the provided prefix to ensure environmental isolation. Prefix enforcement MUST be strict: implementations MUST NOT publish to or subscribe from topics outside their designated prefix tree. To avoid collisions when multiple clients share the same broker, implementations MUST use unique MQTT Client IDs, for example by incorporating the prefix, a random nonce, or a combination of both.
+  - **Rigid Segment Presence:** Every UUFI topic path MUST include both a subtype (`subType`) and a subfolder (`subFolder`) segment without exception. Topic paths MUST be formatted strictly as `[/{prefix}]/uufi/c/{subType}/{subFolder}` (for common channels) or `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/{subType}/{subFolder}` (for registry/device scoped channels). Omitting the subfolder segment or truncating suffixes (e.g. `/c/{subType}`) is strictly prohibited.
+  - **Handshake Subfolder Suffix:** For standard registry-less handshakes, the subfolder segment MUST be explicitly set to `"udmi"`. Thus, the handshake topics MUST be exactly `[/{prefix}]/uufi/c/state/udmi` and `[/{prefix}]/uufi/c/config/udmi`.
+  - **Prohibition of Alternative Topic Structures:** Principal-scoped patterns (such as `[/{prefix}]/uufi/p/{principal}/...`) and any other custom or arbitrary routing hierarchies are strictly prohibited. All system components MUST standardize exclusively on the common and registry-scoped topic channels to ensure interoperability.
+- **Prefix Isolation:** The `prefix` MUST be used to isolate different environments sharing the same broker. If provided, it MUST be the leading part of the topic path (e.g. matching all segments of the path provided in the connection string). Implementations MUST support multi-segment prefixes and MUST NOT omit the prefix if provided in the connection string. All active subscriptions (including those for traffic observation) MUST be scoped to the provided prefix to ensure environmental isolation. Prefix enforcement MUST be strict: implementations MUST NOT publish to or subscribe from topics outside their designated prefix tree. To avoid collisions and support standard broker authorization structures, implementations MUST construct unique MQTT Client IDs adhering to a standardized format:
+  - **Standardized Client ID Format:** Client IDs MUST be formatted strictly as `[/{prefix}]/{registry_id}/{client_id}`. If the registry is unknown or not applicable, the Client ID MUST be formatted as `[/{prefix}]/{client_id}`.
+  - **Uniqueness and Nonces:** To ensure absolute uniqueness and prevent session hijacking or connection drops when multiple clients share a broker, implementations MAY append a random, unique alphanumeric suffix (e.g., `_sess123` or a secure random nonce) to the formatted Client ID.
 - **Project Identity:** For the MQTT transport, the `projectId` field in the envelope SHOULD be treated as a general environment or project identifier. All components within a single UUFI session MUST use a consistent `projectId` (default: `vibrant`) to avoid ambiguity in message processing.
 - **Cloud Model Service:**
   - **Discovery:** Clients publish a `query/cloud` message to `[/{prefix}]/uufi/c/query/cloud`.
-  - **Response:** System publishes the model to `[/{prefix}]/uufi/c/config/cloud`.
+  - **Response:** System publishes the model to `[/{prefix}]/uufi/c/model/cloud`. Sourcing model updates from `[/{prefix}]/uufi/c/config/cloud` is strictly prohibited.
   - **Structure:** Uses nested **Registries** (Section 5.1).
 - **State Query Service:**
   - **Discovery:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
@@ -57,14 +62,25 @@ Handshake is **Client-initiated**. The **System MUST NOT initiate a handshake** 
 - **Local Blobs**: For local file references, the `url` MUST use the `file://` scheme. Recipients MUST strip the scheme to resolve the path.
 - **Metadata**: Device metadata (`make`, `model`) SHOULD be stored in a dedicated `meta` subsystem within the cloud model for consistency.
 
-### Step 1: State Declaration
+### 3.1. Handshake Steps and Payload Standards
+
+To guarantee parsing interoperability and avoid protocol timeouts, Handshake payloads and correlation MUST strictly adhere to the following rules:
+
+- **Single, Strict, and Flattened Payload Structure:**
+  - **Step 1 (Handshake Request):** The `"setup"` payload block MUST reside directly at the payload root of the message (i.e. the root of the inner UDMI state payload). Nested or wrapped formats (e.g., nesting `"setup"` under a `"udmi"` key or any other custom outer wrapper) are strictly prohibited and MUST be treated as protocol violations.
+  - **Step 2 (Handshake Response):** The `"reply"` payload block (along with the optional/mandatory `"setup"` block) MUST reside directly at the payload root of the message. Wrapping under a `"udmi"` root sub-object or any other custom outer wrapper is strictly prohibited and MUST be treated as a protocol violation.
+
+- **Transaction Correlation:** 
+  To ensure reliable request-response correlation on shared handshake channels (e.g., `/uufi/c/config/udmi`), the handshake configuration reply message's envelope MUST include a `"transactionId"` attribute matching the exact transaction ID from the client's handshake request envelope. Receivers MUST validate this correlation and reject mismatched responses.
+
+### Step 1: State Declaration (Handshake Request)
 The Client publishes a UDMI `state` message to `/uufi/c/state/udmi`.
-- **Payload:** Must include `setup` (see Appendix A.1.1).
+- **Payload:** Must include `setup` directly at the root (see Appendix A.1.1).
 - **Addressing:** Registry-less topic. `source` in envelope contains Client identity.
 
-### Step 2: Configuration Confirmation
+### Step 2: Configuration Confirmation (Handshake Response)
 The System publishes a UDMI `config` message to `/uufi/c/config/udmi`.
-- **Payload:** Must include `setup` and `reply`.
+- **Payload:** Must include `setup` and `reply` directly at the root (see Appendix A.1.1.a and A.1.2.a).
 - **Addressing:** Envelope `principal` MUST match Client's identity. For handshake replies, the System MUST use the `principal` or `source` from the received state message to ensure the reply reaches the correct client. If the received message has a `principal`, it SHOULD be used; otherwise, the `source` SHOULD be used as a fallback.
 
 **Retries:** The Client SHOULD periodically republish the Step 1 state message (e.g., every 5 seconds) if a valid Step 2 confirmation has not been received, until the 60-second timeout.
@@ -106,6 +122,18 @@ Inner JSON `payload` object MUST include:
 - **Mandatory Fields:** The MQTT envelope MUST include `projectId`, `transactionId`, `publishTime`, `source`, `principal`, and `payload`.
 - **Nesting:** UDMI message data MUST be nested within the `payload` key.
 
+### 4.1. Envelope Metadata and Configuration Attributes
+
+To ensure protocol compatibility, data integrity, and protection against replay attacks, the following metadata policies are codified for UUFI message envelopes and payloads:
+
+- **Envelope Nonce Attribute:**
+  To support message deduplication and replay protection, clients and devices publishing state, event, or model messages SHOULD include a `"nonce"` field in the envelope's root containing a secure, pseudorandomly generated hexadecimal string (minimum 32 characters, e.g., 16 bytes of entropy).
+  All receivers (including orchestrators, gateways, and verifiers) MUST gracefully accept, parse, and process envelopes containing the `"nonce"` attribute without throwing schema errors or dropping the messages.
+
+- **Configuration Version Attribute:**
+  All configuration envelopes (at the envelope metadata level) and their inner payloads (at the payload root level) MUST include a standard `"version"` attribute matching the UDMI version schema (e.g., `"1.5.2"`).
+  Receivers MUST parse and validate this version attribute to guarantee protocol compatibility. Any configuration message that lacks this attribute or contains an invalid or unparseable version schema MUST be treated as non-compliant, rejected immediately, and failed.
+
 ## 5. Cloud Model Operations
 
 ### 5.1. Schema
@@ -113,25 +141,49 @@ Inner JSON `payload` object MUST include:
 - **Registries:** Map of `{registry_id}` to a map of `{device_id}` to a map of `{subsystem_id}` to subsystem state.
 - **Detail:** Optional parameters.
 
+- **Cloud Model Update Payload Structure (Standard Root Key & Nesting Hierarchy):**
+  All cloud model updates published over the UUFI bus (specifically on the `/uufi/c/model/cloud` topic suffix) MUST utilize a standard flattened format where the `"registries"` key resides directly at the payload root.
+  The payload under `"registries"` MUST follow a nested registry-to-device hierarchy:
+  ```json
+  {
+    "registries": {
+      "<registry_id>": {
+        "devices": {
+          "<device_id>": <device_model_data>
+        }
+      }
+    }
+  }
+  ```
+- **Prohibited Formats:** 
+  - Wrapping the model update payload inside a `"cloud"` root sub-object is strictly prohibited.
+  - Publishing flat device schemas directly at the root (e.g., `{"devices": ...}`) is strictly prohibited and MUST be rejected as non-compliant.
+  - Sourcing updates from `/uufi/c/config/cloud` is strictly prohibited.
+
 ### 5.2. Update Semantics (Partial Merge)
 The `UPDATE` operation for the `cloud` subfolder is a partial merge at the device subsystem level. Existing fields not in the payload MUST NOT be modified.
 
+### 5.3. Device System Configuration
+To configure a device's expected or desired software subsystem version, implementations MUST adhere to exactly ONE standard schema:
+- **Standard Expected Version Path:** The expected version MUST be configured exclusively within the standard software dictionary structure under system configuration: `system.software.<subsystem> = "{version}"` (where `<subsystem>` defaults to `"system"`).
+- **Prohibition of Custom Properties:** Any custom, flat, or alternative properties (such as `system.target_version` or `system.software_target`) are strictly prohibited and MUST NOT be accepted by the cloud orchestrator or processed by devices.
+
 ## 6. UDMI to UUFI Mapping
 
-| UDMI Operation | Envelope `subType` | Envelope `subFolder` | Direction |
-| :--- | :--- | :--- | :--- |
-| Handshake State | `state` | `udmi` | Publish |
-| Handshake Config | `config` | `udmi` | Receive |
-| Config Update | `config` | *varies* | Publish |
-| State Event | `state` | *varies* | Receive |
-| Telemetry | `events` | `pointset` | Receive |
-| Discovery | `events` | `discovery` | Receive |
-| Model Query | `query` | `cloud` | Publish |
-| Model Update | `model` | `cloud` | Publish |
-| Model Reply | `config` | `cloud` | Receive |
-| State Query | `query` | `state` | Publish |
-| Blobset Config | `config` | `blobset` | Publish |
-| Blobset State | `state` | `blobset` | Receive |
+| UDMI Operation | Envelope `subType` | Envelope `subFolder` | Direction | Note |
+| :--- | :--- | :--- | :--- | :--- |
+| Handshake State | `state` | `udmi` | Publish | Standard flat format (Step 1) |
+| Handshake Config | `config` | `udmi` | Receive | Standard flat format (Step 2) |
+| Config Update | `config` | *varies* | Publish | |
+| State Event | `state` | *varies* | Receive | |
+| Telemetry | `events` | `pointset` | Receive | |
+| Discovery | `events` | `discovery` | Receive | |
+| Model Query | `query` | `cloud` | Publish | |
+| Model Update | `model` | `cloud` | Publish | Under `"registries"` root key |
+| Model Reply | `model` | `cloud` | Receive | Under `"registries"` root key (config/cloud is prohibited) |
+| State Query | `query` | `state` | Publish | |
+| Blobset Config | `config` | `blobset` | Publish | |
+| Blobset State | `state` | `blobset` | Receive | |
 
 ## 7. Reliability
 
@@ -146,11 +198,14 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 
 ### 8.1. Payload Structure
 - **Nesting:** The `payload` object contains the fields of the UDMI message corresponding to the `subFolder` and `subType`.
-- **Subsystem Nesting:** For `blobset` config and state payloads, data MUST be nested within a subsystem-id key (e.g., `system`) to support multi-subsystem devices. Implementations MUST handle both nested and unnested (flat) payloads for backward compatibility and robust interoperability.
+- **Subsystem Nesting:** For `blobset` config and state payloads, data MUST be nested within a subsystem-id key (e.g., `system`) to support multi-subsystem devices. Subsystem nesting is strictly required for all UUFI-compliant messages, and unnested (flat) payloads are not supported.
 
 - **Mandatory Fields:** `timestamp` and `version` MUST be at the root of the `payload` object.
 - **Metadata:** The `make` and `model` fields are mandatory for all `blobset` subfolder payloads (state and config) within the subsystem nesting. These fields are essential for the System to locate the correct blob in the repository and MUST be included in every subsystem entry subject to reconciliation.
-- **Blobset Config URL:** The `url` field in a `blobset` config payload MUST be a valid URI. Implementations MUST support the `file://` scheme for local file references. When a `file://` URI is provided, the recipient MUST strip the scheme and any leading slashes as appropriate for the local operating system to resolve the absolute or relative path.
+- **Blobset Config URL & Canonical Path Resolution:** The `url` field in a `blobset` config payload MUST be a valid URI. Implementations MUST support the `file://` scheme for local file references. When a `file://` URI is provided, the recipient MUST convert it to a canonical path according to the following strict rules:
+  - **Absolute Paths:** If the URI has three leading slashes (e.g., `file:///var/tmp/bundle.bin`), the scheme `file://` is stripped and the remainder (`/var/tmp/bundle.bin`) MUST be resolved as a standard absolute path on the host system.
+  - **Relative Paths:** If the URI has two leading slashes (e.g., `file://relative/path/bundle.bin`), the scheme `file://` is stripped and the path MUST be resolved relative to a designated application/site-model root directory.
+  - Standardization of these resolution rules ensures consistent payload parsing across diverse host operating systems.
 
 
 ### 8.2. Timestamp Format
@@ -297,6 +352,35 @@ This appendix references the formal JSON schemas and provides message examples f
 }
 ```
 
+### A.1.1.a. Handshake Response (PubSub)
+
+**Attributes:**
+```json
+{
+  "subFolder": "udmi",
+  "subType": "config",
+  "transactionId": "UUFI:sess123:001",
+  "source": "system-id",
+  "principal": "client-id@"
+}
+```
+
+**Data:**
+```json
+{
+  "version": "1.5.2",
+  "timestamp": "2026-04-29T10:00:05Z",
+  "setup": {
+    "functions_ver": 9,
+    "transaction_id": "UUFI:sess123:001",
+    "msg_source": "client-id"
+  },
+  "reply": {
+    "transaction_id": "UUFI:sess123:001"
+  }
+}
+```
+
 ### A.1.2. Handshake (MQTT)
 
 **Topic:** `/uufi/c/state/udmi`
@@ -316,6 +400,33 @@ This appendix references the formal JSON schemas and provides message examples f
       "functions_ver": 9,
       "transaction_id": "UUFI:sess123:001",
       "msg_source": "client-id"
+    }
+  }
+}
+```
+
+### A.1.2.a. Handshake Response (MQTT)
+
+**Topic:** `/uufi/c/config/udmi`
+
+**Payload:**
+```json
+{
+  "projectId": "vibrant",
+  "transactionId": "UUFI:sess123:001",
+  "publishTime": "2026-04-29T10:00:05Z",
+  "source": "system-id",
+  "principal": "client-id",
+  "payload": {
+    "version": "1.5.2",
+    "timestamp": "2026-04-29T10:00:05Z",
+    "setup": {
+      "functions_ver": 9,
+      "transaction_id": "UUFI:sess123:001",
+      "msg_source": "client-id"
+    },
+    "reply": {
+      "transaction_id": "UUFI:sess123:001"
     }
   }
 }
@@ -418,6 +529,72 @@ This appendix references the formal JSON schemas and provides message examples f
           "url": "file:///path/to/bundle.bin",
           "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
           "generation": "2026-04-29T10:10:00Z"
+        }
+      }
+    }
+  }
+}
+```
+
+### A.1.7. Cloud Model Update (PubSub)
+
+**Attributes:**
+```json
+{
+  "subFolder": "cloud",
+  "subType": "model",
+  "transactionId": "UUFI:sess123:004",
+  "source": "orchestrator",
+  "principal": "orchestrator"
+}
+```
+
+**Data:**
+```json
+{
+  "version": "1.5.2",
+  "timestamp": "2026-04-29T10:15:00Z",
+  "registries": {
+    "reg-1": {
+      "devices": {
+        "dev-1": {
+          "system": {
+            "software": {
+              "system": "2.1.0"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### A.1.8. Cloud Model Update (MQTT)
+
+**Topic:** `/uufi/c/model/cloud`
+
+**Payload:**
+```json
+{
+  "projectId": "vibrant",
+  "transactionId": "UUFI:sess123:004",
+  "publishTime": "2026-04-29T10:15:00Z",
+  "source": "orchestrator",
+  "principal": "orchestrator",
+  "payload": {
+    "version": "1.5.2",
+    "timestamp": "2026-04-29T10:15:00Z",
+    "registries": {
+      "reg-1": {
+        "devices": {
+          "dev-1": {
+            "system": {
+              "software": {
+                "system": "2.1.0"
+              }
+            }
+          }
         }
       }
     }
