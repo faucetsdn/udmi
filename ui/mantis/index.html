@@ -40,11 +40,13 @@
         <!-- Debug Scenario Selector -->
         <div class="control-group">
           <label for="scenario-select" class="control-label">Debug Scenario</label>
-          <div style="display: flex; align-items: center;">
-            <select id="scenario-select" class="form-select" style="width: 260px;" aria-label="Select Scenario" disabled>
+          <div class="scenario-select-container">
+            <select id="scenario-select" class="form-select" style="width: 240px;" aria-label="Select Scenario" disabled>
               <option value="">-- Waiting for parent selection --</option>
             </select>
-            <span id="mantis-test-status-badge" class="badge badge-idle" style="display: none; align-items: center; gap: 4px; padding: 4px 10px; font-size: 12px; margin-left: 8px;"></span>
+            <span id="mantis-test-status-badge" class="badge scenario-status-badge" style="display: none;"></span>
+            <span id="mantis-test-target-badge" class="badge scenario-status-badge badge-info" style="display: none;"></span>
+            <span id="mantis-test-time-badge" class="badge scenario-status-badge badge-neutral" style="display: none;"></span>
           </div>
         </div>
       </div>
@@ -71,7 +73,10 @@
           <!-- Left Pane: State Transition Graph/Tree -->
           <div class="card mantis-tree-card">
             <div class="card-header">
-              <h3>Debug Sequence Flow</h3>
+              <div style="display: flex; align-items: center;">
+                <span class="card-header-icon-box icon-box-blue"><span class="material-symbols-outlined" style="font-size:18px;">schema</span></span>
+                <h3 style="margin:0;">Debug Sequence Flow</h3>
+              </div>
               <span class="badge badge-info">Active Stream</span>
             </div>
             <div class="mantis-tree-container">
@@ -83,7 +88,7 @@
           <div class="card mantis-inspector-card">
             <div class="card-header border-bottom">
               <div class="inspector-title-bar">
-                <span class="material-symbols-outlined">topic</span>
+                <span class="card-header-icon-box icon-box-emerald"><span class="material-symbols-outlined" style="font-size:18px;">data_object</span></span>
                 <span id="mqtt-topic" class="topic-name">Select a state node to inspect MQTT payload</span>
               </div>
               <button id="btn-copy-payload" class="btn btn-outlined btn-icon" disabled
@@ -108,7 +113,10 @@
             <!-- Playbook & AI Settings Card -->
             <div class="card playbook-card" style="margin-bottom: 20px;">
               <div class="card-header">
-                <h3>Diagnostic Settings</h3>
+                <div style="display: flex; align-items: center;">
+                  <span class="card-header-icon-box icon-box-purple"><span class="material-symbols-outlined" style="font-size:18px;">tune</span></span>
+                  <h3 style="margin:0;">Diagnostic Settings</h3>
+                </div>
               </div>
               <div class="card-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
                 <div class="control-group">
@@ -126,17 +134,6 @@
                     <button type="button" id="btn-browse-success-run" class="btn btn-outlined btn-icon-sm" aria-label="Browse successful run folder">
                       <span class="material-symbols-outlined">folder_open</span>
                     </button>
-                  </div>
-                </div>
-
-                <div id="group-test-verdict" class="control-group" style="display: none; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
-                  <label class="control-label">Compliance Test Verdict</label>
-                  <div id="test-verdict-box" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background-color: var(--bg-app); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span id="test-verdict-icon" class="material-symbols-outlined" style="font-size: 20px;">help_outline</span>
-                      <span id="test-verdict-text" style="font-weight: 600; font-size: 13px;">Unknown</span>
-                    </div>
-                    <span id="test-verdict-time" style="font-size: 11px; color: var(--text-muted);"></span>
                   </div>
                 </div>
 
@@ -164,6 +161,22 @@
                   </div>
                 </div>
 
+                <div class="control-group" style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
+                  <label class="control-label"
+                    style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                    <input type="checkbox" id="mantis-fetch-udmis-logs" style="cursor: pointer; width: 16px; height: 16px;" />
+                    <span>Fetch UDMIS logs for cloud targets</span>
+                  </label>
+                </div>
+                
+                <div id="group-cloud-logging-config" class="control-group" style="display: none; flex-direction: column; gap: 8px;">
+                  <div>
+                    <label for="mantis-cloud-project" class="control-label">Cloud Logging GCP Project ID</label>
+                    <input type="text" id="mantis-cloud-project" class="form-input w-full" style="width: 100%;"
+                      placeholder="e.g. my-gcp-project" />
+                  </div>
+                </div>
+
                 <button id="btn-run-triage" class="btn btn-primary w-full" style="margin-top: 8px; width: 100%;" disabled>
                   <span class="material-symbols-outlined">psychology</span>
                   <span>Run AI Triage</span>
@@ -178,7 +191,10 @@
             <!-- Live Progress Terminal -->
             <div class="card terminal-card" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
               <div class="card-header border-bottom">
-                <h3>AI Agent Thoughts</h3>
+                <div style="display: flex; align-items: center;">
+                  <span class="card-header-icon-box icon-box-amber"><span class="material-symbols-outlined" style="font-size:18px;">terminal</span></span>
+                  <h3 style="margin:0;">AI Agent Thoughts</h3>
+                </div>
                 <span id="triage-status-badge" class="badge badge-idle">Idle</span>
               </div>
               <div id="triage-terminal-container" style="flex: 1; min-height: 0;"></div>
@@ -192,8 +208,8 @@
           <!-- Right Column: Pristine Markdown RCA Report -->
           <div class="card rca-report-card">
             <div class="card-header border-bottom">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span class="material-symbols-outlined" style="color: var(--color-primary);">description</span>
+              <div style="display: flex; align-items: center;">
+                <span class="card-header-icon-box icon-box-gradient"><span class="material-symbols-outlined" style="font-size:18px;">auto_awesome</span></span>
                 <h3 style="margin: 0;">AI Root Cause Analysis (RCA)</h3>
               </div>
               <button id="btn-copy-report" class="btn btn-outlined btn-icon" title="Copy report markdown" disabled>

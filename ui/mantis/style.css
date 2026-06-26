@@ -16,13 +16,36 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: var(--toolbar-height);
-  padding: 0 24px;
+  min-height: var(--toolbar-height);
+  padding: 8px 24px;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
   z-index: 10;
   flex-shrink: 0;
   position: relative;
+}
+
+.scenario-select-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.scenario-status-badge {
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .toolbar-left {
@@ -242,7 +265,7 @@
 }
 
 .diagnostics-sidebar {
-  flex: 0 0 380px;
+  flex: 0 0 40%;
   min-width: 250px;
   max-width: calc(100% - 300px);
   display: flex;
@@ -732,4 +755,108 @@
   gap: 10px;
   padding: 14px 20px;
   border-top: 1px solid var(--border-color, #313244);
+}
+
+/* ==========================================================================
+   13. Rich Aesthetic & Visual Excellence Enhancements
+   ========================================================================== */
+
+/* Header Top Accent Gradient Line */
+.local-toolbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899, #10b981);
+  z-index: 11;
+}
+
+/* Card Left Accent Color Borders & Glow */
+.card {
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.mantis-tree-card {
+  border-left: 4px solid #3b82f6 !important;
+}
+
+.mantis-inspector-card {
+  border-left: 4px solid #10b981 !important;
+}
+
+.playbook-card {
+  border-left: 4px solid #8b5cf6 !important;
+}
+
+.terminal-card {
+  border-left: 4px solid #f59e0b !important;
+}
+
+.rca-report-card {
+  border-left: 4px solid #ec4899 !important;
+}
+
+/* Card Header Icon Boxes & Color Themes */
+.card-header-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  margin-right: 8px;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.card:hover .card-header-icon-box {
+  transform: scale(1.08);
+}
+
+.icon-box-blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.icon-box-emerald {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.icon-box-purple {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.icon-box-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.icon-box-gradient {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.2), rgba(139, 92, 246, 0.2));
+  color: #ec4899;
+  border: 1px solid rgba(236, 72, 153, 0.35);
+}
+
+/* Run AI Triage Button Premium Gradient */
+#btn-run-triage:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#btn-run-triage:not(:disabled):hover {
+  background: linear-gradient(135deg, #1d4ed8, #6d28d9) !important;
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+  transform: translateY(-1px);
 }

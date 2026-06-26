@@ -45,48 +45,64 @@ def extract_test_timebounds(sequence_log_path: str, test_id: str) -> tuple[datet
     return start_dt, end_dt
 
 def pull_gcloud_logs(project: str, service: str, start_dt: datetime, end_dt: datetime, padding_seconds: int) -> list[str]:
-    """Executes gcloud logging read to pull structured logs in the padded time range."""
+    """Executes gcloud logging read with time-sliced batching to fetch complete logs without timeouts."""
     padded_start = start_dt - timedelta(seconds=padding_seconds)
     padded_end = end_dt + timedelta(seconds=padding_seconds)
 
-    # Format timestamps for gcloud filter: YYYY-MM-DDTHH:MM:SSZ
-    start_str = padded_start.strftime("%Y-%m-%dT%H:%M:%SZ")
-    end_str = padded_end.strftime("%Y-%m-%dT%H:%M:%SZ")
+    chunk_seconds = 120  # 2-minute time-sliced chunks for fast, reliable batching
+    curr_start = padded_start
 
-    # Construct resilient GKE / Cloud Run hybrid query
-    log_filter = (
-        f'(resource.type="k8s_container" AND resource.labels.project_id="{project}" AND (labels."k8s-pod/app"="{service}" OR labels."k8s_pod/app"="{service}")) AND '
-        f'timestamp >= "{start_str}" AND '
-        f'timestamp <= "{end_str}"'
-    )
+    all_entries = []
+    seen_ids = set()
 
-    cmd = [
-        "gcloud", "logging", "read",
-        log_filter,
-        f"--project={project}",
-        "--format=json"
-    ]
+    import json
 
-    print(f"Running gcloud command: {' '.join(cmd)}")
-    
-    try:
-        out = subprocess.check_output(cmd, text=True)
-        import json
-        entries = json.loads(out) if out.strip() else []
-        
-        # Parse, extract text, and format chronologically
-        log_lines = []
-        for entry in entries:
-            ts = entry.get("timestamp", "unknown")
-            payload = entry.get("textPayload") or json.dumps(entry.get("jsonPayload", {}))
-            log_lines.append(f"{ts} {payload.strip()}")
-            
-        # Sort chronologically
-        log_lines.sort()
-        return log_lines
-    except Exception as e:
-        print(f"Warning: failed to pull logs from Cloud Logging: {e}", file=sys.stderr)
-        return []
+    while curr_start < padded_end:
+        curr_end = min(curr_start + timedelta(seconds=chunk_seconds), padded_end)
+        start_str = curr_start.strftime("%Y-%m-%dT%H:%M:%SZ")
+        end_str = curr_end.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        log_filter = (
+            f'resource.type="k8s_container" AND '
+            f'(resource.labels.container_name:"{service}" OR resource.labels.pod_name:"{service}") AND '
+            f'timestamp >= "{start_str}" AND '
+            f'timestamp <= "{end_str}"'
+        )
+
+        cmd = [
+            "gcloud", "logging", "read",
+            log_filter,
+            f"--project={project}",
+            "--limit=2000",
+            "--format=json"
+        ]
+
+        print(f"Fetching cloud log batch [{start_str} to {end_str}]...")
+
+        try:
+            out = subprocess.check_output(cmd, text=True)
+            entries = json.loads(out) if out.strip() else []
+            for entry in entries:
+                insert_id = entry.get("insertId")
+                if insert_id and insert_id in seen_ids:
+                    continue
+                if insert_id:
+                    seen_ids.add(insert_id)
+                all_entries.append(entry)
+        except Exception as e:
+            print(f"Warning: failed batch [{start_str} to {end_str}]: {e}", file=sys.stderr)
+
+        curr_start = curr_end
+
+    # Parse, extract text, and format chronologically
+    log_lines = []
+    for entry in all_entries:
+        ts = entry.get("timestamp", "unknown")
+        payload = entry.get("textPayload") or json.dumps(entry.get("jsonPayload", {}))
+        log_lines.append(f"{ts} {payload.strip()}")
+
+    log_lines.sort()
+    return log_lines
 
 def main():
     parser = argparse.ArgumentParser(description="Pull Cloud Logs for a Padded Test Execution Window")

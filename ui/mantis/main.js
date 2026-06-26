@@ -30,14 +30,18 @@ function combinePaths(base, sub) {
 }
 
 function getParentPath(path) {
-  if (!path || path === '.' || path === '/' || path === '' || path === '~') return '';
+  if (!path || path === '.' || path === '/' || path === '' || path === '~') return '~';
   const parts = path.split('/').filter(p => p);
   if (parts.length <= 1) {
-    return path.startsWith('/') ? '/' : '~';
+    return path.startsWith('~') ? '~' : (path.startsWith('/') ? '/' : '.');
   }
   parts.pop();
+  if (parts[0] === '~') {
+    return parts.join('/');
+  }
   return (path.startsWith('/') ? '/' : '') + parts.join('/');
 }
+
 
 // --- MANTIS DECOUPLED CONTROLLER ---
 class MantisController {
@@ -57,6 +61,8 @@ class MantisController {
     this.isTriageLoading = false;
     this.triageLogOffset = 0;
     this.triagePollInterval = null;
+    this.isPollingTriage = false;
+    this.hasHandledCompletion = false;
 
     this.initElements();
     this.initComponents();
@@ -101,6 +107,9 @@ class MantisController {
     this.groupGeminiKey = document.getElementById('group-gemini-key');
     this.groupVertexConfig = document.getElementById('group-vertex-config');
     this.successRunInput = document.getElementById('mantis-success-run');
+    this.fetchUdmisLogsCheckbox = document.getElementById('mantis-fetch-udmis-logs');
+    this.cloudProjectInput = document.getElementById('mantis-cloud-project');
+    this.groupCloudLoggingConfig = document.getElementById('group-cloud-logging-config');
 
     // Mantis Folder Browser Modal Elements
     this.btnBrowseSuccessRun = document.getElementById('btn-browse-success-run');
@@ -116,11 +125,8 @@ class MantisController {
 
     // Compliance Test Verdict Elements
     this.testStatusBadge = document.getElementById('mantis-test-status-badge');
-    this.groupTestVerdict = document.getElementById('group-test-verdict');
-    this.testVerdictBox = document.getElementById('test-verdict-box');
-    this.testVerdictIcon = document.getElementById('test-verdict-icon');
-    this.testVerdictText = document.getElementById('test-verdict-text');
-    this.testVerdictTime = document.getElementById('test-verdict-time');
+    this.testTargetBadge = document.getElementById('mantis-test-target-badge');
+    this.testTimeBadge = document.getElementById('mantis-test-time-badge');
     this.deviceResults = {};
   }
 
@@ -177,6 +183,15 @@ class MantisController {
     this.apiKeyInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_api_key', e.target.value.trim()));
     this.gcpProjectInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_gcp_project', e.target.value.trim()));
     this.gcpLocationInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_gcp_location', e.target.value.trim()));
+    if (this.fetchUdmisLogsCheckbox) {
+      this.fetchUdmisLogsCheckbox.addEventListener('change', (e) => {
+        localStorage.setItem('udmi_mantis_fetch_udmis', e.target.checked);
+        this.toggleCloudLoggingControls();
+      });
+    }
+    if (this.cloudProjectInput) {
+      this.cloudProjectInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_cloud_project', e.target.value.trim()));
+    }
 
     // Prevent accidental tab closure during active AI triage
     window.addEventListener('beforeunload', (e) => {
@@ -218,7 +233,9 @@ class MantisController {
 
     const savedWidth = localStorage.getItem('udmi_mantis_sidebar_width');
     if (savedWidth) {
-      this.diagnosticsSidebar.style.flexBasis = `${savedWidth}px`;
+      this.diagnosticsSidebar.style.flexBasis = (savedWidth.endsWith('%') || savedWidth.endsWith('px')) ? savedWidth : `${savedWidth}px`;
+    } else {
+      this.diagnosticsSidebar.style.flexBasis = '40%';
     }
 
     let isResizing = false;
@@ -272,6 +289,12 @@ class MantisController {
     if (this.successRunInput) {
       this.successRunInput.value = localStorage.getItem('udmi_mantis_success_run') || '';
     }
+    if (this.fetchUdmisLogsCheckbox) {
+      this.fetchUdmisLogsCheckbox.checked = localStorage.getItem('udmi_mantis_fetch_udmis') === 'true';
+    }
+    if (this.cloudProjectInput) {
+      this.cloudProjectInput.value = localStorage.getItem('udmi_mantis_cloud_project') || '';
+    }
     this.toggleProviderControls();
   }
 
@@ -284,6 +307,18 @@ class MantisController {
     } else {
       this.groupGeminiKey.style.display = 'flex';
       this.groupVertexConfig.style.display = 'none';
+    }
+    this.toggleCloudLoggingControls();
+  }
+
+  toggleCloudLoggingControls() {
+    const isChecked = this.fetchUdmisLogsCheckbox ? this.fetchUdmisLogsCheckbox.checked : false;
+    if (this.groupCloudLoggingConfig) {
+      if (isChecked) {
+        this.groupCloudLoggingConfig.style.display = 'flex';
+      } else {
+        this.groupCloudLoggingConfig.style.display = 'none';
+      }
     }
   }
 
@@ -487,8 +522,12 @@ class MantisController {
           const opt = document.createElement('option');
           opt.value = sc;
           const statusInfo = this.deviceResults[sc];
-          const statusTag = statusInfo ? ` [${statusInfo.status.toUpperCase()}]` : '';
-          opt.textContent = this.formatScenarioTitle(sc) + statusTag;
+          const st = statusInfo ? (statusInfo.status || '').toLowerCase() : '';
+          let symbol = '';
+          if (st === 'pass') symbol = ' ✔';
+          else if (st === 'fail' || st === 'error') symbol = ' ✘';
+          else if (st === 'skip') symbol = ' ⊘';
+          opt.textContent = this.formatScenarioTitle(sc) + symbol;
           this.scenarioSelect.appendChild(opt);
         });
         this.scenarioSelect.disabled = false;
@@ -506,6 +545,15 @@ class MantisController {
     this.resetMantisWorkspace();
     this.updateScenarioVerdict(scenarioId);
     if (!scenarioId) return;
+
+    const statusInfo = this.deviceResults && this.deviceResults[scenarioId];
+    if (statusInfo && (statusInfo.project_spec || statusInfo.target_project)) {
+      const pSpec = statusInfo.project_spec || statusInfo.target_project;
+      this.projectSpec = pSpec;
+      if (this.cloudProjectInput && pSpec && pSpec !== 'localhost') {
+        this.cloudProjectInput.value = pSpec;
+      }
+    }
 
     this.mantisTreeContainer.innerHTML = '<div style="text-align:center; padding-top:40px; color:var(--text-muted)">Loading transition sequence...</div>';
 
@@ -641,9 +689,9 @@ class MantisController {
     this.scenarioSelect.value = testId;
     await this.handleScenarioChange(testId);
     
-    // Switch to diagnostics tab and auto-boot triage!
+    // Switch to diagnostics tab (waiting for user to click "Run AI Triage")
     this.switchLocalTab('diagnostics');
-    this.startAITriage();
+    this.isTriageLoading = false;
   }
 
   // --- MANTIS AI TRIAGE EXECUTION LOOP ---
@@ -708,6 +756,8 @@ class MantisController {
     const gcpProject = this.gcpProjectInput.value.trim();
     const gcpLocation = this.gcpLocationInput.value.trim() || 'global';
     const successRun = this.successRunInput ? this.successRunInput.value.trim() : '';
+    const fetchUdmis = this.fetchUdmisLogsCheckbox ? this.fetchUdmisLogsCheckbox.checked : false;
+    const cloudProject = (this.cloudProjectInput ? this.cloudProjectInput.value.trim() : '') || gcpProject;
 
     if (this.successRunInput) {
       localStorage.setItem('udmi_mantis_success_run', successRun);
@@ -716,6 +766,12 @@ class MantisController {
     let runUrl = `/api/run_triage?device_id=${encodeURIComponent(deviceId)}&test_id=${encodeURIComponent(testId)}&playbook=${playbook}&site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(projectSpec)}`;
     if (successRun) {
       runUrl += `&success_run=${encodeURIComponent(successRun)}`;
+    }
+    if (fetchUdmis) {
+      runUrl += `&fetch_udmis=true`;
+      if (cloudProject) {
+        runUrl += `&cloud_project=${encodeURIComponent(cloudProject)}`;
+      }
     }
     if (provider === 'vertex') {
       runUrl += `&use_vertex=true&gcp_project=${encodeURIComponent(gcpProject)}&gcp_location=${encodeURIComponent(gcpLocation)}`;
@@ -728,6 +784,10 @@ class MantisController {
       const startData = await res.json();
       if (!res.ok) {
         throw new Error(startData.error || `HTTP ${res.status}`);
+      }
+
+      if (startData.session_id) {
+        this.currentSessionId = startData.session_id;
       }
 
       if (startData.status === "Skipped") {
@@ -748,6 +808,9 @@ class MantisController {
         this.stopAITriage(false);
         return;
       }
+
+      this.hasHandledCompletion = false;
+      this.isPollingTriage = false;
 
       // Start Polling
       this.triagePollInterval = setInterval(() => this.pollTriageStatus(), 500);
@@ -807,6 +870,8 @@ class MantisController {
   }
 
   async pollTriageStatus() {
+    if (this.isPollingTriage) return;
+    this.isPollingTriage = true;
     const url = `/api/triage_status?offset=${this.triageLogOffset}`;
     try {
       const response = await fetch(url);
@@ -824,6 +889,9 @@ class MantisController {
 
       // Handle process exit
       if (data.running === false && data.exit_code !== null) {
+        if (this.hasHandledCompletion) return;
+        this.hasHandledCompletion = true;
+
         clearInterval(this.triagePollInterval);
         this.triagePollInterval = null;
         this.isTriageRunning = false;
@@ -880,12 +948,18 @@ class MantisController {
     } catch (err) {
       this.triageLogViewer.append(`\n⚠️ Poll connection error: ${err.message}\n`, 'error');
       this.stopAITriage(true);
+    } finally {
+      this.isPollingTriage = false;
     }
   }
 
-  async loadTriageReport() {
+  async loadTriageReport(sessionId) {
     const projectSpec = this.projectSpec || '//mqtt/localhost';
-    const url = `/api/triage_report?site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(projectSpec)}&device_id=${encodeURIComponent(this.device)}&test_id=${encodeURIComponent(this.scenarioSelect.value)}`;
+    const sid = sessionId || this.currentSessionId;
+    let url = `/api/triage_report?site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(projectSpec)}&device_id=${encodeURIComponent(this.device)}&test_id=${encodeURIComponent(this.scenarioSelect.value)}`;
+    if (sid) {
+      url += `&session_id=${encodeURIComponent(sid)}`;
+    }
     
     try {
       const response = await fetch(url);
@@ -912,15 +986,29 @@ class MantisController {
   parseMarkdownToHTML(md) {
     if (!md) return '';
     
+    let text = md.trim();
+    // Strip top-level fenced code block wrapper if LLM returned entire report enclosed in ```markdown ... ```
+    if (text.startsWith('```')) {
+      text = text.replace(/^```[a-zA-Z]*\r?\n/, '').replace(/\r?\n```$/, '').trim();
+    }
+
     // 1. Escape HTML tags to protect the dashboard
-    let escaped = md.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     
     // 2. Pre-process block elements: Fenced code blocks
     // Temporarily replace fenced code blocks with placeholders to protect them from inline parsing
     const codeBlocks = [];
     escaped = escaped.replace(/```([\s\S]*?)```/g, (match, code) => {
+      let cleanedCode = code.trim();
+      const firstLineEnd = cleanedCode.indexOf('\n');
+      if (firstLineEnd !== -1) {
+        const firstLine = cleanedCode.substring(0, firstLineEnd).trim();
+        if (/^[a-zA-Z0-9_-]+$/.test(firstLine)) {
+          cleanedCode = cleanedCode.substring(firstLineEnd + 1).trim();
+        }
+      }
       const placeholder = `__CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
-      codeBlocks.push(`<pre class="markdown-code-block"><code>${code.trim()}</code></pre>`);
+      codeBlocks.push(`<pre class="markdown-code-block"><code>${cleanedCode}</code></pre>`);
       return placeholder;
     });
 
@@ -1136,7 +1224,8 @@ class MantisController {
   updateScenarioVerdict(scenarioId) {
     if (!scenarioId || !this.deviceResults || !this.deviceResults[scenarioId]) {
       if (this.testStatusBadge) this.testStatusBadge.style.display = 'none';
-      if (this.groupTestVerdict) this.groupTestVerdict.style.display = 'none';
+      if (this.testTargetBadge) this.testTargetBadge.style.display = 'none';
+      if (this.testTimeBadge) this.testTimeBadge.style.display = 'none';
       this.btnRunTriage.disabled = !scenarioId;
       this.btnRunTriage.title = '';
       return;
@@ -1145,68 +1234,51 @@ class MantisController {
     const info = this.deviceResults[scenarioId];
     const status = info.status || 'idle';
     const ts = info.timestamp || '';
+    const targetProject = info.project_spec || info.target_project || '';
 
     if (this.testStatusBadge) this.testStatusBadge.style.display = 'inline-flex';
-    if (this.groupTestVerdict) this.groupTestVerdict.style.display = 'flex';
-    if (this.testVerdictTime) this.testVerdictTime.textContent = ts;
+    if (this.testTargetBadge) {
+      if (targetProject) {
+        this.testTargetBadge.style.display = 'inline-flex';
+        this.testTargetBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">lan</span><span>${targetProject}</span>`;
+      } else {
+        this.testTargetBadge.style.display = 'none';
+      }
+    }
+    if (this.testTimeBadge) {
+      if (ts) {
+        this.testTimeBadge.style.display = 'inline-flex';
+        this.testTimeBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">schedule</span><span>${ts}</span>`;
+      } else {
+        this.testTimeBadge.style.display = 'none';
+      }
+    }
 
     if (status === 'pass') {
       if (this.testStatusBadge) {
-        this.testStatusBadge.className = 'badge badge-success';
+        this.testStatusBadge.className = 'badge scenario-status-badge badge-success';
         this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">check_circle</span><span>Passed</span>';
-      }
-      if (this.testVerdictBox) {
-        this.testVerdictBox.style.backgroundColor = 'rgba(109, 213, 140, 0.1)';
-        this.testVerdictBox.style.borderColor = 'rgba(109, 213, 140, 0.3)';
-        this.testVerdictIcon.style.color = 'var(--color-tertiary)';
-        this.testVerdictIcon.textContent = 'check_circle';
-        this.testVerdictText.style.color = 'var(--color-tertiary)';
-        this.testVerdictText.textContent = 'PASSED (Compliance Verified)';
       }
       this.btnRunTriage.disabled = true;
       this.btnRunTriage.title = 'AI Triage is disabled because compliance test case passed successfully.';
     } else if (status === 'skip') {
       if (this.testStatusBadge) {
-        this.testStatusBadge.className = 'badge badge-warning';
+        this.testStatusBadge.className = 'badge scenario-status-badge badge-warning';
         this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">remove_circle</span><span>Skipped</span>';
-      }
-      if (this.testVerdictBox) {
-        this.testVerdictBox.style.backgroundColor = 'rgba(255, 183, 3, 0.1)';
-        this.testVerdictBox.style.borderColor = 'rgba(255, 183, 3, 0.3)';
-        this.testVerdictIcon.style.color = 'var(--color-warning)';
-        this.testVerdictIcon.textContent = 'remove_circle';
-        this.testVerdictText.style.color = 'var(--color-warning)';
-        this.testVerdictText.textContent = 'SKIPPED (Not Applicable)';
       }
       this.btnRunTriage.disabled = true;
       this.btnRunTriage.title = 'AI Triage is disabled for skipped test cases.';
     } else if (status === 'fail') {
       if (this.testStatusBadge) {
-        this.testStatusBadge.className = 'badge badge-error';
+        this.testStatusBadge.className = 'badge scenario-status-badge badge-error';
         this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">cancel</span><span>Failed</span>';
-      }
-      if (this.testVerdictBox) {
-        this.testVerdictBox.style.backgroundColor = 'rgba(255, 107, 107, 0.1)';
-        this.testVerdictBox.style.borderColor = 'rgba(255, 107, 107, 0.3)';
-        this.testVerdictIcon.style.color = 'var(--color-error)';
-        this.testVerdictIcon.textContent = 'cancel';
-        this.testVerdictText.style.color = 'var(--color-error)';
-        this.testVerdictText.textContent = 'FAILED (Compliance Issues Detected)';
       }
       this.btnRunTriage.disabled = false;
       this.btnRunTriage.title = 'Run AI Triage';
     } else {
       if (this.testStatusBadge) {
-        this.testStatusBadge.className = 'badge badge-idle';
+        this.testStatusBadge.className = 'badge scenario-status-badge badge-idle';
         this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">help_outline</span><span>Idle</span>';
-      }
-      if (this.testVerdictBox) {
-        this.testVerdictBox.style.backgroundColor = 'var(--bg-app)';
-        this.testVerdictBox.style.borderColor = 'var(--border-color)';
-        this.testVerdictIcon.style.color = 'var(--text-secondary)';
-        this.testVerdictIcon.textContent = 'help_outline';
-        this.testVerdictText.style.color = 'var(--text-secondary)';
-        this.testVerdictText.textContent = 'NO STATUS';
       }
       this.btnRunTriage.disabled = false;
       this.btnRunTriage.title = 'Run AI Triage';
