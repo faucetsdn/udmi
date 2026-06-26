@@ -11,6 +11,10 @@ source etc/shell_common.sh
 # Initialize test passed state
 TEST_PASSED=false
 
+# Limit JVM heap size for all Java processes (UDMIS, Bridges, Pubber, Registrar)
+# to prevent out-of-memory issues in resource-constrained CI environments.
+export JAVA_TOOL_OPTIONS="-Xmx512m"
+
 # 2. Environment Check
 echo "Checking environment..."
 for cmd in java docker nc base64 openssl curl tar jq; do
