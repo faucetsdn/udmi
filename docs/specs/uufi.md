@@ -265,7 +265,7 @@ bin/test_uufi
 This command automatically orchestrates the following operations:
 1. **System Initialization:** Confirms that the Scope 1 local services are healthy.
 2. **DUT Lifecycle:** Registers and launches a **Pubber** device (Scope 2).
-3. **Handshake Phase:** Starts a low-level `uufi_test_client` which completes the standard Step 1 and Step 2 UUFI Handshake over the broker.
+3. **Handshake Phase:** Starts a low-level `test_uufi_client` which completes the standard Step 1 and Step 2 UUFI Handshake over the broker.
 4. **Bidirectional Exchange:** 
    - Sends a UUFI-wrapped configuration update to the DUT.
    - Verifies that the gateway correctly routes the update to the Pubber device.
@@ -273,7 +273,7 @@ This command automatically orchestrates the following operations:
 
 For modular, manual client-side testing against an already running environment, the standalone script can be run directly:
 ```bash
-bin/uufi_test_client
+bin/test_uufi_client
 ```
 
 ---

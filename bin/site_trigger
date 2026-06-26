@@ -60,9 +60,20 @@ print(
     f"in {metadata_file}."
 )
 
-# 2. Trigger a model update message over UUFI
-# Extract site_id from the site_path directory name
-site_id = os.path.basename(os.path.abspath(site_path))
+# Try to extract registry_id from cloud_iot_config.json
+site_config_file = os.path.join(site_path, "cloud_iot_config.json")
+if not os.path.exists(site_config_file):
+  sys.exit(f"Error: Configuration file {site_config_file} not found. site_trigger requires a valid cloud_iot_config.json.")
+
+try:
+  with open(site_config_file, "r", encoding="utf-8") as f:
+    site_config = json.load(f)
+    registry_id = site_config.get("registry_id")
+except (OSError, json.JSONDecodeError) as e:
+  sys.exit(f"Error: Could not read configuration file {site_config_file}: {e}")
+
+if not registry_id:
+  sys.exit(f"Error: registry_id is not defined in {site_config_file}. site_trigger requires registry_id to be defined.")
 
 # Parse connection spec
 url = urlparse(conn_spec)
@@ -70,7 +81,7 @@ host = url.hostname or "localhost"
 is_ssl = url.scheme in ("ssl", "mqtts", "tcps", "wss")
 port = url.port or (8883 if is_ssl else 1883)
 
-# Build model update payload
+# Build model update payload adhering strictly to flat CloudModel schema
 now_utc_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 payload = {
@@ -81,24 +92,23 @@ payload = {
     "payload": {
         "version": "1.5.2",
         "timestamp": now_utc_str,
-        "op": "UPDATE",
-        "detail": {
-            site_id: {
-                device_id: {
-                    blob_id: {
-                        "target_version": version
-                    }
+        "auth_type": "RS256",
+        "blocked": False,
+        "config": {
+            "system": {
+                "software": {
+                    blob_id: version
                 }
             }
         }
     }
 }
 
-# Publish the model/cloud message over the UUFI bus
-topic = "/uufi/c/model/cloud"
+# Publish the registry and device-scoped model/cloud message over the UUFI bus
+topic = f"/uufi/r/{registry_id}/d/{device_id}/c/model/cloud"
 if url.path and url.path != "/":
   prefix = url.path.strip("/")
-  topic = f"/{prefix}/uufi/c/model/cloud"
+  topic = f"/{prefix}/uufi/r/{registry_id}/d/{device_id}/c/model/cloud"
 
 # Use mosquitto_pub to publish the message
 cmd = [
@@ -108,20 +118,6 @@ cmd = [
     "-t", topic,
     "-m", json.dumps(payload)
 ]
-
-# Try to extract registry_id for dynamic security client ID binding
-registry_id = None
-site_config_file = os.path.join(site_path, "cloud_iot_config.json")
-if os.path.exists(site_config_file):
-  try:
-    with open(site_config_file, "r", encoding="utf-8") as f:
-      site_config = json.load(f)
-      registry_id = site_config.get("registry_id")
-  except (OSError, json.JSONDecodeError) as e:
-    print(
-        f"Warning: Could not read cloud_iot_config.json: {e}",
-        file=sys.stderr,
-    )
 
 if registry_id:
   cmd.extend(["-i", f"{registry_id}/client"])

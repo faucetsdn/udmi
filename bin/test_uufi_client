@@ -117,5 +117,64 @@ fi
 kill $SUB_STATE_PID 2>/dev/null || true
 echo "Comprehensive Exchange SUCCESS: Received matching state update"
 
+# 3. Cloud Model Update Test
+echo "Starting Cloud Model Update test..."
+METADATA_FILE="$SITE_MODEL/devices/$DUT_ID/metadata.json"
+cp "$METADATA_FILE" "${METADATA_FILE}.bak"
+restore_metadata() {
+    mv "${METADATA_FILE}.bak" "$METADATA_FILE" 2>/dev/null || true
+}
+trap "restore_metadata; kill $SUB_PID $SUB_STATE_PID 2>/dev/null || true" EXIT
+
+MODEL_REPLY_FILE=$(mktemp)
+echo "Subscribing to /uufi/r/$REGISTRY_ID/d/$DUT_ID/c/model/cloud..."
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_model_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/model/cloud" -F "%p" | while read -r line; do
+    echo "Received UUFI Cloud Model update: $line"
+    echo "$line" > "$MODEL_REPLY_FILE"
+    VERSION_VAL=$(jq -r .payload.config.system.software.system_firmware < "$MODEL_REPLY_FILE" 2>/dev/null)
+    if [[ "$VERSION_VAL" == "v3" ]]; then
+        echo "Found expected system_firmware version v3 in Cloud Model!"
+        kill -USR1 $$ 2>/dev/null || true
+        exit 0
+    fi
+done &
+SUB_MODEL_PID=$!
+
+GOT_MODEL=0
+trap "GOT_STATE=1" USR2
+trap "GOT_MODEL=1" USR1
+
+sleep 2
+
+echo "Triggering Cloud Model update using site_trigger..."
+$UDMI_ROOT/bin/site_trigger update "$SITE_MODEL" "$DUT_ID" "system_firmware" "v3" "mqtt://$HOST:$PORT"
+
+echo "Waiting for Cloud Model Update on the bus..."
+TIMEOUT=30
+while [ $GOT_MODEL -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
+    echo "Waiting for cloud model update... ($TIMEOUT)"
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+done
+
+if [ $GOT_MODEL -eq 0 ]; then
+    echo "Timed out waiting for Cloud Model Update"
+    if [[ -f "$MODEL_REPLY_FILE" && -s "$MODEL_REPLY_FILE" ]]; then
+        echo "=== DIAGNOSTIC: Last received cloud model update ==="
+        cat "$MODEL_REPLY_FILE"
+        echo "=============================================="
+    else
+        echo "DIAGNOSTIC: No cloud model updates were received at all."
+    fi
+    kill $SUB_MODEL_PID 2>/dev/null || true
+    restore_metadata
+    exit 1
+fi
+
+kill $SUB_MODEL_PID 2>/dev/null || true
+restore_metadata
+trap - EXIT
+echo "Cloud Model Update SUCCESS: Received matching model update message on bus"
+
 echo "UUFI Comprehensive Integration Test PASSED"
-rm -f "$REPLY_FILE" "$STATE_REPLY_FILE"
+rm -f "$REPLY_FILE" "$STATE_REPLY_FILE" "$MODEL_REPLY_FILE"
