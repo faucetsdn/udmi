@@ -94,7 +94,8 @@ public class WritebackSequences extends PointsetBase {
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
 
-    waitUntil(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
+    waitUntil(expectedValueState(DEFAULT_STATE), MAX_WAIT_TIME,
+        () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
@@ -126,7 +127,8 @@ public class WritebackSequences extends PointsetBase {
     Object targetValue = targetModel.target_value;
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
-    waitUntil(expectedValueState(DEFAULT_STATE), () -> valueStateIs(targetPoint, DEFAULT_STATE));
+    waitUntil(expectedValueState(DEFAULT_STATE), MAX_WAIT_TIME,
+        () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
     // Wait until the intermediate UPDATING state. In other cases, this should:
@@ -140,7 +142,8 @@ public class WritebackSequences extends PointsetBase {
 
       return valueStateIs(targetPoint, UPDATING_STATE);
     });
-    waitUntil(expectedValueState(APPLIED_STATE), () -> valueStateIs(targetPoint, APPLIED_STATE));
+    waitUntil(expectedValueState(APPLIED_STATE), MAX_WAIT_TIME,
+        () -> valueStateIs(targetPoint, APPLIED_STATE));
   }
 }
 

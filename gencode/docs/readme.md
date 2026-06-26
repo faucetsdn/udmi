@@ -33,6 +33,7 @@
 * [**events_mapping**](events_mapping.html) - [Mapping result](../../docs/specs/mapping.md) with implicit enumeration
 * [**events_validation**](events_validation.html) - Validation device result
 * [**monitoring**](monitoring.html) - Output from UDMIS monitoring
+* [**mosquitto_client_response**](mosquitto_client_response.html) - Information returned by Mosquitto dynamic security getClient command.
 * [**persistent_device**](persistent_device.html) - Device persistent data
 * [**properties**](properties.html)
 * [**query_cloud**](query_cloud.html) - Information specific to how the device communicates with the cloud.

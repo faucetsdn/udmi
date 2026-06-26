@@ -132,8 +132,8 @@ if url.username:
 if url.password:
   cmd.extend(["-P", url.password])
 
-# Add CA cert if SSL is used
-if is_ssl:
+# Add CA cert if SSL is used (or port 8883)
+if is_ssl or port == 8883:
   ca_cert = os.path.join(site_path, "reflector", "ca.crt")
   if os.path.exists(ca_cert):
     cmd.extend(["--cafile", ca_cert])

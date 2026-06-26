@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.messaging.impl;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.Common.PUBLISH_TIME_KEY;
+import static com.google.udmi.util.Common.SOURCE_KEY;
 import static com.google.udmi.util.Common.TRANSACTION_KEY;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
@@ -52,7 +53,7 @@ import udmi.schema.IotAccess.IotProvider;
  */
 public class SimpleMqttPipe extends MessageBase {
 
-  private static final int MAX_INFLIGHT = 100;
+  private static final int MAX_INFLIGHT = 1000;
   private static final String IMPLICIT_CHANNEL = IotProvider.IMPLICIT.value();
   private static final String SEND_CHANNEL_DESIGNATOR = "c";
   private static final String SEND_CHANNEL_PREFIX = SEND_CHANNEL_DESIGNATOR + "/";
@@ -261,6 +262,9 @@ public class SimpleMqttPipe extends MessageBase {
       captureMessage(topic, payload, false);
       debug("MQTT publish from %s to %s: %s", clientId, topic, payload);
       mqttClient.publish(topic, message);
+
+
+
       int tokens = mqttClient.getPendingDeliveryTokens().length;
       ifTrueThen(tokens > 2, () ->
           debug("Client has %d inFlight tokens, from %s", tokens, topic));
@@ -384,6 +388,8 @@ public class SimpleMqttPipe extends MessageBase {
     return format("/r/%s/d/%s%s%s", envelope.deviceRegistryId, envelope.deviceId, channel, topic);
   }
 
+
+
   private String makeTransactionId() {
     return format("MP:%08x", (long) (Math.random() * 0x100000000L));
   }
@@ -464,6 +470,7 @@ public class SimpleMqttPipe extends MessageBase {
         Map<String, String> envelopeMap = parseEnvelopeTopic(topic);
         envelopeMap.put(PUBLISH_TIME_KEY, isoConvert());
         envelopeMap.put(TRANSACTION_KEY, makeTransactionId());
+        envelopeMap.put(SOURCE_KEY, IMPLICIT_CHANNEL);
         receiveMessage(envelopeMap, payload);
       } catch (Exception e) {
         error("Exception receiving message on %s: %s", clientId, friendlyStackTrace(e));
