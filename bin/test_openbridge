@@ -5,6 +5,9 @@ set -euo pipefail
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR/.."
 
+# Source common shell utilities to get access to native versioning (UDMI_VERSION, UDMI_COMMIT)
+source etc/shell_common.sh
+
 # Initialize test passed state
 TEST_PASSED=false
 
@@ -341,16 +344,14 @@ export UDMI_NAMESPACE=""
 mkdir -p udmis/var
 (
   current_user="${USER:-runner}@$(hostname)"
-  revparse=$(git rev-parse HEAD 2>/dev/null || echo "unknown_commit")
-  udmi_commit=${revparse:0:9}
   built_at=$(date --utc +%Y-%m-%dT%H:%M:%SZ)
   
   cat <<EOF > udmis/var/deployed_version.json
 {
   "built_at" : "$built_at",
   "built_by" : "$current_user",
-  "udmi_ref" : "g$udmi_commit",
-  "udmi_version" : "1.4.1"
+  "udmi_ref" : "g$UDMI_COMMIT",
+  "udmi_version" : "$UDMI_VERSION"
 }
 EOF
 )
