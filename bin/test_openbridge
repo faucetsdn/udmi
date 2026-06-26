@@ -490,27 +490,35 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   > out/bridge_reflect.log 2>&1 &
 BRIDGE_REFLECT_PID=$!
 
-echo "Waiting for bridges to initialize..."
-sleep 5
-
-if ! kill -0 "$BRIDGE_EVENTS_PID" 2>/dev/null; then
-  echo "Error: Events Bridge failed to start. Logs:" >&2
-  cat out/bridge_events.log >&2
+wait_for_bridge() {
+  local name=$1
+  local pid=$2
+  local log_file=$3
+  local timeout=30
+  
+  echo "Waiting for $name to connect to MQTT broker..."
+  while [ $timeout -gt 0 ]; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo "Error: $name process exited unexpectedly. Logs:" >&2
+      cat "$log_file" >&2
+      exit 1
+    fi
+    if grep -q "Connected to MQTT broker." "$log_file" 2>/dev/null; then
+      echo "$name is connected."
+      return 0
+    fi
+    sleep 1
+    timeout=$((timeout - 1))
+  done
+  echo "Error: Timeout waiting for $name to connect. Logs:" >&2
+  cat "$log_file" >&2
   exit 1
-fi
+}
 
-if ! kill -0 "$BRIDGE_STATE_PID" 2>/dev/null; then
-  echo "Error: State Bridge failed to start. Logs:" >&2
-  cat out/bridge_state.log >&2
-  exit 1
-fi
-
-if ! kill -0 "$BRIDGE_REFLECT_PID" 2>/dev/null; then
-  echo "Error: Reflect Bridge failed to start. Logs:" >&2
-  cat out/bridge_reflect.log >&2
-  exit 1
-fi
-echo "Bridges are running."
+wait_for_bridge "Events Bridge" "$BRIDGE_EVENTS_PID" "out/bridge_events.log"
+wait_for_bridge "State Bridge" "$BRIDGE_STATE_PID" "out/bridge_state.log"
+wait_for_bridge "Reflect Bridge" "$BRIDGE_REFLECT_PID" "out/bridge_reflect.log"
+echo "Bridges are running and connected."
 
 echo "Registering devices via All-Pub/Sub Pipeline..."
 bin/registrar "$SITE_MODEL" //gref/udmis
