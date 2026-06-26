@@ -1,0 +1,108 @@
+#!/bin/bash
+# ==========================================================================
+# UDMI Workbench Launcher Script
+# ==========================================================================
+
+# Exit on error
+set -e
+
+# Resolve the workspace directory (script parent's parent)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
+cd "$WORKSPACE_DIR"
+
+# Create or update the ui/version.txt file using git on startup
+if command -v git > /dev/null 2>&1 && git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+  git rev-parse --short HEAD > ui/version.txt
+else
+  if [ ! -f ui/version.txt ]; then
+    echo "HEAD" > ui/version.txt
+  fi
+fi
+
+# Parse arguments
+FEATURE="all"
+if [ "$#" -gt 0 ]; then
+  case "$1" in
+    sequencer|seq)
+      FEATURE="sequencer"
+      ;;
+    mantis|man)
+      FEATURE="mantis"
+      ;;
+    all|suite)
+      FEATURE="all"
+      ;;
+    *)
+      echo "Error: Unknown tool argument '$1'"
+      echo "Usage: $0 [sequencer | mantis | all]"
+      exit 1
+      ;;
+  esac
+fi
+
+# Determine features query param
+if [ "$FEATURE" = "all" ]; then
+  FEATURES_PARAM="sequencer,mantis"
+else
+  FEATURES_PARAM="$FEATURE"
+fi
+
+# Check if the backend server is running on port 8080
+SERVER_RUNNING=true
+RESTART_NEEDED=false
+
+if ! lsof -i :8080 > /dev/null 2>&1; then
+  SERVER_RUNNING=false
+else
+  # Server is running, check if its active feature set matches the requested one
+  RUNNING_FEATURES=$(curl -s --max-time 1 http://localhost:8080/api/features | tr -d '[]" ' || echo "")
+  
+  # Normalize features list to compare (sort comma-separated strings)
+  NORM_RUNNING=$(echo "$RUNNING_FEATURES" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
+  NORM_REQUESTED=$(echo "$FEATURES_PARAM" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
+  
+  if [ "$NORM_RUNNING" != "$NORM_REQUESTED" ]; then
+    echo "UDMI Workbench server is running with different features (${RUNNING_FEATURES:-unknown})."
+    RESTART_NEEDED=true
+  fi
+fi
+
+if [ "$SERVER_RUNNING" = false ] || [ "$RESTART_NEEDED" = true ]; then
+  if [ "$RESTART_NEEDED" = true ]; then
+    echo "Restarting backend server with requested features (${FEATURES_PARAM})..."
+    # Terminate the running server safely
+    fuser -k 8080/tcp > /dev/null 2>&1 || true
+    sleep 0.5
+  else
+    echo "Starting UDMI Workbench backend server..."
+  fi
+  
+  # Start the server in the background, logging to a temporary file in the workspace
+  mkdir -p out
+  nohup python3 ui/server.py --features="${FEATURES_PARAM}" > out/workbench_server.log 2>&1 &
+  disown
+  
+  # Wait for the server to spin up
+  for i in {1..10}; do
+    if lsof -i :8080 > /dev/null 2>&1; then
+      break
+    fi
+    sleep 0.5
+  done
+  
+  if ! lsof -i :8080 > /dev/null 2>&1; then
+    echo "Error: Failed to start the backend server. Check logs in out/workbench_server.log"
+    exit 1
+  fi
+  echo "Backend server started successfully on port 8080."
+else
+  echo "UDMI Workbench backend server is already running on port 8080 with the correct feature set."
+fi
+
+# Build URL
+URL="http://localhost:8080/ui/index.html?features=${FEATURES_PARAM}"
+
+echo "Opening UDMI Workbench (${FEATURE}) in your default browser..."
+echo "Workbench running at: ${URL}"
+

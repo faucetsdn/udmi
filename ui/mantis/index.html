@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mantis Debugger Tool</title>
+
+  <!-- Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../shared/theme.css?v=1.6">
+  <link rel="stylesheet" href="style.css?v=1.6">
+</head>
+
+<body>
+
+  <!-- Mantis Tool Layout -->
+  <div class="tool-layout">
+
+    <!-- Local Header Toolbar (Specialized controls) -->
+    <header class="local-toolbar" style="display: flex; align-items: center; justify-content: space-between;">
+      <div class="toolbar-left" style="display: flex; align-items: center; gap: 20px;">
+        <!-- Device Select -->
+        <div class="control-group">
+          <label for="device-select" class="control-label">Device</label>
+          <select id="device-select" class="form-select" style="width: 160px;" aria-label="Select Device" disabled>
+            <option value="">-- Enter site path --</option>
+          </select>
+        </div>
+
+        <!-- Debug Scenario Selector -->
+        <div class="control-group">
+          <label for="scenario-select" class="control-label">Debug Scenario</label>
+          <div style="display: flex; align-items: center;">
+            <select id="scenario-select" class="form-select" style="width: 260px;" aria-label="Select Scenario" disabled>
+              <option value="">-- Waiting for parent selection --</option>
+            </select>
+            <span id="mantis-test-status-badge" class="badge badge-idle" style="display: none; align-items: center; gap: 4px; padding: 4px 10px; font-size: 12px; margin-left: 8px;"></span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Tab Buttons (Multi-view orchestration) -->
+      <div class="toolbar-right" style="display: flex; gap: 8px;">
+        <button id="tab-btn-trace" class="btn btn-primary" data-tab="trace">
+          <span class="material-symbols-outlined">timeline</span>
+          <span>Timeline Trace</span>
+        </button>
+        <button id="tab-btn-diagnostics" class="btn btn-outlined" data-tab="diagnostics">
+          <span class="material-symbols-outlined">psychology</span>
+          <span>AI Diagnostics</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="tool-main">
+      
+      <!-- Tab Page 1: Timeline Trace -->
+      <div id="tab-page-trace" class="tab-page active">
+        <div class="mantis-layout">
+          <!-- Left Pane: State Transition Graph/Tree -->
+          <div class="card mantis-tree-card">
+            <div class="card-header">
+              <h3>Debug Sequence Flow</h3>
+              <span class="badge badge-info">Active Stream</span>
+            </div>
+            <div class="mantis-tree-container">
+              <!-- Dynamically populated transitions flow -->
+            </div>
+          </div>
+
+          <!-- Right Pane: MQTT Payload Inspector -->
+          <div class="card mantis-inspector-card">
+            <div class="card-header border-bottom">
+              <div class="inspector-title-bar">
+                <span class="material-symbols-outlined">topic</span>
+                <span id="mqtt-topic" class="topic-name">Select a state node to inspect MQTT payload</span>
+              </div>
+              <button id="btn-copy-payload" class="btn btn-outlined btn-icon" disabled
+                aria-label="Copy payload to clipboard">
+                <span class="material-symbols-outlined">content_copy</span>
+              </button>
+            </div>
+            <div class="inspector-body">
+              <div id="mqtt-json-viewer" style="height: 100%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Page 2: AI Diagnostics -->
+      <div id="tab-page-diagnostics" class="tab-page">
+        <div class="diagnostics-layout">
+          
+          <!-- Left Column: Live Progress Terminal & Actions -->
+          <div class="diagnostics-sidebar">
+            
+            <!-- Playbook & AI Settings Card -->
+            <div class="card playbook-card" style="margin-bottom: 20px;">
+              <div class="card-header">
+                <h3>Diagnostic Settings</h3>
+              </div>
+              <div class="card-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
+                <div class="control-group">
+                  <label for="playbook-select" class="control-label">Diagnostic Playbook</label>
+                  <select id="playbook-select" class="form-select w-full" style="width: 100%;">
+                    <option value="oem">Device Compliance Auditor (Standard)</option>
+                    <option value="swe">Codebase Debugger (Advanced)</option>
+                  </select>
+                </div>
+
+                <div class="control-group">
+                  <label for="mantis-success-run" class="control-label">Reference Successful Run <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(Optional Baseline)</span></label>
+                  <div class="input-with-button">
+                    <input type="text" id="mantis-success-run" class="form-input w-full" style="width: 100%;" placeholder="e.g. out_prev or path/to/successful/sequence.log" />
+                    <button type="button" id="btn-browse-success-run" class="btn btn-outlined btn-icon-sm" aria-label="Browse successful run folder">
+                      <span class="material-symbols-outlined">folder_open</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div id="group-test-verdict" class="control-group" style="display: none; border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
+                  <label class="control-label">Compliance Test Verdict</label>
+                  <div id="test-verdict-box" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background-color: var(--bg-app); border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                      <span id="test-verdict-icon" class="material-symbols-outlined" style="font-size: 20px;">help_outline</span>
+                      <span id="test-verdict-text" style="font-weight: 600; font-size: 13px;">Unknown</span>
+                    </div>
+                    <span id="test-verdict-time" style="font-size: 11px; color: var(--text-muted);"></span>
+                  </div>
+                </div>
+
+                <div class="control-group" style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
+                  <label for="mantis-provider-select" class="control-label">AI Auth Provider</label>
+                  <select id="mantis-provider-select" class="form-select w-full" style="width: 100%;">
+                    <option value="gemini">Gemini API Key</option>
+                    <option value="vertex">Google Vertex AI (ADC)</option>
+                  </select>
+                </div>
+
+                <div id="group-gemini-key" class="control-group">
+                  <label for="mantis-api-key" class="control-label">Gemini API Key</label>
+                  <input type="password" id="mantis-api-key" class="form-input w-full" style="width: 100%;" placeholder="AIzaSy... (or from shell env)" />
+                </div>
+
+                <div id="group-vertex-config" class="control-group" style="display: none; flex-direction: column; gap: 8px;">
+                  <div>
+                    <label for="mantis-gcp-project" class="control-label">GCP Project ID</label>
+                    <input type="text" id="mantis-gcp-project" class="form-input w-full" style="width: 100%;" placeholder="e.g. my-gcp-project" />
+                  </div>
+                  <div>
+                    <label for="mantis-gcp-location" class="control-label">GCP Location</label>
+                    <input type="text" id="mantis-gcp-location" class="form-input w-full" style="width: 100%;" value="global" placeholder="global" />
+                  </div>
+                </div>
+
+                <button id="btn-run-triage" class="btn btn-primary w-full" style="margin-top: 8px; width: 100%;" disabled>
+                  <span class="material-symbols-outlined">psychology</span>
+                  <span>Run AI Triage</span>
+                </button>
+                <button id="btn-stop-triage" class="btn btn-outlined w-full text-error" style="display: none; width: 100%;">
+                  <span class="material-symbols-outlined">stop</span>
+                  <span>Stop Triage</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Live Progress Terminal -->
+            <div class="card terminal-card" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+              <div class="card-header border-bottom">
+                <h3>AI Agent Thoughts</h3>
+                <span id="triage-status-badge" class="badge badge-idle">Idle</span>
+              </div>
+              <div id="triage-terminal-container" style="flex: 1; min-height: 0;"></div>
+            </div>
+
+          </div>
+
+          <!-- Resizer Divider -->
+          <div id="diagnostics-resizer" class="pane-resizer" title="Drag to resize RCA panel"></div>
+
+          <!-- Right Column: Pristine Markdown RCA Report -->
+          <div class="card rca-report-card">
+            <div class="card-header border-bottom">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="material-symbols-outlined" style="color: var(--color-primary);">description</span>
+                <h3 style="margin: 0;">AI Root Cause Analysis (RCA)</h3>
+              </div>
+              <button id="btn-copy-report" class="btn btn-outlined btn-icon" title="Copy report markdown" disabled>
+                <span class="material-symbols-outlined">content_copy</span>
+              </button>
+            </div>
+            <div id="rca-report-body" class="rca-body">
+              <div class="rca-placeholder-message">
+                Select a device and scenario, then click "Run AI Triage" to generate diagnostics.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+
+  </div>
+
+  <!-- Inline Folder Browser Modal for Mantis Baseline Run -->
+  <div id="mantis-folder-browser-modal" class="modal-overlay">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3>Browse Reference Run Directory</h3>
+        <button type="button" id="btn-close-mantis-browser" class="btn-close" aria-label="Close folder browser">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="browser-path-bar" style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+          <button type="button" id="btn-mantis-browser-up" class="btn btn-outlined btn-icon-sm" aria-label="Go to parent directory">
+            <span class="material-symbols-outlined">arrow_upward</span>
+          </button>
+          <input type="text" id="mantis-browser-current-path" class="form-input" style="flex: 1;" aria-label="Current path" />
+        </div>
+        <div id="mantis-browser-list" class="browser-list" aria-label="Directory list" style="height: 240px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px;">
+          <!-- Populated dynamically with subdirectories -->
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <button type="button" id="btn-mantis-browser-cancel" class="btn btn-outlined">Cancel</button>
+        <button type="button" id="btn-mantis-browser-select" class="btn btn-primary">Select Directory</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script type="module" src="main.js"></script>
+</body>
+
+</html>
