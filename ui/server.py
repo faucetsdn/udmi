@@ -4,6 +4,7 @@ import json
 import urllib.parse
 import subprocess
 import signal
+from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
 PORT = 8080
@@ -41,6 +42,8 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.handle_api_list(parsed_url.query)
         elif parsed_url.path == '/api/read_file':
             self.handle_api_read_file(parsed_url.query)
+        elif parsed_url.path == '/api/device_results':
+            self.handle_device_results(parsed_url.query)
         elif parsed_url.path == '/api/run_sequencer':
             self.handle_run_sequencer(parsed_url.query)
         elif parsed_url.path == '/api/stop_sequencer':
@@ -136,6 +139,71 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(response_data)
         except Exception as e:
             self.send_error_response(500, str(e))
+
+    def handle_device_results(self, query_string):
+        params = urllib.parse.parse_qs(query_string)
+        site_model = params.get('site_model', [None])[0]
+        device = params.get('device', [None])[0]
+
+        if not site_model or not device:
+            self.send_error_response(400, "Missing 'site_model' or 'device' parameter")
+            return
+
+        # Resolve tests path: site_model/out/devices/device/tests
+        target_dir = os.path.expanduser(site_model)
+        if not os.path.isabs(target_dir):
+            target_dir = os.path.abspath(os.path.join(ROOT_DIR, target_dir))
+
+        tests_dir = os.path.join(target_dir, 'out', 'devices', device, 'tests')
+
+        results = {}
+        if os.path.exists(tests_dir) and os.path.isdir(tests_dir):
+            try:
+                for test_name in os.listdir(tests_dir):
+                    test_path = os.path.join(tests_dir, test_name)
+                    if os.path.isdir(test_path):
+                        seq_log = os.path.join(test_path, 'sequence.log')
+                        seq_md = os.path.join(test_path, 'sequence.md')
+                        
+                        mtime = os.path.getmtime(test_path)
+                        if os.path.exists(seq_log):
+                            mtime = max(mtime, os.path.getmtime(seq_log))
+                        
+                        formatted_ts = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
+
+                        status = 'idle'
+                        if os.path.exists(seq_md):
+                            with open(seq_md, 'r', encoding='utf-8', errors='replace') as f:
+                                md_content = f.read()
+                            md_lower = md_content.lower()
+                            if 'test passed' in md_lower or 'sequence complete' in md_lower:
+                                status = 'pass'
+                            elif 'test skipped' in md_lower:
+                                status = 'skip'
+                            elif os.path.exists(seq_log):
+                                status = 'fail'
+                        elif os.path.exists(seq_log):
+                            status = 'fail'
+
+                        results[test_name] = {
+                            "status": status,
+                            "timestamp": formatted_ts
+                        }
+            except Exception as e:
+                self.send_error_response(500, f"Error scanning test directory: {str(e)}")
+                return
+
+        response_data = json.dumps({
+            "device": device,
+            "results": results
+        }).encode('utf-8')
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
 
     def handle_run_sequencer(self, query_string):
         global sequencer_process
@@ -308,8 +376,20 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         project_spec = params.get('project_spec', [None])[0]
         site_model = params.get('site_model', [None])[0]
 
+        gemini_key_param = params.get('gemini_api_key', [None])[0]
+        use_vertex_param = params.get('use_vertex', [None])[0]
+        gcp_project_param = params.get('gcp_project', [None])[0]
+        gcp_location_param = params.get('gcp_location', [None])[0]
+
         if not device_id or not test_id:
             self.send_error_response(400, "Missing required parameters: device_id, test_id")
+            return
+
+        # Guardrail: Check GEMINI_API_KEY / Vertex AI configuration before spawning process
+        gemini_key = gemini_key_param or os.getenv("GEMINI_API_KEY")
+        use_vertex = (use_vertex_param == 'true') if use_vertex_param else (os.getenv("MANTIS_USE_VERTEXAI", "").lower() in ("true", "1", "yes"))
+        if not gemini_key and not use_vertex:
+            self.send_error_response(412, "Triage aborted: GEMINI_API_KEY is not configured. Please enter your Gemini API Key in Diagnostic Settings or set the environment variable.")
             return
 
         # 1. Resolve virtualenv python binary
@@ -373,6 +453,8 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         if os.path.exists(udmis_log_abs):
             failed_run_logs["udmis_log"] = udmis_log_rel
 
+        success_run_param = params.get('success_run', [None])[0]
+
         manifest_data = {
             "metadata": {
                 "target_project": project_spec or "//mqtt/localhost",
@@ -392,6 +474,27 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             ]
         }
 
+        if success_run_param:
+            succ_target = os.path.abspath(os.path.expanduser(success_run_param)) if os.path.isabs(os.path.expanduser(success_run_param)) else os.path.abspath(os.path.join(ROOT_DIR, success_run_param))
+            succ_log_abs = None
+            if os.path.isdir(succ_target):
+                cand1 = os.path.join(succ_target, "sequence.log")
+                cand2 = os.path.join(succ_target, "out", "devices", device_id, "tests", test_id, "sequence.log")
+                if os.path.exists(cand1):
+                    succ_log_abs = cand1
+                elif os.path.exists(cand2):
+                    succ_log_abs = cand2
+            elif os.path.isfile(succ_target) and succ_target.endswith(".log"):
+                succ_log_abs = succ_target
+
+            if succ_log_abs and os.path.exists(succ_log_abs):
+                succ_log_rel = os.path.relpath(succ_log_abs, ROOT_DIR)
+                succ_md_abs = succ_log_abs.replace(".log", ".md")
+                succ_logs = {"sequence_log": succ_log_rel}
+                if os.path.exists(succ_md_abs):
+                    succ_logs["sequence_md"] = os.path.relpath(succ_md_abs, ROOT_DIR)
+                manifest_data["failures"][0]["logs"]["success_run"] = succ_logs
+
         manifest_path = os.path.join(out_dir, 'triage_manifest.json')
         try:
             with open(manifest_path, 'w', encoding='utf-8') as fm:
@@ -408,12 +511,21 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             playbook_path = os.path.join(ROOT_DIR, 'util', 'mantis', 'config', 'playbook_swe.yaml')
             cmd.extend(["--playbook", playbook_path])
 
-        # 4. Setup PYTHONPATH so it can resolve tools, util/ (for mantis namespace), and util/mantis/src
+        # 4. Setup PYTHONPATH and AI credentials so it can resolve tools and authenticate
         env = os.environ.copy()
         mantis_src = os.path.join(ROOT_DIR, 'util', 'mantis', 'src')
         util_dir = os.path.join(ROOT_DIR, 'util')
         tools_dir = os.path.join(ROOT_DIR, 'tools')
         env['PYTHONPATH'] = f"{tools_dir}:{mantis_src}:{util_dir}:{env.get('PYTHONPATH', '')}"
+
+        if gemini_key:
+            env['GEMINI_API_KEY'] = gemini_key
+        if use_vertex:
+            env['MANTIS_USE_VERTEXAI'] = 'true'
+            if gcp_project_param:
+                env['GCLOUD_PROJECT'] = gcp_project_param
+            if gcp_location_param:
+                env['GCP_LOCATION'] = gcp_location_param
 
         log_path = os.path.join(out_dir, 'triage.log')
         if os.path.exists(log_path):

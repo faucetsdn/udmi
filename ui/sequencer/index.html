@@ -167,6 +167,28 @@
 
   </div>
 
+  <!-- Test Artifact File Viewer Modal -->
+  <div id="file-viewer-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="material-symbols-outlined modal-icon">description</span>
+          <h3 id="modal-test-name">Test Execution Artifacts</h3>
+        </div>
+        <div class="modal-tabs">
+          <button id="modal-tab-md" class="modal-tab active">sequence.md</button>
+          <button id="modal-tab-log" class="modal-tab">sequence.log</button>
+        </div>
+        <button id="modal-close-btn" class="btn-outlined btn-icon" title="Close" aria-label="Close dialog" style="width: 32px; height: 32px; min-width: 32px; padding: 0;">
+          <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre id="modal-file-content" class="file-content-viewer">Loading file content...</pre>
+      </div>
+    </div>
+  </div>
+
   <!-- JavaScript Modules -->
   <script type="module" src="main.js"></script>
 </body>

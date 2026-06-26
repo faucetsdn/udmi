@@ -233,27 +233,61 @@
 
 /* 6. AI Triage Diagnostics Layout */
 .diagnostics-layout {
-  display: grid;
-  grid-template-columns: 350px 1fr;
-  gap: 24px;
+  display: flex;
+  flex-direction: row;
   height: 100%;
-  min-height: 0; /* Protect grid from exceeding viewport height */
-  transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.diagnostics-layout.running {
-  grid-template-columns: 60% 40%;
-}
-
-.diagnostics-layout.complete {
-  grid-template-columns: 280px 1fr;
+  min-height: 0; /* Protect layout from exceeding viewport height */
+  position: relative;
+  width: 100%;
 }
 
 .diagnostics-sidebar {
+  flex: 0 0 380px;
+  min-width: 250px;
+  max-width: calc(100% - 300px);
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  transition: flex-basis 0.3s ease;
+}
+
+.rca-report-card {
+  flex: 1 1 0%;
+  min-width: 300px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.pane-resizer {
+  width: 16px;
+  margin: 0 4px;
+  cursor: col-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 10;
+  user-select: none;
+  flex-shrink: 0;
+  touch-action: none;
+}
+
+.pane-resizer::after {
+  content: '';
+  width: 4px;
+  height: 36px;
+  border-radius: 2px;
+  background-color: var(--border-color);
+  transition: background-color 0.2s, height 0.2s, width 0.2s;
+}
+
+.pane-resizer:hover::after,
+.pane-resizer.resizing::after {
+  background-color: var(--color-primary);
+  height: 54px;
+  width: 5px;
 }
 
 .terminal-card {
@@ -559,4 +593,143 @@
 
 .markdown-table tr:hover {
   background-color: rgba(255, 255, 255, 0.02); /* Very subtle hover row highlights! */
+}
+
+/* 12. Input With Button & Modal Overlays */
+.input-with-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.btn-icon-sm {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-card {
+  width: 540px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface, #1e1e2e);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  border: 1px solid var(--border-color, #313244);
+  animation: modalFadeIn 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color, #313244);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary, #cdd6f4);
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted, #9399b2);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.btn-close:hover {
+  color: var(--text-primary, #cdd6f4);
+}
+
+.modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.browser-list {
+  border: 1px solid var(--border-color, #313244);
+  background-color: var(--bg-app, #11111b);
+  border-radius: var(--radius-md, 8px);
+  height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.browser-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  font-size: 13px;
+  color: var(--text-primary, #cdd6f4);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.browser-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.browser-item.selected {
+  background-color: rgba(137, 180, 250, 0.15);
+  color: var(--color-primary, #89b4fa);
+}
+
+.browser-item .material-symbols-outlined {
+  color: var(--text-muted, #9399b2);
+  font-size: 20px;
+}
+
+.browser-item.selected .material-symbols-outlined {
+  color: var(--color-primary, #89b4fa);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border-color, #313244);
 }

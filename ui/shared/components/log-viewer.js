@@ -92,13 +92,14 @@ export class LogViewer {
         .log-timestamp {
           color: #80868b;
           margin-right: 8px;
-          user-select: none;
+          user-select: text;
         }
       </style>
       <div class="log-viewer-header">
         <span style="font-weight: 500; color: #aaa;">STREAMING LOGS</span>
         <div class="log-viewer-controls">
           <input type="text" class="log-viewer-search" placeholder="Filter logs..." aria-label="Filter logs" />
+          <button class="log-viewer-btn btn-copy">Copy Logs</button>
           <button class="log-viewer-btn btn-clear">Clear</button>
           <button class="log-viewer-btn btn-scroll">Lock Scroll</button>
         </div>
@@ -108,11 +109,13 @@ export class LogViewer {
 
     this.body = this.container.querySelector('.log-viewer-body');
     this.searchInput = this.container.querySelector('.log-viewer-search');
+    this.copyBtn = this.container.querySelector('.btn-copy');
     this.clearBtn = this.container.querySelector('.btn-clear');
     this.scrollBtn = this.container.querySelector('.btn-scroll');
 
     // Event listeners
     this.searchInput.addEventListener('input', (e) => this.setFilter(e.target.value));
+    this.copyBtn.addEventListener('click', () => this.copyLogsToClipboard());
     this.clearBtn.addEventListener('click', () => this.clear());
     this.scrollBtn.addEventListener('click', () => this.toggleScrollLock());
 
@@ -209,6 +212,26 @@ export class LogViewer {
   clear() {
     this.logs = [];
     this.body.innerHTML = '';
+  }
+
+  copyLogsToClipboard() {
+    if (this.logs.length === 0) return;
+    const formattedText = this.logs
+      .filter(log => this.matchesFilter(log))
+      .map(log => `[${log.timestamp}] ${log.text}`)
+      .join('\n');
+    
+    navigator.clipboard.writeText(formattedText).then(() => {
+      const oldText = this.copyBtn.textContent;
+      this.copyBtn.textContent = 'Copied!';
+      this.copyBtn.style.borderColor = 'var(--color-tertiary)';
+      this.copyBtn.style.color = 'var(--color-tertiary)';
+      setTimeout(() => {
+        this.copyBtn.textContent = oldText;
+        this.copyBtn.style.borderColor = '#3c3c3c';
+        this.copyBtn.style.color = '#ccc';
+      }, 1500);
+    });
   }
 
   escapeHTML(str) {

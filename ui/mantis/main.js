@@ -29,6 +29,16 @@ function combinePaths(base, sub) {
   return base + '/' + sub;
 }
 
+function getParentPath(path) {
+  if (!path || path === '.' || path === '/' || path === '' || path === '~') return '';
+  const parts = path.split('/').filter(p => p);
+  if (parts.length <= 1) {
+    return path.startsWith('/') ? '/' : '~';
+  }
+  parts.pop();
+  return (path.startsWith('/') ? '/' : '') + parts.join('/');
+}
+
 // --- MANTIS DECOUPLED CONTROLLER ---
 class MantisController {
   constructor() {
@@ -78,8 +88,40 @@ class MantisController {
     this.rcaReportBody = document.getElementById('rca-report-body');
     this.btnCopyReport = document.getElementById('btn-copy-report');
     
-    // Layout Container (for sliding panels animation)
+    // Layout Container & Resizer
     this.diagnosticsLayout = document.querySelector('.diagnostics-layout');
+    this.diagnosticsSidebar = document.querySelector('.diagnostics-sidebar');
+    this.diagnosticsResizer = document.getElementById('diagnostics-resizer');
+
+    // AI Credentials & Baseline Run Controls
+    this.providerSelect = document.getElementById('mantis-provider-select');
+    this.apiKeyInput = document.getElementById('mantis-api-key');
+    this.gcpProjectInput = document.getElementById('mantis-gcp-project');
+    this.gcpLocationInput = document.getElementById('mantis-gcp-location');
+    this.groupGeminiKey = document.getElementById('group-gemini-key');
+    this.groupVertexConfig = document.getElementById('group-vertex-config');
+    this.successRunInput = document.getElementById('mantis-success-run');
+
+    // Mantis Folder Browser Modal Elements
+    this.btnBrowseSuccessRun = document.getElementById('btn-browse-success-run');
+    this.mantisBrowserModal = document.getElementById('mantis-folder-browser-modal');
+    this.btnCloseMantisBrowser = document.getElementById('btn-close-mantis-browser');
+    this.btnMantisBrowserUp = document.getElementById('btn-mantis-browser-up');
+    this.mantisBrowserCurrentPath = document.getElementById('mantis-browser-current-path');
+    this.mantisBrowserList = document.getElementById('mantis-browser-list');
+    this.btnMantisBrowserCancel = document.getElementById('btn-mantis-browser-cancel');
+    this.btnMantisBrowserSelect = document.getElementById('btn-mantis-browser-select');
+    this.mantisBrowserPath = '~';
+    this.selectedMantisBrowserFolder = null;
+
+    // Compliance Test Verdict Elements
+    this.testStatusBadge = document.getElementById('mantis-test-status-badge');
+    this.groupTestVerdict = document.getElementById('group-test-verdict');
+    this.testVerdictBox = document.getElementById('test-verdict-box');
+    this.testVerdictIcon = document.getElementById('test-verdict-icon');
+    this.testVerdictText = document.getElementById('test-verdict-text');
+    this.testVerdictTime = document.getElementById('test-verdict-time');
+    this.deviceResults = {};
   }
 
   initComponents() {
@@ -89,6 +131,12 @@ class MantisController {
 
     // Initialize LogViewer (Diagnostics tab)
     this.triageLogViewer = new LogViewer(this.triageTerminalContainer);
+
+    // Load cached auth settings
+    this.loadCachedAuthSettings();
+
+    // Initialize interactive pane resizer
+    this.initResizer();
   }
 
   initEvents() {
@@ -123,9 +171,216 @@ class MantisController {
     // Triage run controls
     this.btnRunTriage.addEventListener('click', () => this.startAITriage());
     this.btnStopTriage.addEventListener('click', () => this.stopAITriage());
+
+    // AI Auth controls events
+    this.providerSelect.addEventListener('change', () => this.toggleProviderControls());
+    this.apiKeyInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_api_key', e.target.value.trim()));
+    this.gcpProjectInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_gcp_project', e.target.value.trim()));
+    this.gcpLocationInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_gcp_location', e.target.value.trim()));
+
+    // Prevent accidental tab closure during active AI triage
+    window.addEventListener('beforeunload', (e) => {
+      if (this.isTriageRunning) {
+        e.preventDefault();
+        e.returnValue = 'AI Triage is currently running. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    });
+
+    // --- 3. MANTIS FOLDER BROWSER LISTENERS ---
+    if (this.btnBrowseSuccessRun) {
+      this.btnBrowseSuccessRun.addEventListener('click', () => this.openMantisFolderBrowser());
+    }
+    if (this.btnCloseMantisBrowser) {
+      this.btnCloseMantisBrowser.addEventListener('click', () => this.closeMantisFolderBrowser());
+    }
+    if (this.btnMantisBrowserCancel) {
+      this.btnMantisBrowserCancel.addEventListener('click', () => this.closeMantisFolderBrowser());
+    }
+    if (this.btnMantisBrowserUp) {
+      this.btnMantisBrowserUp.addEventListener('click', () => this.navigateMantisBrowserUp());
+    }
+    if (this.btnMantisBrowserSelect) {
+      this.btnMantisBrowserSelect.addEventListener('click', () => this.selectMantisBrowserDirectory());
+    }
+    if (this.mantisBrowserCurrentPath) {
+      this.mantisBrowserCurrentPath.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          this.loadMantisBrowserPath(e.target.value.trim());
+        }
+      });
+    }
   }
 
-  // --- TAB SWITCHING MACHINERY ---
+  // --- RESIZER & TAB MACHINERY ---
+  initResizer() {
+    if (!this.diagnosticsResizer || !this.diagnosticsSidebar || !this.diagnosticsLayout) return;
+
+    const savedWidth = localStorage.getItem('udmi_mantis_sidebar_width');
+    if (savedWidth) {
+      this.diagnosticsSidebar.style.flexBasis = `${savedWidth}px`;
+    }
+
+    let isResizing = false;
+
+    const onPointerDown = (e) => {
+      isResizing = true;
+      this.diagnosticsResizer.classList.add('resizing');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      this.diagnosticsSidebar.style.transition = 'none';
+    };
+
+    const onPointerMove = (e) => {
+      if (!isResizing) return;
+      const layoutRect = this.diagnosticsLayout.getBoundingClientRect();
+      let newWidth = e.clientX - layoutRect.left;
+      
+      const minWidth = 250;
+      const maxWidth = layoutRect.width - 300;
+      if (newWidth < minWidth) newWidth = minWidth;
+      if (newWidth > maxWidth) newWidth = maxWidth;
+
+      this.diagnosticsSidebar.style.flexBasis = `${newWidth}px`;
+    };
+
+    const onPointerUp = () => {
+      if (isResizing) {
+        isResizing = false;
+        this.diagnosticsResizer.classList.remove('resizing');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        this.diagnosticsSidebar.style.transition = 'flex-basis 0.3s ease';
+        const currentWidth = parseFloat(this.diagnosticsSidebar.style.flexBasis);
+        if (currentWidth) {
+          localStorage.setItem('udmi_mantis_sidebar_width', currentWidth);
+        }
+      }
+    };
+
+    this.diagnosticsResizer.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+  }
+
+  loadCachedAuthSettings() {
+    const provider = localStorage.getItem('udmi_mantis_provider') || 'gemini';
+    this.providerSelect.value = provider;
+    this.apiKeyInput.value = localStorage.getItem('udmi_mantis_api_key') || '';
+    this.gcpProjectInput.value = localStorage.getItem('udmi_mantis_gcp_project') || '';
+    this.gcpLocationInput.value = localStorage.getItem('udmi_mantis_gcp_location') || 'global';
+    if (this.successRunInput) {
+      this.successRunInput.value = localStorage.getItem('udmi_mantis_success_run') || '';
+    }
+    this.toggleProviderControls();
+  }
+
+  toggleProviderControls() {
+    const provider = this.providerSelect.value;
+    localStorage.setItem('udmi_mantis_provider', provider);
+    if (provider === 'vertex') {
+      this.groupGeminiKey.style.display = 'none';
+      this.groupVertexConfig.style.display = 'flex';
+    } else {
+      this.groupGeminiKey.style.display = 'flex';
+      this.groupVertexConfig.style.display = 'none';
+    }
+  }
+
+  // --- FOLDER BROWSER MODAL CONTROLLER FOR BASELINE RUN ---
+  openMantisFolderBrowser() {
+    const currentVal = this.successRunInput ? this.successRunInput.value.trim() : '';
+    this.mantisBrowserPath = currentVal || '~';
+    this.selectedMantisBrowserFolder = null;
+    if (this.mantisBrowserModal) {
+      this.mantisBrowserModal.classList.add('active');
+    }
+    this.loadMantisBrowserPath(this.mantisBrowserPath);
+  }
+
+  closeMantisFolderBrowser() {
+    if (this.mantisBrowserModal) {
+      this.mantisBrowserModal.classList.remove('active');
+    }
+  }
+
+  async loadMantisBrowserPath(path) {
+    this.selectedMantisBrowserFolder = null;
+    if (this.mantisBrowserList) {
+      this.mantisBrowserList.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted);">Reading directory...</div>';
+    }
+    
+    try {
+      const data = await fetchDirectoryList(path);
+      this.mantisBrowserPath = data.path;
+      if (this.mantisBrowserCurrentPath) {
+        this.mantisBrowserCurrentPath.value = data.path;
+      }
+      this.renderMantisBrowserList(data.folders);
+    } catch (err) {
+      if (path !== '~') {
+        console.warn(`Failed to load '${path}', falling back to '~':`, err);
+        return this.loadMantisBrowserPath('~');
+      }
+      if (this.mantisBrowserList) {
+        this.mantisBrowserList.innerHTML = `<div style="padding:16px; text-align:center; color:var(--color-error);">Error: ${err.message}</div>`;
+      }
+    }
+  }
+
+  renderMantisBrowserList(folders) {
+    if (!this.mantisBrowserList) return;
+    this.mantisBrowserList.innerHTML = '';
+    
+    if (folders.length === 0) {
+      this.mantisBrowserList.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted);">No subdirectories found</div>';
+      return;
+    }
+
+    folders.forEach(folder => {
+      const itemEl = document.createElement('div');
+      itemEl.className = 'browser-item';
+      itemEl.innerHTML = `
+        <span class="material-symbols-outlined">folder</span>
+        <span>${folder}</span>
+      `;
+      
+      itemEl.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.mantisBrowserList.querySelectorAll('.browser-item').forEach(el => el.classList.remove('selected'));
+        itemEl.classList.add('selected');
+        this.selectedMantisBrowserFolder = folder;
+      });
+
+      itemEl.addEventListener('dblclick', (e) => {
+        e.stopPropagation();
+        const nextPath = combinePaths(this.mantisBrowserPath, folder);
+        this.loadMantisBrowserPath(nextPath);
+      });
+
+      this.mantisBrowserList.appendChild(itemEl);
+    });
+  }
+
+  navigateMantisBrowserUp() {
+    const parent = getParentPath(this.mantisBrowserPath);
+    if (parent !== null && parent !== '') {
+      this.loadMantisBrowserPath(parent);
+    }
+  }
+
+  selectMantisBrowserDirectory() {
+    let finalPath = this.mantisBrowserPath;
+    if (this.selectedMantisBrowserFolder) {
+      finalPath = combinePaths(this.mantisBrowserPath, this.selectedMantisBrowserFolder);
+    }
+    if (this.successRunInput) {
+      this.successRunInput.value = finalPath;
+      localStorage.setItem('udmi_mantis_success_run', finalPath);
+    }
+    this.closeMantisFolderBrowser();
+  }
+
   switchLocalTab(tabId) {
     this.activeTab = tabId;
     
@@ -210,6 +465,17 @@ class MantisController {
     this.jsonViewer.render({ message: "Select a debug scenario from the toolbar." });
     this.scenarioSelect.innerHTML = '<option value="">Scanning scenarios...</option>';
 
+    // Fetch device compliance test results for status badges
+    try {
+      const res = await fetch(`/api/device_results?site_model=${encodeURIComponent(this.siteModel)}&device=${encodeURIComponent(device)}`);
+      if (res.ok) {
+        const resData = await res.json();
+        this.deviceResults = resData.results || {};
+      }
+    } catch (err) {
+      console.error('Error fetching device results in mantis:', err);
+    }
+
     const testsPath = combinePaths(this.siteModel, `out/devices/${device}/tests`);
     try {
       const data = await fetchDirectoryList(testsPath);
@@ -220,11 +486,12 @@ class MantisController {
         scenarios.forEach(sc => {
           const opt = document.createElement('option');
           opt.value = sc;
-          opt.textContent = this.formatScenarioTitle(sc);
+          const statusInfo = this.deviceResults[sc];
+          const statusTag = statusInfo ? ` [${statusInfo.status.toUpperCase()}]` : '';
+          opt.textContent = this.formatScenarioTitle(sc) + statusTag;
           this.scenarioSelect.appendChild(opt);
         });
         this.scenarioSelect.disabled = false;
-        this.btnRunTriage.disabled = false; // Enable AI triage trigger
       } else {
         this.scenarioSelect.innerHTML = '<option value="">-- No test runs found --</option>';
       }
@@ -237,6 +504,7 @@ class MantisController {
   // --- CHROMATOGRAPHIC SEQUENCE TRACE LOADERS ---
   async handleScenarioChange(scenarioId) {
     this.resetMantisWorkspace();
+    this.updateScenarioVerdict(scenarioId);
     if (!scenarioId) return;
 
     this.mantisTreeContainer.innerHTML = '<div style="text-align:center; padding-top:40px; color:var(--text-muted)">Loading transition sequence...</div>';
@@ -416,12 +684,18 @@ class MantisController {
 
     // Clear views
     this.triageLogViewer.clear();
-    this.triageLogViewer.append(`🤖 Starting Mantis AI Triage Agent...\nDevice: ${deviceId}\nTest ID: ${testId}\nPlaybook: ${this.playbookSelect.value.toUpperCase()}\n------------------------------------------------\n`, 'info');
+    this.triageLogViewer.append(`Starting Mantis AI Triage Agent------\nDevice: ${deviceId}\nTest ID: ${testId}\nPlaybook: ${this.playbookSelect.value.toUpperCase()}\n------------------------------------------------\n`, 'info');
     
     this.rcaReportBody.innerHTML = `
-      <div class="rca-placeholder-message">
-        <div class="loader" style="margin-bottom: 24px;"></div>
-        <span style="font-weight: 500; color: var(--text-secondary); max-width: 480px;">Mantis AI is digesting compliance logs, scanning codebase references, and compiling the Root Cause Analysis...</span>
+      <div class="rca-placeholder-message" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px;">
+        <div class="loader" style="margin-bottom: 12px;"></div>
+        <span style="font-weight: 500; color: var(--text-primary); font-size: 15px; max-width: 500px; line-height: 1.5;">
+          Mantis AI is digesting compliance logs, scanning codebase references, and compiling the Root Cause Analysis...
+        </span>
+        <div style="font-size: 13px; color: var(--text-secondary); max-width: 460px; line-height: 1.5; background-color: var(--bg-surface-container); padding: 10px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 20px;">notifications_active</span>
+          <span>You will receive a notification when the RCA report is ready. Please do not close this tab.</span>
+        </div>
       </div>
     `;
     this.btnCopyReport.disabled = true;
@@ -429,7 +703,25 @@ class MantisController {
     // Trigger API
     const playbook = this.playbookSelect.value;
     const projectSpec = this.projectSpec || '//mqtt/localhost';
-    const runUrl = `/api/run_triage?device_id=${encodeURIComponent(deviceId)}&test_id=${encodeURIComponent(testId)}&playbook=${playbook}&site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(projectSpec)}`;
+    const provider = this.providerSelect.value;
+    const apiKey = this.apiKeyInput.value.trim();
+    const gcpProject = this.gcpProjectInput.value.trim();
+    const gcpLocation = this.gcpLocationInput.value.trim() || 'global';
+    const successRun = this.successRunInput ? this.successRunInput.value.trim() : '';
+
+    if (this.successRunInput) {
+      localStorage.setItem('udmi_mantis_success_run', successRun);
+    }
+
+    let runUrl = `/api/run_triage?device_id=${encodeURIComponent(deviceId)}&test_id=${encodeURIComponent(testId)}&playbook=${playbook}&site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(projectSpec)}`;
+    if (successRun) {
+      runUrl += `&success_run=${encodeURIComponent(successRun)}`;
+    }
+    if (provider === 'vertex') {
+      runUrl += `&use_vertex=true&gcp_project=${encodeURIComponent(gcpProject)}&gcp_location=${encodeURIComponent(gcpLocation)}`;
+    } else if (apiKey) {
+      runUrl += `&gemini_api_key=${encodeURIComponent(apiKey)}`;
+    }
     
     try {
       const res = await fetch(runUrl);
@@ -531,7 +823,7 @@ class MantisController {
       this.triageLogOffset = data.offset;
 
       // Handle process exit
-      if (data.running === false) {
+      if (data.running === false && data.exit_code !== null) {
         clearInterval(this.triagePollInterval);
         this.triagePollInterval = null;
         this.isTriageRunning = false;
@@ -835,6 +1127,89 @@ class MantisController {
       this.triageLogViewer.clear();
       this.triageStatusBadge.textContent = 'Idle';
       this.triageStatusBadge.className = 'badge badge-idle';
+    }
+
+    if (this.testStatusBadge) this.testStatusBadge.style.display = 'none';
+    if (this.groupTestVerdict) this.groupTestVerdict.style.display = 'none';
+  }
+
+  updateScenarioVerdict(scenarioId) {
+    if (!scenarioId || !this.deviceResults || !this.deviceResults[scenarioId]) {
+      if (this.testStatusBadge) this.testStatusBadge.style.display = 'none';
+      if (this.groupTestVerdict) this.groupTestVerdict.style.display = 'none';
+      this.btnRunTriage.disabled = !scenarioId;
+      this.btnRunTriage.title = '';
+      return;
+    }
+
+    const info = this.deviceResults[scenarioId];
+    const status = info.status || 'idle';
+    const ts = info.timestamp || '';
+
+    if (this.testStatusBadge) this.testStatusBadge.style.display = 'inline-flex';
+    if (this.groupTestVerdict) this.groupTestVerdict.style.display = 'flex';
+    if (this.testVerdictTime) this.testVerdictTime.textContent = ts;
+
+    if (status === 'pass') {
+      if (this.testStatusBadge) {
+        this.testStatusBadge.className = 'badge badge-success';
+        this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">check_circle</span><span>Passed</span>';
+      }
+      if (this.testVerdictBox) {
+        this.testVerdictBox.style.backgroundColor = 'rgba(109, 213, 140, 0.1)';
+        this.testVerdictBox.style.borderColor = 'rgba(109, 213, 140, 0.3)';
+        this.testVerdictIcon.style.color = 'var(--color-tertiary)';
+        this.testVerdictIcon.textContent = 'check_circle';
+        this.testVerdictText.style.color = 'var(--color-tertiary)';
+        this.testVerdictText.textContent = 'PASSED (Compliance Verified)';
+      }
+      this.btnRunTriage.disabled = true;
+      this.btnRunTriage.title = 'AI Triage is disabled because compliance test case passed successfully.';
+    } else if (status === 'skip') {
+      if (this.testStatusBadge) {
+        this.testStatusBadge.className = 'badge badge-warning';
+        this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">remove_circle</span><span>Skipped</span>';
+      }
+      if (this.testVerdictBox) {
+        this.testVerdictBox.style.backgroundColor = 'rgba(255, 183, 3, 0.1)';
+        this.testVerdictBox.style.borderColor = 'rgba(255, 183, 3, 0.3)';
+        this.testVerdictIcon.style.color = 'var(--color-warning)';
+        this.testVerdictIcon.textContent = 'remove_circle';
+        this.testVerdictText.style.color = 'var(--color-warning)';
+        this.testVerdictText.textContent = 'SKIPPED (Not Applicable)';
+      }
+      this.btnRunTriage.disabled = true;
+      this.btnRunTriage.title = 'AI Triage is disabled for skipped test cases.';
+    } else if (status === 'fail') {
+      if (this.testStatusBadge) {
+        this.testStatusBadge.className = 'badge badge-error';
+        this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">cancel</span><span>Failed</span>';
+      }
+      if (this.testVerdictBox) {
+        this.testVerdictBox.style.backgroundColor = 'rgba(255, 107, 107, 0.1)';
+        this.testVerdictBox.style.borderColor = 'rgba(255, 107, 107, 0.3)';
+        this.testVerdictIcon.style.color = 'var(--color-error)';
+        this.testVerdictIcon.textContent = 'cancel';
+        this.testVerdictText.style.color = 'var(--color-error)';
+        this.testVerdictText.textContent = 'FAILED (Compliance Issues Detected)';
+      }
+      this.btnRunTriage.disabled = false;
+      this.btnRunTriage.title = 'Run AI Triage';
+    } else {
+      if (this.testStatusBadge) {
+        this.testStatusBadge.className = 'badge badge-idle';
+        this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">help_outline</span><span>Idle</span>';
+      }
+      if (this.testVerdictBox) {
+        this.testVerdictBox.style.backgroundColor = 'var(--bg-app)';
+        this.testVerdictBox.style.borderColor = 'var(--border-color)';
+        this.testVerdictIcon.style.color = 'var(--text-secondary)';
+        this.testVerdictIcon.textContent = 'help_outline';
+        this.testVerdictText.style.color = 'var(--text-secondary)';
+        this.testVerdictText.textContent = 'NO STATUS';
+      }
+      this.btnRunTriage.disabled = false;
+      this.btnRunTriage.title = 'Run AI Triage';
     }
   }
 

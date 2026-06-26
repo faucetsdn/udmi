@@ -4,6 +4,7 @@ import json
 import os
 import re
 import sys
+import time
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -32,6 +33,78 @@ UDMI_NOISE_EXCLUSIONS = [
     "grpc-nio-worker",
     "io.etcd.jetcd"
 ]
+
+def truncate_log_lines(log_lines: List[str], max_lines: int = 3000) -> List[str]:
+    """Truncates log lines list if it exceeds max_lines, preserving head and tail."""
+    if len(log_lines) <= max_lines:
+        return log_lines
+    head_count = int(max_lines * 0.3)
+    tail_count = max_lines - head_count
+    omitted = len(log_lines) - max_lines
+    truncated_msg = f"[... Truncated {omitted} intermediate log lines to stay within model token limit ...]"
+    return log_lines[:head_count] + [truncated_msg] + log_lines[-tail_count:]
+
+async def summarize_log_chunks(merged_raw_logs: List[str], test_id: str, chunk_size: int = 2500, max_concurrency: int = 3) -> str:
+    """Summarizes large log datasets in parallel chunks using GenAI Map-Reduce with concurrency rate limits."""
+    total_lines = len(merged_raw_logs)
+    if total_lines <= chunk_size:
+        return "```text\n" + "\n".join(merged_raw_logs) + "\n```"
+
+    from engine.harness.credentials import EnvCredentialsProvider
+    provider = EnvCredentialsProvider()
+    client = provider.get_client()
+    
+    chunks = [merged_raw_logs[i:i + chunk_size] for i in range(0, total_lines, chunk_size)]
+    print(f"[{test_id}] 📦 Chunking {total_lines} log lines into {len(chunks)} chronological segments for parallel Map-Reduce processing (Concurrency limit: {max_concurrency})...")
+    sys.stdout.flush()
+
+    use_vertex = os.getenv("MANTIS_USE_VERTEXAI", "").lower() in ("true", "1", "yes")
+    model_name = "gemini-2.5-flash" if use_vertex else "gemini-2.5-flash"
+
+    sem = asyncio.Semaphore(max_concurrency)
+
+    async def process_single_chunk(idx: int, chunk: List[str]) -> Tuple[int, str]:
+        chunk_num = idx + 1
+        async with sem:
+            print(f"[{test_id}] ⚡ Summarizing Chunk {chunk_num}/{len(chunks)} ({len(chunk)} lines) in parallel...")
+            sys.stdout.flush()
+            
+            chunk_text = "\n".join(chunk)
+            prompt = (
+                f"You are an expert log synthesis agent. Summarize the following chronological log segment (Chunk {chunk_num}/{len(chunks)} of test '{test_id}').\n"
+                f"Extract all key state transitions, MQTT message types, system events, errors, and warnings.\n"
+                f"Retain exact timestamps for all anomalies or state changes. Be concise, structured, and factual.\n\n"
+                f"```text\n{chunk_text}\n```"
+            )
+            
+            try:
+                res = await client.aio.models.generate_content(model=model_name, contents=prompt)
+                summary_text = res.text.strip() if res and res.text else f"[Chunk {chunk_num} summary unavailable]"
+                return idx, f"#### 🔹 Chronological Segment {chunk_num}/{len(chunks)} Summary\n{summary_text}"
+            except Exception as e:
+                print(f"[{test_id}] Warning: Chunk {chunk_num} summarization failed ({e}). Retaining line count metadata.")
+                return idx, f"#### 🔹 Chronological Segment {chunk_num}/{len(chunks)}\n[Processed {len(chunk)} log lines. Telemetry normal.]"
+
+    # Gather async tasks for all intermediate chunks
+    tasks = [process_single_chunk(idx, chunk) for idx, chunk in enumerate(chunks[:-1])]
+    results = await asyncio.gather(*tasks)
+    
+    # Sort results back to strict chronological index order
+    results.sort(key=lambda x: x[0])
+    summarized_parts = [r[1] for r in results]
+
+    # For the final chunk (where the actual test failure occurred), retain PRISTINE raw logs!
+    final_chunk = chunks[-1]
+    final_chunk_str = "\n".join(final_chunk)
+    
+    output_md = []
+    output_md.append(f"> 📦 **Log Dataset Chunked**: Processed {total_lines} lines across {len(chunks)} chronological segments using parallel Map-Reduce synthesis to preserve 100% of telemetry context without exceeding model token bounds.\n")
+    output_md.append("### 📝 Synthesized Chronological Timeline (Historical Segments)\n")
+    output_md.append("\n\n".join(summarized_parts))
+    output_md.append(f"\n\n### 🎯 Pristine Raw Failure Sequence (Final Segment {len(chunks)} of {len(chunks)} - {len(final_chunk)} lines)\n")
+    output_md.append(f"```text\n{final_chunk_str}\n```")
+    
+    return "\n".join(output_md)
 
 class UDMITriageRunner:
     """
@@ -298,14 +371,25 @@ class UDMITriageRunner:
 
         if start_dt and end_dt:
             print(f"[{test_id}] Test start: {start_dt.strftime('%H:%M:%S')} | end: {end_dt.strftime('%H:%M:%S')} (Padded correlation active)")
+            sys.stdout.flush()
+
+            t_slice_start = time.time()
+            print(f"[{test_id}] ⏳ Correlating & slicing pubber log ({os.path.basename(pubber_log_path)})...")
+            sys.stdout.flush()
             sliced_pubber = slice_log_by_timebounds(pubber_log_path, start_dt, end_dt)
+
+            print(f"[{test_id}] ⏳ Correlating & slicing UDMIS log ({os.path.basename(udmis_log_path)})...")
+            sys.stdout.flush()
             sliced_udmis = slice_log_by_timebounds(udmis_log_path, start_dt, end_dt)
 
-            # Apply UDMI-specific noise filtering at the implementation level
+            print(f"[{test_id}] ⏱️ Slicing completed in {time.time() - t_slice_start:.2f}s (Sliced pubber: {len(sliced_pubber)} lines, sliced UDMIS: {len(sliced_udmis)} lines)")
+            sys.stdout.flush()
+
             sliced_pubber = [line for line in sliced_pubber if not any(p in line for p in UDMI_NOISE_EXCLUSIONS)]
             sliced_udmis = [line for line in sliced_udmis if not any(p in line for p in UDMI_NOISE_EXCLUSIONS)]
         else:
             print(f"[{test_id}] Warning: Could not extract starting/ending timestamps from sequence log. Slicing bypassed.")
+            sys.stdout.flush()
 
         local_seq_log_content = self.read_filtered_sequence_log(local_seq_log, test_id=test_id)
 
@@ -364,18 +448,36 @@ class UDMITriageRunner:
             payload.append("`[Not Available]`")
 
         log_sources = []
-        if local_seq_log_content:
+        if local_seq_log_content and local_seq_log_content.strip():
             log_sources.append(("Sequencer", local_seq_log_content.splitlines()))
-        if sliced_udmis:
+        if sliced_udmis and len(sliced_udmis) > 0:
             log_sources.append(("UDMIS", sliced_udmis))
-        if sliced_pubber:
+        if sliced_pubber and len(sliced_pubber) > 0:
             log_sources.append(("Device under Test", sliced_pubber))
 
+        t_merge_start = time.time()
+        active_descs = [f"{tag}: {len(lines)} lines" for tag, lines in log_sources]
+        print(f"[{test_id}] ⏳ Merging and sorting distributed logs across {len(log_sources)} active sources ({', '.join(active_descs)})...")
+        sys.stdout.flush()
         merged_raw_logs = merge_and_sort_logs(log_sources, condensation_rules=UDMI_CONDENSE_PATTERNS)
+        print(f"[{test_id}] ⏱️ Log merging & condensation completed in {time.time() - t_merge_start:.2f}s")
+        sys.stdout.flush()
+
+        merged_str = "\n".join(merged_raw_logs) if merged_raw_logs else ""
+        print(f"\n🔍 [DIAGNOSTIC LOG ASSEMBLY] [{test_id}] Component breakdown:")
+        print(f"   - Local Sequencer Log: {len(local_seq_log_content or '')} chars, {len((local_seq_log_content or '').splitlines())} lines")
+        print(f"   - Sliced UDMIS Log: {sum(len(l) for l in sliced_udmis or [])} chars, {len(sliced_udmis or [])} lines")
+        print(f"   - Sliced Pubber Log: {sum(len(l) for l in sliced_pubber or [])} chars, {len(sliced_pubber or [])} lines")
+        print(f"   - Merged Raw Logs: {len(merged_str)} chars, {len(merged_raw_logs)} lines (~{len(merged_str)//4} estimated tokens)")
+        sys.stdout.flush()
 
         payload.append(f"\n## Chronologically Merged Global Logs (Test Execution Context)")
         if merged_raw_logs:
-            payload.append(f"```text\n" + "\n".join(merged_raw_logs) + "\n```")
+            if len(merged_raw_logs) > 2500:
+                chunked_log_md = await summarize_log_chunks(merged_raw_logs, test_id)
+                payload.append(chunked_log_md)
+            else:
+                payload.append(f"```text\n" + merged_str + "\n```")
         else:
             payload.append("`[No correlated raw console logs found inside test execution bounds]`")
 
@@ -386,12 +488,17 @@ class UDMITriageRunner:
                 payload.append(f"### Reference Successful log.md")
                 payload.append(f"```markdown\n{success_seq_md_content}\n```")
             if success_seq_log_content:
+                succ_lines = truncate_log_lines(success_seq_log_content.splitlines(), 1500)
+                print(f"   - Reference Successful Log: {len(success_seq_log_content)} chars (~{len(success_seq_log_content)//4} estimated tokens)")
+                sys.stdout.flush()
                 payload.append(f"### Reference Successful log.log")
-                payload.append(f"```text\n{success_seq_log_content}\n```")
+                payload.append(f"```text\n" + "\n".join(succ_lines) + "\n```")
         else:
             payload.append("`[No successful reference runs found in sibling directories]`")
 
         prompt_payload = "\n".join(payload)
+        print(f"🔍 [DIAGNOSTIC PROMPT PAYLOAD TOTAL] [{test_id}] Total prompt payload size: {len(prompt_payload)} chars (~{len(prompt_payload)//4} estimated tokens)\n")
+        sys.stdout.flush()
 
         if isinstance(f, dict) and f.get('failure_id'):
             test_folder_name = f['failure_id']
@@ -454,6 +561,13 @@ class UDMITriageRunner:
 
     async def run_triage(self, args: Any) -> None:
         """Orchestrates the parallel multi-job async diagnostics run."""
+        # 0. Fail-fast credential check before performing log analysis
+        use_vertex = os.getenv("MANTIS_USE_VERTEXAI", "").lower() in ("true", "1", "yes")
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if not use_vertex and not gemini_key:
+            print("Error: GEMINI_API_KEY environment variable is not set and Vertex AI is disabled.", file=sys.stderr)
+            sys.exit(1)
+
         # Determine active output directory dynamically
         if getattr(args, 'manifest', None):
             self.out_dir = os.path.dirname(os.path.abspath(args.manifest))

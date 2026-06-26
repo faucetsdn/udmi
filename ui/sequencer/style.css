@@ -16,8 +16,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  height: var(--toolbar-height);
-  padding: 0 24px;
+  min-height: var(--toolbar-height);
+    padding: 8px 24px;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
   z-index: 10;
@@ -209,6 +209,11 @@
   color: var(--text-disabled);
 }
 
+.status-icon.queued {
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
 .status-icon.running {
   color: var(--color-primary);
   animation: rotateSpinner 1.2s linear infinite;
@@ -226,11 +231,116 @@
   color: var(--color-error);
 }
 
+.status-icon.clickable {
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.status-icon.clickable:hover {
+  background-color: var(--bg-surface-container-high);
+  transform: scale(1.15);
+}
 @keyframes rotateSpinner {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
+/* Modal File Viewer Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  width: 85vw;
+  max-width: 950px;
+  height: 80vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background-color: var(--bg-surface-container-low);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-title-group h3 {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.modal-icon {
+  color: var(--color-primary);
+}
+
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-tab {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  color: var(--text-secondary);
+}
+
+.modal-tab:hover {
+  background-color: var(--bg-surface-container-high);
+}
+
+.modal-tab.active {
+  background-color: var(--color-primary);
+  color: var(--on-primary);
+  border-color: var(--color-primary);
+}
+
+.modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  background-color: var(--bg-app);
+}
+
+.file-content-viewer {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-primary);
+  margin: 0;
+}
 /* 5. Right Workspace & Log Terminal */
 .sequencer-workspace {
   display: grid;

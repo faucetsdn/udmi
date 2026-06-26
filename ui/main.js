@@ -64,6 +64,23 @@ class ShellOrchestrator {
     this.applyFeatureFlagsLayout();
     this.initEvents();
     this.loadCachedSiteModelPath();
+
+    // 5. Dismiss application loader smoothly once fonts/DOM are ready
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => this.dismissLoader());
+    } else {
+      setTimeout(() => this.dismissLoader(), 300);
+    }
+  }
+
+  dismissLoader() {
+    const loader = document.getElementById('app-loader');
+    if (loader && !loader.classList.contains('fade-out')) {
+      loader.classList.add('fade-out');
+      setTimeout(() => {
+        loader.style.display = 'none';
+      }, 450);
+    }
   }
 
   parseFeatureFlags() {

@@ -13,7 +13,7 @@ from google.genai import types
 from .engine import AsyncTriageEngine, _get_response_text
 from .config.playbook import Playbook
 from .config.cache import SemanticCache
-from .ui import print_green, print_magenta, color_text, GREEN, YELLOW, print_mantis_banner
+from .ui import print_green, print_magenta, color_text, GREEN, YELLOW, RED, print_mantis_banner
 
 
 class TriagePipeline:
@@ -258,7 +258,8 @@ class TriagePipeline:
 
         # 3. Fallback to GenAI stage execution
         print()
-        print_green(f"--- Running Playbook Stage: {stage_name.capitalize()} ---", bold=True)
+        print_green(f"▶▶ STAGE EXECUTION: {stage_name.upper()} (Type: {stage_cfg.type})", bold=True)
+        sys.stdout.flush()
 
         # Resolve stage-specific tools
         stage_tools = self.playbook.resolve_tools(stage_name, available_tools) if self.playbook else {}
@@ -295,19 +296,35 @@ class TriagePipeline:
             if placeholder in sys_inst:
                 sys_inst = sys_inst.replace(placeholder, str(val))
 
+        full_text = combined_payload + "\n\n" + self.skills_catalog
+        if len(full_text) > 2500000:
+            print(color_text(f"⚠️ Warning: Stage '{stage_name}' prompt payload is large ({len(full_text)} chars). Truncating to protect Gemini context limit...", YELLOW, bold=True))
+            sys.stdout.flush()
+            full_text = full_text[:500000] + "\n\n[... Intermediate prompt text truncated to stay within model token limit ...]\n\n" + full_text[-1800000:]
+
+        print_green(f"🔍 [STAGE PROMPT SIZE] Stage '{stage_name}': {len(full_text)} chars (~{len(full_text)//4} estimated tokens)", bold=True)
+        sys.stdout.flush()
+
         history = [types.Content(role="user", parts=[types.Part.from_text(
-            text=combined_payload + "\n\n" + self.skills_catalog
+            text=full_text
         )])]
 
         active_model = self._resolve_model_for_stage(stage_name)
-        result = await self.engine.execute_loop(
-            system_instruction=sys_inst,
-            history=history,
-            tools_map=stage_tools,
-            required_headers=stage_cfg.headers,
-            model_name=active_model,
-            executed_tool_signatures=self.executed_tool_signatures
-        )
+        try:
+            result = await self.engine.execute_loop(
+                system_instruction=sys_inst,
+                history=history,
+                tools_map=stage_tools,
+                required_headers=stage_cfg.headers,
+                model_name=active_model,
+                executed_tool_signatures=self.executed_tool_signatures
+            )
+        except Exception as e:
+            import traceback
+            print(color_text(f"❌ Exception caught in Stage '{stage_name}' (Model: {active_model}): {type(e).__name__}: {e}", RED, bold=True), file=sys.stderr)
+            traceback.print_exc()
+            sys.stderr.flush()
+            raise RuntimeError(f"[Stage: '{stage_name}'] {type(e).__name__}: {e}") from e
         
         self.context[stage_name] = result
         return result

@@ -71,6 +71,17 @@ class SequencerController {
     this.metricSkipped = document.getElementById('metric-skipped');
     this.metricFailed = document.getElementById('metric-failed');
     this.metricTime = document.getElementById('metric-time');
+
+    // Modal Elements
+    this.fileViewerModal = document.getElementById('file-viewer-modal');
+    this.modalTestName = document.getElementById('modal-test-name');
+    this.modalTabMd = document.getElementById('modal-tab-md');
+    this.modalTabLog = document.getElementById('modal-tab-log');
+    this.modalCloseBtn = document.getElementById('modal-close-btn');
+    this.modalFileContent = document.getElementById('modal-file-content');
+
+    this.activeModalTestCase = null;
+    this.activeModalFileType = 'sequence.md';
   }
 
   initComponents() {
@@ -92,8 +103,10 @@ class SequencerController {
       this.device = e.target.value;
       if (this.device) {
         localStorage.setItem('udmi_last_selected_device', this.device);
+        this.loadDevicePreviousResults();
       } else {
         localStorage.removeItem('udmi_last_selected_device');
+        this.clearPreviousResults();
       }
       this.validateInputs();
     });
@@ -127,6 +140,28 @@ class SequencerController {
     this.testSearch.addEventListener('input', (e) => this.filterTestCases(e.target.value));
     this.btnSelectAll.addEventListener('click', () => this.toggleAllTestCases(true));
     this.btnDeselectAll.addEventListener('click', () => this.toggleAllTestCases(false));
+
+    // Modal events
+    this.modalCloseBtn.addEventListener('click', () => {
+      this.fileViewerModal.style.display = 'none';
+    });
+    this.fileViewerModal.addEventListener('click', (e) => {
+      if (e.target === this.fileViewerModal) {
+        this.fileViewerModal.style.display = 'none';
+      }
+    });
+    this.modalTabMd.addEventListener('click', () => {
+      this.activeModalFileType = 'sequence.md';
+      this.modalTabMd.classList.add('active');
+      this.modalTabLog.classList.remove('active');
+      this.loadModalFileContent();
+    });
+    this.modalTabLog.addEventListener('click', () => {
+      this.activeModalFileType = 'sequence.log';
+      this.modalTabLog.classList.add('active');
+      this.modalTabMd.classList.remove('active');
+      this.loadModalFileContent();
+    });
   }
 
   // --- STATE SYNC & INPUT VALIDATION ---
@@ -136,6 +171,7 @@ class SequencerController {
     this.deviceSelect.innerHTML = '<option value="">-- Select DUT --</option>';
     this.deviceSelect.disabled = true;
     this.device = '';
+    this.clearPreviousResults();
 
     if (!siteModel) {
       this.deviceSelect.innerHTML = '<option value="">-- Enter site path --</option>';
@@ -169,6 +205,7 @@ class SequencerController {
           this.deviceSelect.value = cachedDev;
           this.device = cachedDev;
           this.logViewer.append(`Restored last active DUT: "${this.device}"`, 'success');
+          this.loadDevicePreviousResults();
         }
       } else {
         this.deviceSelect.innerHTML = '<option value="">-- No devices found under path --</option>';
@@ -260,12 +297,117 @@ class SequencerController {
       if (parsedCases.length > 0) {
         this.testCases = parsedCases;
         this.renderTestCases();
+        if (this.device) {
+          this.loadDevicePreviousResults();
+        }
       } else {
         throw new Error('No test cases parsed');
       }
     } catch (err) {
       this.logViewer.append(`Error loading test cases: ${err.message}`, 'error');
       console.error(err);
+    }
+  }
+
+  clearPreviousResults() {
+    this.testCases.forEach(tc => {
+      tc.status = 'idle';
+      tc.lastTimestamp = null;
+    });
+    this.renderTestCases();
+
+    if (!this.isRunning) {
+      this.metricPassed.textContent = 0;
+      this.metricFailed.textContent = 0;
+      this.metricSkipped.textContent = 0;
+      this.suiteStatusBadge.textContent = 'Idle';
+      this.suiteStatusBadge.className = 'badge badge-neutral';
+    }
+  }
+
+  async loadDevicePreviousResults(preserveBadge = false, updateMetrics = true) {
+    if (!this.siteModel || !this.device) {
+      this.clearPreviousResults();
+      return;
+    }
+
+    try {
+      const url = `/api/device_results?site_model=${encodeURIComponent(this.siteModel)}&device=${encodeURIComponent(this.device)}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        if (!preserveBadge) this.clearPreviousResults();
+        return;
+      }
+      const data = await res.json();
+
+      if (data.results && Object.keys(data.results).length > 0) {
+        let passCount = 0;
+        let failCount = 0;
+        let skipCount = 0;
+
+        this.testCases.forEach(tc => {
+          if (data.results[tc.id]) {
+            const resObj = data.results[tc.id];
+            tc.status = resObj.status;
+            tc.lastTimestamp = resObj.timestamp;
+
+            if (resObj.status === 'pass') passCount++;
+            else if (resObj.status === 'fail' || resObj.status === 'error') failCount++;
+            else if (resObj.status === 'skip') skipCount++;
+          } else {
+            tc.status = 'idle';
+            tc.lastTimestamp = null;
+          }
+        });
+
+        this.renderTestCases();
+
+        if (!this.isRunning && updateMetrics) {
+          this.metricPassed.textContent = passCount;
+          this.metricFailed.textContent = failCount;
+          this.metricSkipped.textContent = skipCount;
+          if (!preserveBadge) {
+            this.suiteStatusBadge.textContent = 'Historical Runs';
+            this.suiteStatusBadge.className = 'badge badge-info';
+          }
+        }
+      } else if (!preserveBadge) {
+        this.clearPreviousResults();
+      }
+    } catch (err) {
+      console.error('Error fetching device previous results:', err);
+      if (!preserveBadge) this.clearPreviousResults();
+    }
+  }
+
+  async openFileViewerModal(tc) {
+    this.activeModalTestCase = tc;
+    this.activeModalFileType = 'sequence.md';
+
+    this.modalTestName.textContent = `${tc.title} (${tc.id})`;
+    this.modalTabMd.classList.add('active');
+    this.modalTabLog.classList.remove('active');
+    this.fileViewerModal.style.display = 'flex';
+
+    this.loadModalFileContent();
+  }
+
+  async loadModalFileContent() {
+    if (!this.activeModalTestCase || !this.siteModel || !this.device) return;
+
+    const filePath = combinePaths(this.siteModel, `out/devices/${this.device}/tests/${this.activeModalTestCase.id}/${this.activeModalFileType}`);
+    this.modalFileContent.textContent = `Loading ${this.activeModalFileType}...`;
+
+    try {
+      const res = await fetch(`/api/read_file?path=${encodeURIComponent(filePath)}`);
+      if (!res.ok) {
+        this.modalFileContent.textContent = `File not found or empty: ${this.activeModalFileType}`;
+        return;
+      }
+      const text = await res.text();
+      this.modalFileContent.textContent = text || `(File is empty: ${this.activeModalFileType})`;
+    } catch (err) {
+      this.modalFileContent.textContent = `Error loading file: ${err.message}`;
     }
   }
 
@@ -280,13 +422,16 @@ class SequencerController {
       itemEl.className = `test-case-item ${tc.id === this.selectedTestCaseId ? 'active' : ''}`;
       
       const disabledAttr = this.isRunning ? 'disabled' : '';
+      const isClickable = tc.status !== 'idle' && tc.status !== 'queued' && tc.status !== 'running';
+      const clickableClass = isClickable ? 'clickable' : '';
+      const titleAttr = isClickable ? 'View test sequence logs & markdown' : '';
       
       itemEl.innerHTML = `
         <div class="test-case-meta">
           <input type="checkbox" class="test-case-checkbox" ${tc.checked !== false ? 'checked' : ''} ${disabledAttr} aria-label="Select ${tc.title}" />
           <div class="test-case-info">
             <div class="test-case-title">${tc.title}</div>
-            <div class="test-case-desc">${tc.desc}</div>
+            <div class="test-case-desc">${tc.desc}${tc.lastTimestamp ? ` <span class="test-timestamp" style="font-size: 11px; opacity: 0.7; margin-left: 6px; font-family: monospace;">(${tc.lastTimestamp})</span>` : ''}</div>
           </div>
         </div>
         <div class="test-case-status" style="display: flex; align-items: center;">
@@ -295,7 +440,7 @@ class SequencerController {
               <span class="material-symbols-outlined">psychology</span>
             </button>
           ` : ''}
-          <span class="material-symbols-outlined status-icon ${tc.status}">
+          <span class="material-symbols-outlined status-icon ${tc.status} ${clickableClass}" title="${titleAttr}">
             ${this.getSequencerStatusIconName(tc.status)}
           </span>
         </div>
@@ -321,6 +466,14 @@ class SequencerController {
         });
       }
 
+      const statusIcon = itemEl.querySelector('.status-icon');
+      if (statusIcon && isClickable) {
+        statusIcon.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.openFileViewerModal(tc);
+        });
+      }
+
       this.testCasesList.appendChild(itemEl);
     });
   }
@@ -335,6 +488,7 @@ class SequencerController {
   getSequencerStatusIconName(status) {
     switch (status) {
       case 'idle': return 'remove';
+      case 'queued': return 'pending';
       case 'running': return 'progress_activity';
       case 'pass': return 'check_circle';
       case 'skip': return 'remove_circle';
@@ -379,7 +533,11 @@ class SequencerController {
     this.btnSettings.disabled = true;
     this.settingsPopover.classList.remove('active');
 
-    this.testCases.forEach(tc => tc.status = 'idle');
+    this.testCases.forEach(tc => {
+      if (tc.checked !== false) {
+        tc.status = 'queued';
+      }
+    });
     this.renderTestCases();
 
     this.runTimer = setInterval(() => {
@@ -449,7 +607,12 @@ class SequencerController {
       this.logOffset = data.offset;
 
       if (!data.running) {
-        clearInterval(this.pollInterval);
+        if (this.pollInterval) {
+          clearInterval(this.pollInterval);
+          this.pollInterval = null;
+        } else {
+          return;
+        }
         const code = data.exit_code;
         this.logViewer.append(`\nProcess exited with status code: ${code}`, code === 0 ? 'success' : 'warn');
         
@@ -461,7 +624,7 @@ class SequencerController {
             if (tc.status === 'pass') passed++;
             else if (tc.status === 'skip') skipped++;
             else {
-              if (tc.status === 'idle' || tc.status === 'running') tc.status = 'fail';
+              if (tc.status === 'idle' || tc.status === 'queued' || tc.status === 'running') tc.status = 'fail';
               failed++;
             }
           }
@@ -546,19 +709,26 @@ class SequencerController {
     } catch (err) {
       this.logViewer.append(`Failed to stop cleanly: ${err.message}`, 'error');
     }
-    if (this.pollInterval) clearInterval(this.pollInterval);
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
     this.finishTestSuiteVisuals();
-    this.suiteStatusBadge.textContent = 'Aborted';
-    this.suiteStatusBadge.className = 'badge badge-warning';
     this.testCases.forEach(tc => {
-      if (tc.status === 'running') tc.status = 'idle';
+      if (tc.status === 'running' || tc.status === 'queued') tc.status = 'idle';
     });
     this.renderTestCases();
     this.updateMetricsFromCheckedStates();
+    await this.loadDevicePreviousResults(true, false);
+    this.suiteStatusBadge.textContent = 'Aborted';
+    this.suiteStatusBadge.className = 'badge badge-warning';
   }
 
-  finishTestSuite(passed, failed, skipped, cleanExit) {
-    if (this.pollInterval) clearInterval(this.pollInterval);
+  async finishTestSuite(passed, failed, skipped, cleanExit) {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
     this.finishTestSuiteVisuals();
     if (failed > 0 || !cleanExit) {
       this.suiteStatusBadge.textContent = 'Failed';
@@ -569,6 +739,7 @@ class SequencerController {
       this.suiteStatusBadge.className = 'badge badge-success';
       this.logViewer.append(`\nCOMPLIANCE RUN COMPLETE. Passed: ${passed}, Skipped: ${skipped}, Failed: ${failed}. DUT is compliant!`, 'success');
     }
+    await this.loadDevicePreviousResults(true, false);
   }
 
   finishTestSuiteVisuals() {
