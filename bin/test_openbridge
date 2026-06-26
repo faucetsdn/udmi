@@ -515,6 +515,45 @@ wait_for_bridge() {
   exit 1
 }
 
+wait_for_device_config() {
+  local device_id=$1
+  local registry_id=$2
+  local site_model=$3
+  local timeout_sec=30
+  
+  local key_file="$site_model/devices/$device_id/rsa_private.pkcs8"
+  if [ ! -f "$key_file" ]; then
+    echo "Error: Key file $key_file not found" >&2
+    return 1
+  fi
+  
+  # Calculate password (first 8 chars of sha256sum of the pkcs8 key)
+  local password
+  password=$(sha256sum "$key_file" | awk '{print $1}' | cut -c1-8)
+  
+  local username="/r/$registry_id/d/$device_id"
+  local topic="/r/$registry_id/d/$device_id/config"
+  
+  echo "Waiting up to ${timeout_sec}s for device $device_id config to be available on MQTT..."
+  
+  if timeout "$timeout_sec" mosquitto_sub \
+    -h 127.0.0.1 -p 8883 \
+    -t "$topic" \
+    -i "$username" \
+    -u "$username" -P "$password" \
+    --cafile "$site_model/reflector/ca.crt" \
+    --cert "$site_model/devices/$device_id/rsa_private.crt" \
+    --key "$site_model/devices/$device_id/rsa_private.pem" \
+    -C 1 > /dev/null 2>&1; then
+    echo "Device $device_id config is available on MQTT (ACL verified)."
+    return 0
+  else
+    echo "Error: Timeout or failure waiting for device $device_id config on MQTT." >&2
+    echo "This indicates UDMIS failed to publish config, or Mosquitto ACLs blocked it." >&2
+    return 1
+  fi
+}
+
 wait_for_bridge "Events Bridge" "$BRIDGE_EVENTS_PID" "out/bridge_events.log"
 wait_for_bridge "State Bridge" "$BRIDGE_STATE_PID" "out/bridge_state.log"
 wait_for_bridge "Reflect Bridge" "$BRIDGE_REFLECT_PID" "out/bridge_reflect.log"
@@ -522,6 +561,12 @@ echo "Bridges are running and connected."
 
 echo "Registering devices via All-Pub/Sub Pipeline..."
 bin/registrar "$SITE_MODEL" //gref/udmis
+
+if ! wait_for_device_config "$DEVICE_ID" "$REGISTRY_ID" "$SITE_MODEL"; then
+  echo "Pre-verification failed. Dumping UDMIS logs..." >&2
+  cat out/udmis_host.log >&2
+  exit 1
+fi
 
 # 15. Run Pubber
 echo "Starting Pubber..."
