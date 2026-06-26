@@ -50,12 +50,24 @@ def slice_log_by_timebounds(filepath: str, start_dt: datetime, end_dt: datetime,
     padded_end = end_dt + timedelta(seconds=padding_seconds)
     ts_pattern = re.compile(r'^([\d\-T:Z\.,]+)\s+')
 
+    # Pre-calculate valid hour substrings to optimize timestamp parsing (e.g. "17:")
+    valid_hours = []
+    curr = padded_start.replace(minute=0, second=0, microsecond=0)
+    while curr <= padded_end:
+        valid_hours.append(f"{curr.hour:02d}:")
+        curr += timedelta(hours=1)
+
     try:
         with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
             for line in f:
                 m = ts_pattern.match(line)
                 if m:
-                    ts = parse_timestamp(m.group(1))
+                    ts_str = m.group(1)
+                    # Performance Optimization: Skip expensive datetime parsing if the hour prefix doesn't match
+                    if not any(h in ts_str for h in valid_hours):
+                        continue
+
+                    ts = parse_timestamp(ts_str)
                     if ts and (padded_start <= ts <= padded_end):
                         sliced_entries.append(line.strip())
     except Exception as e:

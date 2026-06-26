@@ -24,6 +24,15 @@ UDMI_CONDENSE_PATTERNS = [
     )
 ]
 
+# Strict noise exclusion patterns for high-frequency low-level library debug logs and heartbeats
+UDMI_NOISE_EXCLUSIONS = [
+    "io.grpc.netty",
+    "io.grpc.internal",
+    "io.netty",
+    "grpc-nio-worker",
+    "io.etcd.jetcd"
+]
+
 class UDMITriageRunner:
     """
     Main coordinator of UDMI diagnostics. Walking directories, resolving sharded run outputs,
@@ -291,6 +300,10 @@ class UDMITriageRunner:
             print(f"[{test_id}] Test start: {start_dt.strftime('%H:%M:%S')} | end: {end_dt.strftime('%H:%M:%S')} (Padded correlation active)")
             sliced_pubber = slice_log_by_timebounds(pubber_log_path, start_dt, end_dt)
             sliced_udmis = slice_log_by_timebounds(udmis_log_path, start_dt, end_dt)
+
+            # Apply UDMI-specific noise filtering at the implementation level
+            sliced_pubber = [line for line in sliced_pubber if not any(p in line for p in UDMI_NOISE_EXCLUSIONS)]
+            sliced_udmis = [line for line in sliced_udmis if not any(p in line for p in UDMI_NOISE_EXCLUSIONS)]
         else:
             print(f"[{test_id}] Warning: Could not extract starting/ending timestamps from sequence log. Slicing bypassed.")
 

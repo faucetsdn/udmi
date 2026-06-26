@@ -44,6 +44,7 @@ class MantisController {
     
     // Triage Subprocess State
     this.isTriageRunning = false;
+    this.isTriageLoading = false;
     this.triageLogOffset = 0;
     this.triagePollInterval = null;
 
@@ -352,6 +353,12 @@ class MantisController {
 
   // --- CROSS-IFRAME AUTO-TRIAGE REDIRECTION (PostMessage) ---
   async handleLoadDiagnose(data) {
+    if (this.isTriageRunning || this.isTriageLoading) {
+      console.log('Mantis Screen: Triage run or load already in progress. Ignoring duplicate trigger.');
+      return;
+    }
+    this.isTriageLoading = true;
+
     const { testId, deviceId, siteModel, projectSpec } = data;
     console.log(`Mantis Screen: Received load_diagnose payload for test ${testId} on device ${deviceId}`);
     
@@ -374,6 +381,7 @@ class MantisController {
   // --- MANTIS AI TRIAGE EXECUTION LOOP ---
   async startAITriage() {
     if (this.isTriageRunning) return;
+    this.isTriageLoading = false; // Transition from loading to running state
 
     const deviceId = this.device;
     const testId = this.scenarioSelect.value;
@@ -430,6 +438,25 @@ class MantisController {
         throw new Error(startData.error || `HTTP ${res.status}`);
       }
 
+      if (startData.status === "Skipped") {
+        this.triageStatusBadge.textContent = 'Passed';
+        this.triageStatusBadge.className = 'badge badge-success';
+        this.triageLogViewer.append(`\n✨ Triage Bypassed: ${startData.message}\n`, 'info');
+        
+        this.rcaReportBody.innerHTML = `
+          <div class="rca-placeholder-message">
+            <span class="material-symbols-outlined" style="font-size:54px; color:var(--color-tertiary); margin-bottom:12px;">check_circle</span>
+            <span style="font-weight: 600; font-size: 16px; color: var(--text-primary);">Test Case Passed Successfully!</span>
+            <span style="font-size: 13.5px; color: var(--text-secondary); margin-top: 8px; max-width: 440px; text-align: center; line-height: 1.5;">
+              Mantis AI Triage is skipped because compliance test case <strong>'${testId}'</strong> on device <strong>'${deviceId}'</strong> is in a healthy, passing state. No root-cause analysis is needed.
+            </span>
+          </div>
+        `;
+        
+        this.stopAITriage(false);
+        return;
+      }
+
       // Start Polling
       this.triagePollInterval = setInterval(() => this.pollTriageStatus(), 500);
     } catch (err) {
@@ -454,6 +481,7 @@ class MantisController {
     }
 
     this.isTriageRunning = false;
+    this.isTriageLoading = false;
 
     // Reset panel sliding to default
     this.diagnosticsLayout.classList.remove('running', 'complete');

@@ -322,30 +322,55 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         os.makedirs(out_dir, exist_ok=True)
 
         site_id = os.path.basename(os.path.normpath(site_model)) if site_model else "udmi_site_model"
+        site_model_abs = os.path.abspath(os.path.expanduser(site_model)) if site_model else os.path.join(ROOT_DIR, "sites", "udmi_site_model")
         
-        # Resolve relative and absolute paths for the logs
-        seq_log_rel = f"sites/{site_id}/out/devices/{device_id}/tests/{test_id}/sequence.log"
-        seq_md_rel = f"sites/{site_id}/out/devices/{device_id}/tests/{test_id}/sequence.md"
-        pubber_log_rel = "out/pubber.log"
-        udmis_log_rel = "out/udmis.log"
-
-        seq_log_abs = os.path.join(ROOT_DIR, seq_log_rel)
+        # 1. Resolve absolute paths for the logs directly from the site model directory
+        seq_log_abs = os.path.join(site_model_abs, "out", "devices", device_id, "tests", test_id, "sequence.log")
+        seq_md_abs = os.path.join(site_model_abs, "out", "devices", device_id, "tests", test_id, "sequence.md")
+        pubber_log_abs = os.path.join(ROOT_DIR, "out", "pubber.log")
+        udmis_log_abs = os.path.join(ROOT_DIR, "out", "udmis.log")
 
         # Strict Guardrail: If sequence_log is absent, do not trigger the run at all!
         if not os.path.exists(seq_log_abs):
             self.send_error_response(412, f"Triage aborted: Sequencer log not found for '{test_id}'. Please run the compliance test case first to generate logs.")
             return
 
+        # Smart Guardrail: If the test case passed successfully, do not run triage!
+        try:
+            with open(seq_log_abs, 'r', encoding='utf-8', errors='ignore') as f:
+                log_content = f.read()
+                if "RESULT pass" in log_content:
+                    response_data = json.dumps({
+                        "status": "Skipped",
+                        "message": f"Compliance test case '{test_id}' passed successfully. Diagnostics are not required."
+                    }).encode('utf-8')
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.send_header('Content-Length', str(len(response_data)))
+                    self.send_header('Access-Control-Allow-Origin', '*')
+                    self.end_headers()
+                    self.wfile.write(response_data)
+                    return
+        except Exception as e:
+            print(f"Warning: Failed to check sequence.log for passing status: {e}")
+
+        # 2. Convert all absolute paths to relative paths relative to ROOT_DIR (UDMI root)
+        # This ensures they integrate perfectly with Mantis's internal path joining (handling custom sites directories seamlessly)
+        seq_log_rel = os.path.relpath(seq_log_abs, ROOT_DIR)
+        seq_md_rel = os.path.relpath(seq_md_abs, ROOT_DIR)
+        pubber_log_rel = os.path.relpath(pubber_log_abs, ROOT_DIR)
+        udmis_log_rel = os.path.relpath(udmis_log_abs, ROOT_DIR)
+
         # Dynamically compile the logs dictionary, including only files that exist on disk
         failed_run_logs = {
             "sequence_log": seq_log_rel
         }
 
-        if os.path.exists(os.path.join(ROOT_DIR, seq_md_rel)):
+        if os.path.exists(seq_md_abs):
             failed_run_logs["sequence_md"] = seq_md_rel
-        if os.path.exists(os.path.join(ROOT_DIR, pubber_log_rel)):
+        if os.path.exists(pubber_log_abs):
             failed_run_logs["pubber_log"] = pubber_log_rel
-        if os.path.exists(os.path.join(ROOT_DIR, udmis_log_rel)):
+        if os.path.exists(udmis_log_abs):
             failed_run_logs["udmis_log"] = udmis_log_rel
 
         manifest_data = {
