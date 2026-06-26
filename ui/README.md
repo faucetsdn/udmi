@@ -86,6 +86,26 @@ window.addEventListener('message', (event) => {
 
 ---
 
+## 🛰️ Backend API Endpoints (`ui/server.py`)
+
+The Workbench Python server (`ui/server.py`) provides non-blocking REST and streaming SSE endpoints that interface directly with UDMI backend scripts and micro-frontends:
+
+| Route / Endpoint | Description | Query Parameters / Flags |
+|---|---|---|
+| `/api/devices` | Discovers available devices in site model. | `site_model` |
+| `/api/device_results` | Scans test outputs and execution statuses. | `site_model`, `device` |
+| `/api/list` | Returns subdirectories & files for directory browser modal. | `path` (defaults to repo root or `~`) |
+| `/api/read_file` | Reads file content for log & artifact viewers. | `path` |
+| `/api/run_sequencer` | Launches Sequencer test execution subprocess (`bin/sequencer`). | `site_model`, `device_id`, `project_spec`, `log_level`, `min_stage`, `serial_no` |
+| `/api/stop_sequencer` | Terminates active Sequencer subprocess cleanly. | None |
+| `/api/stream` | Server-Sent Events (SSE) live log streaming for Sequencer. | None |
+| `/api/run_triage` | Launches Mantis AI triage subprocess (`bin/triage`). | `site_model`, `device_id`, `test_id`, `playbook`, `project_spec`, `gemini_api_key`, `use_vertex`, `gcp_project`, `gcp_location`, `success_run` |
+| `/api/stop_triage` | Terminates active Mantis triage subprocess. | None |
+| `/api/triage_stream` | Server-Sent Events (SSE) live log streaming for Mantis. | None |
+| `/api/triage_report` | Fetches generated AI Root Cause Analysis markdown report. | `site_model`, `device_id`, `test_id` |
+
+---
+
 ## How to Extend: Add a New Tool in 5 Minutes!
 
 Adding a new developer tool (for example, a **`config_editor`**) is incredibly simple and requires **zero changes** to the business logic of existing tools.

@@ -51,16 +51,25 @@ The [**Sequencer**](./sequencer.md) tool allows you to run, manage, and monitor 
 
 ---
 
-## The Mantis Debugger
+## The Mantis Debugger & AI Triage Suite
 
-The [**Mantis**](./mantis.md) tool is a passive trace explorer and MQTT transaction debugger. It allows you to inspect the historical state transitions and configuration handshakes of a device.
+The [**Mantis**](./mantis.md) tool is an intelligent trace explorer, MQTT transaction debugger, and automated AI diagnostic triage suite. It provides passive log inspection alongside powered Root Cause Analysis (RCA) directly within Workbench.
 
 ### Key Features & How to Use:
-1.  **Device Selector**: Select the device you want to inspect from the local **Device** dropdown.
-2.  **Scenario Discovery**: Select an executed test run scenario (e.g., `blob_update_success`, `config_logging`) from the local **Debug Scenario** dropdown. Mantis automatically scans that device's test output history.
-3.  **Chronological Timeline**: View a vertical, color-coded sequence timeline of all MQTT messages exchanged during that scenario, sorted precisely in chronological order.
-    *   **Settings Icons (Orange)**: Represent configuration handshakes.
-    *   **Swap Icons (Green)**: Represent state reports.
-    *   **Notification Icons (Red)**: Represent system error alerts.
-4.  **MQTT Payload Inspector**: Click any node on the timeline to fetch and display its raw JSON payload in the collapsible tree viewer. Use the **Copy Button** to copy the formatted JSON to your clipboard with one click.
+
+#### 1. Passive Trace Explorer (Trace Tab)
+*   **Device & Scenario Selector**: Choose a target device and test execution scenario (e.g., `endpoint_failure_and_restart`, `blob_update_success`) from the dropdown selectors. Mantis automatically scans historical test runs.
+*   **Chronological Timeline**: Inspect a vertical, color-coded sequence timeline of all MQTT telemetry, state, and config messages exchanged during the run:
+    *   **Settings Icons (Orange)**: Configuration handshakes (`config`).
+    *   **Swap Icons (Green)**: Device state updates (`state`).
+    *   **Notification Icons (Red)**: System errors and event alerts (`events`).
+*   **MQTT Payload Inspector**: Click any node on the timeline to inspect its raw JSON payload in the collapsible tree viewer with one-click clipboard copying.
+
+#### 2. Automated AI Triage & Root Cause Analysis (AI Diagnostics Tab)
+*   **Compliance Test Verdict Badges**: View real-time test status indicators (`Passed`, `Skipped`, `Failed`). To save AI quota and eliminate unnecessary API usage, tests with a `Passed` status automatically disable the AI Triage trigger.
+*   **AI Credentials & Provider Configuration**: Configure diagnostic settings using either a standard **Gemini API Key** or enterprise **GCP Vertex AI (ADC)** credentials with custom GCP project and location parameters. All credentials are securely cached locally in your browser.
+*   **Diagnostic Playbooks**: Select between the **Device Compliance Auditor (Standard OEM)** playbook for hardware/integrator protocol auditing or the **Codebase Debugger (Advanced SWE)** playbook for Pubber/UDMIS Java source debugging.
+*   **Reference Successful Run (Baseline Run Selector)**: Use the input field or click the folder icon to launch the **Folder Browser Modal** (rooted at `$HOME`). Selecting a past passing run directory adds clean baseline logs (`sequence.log` and `sequence.md`) to the manifest, enabling Gemini to perform differential diagnosis against a known working state.
+*   **Live Subprocess Streaming & RCA Reports**: Click **Run AI Triage** to launch the backend diagnostic engine (`bin/triage`). Raw logs stream in real time into the embedded terminal. Upon completion, the final AI Root Cause Analysis markdown report renders in the right panel with one-click copy support.
+*   **Interactive Workspace Controls**: Enjoy a drag-to-resize split pane layout and built-in tab closure safeguards that protect against accidental navigation while an AI diagnostic run is active.
 
