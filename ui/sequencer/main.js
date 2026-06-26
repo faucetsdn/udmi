@@ -350,6 +350,7 @@ class SequencerController {
             const resObj = data.results[tc.id];
             tc.status = resObj.status;
             tc.lastTimestamp = resObj.timestamp;
+            tc.projectSpec = resObj.project_spec || resObj.target_project;
 
             if (resObj.status === 'pass') passCount++;
             else if (resObj.status === 'fail' || resObj.status === 'error') failCount++;
@@ -357,6 +358,7 @@ class SequencerController {
           } else {
             tc.status = 'idle';
             tc.lastTimestamp = null;
+            tc.projectSpec = null;
           }
         });
 
@@ -431,7 +433,23 @@ class SequencerController {
           <input type="checkbox" class="test-case-checkbox" ${tc.checked !== false ? 'checked' : ''} ${disabledAttr} aria-label="Select ${tc.title}" />
           <div class="test-case-info">
             <div class="test-case-title">${tc.title}</div>
-            <div class="test-case-desc">${tc.desc}${tc.lastTimestamp ? ` <span class="test-timestamp" style="font-size: 11px; opacity: 0.7; margin-left: 6px; font-family: monospace;">(${tc.lastTimestamp})</span>` : ''}</div>
+            <div class="test-case-desc">${tc.desc}</div>
+            ${(tc.projectSpec || tc.lastTimestamp) ? `
+              <div class="test-case-details" style="display: flex; flex-direction: column; gap: 2px; margin-top: 4px; font-size: 11px;">
+                ${tc.projectSpec ? `
+                  <div style="display: flex; align-items: center; gap: 4px; color: var(--color-primary, #89b4fa);">
+                    <span class="material-symbols-outlined" style="font-size: 13px; opacity: 0.85;">lan</span>
+                    <span style="font-family: var(--font-mono, monospace); font-weight: 500;">${tc.projectSpec}</span>
+                  </div>
+                ` : ''}
+                ${tc.lastTimestamp ? `
+                  <div style="display: flex; align-items: center; gap: 4px; color: var(--text-muted);">
+                    <span class="material-symbols-outlined" style="font-size: 13px; opacity: 0.7;">schedule</span>
+                    <span style="font-family: var(--font-mono, monospace);">${tc.lastTimestamp}</span>
+                  </div>
+                ` : ''}
+              </div>
+            ` : ''}
           </div>
         </div>
         <div class="test-case-status" style="display: flex; align-items: center;">

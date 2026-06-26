@@ -106,6 +106,41 @@ async def summarize_log_chunks(merged_raw_logs: List[str], test_id: str, chunk_s
     
     return "\n".join(output_md)
 
+import difflib
+
+def mask_dynamic_fields(line: str) -> str:
+    """Masks timestamps, UUIDs, hex pointers, and volatile tokens for structural diffing."""
+    line = re.sub(r'\b\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?\b', '<TIMESTAMP>', line)
+    line = re.sub(r'\b\d{2}:\d{2}:\d{2}(?:\.\d+)?\b', '<TIME>', line)
+    line = re.sub(r'\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\b', '<UUID>', line)
+    line = re.sub(r'\b0x[0-9a-fA-F]+\b', '<HEX>', line)
+    return line
+
+def generate_unified_log_diff(fail_lines: List[str], success_lines: List[str]) -> str:
+    """Computes structural diffs between failing and passing logs with dynamic fields masked."""
+    if not fail_lines and not success_lines:
+        return "`[No log lines available for diff]`"
+    
+    masked_fail = [mask_dynamic_fields(line) for line in fail_lines]
+    masked_success = [mask_dynamic_fields(line) for line in success_lines]
+    
+    diff_lines = list(difflib.unified_diff(
+        masked_success,
+        masked_fail,
+        fromfile='passing_run.log',
+        tofile='failing_run.log',
+        lineterm=''
+    ))
+    
+    if not diff_lines:
+        return "`[No structural differences detected between failing and reference passing runs]`"
+    
+    if len(diff_lines) > 500:
+        diff_lines = diff_lines[:250] + ["[... Truncated intermediate diff lines ...]"] + diff_lines[-250:]
+        
+    return "\n".join(diff_lines)
+
+
 class UDMITriageRunner:
     """
     Main coordinator of UDMI diagnostics. Walking directories, resolving sharded run outputs,
@@ -450,10 +485,24 @@ class UDMITriageRunner:
         log_sources = []
         if local_seq_log_content and local_seq_log_content.strip():
             log_sources.append(("Sequencer", local_seq_log_content.splitlines()))
+        elif not os.path.exists(local_seq_log):
+            log_sources.append(("Sequencer", [f"[TELEMETRY MISSING: {os.path.basename(local_seq_log)} not present]"]))
+        elif os.path.getsize(local_seq_log) == 0:
+            log_sources.append(("Sequencer", [f"[TELEMETRY EMPTY: {os.path.basename(local_seq_log)} is 0 bytes]"]))
+
         if sliced_udmis and len(sliced_udmis) > 0:
             log_sources.append(("UDMIS", sliced_udmis))
+        elif not os.path.exists(udmis_log_path):
+            log_sources.append(("UDMIS", [f"[TELEMETRY MISSING: {os.path.basename(udmis_log_path)} not present]"]))
+        elif os.path.getsize(udmis_log_path) == 0:
+            log_sources.append(("UDMIS", [f"[TELEMETRY EMPTY: {os.path.basename(udmis_log_path)} is 0 bytes]"]))
+
         if sliced_pubber and len(sliced_pubber) > 0:
             log_sources.append(("Device under Test", sliced_pubber))
+        elif not os.path.exists(pubber_log_path):
+            log_sources.append(("Device under Test", [f"[TELEMETRY MISSING: {os.path.basename(pubber_log_path)} not present]"]))
+        elif os.path.getsize(pubber_log_path) == 0:
+            log_sources.append(("Device under Test", [f"[TELEMETRY EMPTY: {os.path.basename(pubber_log_path)} is 0 bytes]"]))
 
         t_merge_start = time.time()
         active_descs = [f"{tag}: {len(lines)} lines" for tag, lines in log_sources]
@@ -488,6 +537,10 @@ class UDMITriageRunner:
                 payload.append(f"### Reference Successful log.md")
                 payload.append(f"```markdown\n{success_seq_md_content}\n```")
             if success_seq_log_content:
+                if local_seq_log_content:
+                    diff_summary = generate_unified_log_diff(local_seq_log_content.splitlines(), success_seq_log_content.splitlines())
+                    payload.append(f"### 📊 Structural Differential Analysis (Failing vs Reference Passing Run)")
+                    payload.append(f"```diff\n{diff_summary}\n```")
                 succ_lines = truncate_log_lines(success_seq_log_content.splitlines(), 1500)
                 print(f"   - Reference Successful Log: {len(success_seq_log_content)} chars (~{len(success_seq_log_content)//4} estimated tokens)")
                 sys.stdout.flush()
@@ -612,17 +665,17 @@ class UDMITriageRunner:
                 run_dir = os.path.abspath(os.path.join(self.udmi_root, fail_item['run_directory']))
                 
                 failed_logs = fail_item['logs']['failed_run']
-                t_meta = {
-                    'sequence_log': failed_logs['sequence_log'],
-                    'sequence_md': failed_logs['sequence_md'],
-                    'pubber_log': failed_logs['pubber_log'],
-                    'udmis_log': failed_logs['udmis_log']
-                }
+                t_meta = {}
+                for k in ['sequence_log', 'sequence_md', 'pubber_log', 'udmis_log']:
+                    if failed_logs.get(k):
+                        t_meta[k] = failed_logs[k]
                 
                 success_logs = fail_item['logs'].get('success_run')
-                if success_logs:
-                    t_meta['success_log'] = success_logs['sequence_log']
-                    t_meta['success_md'] = success_logs['sequence_md']
+                if isinstance(success_logs, dict):
+                    if success_logs.get('sequence_log'):
+                        t_meta['success_log'] = success_logs['sequence_log']
+                    if success_logs.get('sequence_md'):
+                        t_meta['success_md'] = success_logs['sequence_md']
 
                 runs_to_triage.append((
                     run_dir,

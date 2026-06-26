@@ -320,6 +320,9 @@ class TriagePipeline:
                 executed_tool_signatures=self.executed_tool_signatures
             )
         except Exception as e:
+            from engine.harness.rate_limiter import RateLimitTimeoutError
+            if isinstance(e, RateLimitTimeoutError):
+                raise
             import traceback
             print(color_text(f"❌ Exception caught in Stage '{stage_name}' (Model: {active_model}): {type(e).__name__}: {e}", RED, bold=True), file=sys.stderr)
             traceback.print_exc()

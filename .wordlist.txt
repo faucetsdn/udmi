@@ -28,6 +28,7 @@ BOS
 breakpoint
 buildingsiot
 camelCase
+Checkboxes
 centric
 CLA
 ClearBlade
@@ -239,6 +240,7 @@ transactional
 transactionId
 transpile
 transpiles
+triaged
 triages
 txt
 UCUM

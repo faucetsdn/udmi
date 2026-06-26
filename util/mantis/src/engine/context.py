@@ -1,11 +1,15 @@
 import os
 import re
 import sys
+import bisect
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
-from typing import List
-from typing import Optional
+from typing import List, Optional, Tuple
+
+# Module-level compiled regex patterns for timestamp matching
+RE_TIMESTAMP_PREFIX = re.compile(r'^([\d\-T:Z\.,\s]+)\s+')
+RE_MERGE_TIMESTAMP = re.compile(r'^([\d\-T:Z\.,\s]+)\s+')
 
 
 def parse_timestamp(ts_str: str) -> Optional[datetime]:
@@ -17,47 +21,114 @@ def parse_timestamp(ts_str: str) -> Optional[datetime]:
         return None
     ts_clean = ts_str.strip("[] ")
     
+    dt = None
     # Fast-path C-accelerated ISO parsing (100x faster than strptime)
     if "T" in ts_clean or " " in ts_clean:
         iso_candidate = ts_clean.rstrip("Z").replace(" ", "T")
         try:
-            return datetime.fromisoformat(iso_candidate)
+            dt = datetime.fromisoformat(iso_candidate)
         except ValueError:
             pass
 
-    formats = [
-        "%Y-%m-%dT%H:%M:%S.%fZ",
-        "%Y-%m-%dT%H:%M:%SZ",
-        "%Y-%m-%d %H:%M:%S.%f",
-        "%Y-%m-%d %H:%M:%S",
-        "%H:%M:%S.%f",
-        "%H:%M:%S"
-    ]
-    for fmt in formats:
+    if dt is None:
+        formats = [
+            "%Y-%m-%dT%H:%M:%S.%fZ",
+            "%Y-%m-%dT%H:%M:%SZ",
+            "%Y-%m-%d %H:%M:%S.%f",
+            "%Y-%m-%d %H:%M:%S",
+            "%H:%M:%S.%f",
+            "%H:%M:%S"
+        ]
+        for fmt in formats:
+            try:
+                if fmt in ["%H:%M:%S", "%H:%M:%S.%f"]:
+                    today = datetime.now(timezone.utc).date()
+                    t = datetime.strptime(ts_clean, fmt).time()
+                    dt = datetime.combine(today, t)
+                else:
+                    dt = datetime.strptime(ts_clean, fmt)
+                break
+            except ValueError:
+                continue
+
+    if dt and dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
+class SparseLogIndex:
+    """
+    Sparse timestamp index for log files enabling O(log N) temporal binary search slicing.
+    Indexes byte offsets and parsed timestamps at periodic sample intervals.
+    """
+    def __init__(self, filepath: str, sample_interval_bytes: int = 64 * 1024):
+        self.filepath = filepath
+        self.sample_interval = sample_interval_bytes
+        self.timestamps: List[datetime] = []
+        self.offsets: List[int] = []
+        self._build_index()
+
+    def _build_index(self):
+        if not os.path.exists(self.filepath):
+            return
         try:
-            if fmt in ["%H:%M:%S", "%H:%M:%S.%f"]:
-                today = datetime.now(timezone.utc).date()
-                t = datetime.strptime(ts_clean, fmt).time()
-                return datetime.combine(today, t)
-            return datetime.strptime(ts_clean, fmt)
-        except ValueError:
-            continue
-    return None
+            with open(self.filepath, 'r', encoding='utf-8', errors='replace') as f:
+                last_sample = -self.sample_interval
+                while True:
+                    offset = f.tell()
+                    line = f.readline()
+                    if not line:
+                        break
+                    if offset - last_sample >= self.sample_interval or offset == 0:
+                        m = RE_TIMESTAMP_PREFIX.match(line)
+                        if m:
+                            ts = parse_timestamp(m.group(1))
+                            if ts:
+                                self.timestamps.append(ts)
+                                self.offsets.append(offset)
+                                last_sample = offset
+        except Exception:
+            pass
+
+    def get_byte_range(self, start_dt: datetime, end_dt: datetime) -> Tuple[int, Optional[int]]:
+        """Returns (start_byte_offset, end_byte_offset) for the given temporal bounds."""
+        if not self.timestamps:
+            return 0, None
+        
+        if start_dt and start_dt.tzinfo is None:
+            start_dt = start_dt.replace(tzinfo=timezone.utc)
+        if end_dt and end_dt.tzinfo is None:
+            end_dt = end_dt.replace(tzinfo=timezone.utc)
+
+        idx_start = bisect.bisect_left(self.timestamps, start_dt)
+        start_offset = self.offsets[max(0, idx_start - 1)]
+        
+        idx_end = bisect.bisect_right(self.timestamps, end_dt)
+        if idx_end < len(self.offsets):
+            end_offset = self.offsets[idx_end]
+        else:
+            end_offset = None
+        return start_offset, end_offset
 
 
 def slice_log_by_timebounds(filepath: str, start_dt: datetime, end_dt: datetime,
-    padding_seconds: int = 60) -> List[str]:
+                            padding_seconds: int = 60, use_index: bool = True) -> List[str]:
     """
     Slices log entries matching the temporal timebounds plus/minus padding.
     Assumes log entries start with a parsable timestamp.
+    Uses SparseLogIndex to skip directly to relevant byte offset ranges for large log files.
     """
     sliced_entries = []
     if not os.path.exists(filepath) or not start_dt or not end_dt:
         return sliced_entries
 
+    if start_dt.tzinfo is None:
+        start_dt = start_dt.replace(tzinfo=timezone.utc)
+    if end_dt.tzinfo is None:
+        end_dt = end_dt.replace(tzinfo=timezone.utc)
+
     padded_start = start_dt - timedelta(seconds=padding_seconds)
     padded_end = end_dt + timedelta(seconds=padding_seconds)
-    ts_pattern = re.compile(r'^([\d\-T:Z\.,]+)\s+')
 
     # Pre-calculate valid hour substrings to optimize timestamp parsing (e.g. "17:")
     valid_hours = []
@@ -68,8 +139,21 @@ def slice_log_by_timebounds(filepath: str, start_dt: datetime, end_dt: datetime,
 
     try:
         with open(filepath, 'r', encoding='utf-8', errors='replace') as f:
-            for line in f:
-                m = ts_pattern.match(line)
+            end_offset = None
+            if use_index and os.path.getsize(filepath) > 64 * 1024:
+                index = SparseLogIndex(filepath)
+                start_offset, end_offset = index.get_byte_range(padded_start, padded_end)
+                f.seek(start_offset)
+                if start_offset > 0:
+                    f.readline() # Discard partial line
+
+            while True:
+                if end_offset is not None and f.tell() > end_offset:
+                    break
+                line = f.readline()
+                if not line:
+                    break
+                m = RE_TIMESTAMP_PREFIX.match(line)
                 if m:
                     ts_str = m.group(1)
                     # Performance Optimization: Skip expensive datetime parsing if the hour prefix doesn't match
@@ -109,41 +193,36 @@ def condense_log_verbosity(logs: List[str], rules: Optional[List[LogCondensation
     while i < n:
         current_line = logs[i]
         matched_rule = False
-        curr_lower = current_line.lower()
 
-        # Fast string pre-filter check: only attempt regex matching if line contains potential condensation keywords
-        if "defer" in curr_lower or "writeback" in curr_lower:
-            for rule in rules:
-                match = rule.pattern.search(current_line)
-                if match:
-                    prefix = match.group(1)
-                    val = match.group(2) if len(match.groups()) >= 2 else ""
-                    count = 1
-                    j = i + 1
-                    
-                    while j < n:
-                        next_line = logs[j]
-                        next_lower = next_line.lower()
-                        if "defer" in next_lower or "writeback" in next_lower:
-                            next_match = rule.pattern.search(next_line)
-                            if next_match and next_match.group(1) == prefix:
-                                count += 1
-                                j += 1
-                                continue
-                        break
-                    
-                    if count > 1:
-                        bracket_prefix = ""
-                        if current_line.startswith("["):
-                            bracket_prefix = current_line.split("]", 1)[0] + "] "
-                        formatted = rule.template.format(val=val, count=count)
-                        condensed.append(f"{bracket_prefix}{formatted}")
+        for rule in rules:
+            match = rule.pattern.search(current_line)
+            if match:
+                prefix = match.group(1)
+                val = match.group(2) if len(match.groups()) >= 2 else ""
+                count = 1
+                j = i + 1
+                
+                while j < n:
+                    next_line = logs[j]
+                    next_match = rule.pattern.search(next_line)
+                    if next_match and next_match.group(1) == prefix:
+                        count += 1
+                        j += 1
                     else:
-                        condensed.append(current_line)
-                    
-                    i = j
-                    matched_rule = True
-                    break
+                        break
+                
+                if count > 1:
+                    bracket_prefix = ""
+                    if current_line.startswith("["):
+                        bracket_prefix = current_line.split("]", 1)[0] + "] "
+                    formatted = rule.template.format(val=val, count=count)
+                    condensed.append(f"{bracket_prefix}{formatted}")
+                else:
+                    condensed.append(current_line)
+                
+                i = j
+                matched_rule = True
+                break
 
         if not matched_rule:
             condensed.append(current_line)
@@ -168,20 +247,19 @@ def merge_and_sort_logs(log_sources: List[tuple], condensation_rules: Optional[L
         return condense_log_verbosity(formatted, rules=condensation_rules)
 
     merged_entries = []
-    ts_pattern = re.compile(r'^([\d\-T:Z\.,\s]+)\s+')
 
     for tag, lines in log_sources:
         for line in lines:
             line = line.strip()
             if not line:
                 continue
-            m = ts_pattern.match(line)
+            m = RE_MERGE_TIMESTAMP.match(line)
             ts_dt = None
             if m:
                 ts_dt = parse_timestamp(m.group(1))
 
             if not ts_dt:
-                ts_dt = datetime.min
+                ts_dt = datetime.min.replace(tzinfo=timezone.utc)
 
             merged_entries.append((ts_dt, tag, line))
 

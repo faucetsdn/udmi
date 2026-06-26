@@ -57,6 +57,12 @@ jobs:
       - name: python generated classes test output
         if: ${{ !cancelled() }}
         run: more out/test_bin+test_generated_classes_py
+      - name: mantis test output
+        if: ${{ !cancelled() }}
+        run: more out/test_bin+test_mantis || true
+      - name: workbench test output
+        if: ${{ !cancelled() }}
+        run: more out/test_bin+test_workbench || true
 
   spelling:
     name: Docs Spelling Checks

@@ -2,74 +2,73 @@
 
 # UDMI Workbench: Visual Workspace Guide
 
-**UDMI Workbench** is a modern, unified web application designed to simplify UDMI device development, compliance testing, and device debugging. It replaces complex terminal-based workflows with a highly polished, responsive visual dashboard aligned with Material 3 styling.
+**UDMI Workbench** is a unified web application for UDMI device development, compliance testing, and automated AI diagnostics. It replaces complex CLI commands with an interactive dashboard.
 
 ---
 
 ## Quick Start: Launching Workbench
 
-UDMI Workbench features a launcher script located at **`bin/workbench`** which manages the backend Python API server and triggers your default browser with appropriate feature flags.
+The **`bin/workbench`** launcher manages the Python backend API server and opens Workbench in your browser:
 
-Open your terminal and run any of the following commands:
-
-### 1. Launch the Complete Workspace Suite
-Opens the unified multi-tab workspace, showing the logo, global Site Model inputs, the Navigation Rail, and all the available tools:
 ```bash
+# Launch full suite
 bin/workbench
-```
 
-### 2. Launch with selective features (e.g. sequencer)
-Runs the UI in standalone full-screen mode. The navigation sidebar is hidden, and the Sequencer app occupies the entire browser window:
-```bash
+# Launch standalone tool (Sequencer or Mantis full-screen)
 bin/workbench sequencer
-# or shorthand:
-bin/workbench seq
+bin/workbench mantis
 ```
 
 ---
 
-## The Sequencer Dashboard
+## Screen Input Reference
 
-The [**Sequencer**](./sequencer.md) tool allows you to run, manage, and monitor end-to-end UDMI compliance tests on a Device Under Test (DUT).
-
-### Key Features & How to Use:
-1.  **Global Site Model**: Enter or browse your Site Model path (e.g., `sites/udmi_site_model`) in the top global toolbar.
-2.  **Local DUT Selector**: Choose the target device to test from the local **Device Under Test** dropdown. The tool automatically scans the site model's `devices/` folder and caches your last active device.
-3.  **Target Project**: Specify the target MQTT broker address (default: `//mqtt/localhost`).
-4.  **Advanced Settings**: Click the **Settings Gear** icon in the toolbar to open the advanced execution popover. This allows you to customize the underlying test flags:
-    *   **Log Level**: Adjusts the verbosity of the log output:
-        *   `INFO` (Default): Standard execution progress logging.
-        *   `DEBUG`: Enables verbose debug logging (equivalent to the command-line `-v` flag).
-        *   `TRACE`: Enables highly detailed trace logging (equivalent to the command-line `-vv` flag).
-    *   **Min Test Stage**: Filters which compliance tests are executed:
-        *   `PREVIEW` (Default): Runs stable and preview-stage tests.
-        *   `ALPHA`: Includes experimental alpha-stage tests in the run (equivalent to the command-line `-a` flag).
-        *   `ALPHA_ONLY`: Restricts execution exclusively to alpha-stage tests (equivalent to the command-line `-x` flag).
-    *   **Serial Number**: An optional text field to override the device's default serial number during the test run (equivalent to the command-line `-s [serial_no]` flag).
-5.  **Live Log Streaming**: Once you click **Run Tests**, raw logs from the backend sequencer are streamed **instantly** (0ms latency) into the dark terminal window.
-6.  **Progress Tracking**: View live metrics (Passed, Skipped, and Failed test counts) and a visual progress bar indicating the exact percentage of completed tests.
+### 1. Global Inputs
+*   **Site Model Path**: Path to the active site model directory (e.g., `sites/udmi_site_model`). Enter manually or click the folder icon to launch the interactive directory browser.
 
 ---
 
-## The Mantis Debugger & AI Triage Suite
+### 2. The Sequencer Screen
+Used to run and monitor end-to-end UDMI device compliance tests.
 
-The [**Mantis**](./mantis.md) tool is an intelligent trace explorer, MQTT transaction debugger, and automated AI diagnostic triage suite. It provides passive log inspection alongside powered Root Cause Analysis (RCA) directly within Workbench.
+#### Main Header Inputs:
+*   **Device Under Test (DUT)**: Dropdown selecting the target device from the site model (`devices/` folder).
+*   **Target Project**: Text field specifying the MQTT broker or cloud project endpoint (default: `//mqtt/localhost`).
+*   **Sequencer Version**: Displays the active Sequencer version (`HEAD`).
 
-### Key Features & How to Use:
+#### Advanced Settings (Gear Icon Popover):
+*   **Log Level**: Verbosity selection (`INFO` default, `DEBUG` `-v`, `TRACE` `-vv`).
+*   **Min Test Stage**: Test stage filter (`PREVIEW` default, `ALPHA` `-a`, `ALPHA_ONLY` `-x`).
+*   **Serial Number**: Optional text override for device serial number (`-s`).
 
-#### 1. Passive Trace Explorer (Trace Tab)
-*   **Device & Scenario Selector**: Choose a target device and test execution scenario (e.g., `endpoint_failure_and_restart`, `blob_update_success`) from the dropdown selectors. Mantis automatically scans historical test runs.
-*   **Chronological Timeline**: Inspect a vertical, color-coded sequence timeline of all MQTT telemetry, state, and config messages exchanged during the run:
-    *   **Settings Icons (Orange)**: Configuration handshakes (`config`).
-    *   **Swap Icons (Green)**: Device state updates (`state`).
-    *   **Notification Icons (Red)**: System errors and event alerts (`events`).
-*   **MQTT Payload Inspector**: Click any node on the timeline to inspect its raw JSON payload in the collapsible tree viewer with one-click clipboard copying.
+#### Test Suite Checklist & Historical Runs:
+*   **Search Box**: Filter test cases by name.
+*   **Checkboxes**: Select specific test cases to execute (includes **Select All** / **Deselect All** toggles).
+*   **Historical Status Display**: Automatically loads and displays previous execution results (`Passed` ✔, `Failed` ✘, `Skipped` ⊘) for each test case from disk artifacts (`out/devices/`).
+*   **Artifact Inspection**: Click any test item to open the artifact viewer modal and inspect historical `sequence.md` summaries and `sequence.log` output.
+*   **Direct AI Diagnosis**: Click the inline **Diagnose with Mantis AI** brain icon on any failed test to switch directly to the Mantis screen for immediate triage of past run results.
 
-#### 2. Automated AI Triage & Root Cause Analysis (AI Diagnostics Tab)
-*   **Compliance Test Verdict Badges**: View real-time test status indicators (`Passed`, `Skipped`, `Failed`). To save AI quota and eliminate unnecessary API usage, tests with a `Passed` status automatically disable the AI Triage trigger.
-*   **AI Credentials & Provider Configuration**: Configure diagnostic settings using either a standard **Gemini API Key** or enterprise **GCP Vertex AI (ADC)** credentials with custom GCP project and location parameters. All credentials are securely cached locally in your browser.
-*   **Diagnostic Playbooks**: Select between the **Device Compliance Auditor (Standard OEM)** playbook for hardware/integrator protocol auditing or the **Codebase Debugger (Advanced SWE)** playbook for Pubber/UDMIS Java source debugging.
-*   **Reference Successful Run (Baseline Run Selector)**: Use the input field or click the folder icon to launch the **Folder Browser Modal** (rooted at `$HOME`). Selecting a past passing run directory adds clean baseline logs (`sequence.log` and `sequence.md`) to the manifest, enabling Gemini to perform differential diagnosis against a known working state.
-*   **Live Subprocess Streaming & RCA Reports**: Click **Run AI Triage** to launch the backend diagnostic engine (`bin/triage`). Raw logs stream in real time into the embedded terminal. Upon completion, the final AI Root Cause Analysis markdown report renders in the right panel with one-click copy support.
-*   **Interactive Workspace Controls**: Enjoy a drag-to-resize split pane layout and built-in tab closure safeguards that protect against accidental navigation while an AI diagnostic run is active.
+---
 
+### 3. The Mantis Screen
+Used to inspect MQTT telemetry transactions and run AI-powered triage root cause analysis (RCA).
+
+#### Main Header Inputs:
+*   **Device**: Dropdown selecting the target device.
+*   **Debug Scenario**: Dropdown selecting test execution runs. Automatically scans historical test artifacts from disk, displaying historical run verdicts (`Passed` ✔, `Failed` ✘, `Skipped` ⊘), target project badges, and execution timestamps.
+*   **Historical Run Triage**: Historical test runs can be selected and triaged immediately using AI Diagnostics without triggering a fresh test execution.
+
+#### Timeline Trace Tab:
+*   **Interactive Node Selection**: Click any node on the sequence flow graph to view raw `config`, `state`, or `events` MQTT payloads in the JSON inspector with one-click clipboard copying.
+
+#### AI Diagnostics Tab Inputs:
+*   **Diagnostic Playbook**: Select triage depth:
+    *   `Device Compliance Auditor (Standard OEM)`: Hardware/protocol compliance validation.
+    *   `Codebase Debugger (Advanced SWE)`: Source code debugging.
+*   **Reference Successful Run** *(Optional)*: Text path or folder browser selection pointing to a baseline passing test run (e.g., `out_prev`). Enables differential diagnosis against a known working state.
+*   **AI Auth Provider**: Choose authentication mode:
+    *   `Gemini API Key`: Enter your Gemini API key in the password field.
+    *   `Google Vertex AI (ADC)`: Enter **GCP Project ID** and **GCP Location** (default: `global`).
+*   **Fetch UDMIS Logs**: Checkbox toggling automatic fetching of cloud-hosted UDMIS container logs when debugging remote GKE/cloud targets.
+    *   **Cloud Logging GCP Project ID**: Text field for the target cloud project ID (auto-populated from historical test metadata).
+*   **Run AI Triage Button**: Launches the backend diagnostic agent on the selected scenario. Disabled for tests with a `Passed` status to preserve API quota.

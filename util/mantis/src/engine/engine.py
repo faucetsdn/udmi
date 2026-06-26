@@ -311,10 +311,6 @@ class AsyncTriageEngine:
             if self.enable_history_compaction and loop_count > 0 and loop_count % 5 == 0:
                 await self._compact_history_if_bloated(history)
 
-            use_vertex = os.getenv("MANTIS_USE_VERTEXAI", "").lower() in ("true", "1", "yes")
-            if not use_vertex:
-                await asyncio.sleep(3.0)
-
         clean_break = False
         if response and not response.function_calls:
             text_content = _get_response_text(response)

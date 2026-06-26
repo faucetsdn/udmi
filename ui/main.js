@@ -16,14 +16,18 @@ function combinePaths(base, sub) {
 }
 
 function getParentPath(path) {
-  if (!path || path === '.' || path === '/' || path === '') return '';
+  if (!path || path === '.' || path === '/' || path === '' || path === '~') return '~';
   const parts = path.split('/').filter(p => p);
   if (parts.length <= 1) {
-    return path.startsWith('/') ? '/' : '.';
+    return path.startsWith('~') ? '~' : (path.startsWith('/') ? '/' : '.');
   }
   parts.pop();
+  if (parts[0] === '~') {
+    return parts.join('/');
+  }
   return (path.startsWith('/') ? '/' : '') + parts.join('/');
 }
+
 
 // --- MICRO-FRONTEND ORCHESTRATOR SHELL ---
 class ShellOrchestrator {

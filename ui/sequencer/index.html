@@ -103,7 +103,10 @@
         <!-- Left Grid: Test Cases Selector -->
         <div class="card test-suite-card">
           <div class="card-header">
-            <h3>Test Suite Compliance</h3>
+            <div style="display: flex; align-items: center;">
+              <span class="card-header-icon-box icon-box-purple"><span class="material-symbols-outlined" style="font-size:18px;">fact_check</span></span>
+              <h3 style="margin: 0;">Test Suite Compliance</h3>
+            </div>
             <div class="search-box">
               <span class="material-symbols-outlined search-icon">search</span>
               <input type="text" id="test-search" class="search-input" placeholder="Search test cases..."
@@ -131,7 +134,10 @@
           <!-- Bottom: Progress Stats Card -->
           <div class="card progress-stats-card">
             <div class="stats-header">
-              <h3>Test Suite Progress</h3>
+              <div style="display: flex; align-items: center;">
+                <span class="card-header-icon-box icon-box-emerald"><span class="material-symbols-outlined" style="font-size:18px;">donut_large</span></span>
+                <h3 style="margin: 0;">Test Suite Progress</h3>
+              </div>
               <span id="suite-status" class="badge badge-neutral">Idle</span>
             </div>
 
