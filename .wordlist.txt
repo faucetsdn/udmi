@@ -28,12 +28,14 @@ BOS
 breakpoint
 buildingsiot
 camelCase
+Checkboxes
 centric
 CLA
 ClearBlade
 CLI
 CloudRun
 CoAP
+Codebase
 cognisant
 comms
 config
@@ -61,6 +63,7 @@ DNS
 dockerized
 Dockerized
 downlink
+dropdown
 DUT
 enablement
 encoding
@@ -148,6 +151,7 @@ nmap
 npm
 nterface
 observability
+OEM
 OIDC
 onboarding
 Onboarding
@@ -218,9 +222,11 @@ subflows
 subfolder
 subFolder
 subFolders
+Subprocess
 subType
 subTypes
 swapped
+SWE
 systemd
 tcp
 terraform
@@ -234,6 +240,8 @@ transactional
 transactionId
 transpile
 transpiles
+triaged
+triages
 txt
 UCUM
 udmi

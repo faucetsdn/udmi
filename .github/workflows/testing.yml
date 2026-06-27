@@ -57,6 +57,12 @@ jobs:
       - name: python generated classes test output
         if: ${{ !cancelled() }}
         run: more out/test_bin+test_generated_classes_py
+      - name: mantis test output
+        if: ${{ !cancelled() }}
+        run: more out/test_bin+test_mantis || true
+      - name: workbench test output
+        if: ${{ !cancelled() }}
+        run: more out/test_bin+test_workbench || true
 
   spelling:
     name: Docs Spelling Checks
@@ -237,7 +243,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
+      TARGET_PROJECT: //mqtt/localhost:9001
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5

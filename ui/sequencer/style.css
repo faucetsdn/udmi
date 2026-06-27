@@ -1,0 +1,643 @@
+/* ==========================================================================
+   UDMI WORKBENCH - SEQUENCER MICRO-FRONTEND STYLES
+   ========================================================================== */
+
+/* 1. Page & Layout Structure */
+.tool-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-app);
+}
+
+.local-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--toolbar-height);
+    padding: 8px 24px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 10;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tool-main {
+  flex: 1;
+  overflow: hidden;
+  padding: 24px;
+}
+
+/* 2. Grid & Workspace Layout */
+.sequencer-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
+  height: 100%;
+  min-height: 0; /* Protect layout from expanding beyond viewport */
+}
+
+/* 3. Checklist Card Styles */
+.test-suite-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  background-color: var(--bg-surface-container-low);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0 10px;
+  gap: 8px;
+}
+
+.search-icon {
+  font-size: 18px;
+  color: var(--text-muted);
+}
+
+.search-input {
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.search-input:focus {
+  outline: none;
+}
+
+.test-suite-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-link-sm {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.btn-link-sm:hover {
+  color: var(--color-primary-dark);
+  text-decoration: underline;
+}
+
+.btn-link-sm:disabled {
+  color: var(--text-disabled);
+  text-decoration: none;
+  cursor: not-allowed;
+}
+
+.action-divider {
+  font-size: 10px;
+  color: var(--border-color);
+}
+
+.test-cases-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.test-case-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--bg-surface-container-low);
+  transition: background-color var(--transition-fast);
+}
+
+.test-case-item:hover {
+  background-color: var(--bg-surface-container-low);
+}
+
+.test-case-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.test-case-checkbox {
+  margin-top: 3px;
+  cursor: pointer;
+}
+
+.test-case-checkbox:disabled {
+  cursor: not-allowed;
+}
+
+.test-case-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.test-case-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.test-case-desc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.test-case-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-left: 10px;
+  flex-shrink: 0;
+}
+
+/* 4. Status Icons & Spinner Animation */
+.status-icon {
+  font-size: 20px;
+  transition: color var(--transition-fast);
+}
+
+.status-icon.idle {
+  color: var(--text-disabled);
+}
+
+.status-icon.queued {
+  color: var(--color-primary);
+  opacity: 0.8;
+}
+
+.status-icon.running {
+  color: var(--color-primary);
+  animation: rotateSpinner 1.2s linear infinite;
+}
+
+.status-icon.pass {
+  color: var(--color-tertiary);
+}
+
+.status-icon.skip {
+  color: var(--text-muted);
+}
+
+.status-icon.fail {
+  color: var(--color-error);
+}
+
+.status-icon.clickable {
+  cursor: pointer;
+  border-radius: 50%;
+  padding: 2px;
+}
+
+.status-icon.clickable:hover {
+  background-color: var(--bg-surface-container-high);
+  transform: scale(1.15);
+}
+@keyframes rotateSpinner {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Modal File Viewer Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-card {
+  width: 85vw;
+  max-width: 950px;
+  height: 80vh;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background-color: var(--bg-surface-container-low);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-title-group h3 {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.modal-icon {
+  color: var(--color-primary);
+}
+
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-tab {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  padding: 4px 12px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  color: var(--text-secondary);
+}
+
+.modal-tab:hover {
+  background-color: var(--bg-surface-container-high);
+}
+
+.modal-tab.active {
+  background-color: var(--color-primary);
+  color: var(--on-primary);
+  border-color: var(--color-primary);
+}
+
+.modal-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+  background-color: var(--bg-app);
+}
+
+.file-content-viewer {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-primary);
+  margin: 0;
+}
+/* 5. Right Workspace & Log Terminal */
+.sequencer-workspace {
+  display: grid;
+  grid-template-rows: 1fr 160px;
+  gap: 24px;
+  height: 100%;
+  min-height: 0; /* Lock grid height to viewport */
+}
+
+.log-terminal-card {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  overflow: hidden;
+  min-height: 0; /* Force terminal scrolling */
+}
+
+/* 6. Progress Stats Card */
+.progress-stats-card {
+  display: flex;
+  flex-direction: column;
+  padding: 20px 24px;
+  overflow: hidden;
+}
+
+.stats-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stats-header h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.stats-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.progress-bar-container {
+  height: 6px;
+  background-color: var(--bg-surface-container-high);
+  border-radius: 3px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--color-primary);
+  border-radius: 3px;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.stats-metrics {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.metric-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.metric-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.text-success { color: var(--color-tertiary); }
+.text-error { color: var(--color-error); }
+.text-muted { color: var(--text-muted); }
+
+/* 7. Advanced Settings Popover */
+.btn-icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.control-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.advanced-settings-card {
+  position: absolute;
+  top: calc(var(--toolbar-height) - 4px);
+  right: 24px;
+  width: 320px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 100;
+  display: none;
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+}
+
+.advanced-settings-card.active {
+  display: block;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.settings-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.settings-body {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.w-full {
+  width: 100%;
+}
+
+/* 8. Mantis AI Triage Button */
+.btn-diagnose {
+  background: transparent;
+  border: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 50%;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.btn-diagnose:hover {
+  background-color: var(--bg-surface-container-high);
+  color: var(--color-primary-hover);
+}
+
+.btn-diagnose span {
+  font-size: 20px;
+}
+
+/* ==========================================================================
+   9. Rich Aesthetic & Visual Excellence Enhancements
+   ========================================================================== */
+
+/* Header Top Accent Gradient Line */
+.local-toolbar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6, #f59e0b);
+  z-index: 11;
+}
+
+/* Card Left Accent Color Borders & Glow */
+.card {
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.test-suite-card {
+  border-left: 4px solid #8b5cf6 !important;
+}
+
+.log-terminal-card {
+  border-left: 4px solid #f59e0b !important;
+}
+
+.progress-stats-card {
+  border-left: 4px solid #10b981 !important;
+}
+
+/* Card Header Icon Boxes & Color Themes */
+.card-header-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  margin-right: 8px;
+  flex-shrink: 0;
+  transition: transform var(--transition-fast);
+}
+
+.card:hover .card-header-icon-box {
+  transform: scale(1.08);
+}
+
+.icon-box-blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.icon-box-emerald {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.icon-box-purple {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.icon-box-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+/* Run Tests Button Premium Emerald Gradient */
+#btn-run:not(:disabled) {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#btn-run:not(:disabled):hover {
+  background: linear-gradient(135deg, #059669, #047857) !important;
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+  transform: translateY(-1px);
+}
+
+/* Mantis AI Triage Button inside Test List Items */
+.btn-diagnose {
+  background: rgba(139, 92, 246, 0.12) !important;
+  color: #8b5cf6 !important;
+  border: 1px solid rgba(139, 92, 246, 0.3) !important;
+}
+
+.btn-diagnose:hover {
+  background: rgba(139, 92, 246, 0.25) !important;
+  color: #a78bfa !important;
+  transform: scale(1.1);
+}
