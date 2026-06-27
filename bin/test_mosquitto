@@ -27,7 +27,7 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 CLNT_USER=kiwi
 CLNT_PASS=possum
-CLNT_ID=$registry_id/client
+CLNT_ID=/uufi/$registry_id/client
 
 SUDO=sudo
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
