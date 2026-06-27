@@ -156,6 +156,11 @@ To configure a device's expected or desired software subsystem version, implemen
 - **Standard Expected Version Path:** The expected version MUST be configured exclusively within the standard software dictionary structure under system configuration: `system.software.<subsystem> = "{version}"` (where `<subsystem>` defaults to `"system"`).
 - **Prohibition of Custom Properties:** Any custom, flat, or alternative properties (such as `system.target_version` or `system.software_target`) are strictly prohibited and MUST NOT be accepted by the cloud orchestrator or processed by devices.
 
+### 5.4. Actual Version Reporting
+To report a device's actual or currently running software subsystem version, implementations MUST adhere strictly to the standard UDMI schema:
+- **Standard Actual Version Path:** The actual running version MUST be reported exclusively within the software dictionary under the system state payload root: `system.software.<subsystem> = "{version}"`.
+- **Prohibition of Non-Standard State Paths:** Reporting actual running versions within alternative structures (such as trying to nest a `version` property under `blobset.blobs.<subsystem_id>`) is strictly prohibited.
+
 ## 6. UDMI to UUFI Mapping
 
 | UDMI Operation | Envelope `subType` | Envelope `subFolder` | Direction | Note |
