@@ -147,7 +147,7 @@ trap "GOT_MODEL=1" USR1
 sleep 2
 
 echo "Triggering Cloud Model update using site_trigger..."
-$UDMI_ROOT/bin/site_trigger update "$SITE_MODEL" "$DUT_ID" "system_firmware" "v3" "mqtt://$HOST:$PORT"
+$UDMI_ROOT/bin/site_trigger update "$SITE_MODEL" "$DUT_ID" "system_firmware" "v3" "mqtt://$USER:$PASS@$HOST:$PORT"
 
 echo "Waiting for Cloud Model Update on the bus..."
 TIMEOUT=30

@@ -63,7 +63,10 @@ print(
 # Try to extract registry_id from cloud_iot_config.json
 site_config_file = os.path.join(site_path, "cloud_iot_config.json")
 if not os.path.exists(site_config_file):
-  sys.exit(f"Error: Configuration file {site_config_file} not found. site_trigger requires a valid cloud_iot_config.json.")
+  sys.exit(
+      f"Error: Configuration file {site_config_file} not found. "
+      "site_trigger requires a valid cloud_iot_config.json."
+  )
 
 try:
   with open(site_config_file, "r", encoding="utf-8") as f:
@@ -73,7 +76,10 @@ except (OSError, json.JSONDecodeError) as e:
   sys.exit(f"Error: Could not read configuration file {site_config_file}: {e}")
 
 if not registry_id:
-  sys.exit(f"Error: registry_id is not defined in {site_config_file}. site_trigger requires registry_id to be defined.")
+  sys.exit(
+      f"Error: registry_id is not defined in {site_config_file}. "
+      "site_trigger requires registry_id to be defined."
+  )
 
 # Parse connection spec
 url = urlparse(conn_spec)
@@ -120,7 +126,7 @@ cmd = [
 ]
 
 if registry_id:
-  cmd.extend(["-i", f"{registry_id}/client"])
+  cmd.extend(["-i", f"/uufi/{registry_id}/client"])
 
 # Add credentials if username/password are in conn_spec
 if url.username:
@@ -128,8 +134,17 @@ if url.username:
 if url.password:
   cmd.extend(["-P", url.password])
 
-# Add CA cert if SSL is used (or port 8883)
-if is_ssl or port == 8883:
+# Add CA cert if SSL is used (or port 8883 or custom MQTT_PORT)
+env_mqtt_port = os.environ.get("MQTT_PORT")
+try:
+  env_port_val = int(env_mqtt_port) if env_mqtt_port else None
+except ValueError:
+  env_port_val = None
+
+is_custom_port = (
+    env_port_val and port == env_port_val and port != 1883
+)
+if is_ssl or port == 8883 or is_custom_port:
   ca_cert = os.path.join(site_path, "reflector", "ca.crt")
   if os.path.exists(ca_cert):
     cmd.extend(["--cafile", ca_cert])
