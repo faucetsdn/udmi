@@ -173,6 +173,21 @@ cp sites/udmi_site_model/reflector/ca.crt bridgehead/var/mosquitto/certs/
 cp sites/udmi_site_model/reflector/rsa_private.crt bridgehead/var/mosquitto/certs/
 cp sites/udmi_site_model/reflector/rsa_private.pem bridgehead/var/mosquitto/certs/
 
+echo "Generating missing device certificates..."
+for device_dir in sites/udmi_site_model/devices/*; do
+  if [ -d "$device_dir" ]; then
+    device_id=$(basename "$device_dir")
+    # Check if we have a private key (either rsa or ec) and generate cert if missing
+    if [ -f "$device_dir/rsa_private.pem" ] && [ ! -f "$device_dir/rsa_private.crt" ]; then
+      echo "Generating cert for RSA device $device_id..."
+      bin/keygen CERT "$device_dir"
+    elif [ -f "$device_dir/ec_private.pem" ] && [ ! -f "$device_dir/ec_private.crt" ]; then
+      echo "Generating cert for EC device $device_id..."
+      bin/keygen CERT "$device_dir"
+    fi
+  fi
+done
+
 # 4. Port Check
 echo "Checking ports..."
 for port in 8883 2379 8085; do
