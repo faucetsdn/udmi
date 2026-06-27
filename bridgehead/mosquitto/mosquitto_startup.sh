@@ -36,7 +36,6 @@ $MOSQUITTO_CTRL addClientRole $SERV_USER service
 
 echo "Starting initializing site $site_model" | tee -a $UDMIS_LOG
 bin/mosquctl_site $site_model
-$MOSQUITTO_CTRL addClientRole $AUTH_USER service
 
 MOSQUITTO_PID=$(pgrep -x mosquitto)
 if [ -n "$MOSQUITTO_PID" ]; then
