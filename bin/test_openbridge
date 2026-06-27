@@ -540,6 +540,9 @@ wait_for_device_config() {
   
   echo "Waiting up to ${timeout_sec}s for device $device_id config to be available on MQTT..."
   
+  local sub_err_log="out/${device_id}_sub_error.log"
+  rm -f "$sub_err_log"
+  
   if timeout "$timeout_sec" mosquitto_sub \
     -h 127.0.0.1 -p 8883 \
     -t "$topic" \
@@ -548,11 +551,16 @@ wait_for_device_config() {
     --cafile "$site_model/reflector/ca.crt" \
     --cert "$site_model/devices/$device_id/rsa_private.crt" \
     --key "$site_model/devices/$device_id/rsa_private.pem" \
-    -C 1 > /dev/null 2>&1; then
+    -C 1 > "out/${device_id}_config_received.json" 2> "$sub_err_log"; then
     echo "Device $device_id config is available on MQTT (ACL verified)."
     return 0
   else
     echo "Error: Timeout or failure waiting for device $device_id config on MQTT." >&2
+    if [ -f "$sub_err_log" ]; then
+      echo "=== mosquitto_sub error log ===" >&2
+      cat "$sub_err_log" >&2
+      echo "===============================" >&2
+    fi
     echo "This indicates UDMIS failed to publish config, or Mosquitto ACLs blocked it." >&2
     return 1
   fi
