@@ -33,6 +33,7 @@ centric
 CLA
 ClearBlade
 CLI
+CloudModel
 CloudRun
 CoAP
 Codebase
@@ -50,6 +51,7 @@ cryptographically
 datapoint
 DBO
 DBP
+deduplication
 Deduplication
 designator
 deterministically
@@ -148,6 +150,9 @@ namespaces
 namespacing
 niversal
 nmap
+nonce
+Nonces
+nonces
 npm
 nterface
 observability
@@ -158,6 +163,7 @@ Onboarding
 OPC
 optionality
 Optionality
+orchestrator
 orchestrators
 OSS
 oversized
@@ -175,6 +181,7 @@ prepended
 prepending
 programmatically
 projectId
+pseudorandomly
 provisioner
 proxied
 Proxied
@@ -225,6 +232,7 @@ subFolders
 Subprocess
 subType
 subTypes
+subtype
 swapped
 SWE
 systemd
@@ -263,7 +271,9 @@ UNK
 Untrusted
 unnested
 unopinionated
+unparseable
 unprocessable
+unscoped
 unwriteable
 uplink
 uri
@@ -275,6 +285,7 @@ Uufi
 UUFI
 validator
 varchar
+verifiers
 writeable
 writeback
 Writeback

@@ -48,7 +48,7 @@ Format: `scheme://[user@]host[:port][/path]`
 - **Project Identity:** For the MQTT transport, the `projectId` field in the envelope SHOULD be treated as a general environment or project identifier. All components within a single UUFI session MUST use a consistent `projectId` (default: `vibrant`) to avoid ambiguity in message processing.
 - **Cloud Model Service:**
   - **Discovery (Query):** Clients publish a `query/cloud` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/cloud`.
-  - **Response (Model Reply):** System publishes the device cloud model to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/cloud`. Sourcing model updates from `[/{prefix}]/uufi/c/config/cloud` or other un-scoped/registry-less topics is strictly prohibited.
+  - **Response (Model Reply):** System publishes the device cloud model to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/cloud`. Sourcing model updates from `[/{prefix}]/uufi/c/config/cloud` or other unscoped/registry-less topics is strictly prohibited.
   - **Structure:** Uses standard flat **CloudModel** payloads addressed via device-scoped envelope attributes and topic paths (Section 5.1).
 - **State Query Service:**
   - **Discovery:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
@@ -146,7 +146,7 @@ To ensure protocol compatibility, data integrity, and protection against replay 
   The inner message payload MUST follow the flat, unnested `CloudModel` schema representing only the specified device (conforming directly to `model_cloud.json`).
 - **Prohibited Formats:** 
   - Nested payload hierarchies (e.g., nesting under a `"registries"`, `"devices"`, or `"cloud"` root key inside the JSON payload) are strictly prohibited.
-  - Sourcing or publishing cloud model updates from `/uufi/c/config/cloud` or any other un-scoped/registry-less topics is strictly prohibited.
+  - Sourcing or publishing cloud model updates from `/uufi/c/config/cloud` or any other unscoped/registry-less topics is strictly prohibited.
 
 ### 5.2. Update Semantics (Partial Merge)
 The `UPDATE` operation for the `cloud` subfolder is a partial merge at the device subsystem level. Existing fields not in the payload MUST NOT be modified.
