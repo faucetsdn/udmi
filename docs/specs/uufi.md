@@ -16,7 +16,7 @@ UUFI utilizes a messaging transport where Clients and Systems interact via dedic
 ## 2. Connectivity
 
 ### 2.1. Connection String
-UUFI interfaces use a URL-like connection string format. Supported schemes: `mqtt://` and `pubsub://`.
+UUFI interfaces use a URL-like connection string format. Supported schemes: `mqtt://`, `mqtts://`, and `pubsub://`.
 
 Format: `scheme://[user@]host[:port][/path]`
 
@@ -35,8 +35,11 @@ Format: `scheme://[user@]host[:port][/path]`
 - **Filtering:** Subscriptions should filter for messages where the `principal` attribute matches the local identity or is absent.
 - **Constraint:** `:port` is prohibited.
 
-#### MQTT (`mqtt://`)
+#### MQTT and MQTTS (`mqtt://`, `mqtts://`)
 - **Host/Port:** Standard network mapping.
+- **SSL/TLS & Client Certificates (for `mqtts://` or secure ports):** When a secure connection is requested (via the `mqtts://` scheme, port `8883`, or ports designated for secure certificate authentication):
+  - Clients and system gateways MUST load and present the client public certificate (`rsa_private.crt`) and private key (`rsa_private.pem`), in addition to validating the CA certificate (`ca.crt`).
+  - Implementations MUST treat `mqtts://` with the same routing, parsing, and topic mapping rules as `mqtt://`, differing only in the enforcement of SSL/TLS and mutual certificate authentication.
 - **Topic Structure:** `[/{prefix}]/uufi/[r/{deviceRegistryId}/[d/{deviceId}/]]c/{subType}/{subFolder}`
   - The `prefix` is the optional path component of the connection string, representing one or more path segments. Implementations MUST strip any leading or trailing slashes from the path component before using it as a `prefix`. In UDMI environments, the `prefix` often corresponds to the `UDMI_PREFIX` environment variable, which isolates multiple UDMI installations on the same messaging backbone.
   - **Rigid Segment Presence:** Every UUFI topic path MUST include both a subtype (`subType`) and a subfolder (`subFolder`) segment without exception. Topic paths MUST be formatted strictly as `[/{prefix}]/uufi/c/{subType}/{subFolder}` (for common channels) or `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/{subType}/{subFolder}` (for registry/device scoped channels). Omitting the subfolder segment or truncating suffixes (e.g. `/c/{subType}`) is strictly prohibited.
@@ -217,9 +220,9 @@ To report a device's actual or currently running software subsystem version, imp
 
 ---
 
-# 9. Test and Development
+# 9. For Test (Testing Utilities and Script Invocation)
 
-The UDMI repository provides a modular, multi-tier local development and testing workflow to isolate infrastructure, devices, and client applications.
+This section documents the testing utilities, validation suites, and script execution pathways available within the repository. Because the production UUFI specification is strictly a message-passing protocol (relying solely on standard MQTT or PubSub topics/payloads), all shell script invocations, on-prem simulators, database triggers, and testing runners described here are sequestered as non-runtime testing utilities.
 
 ## 9.1. Scope 1: Basic Local Setup (Infrastructure Only)
 
@@ -310,6 +313,16 @@ bin/site_trigger update <site_path> <device_id> <blob_id> <version> [conn_spec]
 This tool:
 1.  **Mutates Site Model:** Locates the specified `metadata.json` file in the site directory (e.g., `<site_path>/devices/{device_id}/metadata.json`) and atomically updates its expected version tag (`system.software.<blob_id> = <version>`).
 2.  **Triggers Model Event:** Synthesizes and publishes a corresponding `model/cloud` Model Update message to `/uufi/c/model/cloud` on the broker, enabling reactive orchestrators to instantly sync.
+
+---
+
+## 9.6. Testing Utility Connection Constraints
+
+Some repository testing and development utilities (such as the on-premise Java-based `Reflector`, `Pubber`, and `start_dut` processes) have connection-string parsing limitations when processing credentials or secure schemas.
+
+To avoid parsing failures (such as the `Unknown iotProvider jwt` runtime error) when invoking these testing utilities:
+- **Connection Format:** The connection string parameter passed to these tools MUST be formatted strictly as standard unencrypted local broker strings (e.g., `//mqtt/localhost:$port` or `mqtt/localhost:$port`).
+- **Secure Credentials Out-of-Band:** All secure authentication parameters, TLS certificates, and ports MUST be passed out-of-band using designated environment variables (such as `MQTT_PORT`) and standard filesystem layouts (such as `var/mosquitto/certs/`) rather than inline within the connection string.
 
 ---
 
