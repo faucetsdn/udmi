@@ -356,6 +356,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void sendConfigUpdate(String registryId, String deviceId, String config) {
+    info("sendConfigUpdate called for %s/%s, publish enabled: %b",
+        registryId, deviceId, isPublishEnabled());
     if (isPublishEnabled()) {
       publishMqtt(registryId, deviceId, config);
     } else {
@@ -369,6 +371,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void publishMqtt(String registryId, String deviceId, String payload) {
+    info("publishMqtt called for %s/%s, mqttPipe null: %b",
+        registryId, deviceId, mqttPipe == null);
     if (mqttPipe == null) {
       warn("MQTT pipe not initialized, unable to publish config");
       return;
@@ -382,7 +386,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
       Bundle bundle = new Bundle(envelope, MessageDispatcher.rawString(payload));
       mqttPipe.publish(bundle);
-      debug("Published config to pipe for %s/%s", registryId, deviceId);
+      info("Published config to pipe for %s/%s", registryId, deviceId);
     } catch (Exception e) {
       error("While publishing to MQTT pipe for " + registryId + "/" + deviceId
           + ": " + friendlyStackTrace(e));
