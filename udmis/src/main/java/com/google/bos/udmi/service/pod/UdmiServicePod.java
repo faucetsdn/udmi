@@ -35,10 +35,16 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.jetbrains.annotations.NotNull;
 import udmi.schema.BridgePodConfiguration;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.IotAccess;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.Level;
 import udmi.schema.PodConfiguration;
 import udmi.schema.SetupUdmiConfig;
@@ -64,6 +70,7 @@ public class UdmiServicePod extends ContainerBase {
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class,
       ProvisioningEngine.class, BitboxAdapter.class, DistributorPipe.class, UufiProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = new HashMap<>();
+  private static CommandLine podCommandLine;
 
   static {
     PROCESSOR_CLASSES.forEach(clazz -> PROCESSORS.put(ContainerBase.getName(clazz), clazz));
@@ -170,11 +177,30 @@ public class UdmiServicePod extends ContainerBase {
     }
   }
 
-  private static PodConfiguration makePodConfiguration(String[] args) {
-    if (args.length != 1) {
-      throw new RuntimeException("Exactly one argument expected: pod_config.json");
+  private static CommandLine parseArgs(String[] args) {
+    Options options = new Options();
+    options.addOption(null, "etcd_ssl", false, "Enable SSL for etcd.");
+    options.addOption(null, "etcd_ca_path", true, "Path to CA certificate for etcd SSL.");
+    options.addOption(null, "etcd_client_cert_path", true,
+        "Path to client certificate for etcd SSL.");
+    options.addOption(null, "etcd_client_key_path", true, "Path to client key for etcd SSL.");
+
+    CommandLineParser parser = new DefaultParser();
+    try {
+      CommandLine commandLine = parser.parse(options, args);
+      if (commandLine.getArgList().size() != 1) {
+        throw new RuntimeException("Exactly one positional argument expected: pod_config.json");
+      }
+      return commandLine;
+    } catch (ParseException e) {
+      throw new RuntimeException("While parsing command line arguments", e);
     }
-    PodConfiguration config = loadRecursive(new File(args[0]));
+  }
+
+  private static PodConfiguration makePodConfiguration(String[] args) {
+    podCommandLine = parseArgs(args);
+    String configPath = podCommandLine.getArgList().get(0);
+    PodConfiguration config = loadRecursive(new File(configPath));
     System.err.println(stringify(config));
     ifNotNullThrow(config.include, "unresolved config include directive");
     return config;
@@ -219,8 +245,30 @@ public class UdmiServicePod extends ContainerBase {
     config.name = name;
   }
 
+  private void applyEtcdOptions(IotAccess config) {
+    if (config.provider != IotProvider.ETCD) {
+      return;
+    }
+    if (podCommandLine.hasOption("etcd_ssl")) {
+      config.options = (config.options == null ? "" : config.options + ",") + "ssl=true";
+    }
+    if (podCommandLine.hasOption("etcd_ca_path")) {
+      config.options = (config.options == null ? "" : config.options + ",") + "ca_path="
+          + podCommandLine.getOptionValue("etcd_ca_path");
+    }
+    if (podCommandLine.hasOption("etcd_client_cert_path")) {
+      config.options = (config.options == null ? "" : config.options + ",") + "client_cert_path="
+          + podCommandLine.getOptionValue("etcd_client_cert_path");
+    }
+    if (podCommandLine.hasOption("etcd_client_key_path")) {
+      config.options = (config.options == null ? "" : config.options + ",") + "client_key_path="
+          + podCommandLine.getOptionValue("etcd_client_key_path");
+    }
+  }
+
   private void createAccess(String name, IotAccess config) {
     config.name = name;
+    applyEtcdOptions(config);
     putComponent(name, () -> IotAccessProvider.from(config));
   }
 
@@ -251,6 +299,7 @@ public class UdmiServicePod extends ContainerBase {
 
   private void createIotData(String name, IotAccess config) {
     config.name = name;
+    applyEtcdOptions(config);
     putComponent(name, () -> IotDataProvider.from(config));
   }
 

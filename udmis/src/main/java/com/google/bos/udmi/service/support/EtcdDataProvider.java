@@ -5,12 +5,14 @@ import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
+import io.etcd.jetcd.ClientBuilder;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.Lock;
@@ -20,6 +22,8 @@ import io.etcd.jetcd.op.Op;
 import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
+import io.netty.handler.ssl.SslContextBuilder;
+import java.io.File;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -39,7 +43,12 @@ import udmi.schema.IotAccess;
 public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
   public static final GetOption PREFIXED_OPTION = GetOption.newBuilder().isPrefix(true).build();
-  private static final String EXPECTED_PREFIX = "http://";
+  private static final String SSL_KEY = "ssl";
+  private static final String CA_PATH_KEY = "ca_path";
+  private static final String CLIENT_CERT_PATH_KEY = "client_cert_path";
+  private static final String CLIENT_KEY_PATH_KEY = "client_key_path";
+  private static final String HTTP_PREFIX = "http://";
+  private static final String HTTPS_PREFIX = "https://";
   private static final String RESULTING_PREFIX = "ip:///";
   private static final long QUERY_TIMEOUT_SEC = 10;
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(QUERY_TIMEOUT_SEC);
@@ -117,9 +126,31 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     }
   }
 
+  private ClientBuilder createClientBuilder(String target) {
+    ClientBuilder builder = Client.builder().target(target);
+    if (TRUE_OPTION.equals(options.get(SSL_KEY))) {
+      try {
+        SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
+        ifNotNullThen(options.get(CA_PATH_KEY),
+            path -> sslContextBuilder.trustManager(new File(path)));
+        String clientCertPath = options.get(CLIENT_CERT_PATH_KEY);
+        String clientKeyPath = options.get(CLIENT_KEY_PATH_KEY);
+        if (clientCertPath != null && clientKeyPath != null) {
+          sslContextBuilder.keyManager(new File(clientCertPath), new File(clientKeyPath));
+        }
+        builder.sslContext(sslContextBuilder.build());
+      } catch (Exception e) {
+        throw new RuntimeException("While building SSL context for etcd", e);
+      }
+    }
+    return builder;
+  }
+
   private Client initializeClient() {
     String target = variableSubstitution(config.project_id, "undefined project_id");
-    try (Client tmpClient = Client.builder().target(target).build()) {
+    boolean ssl = TRUE_OPTION.equals(options.get(SSL_KEY));
+    String expectedPrefix = ssl ? HTTPS_PREFIX : HTTP_PREFIX;
+    try (Client tmpClient = createClientBuilder(target).build()) {
       info("Connecting to etcd target %s to glean client list", target);
       List<Member> members =
           tmpClient.getClusterClient().listMember().get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS)
@@ -127,13 +158,13 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       Set<String> uris = members.stream().flatMap(member -> member.getClientURIs().stream())
           .map(URI::toString).collect(Collectors.toSet());
       checkState(!uris.isEmpty(), "no member uris found");
-      checkState(uris.stream().allMatch(uri -> uri.startsWith(EXPECTED_PREFIX)),
-          "inconsistent prefix");
-      String collected = uris.stream().map(uri -> uri.substring(EXPECTED_PREFIX.length()))
+      checkState(uris.stream().allMatch(uri -> uri.startsWith(expectedPrefix)),
+          "inconsistent prefix " + expectedPrefix);
+      String collected = uris.stream().map(uri -> uri.substring(expectedPrefix.length()))
           .collect(Collectors.joining(","));
       String targets = RESULTING_PREFIX + collected;
       info("Gleaned etcd client targets %s", targets);
-      Client client = Client.builder().target(targets).connectTimeout(CONNECT_TIMEOUT).build();
+      Client client = createClientBuilder(targets).connectTimeout(CONNECT_TIMEOUT).build();
       updateConnectedKey(client);
       reapConnectedKeys(client);
       return client;

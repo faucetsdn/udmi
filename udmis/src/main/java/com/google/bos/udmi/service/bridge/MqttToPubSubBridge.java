@@ -100,8 +100,8 @@ public final class MqttToPubSubBridge {
     String mqttBrokerUrl = commandLine.getOptionValue("mqtt_broker_url", "tcp://localhost:1883");
     String mqttSubscriptionTopic =
         commandLine.getOptionValue("mqtt_subscription_topic", "/r/+/d/#");
-    String gcpProjectId = commandLine.getOptionValue("gcp_project_id");
-    String pubsubTopicId = commandLine.getOptionValue("pubsub_topic_id");
+    final String gcpProjectId = commandLine.getOptionValue("gcp_project_id");
+    final String pubsubTopicId = commandLine.getOptionValue("pubsub_topic_id");
     boolean mqttTls = commandLine.hasOption("mqtt_tls");
     String mqttCaPath = commandLine.getOptionValue("mqtt_ca_path");
     String mqttUsername = commandLine.getOptionValue("mqtt_username");
@@ -111,6 +111,22 @@ public final class MqttToPubSubBridge {
     String etcdTarget = commandLine.getOptionValue("etcd_target");
     String etcdOptions = commandLine.getOptionValue("etcd_options");
     String sourceAttribute = commandLine.getOptionValue("source_attribute", "bridge");
+
+    if (commandLine.hasOption("etcd_ssl")) {
+      etcdOptions = (etcdOptions == null ? "" : etcdOptions + ",") + "ssl=true";
+    }
+    if (commandLine.hasOption("etcd_ca_path")) {
+      etcdOptions = (etcdOptions == null ? "" : etcdOptions + ",") + "ca_path="
+          + commandLine.getOptionValue("etcd_ca_path");
+    }
+    if (commandLine.hasOption("etcd_client_cert_path")) {
+      etcdOptions = (etcdOptions == null ? "" : etcdOptions + ",") + "client_cert_path="
+          + commandLine.getOptionValue("etcd_client_cert_path");
+    }
+    if (commandLine.hasOption("etcd_client_key_path")) {
+      etcdOptions = (etcdOptions == null ? "" : etcdOptions + ",") + "client_key_path="
+          + commandLine.getOptionValue("etcd_client_key_path");
+    }
 
     if (gcpProjectId == null || pubsubTopicId == null) {
       logger.error("gcp_project_id and pubsub_topic_id are required.");
@@ -212,6 +228,11 @@ public final class MqttToPubSubBridge {
     options.addOption(null, "mqtt_client_key_path", true, "Path to client private key for TLS.");
     options.addOption(null, "etcd_target", true, "etcd endpoint URL.");
     options.addOption(null, "etcd_options", true, "etcd provider options (comma-separated).");
+    options.addOption(null, "etcd_ssl", false, "Enable SSL for etcd.");
+    options.addOption(null, "etcd_ca_path", true, "Path to CA certificate for etcd SSL.");
+    options.addOption(null, "etcd_client_cert_path", true,
+        "Path to client certificate for etcd SSL.");
+    options.addOption(null, "etcd_client_key_path", true, "Path to client key for etcd SSL.");
     options.addOption(null, "source_attribute", true, "Value for the source attribute.");
     options.addOption("h", "help", false, "Print usage info.");
 
