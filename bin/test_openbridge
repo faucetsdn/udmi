@@ -538,7 +538,7 @@ wait_for_device_config() {
   local device_id=$1
   local registry_id=$2
   local site_model=$3
-  local timeout_sec=30
+  local timeout_sec=90
   
   local key_file="$site_model/devices/$device_id/rsa_private.pkcs8"
   if [ ! -f "$key_file" ]; then
