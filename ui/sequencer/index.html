@@ -116,6 +116,18 @@
               <button id="btn-select-all" class="btn-link-sm" aria-label="Select all test cases">Select All</button>
               <span class="action-divider">|</span>
               <button id="btn-deselect-all" class="btn-link-sm" aria-label="Deselect all test cases">Deselect All</button>
+              <span class="action-divider">|</span>
+              <div class="status-select-group" style="display: inline-flex; align-items: center; gap: 2px;">
+                <button id="btn-select-passed" class="btn-icon-filter pass" title="Select all passed" aria-label="Select all passed">
+                  <span class="material-symbols-outlined">check_circle</span>
+                </button>
+                <button id="btn-select-skipped" class="btn-icon-filter skip" title="Select all skipped" aria-label="Select all skipped">
+                  <span class="material-symbols-outlined">remove_circle</span>
+                </button>
+                <button id="btn-select-failed" class="btn-icon-filter fail" title="Select all failed" aria-label="Select all failed">
+                  <span class="material-symbols-outlined">cancel</span>
+                </button>
+              </div>
             </div>
           </div>
 

@@ -16,7 +16,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    timeout-minutes: 15
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
