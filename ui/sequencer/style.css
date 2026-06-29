@@ -138,6 +138,37 @@
   color: var(--border-color);
 }
 
+.btn-icon-filter {
+  background: transparent;
+  border: none;
+  padding: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: transform var(--transition-fast), background-color var(--transition-fast);
+}
+
+.btn-icon-filter .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.btn-icon-filter:hover:not(:disabled) {
+  background-color: var(--bg-surface-container-high);
+  transform: scale(1.18);
+}
+
+.btn-icon-filter:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-icon-filter.pass { color: var(--color-tertiary); }
+.btn-icon-filter.skip { color: var(--text-muted); }
+.btn-icon-filter.fail { color: var(--color-error); }
+
 .test-cases-list {
   flex: 1;
   overflow-y: auto;
