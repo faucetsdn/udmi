@@ -138,7 +138,7 @@ public final class MqttToPubSubBridge {
     EtcdDataProvider etcdProvider = null;
 
     try {
-      etcdProvider = createEtcdProvider(etcdTarget, etcdOptions);
+      etcdProvider = createEtcdProvider(etcdTarget, etcdOptions, commandLine);
       publisher = createPublisher(gcpProjectId, pubsubTopicId);
 
       // Initialize MQTT Client
@@ -460,7 +460,8 @@ public final class MqttToPubSubBridge {
         new SubjectPublicKeyInfo(algId, rsaPublicKey), new PrivateKeyInfo(algId, rsaPrivateKey));
   }
 
-  private static EtcdDataProvider createEtcdProvider(String target, String options) {
+  private static EtcdDataProvider createEtcdProvider(String target, String options,
+      CommandLine commandLine) {
     if (target == null) {
       return null;
     }
@@ -468,6 +469,20 @@ public final class MqttToPubSubBridge {
     iotAccess.provider = IotProvider.ETCD;
     iotAccess.project_id = target;
     iotAccess.options = options;
+
+    if (commandLine.hasOption("etcd_ssl")
+        || commandLine.hasOption("etcd_ca_path")
+        || commandLine.hasOption("etcd_client_cert_path")
+        || commandLine.hasOption("etcd_client_key_path")) {
+      iotAccess.endpoint = new udmi.schema.EndpointConfiguration();
+      if (commandLine.hasOption("etcd_ssl")) {
+        iotAccess.endpoint.transport = udmi.schema.EndpointConfiguration.Transport.SSL;
+      }
+      iotAccess.endpoint.ca_file = commandLine.getOptionValue("etcd_ca_path");
+      iotAccess.endpoint.cert_file = commandLine.getOptionValue("etcd_client_cert_path");
+      iotAccess.endpoint.key_file = commandLine.getOptionValue("etcd_client_key_path");
+    }
+
     EtcdDataProvider provider = new EtcdDataProvider(iotAccess);
     logger.info("EtcdDataProvider initialized for target: {}", target);
     return provider;

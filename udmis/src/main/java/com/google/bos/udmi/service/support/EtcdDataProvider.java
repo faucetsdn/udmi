@@ -7,6 +7,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
@@ -126,15 +127,35 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     }
   }
 
+  private String getCaPath() {
+    return ofNullable(options.get(CA_PATH_KEY))
+        .orElseGet(() -> ifNotNullGet(config.endpoint, x -> x.ca_file));
+  }
+
+  private String getClientCertPath() {
+    return ofNullable(options.get(CLIENT_CERT_PATH_KEY))
+        .orElseGet(() -> ifNotNullGet(config.endpoint, x -> x.cert_file));
+  }
+
+  private String getClientKeyPath() {
+    return ofNullable(options.get(CLIENT_KEY_PATH_KEY))
+        .orElseGet(() -> ifNotNullGet(config.endpoint, x -> x.key_file));
+  }
+
+  private boolean isSslEnabled() {
+    return TRUE_OPTION.equals(options.get(SSL_KEY))
+        || ifNotNullGet(config.endpoint,
+            x -> x.transport == udmi.schema.EndpointConfiguration.Transport.SSL, false);
+  }
+
   private ClientBuilder createClientBuilder(String target) {
     ClientBuilder builder = Client.builder().target(target);
-    if (TRUE_OPTION.equals(options.get(SSL_KEY))) {
+    if (isSslEnabled()) {
       try {
         SslContextBuilder sslContextBuilder = SslContextBuilder.forClient();
-        ifNotNullThen(options.get(CA_PATH_KEY),
-            path -> sslContextBuilder.trustManager(new File(path)));
-        String clientCertPath = options.get(CLIENT_CERT_PATH_KEY);
-        String clientKeyPath = options.get(CLIENT_KEY_PATH_KEY);
+        ifNotNullThen(getCaPath(), path -> sslContextBuilder.trustManager(new File(path)));
+        String clientCertPath = getClientCertPath();
+        String clientKeyPath = getClientKeyPath();
         if (clientCertPath != null && clientKeyPath != null) {
           sslContextBuilder.keyManager(new File(clientCertPath), new File(clientKeyPath));
         }
@@ -148,7 +169,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
   private Client initializeClient() {
     String target = variableSubstitution(config.project_id, "undefined project_id");
-    boolean ssl = TRUE_OPTION.equals(options.get(SSL_KEY));
+    boolean ssl = isSslEnabled();
     String expectedPrefix = ssl ? HTTPS_PREFIX : HTTP_PREFIX;
     try (Client tmpClient = createClientBuilder(target).build()) {
       info("Connecting to etcd target %s to glean client list", target);
