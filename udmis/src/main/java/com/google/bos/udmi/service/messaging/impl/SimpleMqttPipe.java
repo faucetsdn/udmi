@@ -378,7 +378,7 @@ public class SimpleMqttPipe extends MessageBase {
     if (envelope.gatewayId != null) {
       topic = "/" + envelope.gatewayId + topic;
     }
-    if (envelope.subFolder != null || !topic.isEmpty()) {
+    if (envelope.subFolder != null && envelope.subType != SubType.CONFIG) {
       topic = "/" + envelope.subFolder + topic;
     }
     if (envelope.subType != null || !topic.isEmpty()) {
