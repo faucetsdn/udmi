@@ -112,6 +112,7 @@ export class LogViewer {
     this.copyBtn = this.container.querySelector('.btn-copy');
     this.clearBtn = this.container.querySelector('.btn-clear');
     this.scrollBtn = this.container.querySelector('.btn-scroll');
+    this.isProgrammaticScroll = false;
 
     // Event listeners
     this.searchInput.addEventListener('input', (e) => this.setFilter(e.target.value));
@@ -120,9 +121,11 @@ export class LogViewer {
     this.scrollBtn.addEventListener('click', () => this.toggleScrollLock());
 
     this.body.addEventListener('scroll', () => {
+      if (this.isProgrammaticScroll) return;
       // If user scrolls up, unlock scroll, otherwise lock it if scrolled to bottom
-      const threshold = 15;
-      const isAtBottom = this.body.scrollHeight - this.body.clientHeight - this.body.scrollTop < threshold;
+      const threshold = 30;
+      const distance = Math.abs(this.body.scrollHeight - this.body.clientHeight - this.body.scrollTop);
+      const isAtBottom = distance < threshold;
       if (!isAtBottom && this.options.autoScroll) {
         this.setAutoScroll(false);
       } else if (isAtBottom && !this.options.autoScroll) {
@@ -167,7 +170,14 @@ export class LogViewer {
   }
 
   scrollToBottom() {
+    this.isProgrammaticScroll = true;
     this.body.scrollTop = this.body.scrollHeight;
+    requestAnimationFrame(() => {
+      this.body.scrollTop = this.body.scrollHeight;
+      setTimeout(() => {
+        this.isProgrammaticScroll = false;
+      }, 50);
+    });
   }
 
   setAutoScroll(value) {

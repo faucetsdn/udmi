@@ -757,6 +757,7 @@ class MantisController {
     this.triageStatusBadge.className = 'badge badge-running';
 
     // Clear views
+    this.triageLogViewer.setAutoScroll(true);
     this.triageLogViewer.clear();
     this.triageLogViewer.append(`Starting Mantis AI Triage Agent------\nDevice: ${deviceId}\nTest ID: ${testId}\nPlaybook: ${this.playbookSelect.value.toUpperCase()}\n------------------------------------------------\n`, 'info');
     
