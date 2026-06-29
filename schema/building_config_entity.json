@@ -6,9 +6,6 @@
     "code": {
       "type": "string"
     },
-    "etag": {
-      "type": "string"
-    },
     "type": {
       "type": "string"
     }

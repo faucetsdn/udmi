@@ -21,11 +21,13 @@
     "points": {
       "split_threshold": {
         "ref": "vendor-ref can be anything",
-        "units": "Imperial-gallons-per-minute"
+        "units": "Imperial-gallons-per-minute",
+        "url": "vendor://whatEVERyouWANT!!!#!#!/vendor-ref can be anything"
       },
       "triangulating_axis": {
         "ref": "anything-goes!",
-        "units": "Degrees-phase"
+        "units": "Degrees-phase",
+        "url": "vendor://whatEVERyouWANT!!!#!#!/anything-goes!"
       }
     }
   },

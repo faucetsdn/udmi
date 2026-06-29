@@ -112,4 +112,15 @@ public interface FamilyProvider {
   default void validatePoint(String metadataRef) {
     throw new IllegalArgumentException("Point reference not allowed for family " + familyKey());
   }
+
+  /**
+   * Validate a family localnet model.
+   */
+  default void validateModel(udmi.schema.FamilyLocalnetModel familyModel) {
+    if (familyModel.adjunct != null && !familyModel.adjunct.isEmpty()) {
+      throw new IllegalArgumentException(String.format(
+          "Adjunct properties not allowed for family %s: %s",
+          familyKey(), familyModel.adjunct.keySet()));
+    }
+  }
 }

@@ -36,7 +36,7 @@ class SimpleHTTPRequestHandler(BaseHTTPRequestHandler):
     if code:
       print(stdout)
       print(stderr)
-      raise Exception('keygen failed')
+      raise RuntimeError('keygen failed')
     keyfile = f'{site_path}/devices/{device_id}/rsa_private.pem'
     with open(keyfile, 'r', encoding='utf-8') as f:
       keystr = f.read()

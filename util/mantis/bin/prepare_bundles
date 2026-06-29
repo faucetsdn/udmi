@@ -1,0 +1,193 @@
+#!/bin/bash -e
+# Extract UDMI support bundles into test-runs folders.
+
+MANTIS_BIN=$(dirname $0)
+MANTIS_DIR=$(realpath $MANTIS_BIN/..)
+UDMI_ROOT=$(realpath $MANTIS_DIR/../..)
+cd $UDMI_ROOT
+
+usage() {
+    echo "Usage: $0 -o <test_runs_dir> <archive1> [archive2 ...]"
+    echo "Extract UDMI support bundles into test-runs folders."
+    echo
+    echo "Options:"
+    echo "  -h, --help    Show this help message and exit"
+    echo "  -o            Output directory for extracted runs"
+    exit ${1:-1}
+}
+
+if [[ "$1" == "-h" || "$1" == "--help" ]]; then
+    usage 0
+fi
+
+clean_workspace() {
+    local sites_in="sites/udmi_site_model_*/"
+    local sites_out="sites/udmi_site_model/out"
+    
+    rm -rf out_* $sites_in
+    rm -f *udmi-support_*.tgz
+
+    # Keep out/mantis/ safe by only deleting temporary outputs in out/
+    mkdir -p out
+    rm -f out/sequencer.out out/test_itemized.out out/schema.out out/schema_itemized.out out/*.combined 2>/dev/null || true
+    rm -rf $sites_out
+    mkdir -p $sites_out
+}
+
+extract_archive() {
+    local archive=$1
+    local archive_dir=${archive%/}
+    archive_dir=${archive_dir%.zip}
+    archive_dir=${archive_dir%% *}
+    archive_dir=${archive_dir##*/}
+
+    if [[ ${archive} =~ \.tgz$ ]]; then
+        tar -xzvf "$archive"
+        echo "Extracted singular archive $archive"
+    elif [[ -f $archive ]]; then
+        rm -rf "$archive_dir"
+        echo "Extracting archive to $archive_dir"
+        unzip -q -o "$archive" -d "$archive_dir"
+        
+        echo "Extracting test archives..."
+        if ls "$archive_dir"/*sequencer*udmi-support_*.tgz &>/dev/null; then
+            ls "$archive_dir"/*sequencer*udmi-support_*.tgz | xargs -n 1 tar -xzf
+        else
+            ls "$archive_dir"/*udmi-support_*.tgz | xargs -n 1 tar -xzf
+        fi
+    elif [[ -d $archive ]]; then
+        echo "Input is a directory. Extracting test archives from $archive..."
+        if ls "$archive"/*sequencer*udmi-support_*.tgz &>/dev/null; then
+            ls "$archive"/*sequencer*udmi-support_*.tgz | xargs -n 1 tar -xzf
+        else
+            ls "$archive"/*udmi-support_*.tgz | xargs -n 1 tar -xzf
+        fi
+    else
+        echo "Unknown archive file $archive"
+        return 1
+    fi
+}
+
+consolidate_device_tests() {
+    local sites_in="sites/udmi_site_model_*/"
+    local sites_out="sites/udmi_site_model/out"
+    
+    echo "Consolidating device tests..."
+    local devices=$(ls -d $sites_in/out-seq/devices 2>/dev/null) || true
+    if [[ -n $devices ]]; then
+        for devices_dir in $devices; do
+            rsync -ah $devices_dir/ $sites_out/devices/
+        done
+    else
+        echo "Nothing to consolidate."
+    fi
+
+    local src_count=$(find $sites_in/out-seq -name sequence.md 2>/dev/null | wc -l)
+    local dst_count=$(find $sites_out -name sequence.md 2>/dev/null | wc -l)
+
+    if [[ $src_count != $dst_count ]]; then
+        echo "WARNING: Mismatch in src/dst count: $src_count != $dst_count"
+    fi
+
+    echo "Restored $dst_count test output files to $sites_out"
+}
+
+consolidate_test_logs() {
+    # Safely consolidate outputs if directories exist
+    if ls out_*/sequencer.out.combined &>/dev/null; then
+        cat out_*/sequencer.out.combined | sort -k 3,4 > out/sequencer.out
+    fi
+    if ls out_*/schema.out.combined &>/dev/null; then
+        cat out_*/schema.out.combined | fgrep RESULT | sort -k 3,4 | uniq > out/schema.out
+    fi
+    if ls out_*/test_itemized.out &>/dev/null; then
+        cat out_*/test_itemized.out | sort > out/test_itemized.out
+    fi
+    if ls out_*/schema_itemized.out &>/dev/null; then
+        cat out_*/schema_itemized.out | sort | uniq > out/schema_itemized.out
+    fi
+
+    echo "Restored combined schema.out files."
+}
+
+extract_and_consolidate() {
+    local archive=$1
+    local LC_ALL=C
+    
+    clean_workspace
+    extract_archive "$archive" || return 1
+    consolidate_device_tests
+    consolidate_test_logs
+    
+    echo "Done with extraction and consolidation for $archive"
+}
+
+output_dir=""
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -o|--output)
+            output_dir="$2"
+            shift 2
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+if [[ -z "$output_dir" || $# -eq 0 ]]; then
+    usage
+fi
+
+output_dir=$(realpath "$output_dir")
+mkdir -p "$output_dir"
+
+run_idx=1
+for archive in "$@"; do
+    archive_path=$(realpath "$archive")
+    echo "Processing $archive_path into run_$run_idx"
+    
+    # 1. Process archive
+    extract_and_consolidate "$archive_path"
+    
+    # 2. Backup directories
+    run_dir="$output_dir/run_$run_idx"
+    mkdir -p "$run_dir/sites" "$run_dir/out"
+    
+    [[ -f out/sequencer.out ]] && cp out/sequencer.out "$run_dir/"
+    [[ -f out/test_itemized.out ]] && cp out/test_itemized.out "$run_dir/"
+    
+    # Copy sharded out_* directories
+    for sod in out_*; do
+        if [[ -d "$sod" ]]; then
+            cp -r "$sod" "$run_dir/"
+        fi
+    done
+    
+    # Copy sharded sites directories and active site
+    active_site="udmi_site_model"
+    for ssd in sites/udmi_site_model_*; do
+        if [[ -d "$ssd" ]]; then
+            cp -r "$ssd" "$run_dir/sites/"
+            active_site=$(basename "$ssd" | sed -E 's/_[0-9]+$//')
+        fi
+    done
+    
+    if [[ -d "sites/$active_site" ]]; then
+        cp -r "sites/$active_site" "$run_dir/sites/"
+    fi
+    
+    if [[ -d "out" ]]; then
+        # Copy everything except mantis
+        rsync -a --exclude 'mantis' out/ "$run_dir/out/"
+    fi
+    
+    # 3. Cleanup
+    rm -rf out_[0-9]* sites/udmi_site_model_[0-9]* udmi-support_* 2>/dev/null || true
+    find out -mindepth 1 -maxdepth 1 -not -name "mantis" -exec rm -rf {} + 2>/dev/null || true
+    
+    run_idx=$((run_idx + 1))
+done
+
+echo "Successfully prepared bundles in $output_dir"

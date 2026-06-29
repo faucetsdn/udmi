@@ -37,7 +37,6 @@ public class DboExternalProcessor implements ExternalProcessor {
 
     buildingConfigEntity.code = linkExternalsModel.label;
     buildingConfigEntity.type = linkExternalsModel.type;
-    buildingConfigEntity.etag = linkExternalsModel.etag;
 
     File dboOut = new File(device.getOutDir(), DBO_OUT_FILE);
     JsonUtil.writeFile(buildingConfig, dboOut);

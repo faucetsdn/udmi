@@ -1,8 +1,8 @@
 {
   "families" : {
+    "bacnet" : { },
     "ether" : { },
     "ipv4" : { },
-    "vendor" : { },
-    "bacnet" : { }
+    "vendor" : { }
   }
 }

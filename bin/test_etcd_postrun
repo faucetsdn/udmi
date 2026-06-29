@@ -2,16 +2,16 @@
 set -x
 
 ROOT=$(dirname $0)/..
-cd $ROOT
+# cd $ROOT
 
-source etc/shell_common.sh
+source $ROOT/etc/shell_common.sh
 
 # Print everything for debug
-udmis/bin/etcdctl get --prefix ""
+$ROOT/udmis/bin/etcdctl get --prefix ""
 more sites/udmi_site_model/devices/AHU-1/* | cat
 
 echo "Verifying key in etcd..."
-GOT_KEY=$(udmis/bin/etcdctl get /r/ZZ-TRI-FECTA/d/AHU-1:auth_key --print-value-only)
+GOT_KEY=$($ROOT/udmis/bin/etcdctl get /r/ZZ-TRI-FECTA/d/AHU-1:auth_key --print-value-only)
 WANT_KEY=$(cat sites/udmi_site_model/devices/AHU-1/rsa_public.pem)
 
 

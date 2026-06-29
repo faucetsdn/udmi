@@ -84,6 +84,16 @@ done
 echo ::::::::: tail $LOGFILE
 tail -n 30 $LOGFILE
 
+if [[ ! -f $POD_READY ]]; then
+    echo "=== DIAGNOSTIC LOGS FOR UDMIS STARTUP FAILURE ==="
+    echo "Host working directory: $PWD"
+    echo "Process $PID status:"
+    ps -p $PID || echo "Process $PID not running"
+    echo "Last 100 lines of $LOGFILE:"
+    tail -n 100 $LOGFILE || true
+    echo "=== END DIAGNOSTIC LOGS ==="
+fi
+
 [[ -f $POD_READY ]] || fail pod_ready.txt not found.
 
 echo udmis running in the background, pid $PID log in $(realpath $LOGFILE)

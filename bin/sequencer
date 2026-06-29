@@ -134,6 +134,9 @@ if [[ $project_spec =~ ^// ]]; then
     no_provider=${no_prefix#*/}
     project_id=${no_provider%/*}
     udmi_namespace=${no_provider#$project_id}
+    if [[ $project_id == *:* ]]; then
+        project_id=${project_id%:*}
+    fi
 elif [[ $project_spec == -- ]]; then
     echo Configuring for mock project use...
     project_id=mock-project

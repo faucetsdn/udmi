@@ -1,0 +1,84 @@
+#!/bin/bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+ROOT_DIR="$( cd "$DIR/.." &> /dev/null && pwd )"
+
+# Activate the venv created by bin/setup_base
+if [ -f "$ROOT_DIR/venv/bin/activate" ]; then
+    source "$ROOT_DIR/venv/bin/activate"
+fi
+
+function run_test {
+    TEST_DIR=$1
+
+    GOLD_FILE="$TEST_DIR/building_config.yaml"
+    if [ ! -f "$GOLD_FILE" ]; then
+        echo "Gold file not found: $GOLD_FILE"
+        return 1
+    fi
+
+    if head -n 1 "$GOLD_FILE" | grep -q "device_registry_id,"; then
+        echo "Skipping site_model generation: $GOLD_FILE appears to be CSV, not YAML."
+        echo "Test passed: $TEST_DIR (skipped execution)"
+        return 0
+    fi
+
+    BEFORE_DIR="$TEST_DIR/site_model_before"
+    AFTER_DIR="$TEST_DIR/site_model_after"
+    OUTPUT_FILE="$TEST_DIR/extracted_config.yaml"
+
+    if [ ! -d "$BEFORE_DIR" ]; then
+        echo "Required directory missing: $BEFORE_DIR"
+        return 1
+    fi
+
+    echo "Running DBO merge test for $TEST_DIR..."
+    rm -rf "$AFTER_DIR"
+    rm -f "$OUTPUT_FILE"
+    mkdir -p "$AFTER_DIR"
+
+    if [ -d "$BEFORE_DIR/devices" ]; then
+        cp -r "$BEFORE_DIR/devices" "$AFTER_DIR/"
+    fi
+
+    export UDMI_TEST_TIMESTAMP="2026-01-01T00:00:00Z"
+    "$ROOT_DIR/bin/dbo_merge" "$GOLD_FILE" "$AFTER_DIR"
+
+    # General test: extract from merged output and compare with GOLD_FILE
+    echo "Running extraction test for $TEST_DIR..."
+
+    "$ROOT_DIR/bin/dbo_extract" "$AFTER_DIR" "$OUTPUT_FILE"
+
+    if ! diff "$GOLD_FILE" "$OUTPUT_FILE"; then
+        echo "Extraction mismatch for $TEST_DIR"
+        return 1
+    fi
+
+    EXPECTED_DIR="$TEST_DIR/site_model_expected"
+    if [ -d "$EXPECTED_DIR" ]; then
+        echo "Comparing $AFTER_DIR with $EXPECTED_DIR..."
+        if ! diff -r "$EXPECTED_DIR" "$AFTER_DIR"; then
+            echo "Site model mismatch for $TEST_DIR"
+            return 1
+        fi
+    fi
+
+    echo "Test passed: $TEST_DIR"
+    return 0
+}
+
+SITES=("$@")
+if [ ${#SITES[@]} -eq 0 ]; then
+    SITES=($ROOT_DIR/tests/dbo/*)
+fi
+
+RET=0
+for SITE in "${SITES[@]}"; do
+    if [ -d "$SITE" ]; then
+        run_test "$SITE" || RET=1
+    else
+        echo "Skipping non-directory: $SITE"
+    fi
+done
+
+exit $RET

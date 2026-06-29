@@ -4,8 +4,8 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static udmi.lib.ProtocolFamily.BACNET;
 
-import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.BiConsumer;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
@@ -17,7 +17,7 @@ import udmi.schema.FamilyDiscoveryConfig;
 public class PubberBacnetProvider extends PubberProviderBase implements PubberFamilyProvider {
 
   private static final int BACNET_DISCOVERY_RATE_SEC = 1;
-  private final Deque<String> toReport = new ArrayDeque<>();
+  private final Deque<String> toReport = new ConcurrentLinkedDeque<>();
 
   /**
    * Provider for metadata-based (simulated) bacnet discovery.
@@ -28,12 +28,12 @@ public class PubberBacnetProvider extends PubberProviderBase implements PubberFa
   }
 
   @Override
-  public synchronized void periodicUpdate() {
+  public void periodicUpdate() {
     ifNotNullThen(toReport.poll(), getResultPublisher());
   }
 
   @Override
-  public synchronized void startScan(FamilyDiscoveryConfig discoveryConfig,
+  public void startScan(FamilyDiscoveryConfig discoveryConfig,
       BiConsumer<String, DiscoveryEvents> publisher) {
     super.startScan(discoveryConfig, publisher);
     toReport.clear();
@@ -42,7 +42,7 @@ public class PubberBacnetProvider extends PubberProviderBase implements PubberFa
   }
 
   @Override
-  public synchronized void stopScan() {
+  public void stopScan() {
     super.stop();
   }
 }

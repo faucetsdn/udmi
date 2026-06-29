@@ -8,6 +8,7 @@ import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.bos.udmi.service.pod.ContainerBase;
+import com.google.udmi.util.JsonUtil;
 import java.io.BufferedReader;
 import java.io.File;
 import java.util.Date;
@@ -40,7 +41,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private Process tailProcess;
 
   private MosquittoDynamicSecurityService dynSecService;
-  private final ObjectMapper objectMapper = new ObjectMapper();
+  private final ObjectMapper objectMapper = JsonUtil.OBJECT_MAPPER;
 
   /**
    * Create a new broker connection provider.
@@ -98,47 +99,86 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     return dynSecService;
   }
 
-  private CompletableFuture<Void> enqueueCommand(String commandName, Map<String, Object> cmd,
-      String username, String password, String clientId, boolean isFallbackSupported) {
+  private CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommandInternal(
+      String commandName, Map<String, Object> cmd) {
     try {
       byte[] bytes = objectMapper.writeValueAsBytes(cmd);
-      CompletableFuture<Void> future = new CompletableFuture<>();
-      return getDynSecService().enqueueCommand(new MosquittoDynamicSecurityService.CommandRequest(
-          commandName, bytes, future, username, password, clientId, isFallbackSupported));
+      CompletableFuture<udmi.schema.MosquittoClientResponse> future = new CompletableFuture<>();
+      return getDynSecService().enqueueCommand(
+          new MosquittoDynamicSecurityService.CommandRequest(commandName, bytes, future));
     } catch (Exception e) {
-      CompletableFuture<Void> future = new CompletableFuture<>();
+      CompletableFuture<udmi.schema.MosquittoClientResponse> future = new CompletableFuture<>();
       future.completeExceptionally(e);
       return future;
     }
   }
 
-  private CompletableFuture<Void> mosquctlClient(String clientId, String clientPass) {
+  private CompletableFuture<Void> enqueueCommand(String commandName, Map<String, Object> cmd) {
+    return enqueueCommandWithRetry(commandName, cmd, 0).thenApply(v -> null);
+  }
+
+  private CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommandWithRetry(
+      String commandName, Map<String, Object> cmd, int retryCount) {
+    return enqueueCommandInternal(commandName, cmd)
+        .exceptionallyCompose(ex -> {
+          Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+          String msg = cause.getMessage();
+          if (msg != null && msg.contains("Internal error") && retryCount < 20) {
+            long delay = 250;
+            warn("Command %s failed with Internal error, retrying in %dms (attempt %d/20)...",
+                commandName, delay, retryCount + 1);
+            return CompletableFuture.runAsync(() -> {},
+                CompletableFuture.delayedExecutor(
+                    delay, java.util.concurrent.TimeUnit.MILLISECONDS))
+                .thenCompose(v -> enqueueCommandWithRetry(commandName, cmd, retryCount + 1));
+          }
+          return CompletableFuture.failedFuture(ex);
+        });
+  }
+
+  private boolean isReflectRegistry(String id) {
+    return id != null && id.contains("/" + reflectRegistry + "/");
+  }
+
+  private CompletableFuture<Void> deprovisionClient(
+      String clientId, String clientUser, String roleName) {
+    CompletableFuture<Void> f1 = deleteClient(clientUser);
+    CompletableFuture<Void> f2 = deleteRole(roleName);
+    return CompletableFuture.allOf(f1, f2)
+        .thenRun(() -> info("Device %s deleted correctly.", clientId));
+  }
+
+  private CompletableFuture<Void> provisionClient(String clientId, String clientPass) {
     String clientUser = clientId;
     String roleName = "role_" + clientId.replace("/", "_");
 
     if ("--".equals(clientPass)) {
-      CompletableFuture<Void> f1 = deleteClient(clientUser);
-      CompletableFuture<Void> f2 = deleteRole(roleName);
-      return CompletableFuture.allOf(f1, f2)
-          .thenRun(() -> info("Device %s deleted correctly.", clientId));
+      return deprovisionClient(clientId, clientUser, roleName);
     } else {
-      CompletableFuture<Void> clientFuture = createClient(clientUser, clientPass, clientId);
+      CompletableFuture<Void> clientFuture =
+          createClientWithFallback(clientUser, clientPass, clientId);
       CompletableFuture<Void> roleFuture = createRole(roleName);
 
-      return CompletableFuture.allOf(clientFuture, roleFuture).thenCompose(v -> {
-        CompletableFuture<Void> r1 = addClientRole(clientUser, roleName);
-        CompletableFuture<Void> a1 =
-            addRoleAcl(roleName, "subscribePattern", clientId + "/config", true);
-        CompletableFuture<Void> a2 =
-            addRoleAcl(roleName, "subscribePattern", clientId + "/commands/#", true);
-        CompletableFuture<Void> a3 =
-            addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true);
-        CompletableFuture<Void> a4 =
-            addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true);
-        CompletableFuture<Void> a5 =
-            addRoleAcl(roleName, "publishClientSend", clientId + "/state", true);
-        return CompletableFuture.allOf(r1, a1, a2, a3, a4, a5);
-      }).thenRun(() -> info("Device %s registered correctly.", clientId));
+      return CompletableFuture.allOf(clientFuture, roleFuture)
+          .thenCompose(v -> ensureClientHasRole(clientUser, roleName))
+          .thenCompose(v -> {
+            CompletableFuture<Void> a1 =
+                addRoleAcl(roleName, "subscribePattern", clientId + "/config", true);
+            CompletableFuture<Void> a2 =
+                addRoleAcl(roleName, "subscribePattern", clientId + "/commands/#", true);
+            CompletableFuture<Void> a3 =
+                addRoleAcl(roleName, "subscribePattern", clientId + "/errors", true);
+            CompletableFuture<Void> a4 =
+                addRoleAcl(roleName, "publishClientSend", clientId + "/events/#", true);
+            CompletableFuture<Void> a5 =
+                addRoleAcl(roleName, "publishClientSend", clientId + "/state", true);
+            if (isReflectRegistry(clientId)) {
+              CompletableFuture<Void> a6 =
+                  addRoleAcl(roleName, "publishClientSend", clientId + "/reflect", true);
+              return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6);
+            }
+            return CompletableFuture.allOf(a1, a2, a3, a4, a5);
+          }).thenRun(() -> info("Device %s registered correctly.", clientId));
     }
   }
 
@@ -147,7 +187,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     cmd.put("command", "setClientPassword");
     cmd.put("username", clientUser);
     cmd.put("password", clientPass);
-    return enqueueCommand("setClientPassword", cmd, clientUser, clientPass, null, false);
+    return enqueueCommand("setClientPassword", cmd);
   }
 
   private CompletableFuture<Void> addRoleAcl(
@@ -158,21 +198,21 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     cmd.put("acltype", type);
     cmd.put("topic", pattern);
     cmd.put("allow", allow);
-    return enqueueCommand("addRoleACL", cmd, null, null, null, false);
+    return enqueueCommand("addRoleACL", cmd);
   }
 
   private CompletableFuture<Void> deleteClient(String clientUser) {
     Map<String, Object> cmd = new HashMap<>();
     cmd.put("command", "deleteClient");
     cmd.put("username", clientUser);
-    return enqueueCommand("deleteClient", cmd, clientUser, null, null, false);
+    return enqueueCommand("deleteClient", cmd);
   }
 
   private CompletableFuture<Void> deleteRole(String roleName) {
     Map<String, Object> cmd = new HashMap<>();
     cmd.put("command", "deleteRole");
     cmd.put("rolename", roleName);
-    return enqueueCommand("deleteRole", cmd, null, null, null, false);
+    return enqueueCommand("deleteRole", cmd);
   }
 
   private CompletableFuture<Void> createClient(
@@ -184,14 +224,67 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     if (clientId != null) {
       cmd.put("clientid", clientId);
     }
-    return enqueueCommand("createClient", cmd, clientUser, clientPass, clientId, true);
+    return enqueueCommand("createClient", cmd);
+  }
+
+  private CompletableFuture<Void> modifyClient(
+      String clientUser, String clientPass, String clientId) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "modifyClient");
+    cmd.put("username", clientUser);
+    if (clientPass != null) {
+      cmd.put("password", clientPass);
+    }
+    if (clientId != null) {
+      cmd.put("clientid", clientId);
+    }
+    return enqueueCommand("modifyClient", cmd);
+  }
+
+  private CompletableFuture<Void> createClientWithFallback(
+      String clientUser, String clientPass, String clientId) {
+    return createClient(clientUser, clientPass, clientId)
+        .exceptionallyCompose(ex -> {
+          Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+          String msg = cause.getMessage();
+          if (msg != null && msg.contains("exists")) {
+            info("Client %s already exists. Falling back to modifyClient...", clientUser);
+            return modifyClient(clientUser, clientPass, clientId);
+          }
+          return CompletableFuture.failedFuture(ex);
+        });
   }
 
   private CompletableFuture<Void> createRole(String roleName) {
     Map<String, Object> cmd = new HashMap<>();
     cmd.put("command", "createRole");
     cmd.put("rolename", roleName);
-    return enqueueCommand("createRole", cmd, null, null, null, false);
+    return enqueueCommand("createRole", cmd);
+  }
+
+  private CompletableFuture<udmi.schema.MosquittoClientResponse> getClient(String clientUser) {
+    Map<String, Object> cmd = new HashMap<>();
+    cmd.put("command", "getClient");
+    cmd.put("username", clientUser);
+    return enqueueCommandWithRetry("getClient", cmd, 0);
+  }
+
+  private CompletableFuture<Void> ensureClientHasRole(String clientUser, String roleName) {
+    return getClient(clientUser).thenCompose(resp -> {
+      boolean hasRole = false;
+      if (resp != null && resp.data != null && resp.data.client != null
+          && resp.data.client.roles != null) {
+        hasRole = resp.data.client.roles.stream().anyMatch(r -> roleName.equals(r.rolename));
+      }
+      if (hasRole) {
+        info("Client %s already has role %s, skipping addClientRole.", clientUser, roleName);
+        return CompletableFuture.completedFuture(null);
+      }
+      return addClientRole(clientUser, roleName);
+    }).exceptionallyCompose(ex -> {
+      // If getClient fails, fallback to simply adding the role.
+      return addClientRole(clientUser, roleName);
+    });
   }
 
   private CompletableFuture<Void> addClientRole(String clientUser, String roleName) {
@@ -199,7 +292,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     cmd.put("command", "addClientRole");
     cmd.put("username", clientUser);
     cmd.put("rolename", roleName);
-    return enqueueCommand("addClientRole", cmd, clientUser, null, null, false);
+    return enqueueCommand("addClientRole", cmd);
   }
 
   private void mosquctlLog(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {
@@ -284,22 +377,33 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   @Override
   public CompletableFuture<Void> authorize(String clientId, String password) {
-    return mosquctlClient(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
+    return provisionClient(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
   }
 
   @Override
   public CompletableFuture<Void> bindGateway(String gatewayId, String deviceId) {
     String roleName = "role_" + gatewayId.replace("/", "_");
 
-    // add ACLs
-    return CompletableFuture.allOf(
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/config", true),
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#", true),
-        addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", true),
-        addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", true),
-        addRoleAcl(roleName, "publishClientSend", deviceId + "/state", true),
-        addRoleAcl(roleName, "publishClientSend", deviceId + "/attach", true)
-    );
+    CompletableFuture<Void> a1 =
+        addRoleAcl(roleName, "subscribePattern", deviceId + "/config", true);
+    CompletableFuture<Void> a2 =
+        addRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#", true);
+    CompletableFuture<Void> a3 =
+        addRoleAcl(roleName, "subscribePattern", deviceId + "/errors", true);
+    CompletableFuture<Void> a4 =
+        addRoleAcl(roleName, "publishClientSend", deviceId + "/events/#", true);
+    CompletableFuture<Void> a5 =
+        addRoleAcl(roleName, "publishClientSend", deviceId + "/state", true);
+    CompletableFuture<Void> a6 =
+        addRoleAcl(roleName, "publishClientSend", deviceId + "/attach", true);
+
+    if (isReflectRegistry(deviceId)) {
+      CompletableFuture<Void> a7 =
+          addRoleAcl(roleName, "publishClientSend", deviceId + "/reflect", true);
+      return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6, a7);
+    }
+
+    return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6);
   }
 
   @Override
@@ -307,14 +411,26 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     info("Unbind device Id: %s from gateway Id: %s", deviceId, gatewayId);
     String roleName = "role_" + gatewayId.replace("/", "_");
 
-    return CompletableFuture.allOf(
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/config"),
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#"),
-        removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors"),
-        removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#"),
-        removeRoleAcl(roleName, "publishClientSend", deviceId + "/state"),
-        removeRoleAcl(roleName, "publishClientSend", deviceId + "/attach")
-    );
+    CompletableFuture<Void> a1 =
+        removeRoleAcl(roleName, "subscribePattern", deviceId + "/config");
+    CompletableFuture<Void> a2 =
+        removeRoleAcl(roleName, "subscribePattern", deviceId + "/commands/#");
+    CompletableFuture<Void> a3 =
+        removeRoleAcl(roleName, "subscribePattern", deviceId + "/errors");
+    CompletableFuture<Void> a4 =
+        removeRoleAcl(roleName, "publishClientSend", deviceId + "/events/#");
+    CompletableFuture<Void> a5 =
+        removeRoleAcl(roleName, "publishClientSend", deviceId + "/state");
+    CompletableFuture<Void> a6 =
+        removeRoleAcl(roleName, "publishClientSend", deviceId + "/attach");
+
+    if (isReflectRegistry(deviceId)) {
+      CompletableFuture<Void> a7 =
+          removeRoleAcl(roleName, "publishClientSend", deviceId + "/reflect");
+      return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6, a7);
+    }
+
+    return CompletableFuture.allOf(a1, a2, a3, a4, a5, a6);
   }
 
   private CompletableFuture<Void> removeRoleAcl(String roleName, String type, String pattern) {
@@ -323,7 +439,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
     cmd.put("rolename", roleName);
     cmd.put("acltype", type);
     cmd.put("topic", pattern);
-    return enqueueCommand("removeRoleACL", cmd, null, null, null, false);
+    return enqueueCommand("removeRoleACL", cmd);
   }
 
   @Override

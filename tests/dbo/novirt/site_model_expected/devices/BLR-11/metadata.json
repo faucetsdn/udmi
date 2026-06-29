@@ -1,0 +1,60 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "BLR M1",
+    "location": {
+      "site": "US-MTV-RLS1"
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "3951c152-4fdf-4b8f-8fa9-ede094c72787",
+      "type": "HVAC/BLR_SS_SWTC_CPC_RWISOVM",
+      "label": "Boiler #1 Integration / 100 Mayfield, Boiler Plant Mayfield / 100 Mayfield"
+    }
+  },
+  "cloud": {
+    "num_id": "27170960795428"
+  },
+  "pointset": {
+    "points": {
+      "circulation_pump_run_command": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      },
+      "circulation_pump_run_status": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      },
+      "failed_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "heating_percentage_command": {
+        "units": "percent"
+      },
+      "high_supply_water_temperature_alarm": {
+        "values": {
+          "1.0": "ACTIVE",
+          "0.0": "INACTIVE"
+        }
+      },
+      "return_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "supply_water_temperature_sensor": {
+        "units": "degrees-fahrenheit"
+      },
+      "supply_water_temperature_setpoint": {
+        "units": "degrees-fahrenheit"
+      }
+    }
+  }
+}

@@ -5,21 +5,21 @@
   },
   "last_config" : "TIMESTAMP",
   "operation" : {
-    "operational" : true,
     "last_start" : "TIMESTAMP",
-    "restart_count" : 3,
-    "mode" : "initial"
+    "mode" : "initial",
+    "operational" : true,
+    "restart_count" : 2
   },
-  "serial_no" : "sequencer-23930",
+  "serial_no" : "sequencer-7683",
   "software" : {
     "firmware" : "v1",
     "pubber_module" : "v1"
   },
   "status" : {
-    "message" : "success",
     "category" : "system.config.apply",
-    "timestamp" : "TIMESTAMP",
-    "level" : 300
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"
