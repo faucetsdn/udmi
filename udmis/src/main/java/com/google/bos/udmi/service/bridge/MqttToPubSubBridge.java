@@ -92,6 +92,9 @@ public class MqttToPubSubBridge {
   private final ThreadPoolExecutor executor;
   private volatile boolean tripped = false;
 
+  /**
+   * Initializes a new instance of the bridge, configuring the underlying executor.
+   */
   public MqttToPubSubBridge() {
     this.executor = new ThreadPoolExecutor(
         NUM_THREADS, NUM_THREADS,
