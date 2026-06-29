@@ -60,7 +60,7 @@ else
     export MOSQUITTO_LOG_PATH=/var/log/mosquitto/mosquitto.log
 fi
 
-if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
+if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]] && [[ -f /root/bin/run ]]; then
     UDMIS_DIR=/root
 else
     UDMIS_DIR=$UDMI_ROOT/udmis
