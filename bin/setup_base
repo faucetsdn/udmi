@@ -8,30 +8,24 @@ if [[ -n $(which apt-get) ]]; then
     sudo apt-get update -y
     update_cmd="apt-get install -y"
     extra_packages=""
+    venv_opts=""
+    req_src="etc/requirements.txt"
 else
     update_cmd="apk add"
     # Some extra packages are necessary for alpine based docker builds.
     extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc py3-grpcio py3-cryptography py3-cffi"
+    venv_opts="--system-site-packages"
+    req_src="<(sed -E 's/^(grpcio|grpcio-status|cryptography|cffi)==/\1>=/' etc/requirements.txt)"
 fi
 
 sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients
 
 python3 --version
-if [[ -n $NO_CACHE_DIR ]]; then
-    venv_opts="--system-site-packages"
-    req_file=$(mktemp)
-    sed -E 's/^(grpcio|grpcio-status|cryptography|cffi)==/\1>=/' etc/requirements.txt > $req_file
-else
-    venv_opts=""
-    req_file="etc/requirements.txt"
-fi
-
 python3 -m venv $venv_opts venv
 
 venv_pip3=$($(dirname $0)/which_venv_pip3)
 echo $venv_pip3
 $(dirname ${venv_pip3})/python3 -m pip install --upgrade pip $PIP_OPTS
-${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r $req_file $PIP_OPTS
-[[ $req_file != etc/requirements.txt ]] && rm -f $req_file
+eval "${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r $req_src $PIP_OPTS"
 
 java -version
