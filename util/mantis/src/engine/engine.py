@@ -238,18 +238,19 @@ class AsyncTriageEngine:
                 config=config
             )
 
-            if response.candidates and response.candidates[0].content:
+            if response and response.candidates and response.candidates[0].content:
                 model_content = response.candidates[0].content
                 model_content.role = "model"
                 history.append(model_content)
-                for part in model_content.parts:
-                    if part.text:
-                        print(
-                            f"\n" + color_text("[Mantis]:", YELLOW, bold=True) + f"\n{part.text.strip()}\n")
+                if model_content.parts:
+                    for part in model_content.parts:
+                        if part.text:
+                            print(
+                                f"\n" + color_text("[Mantis]:", YELLOW, bold=True) + f"\n{part.text.strip()}\n")
 
-            function_calls = response.function_calls
+            function_calls = response.function_calls if response else None
             has_thought = any(part.text and part.text.strip() for part in
-                              model_content.parts) if response.candidates else False
+                              model_content.parts) if (model_content and model_content.parts) else False
 
             if function_calls and not has_thought:
                 history.append(
