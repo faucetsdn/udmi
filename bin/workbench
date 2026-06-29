@@ -11,6 +11,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_DIR="$(dirname "$SCRIPT_DIR")"
 cd "$WORKSPACE_DIR"
 
+# Check if project environment is initialized
+if ! bin/which_venv_pip3 > /dev/null 2>&1; then
+  echo "Error: Virtual environment not found or not initialized."
+  echo "Please run 'bin/setup_base' first to install system dependencies and virtualenv."
+  exit 1
+fi
+
 # Create or update the ui/version.txt file using git on startup
 if command -v git > /dev/null 2>&1 && git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
   git rev-parse --short HEAD > ui/version.txt

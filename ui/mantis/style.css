@@ -272,6 +272,8 @@
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
   transition: flex-basis 0.3s ease;
 }
 
@@ -314,14 +316,35 @@
 }
 
 .terminal-card {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 250px;
   display: flex;
   flex-direction: column;
   background-color: #1e1e1e;
   border: 1px solid #333;
   border-radius: var(--radius-md);
   overflow: hidden;
+}
+
+#triage-terminal-container {
+  flex: 1;
+  height: 100%;
   min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#triage-terminal-container .log-viewer-wrapper {
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+#triage-terminal-container .log-viewer-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .terminal-card .card-header {
@@ -788,6 +811,14 @@
 
 .playbook-card {
   border-left: 4px solid #8b5cf6 !important;
+}
+
+.playbook-card.collapsed {
+  margin-bottom: 12px !important;
+}
+
+.playbook-card.collapsed .card-body {
+  display: none !important;
 }
 
 .terminal-card {

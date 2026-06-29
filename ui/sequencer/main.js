@@ -47,6 +47,9 @@ class SequencerController {
     this.btnStop = document.getElementById('btn-stop');
     this.btnSelectAll = document.getElementById('btn-select-all');
     this.btnDeselectAll = document.getElementById('btn-deselect-all');
+    this.btnSelectPassed = document.getElementById('btn-select-passed');
+    this.btnSelectSkipped = document.getElementById('btn-select-skipped');
+    this.btnSelectFailed = document.getElementById('btn-select-failed');
     this.btnSettings = document.getElementById('btn-settings');
     
     // Inputs
@@ -140,6 +143,9 @@ class SequencerController {
     this.testSearch.addEventListener('input', (e) => this.filterTestCases(e.target.value));
     this.btnSelectAll.addEventListener('click', () => this.toggleAllTestCases(true));
     this.btnDeselectAll.addEventListener('click', () => this.toggleAllTestCases(false));
+    if (this.btnSelectPassed) this.btnSelectPassed.addEventListener('click', () => this.selectTestCasesByStatus('pass'));
+    if (this.btnSelectSkipped) this.btnSelectSkipped.addEventListener('click', () => this.selectTestCasesByStatus('skip'));
+    if (this.btnSelectFailed) this.btnSelectFailed.addEventListener('click', () => this.selectTestCasesByStatus('fail'));
 
     // Modal events
     this.modalCloseBtn.addEventListener('click', () => {
@@ -417,6 +423,9 @@ class SequencerController {
   renderTestCases() {
     this.btnSelectAll.disabled = this.isRunning;
     this.btnDeselectAll.disabled = this.isRunning;
+    if (this.btnSelectPassed) this.btnSelectPassed.disabled = this.isRunning;
+    if (this.btnSelectSkipped) this.btnSelectSkipped.disabled = this.isRunning;
+    if (this.btnSelectFailed) this.btnSelectFailed.disabled = this.isRunning;
 
     this.testCasesList.innerHTML = '';
     this.testCases.forEach(tc => {
@@ -499,6 +508,13 @@ class SequencerController {
   toggleAllTestCases(checked) {
     if (this.isRunning) return;
     this.testCases.forEach(tc => tc.checked = checked);
+    this.renderTestCases();
+    this.validateInputs();
+  }
+
+  selectTestCasesByStatus(status) {
+    if (this.isRunning) return;
+    this.testCases.forEach(tc => tc.checked = (tc.status === status));
     this.renderTestCases();
     this.validateInputs();
   }
