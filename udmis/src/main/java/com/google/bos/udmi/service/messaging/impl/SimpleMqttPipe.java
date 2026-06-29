@@ -378,7 +378,8 @@ public class SimpleMqttPipe extends MessageBase {
     if (envelope.gatewayId != null) {
       topic = "/" + envelope.gatewayId + topic;
     }
-    boolean isConfigUpdate = envelope.subType == SubType.CONFIG && envelope.subFolder == SubFolder.UPDATE;
+    boolean isConfigUpdate = envelope.subType == SubType.CONFIG
+        && envelope.subFolder == SubFolder.UPDATE;
     if (envelope.subFolder != null && !isConfigUpdate) {
       topic = "/" + envelope.subFolder + topic;
     }
