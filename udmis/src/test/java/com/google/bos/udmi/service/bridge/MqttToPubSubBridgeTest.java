@@ -62,7 +62,7 @@ class MqttToPubSubBridgeTest {
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
     assertEquals("bridge", attributes.get("source"));
     org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("receiveTime"));
-    assertEquals("test-client", attributes.get("distributeClientId"));
+    assertEquals("test-client", attributes.get("distributorClientId"));
   }
 
   @Test
@@ -97,7 +97,7 @@ class MqttToPubSubBridgeTest {
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
     assertEquals("subfolder_name", attributes.get("subFolder"));
     org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("receiveTime"));
-    assertEquals("test-client", attributes.get("distributeClientId"));
+    assertEquals("test-client", attributes.get("distributorClientId"));
   }
 
   @Test
@@ -131,7 +131,7 @@ class MqttToPubSubBridgeTest {
     assertEquals("unknown", attributes.get("deviceId"));
     assertEquals("unknown", attributes.get("deviceRegistryId"));
     org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("receiveTime"));
-    assertEquals("test-client", attributes.get("distributeClientId"));
+    assertEquals("test-client", attributes.get("distributorClientId"));
   }
 
   @Test
@@ -155,7 +155,8 @@ class MqttToPubSubBridgeTest {
     when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
     when(mockDataRef.get("num_id")).thenReturn("123456");
 
-    new MqttToPubSubBridge().setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
+    new MqttToPubSubBridge()
+        .setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
 
     ArgumentCaptor<MqttCallback> callbackCaptor =
         ArgumentCaptor.forClass(MqttCallback.class);
@@ -194,7 +195,8 @@ class MqttToPubSubBridgeTest {
     when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
     when(mockDataRef.get("num_id")).thenReturn(null);
 
-    new MqttToPubSubBridge().setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
+    new MqttToPubSubBridge()
+        .setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
 
     ArgumentCaptor<MqttCallback> callbackCaptor =
         ArgumentCaptor.forClass(MqttCallback.class);
@@ -233,7 +235,8 @@ class MqttToPubSubBridgeTest {
     when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
     when(mockDataRef.get("num_id")).thenThrow(new RuntimeException("etcd error"));
 
-    new MqttToPubSubBridge().setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
+    new MqttToPubSubBridge()
+        .setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
 
     ArgumentCaptor<MqttCallback> callbackCaptor =
         ArgumentCaptor.forClass(MqttCallback.class);
@@ -294,7 +297,8 @@ class MqttToPubSubBridgeTest {
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
 
     // Call 5-parameter setupBridge with custom source attribute
-    new MqttToPubSubBridge().setupBridge(mockMqttClient, mockPublisher, testTopic, null, "custom-source");
+    new MqttToPubSubBridge()
+        .setupBridge(mockMqttClient, mockPublisher, testTopic, null, "custom-source");
 
     verify(mockMqttClient).subscribe(testTopic, 1);
 
@@ -328,11 +332,13 @@ class MqttToPubSubBridgeTest {
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
 
-    // Note: The double-slash before 'r' is expected because the MQTT topic explicitly starts with a slash
-    // (e.g. "/r/..."). Thus, "$share/my-group/" concatenated with "/r/..." correctly yields the double slash.
+    // Note: The double-slash before 'r' is expected because the MQTT topic explicitly
+    // starts with a slash (e.g. "/r/..."). Thus, "$share/my-group/" concatenated with
+    // "/r/..." correctly yields the double slash.
     // Call setupBridge with shared subscription
-    new MqttToPubSubBridge().setupBridge(mockMqttClient, mockPublisher, originalTopic, null,
-        "bridge", sharedSubscriptionName);
+    new MqttToPubSubBridge()
+        .setupBridge(mockMqttClient, mockPublisher, originalTopic, null,
+            "bridge", sharedSubscriptionName);
 
     // Verify it subscribed to the shared subscription filter
     verify(mockMqttClient).subscribe(expectedFilter, 1);

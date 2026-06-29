@@ -88,7 +88,7 @@ public class MqttToPubSubBridge {
 
   private static final int MAX_QUEUE_SIZE = 99;
   private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors() * 2;
-  
+
   private final ThreadPoolExecutor executor;
   private volatile boolean tripped = false;
 
@@ -101,6 +101,11 @@ public class MqttToPubSubBridge {
         new ThreadPoolExecutor.CallerRunsPolicy());
   }
 
+  /**
+   * Checks if the circuit breaker has been tripped.
+   *
+   * @return true if tripped, false otherwise
+   */
   public boolean isTripped() {
     return tripped;
   }
@@ -177,7 +182,7 @@ public class MqttToPubSubBridge {
       logger.error("gcp_project_id, pubsub_topic_id, and mqtt_client_id are required.");
       System.exit(1);
     }
-    
+
     Long sessionExpiryInterval = 0xFFFFFFFFL;
     if (mqttSessionExpiryInterval != null) {
       sessionExpiryInterval = Long.parseLong(mqttSessionExpiryInterval);
@@ -278,7 +283,8 @@ public class MqttToPubSubBridge {
     options.addOption(null, "gcp_project_id", true, "Google Cloud Project ID.");
     options.addOption(null, "pubsub_topic_id", true, "Google Cloud Pub/Sub topic ID.");
     options.addOption(null, "mqtt_client_id", true, "MQTT client ID.");
-    options.addOption(null, "mqtt_session_expiry_interval", true, "MQTT session expiry interval (seconds).");
+    options.addOption(null, "mqtt_session_expiry_interval", true,
+        "MQTT session expiry interval (seconds).");
     options.addOption(null, "mqtt_tls", false, "Enable TLS for MQTT connection.");
     options.addOption(null, "mqtt_ca_path", true, "Path to CA certificate for TLS.");
     options.addOption(null, "mqtt_username", true, "MQTT username for authentication.");
@@ -432,7 +438,8 @@ public class MqttToPubSubBridge {
                   }
 
                   ByteString data = ByteString.copyFrom(payload);
-                  PubsubMessage.Builder pubsubMessageBuilder = PubsubMessage.newBuilder().setData(data);
+                  PubsubMessage.Builder pubsubMessageBuilder =
+                      PubsubMessage.newBuilder().setData(data);
 
                   PubsubMessage pubsubMessage =
                       pubsubMessageBuilder.putAllAttributes(attributes).build();
@@ -452,7 +459,8 @@ public class MqttToPubSubBridge {
 
                     @Override
                     public void onFailure(Throwable t) {
-                      logger.warn("Error publishing to Pub/Sub, dropping ACK so broker can redeliver", t);
+                      logger.warn(
+                          "Error publishing to Pub/Sub, dropping ACK so broker can redeliver", t);
                     }
                   }, MoreExecutors.directExecutor());
 
