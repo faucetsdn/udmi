@@ -95,17 +95,27 @@ class AsyncTriageEngine:
             if not acquired:
                 raise RateLimitTimeoutError("Timeout budget exceeded waiting for Gemini API rate-limiter tokens.")
 
+        # Sanitize contents list to ensure no Content objects with empty or null parts are sent to Gemini API
+        sanitized_contents = contents
+        if isinstance(contents, list):
+            sanitized_contents = []
+            for item in contents:
+                if hasattr(item, 'parts') and (item.parts is None or len(item.parts) == 0):
+                    continue
+                sanitized_contents.append(item)
+
         async with self.semaphore:
             for attempt in range(self.max_retries):
                 try:
                     return await self.client.aio.models.generate_content(
                         model=model,
-                        contents=contents,
+                        contents=sanitized_contents,
                         config=config
                     )
                 except Exception as e:
-                    err_str = str(e)
-                    is_transient = any(token in err_str.upper() for token in [
+                    err_str = str(e).upper()
+                    is_invalid_arg = "400" in err_str or "INVALID_ARGUMENT" in err_str
+                    is_transient = not is_invalid_arg and any(token in err_str for token in [
                         "429", "503", "500", "RESOURCE_EXHAUSTED", "UNAVAILABLE", "INTERNAL", "OVERLOADED"
                     ])
                     if is_transient and attempt < self.max_retries - 1:
@@ -239,10 +249,11 @@ class AsyncTriageEngine:
             )
 
             if response and response.candidates and response.candidates[0].content:
-                model_content = response.candidates[0].content
-                model_content.role = "model"
-                history.append(model_content)
-                if model_content.parts:
+                cand_content = response.candidates[0].content
+                if cand_content.parts and len(cand_content.parts) > 0:
+                    model_content = cand_content
+                    model_content.role = "model"
+                    history.append(model_content)
                     for part in model_content.parts:
                         if part.text:
                             print(

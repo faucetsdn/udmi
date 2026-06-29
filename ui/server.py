@@ -510,6 +510,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         gcp_location_param = data.get('gcp_location') or params.get('gcp_location', [None])[0]
         fetch_udmis_param = data.get('fetch_udmis') or params.get('fetch_udmis', [None])[0]
         cloud_project_param = data.get('cloud_project') or params.get('cloud_project', [None])[0] or gcp_project_param
+        exclude_param = data.get('exclude') or params.get('exclude', [None])[0]
 
         if not device_id or not test_id:
             self.send_error_response(400, "Missing required parameters: device_id, test_id")
@@ -579,7 +580,18 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                         ts_str = datetime.now().strftime('%H:%M:%S')
                         with open(log_path, 'a', encoding='utf-8') as lf:
                             lf.write(f"[{ts_str}] ☁️ Fetching UDMIS container logs from Google Cloud Logging for project '{target_gcp_project}'...\n")
+                        
+                        exclude_tokens = ["NettyClientHandler", "GrpcHttp2", "OUTBOUND HEADERS", "INBOUND HEADERS", "INBOUND DATA", "INBOUND PING", "OUTBOUND PING"]
+                        if exclude_param:
+                            if isinstance(exclude_param, list):
+                                exclude_tokens = exclude_param
+                            elif isinstance(exclude_param, str):
+                                exclude_tokens = [t.strip() for t in exclude_param.split(',') if t.strip()]
+
                         cmd_pull = [python_bin, pull_cloud_script, "-sl", seq_log_abs, "-t", test_id, "-p", target_gcp_project, "-o", udmis_log_abs]
+                        if exclude_tokens:
+                            cmd_pull.extend(["-e"] + exclude_tokens)
+
                         res_pull = subprocess.run(cmd_pull, capture_output=True, text=True, timeout=60)
                         ts_str2 = datetime.now().strftime('%H:%M:%S')
                         with open(log_path, 'a', encoding='utf-8') as lf:
