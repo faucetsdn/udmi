@@ -111,6 +111,12 @@ class MantisController {
     this.cloudProjectInput = document.getElementById('mantis-cloud-project');
     this.groupCloudLoggingConfig = document.getElementById('group-cloud-logging-config');
 
+    // Collapsible Diagnostic Settings Card Elements
+    this.playbookCard = document.getElementById('playbook-card');
+    this.playbookCardHeader = document.getElementById('playbook-card-header');
+    this.btnTogglePlaybookCard = document.getElementById('btn-toggle-playbook-card');
+    this.iconTogglePlaybookCard = document.getElementById('icon-toggle-playbook-card');
+
     // Mantis Folder Browser Modal Elements
     this.btnBrowseSuccessRun = document.getElementById('btn-browse-success-run');
     this.mantisBrowserModal = document.getElementById('mantis-folder-browser-modal');
@@ -191,6 +197,11 @@ class MantisController {
     }
     if (this.cloudProjectInput) {
       this.cloudProjectInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_cloud_project', e.target.value.trim()));
+    }
+
+    // Diagnostic Settings Card Collapse Listener
+    if (this.playbookCardHeader) {
+      this.playbookCardHeader.addEventListener('click', () => this.togglePlaybookCard());
     }
 
     // Prevent accidental tab closure during active AI triage
@@ -319,6 +330,18 @@ class MantisController {
       } else {
         this.groupCloudLoggingConfig.style.display = 'none';
       }
+    }
+  }
+
+  togglePlaybookCard(forceCollapse) {
+    if (!this.playbookCard) return;
+    const shouldCollapse = forceCollapse !== undefined ? forceCollapse : !this.playbookCard.classList.contains('collapsed');
+    if (shouldCollapse) {
+      this.playbookCard.classList.add('collapsed');
+      if (this.iconTogglePlaybookCard) this.iconTogglePlaybookCard.style.transform = 'rotate(-90deg)';
+    } else {
+      this.playbookCard.classList.remove('collapsed');
+      if (this.iconTogglePlaybookCard) this.iconTogglePlaybookCard.style.transform = 'rotate(0deg)';
     }
   }
 
@@ -714,6 +737,9 @@ class MantisController {
 
     this.isTriageRunning = true;
     this.triageLogOffset = 0;
+
+    // Auto-collapse Diagnostic Settings card so AI Agent Thoughts takes over vertical space
+    this.togglePlaybookCard(true);
 
     // Trigger panel sliding: expand console to 60% wide
     this.diagnosticsLayout.classList.remove('complete');

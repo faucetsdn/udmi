@@ -1,5 +1,5 @@
-agentskills-core==0.2.3
-agentskills-fs==0.2.3
+agentskills-core==0.2.2
+agentskills-fs==0.2.2
 annotated-types==0.7.0
 anyio==4.14.1
 astroid==4.0.4
