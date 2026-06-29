@@ -1,12 +1,16 @@
 package com.google.bos.udmi.service.bridge;
 
 import com.google.api.core.ApiFuture;
+import com.google.api.core.ApiFutureCallback;
+import com.google.api.core.ApiFutures;
 import com.google.api.gax.core.NoCredentialsProvider;
 import com.google.api.gax.grpc.GrpcTransportChannel;
 import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.base.Splitter;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
@@ -77,23 +81,31 @@ import udmi.schema.IotAccess.IotProvider;
 /**
  * A bridge that subscribes to an MQTT topic and publishes messages to a Google Cloud Pub/Sub topic.
  */
-public final class MqttToPubSubBridge {
+public class MqttToPubSubBridge {
 
   private static final Pattern TOPIC_PATTERN = Pattern.compile("/r/([^/]+)/d/([^/]+)/?(.*)");
   private static final Logger logger = LoggerFactory.getLogger(MqttToPubSubBridge.class);
 
   private static final int MAX_QUEUE_SIZE = 99;
   private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors() * 2;
-  // Change rejection policy to AbortPolicy to throw RejectedExecutionException when queue is full.
-  private static final ThreadPoolExecutor executor = new ThreadPoolExecutor(
-      NUM_THREADS, NUM_THREADS,
-      0L, TimeUnit.MILLISECONDS,
-      new ArrayBlockingQueue<>(MAX_QUEUE_SIZE),
-      new ThreadPoolExecutor.AbortPolicy());
+  
+  private final ThreadPoolExecutor executor;
+  private volatile boolean tripped = false;
 
-  private static volatile boolean tripped = false;
+  public MqttToPubSubBridge() {
+    this.executor = new ThreadPoolExecutor(
+        NUM_THREADS, NUM_THREADS,
+        0L, TimeUnit.MILLISECONDS,
+        new ArrayBlockingQueue<>(MAX_QUEUE_SIZE),
+        new ThreadFactoryBuilder().setNameFormat("mqtt-bridge-%d").setDaemon(true).build(),
+        new ThreadPoolExecutor.CallerRunsPolicy());
+  }
 
-  private static void startCircuitBreaker(IMqttClient mqttClient, ThreadPoolExecutor executor) {
+  public boolean isTripped() {
+    return tripped;
+  }
+
+  private void startCircuitBreaker(IMqttClient mqttClient) {
     Thread monitor = new Thread(() -> {
       long fullStartTime = 0;
       while (!tripped) {
@@ -111,7 +123,6 @@ public final class MqttToPubSubBridge {
               } catch (Exception e) {
                 logger.error("Error disconnecting during circuit breaker trip", e);
               }
-              System.exit(1);
             }
           } else {
             fullStartTime = 0; // reset
@@ -149,6 +160,8 @@ public final class MqttToPubSubBridge {
         commandLine.getOptionValue("mqtt_subscription_topic", "/r/+/d/#");
     String gcpProjectId = commandLine.getOptionValue("gcp_project_id");
     String pubsubTopicId = commandLine.getOptionValue("pubsub_topic_id");
+    String mqttClientId = commandLine.getOptionValue("mqtt_client_id");
+    String mqttSessionExpiryInterval = commandLine.getOptionValue("mqtt_session_expiry_interval");
     boolean mqttTls = commandLine.hasOption("mqtt_tls");
     String mqttCaPath = commandLine.getOptionValue("mqtt_ca_path");
     String mqttUsername = commandLine.getOptionValue("mqtt_username");
@@ -160,9 +173,14 @@ public final class MqttToPubSubBridge {
     String sourceAttribute = commandLine.getOptionValue("source_attribute", "bridge");
     String sharedSubscription = commandLine.getOptionValue("shared_subscription");
 
-    if (gcpProjectId == null || pubsubTopicId == null) {
-      logger.error("gcp_project_id and pubsub_topic_id are required.");
+    if (gcpProjectId == null || pubsubTopicId == null || mqttClientId == null) {
+      logger.error("gcp_project_id, pubsub_topic_id, and mqtt_client_id are required.");
       System.exit(1);
+    }
+    
+    Long sessionExpiryInterval = 0xFFFFFFFFL;
+    if (mqttSessionExpiryInterval != null) {
+      sessionExpiryInterval = Long.parseLong(mqttSessionExpiryInterval);
     }
 
     Publisher publisher = null;
@@ -174,17 +192,12 @@ public final class MqttToPubSubBridge {
       publisher = createPublisher(gcpProjectId, pubsubTopicId);
 
       // Initialize MQTT Client
-      String mqttClientId = System.getenv("MQTT_CLIENT_ID");
-      if (mqttClientId == null || mqttClientId.isEmpty()) {
-        mqttClientId = java.util.UUID.randomUUID().toString();
-      }
-
       mqttClient =
           new MqttClient(
               mqttBrokerUrl, mqttClientId, new MemoryPersistence());
       MqttConnectionOptions connOpts = new MqttConnectionOptions();
       connOpts.setCleanStart(false);
-      connOpts.setSessionExpiryInterval(0xFFFFFFFFL); // No session expiry
+      connOpts.setSessionExpiryInterval(sessionExpiryInterval);
       connOpts.setAutomaticReconnect(true);
       connOpts.setReceiveMaximum(100);
 
@@ -204,15 +217,17 @@ public final class MqttToPubSubBridge {
       mqttClient.connect(connOpts);
       logger.debug("Connected to MQTT broker.");
 
+      MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+
       // Start the circuit breaker monitor
-      startCircuitBreaker(mqttClient, executor);
+      bridge.startCircuitBreaker(mqttClient);
 
       // Set up MQTT Message Callback
-      setupBridge(mqttClient, publisher, mqttSubscriptionTopic,
+      bridge.setupBridge(mqttClient, publisher, mqttSubscriptionTopic,
           etcdProvider, sourceAttribute, sharedSubscription);
 
       // Keep the application running
-      while (true) {
+      while (!bridge.isTripped()) {
         try {
           Thread.sleep(10000);
         } catch (InterruptedException e) {
@@ -262,6 +277,8 @@ public final class MqttToPubSubBridge {
     options.addOption(null, "mqtt_subscription_topic", true, "MQTT subscription topic.");
     options.addOption(null, "gcp_project_id", true, "Google Cloud Project ID.");
     options.addOption(null, "pubsub_topic_id", true, "Google Cloud Pub/Sub topic ID.");
+    options.addOption(null, "mqtt_client_id", true, "MQTT client ID.");
+    options.addOption(null, "mqtt_session_expiry_interval", true, "MQTT session expiry interval (seconds).");
     options.addOption(null, "mqtt_tls", false, "Enable TLS for MQTT connection.");
     options.addOption(null, "mqtt_ca_path", true, "Path to CA certificate for TLS.");
     options.addOption(null, "mqtt_username", true, "MQTT username for authentication.");
@@ -294,7 +311,7 @@ public final class MqttToPubSubBridge {
    * @param mqttSubscriptionTopic The MQTT topic to subscribe to.
    * @throws MqttException If an MQTT error occurs.
    */
-  public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
+  public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider) throws MqttException {
     setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, "bridge", null);
   }
@@ -308,7 +325,7 @@ public final class MqttToPubSubBridge {
    * @param sourceAttribute       The value of the source attribute.
    * @throws MqttException If an MQTT error occurs.
    */
-  public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
+  public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute)
       throws MqttException {
     setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute, null);
@@ -317,7 +334,7 @@ public final class MqttToPubSubBridge {
   /**
    * Sets up the bridge between MQTT and Pub/Sub with a custom source attribute value.
    */
-  public static void setupBridge(IMqttClient mqttClient, Publisher publisher,
+  public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
       String sharedSubscription)
       throws MqttException {
@@ -363,7 +380,7 @@ public final class MqttToPubSubBridge {
           @Override
           public void messageArrived(String topic, MqttMessage message) {
             try {
-              final String recieveTime = java.time.Instant.now().toString();
+              final String receiveTime = java.time.Instant.now().toString();
               executor.submit(() -> {
                 try {
                   byte[] payload = message.getPayload();
@@ -396,8 +413,8 @@ public final class MqttToPubSubBridge {
                   attributes.put("mqttTopic", parsedTopic);
                   attributes.put("deviceId", deviceId);
                   attributes.put("deviceRegistryId", registryId);
-                  attributes.put("recieveTime", recieveTime);
-                  attributes.put("distributeClientId", mqttClient.getClientId());
+                  attributes.put("receiveTime", receiveTime);
+                  attributes.put("distributorClientId", mqttClient.getClientId());
                   if (sourceAttribute != null) {
                     attributes.put("source", sourceAttribute);
                   }
@@ -415,35 +432,29 @@ public final class MqttToPubSubBridge {
                   }
 
                   ByteString data = ByteString.copyFrom(payload);
-                  PubsubMessage.Builder pubsubMessageBuilder =
-                      PubsubMessage.newBuilder().setData(data);
+                  PubsubMessage.Builder pubsubMessageBuilder = PubsubMessage.newBuilder().setData(data);
 
                   PubsubMessage pubsubMessage =
                       pubsubMessageBuilder.putAllAttributes(attributes).build();
 
-                  // Publish to Pub/Sub with local retries
-                  long backoff = 100;
-                  while (!tripped) {
-                    try {
-                      ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-                      String msgId = messageIdFuture.get(); // blocks until complete
+                  // Publish to Pub/Sub and acknowledge asynchronously
+                  ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
+                  ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
+                    @Override
+                    public void onSuccess(String msgId) {
                       logger.debug("Published to Pub/Sub with message ID: {}", msgId);
-                      mqttClient.messageArrivedComplete(message.getId(), message.getQos());
-                      break; // success
-                    } catch (Exception e) {
-                      // Note: Poison pills (e.g., consistently failing serialization) could
-                      // permanently block this thread since we retry indefinitely,
-                      // but schema validation happens earlier in the pipeline.
-                      logger.warn("Error publishing to Pub/Sub, retrying in {} ms", backoff, e);
                       try {
-                        Thread.sleep(backoff);
-                      } catch (InterruptedException ie) {
-                        Thread.currentThread().interrupt();
-                        break;
+                        mqttClient.messageArrivedComplete(message.getId(), message.getQos());
+                      } catch (MqttException e) {
+                        logger.error("Failed to ACK MQTT message, it will be redelivered", e);
                       }
-                      backoff = Math.min(backoff * 2, 10000);
                     }
-                  }
+
+                    @Override
+                    public void onFailure(Throwable t) {
+                      logger.warn("Error publishing to Pub/Sub, dropping ACK so broker can redeliver", t);
+                    }
+                  }, MoreExecutors.directExecutor());
 
                 } catch (RuntimeException e) {
                   logger.warn("Error processing MQTT message", e);
@@ -620,6 +631,4 @@ public final class MqttToPubSubBridge {
       return null;
     }
   }
-
-  private MqttToPubSubBridge() {}
 }
