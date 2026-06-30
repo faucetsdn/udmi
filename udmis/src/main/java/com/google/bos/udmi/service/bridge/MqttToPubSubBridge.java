@@ -177,7 +177,8 @@ public class MqttToPubSubBridge {
     String mqttClientCertPath = commandLine.getOptionValue("mqtt_client_cert_path");
     String mqttClientKeyPath = commandLine.getOptionValue("mqtt_client_key_path");
     String etcdTarget = commandLine.getOptionValue("etcd_target");
-    String etcdOptions = commandLine.getOptionValue("etcd_options");
+    String etcdOptions = getEtcdOptions(commandLine);
+
     String sourceAttribute = commandLine.getOptionValue("source_attribute", "bridge");
     String sharedSubscription = commandLine.getOptionValue("shared_subscription");
 
@@ -279,7 +280,7 @@ public class MqttToPubSubBridge {
     }
   }
 
-  private static CommandLine parseArgs(String[] args) throws ParseException {
+  static CommandLine parseArgs(String[] args) throws ParseException {
     Options options = new Options();
     options.addOption(null, "mqtt_broker_url", true, "MQTT broker URL.");
     options.addOption(null, "mqtt_subscription_topic", true, "MQTT subscription topic.");
@@ -296,6 +297,9 @@ public class MqttToPubSubBridge {
     options.addOption(null, "mqtt_client_key_path", true, "Path to client private key for TLS.");
     options.addOption(null, "etcd_target", true, "etcd endpoint URL.");
     options.addOption(null, "etcd_options", true, "etcd provider options (comma-separated).");
+    options.addOption(null, "etcd_ca_path", true, "Path to CA certificate for etcd TLS.");
+    options.addOption(null, "etcd_client_cert_path", true, "Path to client certificate for etcd TLS.");
+    options.addOption(null, "etcd_client_key_path", true, "Path to client private key for etcd TLS.");
     options.addOption(null, "source_attribute", true, "Value for the source attribute.");
     options.addOption(null, "shared_subscription", true, "Shared subscription name.");
     options.addOption("h", "help", false, "Print usage info.");
@@ -310,6 +314,38 @@ public class MqttToPubSubBridge {
     }
 
     return commandLine;
+  }
+
+  static String getEtcdOptions(CommandLine commandLine) {
+    String etcdTarget = commandLine.getOptionValue("etcd_target");
+    if (etcdTarget == null) {
+      return null;
+    }
+    String etcdOptions = commandLine.getOptionValue("etcd_options");
+    String etcdCaPath = commandLine.getOptionValue("etcd_ca_path");
+    String etcdClientCertPath = commandLine.getOptionValue("etcd_client_cert_path");
+    String etcdClientKeyPath = commandLine.getOptionValue("etcd_client_key_path");
+
+    StringBuilder optionsBuilder = new StringBuilder(etcdOptions != null ? etcdOptions : "");
+    if (etcdCaPath != null) {
+      if (optionsBuilder.length() > 0) {
+        optionsBuilder.append(",");
+      }
+      optionsBuilder.append("ca_file=").append(etcdCaPath);
+    }
+    if (etcdClientCertPath != null) {
+      if (optionsBuilder.length() > 0) {
+        optionsBuilder.append(",");
+      }
+      optionsBuilder.append("cert_file=").append(etcdClientCertPath);
+    }
+    if (etcdClientKeyPath != null) {
+      if (optionsBuilder.length() > 0) {
+        optionsBuilder.append(",");
+      }
+      optionsBuilder.append("key_file=").append(etcdClientKeyPath);
+    }
+    return optionsBuilder.toString();
   }
 
   /**
