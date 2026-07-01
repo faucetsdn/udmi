@@ -2,7 +2,8 @@
 
 ETCD_VER=v3.5.13
 DOWNLOAD_URL=https://storage.googleapis.com/etcd
-TARGET_DIR=/tmp/etcd
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+TARGET_DIR=${SCRIPT_DIR}/etcd_bin
 
 if [[ ! -d ${TARGET_DIR} ]]; then
    rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
@@ -20,9 +21,9 @@ if [[ ! -d ${TARGET_DIR} ]]; then
 fi
 
 if env | fgrep ETCD_CLIENT_; then
-    ENDPOINTS=ip://etcd-set-0/etcd-set:2379,etcd-set-1.etcd-set:2379
+    ENDPOINTS=ip://etcd-set-0/etcd-set:${ETCD_PORT:-2379},etcd-set-1.etcd-set:${ETCD_PORT:-2379}
 else
-    ENDPOINTS=http://localhost:2379
+    ENDPOINTS=http://127.0.0.1:${ETCD_PORT:-2379}
 fi
 
 ${TARGET_DIR}/etcdctl --endpoints=$ENDPOINTS "$@"

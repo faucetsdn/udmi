@@ -15,13 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "last_state",
-    "reply",
-    "setup"
-})
 public class UdmiConfig {
 
     /**

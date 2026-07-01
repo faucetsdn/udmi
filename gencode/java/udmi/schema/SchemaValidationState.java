@@ -15,10 +15,6 @@ import udmi.schema.FeatureDiscovery.FeatureStage;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "stages",
-    "sequences"
-})
 public class SchemaValidationState {
 
     @JsonProperty("stages")

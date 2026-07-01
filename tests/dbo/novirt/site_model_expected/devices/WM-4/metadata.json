@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {
+    "name": "utility-Water_Main_B",
+    "location": {
+      "site": "US-MTV-RLS1"
+    }
+  },
+  "externals": {
+    "dbo": {
+      "ext_id": "21504789-8f10-48ba-abd0-46fb5e9084e4",
+      "type": "METERS/WM_STANDARD",
+      "label": "utility-Water_Main_B"
+    }
+  },
+  "cloud": {
+    "num_id": "125087604967590"
+  },
+  "pointset": {
+    "points": {
+      "water_volume_accumulator": {
+        "units": "us-gallons"
+      }
+    }
+  }
+}

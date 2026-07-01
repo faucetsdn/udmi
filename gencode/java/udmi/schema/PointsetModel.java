@@ -15,13 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "points",
-    "exclude_units_from_config",
-    "exclude_points_from_config",
-    "sample_limit_sec",
-    "sample_rate_sec"
-})
 public class PointsetModel {
 
     /**

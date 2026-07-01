@@ -43,23 +43,29 @@ def make_timestamp(*,seconds_from_now = 0, seconds_from_epoch = None):
 def test_number_discovery_start_and_stop():
   mock_state = mock.MagicMock()
   mock_publisher = mock.MagicMock()
-  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher, range="1,2,3,4,5")
   numbers._start()
   assert numbers.state.phase == state.Phase.active
-  time.sleep(5)
+
+  # Wait for the explicit sequence to finish processing
+  if numbers.task_thread:
+      numbers.task_thread.join(timeout=10)
+
   numbers._stop()
   assert numbers.state.phase == state.Phase.stopped
-  #until_true(lambda: numbers.state.phase == discovery.states.FINISHED, "phase to be finished", 8)
-  # maybe flakey?
   assert [None, '1', '2', '3', '4', '5', None] == [x[0].addr for (x, _) in mock_publisher.call_args_list]
 
 
 def test_event_counts():
   mock_state = udmi.schema.state.State()
   mock_publisher = mock.MagicMock()
-  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher, range="1,2,3,4,5")
   numbers._start()
-  time.sleep(5)
+
+  # Wait for the explicit sequence to finish processing
+  if numbers.task_thread:
+      numbers.task_thread.join(timeout=10)
+
   numbers._stop()
   # Because of "negative" start and end markers
   assert mock_publisher.call_count == 7
@@ -136,7 +142,7 @@ def test_generation_scheduling(seconds_from_now, scan_interval, threshold, expec
          mock.patch.object(discovery, 'MAX_THRESHOLD_GENERATION', new=threshold), \
          mock.patch('time.time', return_value=1000), \
          mock.patch('datetime.datetime', MockedDateTime):
-        logging.error(f"seconds from now: {seconds_from_now}")
+        logging.debug(f"seconds from now: {seconds_from_now}")
         generation_timestamp = make_timestamp(seconds_from_epoch=1000 + seconds_from_now) 
         config = {
             "discovery": {

@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd "$ROOT_DIR"
+
+if [ -d "venv" ]; then
+  PYTHON_BIN="venv/bin/python3"
+else
+  PYTHON_BIN="python3"
+fi
+
+PYTHONPATH=.:util/mantis/src $PYTHON_BIN -m pytest util/mantis/tests "$@"

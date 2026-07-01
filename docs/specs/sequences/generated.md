@@ -104,17 +104,17 @@ Validates that a previously applied blob config is not reapplied.
 
 1. Update config trigger blob update for pubber_module
     * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
-1. Wait for pubber_module phase transitions
-1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
 1. Wait until system logs level `NOTICE` category `blobset.blob.apply`
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
 1. Check that pubber_module state is success
 1. Check that pubber_module software version reflects update
-1. Wait for pubber_module phase is FINAL
 1. Check that log level `DEBUG` (or greater) category `blobset.blob.receive` was not logged
 1. Check that log level `DEBUG` (or greater) category `blobset.blob.fetch` was not logged
 1. Check that log level `INFO` (or greater) category `blobset.blob.apply` was not logged
+1. Wait for pubber_module phase is FINAL
 
 Test passed.
 
@@ -124,11 +124,11 @@ Validates reporting of incompatibility for a blob update.
 
 1. Update config trigger blob update for pubber_module
     * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
-1. Wait for pubber_module phase transitions
-1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
 1. Wait until system logs level `ERROR` category `blobset.blob.parse`
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
 1. Check that pubber_module state indicates error
 
 Test passed.
@@ -139,11 +139,11 @@ Validates tamper protection by providing a valid URL but an incorrect SHA-256 ha
 
 1. Update config trigger blob update for pubber_module
     * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
-1. Wait for pubber_module phase transitions
-1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
 1. Wait until system logs level `ERROR` category `blobset.blob.parse`
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
 1. Check that pubber_module state indicates error
 
 Test passed.
@@ -154,11 +154,11 @@ Validates format and signature checking by providing a dummy payload.
 
 1. Update config trigger blob update for pubber_module
     * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
-1. Wait for pubber_module phase transitions
-1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
 1. Wait until system logs level `ERROR` category `blobset.blob.parse`
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
 1. Check that pubber_module state indicates error
 
 Test passed.
@@ -169,11 +169,11 @@ Validates reporting of an oversized payload fetch failure.
 
 1. Update config trigger blob update for pubber_module
     * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
-1. Wait for pubber_module phase transitions
-1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
 1. Wait until system logs level `ERROR` category `blobset.blob.fetch`
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
 1. Check that pubber_module state indicates error
 
 Test passed.
@@ -184,11 +184,11 @@ Validates a successful blob update where the device fetches, applies, and report
 
 1. Update config trigger blob update for pubber_module
     * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
-1. Wait for pubber_module phase transitions
-1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
 1. Wait until system logs level `NOTICE` category `blobset.blob.apply`
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
 1. Check that pubber_module state is success
 1. Check that pubber_module software version reflects update
 
@@ -200,11 +200,11 @@ Validates network resilience by providing an unreachable or 404 URL.
 
 1. Update config trigger blob update for pubber_module
     * Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
-1. Wait for pubber_module phase transitions
-1. Wait for pubber_module phase is FINAL
 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
 1. Wait until system logs level `ERROR` category `blobset.blob.fetch`
+1. Wait for pubber_module phase transitions
+1. Wait for pubber_module phase is FINAL
 1. Check that pubber_module state indicates error
 
 Test passed.

@@ -14,11 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "address",
-    "lat",
-    "long"
-})
 public class SiteLocation {
 
     /**

@@ -1,16 +1,17 @@
 [**UDMI**](../../) / [**Docs**](../) / [**Specs**](./) / [Modbus](#)
 
+THIS IS A PROVISIONAL SPEC THAT IS SUBJECT TO CHANGE.
+
 # Modbus Specification
 
 UDMI supports reading Modbus points by specifying them via a `modbus://` URL schema.
 
 ## URI Schema
 
-`modbus://<host>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation]`
+`modbus://<addr>[:port]/<unitid>/<function>/<address>[/<quantity>][?interpretation]`
 
-*   **`host`**: The host name or IP address of the Modbus endpoint.
-    *   If the `host` maps to a named network, as indicated in the `networks` field in the `gateway` model, then the parameters there define the effective parameters to use.
-*   **`port`**: (Optional) The TCP port.
+*   **`addr`**: e.g., `192.28.27.3` or `modbus_rtu_1` (named network from the `localnet.networks` map).
+*   **`port`**: (Optional) The TCP port, e.g. "192.168.2.3:2833" or "hostname:2741".
 *   **`unitid`**: The Slave ID (Unit Identifier).
 *   **`function`**: The Function Code (see [Function Codes](#function-codes)).
 *   **`address`**: The starting register address.
@@ -33,27 +34,34 @@ UDMI supports reading Modbus points by specifying them via a `modbus://` URL sch
 Parameters passed in the query string define how to interpret the fetched register data:
 
 *   **`border`**: i.e., `MSB` (`Big-Endian`) or `LSB` (`Little-Endian`).
-*   **`type`**: i.e., `INT16`, `UINT32`, `BOOLEAN`, `ASCII`.
+*   **`type`**: e.g., `INT16`, `UINT32`, `BOOLEAN`, `ASCII`, `FLOAT32` (base type and optional length).
 *   **`worder`**: i.e., `HWF` (`High-Word First`) or `LWF` (`Low-Word First`) (for 32-bit values).
-*   **`scale`**: i.e., `1.0`, `0.01`, `100.0` (scale factor).
+*   **`scale`**: e.g., `1.0`, `0.01`, `100.0` (scale factor).
+*   **`offset`**: e.g., `0`, `0.5` (offset applied to value after scaling).
 
 ### Network Parameters
 
-The `host` maps to a named network in the device's `model_localnet.json` (under the `networks` field). Each named network can define the following parameters for communication:
+The `addr` field is either an IPv4 address, DNS hostname, or maps to a
+named network in the device's `model_localnet.json` (under the
+`networks` field). Each named network can define the following
+(optional) parameters for communication:
 
+*   **`protocol`**: i.e., `RTU` or `TCP`.
+*   **`device`**: The port device identifier, e.g. `/dev/tty1`.
 *   **`baud`**: The baud rate.
-*   **`protocol`**: i.e., `RTU`, `TCP`.
-*   **`parity`**: For serial `RTU`.
-*   **`data bits`**: For serial `RTU`.
-*   **`stop bits`**: For serial `RTU`.
+*   **`parity`**: Serial parity.
+*   **`data_bits`**: Number of serial data bits.
+*   **`stop_bits`**: Number of serial stop bits.
 
 ## Examples
 
 The metadata values in the examples below map to the following complete Modbus URIs:
 
-*   **Network RTU Point**: `modbus://modbus_rtu_1/1/3/40001/1?type=INT16&border=MSB`
+*   **Network RTU Point**: `modbus://192.483.4.1/1/3/40001/1?type=INT16&border=MSB`
+*   **Network TCP Point**: `modbus://192.168.2.3:2833/1/3/40001/1?type=INT16&border=MSB`
 *   **`fan_status`**: `modbus://modbus_rtu_1/2/1/101?type=BOOLEAN`
-*   **`filter_differential_pressure`**: `modbus://modbus_rtu_1/2/4/30005?type=UINT32&worder=LWF&scale=0.01`
+*   **`filter_differential_pressure`**: `modbus://localhost/2/4/30005?type=UINT32&worder=LWF&scale=0.01`
+*   **Hostname TCP Point**: `modbus://hostname:2741/2/4/30005?type=UINT32&worder=LWF&scale=0.01`
 
 ### Network Configuration Example
 
@@ -88,8 +96,7 @@ For a proxied Modbus device, the `gateway` block in the `metadata.json` specifie
   "gateway": {
     "target": {
       "family": "modbus",
-      "addr": "2",
-      "network_id": "modbus_rtu_1"
+      "addr": "modbus_rtu_1/2"
     }
   },
   "pointset": {
@@ -105,5 +112,3 @@ For a proxied Modbus device, the `gateway` block in the `metadata.json` specifie
   }
 }
 ```
-
-

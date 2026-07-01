@@ -18,14 +18,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "name",
-    "provider",
-    "project_id",
-    "profile_sec",
-    "options",
-    "endpoint"
-})
 public class IotAccess {
 
     @JsonProperty("name")

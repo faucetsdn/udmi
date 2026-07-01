@@ -18,23 +18,28 @@
   "gateway": {
     "gateway_id": "GAT-123",
     "target": {
-      "addr": "2",
-      "family": "modbus",
-      "network_id": "modbus_rtu_1"
+      "addr": "modbus_rtu_1/2",
+      "family": "modbus"
     }
   },
   "pointset": {
     "exclude_points_from_config": true,
     "points": {
       "fan_status": {
-        "ref": "1/101?type=BOOLEAN"
+        "ref": "1/101?type=BOOLEAN",
+        "url": "modbus://modbus_rtu_1/2/1/101?type=BOOLEAN"
       },
       "filter_differential_pressure": {
         "ref": "4/30005?type=UINT32&worder=LWF&scale=0.01",
-        "units": "Pascals"
+        "units": "Pascals",
+        "url": "modbus://modbus_rtu_1/2/4/30005?type=UINT32&worder=LWF&scale=0.01"
       },
       "split_threshold": {
         "units": "Imperial-gallons-per-minute"
+      },
+      "test_offset_point": {
+        "ref": "3/40001?type=INT16&scale=0.1&offset=100.5",
+        "url": "modbus://modbus_rtu_1/2/3/40001?type=INT16&scale=0.1&offset=100.5"
       },
       "triangulating_axis": {
         "units": "Degrees-phase"

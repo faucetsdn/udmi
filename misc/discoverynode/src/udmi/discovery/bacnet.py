@@ -18,6 +18,9 @@ import re
 import concurrent.futures
 from typing import Iterable
 
+BACNET_DEVICE_ID = 4194300
+BACNET_MODEL_NAME = "DiscoveryNode"
+
 BAC0.log_level("silence")
 for name in logging.getLogger().manager.loggerDict:
   if name.startswith("BAC0"):
@@ -69,6 +72,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
       *,
       bacnet_ip: str = None,
       bacnet_port: int = None,
+      bacnet_device_name = None,
+      bacnet_firmware_version = None,
   ):
     self.devices_published = set()
     self.targetted_devices_found = set()
@@ -76,7 +81,16 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.result_producer_thread = None
     self.resolver_dispatcher_thread = None
    
-    self.bacnet = BAC0.lite(ip=bacnet_ip, port=bacnet_port)
+    self.bacnet = BAC0.lite(
+        ip=bacnet_ip,
+        port=bacnet_port,
+        deviceId=BACNET_DEVICE_ID,
+        modelName=BACNET_MODEL_NAME,
+        localObjName=bacnet_device_name,
+        firmwareRevision=bacnet_firmware_version,
+        location=None,
+        description=None
+    )
     
     super().__init__(state, publisher)
 
@@ -270,7 +284,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
           start = time.monotonic()
           event = self.discover_device(address, id)
           end = time.monotonic() 
-          logging.info(f"discovery for {device} in {end - start} seconds")
+          logging.debug("discovery for %s completed in %s seconds", device, str(end - start))
 
           self.publish(event)
           self.devices_published.add(device)

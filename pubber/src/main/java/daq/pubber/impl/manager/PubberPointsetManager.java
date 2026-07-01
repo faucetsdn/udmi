@@ -87,7 +87,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   @Override
   public AbstractPoint makePoint(String name, PointPointsetModel point) {
-    if (point.units.equals("No-units")) {
+    if ("No-units".equals(point.units)) {
       return new PubberRandomBoolean(name, point);
     } else {
       return new PubberRandomPoint(name, point);

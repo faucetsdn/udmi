@@ -1,6 +1,6 @@
 #!/bin/bash -e
 mkdir -p /root/.ssh 
-ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_ed25519 && chmod 600 /root/.ssh/id_ed25519
+[ -f /root/.ssh/id_ed25519 ] || ssh-keygen -t ed25519 -N "" -f /root/.ssh/id_ed25519; chmod 600 /root/.ssh/id_ed25519
 echo starting up tomcat server
 exec /usr/local/tomcat/bin/catalina.sh run > /tmp/tomcat.log 2>&1 &
 
@@ -16,7 +16,7 @@ project_spec=//mqtt/mosquitto
 cd $UDMI_ROOT
 mkdir -p out
 
-echo Starting local services at $(sudo date -u -Is) | tee $UDMIS_LOG
+echo Starting local services at $(date -u -Is) | tee $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
 if [[ -n ${project_spec:-} ]]; then
@@ -27,13 +27,14 @@ fi
 
 registry_id=$(jq -r .registry_id $site_config)
 
+sleep 12
 echo Starting udmis proper... | tee -a $UDMIS_LOG
 
 
 OLD_PID=$(ps ax | fgrep java | fgrep local_pod.json | awk '{print $1}') || true
 if [[ -n $OLD_PID ]]; then
     echo Killing old udmis process $OLD_PID
-    sudo kill $OLD_PID
+    kill $OLD_PID
     sleep 2
 fi
 
@@ -68,6 +69,16 @@ done
 
 echo ::::::::: tail $LOGFILE
 tail -n 30 $LOGFILE
+
+if [[ ! -f $POD_READY ]]; then
+    echo "=== DIAGNOSTIC LOGS FOR UDMIS STARTUP FAILURE ==="
+    echo "Host working directory: $PWD"
+    echo "Process $PID status:"
+    ps -p $PID || echo "Process $PID not running"
+    echo "Last 100 lines of $LOGFILE:"
+    tail -n 100 $LOGFILE || true
+    echo "=== END DIAGNOSTIC LOGS ==="
+fi
 
 [[ -f $POD_READY ]] || fail pod_ready.txt not found.
 

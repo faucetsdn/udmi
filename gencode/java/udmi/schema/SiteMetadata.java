@@ -18,18 +18,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "site",
-    "name",
-    "tags",
-    "strict_warnings",
-    "location",
-    "links",
-    "externals",
-    "parameters"
-})
 public class SiteMetadata {
 
     /**

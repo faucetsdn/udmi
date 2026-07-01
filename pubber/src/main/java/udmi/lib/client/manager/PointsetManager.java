@@ -17,6 +17,7 @@ import static udmi.schema.Category.POINTSET_POINT_INVALID_VALUE;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
@@ -155,7 +156,8 @@ public interface PointsetManager extends ManagerLog {
   default void updatePoint(AbstractPoint point) {
     String pointName = point.getName();
 
-    if (!getPointsetState().points.containsKey(pointName)) {
+    if (getPointsetState() == null || getPointsetState().points == null
+        || !getPointsetState().points.containsKey(pointName)) {
       return;
     }
 
@@ -254,8 +256,8 @@ public interface PointsetManager extends ManagerLog {
     // Known that pointset config exists, so ensure that a pointset state also exists.
     ifNullThen(getPointsetState(), () -> {
       setPointsetState(new PointsetState());
-      getPointsetState().points = new HashMap<>();
-      getPointsetEvent().points = new HashMap<>();
+      getPointsetState().points = new ConcurrentHashMap<>();
+      getPointsetEvent().points = new ConcurrentHashMap<>();
     });
 
     // Update each internally managed point with its specific pointset config (if any).

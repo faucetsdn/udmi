@@ -1,27 +1,8 @@
-CONFIG_METADATA:
-  operation: INITIALIZE
-c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
-  code: VAV-1
-  cloud_device_id: '2541901344105616'
-  translation:
-    zone_air_temperature_sensor:
-      present_value: points.zone_air_temperature_sensor.present_value
-      units:
-        key: pointset.points.zone_air_temperature_sensor.units
-        values:
-          degrees_celsius: degC
-  links:
-    547a33c5-0ce4-4dfb-9924-5169a3475c89:
-      supply_air_flowrate_sensor_1: supply_air_flowrate_sensor
-  type: HVAC/VAV_SD_DSP
 4931e096-dea5-4b81-86ad-234c6d07b978:
-  code: VAV-2
   cloud_device_id: '2541901344105617'
+  code: VAV-2
   connections:
-    c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
-    - tags:
-      - primary
-      type: FEEDS
+    c773b86d-b0c0-46fc-bd3f-d726fadd5f1e: FEEDS
   translation:
     zone_air_temperature_sensor:
       present_value: points.zone_air_temperature_sensor.present_value
@@ -31,9 +12,14 @@ c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
           degrees_celsius: degC
   type: HVAC/VAV_SD_CSP
 547a33c5-0ce4-4dfb-9924-5169a3475c89:
-  code: VAV-3
   cloud_device_id: '2541901344105618'
+  code: VAV-3
   translation:
+    fan_status:
+      present_value: points.fan_status.present_value
+      states:
+        'OFF': '0.0'
+        'ON': '1.0'
     supply_air_flowrate_sensor:
       present_value: points.supply_air_flowrate_sensor.present_value
       units:
@@ -41,3 +27,35 @@ c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
         values:
           liters_per_second: L/s
   type: HVAC/VAV_SD_DSP
+c773b86d-b0c0-46fc-bd3f-d726fadd5f1e:
+  cloud_device_id: '2541901344105616'
+  code: VAV-1
+  connections:
+    floor-guid: CONTAINS
+    room-guid: CONTAINS
+    site-guid: CONTAINS
+  links:
+    547a33c5-0ce4-4dfb-9924-5169a3475c89:
+      supply_air_flowrate_sensor_1: supply_air_flowrate_sensor
+  translation:
+    zone_air_temperature_sensor:
+      present_value: points.zone_air_temperature_sensor.present_value
+      units:
+        key: pointset.points.zone_air_temperature_sensor.units
+        values:
+          degrees_celsius: degC
+  type: HVAC/VAV_SD_DSP
+floor-guid:
+  code: US-MTV-BASIC-1
+  connections:
+    site-guid: CONTAINS
+  type: FACILITIES/FLOOR
+room-guid:
+  code: US-MTV-BASIC-1-R1
+  connections:
+    floor-guid: CONTAINS
+    site-guid: CONTAINS
+  type: FACILITIES/ROOM
+site-guid:
+  code: US-MTV-BASIC
+  type: FACILITIES/BUILDING

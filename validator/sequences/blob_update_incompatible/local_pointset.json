@@ -1,10 +1,5 @@
 {
-  "sample_rate_sec" : 300,
   "points" : {
-    "filter_differential_pressure_setpoint" : {
-      "units" : "Bars",
-      "set_value" : 98
-    },
     "filter_alarm_pressure_status" : {
       "ref" : "BV11.present_value",
       "units" : "No-units"
@@ -12,6 +7,11 @@
     "filter_differential_pressure_sensor" : {
       "ref" : "AV12.present_value",
       "units" : "Degrees-Celsius"
+    },
+    "filter_differential_pressure_setpoint" : {
+      "set_value" : 98,
+      "units" : "Bars"
     }
-  }
+  },
+  "sample_rate_sec" : 300
 }

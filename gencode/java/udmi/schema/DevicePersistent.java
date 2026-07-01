@@ -15,11 +15,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "endpoint",
-    "restart_count",
-    "applied_blobs"
-})
 public class DevicePersistent {
 
     /**

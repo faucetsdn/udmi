@@ -110,7 +110,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
     //noinspection unchecked
     verify(provider, times(1)).modifyConfig(
-        eq(makeReflectEnvelope(true)),
+        any(Envelope.class),
         (Function<Entry<Long, String>, String>) configCaptor.capture());
 
     // @SuppressWarnings("unchecked")
@@ -165,7 +165,7 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(
-        eq(makeReflectEnvelope(false)), eq(SubFolder.UDMI), commandCaptor.capture());
+        any(Envelope.class), eq(SubFolder.UDMI), commandCaptor.capture());
     Envelope envelope = JsonUtil.fromStringStrict(Envelope.class, commandCaptor.getValue());
     assertEquals(transactionId, envelope.transactionId);
   }

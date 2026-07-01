@@ -1,7 +1,7 @@
 #!/bin/bash -eu
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
+# cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
@@ -26,27 +26,33 @@ CLNT_USER=kiwi
 CLNT_PASS=possum
 CLNT_ID=$registry_id/client
 
-sudo chmod a+r $CERT_DIR/rsa_private.* || true
-bin/keygen CERT $CLIENT_DIR
+SUDO=sudo
+if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
+    SUDO=""
+fi
+$SUDO chmod a+r $CERT_DIR/rsa_private.* || true
+$UDMI_ROOT/bin/keygen CERT $CLIENT_DIR
 
-CLIENT_OPTS="-i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
+CLIENT_OPTS="-h ${MQTT_HOST:-localhost} -p ${MQTT_PORT:-8883} -i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
 
 $MOSQUITTO_CTRL deleteClient $CLNT_USER
 $MOSQUITTO_CTRL createClient $CLNT_USER -p $CLNT_PASS -c $CLNT_ID
 $MOSQUITTO_CTRL addClientRole $CLNT_USER service
 
-killall mosquitto_sub || true
+echo "DEBUG: Listing all mosquitto_sub processes at start of test_mosquitto:"
+ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
 
 topic=/r/mqtt/d/test
 
 
 echo Subscribing to all topics in the background...
-mosquitto_sub $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' > out/mosquitto.sub &
+$MOSQUITTO_SUB $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' > out/mosquitto.sub &
+sub_pid=$!
 
 sleep 1
 
 echo Publishing test message
-mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Racket"
+$MOSQUITTO_PUB $CLIENT_OPTS -t $topic -m "Hello Racket"
 
 sleep 1
 
@@ -56,11 +62,21 @@ fgrep Racket out/mosquitto.sub || fail did not find expected message
 hash_pass=$(sha256sum < $site_path/devices/$device_id/rsa_private.pkcs8)
 dev_pass=${hash_pass:0:8}
 dev_id=/r/$registry_id/d/$device_id
-bin/mosquctl_client $dev_id $dev_pass
+$MOSQUITTO_CTRL deleteClient $dev_id || true
+role_name="role_${dev_id//\//_}"
+$MOSQUITTO_CTRL deleteRole $role_name || true
+$MOSQUITTO_CTRL createClient $dev_id -p $dev_pass -c $dev_id
+$MOSQUITTO_CTRL createRole $role_name
+$MOSQUITTO_CTRL addClientRole $dev_id $role_name
+$MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$dev_id/config" allow
+$MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$dev_id/commands" allow
+$MOSQUITTO_CTRL addRoleACL $role_name subscribePattern "$dev_id/errors" allow
+$MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$dev_id/events/#" allow
+$MOSQUITTO_CTRL addRoleACL $role_name publishClientSend "$dev_id/state" allow
 
 sleep 1
 
-cat <<EOF > /tmp/pubber_config.json
+cat <<EOF > out/pubber_config_test_mosquitto.json
 {
     "endpoint": {
       "protocol": "mqtt",
@@ -69,7 +85,7 @@ cat <<EOF > /tmp/pubber_config.json
       "hostname": "127.0.0.1",
       "topic_prefix": "/r/$registry_id/d/$device_id",
       "config_sync_sec": -1,
-      "port": 8883,
+      "port": ${MQTT_PORT:-8883},
       "auth_provider": {
         "basic": {
           "username": "$dev_id",
@@ -88,20 +104,20 @@ EOF
 
 kill $(pgrep -f 'java.*pubber-.*jar') || true
 
-pubber/bin/build
+$UDMI_ROOT/pubber/bin/build
 
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf sites/udmi_site_model/out/devices/$device_id/persistent_data.json
 
 echo Publishing config to /r/$registry_id/d/$device_id/config
-mosquitto_pub $CLIENT_OPTS -r -t /r/$registry_id/d/$device_id/config -f $DEV_CONF
+$MOSQUITTO_PUB $CLIENT_OPTS -r -t /r/$registry_id/d/$device_id/config -f $DEV_CONF
 
 echo Running pubber smoke check
 # TODO: Replace this with proper smoke check when backend is working.
-timeout 30s pubber/bin/run /tmp/pubber_config.json || true
+timeout 30s $UDMI_ROOT/pubber/bin/run out/pubber_config_test_mosquitto.json || true
 
 echo Publishing ending test message
-mosquitto_pub $CLIENT_OPTS -t $topic -m "Hello Rudolph"
+$MOSQUITTO_PUB $CLIENT_OPTS -t $topic -m "Hello Rudolph"
 
 echo "Waiting up to 20s for operational state message from pubber..."
 for i in {1..20}; do
@@ -119,8 +135,17 @@ if [[ -z "$operational_line" ]]; then
 fi
 
 echo Cleanup subscribers and clients...
-killall mosquitto_sub || true
-bin/mosquctl_client $dev_id --
+echo "DEBUG: Listing all mosquitto_sub processes before target kill:"
+ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
+
+kill $sub_pid || true
+
+echo "DEBUG: Listing all mosquitto_sub processes after target kill:"
+ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
+
+$MOSQUITTO_CTRL deleteClient $dev_id || true
+role_name="role_${dev_id//\//_}"
+$MOSQUITTO_CTRL deleteRole $role_name || true
 
 echo Received messages:
 cat out/mosquitto.sub | cut -c -120
@@ -138,5 +163,5 @@ expected_topic=/r/$registry_id/d/$device_id/state
 
 [[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
 
-echo export MQTT_TEST_BROKER=tcp://localhost:8883
+echo export MQTT_TEST_BROKER=tcp://localhost:${MQTT_PORT:-8883}
 echo Done with mosquitto pubber check.

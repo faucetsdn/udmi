@@ -1,15 +1,15 @@
 {
   "system" : {
-    "last_config" : "1999-10-20T01:02:03Z",
     "hardware" : {
-      "model" : "Delmatic IP_BW6",
-      "make" : "unknown"
+      "make" : "unknown",
+      "model" : "Delmatic IP_BW6"
+    },
+    "last_config" : "1999-10-20T01:02:03Z",
+    "operation" : {
+      "operational" : true
     },
     "software" : {
       "firmware" : "D_IP_BW6_V35_6_S14"
-    },
-    "operation" : {
-      "operational" : true
     }
   },
   "timestamp" : "2023-03-02T19:27:35.819Z",

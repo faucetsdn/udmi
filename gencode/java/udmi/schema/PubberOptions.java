@@ -14,48 +14,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "fixedSampleRate",
-    "noHardware",
-    "noConfigAck",
-    "noPersist",
-    "noLastStart",
-    "noLastConfig",
-    "badCategory",
-    "badVersion",
-    "badAddr",
-    "noProxy",
-    "extraDevice",
-    "barfConfig",
-    "messageTrace",
-    "extraPoint",
-    "configStateDelay",
-    "missingPoint",
-    "extraField",
-    "emptyMissing",
-    "redirectRegistry",
-    "msTimestamp",
-    "smokeCheck",
-    "skewClock",
-    "noPointState",
-    "noState",
-    "noStatus",
-    "noFolder",
-    "badLevel",
-    "spamState",
-    "tweakState",
-    "badState",
-    "baseState",
-    "dupeState",
-    "noLog",
-    "featureEnableSwap",
-    "disableWriteback",
-    "noWriteback",
-    "fixedLogLevel",
-    "fastWrite",
-    "delayWrite",
-    "softwareFirmwareValue"
-})
 public class PubberOptions {
 
     @JsonProperty("fixedSampleRate")

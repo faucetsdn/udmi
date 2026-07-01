@@ -36,6 +36,9 @@ JOPTS="-d . -ds -dg -S -p udmi.schema -ut"
 echo Generating code in $OUTDIR
 $JARBIN $JOPTS -N --source . --target $OUTDIR
 
+echo Removing @JsonPropertyOrder annotations...
+find $OUTDIR -name \*.java | xargs sed -i -z -E 's/@JsonPropertyOrder\(\{[^)]*\}\)\s+//g'
+
 # There is no way to specify enum constants in generated code, so just hack it in manually.
 echo Copying shared constants $ROOT_DIR/etc/*.java
 cp -u $ROOT_DIR/etc/*.java $OUTDIR/udmi/schema/

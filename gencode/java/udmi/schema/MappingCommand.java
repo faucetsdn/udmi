@@ -16,14 +16,6 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * 
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder({
-    "timestamp",
-    "version",
-    "guid",
-    "device_num_id",
-    "status",
-    "translation"
-})
 public class MappingCommand {
 
     /**
