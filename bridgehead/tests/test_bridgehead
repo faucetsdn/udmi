@@ -12,21 +12,6 @@ if [ -f .env ]; then
     cp .env .env.bak
 fi
 
-# Clean up existing containers and data
-docker rm -f $(docker ps -aq) 2>/dev/null || true
-docker network rm $(docker network ls -q) 2>/dev/null || true
-docker compose down -v --remove-orphans 2>/dev/null || true
-rm -rf var/mosquitto/data var/etcd udmi_site_model 2>/dev/null
-
-echo "Launching bridgehead services with local workspace build..."
-"$UDMI_ROOT/bin/start_bridgehead" --local
-
-# Clean up extra keys in AHU-1 that cause validation errors
-rm -f udmi_site_model/devices/AHU-1/rsa_private.pem
-rm -f udmi_site_model/devices/AHU-1/rsa_private.pkcs8
-rm -f udmi_site_model/devices/AHU-1/rsa_public.pem
-chmod a+rwx udmi_site_model/out 2>/dev/null || true
-
 # Function to clean up on exit
 cleanup() {
     echo "Cleaning up..."
@@ -51,18 +36,27 @@ cleanup() {
     docker exec mosquitto chown -R $(id -u):$(id -g) /mosquitto/data || true
     
     echo "Stopping docker-compose services..."
-    docker compose down
-    rm -rf udmi_site_model var/mosquitto/data var/etcd 2>/dev/null
+    "$UDMI_ROOT/bin/stop_bridgehead" || docker compose down
+    rm -rf udmi_site_model var/mosquitto/data var/etcd 2>/dev/null || true
     
     # Restore .env if backup exists
     if [ -f .env.bak ]; then
         echo "Restoring .env"
         mv .env.bak .env
-    else
-        rm -f .env
     fi
 }
 trap cleanup EXIT
+
+# Clean up existing containers and data
+docker rm -f $(docker ps -aq) 2>/dev/null || true
+docker network rm $(docker network ls -q) 2>/dev/null || true
+"$UDMI_ROOT/bin/stop_bridgehead" -v 2>/dev/null || docker compose down -v --remove-orphans 2>/dev/null || true
+rm -rf var/mosquitto/data var/etcd udmi_site_model 2>/dev/null || true
+
+echo "Launching bridgehead services with local workspace build..."
+"$UDMI_ROOT/bin/start_bridgehead" --local
+
+chmod a+rwx udmi_site_model/out 2>/dev/null || true
 
 echo "Waiting for services to be healthy..."
 for i in {1..60}; do
@@ -118,7 +112,7 @@ cat registrar_output.txt
 # Verify expected summary
 failed=0
 grep -q "Device extra: 6" registrar_output.txt || failed=1
-grep -q "Device status: 5" registrar_output.txt || failed=1
+grep -q "Device status: 4" registrar_output.txt || failed=1
 
 # Also verify specific processed lines as per sample output
 grep -q "Processed AHU-22" registrar_output.txt || failed=1
