@@ -1,6 +1,7 @@
 FROM quay.io/coreos/etcd:v3.5.13 AS etcd-client-builder
 FROM tomcat:11-jre21-temurin AS tomcat
-FROM ghcr.io/faucetsdn/udmi:udmis-latest
+ARG UDMIS_BASE_IMAGE=ghcr.io/faucetsdn/udmi:udmis-latest
+FROM ${UDMIS_BASE_IMAGE}
 
 RUN apk add --no-cache bash openjdk21 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils nano telegraf openssh-client
 
