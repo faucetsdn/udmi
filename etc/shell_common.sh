@@ -106,17 +106,17 @@ SERVICES_JAR=$UDMI_ROOT/services/build/libs/services-1.0-SNAPSHOT-all.jar
 VERSION_BASE='1.*'
 
 # Ignore non-version branches (e.g. something like 'develop'), but include dirty info.
-udmi_version=$(cd $UDMI_ROOT; git describe --dirty --match $VERSION_BASE) || true
+udmi_version=$(cd $UDMI_ROOT; git describe --dirty --match $VERSION_BASE 2>/dev/null) || true
 # No luck... just generate any viable version.
-[[ -n $udmi_version ]] || udmi_version=git-$(cd $UDMI_ROOT; git describe --dirty --match $VERSION_BASE --always) || true
+[[ -n $udmi_version ]] || udmi_version=git-$(cd $UDMI_ROOT; git describe --dirty --match $VERSION_BASE --always 2>/dev/null) || true
 [[ $udmi_version == git- ]] && udmi_version=unknown
 
 # No dirty so it always will match. No shenanigans.
-udmi_rev=$(cd $UDMI_ROOT; git describe --match $VERSION_BASE) || udmi_rev=unknown
-revparse=`git rev-parse $udmi_rev` || revparse=unknown
+udmi_rev=$(cd $UDMI_ROOT; git describe --match $VERSION_BASE 2>/dev/null) || udmi_rev=unknown
+revparse=`git rev-parse $udmi_rev 2>/dev/null` || revparse=unknown
 
 udmi_commit=${revparse:0:9}
-udmi_timever=$(TZ=UTC git log --date=iso-strict-local -1 --pretty=format:"%cd" ${udmi_commit}) || udmi_timever=unknown
+udmi_timever=$(TZ=UTC git log --date=iso-strict-local -1 --pretty=format:"%cd" ${udmi_commit} 2>/dev/null) || udmi_timever=unknown
 
 export UDMI_ROOT
 export UDMI_VERSION=$udmi_version

@@ -9,6 +9,7 @@ RUN apk add --no-cache bash openjdk21 gcompat curl jq sudo git python3 py3-grpci
 # Only necessary for running on GKE -- won't show up with docker!
 ENV LD_PRELOAD=/lib/libgcompat.so.0
 
+RUN chmod 1777 /tmp
 RUN apk add openssh
 
 ADD build/udmi_bin/ bin/
