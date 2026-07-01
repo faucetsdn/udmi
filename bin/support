@@ -48,8 +48,15 @@ echo Lingering pubber processes:
 ps ax | fgrep pubber | fgrep java || true
 echo
 
-echo tar --exclude-vcs -czf /tmp/$ARCHIVE $site_model $OUT_DIR
-tar --exclude-vcs -czf /tmp/$ARCHIVE $site_model $OUT_DIR
+STAGING_DIR=/tmp/support_staging
+echo Staging files to $STAGING_DIR...
+rm -rf $STAGING_DIR
+mkdir -p $STAGING_DIR
+cp --parents -a $site_model $OUT_DIR $STAGING_DIR
+
+echo tar --exclude-vcs -czf /tmp/$ARCHIVE -C $STAGING_DIR $site_model $OUT_DIR
+tar --exclude-vcs -czf /tmp/$ARCHIVE -C $STAGING_DIR $site_model $OUT_DIR
+rm -rf $STAGING_DIR
 mv /tmp/$ARCHIVE .
 
 echo Created support archive $(realpath $ARCHIVE)

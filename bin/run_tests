@@ -71,6 +71,11 @@ case "$1" in
     test_wrap bin/test_registrar
     test_wrap bin/test_sites
     test_wrap bin/test_mockseq
+    test_wrap bin/test_dbo_extract
+    ;;
+  util_tests)
+    test_wrap bin/test_mantis
+    test_wrap bin/test_workbench
     ;;
   all_tests)
     run_wrap install_dependencies
@@ -78,6 +83,7 @@ case "$1" in
     run_wrap schema_tests
     run_wrap trace_tests
     run_wrap registrar_tests
+    run_wrap util_tests
     ;;
   *)
     usage unrecognized step $1

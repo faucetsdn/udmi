@@ -5,22 +5,21 @@
   },
   "last_config" : "TIMESTAMP",
   "operation" : {
-    "operational" : true,
     "last_start" : "TIMESTAMP",
-    "restart_count" : 1,
-    "mode" : "initial"
+    "mode" : "initial",
+    "operational" : true,
+    "restart_count" : 1
   },
-  "serial_no" : "sequencer-23385",
+  "serial_no" : "sequencer-30001",
   "software" : {
     "firmware" : "v1",
     "pubber_module" : "v1"
   },
   "status" : {
-    "message" : "Blob data hash mismatch",
-    "detail" : "udmi.lib.base.UdmiException: Blob data hash mismatch;",
-    "category" : "blobset.blob.parse",
-    "timestamp" : "TIMESTAMP",
-    "level" : 500
+    "category" : "system.config.apply",
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
   },
   "timestamp" : "TIMESTAMP",
   "version" : "1.5.3"

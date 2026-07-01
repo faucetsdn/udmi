@@ -49,7 +49,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
     state.setup = new SetupUdmiState();
     state.setup.user = TEST_USER;
     state.setup.transaction_id = "test-txn";
-    
+
     Envelope envelope = new Envelope();
     envelope.subType = SubType.STATE;
     envelope.subFolder = SubFolder.UDMI;
@@ -63,7 +63,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
     assertEquals(1, captured.size(), "captured message count");
     Map<String, Object> capturedMap = (Map<String, Object>) captured.get(0);
     UdmiConfig config = convertTo(UdmiConfig.class, capturedMap.get("payload"));
-    
+
     assertEquals(FUNCTIONS_VERSION_MIN, config.setup.functions_min);
     assertEquals(FUNCTIONS_VERSION_MAX, config.setup.functions_max);
     assertEquals("test-txn", config.reply.transaction_id);
@@ -79,7 +79,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
     innerEnvelope.subFolder = SubFolder.POINTSET;
     innerEnvelope.deviceId = "dev-1";
     innerEnvelope.deviceRegistryId = "reg-1";
-    
+
     Map<String, Object> uufiWrapper = toMap(innerEnvelope);
     uufiWrapper.put("payload", Map.of("points", Map.of("temp", 22)));
 
@@ -106,7 +106,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
     systemEnvelope.subFolder = SubFolder.POINTSET;
     systemEnvelope.deviceId = "dev-1";
     systemEnvelope.deviceRegistryId = "reg-1";
-    
+
     Map<String, Object> payload = Map.of("points", Map.of("temp", 25));
 
     // Send the system message to the processor's input
@@ -118,7 +118,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
     assertNotNull(wrapped.get("payload"), "wrapped payload should not be null");
     assertEquals(SubType.EVENTS.value(), wrapped.get("subType"));
   }
-  
+
   private UufiProcessor getProcessor() {
     return (UufiProcessor) UdmiServicePod.getComponent(UufiProcessor.class);
   }

@@ -17,37 +17,55 @@ import org.junit.Test;
 public class ModbusFamilyProviderTest {
 
   public static final Set<String> GOOD_REFERENCES = ImmutableSet.of(
+      "modbus://modbus_rtu_1/1/3/40001",
+      "modbus://modbus_rtu_1/1/3/40001/10",
+      "modbus://modbus_rtu_1/1/3/40001/10?type=INT16&border=MSB",
+      "modbus://192.168.1.1/2/4/30001?type=UINT32&worder=LWF",
+      "modbus://localhost/2/4/3001",
+      "modbus://my-host/1/3/40001/2?scale=0.1",
+      "modbus://modbus_rtu_1/1/3/40001/1?offset=1.5",
+      "modbus://modbus_rtu_1/1/3/40001/1?border=LSB",
+      "modbus://modbus_rtu_1/1/3/40001/1?type=BOOLEAN",
+      "modbus://modbus_rtu_1/1/3/40001/1?type=ASCII",
+      "modbus://modbus_rtu_1/1/3/40001/1?type=FLOAT32",
+      "modbus://modbus_rtu_1/1/3/40001/1?worder=HWF",
+      "modbus://modbus_rtu_1/1/3/40001/1?type=UINT32&worder=HWF&border=LSB&scale=10&offset=5",
       "modbus://192.168.1.1:502/1/3/40001",
-      "modbus://192.168.1.1:502/1/3/40001/10",
-      "modbus://192.168.1.1/1/3/40001/10?type=INT16&border=MSB",
-      "modbus://my-host.com/2/4/30001?type=UINT32&worder=LWF",
-      "modbus://networkname/2/4/3001",
-      "modbus://10.0.0.1/1/3/40001/2?scale=0.1",
-      "modbus://10.0.0.1/1/3/40001/1?offset=1.5",
-      "modbus://10.0.0.1/1/3/40001/1?border=LSB",
-      "modbus://10.0.0.1/1/3/40001/1?type=BOOLEAN",
-      "modbus://10.0.0.1/1/3/40001/1?type=ASCII",
-      "modbus://10.0.0.1/1/3/40001/1?type=FLOAT32",
-      "modbus://10.0.0.1/1/3/40001/1?worder=HWF",
-      "modbus://10.0.0.1/1/3/40001/1?type=UINT32&worder=HWF&border=LSB&scale=10&offset=5"
+      "modbus://192.168.2.3:2833/1/3/40001",
+      "modbus://hostname:2741/1/3/40001"
   );
 
   public static final Set<String> BAD_REFERENCES = ImmutableSet.of(
       "modbus://network@192.168.1.1:502/1/3/40001",
-      "modbus://192.168.1.1:502/1/3",
-      "modbus://192.168.1.1:502/1/3/40001/10/extra",
-      "modbus://192.168.1.1:502/a/3/40001",
-      "modbus://192.168.1.1:502/1/b/40001",
-      "modbus://192.168.1.1:502/1/3/c",
-      "modbus://192.168.1.1:502/1/7/40001", // Invalid function code 7
-      "modbus://192.168.1.1:502/1/3/40001?foo=bar", // Invalid parameter foo
-      "modbus://192.168.1.1:502/1/3/40001?byte_order=MSB", // Old parameter name
-      "modbus://10.0.0.1/1/3/40001/1?type=BADTYPE",
-      "modbus://10.0.0.1/1/3/40001/1?border=BADBORDER",
-      "modbus://10.0.0.1/1/3/40001/1?worder=BADWORDER",
-      "modbus://10.0.0.1/1/3/40001/1?scale=abc",
-      "modbus://10.0.0.1/1/3/40001/1?offset=xyz",
-      "modbus://10.0.0.1/1/3/40001/1?type", // Missing value
+      "modbus://1/3/40001",
+      "modbus://1/3/40001/10",
+      "modbus://1/3/40001/10?type=INT16&border=MSB",
+      "modbus://2/4/30001?type=UINT32&worder=LWF",
+      "modbus://2/4/3001",
+      "modbus://1/3/40001/2?scale=0.1",
+      "modbus://1/3/40001/1?offset=1.5",
+      "modbus://1/3/40001/1?border=LSB",
+      "modbus://1/3/40001/1?type=BOOLEAN",
+      "modbus://1/3/40001/1?type=ASCII",
+      "modbus://1/3/40001/1?type=FLOAT32",
+      "modbus://1/3/40001/1?worder=HWF",
+      "modbus://1/3/40001/1?type=UINT32&worder=HWF&border=LSB&scale=10&offset=5",
+      "modbus://localhost/1/3",
+      "modbus://localhost/1/3/40001/10/extra",
+      "modbus://localhost/a/3/40001",
+      "modbus://localhost/1/b/40001",
+      "modbus://localhost/1/3/c",
+      "modbus://localhost/1/7/40001", // Invalid function code 7
+      "modbus://localhost/1/3/40001?foo=bar", // Invalid parameter foo
+      "modbus://localhost/1/3/40001?byte_order=MSB", // Old parameter name
+      "modbus://localhost/1/3/40001/1?type=BADTYPE",
+      "modbus://localhost/1/3/40001/1?border=BADBORDER",
+      "modbus://localhost/1/3/40001/1?worder=BADWORDER",
+      "modbus://localhost/1/3/40001/1?scale=abc",
+      "modbus://localhost/1/3/40001/1?offset=xyz",
+      "modbus://localhost/1/3/40001/1?type", // Missing value
+      "modbus://localhost/256/3/40001", // unitid exceeded maximum 255
+      "modbus://localhost/01/3/40001", // unitid has leading zero
       "bacnet://192.168.1.1/1/3/40001"
   );
 
@@ -65,5 +83,26 @@ public class ModbusFamilyProviderTest {
     List<String> badErrors = BAD_REFERENCES.stream().map(this::validateUrl)
         .filter(GeneralUtils::isNotEmpty).toList();
     assertEquals("Not enough validation errors", BAD_REFERENCES.size(), badErrors.size());
+  }
+
+  @Test
+  public void modbus_model_validation() {
+    udmi.schema.FamilyLocalnetModel goodModel = new udmi.schema.FamilyLocalnetModel();
+    goodModel.adjunct = new java.util.HashMap<>();
+    goodModel.adjunct.put("protocol", "RTU");
+    goodModel.adjunct.put("baud", "9600");
+    provider.validateModel(goodModel);
+
+    udmi.schema.FamilyLocalnetModel badModel = new udmi.schema.FamilyLocalnetModel();
+    badModel.adjunct = new java.util.HashMap<>();
+    badModel.adjunct.put("protocol", "RTU");
+    badModel.adjunct.put("invalid_key", "some_value");
+    try {
+      provider.validateModel(badModel);
+      org.junit.Assert.fail("Expected validation to fail for invalid adjunct key");
+    } catch (Exception e) {
+      assertTrue(e.getMessage().contains(
+          "invalid modbus adjunct key 'invalid_key'; allowed keys are "));
+    }
   }
 }

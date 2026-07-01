@@ -2,8 +2,8 @@
 # Start a Pubber DUT for testing
 
 UDMI_ROOT=$(dirname $0)/..
-cd $UDMI_ROOT
-source etc/shell_common.sh
+# cd $UDMI_ROOT
+source $UDMI_ROOT/etc/shell_common.sh
 
 if [[ $# -lt 3 ]]; then
     fail "Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO] [PUBBER_OPTS]"
@@ -24,7 +24,7 @@ if [[ -n $pids ]]; then
     kill $pids || true
 fi
 
-bin/reset_config $site_path $project_id $device_id
+$UDMI_ROOT/bin/reset_config $site_path $project_id $device_id
 
 # Clean out the persistant data store to ensure a clean state each time.
 rm -rf $site_path/out/devices/${device_id}/persistent_data.json
@@ -32,11 +32,11 @@ rm -rf $site_path/out/devices/${device_id}/persistent_data.json
 # Delete existing certificate to force regeneration with current CA
 rm -f $site_path/devices/${device_id}/*.crt
 
-pubber/bin/build
+$UDMI_ROOT/pubber/bin/build
 
 echo Writing pubber output to $PUBBER_LOG
-echo bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
-bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
+echo $UDMI_ROOT/bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
+$UDMI_ROOT/bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
 
 WAITING=30
 for i in `seq 1 $WAITING`; do
@@ -54,6 +54,6 @@ if [[ $i -eq $WAITING ]]; then
 fi
 
 # Augment the device metadata so that tests know what to expect...
-bin/augment_metadata $site_path $device_id $pubber_opts
+$UDMI_ROOT/bin/augment_metadata $site_path $device_id $pubber_opts
 
 echo "DUT $device_id (serial $serial_no) started and ready."

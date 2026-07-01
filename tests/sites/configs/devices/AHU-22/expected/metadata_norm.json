@@ -20,15 +20,18 @@
     "points": {
       "filter_alarm_pressure_status": {
         "ref": "MCN8.present_value",
-        "units": "No-units"
+        "units": "No-units",
+        "url": "vendor://0x65/MCN8.present_value"
       },
       "filter_differential_pressure": {
         "ref": "AI2.differential",
-        "units": "Baré"
+        "units": "Baré",
+        "url": "vendor://0x65/AI2.differential"
       },
       "filter_differential_pressure_sensor": {
         "ref": "AI1.present_value",
-        "units": "Degrees-Celsius"
+        "units": "Degrees-Celsius",
+        "url": "vendor://0x65/AI1.present_value"
       }
     }
   },

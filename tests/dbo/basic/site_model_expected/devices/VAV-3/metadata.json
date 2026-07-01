@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "system": {},
+  "externals": {
+    "dbo": {
+      "ext_id": "547a33c5-0ce4-4dfb-9924-5169a3475c89",
+      "type": "HVAC/VAV_SD_DSP",
+      "label": "VAV-3"
+    }
+  },
+  "cloud": {
+    "num_id": "2541901344105618"
+  },
+  "pointset": {
+    "points": {
+      "supply_air_flowrate_sensor": {
+        "units": "liters_per_second",
+        "units_reported": "L/s"
+      },
+      "fan_status": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      }
+    }
+  }
+}

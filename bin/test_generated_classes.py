@@ -73,7 +73,7 @@ def test_dataclass_serialization_roundtrip(dataclass_to_test):
 
   try:
     instance = dataclass_to_test.from_dict(mock_data)
-  except Exception as e:
+  except Exception as e:  # pylint: disable=broad-exception-caught
     pytest.fail(f"Failed to create {dataclass_to_test.__name__} "
                 f"from dict: {e}\nMock data: {mock_data}")
 
@@ -82,7 +82,7 @@ def test_dataclass_serialization_roundtrip(dataclass_to_test):
 
   try:
     output_dict = instance.to_dict()
-  except Exception as e:
+  except Exception as e:  # pylint: disable=broad-exception-caught
     pytest.fail(f"Failed to call to_dict() on "
                 f"{dataclass_to_test.__name__}: {e}")
 
