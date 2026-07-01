@@ -1,0 +1,268 @@
+{
+  "event_no" : 3,
+  "last_config" : "TIMESTAMP",
+  "logentries" : [ {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.apply",
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1998ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.receive",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1893ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.parse",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Device AHU-1 config handler",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"set_value\" : 98,\n        \"units\" : \"Bars\"\n      }\n    },\n    \"sample_rate_sec\" : 300\n  },\n  \"system\" : {\n    \"metrics_rate_sec\" : 10,\n    \"min_loglevel\" : 100,\n    \"operation\" : {\n      \"last_start\" : \"TIMESTAMP\",\n  \"version\" : \"git-0b373070-dirty\"\n}",
+    "level" : 100,
+    "message" : "Config update AHU-1 (pointset_numeric_values)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.apply",
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1888ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1887ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 0ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Update state TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      },\n      \"ether\" : {\n        \"addr\" : \"42:01:ac:11:23:ac\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"172.17.35.172\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      }\n    }\n  },\n  \"system\" : {\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"last_config\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.3\"\n}",
+    "level" : 100,
+    "message" : "State update AHU-1 (pointset_numeric_values)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.receive",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.parse",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1650ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1648ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"set_value\" : 98,\n        \"units\" : \"Bars\"\n      }\n    },\n    \"sample_rate_sec\" : 300\n  },\n  \"system\" : {\n    \"metrics_rate_sec\" : 10,\n    \"min_loglevel\" : 100,\n    \"operation\" : {\n      \"last_start\" : \"TIMESTAMP\",\n  \"version\" : \"git-0b373070-dirty\"\n}",
+    "level" : 100,
+    "message" : "Config update AHU-1 (pointset_numeric_values)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.apply",
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1643ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 0ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Update state TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      },\n      \"ether\" : {\n        \"addr\" : \"42:01:ac:11:23:ac\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"172.17.35.172\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      }\n    }\n  },\n  \"system\" : {\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"last_config\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.3\"\n}",
+    "level" : 100,
+    "message" : "State update AHU-1 (pointset_numeric_values)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.receive",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.parse",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer -382ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Device AHU-1 config handler",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Update state TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      },\n      \"ether\" : {\n        \"addr\" : \"42:01:ac:11:23:ac\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"172.17.35.172\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      }\n    }\n  },\n  \"system\" : {\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"last_config\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.3\"\n}",
+    "level" : 100,
+    "message" : "State update AHU-1 (pointset_numeric_values)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV11.present_value\",\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV12.present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"set_value\" : 98,\n        \"units\" : \"Bars\"\n      }\n    },\n    \"sample_rate_sec\" : 300\n  },\n  \"system\" : {\n    \"metrics_rate_sec\" : 10,\n    \"min_loglevel\" : 100,\n    \"operation\" : {\n      \"last_start\" : \"TIMESTAMP\",\n  \"version\" : \"git-0b373070-dirty\"\n}",
+    "level" : 100,
+    "message" : "Config update AHU-1 (pointset_numeric_values)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.apply",
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1997ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 0ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Update state TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      },\n      \"ether\" : {\n        \"addr\" : \"42:01:ac:11:23:ac\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"172.17.35.172\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"filter_alarm_pressure_status\" : {\n        \"units\" : \"No-units\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      }\n    }\n  },\n  \"system\" : {\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"last_config\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.3\"\n}",
+    "level" : 100,
+    "message" : "State update AHU-1 (pointset_numeric_values)",
+    "timestamp" : "TIMESTAMP"
+  } ],
+  "metrics" : {
+    "mem_free_mb" : 126.98654174804688,
+    "mem_total_mb" : 160.0
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.3"
+}
