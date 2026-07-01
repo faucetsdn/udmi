@@ -15,17 +15,13 @@ fi
 # Function to clean up on exit
 cleanup() {
     echo "Cleaning up..."
-    echo "Dumping UDMIS logs:"
-    docker logs udmis || true
-    echo "Dumping Validator logs:"
-    docker logs validator || true
-    
-    echo "Dumping Pubber logs:"
-    docker logs pubber || true
+    mkdir -p var/tmp
+    docker logs udmis > var/tmp/udmis.log 2>&1 || true
+    docker logs validator > var/tmp/validator.log 2>&1 || true
+    docker logs pubber > var/tmp/pubber.log 2>&1 || true
     
     if [ -f udmi_site_model/devices/AHU-1/out/exceptions.txt ]; then
-        echo "Dumping AHU-1 exceptions.txt:"
-        cat udmi_site_model/devices/AHU-1/out/exceptions.txt || true
+        cp udmi_site_model/devices/AHU-1/out/exceptions.txt var/tmp/ahu1_exceptions.txt 2>/dev/null || true
     fi
     
     echo "Stopping Pubber container..."
