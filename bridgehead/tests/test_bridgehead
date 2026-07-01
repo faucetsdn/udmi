@@ -15,21 +15,17 @@ fi
 # Function to clean up on exit
 cleanup() {
     echo "Cleaning up..."
-    mkdir -p var/tmp
-    docker logs udmis > var/tmp/udmis.log 2>&1 || true
-    docker logs validator > var/tmp/validator.log 2>&1 || true
-    docker logs pubber > var/tmp/pubber.log 2>&1 || true
+    mkdir -p "$UDMI_ROOT/out"
+    docker logs udmis > "$UDMI_ROOT/out/bridgehead_udmis.log" 2>&1 || true
+    docker logs validator > "$UDMI_ROOT/out/bridgehead_validator.log" 2>&1 || true
+    docker logs pubber > "$UDMI_ROOT/out/bridgehead_pubber.log" 2>&1 || true
     
     if [ -f udmi_site_model/devices/AHU-1/out/exceptions.txt ]; then
-        cp udmi_site_model/devices/AHU-1/out/exceptions.txt var/tmp/ahu1_exceptions.txt 2>/dev/null || true
+        cp udmi_site_model/devices/AHU-1/out/exceptions.txt "$UDMI_ROOT/out/bridgehead_ahu1_exceptions.txt" 2>/dev/null || true
     fi
     
     echo "Stopping Pubber container..."
     docker stop pubber || true
-    echo "Fixing permissions..."
-    docker exec validator chown -R $(id -u):$(id -g) /root/site_model || true
-    docker exec udmis chown -R $(id -u):$(id -g) /root/udmi/var/etcd || true
-    docker exec mosquitto chown -R $(id -u):$(id -g) /mosquitto/data || true
     
     echo "Stopping docker-compose services..."
     "$UDMI_ROOT/bin/stop_bridgehead" || docker compose down
