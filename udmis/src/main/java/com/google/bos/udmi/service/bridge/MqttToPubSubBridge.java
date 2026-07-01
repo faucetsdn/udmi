@@ -395,7 +395,6 @@ public class MqttToPubSubBridge {
                   byte[] payload = message.getPayload();
                   logger.debug("MQTT Message Received - Topic: {}, Payload Length: {}",
                       topic, payload.length);
-
                   String parsedTopic = topic;
                   // Automatically strip the shared subscription prefix if present
                   if (parsedTopic.startsWith("$share/")) {

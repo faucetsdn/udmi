@@ -222,6 +222,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
    */
   @Override
   public String modifyConfig(Envelope envelope, Function<Entry<Long, String>, String> munger) {
+    info("modifyConfig called for %s/%s", envelope.deviceRegistryId, envelope.deviceId);
     int retryCount = CONFIG_UPDATE_MAX_RETRIES;
     String registryId = envelope.deviceRegistryId;
     String deviceId = envelope.deviceId;
@@ -235,7 +236,10 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
               updated -> checkedUpdate(envelope, version, updated));
           // Preventing a spurious "applied config" message when no changes occurred.
           if (updatedConfig != null) {
-            debug("Applied config %s/%s #%d", registryId, deviceId, version);
+            info("Applied config %s/%s #%d", registryId, deviceId, version);
+          } else {
+            info("Config for %s/%s #%d did not change",
+                registryId, deviceId, version);
           }
           return updatedConfig;
         } catch (AbortLoopException e) {

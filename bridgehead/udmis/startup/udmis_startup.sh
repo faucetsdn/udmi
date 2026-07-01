@@ -50,6 +50,20 @@ UDMIS_DIR=udmis
 [[ -d $UDMIS_DIR ]] || UDMIS_DIR=..
 
 
+echo "Waiting for Mosquitto to be fully ready and authorized..." | tee -a $LOGFILE
+until mosquitto_pub \
+  -h "$MQTT_HOST" -p "$MQTT_PORT" \
+  -u "$SERV_USER" -P "$SERV_PASS" \
+  --cafile /etc/mosquitto/certs/ca.crt \
+  --cert /etc/mosquitto/certs/rsa_private.crt \
+  --key /etc/mosquitto/certs/rsa_private.pem \
+  -t "/r/startup_check/d/startup_check/ping" -m "ping" \
+  > /dev/null 2>&1; do
+    echo "Mosquitto not ready yet, retrying..." | tee -a $LOGFILE
+    sleep 2
+done
+echo "Mosquitto is ready and authorized!" | tee -a $LOGFILE
+
 jq --arg u "$SERV_USER" --arg p "$SERV_PASS" --arg host_var "$MQTT_HOST" \
 '.flow_defaults.auth_provider.basic.username = $u | .flow_defaults.auth_provider.basic.password = $p | .flow_defaults.hostname=$host_var | .iot_access.implicit.endpoint.hostname=$host_var' \
 /root/var/local_pod.json > /root/var/local_pod.tmp && mv /root/var/local_pod.tmp /root/var/local_pod.json

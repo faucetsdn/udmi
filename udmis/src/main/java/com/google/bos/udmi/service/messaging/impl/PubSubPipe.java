@@ -149,6 +149,10 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       Envelope envelope = ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
+      String source = stringMap.get(SOURCE_KEY);
+      if (source != null && source.startsWith(PUBSUB_SOURCE + SOURCE_SEPARATOR)) {
+        stringMap.put(SOURCE_KEY, source.substring(PUBSUB_SOURCE.length()));
+      }
       PubsubMessage message = PubsubMessage.newBuilder()
           .putAllAttributes(stringMap)
           .setData(ByteString.copyFromUtf8(stringify(bundle.message)))
