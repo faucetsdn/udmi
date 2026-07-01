@@ -21,7 +21,7 @@ from typing import Any, Optional
 from udmi.core.factory import create_device, get_default_managers
 from udmi.core.managers import PointsetManager, WritebackResult
 from udmi.core.managers.point.basic_point import BasicPoint
-from udmi.schema import AuthProvider, Basic, EndpointConfiguration, PointPointsetModel
+from udmi.schema import AuthProvider, Basic, EndpointConfiguration
 from udmi.schema import Entry, ValueState
 
 # --- CONFIGURATION ---
@@ -43,10 +43,8 @@ class ActuatingPoint(BasicPoint):
     Replaces the legacy global callback by encapsulating the actuation 
     (hardware interaction) logic securely inside the point's set_value implementation.
     """
-    def __init__(self, name: str, model: Optional[PointPointsetModel] = None):
-        super().__init__(name, model)
-        # We manually mark this True for the demo, normally set by cloud metadata
-        self._writable = True
+    def __init__(self, name: str, **kwargs):
+        super().__init__(name, writable=True, **kwargs)
 
     def get_value(self) -> Any:
         return 0.0
@@ -85,9 +83,12 @@ class ActuatingPoint(BasicPoint):
     def validate_value(self, value: Any) -> bool:
         return True
 
+    def _populate_enumeration(self, point) -> None:
+        pass
 
-def actuating_point_factory(name: str, model: Optional[PointPointsetModel] = None):
-    return ActuatingPoint(name, model)
+
+def actuating_point_factory(name: str, **kwargs):
+    return ActuatingPoint(name, **kwargs)
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 Provides the BulkPointProvider interface.
 """
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 class BulkPointProvider(ABC): # pylint: disable=too-few-public-methods
     """
@@ -13,11 +13,14 @@ class BulkPointProvider(ABC): # pylint: disable=too-few-public-methods
     """
 
     @abstractmethod
-    def read_points(self) -> Dict[str, Any]:
+    def read_points(self, active_points: Optional[list[str]] = None) -> Dict[str, Any]:
         """
         Reads the current values of all supported points from hardware.
         Executes a batch IO operation to retrieve the latest sensor readings and returns them
         as a mapping to be injected into the PointsetManager's pipeline.
+
+        Args:
+            active_points: An optional list of active point names.
 
         Returns:
             Dict[str, Any]: A mapping of point names to their present values.

@@ -23,7 +23,7 @@ from typing import Any, Optional
 from udmi.core.factory import create_device, get_default_managers
 from udmi.core.managers import PointsetManager
 from udmi.core.managers.point.basic_point import BasicPoint
-from udmi.schema import AuthProvider, Basic, EndpointConfiguration, PointPointsetModel
+from udmi.schema import AuthProvider, Basic, EndpointConfiguration
 
 # --- Configuration ---
 DEVICE_ID = "AHU-2"
@@ -44,8 +44,9 @@ class SineWavePoint(BasicPoint):
     By overriding `get_value()`, the point itself becomes responsible for its own 
     state calculation without relying on external loops or global callbacks.
     """
-    def __init__(self, name: str, model: Optional[PointPointsetModel] = None):
-        super().__init__(name, model)
+
+    def __init__(self, name: str, **kwargs):
+        super().__init__(name, **kwargs)
         self._start_time = time.time()
         LOGGER.info(f"Custom SineWavePoint '{name}' instantiated.")
 
@@ -62,15 +63,18 @@ class SineWavePoint(BasicPoint):
     def validate_value(self, value: Any) -> bool:
         return True
 
+    def _populate_enumeration(self, point) -> None:
+        pass
 
-def sine_wave_factory(name: str, model: Optional[PointPointsetModel] = None):
+
+def sine_wave_factory(name: str, **kwargs):
     """
     Factory creating SineWavePoint for all points.
     Acts as the Dependency Injection provider for the PointsetManager. When the 
     manager receives a configuration to manage a new point, it uses this factory 
     to instantiate the custom user-defined Point class instead of the default.
     """
-    return SineWavePoint(name, model)
+    return SineWavePoint(name, **kwargs)
 
 
 if __name__ == "__main__":

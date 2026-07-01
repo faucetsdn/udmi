@@ -24,10 +24,10 @@ from typing import Any, Optional
 from udmi.core.factory import create_device, get_default_managers
 from udmi.core.managers import PointsetManager
 from udmi.core.managers.point.basic_point import BasicPoint
-from udmi.schema import AuthProvider, Basic, EndpointConfiguration, PointPointsetModel
+from udmi.schema import AuthProvider, Basic, EndpointConfiguration
 
 # --- Configuration ---
-DEVICE_ID = "AHU-3"
+DEVICE_ID = "AHU-1"
 MQTT_HOSTNAME = "localhost"
 MQTT_PORT = 1883
 BROKER_USERNAME = "pyudmi-device"
@@ -42,9 +42,8 @@ class ExpiringPoint(BasicPoint):
     """
     A custom Point that defaults to 0 but can be overriden by writebacks.
     """
-    def __init__(self, name: str, model: Optional[PointPointsetModel] = None):
-        super().__init__(name, model)
-        self._writable = True  # Override basic_point to make it always writable for the sample
+    def __init__(self, name: str, **kwargs):
+        super().__init__(name, writable=True, **kwargs)
 
     def get_value(self) -> Any:
         return 0.0
@@ -56,8 +55,11 @@ class ExpiringPoint(BasicPoint):
     def validate_value(self, value: Any) -> bool:
         return True
 
-def expiring_point_factory(name: str, model: Optional[PointPointsetModel] = None):
-    return ExpiringPoint(name, model)
+    def _populate_enumeration(self, point) -> None:
+        pass
+
+def expiring_point_factory(name: str, **kwargs):
+    return ExpiringPoint(name, **kwargs)
 
 if __name__ == "__main__":
     try:

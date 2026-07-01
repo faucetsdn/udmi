@@ -677,11 +677,122 @@ def test_offline_buffer_capacity(manager, mock_dispatcher):
 def test_load_persisted_buffer(manager, mock_dispatcher):
     """Verifies that the offline buffer is loaded from persistence correctly."""
     mock_device = MagicMock()
-    mock_device.persistence = MagicMock()
-    mock_device.persistence.get.return_value = [{"points": {"temp": {"present_value": 11.0}}}]
+    mock_persistence = MagicMock()
+    mock_device.persistence = mock_persistence
+    mock_persistence.get.return_value = [{"points": {"temp": {"present_value": 11.0}}}]
     manager.set_device_context(device=mock_device, dispatcher=mock_dispatcher)
 
     manager._load_persisted_buffer()
 
     assert len(manager._offline_buffer) == 1
     assert manager._offline_buffer[0]["points"]["temp"]["present_value"] == 11.0
+
+def test_point_dynamic_ref_adoption():
+    """Verifies that a point dynamically adopts ref from config if none is set."""
+    point = Point("dynamic_point")
+    assert point._ref is None
+
+    # 1. Set config with a ref -> should adopt it
+    config_1 = PointPointsetConfig(ref="adopted_ref_456")
+    point.set_config(config_1)
+    assert point._ref == "adopted_ref_456"
+    assert point.get_state().status is None
+
+    # 2. Set config with same ref -> should match and succeed
+    config_2 = PointPointsetConfig(ref="adopted_ref_456")
+    point.set_config(config_2)
+    assert point.get_state().status is None
+
+    # 3. Set config with mismatching ref -> should fail
+    config_bad = PointPointsetConfig(ref="bad_ref_999")
+    point.set_config(config_bad)
+    assert point.get_state().status is not None
+    assert point.get_state().status.message == "Invalid point ref"
+
+def test_bulk_provider_receives_active_points(manager, mock_dispatcher):
+    """Verifies that BulkPointProvider.read_points is called with list of active point names."""
+    manager.set_device_context(device=None, dispatcher=mock_dispatcher)
+    
+    mock_provider = MagicMock(spec=BulkPointProvider)
+    mock_provider.read_points.return_value = {"temp": 23.4}
+    manager.register_bulk_provider(mock_provider)
+    
+    manager.add_point("temp")
+    manager._active_points = {"temp"}
+
+    manager.publish_telemetry()
+
+    mock_provider.read_points.assert_called_once_with(active_points=["temp"])
+
+def test_point_set_value_complex_returns():
+    """Verifies that custom point subclasses returning ValueState or WritebackResult work properly."""
+    class CustomAppliedPoint(Point):
+        def set_value(self, value):
+            return ValueState.overridden
+
+    class CustomResultPoint(Point):
+        def set_value(self, value):
+            return WritebackResult(
+                value_state=ValueState.failure,
+                status=Entry(message="Hardware error", level=500)
+            )
+
+    point1 = CustomAppliedPoint("point1")
+    point1._writable = True
+    point1.set_config(PointPointsetConfig(set_value=50.0))
+
+    timeout = 1.0
+    start_time = time.time()
+    while point1.value_state != ValueState.overridden and time.time() - start_time < timeout:
+        time.sleep(0.01)
+
+    assert point1.value_state == ValueState.overridden
+    assert point1.get_data().present_value == 50.0
+
+    point2 = CustomResultPoint("point2")
+    point2._writable = True
+    point2.set_config(PointPointsetConfig(set_value=100.0))
+
+    start_time = time.time()
+    while point2.value_state != ValueState.failure and time.time() - start_time < timeout:
+        time.sleep(0.01)
+
+    assert point2.value_state == ValueState.failure
+    assert point2.status.message == "Hardware error"
+    assert point2.get_data().present_value == 100.0
+
+def test_point_decoupled_initialization():
+    """Verifies that Point can be instantiated using explicit decoupled keywords without any model."""
+    point = Point("temp_sensor", writable=True, ref="device_ref_777", units="Celsius", baseline_value=25.0)
+    
+    assert point.get_name() == "temp_sensor"
+    assert point._writable is True
+    assert point._ref == "device_ref_777"
+    assert point.get_state().units == "Celsius"
+    
+    # Verify baseline value is seeded
+    point.update_data()
+    assert point.get_data().present_value == 25.0
+
+def test_add_point_with_explicit_config(manager):
+    """Verifies that PointsetManager.add_point accepts explicit keyword properties."""
+    manager.add_point("pressure", writable=True, ref="pressure_ref_888", units="psi", baseline_value=14.7)
+    
+    assert "pressure" in manager._all_points
+    point = manager._all_points["pressure"]
+    assert point._writable is True
+    assert point._ref == "pressure_ref_888"
+    assert point.get_state().units == "psi"
+    
+    point.update_data()
+    assert point.get_data().present_value == 14.7
+
+def test_add_points_bulk(manager):
+    """Verifies that PointsetManager.add_points bulk registers points."""
+    from src.udmi.core.managers.pointset_manager import PointProperties
+    
+    points_data: dict[str, PointProperties] = {
+        "temp": {"writable": True, "ref": "temp_ref", "units": "C", "baseline_value": 22.0}
+    }
+    manager.add_points(points_data)
+    assert "temp" in manager._all_points

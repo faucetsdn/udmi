@@ -18,6 +18,7 @@ from typing import Callable
 from typing import Dict
 from typing import Mapping
 from typing import Optional
+from typing import TypedDict
 from typing import Union
 
 from udmi.constants import UDMI_VERSION
@@ -47,6 +48,13 @@ class WritebackResult:
     """
     value_state: ValueState
     status: Optional[Entry] = None
+
+class PointProperties(TypedDict, total=False):
+    """Configuration properties for registering points locally."""
+    writable: Optional[bool]
+    ref: Optional[str]
+    units: Optional[str]
+    baseline_value: Optional[Any]
 
 
 # Callback signature: function(point_name, value) -> Optional[ValueState | WritebackResult]
@@ -207,12 +215,22 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
         self._bulk_provider = provider
         LOGGER.info("Registered bulk telemetry provider.")
 
-    def add_point(self, name: str) -> None:
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def add_point(self,
+                  name: str,
+                  writable: Optional[bool] = None,
+                  ref: Optional[str] = None,
+                  units: Optional[str] = None,
+                  baseline_value: Optional[Any] = None) -> None:
         """
         Registers a point to be managed.
 
         Args:
             name: The name of the point to add.
+            writable: Whether the point is writable.
+            ref: The device point reference.
+            units: The point units.
+            baseline_value: The initial baseline value.
         """
         if name not in self._all_points:
             point_model = None
@@ -220,9 +238,51 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
                                       "points") and self.model.points:
                 point_model = self.model.points.get(name)
 
-            self._all_points[name] = self._point_factory(name,
-                                                         model=point_model)
+            try:
+                self._all_points[name] = self._point_factory(
+                    name,
+                    model=point_model,
+                    writable=writable,
+                    ref=ref,
+                    units=units,
+                    baseline_value=baseline_value
+                )
+            except TypeError:
+                # Fallback for backward-compatibility with legacy point factories
+                self._all_points[name] = self._point_factory(name, model=point_model)
+                point = self._all_points[name]
+                # pylint: disable=protected-access
+                if writable is not None:
+                    point._writable = writable
+                if ref is not None:
+                    point._ref = ref
+                if units is not None:
+                    point._state.units = units
+                if baseline_value is not None and hasattr(point, 'set_present_value'):
+                    point.set_present_value(baseline_value)
+                # pylint: enable=protected-access
+
             LOGGER.debug("Added point '%s' to manager.", name)
+
+    def add_points(self, points_config: Dict[str, PointProperties]) -> None:
+        """
+        Registers multiple points in bulk.
+
+        Args:
+            points_config: A mapping of point name to a PointProperties dictionary:
+                           {
+                               "room_temp": {"ref": "BACnet/AI:1", "units": "Celsius"},
+                               "fan_speed": {
+                                   "writable": True,
+                                   "ref": "BACnet/AO:2",
+                                   "units": "Percent",
+                                   "baseline_value": 50.0
+                               }
+                           }
+        """
+        for name, prop_dict in points_config.items():
+            kwargs = {k: v for k, v in prop_dict.items() if v is not None}
+            self.add_point(name, **kwargs)
 
     def set_point_value(self, name: str, value: Any) -> None:
         """
@@ -630,7 +690,12 @@ class PointsetManager(BaseManager): # pylint: disable=too-many-instance-attribut
 
         if self._bulk_provider:
             try:
-                new_values = self._bulk_provider.read_points()
+                active_names = list(self.points.keys())
+                try:
+                    new_values = self._bulk_provider.read_points(active_points=active_names)
+                except TypeError:
+                    new_values = self._bulk_provider.read_points()
+
                 if isinstance(new_values, dict):
                     for point_name, value in new_values.items():
                         self.set_point_value(point_name, value)
