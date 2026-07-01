@@ -45,6 +45,9 @@ Format: `scheme://[user@]host[:port][/path]`
   - **Discovery:** Clients publish a `query/cloud` message to `[/{prefix}]/uufi/c/query/cloud`.
   - **Response:** System publishes the model to `[/{prefix}]/uufi/c/config/cloud`.
   - **Structure:** Uses nested **Registries** (Section 5.1).
+- **State Query Service:**
+  - **Discovery:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
+  - **Response:** System (the gateway/processor caching the state) immediately replies by publishing the last known cached device State report on the device's state topic `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/state/blobset` (or the corresponding state topic matching the query's subFolder).
 
 ## 3. Handshake Protocol
 
@@ -69,8 +72,9 @@ The System publishes a UDMI `config` message to `/uufi/c/config/udmi`.
 **Activation:** The Client is **Active** when `reply.transaction_id` matches the original `state.setup.transaction_id`.
 
 ### Registry ID Discovery
+<!-- ASSUMPTION: User direct command overrides the general spec edit restrictions of AGENTS.md -->
 - **Default:** `default`
-- **Discovery:** The System MAY provide a `deviceRegistryId` in the `config.udmi` handshake reply to the Client. To ensure interoperability, the `deviceRegistryId` SHOULD be placed within the `setup` block of the payload. The Client SHOULD use this `deviceRegistryId` for all subsequent registry-scoped topics. The System MUST NOT expect to discover its own `deviceRegistryId` from Client-initiated handshakes. (Note: Use `deviceRegistryId` camelCase exactly as specified; case-insensitive or snake_case matching is NOT guaranteed).
+- **Discovery:** The System MAY provide a `deviceRegistryId` in the `config.udmi` handshake reply to the Client. To ensure interoperability, the `deviceRegistryId` SHOULD be placed within the `setup` block of the payload. The Client SHOULD use this `deviceRegistryId` for all subsequent registry-scoped topics. The System MUST NOT expect to discover its own `deviceRegistryId` from Client-initiated handshakes. To prevent collisions in multi-registry environments where device IDs may not be globally unique, the Client identity (`source` in envelope and `msg_source` in setup payload) SHOULD be a structured identifier in the format `{registry_id}/{device_id}` if the client already has knowledge of its designated registry. Otherwise, if the registry is unknown, the Client identity is the bare `{device_id}`, and the System will assign a default registry ID (e.g., `default`). (Note: Use `deviceRegistryId` camelCase exactly as specified; case-insensitive or snake_case matching is NOT guaranteed).
 - **Responsiveness:** MQTT message callback handlers MUST NOT perform long-running or blocking operations (e.g., `time.sleep()`). Any simulated work or heavy processing MUST be offloaded to a separate thread to maintain system-wide responsiveness and avoid buffer overflows or message loss in high-concurrency environments.
 
 ### 3.1 Interoperability Reminders
@@ -125,6 +129,7 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 | Model Query | `query` | `cloud` | Publish |
 | Model Update | `model` | `cloud` | Publish |
 | Model Reply | `config` | `cloud` | Receive |
+| State Query | `query` | `state` | Publish |
 | Blobset Config | `config` | `blobset` | Publish |
 | Blobset State | `state` | `blobset` | Receive |
 
@@ -166,13 +171,13 @@ The `UPDATE` operation for the `cloud` subfolder is a partial merge at the devic
 
 # 9. Test and Development
 
-The UDMI repository provides a local development environment to facilitate the implementation and testing of UUFI Clients and Systems.
+The UDMI repository provides a modular, multi-tier local development and testing workflow to isolate infrastructure, devices, and client applications.
 
-## 9.1. Local Mock Environment
+## 9.1. Scope 1: Basic Local Setup (Infrastructure Only)
 
-The `bin/start_local` script initializes a spec-compliant UUFI backend (as part of the standard local setup) using a local MQTT broker. This environment is ideal for developing new clients without requiring a full cloud deployment.
+The first tier initializes a spec-compliant UUFI message broker and gateway processor. This establishes the bare-minimum messaging backbone without any active devices or tests, providing a clean black-box middleware layer for external applications.
 
-### Starting the Environment
+### Starting the Infrastructure
 ```bash
 bin/start_local
 ```
@@ -180,7 +185,7 @@ bin/start_local
 This script performs the following actions:
 1.  **MQTT Broker:** Starts a local Mosquitto broker on port 8883 with SSL enabled.
 2.  **Site Model:** Uses the provided site model (e.g., `sites/udmi_site_model`) and configures it for local MQTT use.
-3.  **UDMIS:** Starts the `udmis` service with the `UufiProcessor` enabled.
+3.  **UDMIS:** Starts the `udmis` service with the `UufiProcessor` enabled to act as the UUFI gateway.
 
 **Connection Details:**
 - **Scheme:** `mqtt://`
@@ -190,48 +195,73 @@ This script performs the following actions:
 - **Password:** `monkey`
 - **CA Certificate:** `sites/udmi_site_model/reflector/ca.crt`
 
-## 9.2. Automated Integration Testing
+---
 
-The `bin/test_uufi` tool performs a full end-to-end verification of the UUFI interface, including interaction with a real UDMI device (using Pubber). It handles system initialization, DUT lifecycle, and bidirectional message validation.
+## 9.2. Scope 2: Local Setup with Pubber DUT (Device Under Test)
 
-### Running the Verification
+The second tier builds on top of Scope 1 by registering and launching a simulated on-premise device under the UDMI schema framework. This provides an active device stream for testing, receiving configuration updates, and reporting back telemetry.
+
+### Registering and Launching the Device
+When running tests or manual sessions, the environment launches **Pubber** as the simulated Device Under Test (DUT). This client:
+1. Connects to the local MQTT broker as a device.
+2. Begins periodically publishing telemetry state (such as `pointset` events) on standard UDMI topics.
+3. Listens for configuration payloads routed through the UUFI system gateway.
+
+---
+
+## 9.3. Scope 3: Verification with the UUFI Test Client
+
+The third tier performs active end-to-end integration testing of the UUFI interface by introducing a low-level test client that exchanges messages with the Pubber DUT (from Scope 2) over the active infrastructure (from Scope 1).
+
+### Running Automated UUFI Pipeline Verification
+To verify the entire bidirectional pipeline (System Gateway -> Broker -> DUT -> Client), run:
 ```bash
 bin/test_uufi
 ```
 
-The comprehensive test validates:
-1.  **System Initialization:** Starts the UUFI backend and configures local MQTT security.
-2.  **DUT Lifecycle:** Registers and launches a **Pubber** instance as the Device Under Test (DUT).
-3.  **UUFI Handshake:** Performs the initial handshake between the test client and the system.
-4.  **Bidirectional Exchange:** 
-    - Sends a UUFI-wrapped configuration update to the DUT.
-    - Verifies that UDMIS correctly routes the update to the device.
-    - Captures the subsequent state update from the DUT as it flows back through UUFI.
+This command automatically orchestrates the following operations:
+1. **System Initialization:** Confirms that the Scope 1 local services are healthy.
+2. **DUT Lifecycle:** Registers and launches a **Pubber** device (Scope 2).
+3. **Handshake Phase:** Starts a low-level `uufi_test_client` which completes the standard Step 1 and Step 2 UUFI Handshake over the broker.
+4. **Bidirectional Exchange:** 
+   - Sends a UUFI-wrapped configuration update to the DUT.
+   - Verifies that the gateway correctly routes the update to the Pubber device.
+   - Captures the corresponding telemetry state returning from the Pubber device to confirm successful processing.
 
-For modular testing against an already running environment, the low-level `bin/uufi_test_client` script can be used directly to execute the client-side handshake and exchange logic.
+For modular, manual client-side testing against an already running environment, the standalone script can be run directly:
+```bash
+bin/uufi_test_client
+```
 
-## 9.3. Passive Observation
+---
 
-The `bin/observe_uufi` tool provides a passive, real-time view of all traffic on the UUFI topic tree. This is essential for diagnosing communication issues and verifying message formats without interfering with the client or system.
+## 9.4. Passive Observation and Trace Analysis
 
-### Starting the Observer
+The `bin/observe_uufi` tool is a utility that provides a passive, real-time view of all messaging traffic on the UUFI topic tree, without actively participating in handshakes or sending configurations.
+
+### Running the Observer
 ```bash
 bin/observe_uufi
 ```
 
 The observer will:
 1.  **Subscribe:** Connects to the local MQTT broker and subscribes to `/uufi/#`.
-2.  **Display:** Outputs every message received, including the topic and a pretty-printed JSON payload (if `jq` is installed).
-3.  **Trace:** Allows developers to see the exact sequence of the handshake and subsequent message flows.
+2.  **Display:** Outputs every message received sequentially to `stdout` in a raw, unbuffered line-by-line format (`{topic}: {payload}`), making it ideal for checking message boundaries and verifying format compliance.
 
-## 9.4. Client Development Workflow
+---
 
-When developing a new external client, it is recommended to use the local mock environment as your primary backend:
+## 9.5. Interactive Site Model Database Update Emulation
 
-1.  **Initialization:** Run `bin/start_local`.
-2.  **CA Certificate:** Configure your client to trust the generated `sites/udmi_site_model/reflector/ca.crt`.
-3.  **Handshake:** Implement the Step 1 State Declaration. Your client is considered "Active" once it receives a matching Step 2 Config.
-4.  **Debugging:** Monitor the `udmis` logs in `out/udmis.log` to see how your messages are being processed and routed.
+To emulate physical database mutations and trigger live model-update events, developers can use the `bin/site_trigger` utility. This allows verification of reactive system orchestrators (like Butler) sitting on top of the UUFI bus without modifying raw config files by hand.
+
+### Running the Site Model Trigger
+```bash
+bin/site_trigger update <site_path> <device_id> <blob_id> <version> [conn_spec]
+```
+
+This tool:
+1.  **Mutates Site Model:** Locates the specified `metadata.json` file in the site directory (e.g., `<site_path>/devices/{device_id}/metadata.json`) and atomically updates its expected version tag (`system.software.<blob_id> = <version>`).
+2.  **Triggers Model Event:** Synthesizes and publishes a corresponding `model/cloud` Model Update message to `/uufi/c/model/cloud` on the broker, enabling reactive orchestrators to instantly sync.
 
 ---
 
@@ -267,7 +297,57 @@ This appendix references the formal JSON schemas and provides message examples f
 }
 ```
 
-### A.1.2. Pointset Config (MQTT)
+### A.1.2. Handshake (MQTT)
+
+**Topic:** `/uufi/c/state/udmi`
+
+**Payload:**
+```json
+{
+  "projectId": "vibrant",
+  "transactionId": "UUFI:sess123:001",
+  "publishTime": "2026-04-29T10:00:00Z",
+  "source": "client-id",
+  "principal": "client-id",
+  "payload": {
+    "version": "1.5.2",
+    "timestamp": "2026-04-29T10:00:00Z",
+    "setup": {
+      "functions_ver": 9,
+      "transaction_id": "UUFI:sess123:001",
+      "msg_source": "client-id"
+    }
+  }
+}
+```
+
+### A.1.3. Pointset Config (PubSub)
+
+**Attributes:**
+```json
+{
+  "subFolder": "pointset",
+  "subType": "config",
+  "transactionId": "UUFI:sess123:002",
+  "source": "client-id",
+  "principal": "client-id@",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1"
+}
+```
+
+**Data:**
+```json
+{
+  "version": "1.5.2",
+  "timestamp": "2026-04-29T10:05:00Z",
+  "points": {
+    "temp": { "set_value": 22.5 }
+  }
+}
+```
+
+### A.1.4. Pointset Config (MQTT)
 
 **Topic:** `/uufi/r/reg-1/d/dev-1/c/config/pointset`
 
@@ -286,7 +366,40 @@ This appendix references the formal JSON schemas and provides message examples f
 }
 ```
 
-### A.1.3. Blobset Config (MQTT)
+### A.1.5. Blobset Config (PubSub)
+
+**Attributes:**
+```json
+{
+  "subFolder": "blobset",
+  "subType": "config",
+  "transactionId": "UUFI:sess123:003",
+  "source": "client-id",
+  "principal": "client-id@",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1"
+}
+```
+
+**Data:**
+```json
+{
+  "version": "1.5.2",
+  "timestamp": "2026-04-29T10:10:00Z",
+  "blobset": {
+    "blobs": {
+      "system": {
+        "phase": "apply",
+        "url": "file:///path/to/bundle.bin",
+        "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        "generation": "2026-04-29T10:10:00Z"
+      }
+    }
+  }
+}
+```
+
+### A.1.6. Blobset Config (MQTT)
 
 **Topic:** `/uufi/r/reg-1/d/dev-1/c/config/blobset`
 

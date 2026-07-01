@@ -20,4 +20,16 @@ for count in `seq 0 30`; do
     sleep 1
 done
 
+if [[ ! -f var/tmp/pod_ready.txt ]]; then
+    echo "=== DIAGNOSTIC LOGS FOR UDMIS STARTUP FAILURE ==="
+    echo "Host working directory: $PWD"
+    echo "Host var/tmp/ contents:"
+    ls -la var/tmp || true
+    echo "Docker container status:"
+    docker ps -a || true
+    echo "Docker logs for udmis:"
+    docker logs udmis || true
+    echo "=== END DIAGNOSTIC LOGS ==="
+fi
+
 ls -l var/tmp/pod_ready.txt 2>&1

@@ -1,0 +1,49 @@
+{
+  "$udmi_version": "1.5.2",
+  "title": "Mosquitto Client Response",
+  "description": "Information returned by Mosquitto dynamic security getClient command.",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": true,
+  "properties": {
+    "command": {
+      "type": "string"
+    },
+    "error": {
+      "type": "string"
+    },
+    "status": {
+      "type": "integer"
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "client": {
+          "type": "object",
+          "additionalProperties": true,
+          "properties": {
+            "username": {
+              "type": "string"
+            },
+            "clientid": {
+              "type": "string"
+            },
+            "roles": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "rolename": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

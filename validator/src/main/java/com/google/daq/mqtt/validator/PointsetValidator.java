@@ -27,6 +27,8 @@ import udmi.schema.State;
 /** Manage pointset validation. */
 public class PointsetValidator {
 
+  private static final int MAX_DECIMAL_PLACES = 2;
+
   private final Metadata metadata;
   private final ErrorCollector errorCollector;
   private Set<String> missingPoints;
@@ -126,6 +128,23 @@ public class PointsetValidator {
     Set<String> outOfRangeErrors = new HashSet<>();
     for (Entry<String, PointPointsetEvents> entry : points.entrySet()) {
       String pointName = entry.getKey();
+      PointPointsetEvents point = entry.getValue();
+
+      // Check for excessive decimal precision on floating-point numbers
+      if (point.present_value instanceof Number numberValue
+          && !(point.present_value instanceof Integer || point.present_value instanceof Long)) {
+        double d = numberValue.doubleValue();
+        if (!Double.isInfinite(d) && !Double.isNaN(d)) {
+          int scale = java.math.BigDecimal.valueOf(d).scale();
+          if (scale > MAX_DECIMAL_PLACES) {
+            outOfRangeErrors.add(
+                String.format(
+                    "%s: present_value %s has excessive decimal precision (%d digits after dot, recommended max is %d)",
+                    pointName, point.present_value, scale, MAX_DECIMAL_PLACES));
+          }
+        }
+      }
+
       PointPointsetModel pointModel = modelPoints.get(pointName);
       if (pointModel == null) {
         continue;
@@ -134,8 +153,6 @@ public class PointsetValidator {
       if (pointModel.range_min == null && pointModel.range_max == null) {
         continue;
       }
-
-      PointPointsetEvents point = points.get(pointName);
 
       if (!Number.class.isInstance(point.present_value)) {
         outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));

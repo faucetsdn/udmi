@@ -2,8 +2,8 @@
   "blobset" : {
     "blobs" : {
       "pubber_module" : {
-        "phase" : "final",
-        "generation" : "TIMESTAMP"
+        "generation" : "TIMESTAMP",
+        "phase" : "final"
       }
     }
   },
@@ -12,6 +12,9 @@
   },
   "localnet" : {
     "families" : {
+      "bacnet" : {
+        "addr" : "27312"
+      },
       "ether" : {
         "addr" : "42:01:ac:11:23:ac"
       },
@@ -20,9 +23,6 @@
       },
       "vendor" : {
         "addr" : "28179023"
-      },
-      "bacnet" : {
-        "addr" : "27312"
       }
     }
   },
@@ -31,37 +31,37 @@
       "filter_alarm_pressure_status" : {
         "units" : "No-units"
       },
+      "filter_differential_pressure_sensor" : {
+        "units" : "Degrees-Celsius"
+      },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "value_state" : "applied"
-      },
-      "filter_differential_pressure_sensor" : {
-        "units" : "Degrees-Celsius"
       }
     }
   },
   "system" : {
-    "last_config" : "TIMESTAMP",
-    "operation" : {
-      "operational" : true,
-      "last_start" : "TIMESTAMP",
-      "restart_count" : 1,
-      "mode" : "initial"
-    },
-    "serial_no" : "sequencer-23930",
     "hardware" : {
       "make" : "BOS",
       "model" : "pubber"
     },
+    "last_config" : "TIMESTAMP",
+    "operation" : {
+      "last_start" : "TIMESTAMP",
+      "mode" : "initial",
+      "operational" : true,
+      "restart_count" : 1
+    },
+    "serial_no" : "sequencer-7770",
     "software" : {
       "firmware" : "v1",
       "pubber_module" : "v2"
     },
     "status" : {
-      "message" : "Staging blob update...",
-      "category" : "blobset.blob.apply",
-      "timestamp" : "TIMESTAMP",
-      "level" : 300
+      "category" : "blobset.blob.receive",
+      "level" : 100,
+      "message" : "Received blob update config for pubber_module",
+      "timestamp" : "TIMESTAMP"
     }
   },
   "timestamp" : "TIMESTAMP",

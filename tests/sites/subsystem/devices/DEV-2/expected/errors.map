@@ -1,0 +1,2 @@
+Exceptions for DEV-2
+  Points temp have defined url field, which is only allowed in generated metadata_norm.json

@@ -25,6 +25,7 @@ import static udmi.schema.Category.BLOBSET_BLOB_PARSE;
 import static udmi.schema.Category.BLOBSET_BLOB_RECEIVE;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
+import com.google.daq.mqtt.sequencer.DefaultLogLevel;
 import com.google.daq.mqtt.sequencer.Feature;
 import com.google.daq.mqtt.sequencer.SequenceBase;
 import com.google.daq.mqtt.sequencer.Summary;
@@ -98,6 +99,7 @@ public class BlobsetSequences extends SequenceBase {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
     endpointConfiguration.protocol = Protocol.MQTT;
     endpointConfiguration.hostname = hostname;
+    endpointConfiguration.port = getAlternateEndpointPort();
     endpointConfiguration.client_id = generateEndpointConfigClientId(registryId);
     if (isMqttProvider()) {
       endpointConfiguration.topic_prefix = endpointConfiguration.client_id;
@@ -417,13 +419,20 @@ public class BlobsetSequences extends SequenceBase {
     deviceConfig.blobset = blobset;
   }
 
-  private String executeBlobUpdate(BlobUpdateTestingModel target) {
+  private String executeBlobUpdate(BlobUpdateTestingModel target, ExpectedLog... expectedLogs) {
     String blobName = target.blob_name;
     String url = target.url;
     String sha256 = target.sha256;
 
     setDeviceConfigSoftwareBlob(blobName, url, sha256);
     updateConfig("trigger blob update for " + blobName);
+
+    for (ExpectedLog expectation : expectedLogs) {
+      expectation.level().ifPresentOrElse(
+          level -> waitForLog(expectation.category(), level),
+          ()  -> waitForLog(expectation.category())
+      );
+    }
 
     untilTrue(blobName + " phase transitions", () -> {
       BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
@@ -458,14 +467,7 @@ public class BlobsetSequences extends SequenceBase {
     info(format("Testing blob update for blob key %s, version %s", target.blob_name,
         target.version));
 
-    String blobName = executeBlobUpdate(target);
-
-    for (ExpectedLog expectation : expectedLogs) {
-      expectation.level().ifPresentOrElse(
-          level -> waitForLog(expectation.category(), level),
-          ()  -> waitForLog(expectation.category())
-      );
-    }
+    String blobName = executeBlobUpdate(target, expectedLogs);
 
     BlobBlobsetState blobBlobsetState = deviceState.blobset.blobs.get(blobName);
 
@@ -490,6 +492,7 @@ public class BlobsetSequences extends SequenceBase {
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates a successful blob update where the device fetches, applies, "
       + "and reports the new version.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_success() {
     verifyBlobUpdateSequence("success", true,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -500,6 +503,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates tamper protection by providing a valid URL but an incorrect SHA-256 hash.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_invalid_hash() {
     verifyBlobUpdateSequence("fail_hash", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -510,6 +514,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates network resilience by providing an unreachable or 404 URL.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_unreachable_url() {
     verifyBlobUpdateSequence("fail_fetch", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -520,6 +525,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates format and signature checking by providing a dummy payload.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_invalid_payload() {
     verifyBlobUpdateSequence("fail_parse", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -530,6 +536,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates reporting of incompatibility for a blob update.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_incompatible() {
     verifyBlobUpdateSequence("fail_incompatible", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -540,6 +547,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates reporting of an oversized payload fetch failure.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_oversize() {
     verifyBlobUpdateSequence("fail_oversize", false,
         expectLog(BLOBSET_BLOB_RECEIVE),
@@ -551,6 +559,7 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   @Feature(stage = PREVIEW, bucket = SYSTEM_SOFTWARE_UPDATES)
   @Summary("Validates that a previously applied blob config is not reapplied.")
+  @DefaultLogLevel(Level.DEBUG)
   public void blob_update_idempotency() {
     // Standard successful update
     verifyBlobUpdateSequence("success", true,
@@ -560,20 +569,20 @@ public class BlobsetSequences extends SequenceBase {
     );
 
     // Resend the exact same config
-    BlobUpdateTestingModel target = getUpdateTarget("success");
+    final BlobUpdateTestingModel target = getUpdateTarget("success");
     updateConfig("trigger redundant update to check for idempotency");
 
     sleepFor("waiting for device to process update", Duration.ofSeconds(10));
-
-    untilTrue(target.blob_name + " phase is FINAL", () -> {
-      BlobBlobsetState blobState = deviceState.blobset.blobs.get(target.blob_name);
-      return blobState != null && BlobPhase.FINAL.equals(blobState.phase);
-    });
 
     // No new lifecycle logs should have been emitted
     checkWasNotLogged(BLOBSET_BLOB_RECEIVE, Level.DEBUG);
     checkWasNotLogged(BLOBSET_BLOB_FETCH, Level.DEBUG);
     checkWasNotLogged(BLOBSET_BLOB_APPLY, Level.INFO);
+
+    untilTrue(target.blob_name + " phase is FINAL", () -> {
+      BlobBlobsetState blobState = deviceState.blobset.blobs.get(target.blob_name);
+      return blobState != null && BlobPhase.FINAL.equals(blobState.phase);
+    });
   }
 
 }
