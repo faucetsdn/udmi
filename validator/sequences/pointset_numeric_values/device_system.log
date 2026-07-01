@@ -1,0 +1,156 @@
+TIMESTAMP INFO    device.log             Configured with auth_type RS256
+TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ether
+TIMESTAMP INFO    device.log             Family ether address is 42:01:ac:11:23:ac
+TIMESTAMP INFO    device.log             Using addresses from default interface: ens4 for family: ipv4
+TIMESTAMP INFO    device.log             Family ipv4 address is 172.17.35.172
+TIMESTAMP INFO    device.log             Resetting persistent store /usr/local/google/home/heykhyati/Projects/udmi/sites/udmi_site_model/out/devices/AHU-1/persistent_data.json
+TIMESTAMP INFO    device.log             Loading endpoint into persistent data from configuration
+TIMESTAMP WARNING device.log             Updating persistent store:
+{
+  "applied_blobs" : { },
+  "endpoint" : {
+    "auth_provider" : {
+      "basic" : {
+        "password" : "38269d11",
+        "username" : "/r/ZZ-TRI-FECTA/d/AHU-1"
+      }
+    },
+    "client_id" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "hostname" : "localhost",
+    "protocol" : "mqtt",
+    "topic_prefix" : "/r/ZZ-TRI-FECTA/d/AHU-1",
+    "transport" : "ssl"
+  },
+  "restart_count" : 1
+}
+TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-8321, mac null, gateway null, options noPersist
+TIMESTAMP INFO    device.log             Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi/out/pubber_module_repo_sequencer-8321
+TIMESTAMP INFO    device.log             Isolated JGit repo initialized successfully.
+TIMESTAMP WARNING device.log             Starting connection 1782883438116 with 0
+TIMESTAMP INFO    device.log             Loading device key bytes from /usr/local/google/home/heykhyati/Projects/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
+TIMESTAMP INFO    device.log             CA cert file: /usr/local/google/home/heykhyati/Projects/udmi/sites/udmi_site_model/reflector/ca.crt
+TIMESTAMP INFO    device.log             Device cert file: /usr/local/google/home/heykhyati/Projects/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.crt
+TIMESTAMP INFO    device.log             Private key file: /usr/local/google/home/heykhyati/Projects/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pem
+TIMESTAMP INFO    device.log             Password sha256 6b5344e1
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP
+TIMESTAMP WARNING device.log             Dropping state update until config received...
+TIMESTAMP WARNING device.log             Received config for config latch AHU-1
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPublisherHost sender with delay 10s
+TIMESTAMP
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberSystemManager sender with delay 10s
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 300s
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP WARNING device.log             Start waiting 10s for config latch for AHU-1
+TIMESTAMP WARNING device.log             Ending connection 1782883438116 with 1
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1998ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 1893ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_numeric_values)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1888ms
+TIMESTAMP DEBUG   device.log             State update defer 1887ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_numeric_values)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1650ms
+TIMESTAMP DEBUG   device.log             State update defer 1648ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_numeric_values)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1643ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_numeric_values)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -382ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_numeric_values)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_numeric_values)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1997ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_numeric_values)
+TIMESTAMP NOTICE  validation.feature.sequence Sequence complete
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer -1047ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_numeric_values)
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_numeric_values)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1999ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1868ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 1867ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_numeric_values)
+TIMESTAMP
+TIMESTAMP WARNING device.log             Terminating AHU-1 PubberPointsetManager sender
+TIMESTAMP WARNING device.log             Starting AHU-1 PubberPointsetManager sender with delay 10s
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1863ms
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   device.log             State update defer 759ms
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             State update defer 758ms
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_numeric_values)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 754ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_numeric_values)
+TIMESTAMP DEBUG   system.config.receive  success
+TIMESTAMP DEBUG   system.config.parse    success
+TIMESTAMP DEBUG   device.log             State update defer 1719ms
+TIMESTAMP INFO    device.log             Device AHU-1 config handler
+TIMESTAMP DEBUG   device.log             Config update AHU-1 (pointset_numeric_values)
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP DEBUG   device.log             value of noWriteback: false
+TIMESTAMP NOTICE  system.config.apply    success
+TIMESTAMP DEBUG   device.log             State update defer 1715ms
+TIMESTAMP DEBUG   device.log             State update defer 0ms
+TIMESTAMP
+TIMESTAMP DEBUG   device.log             State update AHU-1 (pointset_numeric_values)
