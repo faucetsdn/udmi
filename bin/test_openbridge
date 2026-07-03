@@ -1,0 +1,631 @@
+#!/bin/bash -e
+
+# Ensure the script runs from the repository root
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR/.."
+
+# Source common shell utilities to get access to native versioning (UDMI_VERSION, UDMI_COMMIT)
+source etc/shell_common.sh
+
+# Initialize test passed state
+TEST_PASSED=false
+
+# Limit JVM heap size for all Java processes (UDMIS, Bridges, Pubber, Registrar)
+# to prevent out-of-memory issues in resource-constrained CI environments.
+export JAVA_TOOL_OPTIONS="-Xmx512m"
+
+# 2. Environment Check
+echo "Checking environment..."
+for cmd in java docker nc base64 openssl curl tar jq; do
+  if ! command -v "$cmd" &> /dev/null; then
+    echo "Error: $cmd is not installed or not in PATH." >&2
+    exit 1
+  fi
+done
+
+if ! docker compose version &>/dev/null; then
+  echo "Error: docker compose plugin is not installed." >&2
+  exit 1
+fi
+
+if [ ! -d "sites/udmi_site_model" ]; then
+  echo "Site model directory missing. Cloning..."
+  bin/clone_model
+fi
+SITE_MODEL="$(pwd)/sites/udmi_site_model"
+
+REGISTRY_ID=$(jq -r .registry_id "$SITE_MODEL/cloud_iot_config.json")
+DEVICE_ID=$(jq -r .device_id "$SITE_MODEL/cloud_iot_config.json")
+
+# Cleanup Hook (Trap) and Process Helpers
+PUBBER_PID=""
+BRIDGE_EVENTS_PID=""
+BRIDGE_STATE_PID=""
+BRIDGE_REFLECT_PID=""
+UDMIS_PID=""
+CREATED_SYMLINK=false
+
+kill_process() {
+  local pid=$1
+  if [ -n "$pid" ] && kill -0 "$pid" 2>/dev/null; then
+    echo "Killing process $pid and its children..."
+    local children=$(pgrep -P "$pid" 2>/dev/null || true)
+    kill "$pid" 2>/dev/null || true
+    for child in $children; do
+      kill "$child" 2>/dev/null || true
+    done
+    # Wait up to 5s
+    for i in {1..10}; do
+      if ! kill -0 "$pid" 2>/dev/null; then
+        return 0
+      fi
+      sleep 0.5
+    done
+    kill -9 "$pid" 2>/dev/null || true
+  fi
+}
+
+clean_var_directory() {
+  echo "Initializing and cleaning bridgehead/var..."
+  # 1. Try host-side cleanup first (works for files owned by us)
+  if [ -d bridgehead/var ]; then
+    find bridgehead/var -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} + 2>/dev/null || true
+    rm -rf bridgehead/var/tmp/* bridgehead/var/tmp/.* 2>/dev/null || true
+  fi
+
+  # 2. If there are still files left (e.g. root-owned), try using our docker image if it exists
+  if [ -d bridgehead/var ] && [ "$(ls -A bridgehead/var 2>/dev/null | grep -v '^tmp$')" ]; then
+    if docker image inspect bridgehead-mosquitto:latest &>/dev/null; then
+      echo "Using bridgehead-mosquitto image to clean root-owned files..."
+      docker run --rm --entrypoint "" -v "$(pwd)/bridgehead/var:/var_dir" bridgehead-mosquitto sh -c "
+        find /var_dir -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} +
+      " || true
+    else
+      echo "Warning: Some files in bridgehead/var could not be cleaned (permission denied) and bridgehead-mosquitto image is not built yet." >&2
+    fi
+  fi
+
+  # 3. Pre-create directories so they are owned by the host user
+  mkdir -p bridgehead/var/mosquitto/data
+  mkdir -p bridgehead/var/mosquitto/log
+  mkdir -p bridgehead/var/mosquitto/certs
+  mkdir -p bridgehead/var/etcd
+  mkdir -p bridgehead/var/tmp
+
+  # Explicitly set permissions to ensure they remain readable/traversable by host
+  # even after container chowns them to mosquitto (1883) or root
+  chmod 755 bridgehead/var
+  chmod 755 bridgehead/var/mosquitto
+  chmod 755 bridgehead/var/mosquitto/data
+  chmod 755 bridgehead/var/mosquitto/log
+  chmod 755 bridgehead/var/mosquitto/certs
+  chmod 755 bridgehead/var/etcd
+  chmod 777 bridgehead/var/tmp
+}
+
+cleanup() {
+  trap - EXIT INT TERM
+  
+  if [ "$TEST_PASSED" = false ]; then
+    echo "Test failed. Saving Docker logs to out/..." >&2
+    # Files should be readable as they are in pre-created directories
+    if [ -f bridgehead/var/mosquitto/log/mosquitto.log ]; then
+      echo "Saving Mosquitto broker log..." >&2
+      cp bridgehead/var/mosquitto/log/mosquitto.log out/mosquitto.log
+    fi
+    if [ -f bridgehead/var/mosquitto/dynamic_security.json ]; then
+      echo "Saving Mosquitto dynamic security config..." >&2
+      # Run cp and chmod inside the container to ensure the copied file is readable by the host runner user
+      docker run --rm --entrypoint "" \
+        -v "$(pwd)/bridgehead/var:/var_dir" \
+        -v "$(pwd)/out:/out_dir" \
+        bridgehead-mosquitto \
+        sh -c "cp /var_dir/mosquitto/dynamic_security.json /out_dir/dynamic_security.json && chmod 644 /out_dir/dynamic_security.json" 2>/dev/null || true
+    fi
+    docker compose -f bridgehead/docker-compose.yml logs mosquitto > out/mosquitto_docker.log 2>&1 || true
+    docker compose -f bridgehead/docker-compose.yml logs etcd > out/etcd_docker.log 2>&1 || true
+    docker logs pubsub-emulator > out/pubsub_emulator.log 2>&1 || true
+    echo "All logs (Udmis, Bridges, Pubber, Mosquitto, Etcd, PubSub Emulator, Mosquitto Broker, Mosquitto DynSec) are available in the 'out/' directory." >&2
+  fi
+
+  echo "Cleaning up background processes and containers..."
+  
+  kill_process "$PUBBER_PID"
+  kill_process "$BRIDGE_EVENTS_PID"
+  kill_process "$BRIDGE_STATE_PID"
+  kill_process "$BRIDGE_REFLECT_PID"
+  kill_process "$UDMIS_PID"
+
+  echo "Removing pubsub-emulator container..."
+  docker rm -f pubsub-emulator >/dev/null 2>&1 || true
+
+  echo "Stopping compose services..."
+  docker compose -f bridgehead/docker-compose.yml --env-file bridgehead/.env down || true
+
+  clean_var_directory
+
+  if [ "$CREATED_SYMLINK" = true ]; then
+    echo "Removing created symlink bridgehead/udmi_site_model..."
+    rm -f bridgehead/udmi_site_model
+  fi
+
+  echo "Cleanup complete."
+}
+
+trap cleanup EXIT INT TERM
+
+# 3. Clean Prior Runs
+echo "Cleaning up prior runs..."
+docker compose -f bridgehead/docker-compose.yml --env-file bridgehead/.env down || true
+docker rm -f pubsub-emulator >/dev/null 2>&1 || true
+
+clean_var_directory
+
+echo "Generating and copying Mosquitto certs on host..."
+# Generate CA and server certs in site model reflector if not present
+if [ ! -f sites/udmi_site_model/reflector/ca.crt ]; then
+  bin/keygen CA/mosquitto sites/udmi_site_model/reflector
+  bin/keygen CERT/mosquitto sites/udmi_site_model/reflector
+fi
+# Copy to mosquitto certs dir
+cp sites/udmi_site_model/reflector/ca.crt bridgehead/var/mosquitto/certs/
+cp sites/udmi_site_model/reflector/rsa_private.crt bridgehead/var/mosquitto/certs/
+cp sites/udmi_site_model/reflector/rsa_private.pem bridgehead/var/mosquitto/certs/
+
+echo "Generating missing device certificates..."
+for device_dir in sites/udmi_site_model/devices/*; do
+  if [ -d "$device_dir" ]; then
+    device_id=$(basename "$device_dir")
+    # Check if we have a private key (either rsa or ec) and generate cert if missing
+    if [ -f "$device_dir/rsa_private.pem" ] && [ ! -f "$device_dir/rsa_private.crt" ]; then
+      echo "Generating cert for RSA device $device_id..."
+      bin/keygen CERT "$device_dir"
+    elif [ -f "$device_dir/ec_private.pem" ] && [ ! -f "$device_dir/ec_private.crt" ]; then
+      echo "Generating cert for EC device $device_id..."
+      bin/keygen CERT "$device_dir"
+    fi
+  fi
+done
+
+# 4. Port Check
+echo "Checking ports..."
+for port in 8883 2379 8085; do
+  if nc -z 127.0.0.1 "$port" &>/dev/null; then
+    echo "Error: Port $port is already in use." >&2
+    exit 1
+  fi
+done
+
+# 5. Site Model Setup
+echo "Setting up site model link..."
+rm -rf bridgehead/udmi_site_model
+ln -s ../sites/udmi_site_model bridgehead/udmi_site_model
+CREATED_SYMLINK=true
+
+# 7. Build Udmis and Validator
+echo "Building Validator..."
+validator/bin/build
+echo "Building Udmis..."
+udmis/bin/build
+echo "Building Pubber..."
+pubber/bin/build
+
+# 8. Start Docker Services
+echo "Configuring environment..."
+HOST_IP=$(hostname -I 2>/dev/null | awk '{print $1}') || HOST_IP=""
+if [ -z "$HOST_IP" ]; then
+  HOST_IP="127.0.0.1"
+fi
+export HOST_IP
+export MOSQUITTO_LOG_PATH="$(pwd)/bridgehead/var/mosquitto/log/mosquitto.log"
+export AUTH_USER=scrumptious
+export AUTH_PASS=aardvark
+export SERV_USER=rocket
+export SERV_PASS=monkey
+export INFLUXDB_TOKEN=$(openssl rand -hex 32)
+export INFLUX_USER=bridgehead
+export INFLUX_PASSWORD=password
+export GRAFANA_USER=bridgehead
+export GRAFANA_PASSWORD=password
+
+mkdir -p out
+cat << 'EOF' > out/docker-compose.override.yml
+services:
+  etcd:
+    command: ["etcd", "-listen-client-urls=http://0.0.0.0:2379", "-advertise-client-urls=http://127.0.0.1:2379", "--data-dir", "/var/etcd"]
+EOF
+
+echo "Starting mosquitto and etcd via docker-compose..."
+docker compose -f bridgehead/docker-compose.yml -f out/docker-compose.override.yml --env-file bridgehead/.env up -d --build mosquitto etcd
+
+echo "Waiting for ports 8883 and 2379..."
+timeout=30
+while [ $timeout -gt 0 ]; do
+  if nc -z 127.0.0.1 8883 && nc -z 127.0.0.1 2379; then
+    echo "Ports 8883 and 2379 are open."
+    break
+  fi
+  sleep 1
+  timeout=$((timeout - 1))
+done
+if [ $timeout -le 0 ]; then
+  echo "Error: Timeout waiting for ports 8883 and 2379." >&2
+  exit 1
+fi
+
+echo "Waiting for Mosquitto initialization to complete..."
+timeout=30
+while [ $timeout -gt 0 ]; do
+  if docker logs mosquitto 2>&1 | grep -q "Registered sites:"; then
+    echo "Mosquitto initialization completed."
+    break
+  fi
+  sleep 1
+  timeout=$((timeout - 1))
+done
+if [ $timeout -le 0 ]; then
+  echo "Error: Timeout waiting for Mosquitto initialization." >&2
+  docker logs mosquitto >&2
+  exit 1
+fi
+
+echo "Waiting for Mosquitto log file to be readable on host..."
+timeout=30
+while [ $timeout -gt 0 ]; do
+  if [ -r "bridgehead/var/mosquitto/log/mosquitto.log" ]; then
+    echo "Mosquitto log file is readable."
+    break
+  fi
+  sleep 1
+  timeout=$((timeout - 1))
+done
+if [ $timeout -le 0 ]; then
+  echo "Error: Timeout waiting for Mosquitto log file to be readable." >&2
+  ls -la bridgehead/var/mosquitto/log/ || true
+  exit 1
+fi
+
+# 9. Start Pub/Sub Emulator
+echo "Starting Pub/Sub Emulator..."
+docker run -d --name pubsub-emulator -p 8085:8085 gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+
+echo "Waiting for Pub/Sub Emulator to be ready..."
+timeout=30
+while [ $timeout -gt 0 ]; do
+  # Query topics list, if it returns 200 (even if empty) the emulator is ready
+  if curl -s -o /dev/null "http://127.0.0.1:8085/v1/projects/udmis/topics"; then
+    echo "Pub/Sub Emulator is ready."
+    break
+  fi
+  sleep 1
+  timeout=$((timeout - 1))
+done
+if [ $timeout -le 0 ]; then
+  echo "Error: Timeout waiting for Pub/Sub Emulator to be ready." >&2
+  exit 1
+fi
+
+# 10. Create Topics and Subscriptions
+echo "Creating topics in Pub/Sub Emulator..."
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_target"
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_state"
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_reflect"
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_control"
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_reply"
+
+echo "Creating subscriptions in Pub/Sub Emulator..."
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-udmis" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"projects/udmis/topics/udmi_target"}'
+
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-provision" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"projects/udmis/topics/udmi_target"}'
+
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_state-udmis" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"projects/udmis/topics/udmi_state"}'
+
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reflect-udmis" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"projects/udmis/topics/udmi_reflect"}'
+
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_control-udmis" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"projects/udmis/topics/udmi_control"}'
+
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply-bridge" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"projects/udmis/topics/udmi_reply"}'
+
+curl -f -v -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"projects/udmis/topics/udmi_reply"}'
+
+echo "Verifying topics in Pub/Sub Emulator..."
+curl -f -v "http://127.0.0.1:8085/v1/projects/udmis/topics"
+echo
+echo "Verifying subscriptions in Pub/Sub Emulator..."
+curl -f -v "http://127.0.0.1:8085/v1/projects/udmis/subscriptions"
+echo
+
+# 11. Start Host Udmis (Pub/Sub Mode)
+echo "Starting Host Udmis (Pub/Sub Mode)..."
+export GCP_PROJECT=udmis
+export ETCD_CLUSTER=127.0.0.1
+export PUBSUB_EMULATOR_HOST=127.0.0.1:8085
+export UDMI_NAMESPACE=""
+
+# Ensure the var directory exists and contains the required deployed_version.json
+# UDMIS expects this file to exist and contain version info when running
+# We calculate these dynamically to match how bin/container does it in production
+mkdir -p udmis/var
+(
+  current_user="${USER:-runner}@$(hostname)"
+  built_at=$(date --utc +%Y-%m-%dT%H:%M:%SZ)
+  
+  cat <<EOF > udmis/var/deployed_version.json
+{
+  "built_at" : "$built_at",
+  "built_by" : "$current_user",
+  "udmi_ref" : "g$UDMI_COMMIT",
+  "udmi_version" : "$UDMI_VERSION"
+}
+EOF
+)
+
+echo "Generating Udmis Host Pub/Sub config..."
+jq --arg auth_user "$AUTH_USER" \
+   --arg auth_pass "$AUTH_PASS" \
+   --arg serv_user "$SERV_USER" \
+   --arg serv_pass "$SERV_PASS" \
+   '.flows.reflect.send_id = "udmi_reply" |
+    .flows.distributor.enabled = "false" |
+    .iot_access.implicit = {
+      "provider": "implicit",
+      "options": "enabled=${ETCD_CLUSTER}",
+      "endpoint": {
+        "protocol": "mqtt",
+        "transport": "ssl",
+        "hostname": "localhost",
+        "port": 8883,
+        "ca_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/ca.crt",
+        "cert_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.crt",
+        "key_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.pem",
+        "auth_provider": {
+          "basic": {
+            "username": $auth_user,
+            "password": $auth_pass
+          }
+        }
+      }
+    } |
+    .iot_access."iot-access".provider = "dynamic" |
+    .iot_access."iot-access".project_id = "implicit, pubsub" |
+    .bridges.reply_bridge = {
+      "enabled": "true",
+      "from": {
+        "protocol": "pubsub",
+        "recv_id": "udmi_reply-bridge"
+      },
+      "morf": {
+        "protocol": "mqtt",
+        "transport": "ssl",
+        "hostname": "localhost",
+        "port": 8883,
+        "send_id": "reply",
+        "ca_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/ca.crt",
+        "cert_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.crt",
+        "key_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.pem",
+        "auth_provider": {
+          "basic": {
+            "username": $serv_user,
+            "password": $serv_pass
+          }
+        }
+      }
+    }' udmis/etc/prod_pod.json > out/prod_pod_host.json
+
+rm -f /tmp/pod_ready.txt
+
+udmis/bin/run out/prod_pod_host.json > out/udmis_host.log 2>&1 &
+UDMIS_PID=$!
+
+echo "Waiting for Host Udmis (Pub/Sub Mode) to be ready..."
+timeout=30
+while [ $timeout -gt 0 ]; do
+  if [ -f /tmp/pod_ready.txt ]; then
+    echo "Host Udmis (Pub/Sub Mode) is ready."
+    break
+  fi
+  if ! kill -0 "$UDMIS_PID" 2>/dev/null; then
+    echo "Error: Host Udmis (Pub/Sub Mode) process exited unexpectedly." >&2
+    cat out/udmis_host.log >&2
+    exit 1
+  fi
+  sleep 1
+  timeout=$((timeout - 1))
+done
+if [ $timeout -le 0 ]; then
+  echo "Error: Timeout waiting for Host Udmis (Pub/Sub Mode) to start." >&2
+  cat out/udmis_host.log >&2
+  exit 1
+fi
+
+# 14. Start Bridges
+echo "Starting Bridges..."
+java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
+  com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
+  --mqtt_broker_url=ssl://127.0.0.1:8883 \
+  --mqtt_subscription_topic="/r/+/d/+/events/#" \
+  --gcp_project_id=udmis \
+  --pubsub_topic_id=udmi_target \
+  --mqtt_client_id=bridge-events \
+  --mqtt_tls \
+  --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
+  --mqtt_username=rocket \
+  --mqtt_password=monkey \
+  --etcd_target=http://127.0.0.1:2379 \
+  --etcd_options=enabled=true \
+  --source_attribute=iot-access \
+  > out/bridge_events.log 2>&1 &
+BRIDGE_EVENTS_PID=$!
+
+java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
+  com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
+  --mqtt_broker_url=ssl://127.0.0.1:8883 \
+  --mqtt_subscription_topic="/r/+/d/+/state" \
+  --gcp_project_id=udmis \
+  --pubsub_topic_id=udmi_state \
+  --mqtt_client_id=bridge-state \
+  --mqtt_tls \
+  --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
+  --mqtt_username=rocket \
+  --mqtt_password=monkey \
+  --etcd_target=http://127.0.0.1:2379 \
+  --etcd_options=enabled=true \
+  --source_attribute=iot-access \
+  > out/bridge_state.log 2>&1 &
+BRIDGE_STATE_PID=$!
+
+java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
+  com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
+  --mqtt_broker_url=ssl://127.0.0.1:8883 \
+  --mqtt_subscription_topic="/r/UDMI-REFLECT/d/+/reflect" \
+  --gcp_project_id=udmis \
+  --pubsub_topic_id=udmi_reflect \
+  --mqtt_client_id=bridge-reflect \
+  --mqtt_tls \
+  --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
+  --mqtt_username=rocket \
+  --mqtt_password=monkey \
+  --etcd_target=http://127.0.0.1:2379 \
+  --etcd_options=enabled=true \
+  --source_attribute=iot-access \
+  > out/bridge_reflect.log 2>&1 &
+BRIDGE_REFLECT_PID=$!
+
+wait_for_bridge() {
+  local name=$1
+  local pid=$2
+  local log_file=$3
+  local timeout=30
+  
+  echo "Waiting for $name to connect to MQTT broker..."
+  while [ $timeout -gt 0 ]; do
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo "Error: $name process exited unexpectedly. Logs:" >&2
+      cat "$log_file" >&2
+      exit 1
+    fi
+    if grep -q "Connected to MQTT broker." "$log_file" 2>/dev/null; then
+      echo "$name is connected."
+      return 0
+    fi
+    sleep 1
+    timeout=$((timeout - 1))
+  done
+  echo "Error: Timeout waiting for $name to connect. Logs:" >&2
+  cat "$log_file" >&2
+  exit 1
+}
+
+wait_for_device_config() {
+  local device_id=$1
+  local registry_id=$2
+  local site_model=$3
+  local timeout_sec=90
+  
+  local key_file="$site_model/devices/$device_id/rsa_private.pkcs8"
+  if [ ! -f "$key_file" ]; then
+    echo "Error: Key file $key_file not found" >&2
+    return 1
+  fi
+  
+  # Calculate password (first 8 chars of sha256sum of the pkcs8 key)
+  local password
+  password=$(sha256sum "$key_file" | awk '{print $1}' | cut -c1-8)
+  
+  local username="/r/$registry_id/d/$device_id"
+  local topic="/r/$registry_id/d/$device_id/config"
+  
+  echo "Waiting up to ${timeout_sec}s for device $device_id config to be available on MQTT..."
+  
+  local sub_err_log="out/${device_id}_sub_error.log"
+  rm -f "$sub_err_log"
+  
+  if timeout "$timeout_sec" mosquitto_sub \
+    -h 127.0.0.1 -p 8883 \
+    -t "$topic" \
+    -i "$username" \
+    -u "$username" -P "$password" \
+    --cafile "$site_model/reflector/ca.crt" \
+    --cert "$site_model/devices/$device_id/rsa_private.crt" \
+    --key "$site_model/devices/$device_id/rsa_private.pem" \
+    -C 1 > "out/${device_id}_config_received.json" 2> "$sub_err_log"; then
+    echo "Device $device_id config is available on MQTT (ACL verified)."
+    return 0
+  else
+    echo "Error: Timeout or failure waiting for device $device_id config on MQTT." >&2
+    if [ -f "$sub_err_log" ]; then
+      echo "=== mosquitto_sub error log ===" >&2
+      cat "$sub_err_log" >&2
+      echo "===============================" >&2
+    fi
+    echo "This indicates UDMIS failed to publish config, or Mosquitto ACLs blocked it." >&2
+    return 1
+  fi
+}
+
+wait_for_bridge "Events Bridge" "$BRIDGE_EVENTS_PID" "out/bridge_events.log"
+wait_for_bridge "State Bridge" "$BRIDGE_STATE_PID" "out/bridge_state.log"
+wait_for_bridge "Reflect Bridge" "$BRIDGE_REFLECT_PID" "out/bridge_reflect.log"
+echo "Bridges are running and connected."
+
+echo "Registering devices via All-Pub/Sub Pipeline..."
+bin/registrar "$SITE_MODEL" //gref/udmis
+
+if ! wait_for_device_config "$DEVICE_ID" "$REGISTRY_ID" "$SITE_MODEL"; then
+  echo "Pre-verification failed. Dumping UDMIS logs..." >&2
+  cat out/udmis_host.log >&2
+  exit 1
+fi
+
+# 15. Run Pubber
+echo "Starting Pubber..."
+bin/pubber "$SITE_MODEL" //mqtt/127.0.0.1 "$DEVICE_ID" 852649 > out/pubber_host.log 2>&1 &
+PUBBER_PID=$!
+
+echo "Waiting for messages to propagate and populating etcd (up to 45s)..."
+poll_timeout=45
+STATE_VAL=""
+
+for ((i = 1; i <= poll_timeout; i++)); do
+  STATE_VAL=$(udmis/bin/etcdctl get --print-value-only "/r/$REGISTRY_ID/d/$DEVICE_ID:last_state" 2>/dev/null) || STATE_VAL=""
+  if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
+    break
+  fi
+  sleep 1
+done
+
+echo "Verifying etcd state..."
+udmis/bin/etcdctl version
+
+echo "All keys in etcd:"
+udmis/bin/etcdctl get --prefix "" || true
+
+echo "STATE_VAL output: $STATE_VAL"
+
+if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
+  echo "Verification PASSED"
+  TEST_PASSED=true
+else
+  echo "Verification FAILED"
+  exit 1
+fi

@@ -6,6 +6,7 @@ import static com.google.bos.udmi.service.messaging.impl.PubSubPipe.getTransport
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -107,6 +108,7 @@ public class PubSubIotAccessProvider extends IotAccessBase {
       stringMap.put(REGISTRY_ID_PROPERTY_KEY, envelope.deviceRegistryId);
       stringMap.put(DEVICE_ID_KEY, envelope.deviceId);
       stringMap.put(CATEGORY_PROPERTY_KEY, category);
+      stringMap.put(SUBTYPE_PROPERTY_KEY, category);
 
       int index = envelope.source == null ? -1 : envelope.source.indexOf(SOURCE_SEPARATOR);
       String userPart = ifNotNullGet(envelope.source, s -> s.substring(index + 1));
