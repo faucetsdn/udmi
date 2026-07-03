@@ -143,10 +143,7 @@ public class PubSubReflector implements MessagePublisher {
       Subscriber.Builder subscriberBuilder =
           Subscriber.newBuilder(subscriptionName, new MessageProcessor());
       if (isEmulator()) {
-        ManagedChannel channel = getEmulatorChannel();
-        TransportChannelProvider channelProvider =
-            FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
-        subscriberBuilder.setChannelProvider(channelProvider);
+        subscriberBuilder.setChannelProvider(getEmulatorChannelProvider());
         subscriberBuilder.setCredentialsProvider(NoCredentialsProvider.create());
       }
       subscriber = subscriberBuilder.build();
@@ -158,10 +155,7 @@ public class PubSubReflector implements MessagePublisher {
         System.err.println("Sending reflector messages to " + topicName);
         Publisher.Builder publisherBuilder = Publisher.newBuilder(topicName);
         if (isEmulator()) {
-          ManagedChannel channel = getEmulatorChannel();
-          TransportChannelProvider channelProvider =
-              FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
-          publisherBuilder.setChannelProvider(channelProvider);
+          publisherBuilder.setChannelProvider(getEmulatorChannelProvider());
           publisherBuilder.setCredentialsProvider(NoCredentialsProvider.create());
         }
         publisher = publisherBuilder.build();
@@ -328,10 +322,7 @@ public class PubSubReflector implements MessagePublisher {
   private void resetSubscription(ProjectSubscriptionName subscriptionName) {
     SubscriptionAdminSettings.Builder settingsBuilder = SubscriptionAdminSettings.newBuilder();
     if (isEmulator()) {
-      ManagedChannel channel = getEmulatorChannel();
-      TransportChannelProvider channelProvider =
-          FixedTransportChannelProvider.create(GrpcTransportChannel.create(channel));
-      settingsBuilder.setTransportChannelProvider(channelProvider);
+      settingsBuilder.setTransportChannelProvider(getEmulatorChannelProvider());
       settingsBuilder.setCredentialsProvider(NoCredentialsProvider.create());
     }
     try (SubscriptionAdminClient subscriptionAdminClient =
@@ -417,5 +408,10 @@ public class PubSubReflector implements MessagePublisher {
     String useHost = lastIndex < 0 ? emulatorHost
         : String.format("localhost:%s", emulatorHost.substring(lastIndex + 1));
     return ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
+  }
+
+  private static TransportChannelProvider getEmulatorChannelProvider() {
+    GrpcTransportChannel transportChannel = GrpcTransportChannel.create(getEmulatorChannel());
+    return FixedTransportChannelProvider.create(transportChannel);
   }
 }
