@@ -6,9 +6,9 @@ import static com.google.bos.udmi.service.messaging.impl.PubSubPipe.getTransport
 import static com.google.udmi.util.Common.CATEGORY_PROPERTY_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.REGISTRY_ID_PROPERTY_KEY;
-import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SOURCE_SEPARATOR;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
