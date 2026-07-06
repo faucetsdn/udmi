@@ -139,7 +139,8 @@ public class PointsetValidator {
           if (scale > MAX_DECIMAL_PLACES) {
             outOfRangeErrors.add(
                 String.format(
-                    "%s: present_value %s has excessive decimal precision (%d digits after dot, recommended max is %d)",
+                    "%s: present_value %s has excessive decimal precision "
+                        + "(%d digits after dot, recommended max is %d)",
                     pointName, point.present_value, scale, MAX_DECIMAL_PLACES));
           }
         }
