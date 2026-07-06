@@ -573,16 +573,16 @@ jobs:
           bridgehead/tests/test_bridgehead
       - name: udmis.log
         if: ${{ !cancelled() }}
-        run: more out/bridgehead_udmis.log || true
+        run: cat out/bridgehead_udmis.log || true
       - name: validator.log
         if: ${{ !cancelled() }}
-        run: more out/bridgehead_validator.log || true
+        run: cat out/bridgehead_validator.log || true
       - name: pubber.log
         if: ${{ !cancelled() }}
-        run: more out/bridgehead_pubber.log || true
+        run: cat out/bridgehead_pubber.log || true
       - name: ahu1_exceptions.txt
         if: ${{ !cancelled() }}
-        run: more out/bridgehead_ahu1_exceptions.txt || true
+        run: cat out/bridgehead_ahu1_exceptions.txt || true
       - name: Upload logs
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
