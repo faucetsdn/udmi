@@ -1038,6 +1038,7 @@ public class Validator {
     summary.extra_devices = new ArrayList<>(extraDevices);
 
     summary.correct_devices = new ArrayList<>();
+    summary.pending_devices = new ArrayList<>();
     summary.error_devices = new ArrayList<>();
 
     Map<String, DeviceValidationEvents> devices = new TreeMap<>();
@@ -1062,7 +1063,11 @@ public class Validator {
         DeviceValidationEvents event = getValidationEvents(devices, deviceInfo);
         event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
-          summary.correct_devices.add(deviceId);
+          if (isPending(deviceInfo)) {
+            summary.pending_devices.add(deviceId);
+          } else {
+            summary.correct_devices.add(deviceId);
+          }
         } else {
           event.status.category = Category.VALIDATION_DEVICE_EXTRA;
           event.status.level = Level.WARNING.value();
@@ -1073,10 +1078,27 @@ public class Validator {
     summary.missing_devices = new ArrayList<>(targets);
     summary.missing_devices.removeAll(summary.error_devices);
     summary.missing_devices.removeAll(summary.correct_devices);
+    summary.missing_devices.removeAll(summary.pending_devices);
 
     System.err.println("Updating validation reports to " + outBaseDir.getAbsolutePath());
     sendValidationReport(makeValidationReport(summary, devices));
     sendDeviceValidationReports(summaries);
+  }
+
+  private boolean isPending(ReportingDevice device) {
+    Metadata metadata = device.getMetadata();
+    boolean expectsTelemetry = metadata != null && metadata.pointset != null;
+    boolean hasTelemetry = device.hasSeenTelemetry(getNow());
+    boolean hasState = device.seenSchemaRecently("state_system", getNow())
+        || device.seenSchemaRecently("state", getNow());
+
+    if (expectsTelemetry && !hasTelemetry) {
+      return true;
+    }
+    if (!hasState) {
+      return true;
+    }
+    return false;
   }
 
   private synchronized void sendDeviceValidationReports(Map<String, ValidationState> summaries) {

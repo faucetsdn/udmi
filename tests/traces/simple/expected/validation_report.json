@@ -25,10 +25,9 @@
     "GAT-123" : {
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
-        "category" : "validation.device.schema",
-        "detail" : "While validating pointset message at 1999-10-20T01:02:03Z",
-        "level" : 500,
-        "message" : "missing pointset subblock",
+        "category" : "validation.device.receive",
+        "level" : 200,
+        "message" : "Successful validation",
         "timestamp" : "1999-10-20T01:02:03Z"
       }
     },
@@ -45,10 +44,11 @@
   },
   "start_time" : "1999-10-20T01:02:03Z",
   "summary" : {
-    "correct_devices" : [ "AHU-1" ],
-    "error_devices" : [ "AHU-22", "GAT-123", "SNS-4" ],
+    "correct_devices" : [ ],
+    "error_devices" : [ "AHU-22", "SNS-4" ],
     "extra_devices" : [ ],
-    "missing_devices" : [ ]
+    "missing_devices" : [ ],
+    "pending_devices" : [ "AHU-1", "GAT-123" ]
   },
   "timestamp" : "1999-10-20T01:02:03Z",
   REDACTED,
