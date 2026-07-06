@@ -8,8 +8,8 @@ from datetime import timezone
 from typing import List, Optional, Tuple
 
 # Module-level compiled regex patterns for timestamp matching
-RE_TIMESTAMP_PREFIX = re.compile(r'^([\d\-T:Z\.,\s]+)\s+')
-RE_MERGE_TIMESTAMP = re.compile(r'^([\d\-T:Z\.,\s]+)\s+')
+RE_TIMESTAMP_PREFIX = re.compile(r'^(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?|\d{2}:\d{2}:\d{2}(?:\.\d+)?)')
+RE_MERGE_TIMESTAMP = re.compile(r'^(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?|\d{2}:\d{2}:\d{2}(?:\.\d+)?)')
 
 
 def parse_timestamp(ts_str: str) -> Optional[datetime]:
@@ -21,10 +21,13 @@ def parse_timestamp(ts_str: str) -> Optional[datetime]:
         return None
     ts_clean = ts_str.strip("[] ")
     
+    # Truncate nanoseconds (e.g. .214927805Z) to 6 microsecond digits (.214927Z) preserving timezone suffix
+    ts_clean = re.sub(r'(\.\d{6})\d+([Z\+\-\:\d]*)', r'\1\2', ts_clean)
+    
     dt = None
     # Fast-path C-accelerated ISO parsing (100x faster than strptime)
     if "T" in ts_clean or " " in ts_clean:
-        iso_candidate = ts_clean.rstrip("Z").replace(" ", "T")
+        iso_candidate = ts_clean.replace(" ", "T")
         try:
             dt = datetime.fromisoformat(iso_candidate)
         except ValueError:

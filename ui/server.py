@@ -292,34 +292,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                         except Exception:
                             pass
 
-                        if not project_spec:
-                            run_info_file = os.path.join(test_path, 'run_info.json')
-                            if os.path.exists(run_info_file):
-                                try:
-                                    with open(run_info_file, 'r', encoding='utf-8') as rf:
-                                        r_data = json.load(rf)
-                                        project_spec = r_data.get('project_spec') or r_data.get('target_project')
-                                except Exception:
-                                    pass
 
-                        if not project_spec:
-                            sessions_dir = os.path.join(ROOT_DIR, 'out', 'sessions')
-                            if os.path.exists(sessions_dir):
-                                for s in sorted(os.listdir(sessions_dir), reverse=True):
-                                    m_path = os.path.join(sessions_dir, s, 'triage_manifest.json')
-                                    if os.path.exists(m_path):
-                                        try:
-                                            with open(m_path, 'r', encoding='utf-8') as mf:
-                                                m_data = json.load(mf)
-                                                items = m_data.get('failures', []) + m_data.get('successes', [])
-                                                for f_item in items:
-                                                    if f_item.get('device_id') == device and f_item.get('test_name') == test_name:
-                                                        project_spec = m_data.get('metadata', {}).get('target_project')
-                                                        break
-                                        except Exception:
-                                            pass
-                                    if project_spec:
-                                        break
 
                         results[test_name] = {
                             "status": status,
@@ -395,25 +368,6 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                 cmd.extend(test_names)
 
         log_path = os.path.join(session_dir, 'sequencer.log')
-
-        # Save run metadata for historical target project tracking
-        session_meta_file = os.path.join(session_dir, 'run_info.json')
-        try:
-            with open(session_meta_file, 'w', encoding='utf-8') as smf:
-                json.dump({"project_spec": project_spec, "device_id": device_id, "timestamp": datetime.now().isoformat()}, smf, indent=2)
-        except Exception:
-            pass
-
-        if tests_param:
-            test_list = tests_param if isinstance(tests_param, list) else [t.strip() for t in str(tests_param).split(',') if t.strip()]
-            for t_name in test_list:
-                t_dir = os.path.join(site_model_resolved, 'out', 'devices', device_id, 'tests', t_name)
-                os.makedirs(t_dir, exist_ok=True)
-                try:
-                    with open(os.path.join(t_dir, 'run_info.json'), 'w', encoding='utf-8') as rf:
-                        json.dump({"project_spec": project_spec, "device_id": device_id, "timestamp": datetime.now().isoformat()}, rf, indent=2)
-                except Exception:
-                    pass
 
         try:
             proc = subprocess.Popen(
@@ -556,6 +510,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         gcp_location_param = data.get('gcp_location') or params.get('gcp_location', [None])[0]
         fetch_udmis_param = data.get('fetch_udmis') or params.get('fetch_udmis', [None])[0]
         cloud_project_param = data.get('cloud_project') or params.get('cloud_project', [None])[0] or gcp_project_param
+        exclude_param = data.get('exclude') or params.get('exclude', [None])[0]
 
         if not device_id or not test_id:
             self.send_error_response(400, "Missing required parameters: device_id, test_id")
@@ -625,7 +580,18 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                         ts_str = datetime.now().strftime('%H:%M:%S')
                         with open(log_path, 'a', encoding='utf-8') as lf:
                             lf.write(f"[{ts_str}] ☁️ Fetching UDMIS container logs from Google Cloud Logging for project '{target_gcp_project}'...\n")
+                        
+                        exclude_tokens = ["NettyClientHandler", "GrpcHttp2", "OUTBOUND HEADERS", "INBOUND HEADERS", "INBOUND DATA", "INBOUND PING", "OUTBOUND PING"]
+                        if exclude_param:
+                            if isinstance(exclude_param, list):
+                                exclude_tokens = exclude_param
+                            elif isinstance(exclude_param, str):
+                                exclude_tokens = [t.strip() for t in exclude_param.split(',') if t.strip()]
+
                         cmd_pull = [python_bin, pull_cloud_script, "-sl", seq_log_abs, "-t", test_id, "-p", target_gcp_project, "-o", udmis_log_abs]
+                        if exclude_tokens:
+                            cmd_pull.extend(["-e"] + exclude_tokens)
+
                         res_pull = subprocess.run(cmd_pull, capture_output=True, text=True, timeout=60)
                         ts_str2 = datetime.now().strftime('%H:%M:%S')
                         with open(log_path, 'a', encoding='utf-8') as lf:

@@ -17,8 +17,8 @@
     rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="../shared/theme.css?v=1.6">
-  <link rel="stylesheet" href="style.css?v=1.6">
+  <link rel="stylesheet" href="../shared/theme.css?v=1.9">
+  <link rel="stylesheet" href="style.css?v=1.9">
 </head>
 
 <body>
@@ -114,14 +114,22 @@
           <div class="diagnostics-sidebar">
             
             <!-- Playbook & AI Settings Card -->
-            <div class="card playbook-card" style="margin-bottom: 20px;">
-              <div class="card-header">
+            <div id="playbook-card" class="card playbook-card" style="margin-bottom: 20px;">
+              <div id="playbook-card-header" class="card-header"
+                style="cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center;">
                   <span class="card-header-icon-box icon-box-purple"><span class="material-symbols-outlined" style="font-size:18px;">tune</span></span>
                   <h3 style="margin:0;">Diagnostic Settings</h3>
                 </div>
+                <button type="button" id="btn-toggle-playbook-card" class="btn-icon-sm btn-outlined" aria-label="Toggle settings"
+                  title="Toggle diagnostic settings"
+                  style="width: 28px; height: 28px; min-width: 28px; border: none; background: transparent; display: flex; align-items: center; justify-content: center;">
+                  <span id="icon-toggle-playbook-card" class="material-symbols-outlined"
+                    style="font-size: 20px; transition: transform 0.25s ease;">expand_more</span>
+                </button>
               </div>
-              <div class="card-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
+              <div id="playbook-card-body" class="card-body"
+                style="padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
                 <div class="control-group">
                   <label for="playbook-select" class="control-label">Diagnostic Playbook</label>
                   <select id="playbook-select" class="form-select w-full" style="width: 100%;">
@@ -192,7 +200,7 @@
             </div>
 
             <!-- Live Progress Terminal -->
-            <div class="card terminal-card" style="flex: 1; display: flex; flex-direction: column; min-height: 0;">
+            <div class="card terminal-card" style="flex: 1; display: flex; flex-direction: column; min-height: 350px;">
               <div class="card-header border-bottom">
                 <div style="display: flex; align-items: center;">
                   <span class="card-header-icon-box icon-box-amber"><span class="material-symbols-outlined" style="font-size:18px;">terminal</span></span>
