@@ -12,14 +12,20 @@ import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.PubsubMessage;
 import java.util.Map;
+import org.apache.commons.cli.CommandLine;
 import org.eclipse.paho.mqttv5.client.IMqttClient;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
 import org.eclipse.paho.mqttv5.common.MqttMessage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.apache.commons.cli.CommandLine;
 
 class MqttToPubSubBridgeTest {
+
+  @BeforeEach
+  void setUp() {
+    MqttToPubSubBridge.clearCacheForTest();
+  }
 
   @Test
   void testSetupBridge() throws Exception {
@@ -380,7 +386,9 @@ class MqttToPubSubBridgeTest {
     };
     CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
     String etcdOptions = MqttToPubSubBridge.getEtcdOptions(commandLine);
-    assertEquals("enabled=true,ca_file=/path/to/ca.crt,cert_file=/path/to/client.crt,key_file=/path/to/client.key", etcdOptions);
+    String expected = "enabled=true,ca_file=/path/to/ca.crt,cert_file=/path/to/client.crt,"
+        + "key_file=/path/to/client.key";
+    assertEquals(expected, etcdOptions);
   }
 
   @Test
@@ -394,11 +402,12 @@ class MqttToPubSubBridgeTest {
     };
     CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
     String etcdOptions = MqttToPubSubBridge.getEtcdOptions(commandLine);
-    assertEquals(null, etcdOptions); // Should be null because etcd_target is missing, so it's ignored
+    // Should be null because etcd_target is missing, so it's ignored
+    assertEquals(null, etcdOptions);
   }
 
   @Test
-  void testGetEtcdOptionsPartialSSL() throws Exception {
+  void testGetEtcdOptionsPartialSsl() throws Exception {
     String[] args = {
         "--gcp_project_id=my-project",
         "--pubsub_topic_id=my-topic",
