@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
   pull_request:
   schedule:
-    - cron: '0 13 * * *'
+    - cron: '0/30 * * * *'
 
 concurrency:
   group: ci-${{ github.repository }}-${{ github.event_name == 'workflow_dispatch' && github.run_id || '' }}
