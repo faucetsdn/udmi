@@ -220,6 +220,7 @@ public class SiteModel {
   private static String getEndpointHostname(ExecutionConfiguration executionConfig) {
     IotProvider iotProvider = ofNullable(executionConfig.iot_provider).orElse(IotProvider.IMPLICIT);
     return switch (iotProvider) {
+      case JWT -> requireNonNull(executionConfig.bridge_host, "missing bridge_host");
       case CLEARBLADE -> ifNotNullGet(executionConfig.cloud_region,
           region -> format(DEFAULT_CLEARBLADE_HOSTNAME_FORMAT, region),
           DEFAULT_CLEARBLADE_HOSTNAME);

@@ -65,7 +65,9 @@ if [[ $project_id =~ ^// ]]; then
     [[ -n $udmi_namespace ]] && quoted_namespace=\"${udmi_namespace#/}\"
 elif [[ $project_id =~ @ ]]; then
     iot_provider=\"jwt\"
-    quoted_bridge=\"${project_id#*@}\"
+    bridge_host=${project_id#*@}
+    bridge_host=${bridge_host%/}
+    quoted_bridge=\"$bridge_host\"
     project_id=${project_id%@*}
 fi
 

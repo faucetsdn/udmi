@@ -265,7 +265,7 @@ public class SequenceBase {
       "timestamp", "system.last_config", "system.status", "gateway.status");
   private static final Duration STATE_TIMESTAMP_ERROR_THRESHOLD = Duration.ofMinutes(20);
   private static final Set<IotAccess.IotProvider> SEQUENCER_PROVIDERS = ImmutableSet.of(
-      IotProvider.GBOS, IotProvider.MQTT, IotProvider.GREF);
+      IotProvider.GBOS, IotProvider.MQTT, IotProvider.GREF, IotProvider.JWT);
   private static final String SEQUENCER_TOOL_NAME = "sequencer";
   private static final String OPTIONAL_PREFIX = "?";
   private static final String NOT_MARKER = " n0t ";
