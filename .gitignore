@@ -49,6 +49,11 @@ __pycache__/
 /tests/sites/*/out/
 /tests/sites/*/devices/*/out/
 /tests/sites/basic/extras/
+/tests/sites/*/reflector/
+tests/sites/*/devices/*/*.crt
+tests/sites/*/devices/*/*.csr
+tests/sites/*/devices/*/rsa_private.*
+tests/sites/*/devices/*/rsa_public.*
 /udmi_*.log
 
 .vscode

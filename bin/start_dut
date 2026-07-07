@@ -5,6 +5,40 @@ UDMI_ROOT=$(dirname $0)/..
 # cd $UDMI_ROOT
 source $UDMI_ROOT/etc/shell_common.sh
 
+# Function to stop an existing DUT by serial number
+stop_existing_dut_with_serial() {
+    local target_serial=$1
+    echo "Stopping/checking existing DUT with serial number: $target_serial"
+
+    # 1. If pid file exists, kill the parent bash/pubber process.
+    local pid_file="out/pubber.$target_serial.pid"
+    if [[ -f $pid_file ]]; then
+        local pid=$(cat $pid_file)
+        if kill -0 $pid 2>/dev/null; then
+            echo "Killing existing pubber runner PID $pid"
+            kill $pid || true
+        fi
+        rm -f $pid_file
+    fi
+
+    # 2. Also find and kill any java process running with this serial number.
+    local java_pids=$(ps ax | grep "[D]pubber.serialNo=$target_serial" | awk '{print $1}')
+    if [[ -n $java_pids ]]; then
+        echo "Killing existing java processes for serial $target_serial: $java_pids"
+        kill $java_pids || true
+    fi
+}
+
+# Check for special STOP mode
+if [[ "$1" == "STOP" ]]; then
+    if [[ $# -lt 2 ]]; then
+        fail "Usage: $0 STOP SERIAL_NO"
+    fi
+    stop_existing_dut_with_serial "$2"
+    echo "DUT (serial $2) stopped."
+    exit 0
+fi
+
 if [[ $# -lt 3 ]]; then
     fail "Usage: $0 SITE_PATH PROJECT_ID DEVICE_ID [SERIAL_NO] [PUBBER_OPTS]"
 fi
@@ -15,14 +49,11 @@ device_id=$3
 serial_no=${4:-dut-$RANDOM}
 pubber_opts=${5:-}
 
-PUBBER_LOG=out/pubber.log
+PUBBER_LOG=out/pubber.$serial_no.log
 mkdir -p out
+ln -sf "pubber.$serial_no.log" out/pubber.log
 
-pids=`ps ax | fgrep pubber | fgrep java | awk '{print $1}'` || true
-if [[ -n $pids ]]; then
-    echo Killing existing pubber pids $pids
-    kill $pids || true
-fi
+stop_existing_dut_with_serial "$serial_no"
 
 $UDMI_ROOT/bin/reset_config $site_path $project_id $device_id
 
@@ -37,6 +68,7 @@ $UDMI_ROOT/pubber/bin/build
 echo Writing pubber output to $PUBBER_LOG
 echo $UDMI_ROOT/bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts
 $UDMI_ROOT/bin/pubber $site_path $project_id $device_id $serial_no $pubber_opts > $PUBBER_LOG 2>&1 &
+echo $! > out/pubber.$serial_no.pid
 
 WAITING=30
 for i in `seq 1 $WAITING`; do
