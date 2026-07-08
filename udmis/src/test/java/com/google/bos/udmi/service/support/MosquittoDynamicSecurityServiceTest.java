@@ -157,7 +157,8 @@ class MosquittoDynamicSecurityServiceTest {
     // Simulate broker response
     String responseJson = "{\"responses\":[{\"status\":0},{\"status\":0}]}";
     MqttMessage responseMsg = new MqttMessage(responseJson.getBytes(StandardCharsets.UTF_8));
-    org.eclipse.paho.mqttv5.common.packet.MqttProperties props = new org.eclipse.paho.mqttv5.common.packet.MqttProperties();
+    org.eclipse.paho.mqttv5.common.packet.MqttProperties props =
+        new org.eclipse.paho.mqttv5.common.packet.MqttProperties();
     props.setCorrelationData(publishedMessage.getProperties().getCorrelationData());
     responseMsg.setProperties(props);
 

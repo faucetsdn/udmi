@@ -11,15 +11,23 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
+import io.etcd.jetcd.ClientBuilder;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.Lock;
 import io.etcd.jetcd.cluster.Member;
 import io.etcd.jetcd.kv.GetResponse;
+import io.etcd.jetcd.kv.TxnResponse;
+import io.etcd.jetcd.op.Cmp;
+import io.etcd.jetcd.op.CmpTarget;
 import io.etcd.jetcd.op.Op;
 import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
+import io.grpc.netty.GrpcSslContexts;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import java.io.File;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -31,11 +39,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import io.grpc.netty.GrpcSslContexts;
-import io.etcd.jetcd.ClientBuilder;
-import io.netty.handler.ssl.SslContext;
-import io.netty.handler.ssl.SslContextBuilder;
-import java.io.File;
 import udmi.schema.IotAccess;
 
 /**
@@ -181,7 +184,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
           .collect(Collectors.joining(","));
       String targets = RESULTING_PREFIX + collected;
       info("Gleaned etcd client targets %s", targets);
-      ClientBuilder clientBuilder = Client.builder().target(targets).connectTimeout(CONNECT_TIMEOUT);
+      ClientBuilder clientBuilder = Client.builder().target(targets)
+          .connectTimeout(CONNECT_TIMEOUT);
       if (sslContext != null) {
         clientBuilder.sslContext(sslContext);
       }
@@ -352,6 +356,45 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
         }
       } catch (Exception e) {
         throw new RuntimeException("While executing batch update on " + getKeyPath(""), e);
+      }
+    }
+
+    @Override
+    public boolean updateIfMatch(String matchKey, String expectedValue, Map<String, String> puts,
+        Set<String> deletes) {
+      try {
+        List<Op> ops = new ArrayList<>();
+        if (puts != null) {
+          puts.forEach((key, value) -> {
+            if (value != null) {
+              ops.add(Op.put(bytes(getKeyPath(key)), bytes(value), PutOption.DEFAULT));
+            }
+          });
+        }
+        if (deletes != null) {
+          deletes.forEach(key -> {
+            if (key != null) {
+              ops.add(Op.delete(bytes(getKeyPath(key)), DeleteOption.DEFAULT));
+            }
+          });
+        }
+        if (!ops.isEmpty()) {
+          Cmp cmp = expectedValue == null
+              ? new Cmp(bytes(getKeyPath(matchKey)), Cmp.Op.EQUAL, CmpTarget.version(0))
+              : new Cmp(bytes(getKeyPath(matchKey)), Cmp.Op.EQUAL,
+                  CmpTarget.value(bytes(expectedValue)));
+
+          TxnResponse response = kvClient.txn()
+              .If(cmp)
+              .Then(ops.toArray(new Op[0]))
+              .commit()
+              .get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+          return response.isSucceeded();
+        }
+        return true;
+      } catch (Exception e) {
+        throw new RuntimeException(
+            "While executing conditional batch update on " + getKeyPath(""), e);
       }
     }
   }

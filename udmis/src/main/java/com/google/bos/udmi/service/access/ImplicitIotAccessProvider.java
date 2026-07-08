@@ -779,16 +779,25 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     String registryId = envelope.deviceRegistryId;
     String deviceId = envelope.deviceId;
     DataRef dataRef = registryDeviceRef(registryId, deviceId);
-    try (AutoCloseable dataLock = dataRef.lock()) {
+    try {
       String prev = dataRef.get(CONFIG_VER_KEY);
       if (prevVersion != null && !prevVersion.toString().equals(prev)) {
         throw new RuntimeException("Config version update mismatch");
       }
 
-      dataRef.put(LAST_CONFIG_KEY, config);
       String update = ofNullable(prevVersion).map(v -> v + 1)
           .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(1L)).toString();
-      dataRef.put(CONFIG_VER_KEY, update);
+
+      Map<String, String> puts = Map.of(
+          LAST_CONFIG_KEY, config,
+          CONFIG_VER_KEY, update
+      );
+
+      boolean success = dataRef.updateIfMatch(CONFIG_VER_KEY, prev, puts, null);
+      if (!success) {
+        throw new RuntimeException("Concurrent modification of config version detected");
+      }
+
       info("Updated config %s #%s to #%s", dataRef, prev, update);
 
       sendConfigUpdate(registryId, deviceId, config);
