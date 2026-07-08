@@ -325,6 +325,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
       MqttProperties properties = new MqttProperties();
       properties.setResponseTopic(this.responseTopic);
+      properties.setCorrelationData(batchId.getBytes(StandardCharsets.UTF_8));
       message.setProperties(properties);
 
       log.info("[Batch {}] Publishing batch containing {} commands ({} bytes) to {}",
