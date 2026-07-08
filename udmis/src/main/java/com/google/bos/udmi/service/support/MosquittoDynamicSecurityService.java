@@ -400,10 +400,12 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
     MqttProperties properties = message.getProperties();
     byte[] correlationData = properties != null ? properties.getCorrelationData() : null;
-    String correlationId = correlationData != null ? new String(correlationData, StandardCharsets.UTF_8) : null;
+    String correlationId = correlationData != null
+        ? new String(correlationData, StandardCharsets.UTF_8) : null;
 
     if (this.inFlightBatchId != null && !this.inFlightBatchId.equals(correlationId)) {
-      log.debug("Ignoring dynamic security response with mismatched correlation data. Expected: {}, Got: {}", this.inFlightBatchId, correlationId);
+      log.debug("Ignoring dynamic security response with mismatched correlation data. "
+          + "Expected: {}, Got: {}", this.inFlightBatchId, correlationId);
       return;
     }
 
