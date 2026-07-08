@@ -325,7 +325,6 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
       MqttProperties properties = new MqttProperties();
       properties.setResponseTopic(this.responseTopic);
-      properties.setCorrelationData(batchId.getBytes(StandardCharsets.UTF_8));
       message.setProperties(properties);
 
       log.info("[Batch {}] Publishing batch containing {} commands ({} bytes) to {}",
@@ -395,17 +394,6 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   @Override
   public synchronized void messageArrived(String topic, MqttMessage message) {
     if (!this.responseTopic.equals(topic)) {
-      return;
-    }
-
-    MqttProperties properties = message.getProperties();
-    byte[] correlationData = properties != null ? properties.getCorrelationData() : null;
-    String correlationId = correlationData != null
-        ? new String(correlationData, StandardCharsets.UTF_8) : null;
-
-    if (this.inFlightBatchId != null && !this.inFlightBatchId.equals(correlationId)) {
-      log.debug("Ignoring dynamic security response with mismatched correlation data. "
-          + "Expected: {}, Got: {}", this.inFlightBatchId, correlationId);
       return;
     }
 
