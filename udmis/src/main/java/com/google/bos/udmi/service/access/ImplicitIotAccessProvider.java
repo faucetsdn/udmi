@@ -779,7 +779,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     String registryId = envelope.deviceRegistryId;
     String deviceId = envelope.deviceId;
     DataRef dataRef = registryDeviceRef(registryId, deviceId);
-    try {
+    try (AutoCloseable lock = dataRef.lock()) {
       String prev = dataRef.get(CONFIG_VER_KEY);
       if (prevVersion != null && !prevVersion.toString().equals(prev)) {
         throw new RuntimeException("Config version update mismatch");
@@ -800,13 +800,25 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
       info("Updated config %s #%s to #%s", dataRef, prev, update);
 
+      String initialAck = dataRef.get(LAST_CONFIG_ACKED);
       sendConfigUpdate(registryId, deviceId, config);
+
+      long timeoutMs = 10000;
+      long start = System.currentTimeMillis();
+      while (System.currentTimeMillis() - start < timeoutMs) {
+        String currentAck = dataRef.get(LAST_CONFIG_ACKED);
+        if (!Objects.equals(initialAck, currentAck)) {
+          debug("Config update #%s acknowledged for %s/%s", update, registryId, deviceId);
+          return config;
+        }
+        safeSleep(100);
+      }
+      throw new RuntimeException(
+          "Timed out waiting for config ACK for " + registryId + "/" + deviceId);
     } catch (Exception e) {
       throw new RuntimeException(
           format("While updating config for %s/%s", registryId, deviceId), e);
     }
-
-    return config;
   }
 
 }
