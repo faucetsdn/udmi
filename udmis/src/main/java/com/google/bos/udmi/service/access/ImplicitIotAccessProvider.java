@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.access;
 
 import static com.google.common.base.Preconditions.checkState;
+import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.booleanString;
@@ -12,6 +13,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
 import static com.google.udmi.util.GeneralUtils.requireNull;
+import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
@@ -26,6 +28,7 @@ import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
 
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
@@ -43,6 +46,7 @@ import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -733,7 +737,25 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   @Override
   public void saveState(String registryId, String deviceId, String stateBlob) {
-    registryDeviceRef(registryId, deviceId).put(LAST_STATE_KEY, stateBlob);
+    DataRef dataRef = registryDeviceRef(registryId, deviceId);
+    try (AutoCloseable lock = dataRef.lock()) {
+      String existingState = dataRef.get(LAST_STATE_KEY);
+      if (existingState != null) {
+        StateUpdate existing = JsonUtil.fromString(StateUpdate.class, existingState);
+        StateUpdate incoming = JsonUtil.fromString(StateUpdate.class, stateBlob);
+        Date existingTime = cleanDate(existing.timestamp);
+        Date incomingTime = cleanDate(incoming.timestamp);
+        if (existingTime != null && incomingTime != null && incomingTime.before(existingTime)) {
+          info("Skipping out-of-order state update for %s/%s: existing %s vs incoming %s",
+              registryId, deviceId, isoConvert(existingTime), isoConvert(incomingTime));
+          return;
+        }
+      }
+      dataRef.put(LAST_STATE_KEY, stateBlob);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          format("While saving state for %s/%s", registryId, deviceId), e);
+    }
   }
 
   @Override
