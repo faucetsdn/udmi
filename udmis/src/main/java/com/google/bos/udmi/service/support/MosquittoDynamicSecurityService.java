@@ -7,7 +7,7 @@ import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.JsonUtil;
-import java.io.ByteArrayOutputStream;
+import java.util.Collections;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -63,7 +63,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private final MqttClient mqttClient;
   private final ExecutorService executor;
   private final ScheduledExecutorService scheduler;
-  private final ObjectMapper objectMapper = JsonUtil.OBJECT_MAPPER;
+  private final ObjectMapper objectMapper = JsonUtil.TERSE_MAPPER;
 
   private final int batchSizeLimit;
   private final long batchBytesLimit;
@@ -135,7 +135,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     this.minPublishIntervalMs = minPublishIntervalMs;
     this.batchTimeoutMs = batchTimeoutMs;
     this.clientId = "dynsec-service-" + format("%08x", (long) (Math.random() * 0x100000000L));
-    this.responseTopic = RESPONSE_TOPIC + "/" + this.clientId;
+    this.responseTopic = RESPONSE_TOPIC;
     this.mqttClient = createMqttClient();
     this.executor = Executors.newSingleThreadExecutor();
     this.scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -157,7 +157,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     this.endpoint = endpoint;
     this.mqttClient = mqttClient;
     this.clientId = mqttClient.getClientId();
-    this.responseTopic = RESPONSE_TOPIC + "/" + this.clientId;
+    this.responseTopic = RESPONSE_TOPIC;
     this.mqttClient.setCallback(this);
     this.commandQueue = commandQueue;
     this.batchSizeLimit = batchSizeLimit;
@@ -315,13 +315,13 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
   private void publishBatchToBroker(List<CommandRequest> batch) {
     try {
-      byte[] payload = serializeBatch(batch);
+      String batchId = format("%06x", (int) (Math.random() * 0x1000000L));
+      this.inFlightBatchId = batchId;
+
+      byte[] payload = serializeBatch(batch, batchId);
       MqttMessage message = new MqttMessage();
       message.setPayload(payload);
       message.setQos(1);
-
-      String batchId = format("%06x", (int) (Math.random() * 0x1000000L));
-      this.inFlightBatchId = batchId;
 
       MqttProperties properties = new MqttProperties();
       properties.setResponseTopic(this.responseTopic);
@@ -375,40 +375,60 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     }
   }
 
-  private byte[] serializeBatch(List<CommandRequest> batch) {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
+  @SuppressWarnings("unchecked")
+  private byte[] serializeBatch(List<CommandRequest> batch, String batchId) {
+    List<Map<String, Object>> commandsList = new ArrayList<>(batch.size());
     try {
-      out.write("{\"commands\":[".getBytes(StandardCharsets.UTF_8));
-      for (int i = 0; i < batch.size(); i++) {
-        if (i > 0) {
-          out.write((int) ',');
-        }
-        out.write(batch.get(i).serializedPayload);
+      for (CommandRequest req : batch) {
+        Map<String, Object> cmdMap = objectMapper.readValue(req.serializedPayload, Map.class);
+        cmdMap.put("correlationData", batchId);
+        commandsList.add(cmdMap);
       }
-      out.write("]}".getBytes(StandardCharsets.UTF_8));
+      return objectMapper.writeValueAsBytes(Collections.singletonMap("commands", commandsList));
     } catch (IOException e) {
-      // Bypassed exception as ByteArrayOutputStream does not throw IOException
+      throw new RuntimeException("Failed to serialize dynamic security batch", e);
     }
-    return out.toByteArray();
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public synchronized void messageArrived(String topic, MqttMessage message) {
     if (!this.responseTopic.equals(topic)) {
       return;
     }
 
     List<CommandRequest> batchCopy = this.inFlightBatch;
-    if (batchCopy == null) {
-      log.warn("Received dynamic security response but no batch was in-flight");
+    String batchId = this.inFlightBatchId;
+    if (batchCopy == null || batchId == null) {
+      log.debug("Received dynamic security response on shared topic but no batch was in-flight");
       return;
     }
+
+    try {
+      Map<String, Object> responseMap = objectMapper.readValue(message.getPayload(), Map.class);
+      List<Map<String, Object>> responsesList =
+          (List<Map<String, Object>>) responseMap.get("responses");
+      if (responsesList == null || responsesList.isEmpty()) {
+        log.debug("Received response on shared topic with empty or missing responses list");
+        return;
+      }
+      Object corrData = responsesList.get(0).get("correlationData");
+      if (!batchId.equals(corrData)) {
+        log.debug("[Batch {}] Ignoring response on shared topic with non-matching correlationData: {}",
+            batchId, corrData);
+        return;
+      }
+    } catch (Exception e) {
+      log.warn("Failed to parse incoming response on shared topic, ignoring: {}",
+          new String(message.getPayload(), StandardCharsets.UTF_8));
+      return;
+    }
+
     if (timeoutTask != null) {
       timeoutTask.cancel(false);
       timeoutTask = null;
     }
     long durationMs = System.currentTimeMillis() - batchPublishTime;
-    String batchId = this.inFlightBatchId;
     log.info(
         "[Batch {}] Received dynamic security response for batch containing {} commands in {}ms",
         batchId, batchCopy.size(), durationMs);
