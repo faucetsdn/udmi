@@ -1,7 +1,7 @@
 {
   "blobset" : {
     "blobs" : {
-      "pubber_module" : {
+      "system" : {
         "generation" : "TIMESTAMP",
         "phase" : "final"
       }
@@ -55,7 +55,7 @@
     "serial_no" : "sequencer-7683",
     "software" : {
       "firmware" : "v1",
-      "pubber_module" : "v1"
+      "system" : "v1"
     },
     "status" : {
       "category" : "system.config.apply",

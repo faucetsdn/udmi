@@ -13,12 +13,12 @@
   "serial_no" : "sequencer-25720",
   "software" : {
     "firmware" : "v1",
-    "pubber_module" : "v1"
+    "system" : "v1"
   },
   "status" : {
     "category" : "blobset.blob.receive",
     "level" : 100,
-    "message" : "Received blob update config for pubber_module",
+    "message" : "Received blob update config for system",
     "timestamp" : "TIMESTAMP"
   },
   "timestamp" : "TIMESTAMP",

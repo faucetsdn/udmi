@@ -46,11 +46,12 @@ To prevent regressions in this reflectively-coupled system, verification MUST pr
 #### Stage 3: Functional Pipeline Integrity (Local Integration)
 - **Goal**: Verify the end-to-end message pipeline (Validator -> Sequencer -> UDMIS) handles both standard and "unknown" cases without reflective failures.
 - **Mandate**: Run the comprehensive local integration suite. This stage is non-negotiable for any change touching `common`, `gencode`, or message-processing logic.
+- **Startup Timeout Hard Stop**: `bin/start_local` must be ready (`UUFI Service is READY`) within **90 seconds**. If local services are not ready after 90 seconds, treat it as an unrecoverable core system failure — stop execution immediately and report the failure. Do NOT attempt to diagnose, debug, or repair the environment.
 - **Commands**:
   1. `bin/run_tests install_dependencies` (Ensure clean local environment)
-  2. `bin/start_local sites/udmi_site_model //mqtt/localhost` (Start local services)
-  3. `bin/test_validator //mqtt/localhost` (Telemetry validation)
-  4. `bin/test_sequencer nostate full //mqtt/localhost` (Exhaustive pipeline verification)
+  2. `bin/start_local sites/udmi_site_model //mqtt/localhost:46432` (Start local services; wait max 90s)
+  3. `bin/test_validator //mqtt/localhost:46432` (Telemetry validation)
+  4. `bin/test_sequencer nostate full //mqtt/localhost:46432` (Exhaustive pipeline verification)
   5. `bin/test_runlocal` (UDMIS component verification)
 
 **Authoritative Source**: If in doubt, audit `.github/workflows/testing.yml` for the current set of `run:` commands. Declaring a task "DONE" without completing all three stages is a violation of engineering standards.

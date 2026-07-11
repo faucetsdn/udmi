@@ -13,13 +13,13 @@
   "serial_no" : "sequencer-10987",
   "software" : {
     "firmware" : "v1",
-    "pubber_module" : "v1"
+    "system" : "v1"
   },
   "status" : {
     "category" : "blobset.blob.parse",
-    "detail" : "udmi.lib.base.UdmiException: Simulated incompatibility for pubber_module;",
+    "detail" : "udmi.lib.base.UdmiException: Simulated incompatibility for system;",
     "level" : 500,
-    "message" : "Simulated incompatibility for pubber_module",
+    "message" : "Simulated incompatibility for system",
     "timestamp" : "TIMESTAMP"
   },
   "timestamp" : "TIMESTAMP",

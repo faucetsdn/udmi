@@ -1,7 +1,7 @@
 {
   "blobset" : {
     "blobs" : {
-      "pubber_module" : {
+      "system" : {
         "generation" : "TIMESTAMP",
         "phase" : "final"
       }
@@ -55,12 +55,12 @@
     "serial_no" : "sequencer-7770",
     "software" : {
       "firmware" : "v1",
-      "pubber_module" : "v2"
+      "system" : "v2"
     },
     "status" : {
       "category" : "blobset.blob.receive",
       "level" : 100,
-      "message" : "Received blob update config for pubber_module",
+      "message" : "Received blob update config for system",
       "timestamp" : "TIMESTAMP"
     }
   },

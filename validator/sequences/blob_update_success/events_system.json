@@ -229,7 +229,7 @@
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "device.log",
-    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"pubber_module\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"git-46d456c3\"\n}",
+    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"system\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"git-46d456c3\"\n}",
     "level" : 100,
     "message" : "Config update AHU-1 (blob_update_success)",
     "timestamp" : "TIMESTAMP"
@@ -256,7 +256,7 @@
   }, {
     "category" : "blobset.blob.receive",
     "level" : 100,
-    "message" : "Received blob update config for pubber_module",
+    "message" : "Received blob update config for system",
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "device.log",
@@ -270,7 +270,7 @@
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "device.log",
-    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"pubber_module\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.3\"\n}",
+    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"system\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.3\"\n}",
     "level" : 100,
     "message" : "State update AHU-1 (blob_update_success)",
     "timestamp" : "TIMESTAMP"
@@ -282,7 +282,7 @@
   }, {
     "category" : "blobset.blob.fetch",
     "level" : 100,
-    "message" : "Fetch blob data for pubber_module",
+    "message" : "Fetch blob data for system",
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "device.log",
@@ -331,7 +331,7 @@
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "device.log",
-    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"pubber_module\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"git-46d456c3\"\n}",
+    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"system\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"git-46d456c3\"\n}",
     "level" : 100,
     "message" : "Config update AHU-1 (blob_update_success)",
     "timestamp" : "TIMESTAMP"
@@ -358,7 +358,7 @@
   }, {
     "category" : "blobset.blob.receive",
     "level" : 100,
-    "message" : "Received blob update config for pubber_module",
+    "message" : "Received blob update config for system",
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "device.log",
@@ -372,7 +372,7 @@
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "device.log",
-    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"pubber_module\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.3\"\n}",
+    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"system\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.3\"\n}",
     "level" : 100,
     "message" : "State update AHU-1 (blob_update_success)",
     "timestamp" : "TIMESTAMP"
@@ -389,7 +389,7 @@
   }, {
     "category" : "blobset.blob.fetch",
     "level" : 100,
-    "message" : "Fetch blob data for pubber_module",
+    "message" : "Fetch blob data for system",
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "system.config.receive",
@@ -428,7 +428,7 @@
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "device.log",
-    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"pubber_module\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"git-46d456c3\"\n}",
+    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"system\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"git-46d456c3\"\n}",
     "level" : 100,
     "message" : "Config update AHU-1 (blob_update_success)",
     "timestamp" : "TIMESTAMP"
@@ -455,7 +455,7 @@
   }, {
     "category" : "blobset.blob.receive",
     "level" : 100,
-    "message" : "Received blob update config for pubber_module",
+    "message" : "Received blob update config for system",
     "timestamp" : "TIMESTAMP"
   }, {
     "category" : "device.log",
@@ -475,7 +475,7 @@
   }, {
     "category" : "device.log",
     "level" : 300,
-    "message" : "Blob pubber_module successfully staged, publishing final state",
+    "message" : "Blob system successfully staged, publishing final state",
     "timestamp" : "TIMESTAMP"
   } ],
   "metrics" : {

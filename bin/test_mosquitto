@@ -145,10 +145,10 @@ cp sites/udmi_site_model/devices/AHU-1/metadata.json sites/udmi_site_model/devic
 trap 'mv sites/udmi_site_model/devices/AHU-1/metadata.json.bak sites/udmi_site_model/devices/AHU-1/metadata.json 2>/dev/null || true' EXIT
 
 # Run site_trigger
-bin/site_trigger update sites/udmi_site_model AHU-1 pubber_module v2 "mqtts://${CLNT_USER}:${CLNT_PASS}@${MQTT_HOST}:${MQTT_PORT}"
+bin/site_trigger update sites/udmi_site_model AHU-1 system v2 "mqtts://${CLNT_USER}:${CLNT_PASS}@${MQTT_HOST}:${MQTT_PORT}"
 
 # Verify file was updated on disk
-updated_version=$(jq -r '.system.software.pubber_module' sites/udmi_site_model/devices/AHU-1/metadata.json)
+updated_version=$(jq -r '.system.software.system' sites/udmi_site_model/devices/AHU-1/metadata.json)
 if [[ "$updated_version" != "v2" ]]; then
     fail "site_trigger failed to update metadata.json on disk"
 fi

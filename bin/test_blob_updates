@@ -46,7 +46,7 @@ log "Target commit for update: $target_commit"
 log "Generating and applying blob update config..."
 generation_payload=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
-bin/update_blob $site_path $project_spec $device_id pubber_module "$payload" --generation "$generation_payload"
+bin/update_blob $site_path $project_spec $device_id system "$payload" --generation "$generation_payload"
 
 log "Waiting for pubber to process update..."
 sleep 20

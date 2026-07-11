@@ -13,7 +13,7 @@
   "serial_no" : "sequencer-30001",
   "software" : {
     "firmware" : "v1",
-    "pubber_module" : "v1"
+    "system" : "v1"
   },
   "status" : {
     "category" : "system.config.apply",

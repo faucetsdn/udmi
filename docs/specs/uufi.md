@@ -108,7 +108,9 @@ Inner JSON `payload` object MUST include:
 
 #### MQTT Constraints
 - **Redundancy:** Envelope fields MUST NOT include data encoded in the topic path (`subType`, `subFolder`, and if present, `deviceRegistryId`, `deviceId`).
-- **Mandatory Fields:** The MQTT envelope MUST include `projectId`, `transactionId`, `publishTime`, `source`, `principal`, and `payload`.
+- **Mandatory Envelope Fields:**
+  - **Outgoing Messages:** Outgoing messages from compliant systems and verifiers MUST populate all standard envelope fields (`projectId`, `transactionId`, `publishTime`, `source`, `principal`, and `payload`).
+  - **Incoming Messages:** Incoming messages received from external or upstream services/utilities MUST be parsed gracefully with robust fallback handling (e.g., defaulting a missing `"projectId"` to `"vibrant"` or the active project/prefix, and treating a missing `"principal"` as absent or falling back to `"source"`).
 - **Nesting:** UDMI message data MUST be nested within the `payload` key.
 
 ### 4.1. Envelope Metadata and Configuration Attributes

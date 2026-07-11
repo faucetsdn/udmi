@@ -132,9 +132,10 @@ if [[ $project_spec =~ ^// ]]; then
     no_prefix=${no_prefix%+${user_name}}
     iot_provider=\"${no_prefix%%/*}\"
     no_provider=${no_prefix#*/}
-    project_id=${no_provider%/*}
+    project_id=${no_provider%%/*}
     udmi_namespace=${no_provider#$project_id}
     if [[ $project_id == *:* ]]; then
+        quoted_bridge=\"$project_id\"
         project_id=${project_id%:*}
     fi
 elif [[ $project_spec == -- ]]; then

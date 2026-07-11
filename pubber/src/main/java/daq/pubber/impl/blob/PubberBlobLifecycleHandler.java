@@ -24,7 +24,7 @@ public class PubberBlobLifecycleHandler implements BlobLifecycleHandler {
   /**
    * The key used to identify the primary software module blob in the system state.
    */
-  public static final String SOFTWARE_MODULE_KEY = "pubber_module";
+  public static final String SOFTWARE_MODULE_KEY = "system";
 
   private final PublisherHost host;
   private final MockGitModuleEmulator moduleEmulator;
