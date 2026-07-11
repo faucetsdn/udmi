@@ -201,7 +201,34 @@ To report a device's actual or currently running software subsystem version, imp
 ### 8.4. MQTT Specific Rules
 - **Redundancy Rule:** Implementations MUST reject messages where envelope fields duplicate topic-encoded data.
 - **Leading Slash:** For MQTT transport, all UUFI topics MUST start with a leading slash `/`. Implementations MUST NOT accept or publish to topics lacking the leading slash.
-- **Wildcards:** Subscription wildcards (e.g., `/#`) MUST also adhere to the leading slash rule and MUST be scoped to the connection-defined prefix to ensure consistent topic matching across the prefix tree.
+
+## 9. Test Setup for External Clients
+
+This section specifies how external client developers (working outside the UDMI project codebase) can set up a local testing environment to build and verify custom UUFI Client implementations against a running System and Device Under Test (DUT).
+
+### 9.1. Local System Infrastructure
+To initialize the local System stack (Mosquitto broker, etcd, and UDMIS control plane), execute the local startup script with a designated target connection spec:
+
+```bash
+bin/start_local sites/udmi_site_model //mqtt/localhost:46432
+```
+
+Upon successful startup, the local environment exposes the following connection parameters:
+- **Broker Endpoint:** `mqtt://localhost:46432` (or `ssl://localhost:46432` for mTLS)
+- **Authentication Credentials:** Username `rocket`, Password `monkey`
+- **mTLS Certificates:**
+  - CA Certificate: `sites/udmi_site_model/reflector/ca.crt`
+  - Client Certificate: `sites/udmi_site_model/reflector/rsa_private.crt`
+  - Private Key: `sites/udmi_site_model/reflector/rsa_private.pem`
+
+### 9.2. Provisioning a Device Under Test (DUT)
+To emulate a managed device executing commands and reporting telemetry over UUFI, launch the DUT (Pubber) process targeting the site model and connection endpoint:
+
+```bash
+bin/start_dut sites/udmi_site_model //mqtt/localhost:46432 AHU-1 uufi-serial
+```
+
+This registers device `AHU-1` with serial number `uufi-serial` and begins standard message exchange between the DUT and the local System.
 
 ---
 
