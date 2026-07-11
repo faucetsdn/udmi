@@ -29,10 +29,10 @@ stop_existing_dut_with_serial() {
     fi
 }
 
-# Check for special STOP mode
-if [[ "$1" == "STOP" ]]; then
+# Check for special stop mode
+if [[ "$1" == "stop" ]]; then
     if [[ $# -lt 2 ]]; then
-        fail "Usage: $0 STOP SERIAL_NO"
+        fail "Usage: $0 stop SERIAL_NO"
     fi
     stop_existing_dut_with_serial "$2"
     echo "DUT (serial $2) stopped."

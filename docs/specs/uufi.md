@@ -206,12 +206,20 @@ To report a device's actual or currently running software subsystem version, imp
 
 This section specifies how external client developers (working outside the UDMI project codebase) can set up a local testing environment to build and verify custom UUFI Client implementations against a running System and Device Under Test (DUT).
 
-### 9.1. Local System Infrastructure
-To initialize the local System stack (Mosquitto broker, etcd, and UDMIS control plane), execute the local startup script with a designated target connection spec:
+### 9.1. Local System Infrastructure (`bin/start_local`)
+To initialize the local System stack (Mosquitto broker, etcd, and UDMIS control plane), execute the local startup script with a designated target site model directory and connection spec:
 
+```bash
+bin/start_local [site_model_dir] //mqtt/localhost:$port
+```
+
+Example:
 ```bash
 bin/start_local sites/udmi_site_model //mqtt/localhost:46432
 ```
+
+- **Format Constraint:** The target connection spec MUST be provided in the format `//mqtt/localhost:$port`. This satisfies internal parameter expansions (`${project_spec%/*}` and `${project_spec#//}`) within `start_local`, permitting custom isolated port execution without modifying UDMI binaries.
+- **Shutdown & Lifecycle Provisions:** Service processes are managed directly via the tooling rather than manual process matching or `kill`/`pkill` commands. To stop the control plane service, execute `bin/start_udmis stop`. Re-executing `bin/start_local` automatically stops and cleans up any existing background instances before starting fresh.
 
 Upon successful startup, the local environment exposes the following connection parameters:
 - **Broker Endpoint:** `mqtt://localhost:46432` (or `ssl://localhost:46432` for mTLS)
@@ -221,14 +229,53 @@ Upon successful startup, the local environment exposes the following connection 
   - Client Certificate: `sites/udmi_site_model/reflector/rsa_private.crt`
   - Private Key: `sites/udmi_site_model/reflector/rsa_private.pem`
 
-### 9.2. Provisioning a Device Under Test (DUT)
+### 9.2. Provisioning a Device Under Test (DUT) (`bin/start_dut`)
 To emulate a managed device executing commands and reporting telemetry over UUFI, launch the DUT (Pubber) process targeting the site model and connection endpoint:
 
+```bash
+bin/start_dut <site_model_dir> //mqtt/localhost:$port [device_id] [serial_no]
+```
+
+Example:
 ```bash
 bin/start_dut sites/udmi_site_model //mqtt/localhost:46432 AHU-1 uufi-serial
 ```
 
-This registers device `AHU-1` with serial number `uufi-serial` and begins standard message exchange between the DUT and the local System.
+- **Format Constraint:** The second positional argument MUST begin with `//` (e.g. `//mqtt/localhost:$port`). Omitting `//` or passing explicit schemes like `mqtts://` causes internal initialization (`reset_config`) to select `iot_provider="jwt"`, resulting in a fatal runtime error (`Unknown iotProvider jwt`).
+- **Function:** Registers device `AHU-1` (or specified device ID) with serial number `uufi-serial` and begins standard message exchange between the DUT and the local System.
+- **Shutdown Provision:** To stop a running DUT process without manual process manipulation, invoke the `stop` subcommand with the target serial number:
+  ```bash
+  bin/start_dut stop <serial_no>
+  ```
+- **Lifecycle Management:** Launching `bin/start_dut` with the serial number of an active DUT automatically stops the existing instance before launching the new process.
+
+### 9.3. Database & Tagabase Registration (`bin/registrar`)
+Prior to test execution, the database synchronization step must be executed using the standard registrar tool in full online mode:
+
+```bash
+bin/registrar <site_model_dir> //mqtt/localhost:$port
+```
+
+Example:
+```bash
+bin/registrar sites/udmi_site_model //mqtt/localhost:46432
+```
+
+- **Function:** Synchronizes the site model database, generates `metadata_norm.json`, populates `generated_config.json`, and initializes tagabase entries for simulated devices.
+
+### 9.4. Site Model Database Mutations (`bin/site_trigger`)
+To trigger automated database mutations or field updates during testing, execute `bin/site_trigger` using explicit connection syntax:
+
+```bash
+bin/site_trigger update <site_path> <device_id> <blob_id> <version> //mqtt/localhost:$port
+```
+
+Example:
+```bash
+bin/site_trigger update sites/udmi_site_model AHU-1 system 1.0.0 //mqtt/localhost:46432
+```
+
+- **Format Constraint:** Enforces `//mqtt/localhost:$port` syntax as the final argument to target custom ports correctly.
 
 ---
 
