@@ -78,6 +78,11 @@ require_certificate true
 allow_anonymous true
 """)
         
+        # Stop background/system mosquitto if running
+        subprocess.run(["sudo", "systemctl", "stop", "mosquitto"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        subprocess.run(["pkill", "-9", "mosquitto"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        time.sleep(0.5)
+
         self.mosquitto_log_path = os.path.join(self.test_dir.name, "mosquitto.log")
         self.mosquitto_log_file = open(self.mosquitto_log_path, "w")
         self.mosquitto_proc = subprocess.Popen(
@@ -86,6 +91,12 @@ allow_anonymous true
             stderr=self.mosquitto_log_file
         )
         time.sleep(2) # wait for mosquitto to start
+
+        if self.mosquitto_proc.poll() is not None:
+            self.mosquitto_log_file.close()
+            with open(self.mosquitto_log_path, "r") as f:
+                log_content = f.read()
+            raise RuntimeError(f"Mosquitto failed to start:\n{log_content}")
 
         
         # 3. Create docker network

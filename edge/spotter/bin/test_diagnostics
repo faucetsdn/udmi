@@ -141,12 +141,23 @@ require_certificate true
 allow_anonymous true
 """)
             
+        # Stop background/system mosquitto if running
+        subprocess.run(["sudo", "systemctl", "stop", "mosquitto"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        subprocess.run(["pkill", "-9", "mosquitto"], stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        time.sleep(0.5)
+
         # Start mosquitto broker
         self.mosquitto_log_file = open(self.mosquitto_log_path, "w")
         self.mosquitto_proc = subprocess.Popen([
             "mosquitto", "-c", self.mosquitto_conf_path, "-v"
         ], stdout=self.mosquitto_log_file, stderr=self.mosquitto_log_file)
         time.sleep(2) # Wait for mosquitto to start and bind to ports
+
+        if self.mosquitto_proc.poll() is not None:
+            self.mosquitto_log_file.close()
+            with open(self.mosquitto_log_path, "r") as f:
+                log_content = f.read()
+            raise RuntimeError(f"Mosquitto failed to start:\n{log_content}")
         # Write configurations for Spotter
         self.spotter_config = {
             "log_level": "DEBUG",
