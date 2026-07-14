@@ -636,7 +636,7 @@ jobs:
       - name: Build Parity Test Prerequisites & Run Parity Tests
         run: |
           misc/discoverynode/bin/build_container test-discovery_node
-          misc/discoverynode/testing/docker/bacnet_device/build.sh
+          bash misc/discoverynode/testing/docker/bacnet_device/build.sh
           PYTHONPATH=clientlib/python/src:. edge/spotter/bin/test_parity
 
 
