@@ -2,23 +2,19 @@
 
 IMAGE=influxdb:v2.7.1
 
-function find_influx {
-    for path in \
-        "udmis/bin/influx_bin" \
-        "bin/influx_bin" \
-        "$(dirname $0)/influx_bin" \
-        "/root/bin/influx_bin" \
-        "/root/udmi/bin/influx_bin" \
-        "/tmp/influx"; do
-        if [[ -f "$path/influxd" ]]; then
-            echo "$path"
-            return 0
-        fi
-    done
-    return 1
-}
+UDMI_ROOT=$(dirname "$0")/..
+BINDIR="${UDMI_ROOT}/udmis/bin/influx_bin"
 
-BINDIR=$(find_influx) || BINDIR=/tmp/influx
+if [[ ! -f "$BINDIR/influxd" ]]; then
+    echo "influxd not found in $BINDIR. Attempting to download via influxctl..."
+    "${UDMI_ROOT}/udmis/bin/influxctl" version || true
+fi
+
+if [[ ! -f "$BINDIR/influxd" ]]; then
+    echo "Error: influxd executable not found at $BINDIR/influxd" >&2
+    exit 1
+fi
+
 INFLUX_LOG=out/influx.log
 
 echo pwd: $(pwd)
@@ -40,11 +36,6 @@ else
             kill $old_pid || true
         fi
     fi
-fi
-
-if [[ ! -f $BINDIR/influxd ]]; then
-    udmis/bin/influxctl version || ../bin/influxctl version || $(dirname $0)/influxctl version || true
-    BINDIR=$(find_influx) || BINDIR=/tmp/influx
 fi
 
 $BINDIR/influxd version
