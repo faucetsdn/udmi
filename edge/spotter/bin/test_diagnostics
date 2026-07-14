@@ -34,6 +34,15 @@ import unittest
 import http.server
 import paho.mqtt.client as mqtt
 
+def create_mqtt_client(client_id=None):
+    if hasattr(mqtt, "CallbackAPIVersion"):
+        if client_id:
+            return mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id)
+        return mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+    if client_id:
+        return mqtt.Client(client_id=client_id)
+    return mqtt.Client()
+
 # Global variable to capture uploaded mock data
 UPLOADED_DATA = b""
 MOCK_SERVER_PORT = 9991
@@ -188,7 +197,7 @@ allow_anonymous true
         global UPLOADED_DATA
         
         # Connect client to local mosquitto to publish config and read state
-        client = mqtt.Client()
+        client = create_mqtt_client()
         
         state_received = threading.Event()
         device_online = threading.Event()
@@ -332,7 +341,7 @@ allow_anonymous true
 
     def test_pcap_mqtt_fallback(self):
         # Connect client to local mosquitto to publish config and read state/pcap fallback
-        client = mqtt.Client()
+        client = create_mqtt_client()
         
         state_received = threading.Event()
         device_online = threading.Event()

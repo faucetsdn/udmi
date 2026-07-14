@@ -88,7 +88,10 @@ class MqttMessagingClient(AbstractMessagingClient):
         self._callbacks = MqttClientCallbacks()
 
         # Initialize Paho Client
-        self._mqtt_client = mqtt.Client(client_id=self._config.client_id)
+        if hasattr(mqtt, "CallbackAPIVersion"):
+            self._mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=self._config.client_id)
+        else:
+            self._mqtt_client = mqtt.Client(client_id=self._config.client_id)
         self._mqtt_client.on_connect = self._on_connect
         self._mqtt_client.on_message = self._on_message
         self._mqtt_client.on_disconnect = self._on_disconnect
@@ -253,7 +256,7 @@ class MqttMessagingClient(AbstractMessagingClient):
     # --- Paho Callbacks ---
 
     def _on_connect(self, client: Any, _userdata: Any, _flags: Any,
-        rc: int) -> None:
+        rc: int, properties: Any = None) -> None:
         if rc == 0:
             LOGGER.info("Connected to MQTT broker. Subscribing...")
             for device_id, channel in self._subscribed_channels:
@@ -285,7 +288,8 @@ class MqttMessagingClient(AbstractMessagingClient):
         else:
             LOGGER.warning("Unexpected topic format: %s", topic)
 
-    def _on_disconnect(self, _client: Any, _userdata: Any, rc: int) -> None:
+    def _on_disconnect(self, _client: Any, _userdata: Any, rc: int,
+        properties: Any = None) -> None:
         if rc != 0:
             LOGGER.warning("Unexpected disconnect (rc=%s). Reconnecting...", rc)
         else:
