@@ -50,18 +50,18 @@ The goal of Phase 1 is to package the legacy discovery node into a containerized
     2.  The new `Spotter Core Agent` (Python).
   * Handle system signals (`SIGTERM`, `SIGINT`) to ensure graceful termination of both child processes. If either process experiences a fatal crash, log the failure and attempt recovery or restart the container.
 * **Implementation & Verification**:
-  * [Dockerfile](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/container/Dockerfile) - Multi-stage build with isolated virtual environments (`/venv_legacy` and `/venv_spotter`).
-  * [supervisor.sh](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/container/supervisor.sh) - Lightweight process supervisor using `exec` in background jobs to properly track PIDs and handle signals gracefully.
-  * [test_supervisor](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin/test_supervisor) - Bash-based verification of graceful shutdown under signals, and exit status code validation (101/102) when child processes crash.
-  * [test_container](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin/test_container) - Bash-based verification of container execution, volume mounts, and child process lifecycle inside the built docker container.
+  * [Dockerfile](container/Dockerfile) - Multi-stage build with isolated virtual environments (`/venv_legacy` and `/venv_spotter`).
+  * [supervisor.sh](container/supervisor.sh) - Lightweight process supervisor using `exec` in background jobs to properly track PIDs and handle signals gracefully.
+  * [test_supervisor](bin/test_supervisor) - Bash-based verification of graceful shutdown under signals, and exit status code validation (101/102) when child processes crash.
+  * [test_container](bin/test_container) - Bash-based verification of container execution, volume mounts, and child process lifecycle inside the built docker container.
 
 #### Task 1.1.2: Shared Credentials & Connection Lifecycle [Completed]
 * **Behavioral Specification**:
   * Configure the container to share on-prem credential paths (mTLS certificates/keys) so both the legacy discovery node and the Spotter Agent can authenticate with ClearBlade/Mosquitto.
   * Ensure the Spotter Agent initializes its own UDMI connection using clientlib abstractions (`CredentialManager`), establishing the management channel for new features (OTA, diagnostics).
 * **Implementation & Verification**:
-  * [agent.py](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/src/agent.py) - Spotter Core Agent connects using clientlib factory and maps shared configuration credentials (`key_file`, `cert_file`, `ca_file`). Supports `udmi_local` basic authentication by automatically deriving password from the sha256 hash of on-prem private keys.
-  * [test_agent.py](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/tests/test_agent.py) - Checks correct construction of `EndpointConfiguration` for different authentication types and client ID configurations.
+  * [agent.py](src/agent.py) - Spotter Core Agent connects using clientlib factory and maps shared configuration credentials (`key_file`, `cert_file`, `ca_file`). Supports `udmi_local` basic authentication by automatically deriving password from the sha256 hash of on-prem private keys.
+  * [test_agent.py](tests/test_agent.py) - Checks correct construction of `EndpointConfiguration` for different authentication types and client ID configurations.
 
 #### Task 1.1.3: Port & Resource Contention Audit [Completed]
 * **Behavioral Specification**:
@@ -84,13 +84,13 @@ The goal of Phase 1 is to package the legacy discovery node into a containerized
   * Spotter Agent ignores legacy discovery configuration blocks, avoiding conflicts.
   * Verify that passive scanning, active Nmap scans, and BACnet discovery triggered by the legacy process function correctly inside the containerized network namespace (host networking mode).
 * **Implementation & Verification**:
-  * [agent.py](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/src/agent.py) - Configured to register only the `SystemManager`, bypassing the default `DiscoveryManager` registration. This ensures the Spotter agent completely ignores `discovery` configurations, which are instead processed exclusively by the legacy node.
+  * [agent.py](src/agent.py) - Configured to register only the `SystemManager`, bypassing the default `DiscoveryManager` registration. This ensures the Spotter agent completely ignores `discovery` configurations, which are instead processed exclusively by the legacy node.
 
 
 ### Phase 1 Testing & Verification Summary
 
 > [!IMPORTANT]
-> Detailed testing requirements, network/mTLS execution conditions, and manual triage policies are documented in the project's testing standard: [GEMINI.md](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/GEMINI.md).
+> Detailed testing requirements, network/mTLS execution conditions, and manual triage policies are documented in the project's testing standard: [GEMINI.md](GEMINI.md).
 
 To ensure robustness, resource safety, and signal reliability, the following tests were executed and validated:
 
@@ -130,7 +130,7 @@ To ensure robustness, resource safety, and signal reliability, the following tes
   * Run the legacy bare-metal discovery node and the new containerized Spotter side-by-side.
   * Intercept and compare the published `DiscoveryEvent` telemetry payloads.
 * **Implementation & Verification**:
-  * [test_parity](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin/test_parity) - Spins up a custom bridge network, runs the simulated BACnet server container (`test-bacnet-device`), runs a dual-port Mosquitto broker (plain & TLS with client certs validation), and sequentially tests `test-discovery_node` vs `udmi-spotter` to assert event parity.
+  * [test_parity](bin/test_parity) - Spins up a custom bridge network, runs the simulated BACnet server container (`test-bacnet-device`), runs a dual-port Mosquitto broker (plain & TLS with client certs validation), and sequentially tests `test-discovery_node` vs `udmi-spotter` to assert event parity.
 * **Verification Criteria**:
   * Assert 100% field parity for discovered device attributes. The containerized deployment must not introduce regressions or schema deviations.
 
@@ -152,8 +152,8 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * Validate the cryptographic `sha256` checksum of the retrieved profile payload.
   * Report progress in `state.blobset.blobs.pcap_capture` using standard phases (`apply`, `final`) and log messages under the `blobset.blob` namespace.
 * **Implementation & Verification**:
-  * [agent.py](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/src/agent.py) - Registers a custom pcap_capture blob handler, validates checksums, and decodes inline Base64 diagnostic payloads.
-  * [system_manager.py](file:///usr/local/google/home/heykhyati/Projects/udmi/clientlib/python/src/udmi/core/managers/system_manager.py) - Incorporates support for standard `blobset.blobs` configuration schemas, tracks generation versions, and manages asynchronous worker thread lifecycles.
+  * [agent.py](src/agent.py) - Registers a custom pcap_capture blob handler, validates checksums, and decodes inline Base64 diagnostic payloads.
+  * [system_manager.py](../../clientlib/python/src/udmi/core/managers/system_manager.py) - Incorporates support for standard `blobset.blobs` configuration schemas, tracks generation versions, and manages asynchronous worker thread lifecycles.
 
 #### Task 2.1.2: PCAP Driver Execution [Completed]
 * **Target Location**: `udmi.core.diagnostics.pcap`
@@ -167,7 +167,7 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * Spawn a thread to execute the packet capture driver (using `tcpdump` or socket sniffer).
   * **Resource Safety:** Run capture processes under low IO/CPU scheduling priorities (`nice` / `ionice`).
 * **Implementation & Verification**:
-  * [pcap.py](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/src/pcap.py) - Captures raw network traffic via a subprocess executing `tcpdump`, using low priority `nice -n 19`. Terminates gracefully on duration or byte constraints.
+  * [pcap.py](src/pcap.py) - Captures raw network traffic via a subprocess executing `tcpdump`. Terminates gracefully on duration or byte constraints.
 
 ---
 
@@ -183,8 +183,8 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * **Zero-Disk Rule:** Do not write raw packets to the local filesystem. Buffers must exist only in RAM and be flushed immediately to GCS.
   * Finalize the session when the capture completes, verifying the GCS response.
 * **Implementation & Verification**:
-  * [uploader.py](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/src/uploader.py) - Implements chunked streaming GCS resumable upload client using standard Python HTTP libraries and chunk generator piping.
-  * [test_diagnostics](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin/test_diagnostics) - Verifies remote pcap capture triggers, local mock resumable upload server handling, and packet validation.
+  * [uploader.py](src/uploader.py) - Implements chunked streaming GCS resumable upload client using standard Python HTTP libraries and chunk generator piping.
+  * [test_diagnostics](bin/test_diagnostics) - Verifies remote pcap capture triggers, local mock resumable upload server handling, and packet validation.
 
 ---
 
@@ -203,24 +203,24 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * Include metadata: `session_id`, `chunk_index`, `total_chunks`, and the chunk payload.
   * *Note: Requires a cloud-side reassembly worker to reconstruct the files on GCS.*
 * **Implementation & Verification**:
-  * [agent.py](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/src/agent.py) - Implements caching generator wrapper to store raw packet chunks in RAM during live capture, catches GCS resumable HTTP transport errors (connection/timeout), and publishes base64-encoded `PcapChunkEvent` objects sequentially over MQTT to `events/pcap`.
-  * [test_diagnostics](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin/test_diagnostics) - Verifies MQTT fallback chunking by triggering a diagnostic job without an `upload_url`, subscribing to `/r/ZZ-TRI-FECTA/d/AHU-1-spotter/events/pcap`, reassembling the chunks, and validating the resulting PCAP headers.
+  * [agent.py](src/agent.py) - Implements caching generator wrapper to store raw packet chunks in RAM during live capture, catches GCS resumable HTTP transport errors (connection/timeout), and publishes base64-encoded `PcapChunkEvent` objects sequentially over MQTT to `events/pcap`.
+  * [test_diagnostics](bin/test_diagnostics) - Verifies MQTT fallback chunking by triggering a diagnostic job without an `upload_url`, subscribing to `/r/ZZ-TRI-FECTA/d/AHU-1-spotter/events/pcap`, reassembling the chunks, and validating the resulting PCAP headers.
 
 #### Sub-phase 2.4: Startup & Dependency Management [Completed]
 
 #### Task 2.4.1: Standalone Dependency Declarations [Completed]
 * **Behavioral Specification**:
-  * Provide a dedicated `requirements.txt` listing all Spotter Python dependencies (including the `clientlib` local library reference) to support local developer environment builds without container rebuild requirements.
+  * Provide a dedicated `requirements.txt` listing all Spotter Python dependencies to support local developer environment builds without container rebuild requirements.
 * **Implementation & Verification**:
-  * [requirements.txt](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/requirements.txt) - Declares explicit python dependency versions (`requests`, `paho-mqtt`, `dataclasses-json`, `cryptography`, `PyJWT`, `psutil`) and references `clientlib` in editable layout mode (`-e ../../clientlib/python`).
+  * [requirements.txt](requirements.txt) - Declares explicit python dependency versions (`requests>=2.32.5`).
 
-#### Task 2.4.2: Unified Startup Orchestrator (`start_spotter`) [Completed]
+#### Task 2.4.2: Unified Startup Orchestrator (`spotter`) [Completed]
 * **Behavioral Specification**:
-  * Provide a startup script (`start_spotter`) that automatically prepares the environment and launches Spotter either in containerized mode or standalone local mode.
+  * Provide a startup script (`spotter`) that automatically prepares the environment and launches Spotter either in containerized mode or standalone local mode.
   * In local mode, it must build distinct virtual environments for both the legacy discovery node and the Spotter agent, configure PYTHONPATH, and start both processes under the lightweight supervisor.
 * **Implementation & Verification**:
-  * [start_spotter](file:///usr/local/google/home/heykhyati/Projects/udmi/bin/start_spotter) - Integrated into the root `bin/` directory. Added support for positional arguments (mimicking `bin/pubber`) allowing running against any device in any site model. Dynamically generates configurations, resolves credentials/certificates, and updates the local broker dynamic security rules to bypass Client ID constraints (allowing both processes to run under the same device ID without connection clashes).
-  * [stop_spotter](file:///usr/local/google/home/heykhyati/Projects/udmi/bin/stop_spotter) - Integrated into the root `bin/` directory. Safely cleans up containerized and local background supervised processes.
+  * [spotter](../../bin/spotter) - Integrated into the root `bin/` directory. Added support for positional arguments (mimicking `bin/pubber`) allowing running against any device in any site model. Dynamically generates configurations, resolves credentials/certificates, and updates the local broker dynamic security rules to bypass Client ID constraints (allowing both processes to run under the same device ID without connection clashes).
+  * [stop_spotter](../../bin/stop_spotter) - Integrated into the root `bin/` directory. Safely cleans up containerized and local background supervised processes.
 
 ---
 
