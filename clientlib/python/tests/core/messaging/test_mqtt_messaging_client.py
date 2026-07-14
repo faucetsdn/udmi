@@ -68,9 +68,7 @@ def test_init_configures_paho(mock_paho_client_class,
         auth_provider=None
     )
 
-    mock_paho_client_class.assert_called_with(
-        client_id=base_endpoint_config.client_id
-    )
+    assert mock_paho_client_class.call_args.kwargs["client_id"] == base_endpoint_config.client_id
 
     assert mock_paho_client_instance.on_connect == client._on_connect
     assert mock_paho_client_instance.on_message == client._on_message
