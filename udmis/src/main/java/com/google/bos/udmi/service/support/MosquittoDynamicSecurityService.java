@@ -7,11 +7,11 @@ import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.JsonUtil;
-import java.util.Collections;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -414,7 +414,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       }
       Object corrData = responsesList.get(0).get("correlationData");
       if (!batchId.equals(corrData)) {
-        log.debug("[Batch {}] Ignoring response on shared topic with non-matching correlationData: {}",
+        log.debug(
+            "[Batch {}] Ignoring response on shared topic with non-matching correlationData: {}",
             batchId, corrData);
         return;
       }
