@@ -74,6 +74,10 @@ clientlib/python/.udmi_persistence.json
 clientlib/python/*/rsa_private.crt
 clientlib/python/*/rsa_private.pem
 clientlib/python/*/.udmi_persistence.json
+.udmi_persistence.json
+rsa_private.crt
+rsa_private.pem
+*.pkcs8
 wordlist.dic
 
 # Test output directories

@@ -1,0 +1,19 @@
+{
+  "log_level": "INFO",
+  "mqtt": {
+    "device_id": "AHU-1",
+    "registry_id": "ZZ-TRI-FECTA",
+    "host": "localhost",
+    "port": 18883,
+    "authentication_mechanism": "udmi_local",
+    "region": "us-central1",
+    "project_id": "my-project",
+    "key_file": "../../sites/udmi_site_model/devices/AHU-1/rsa_private.pem",
+    "cert_file": "../../sites/udmi_site_model/devices/AHU-1/rsa_private.crt",
+    "ca_file": "../../sites/udmi_site_model/reflector/ca.crt",
+    "algorithm": "RS256"
+  },
+  "bacnet": {
+    "ip": "127.0.0.1"
+  }
+}

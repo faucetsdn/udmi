@@ -1,0 +1,2 @@
+-e ../../clientlib/python
+requests>=2.32.5

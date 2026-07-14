@@ -35,6 +35,7 @@ class TlsConfig:
     cert_file: Optional[str] = None
     key_file: Optional[str] = None
     enable_tls: Optional[bool] = None
+    insecure: Optional[bool] = None
 
 
 @dataclass
@@ -225,6 +226,9 @@ class MqttMessagingClient(AbstractMessagingClient):
                 certfile=self._tls_config.cert_file,
                 keyfile=self._tls_config.key_file
             )
+            if self._tls_config.insecure:
+                LOGGER.warning("Disabling TLS hostname verification (insecure mode).")
+                self._mqtt_client.tls_insecure_set(True)
         except Exception as e:
             LOGGER.error("Failed to set TLS: %s", e)
             raise

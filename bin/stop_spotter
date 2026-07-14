@@ -1,0 +1,103 @@
+#!/bin/bash
+# Stop script for UDMI Spotter Agent
+
+set -eo pipefail
+
+MODE="all"
+
+function show_help() {
+    echo "Usage: $0 [options]"
+    echo ""
+    echo "Options:"
+    echo "  --mode <container|local|all>   Specify which Spotter Agent execution to stop (default: all)"
+    echo "  -h, --help                     Show this help message"
+}
+
+# Parse command line options
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --mode)
+            MODE="$2"
+            shift 2
+            ;;
+        -h|--help)
+            show_help
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown option $1"
+            show_help
+            exit 1
+            ;;
+    esac
+done
+
+stop_container() {
+    if docker ps -q --filter "name=udmi-spotter-agent" | grep -q .; then
+        echo "Stopping running Spotter Agent container (udmi-spotter-agent)..."
+        docker stop udmi-spotter-agent
+        echo "Container stopped successfully."
+    else
+        echo "No running Spotter Agent container found."
+    fi
+}
+
+stop_local() {
+    echo "Searching for local supervised Spotter processes..."
+    
+    # Locate supervisor.sh processes that are running with spotter config arguments
+    local supervisor_pids
+    supervisor_pids=$(pgrep -f "supervisor.sh --config_file" || true)
+    
+    if [[ -n "${supervisor_pids}" ]]; then
+        echo "Found running local supervisor(s) with PID(s): ${supervisor_pids}"
+        for pid in ${supervisor_pids}; do
+            echo "Sending SIGTERM to supervisor process ${pid}..."
+            kill -TERM "${pid}" 2>/dev/null || true
+        done
+        
+        # Wait a moment for processes to clean up and exit
+        echo "Waiting for child processes to terminate gracefully..."
+        sleep 2
+        echo "Local services stopped."
+    else
+        # Fallback search directly for agent.py processes if supervisor wasn't found
+        local agent_pids
+        agent_pids=$(pgrep -f "agent.py --config_file" || true)
+        if [[ -n "${agent_pids}" ]]; then
+            echo "Found orphan Spotter Agent process(es) with PID(s): ${agent_pids}"
+            for pid in ${agent_pids}; do
+                echo "Sending SIGTERM to agent process ${pid}..."
+                kill -TERM "${pid}" 2>/dev/null || true
+            done
+        fi
+        
+        local legacy_pids
+        legacy_pids=$(pgrep -f "discoverynode/src/main.py --config_file" || true)
+        if [[ -n "${legacy_pids}" ]]; then
+            echo "Found orphan Legacy Discovery process(es) with PID(s): ${legacy_pids}"
+            for pid in ${legacy_pids}; do
+                echo "Sending SIGTERM to discovery process ${pid}..."
+                kill -TERM "${pid}" 2>/dev/null || true
+            done
+        fi
+        
+        if [[ -z "${agent_pids}" && -z "${legacy_pids}" ]]; then
+            echo "No active local Spotter processes found."
+        fi
+    fi
+}
+
+if [[ "${MODE}" == "container" ]]; then
+    stop_container
+elif [[ "${MODE}" == "local" ]]; then
+    stop_local
+elif [[ "${MODE}" == "all" ]]; then
+    stop_container
+    echo ""
+    stop_local
+else
+    echo "Error: Invalid mode '${MODE}'."
+    show_help
+    exit 1
+fi

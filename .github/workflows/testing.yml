@@ -592,3 +592,41 @@ jobs:
             bridgehead/var/mosquitto/log/
             out/bridgehead_*
 
+  spotter:
+    name: Spotter Agent Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e clientlib/python
+          pip install -r edge/spotter/requirements.txt
+      - name: Unit Tests
+        run: |
+          PYTHONPATH=clientlib/python/src:edge/spotter/src:. python3 -m unittest discover -s edge/spotter/tests
+      - name: Supervisor Lifecycle Integration Tests
+        run: |
+          edge/spotter/bin/test_supervisor
+      - name: Build Docker Container
+        run: |
+          docker build -t udmi-spotter:latest -f edge/spotter/container/Dockerfile .
+      - name: Container Integration Tests
+        run: |
+          edge/spotter/bin/test_container
+      - name: Diagnostics Integration Tests
+        run: |
+          PYTHONPATH=clientlib/python/src:. edge/spotter/bin/test_diagnostics
+      - name: Build Parity Test Prerequisites & Run Parity Tests
+        run: |
+          misc/discoverynode/bin/build_container test-discovery_node
+          misc/discoverynode/testing/docker/bacnet_device/build.sh
+          PYTHONPATH=clientlib/python/src:. edge/spotter/bin/test_parity
+
+

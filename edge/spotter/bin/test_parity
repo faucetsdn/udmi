@@ -1,0 +1,341 @@
+#!/usr/bin/env python3
+import sys
+import os
+
+# Dynamic PYTHONPATH resolution
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_workspace_dir = os.path.abspath(os.path.join(_script_dir, "../../../"))
+sys.path.insert(0, os.path.join(_workspace_dir, "clientlib/python/src"))
+sys.path.insert(0, _workspace_dir)
+
+if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h"):
+    print("Usage: ./test_parity")
+    print("")
+    print("Validates BACnet discovery co-existence parity between the legacy")
+    print("discovery node container and the new dual-process container:")
+    print("1. Launches simulated BACnet server container.")
+    print("2. Spawns local Mosquitto broker with plain (1883) & TLS (18883) listeners.")
+    print("3. Runs legacy and new containers sequentially, triggering scans.")
+    print("4. Asserts 100% telemetry field and sequence parity of output events.")
+    print("")
+    print("Prerequisites:")
+    print("- Requires local Docker daemon running.")
+    print("- Requires test-bacnet-device:latest, test-discovery_node:latest, and udmi-spotter:latest images built.")
+    sys.exit(0)
+
+
+import hashlib
+import json
+import subprocess
+import tempfile
+import time
+import unittest
+import signal
+import paho.mqtt.client as mqtt
+
+class TestParity(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        # Verify docker images are built
+        for img in ["test-bacnet-device:latest", "test-discovery_node:latest", "udmi-spotter:latest"]:
+            try:
+                subprocess.run(["docker", "image", "inspect", img], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            except Exception:
+                raise unittest.SkipTest(f"Docker image {img} not available. Run build scripts first.")
+
+    def setUp(self):
+        self.test_dir = tempfile.TemporaryDirectory()
+        self.mqtt_port = 18883
+        
+        # 1. Get workspace paths for certificates
+        workspace_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+        ca_src = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/ca.crt")
+        server_crt_src = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/server.crt")
+        server_key_src = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/server.key")
+        
+        # Copy client certs for AHU-1 to config dir
+        import shutil
+        shutil.copy(ca_src, os.path.join(self.test_dir.name, "ca.crt"))
+        shutil.copy(os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pem"), os.path.join(self.test_dir.name, "rsa_private.pem"))
+        shutil.copy(os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.crt"), os.path.join(self.test_dir.name, "rsa_private.crt"))
+        shutil.copy(os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8"), os.path.join(self.test_dir.name, "rsa_private.pkcs8"))
+        
+        # 2. Start local Mosquitto broker with dual listeners:
+        # Port 1883: plain TCP for host client
+        # Port 18883: TLS with client certificate requirements for containers
+        self.mosquitto_conf = os.path.join(self.test_dir.name, "mosquitto.conf")
+        with open(self.mosquitto_conf, "w") as f:
+            f.write(f"""
+listener 1883
+allow_anonymous true
+
+listener 18883
+cafile {ca_src}
+certfile {server_crt_src}
+keyfile {server_key_src}
+require_certificate true
+allow_anonymous true
+""")
+        
+        self.mosquitto_log_path = os.path.join(self.test_dir.name, "mosquitto.log")
+        self.mosquitto_log_file = open(self.mosquitto_log_path, "w")
+        self.mosquitto_proc = subprocess.Popen(
+            ["mosquitto", "-c", self.mosquitto_conf, "-v"],
+            stdout=self.mosquitto_log_file,
+            stderr=self.mosquitto_log_file
+        )
+        time.sleep(2) # wait for mosquitto to start
+
+        
+        # 3. Create docker network
+        subprocess.run(["docker", "network", "rm", "spotter-parity-net"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run([
+            "docker", "network", "create",
+            "--subnet=192.168.12.0/24",
+            "--gateway=192.168.12.254",
+            "spotter-parity-net"
+        ], check=True)
+        
+        # 4. Start simulated BACnet device in the docker network
+        self.bacnet_proc = subprocess.Popen(
+            [
+                "docker", "run", "--rm",
+                "--network=spotter-parity-net",
+                "--ip=192.168.12.1",
+                "--name", "parity-bacnet-device",
+                "-e", "BACNET_ID=1",
+                "test-bacnet-device:latest"
+            ],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        time.sleep(3) # wait for BACnet server to start and bind to 47808
+
+    def tearDown(self):
+        # Terminate BACnet device container
+        subprocess.run(["docker", "stop", "parity-bacnet-device"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if self.bacnet_proc:
+            self.bacnet_proc.wait()
+
+        
+        # Delete docker network
+        subprocess.run(["docker", "network", "rm", "spotter-parity-net"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        
+        # Terminate Mosquitto
+        if self.mosquitto_proc:
+            self.mosquitto_proc.terminate()
+            self.mosquitto_proc.wait()
+            
+        if hasattr(self, "mosquitto_log_file") and self.mosquitto_log_file:
+            self.mosquitto_log_file.close()
+            
+        self.test_dir.cleanup()
+
+
+    def run_discovery_test(self, container_image, container_name, client_id, config_file_in_container):
+        messages = []
+        
+        # Connect client to local mosquitto to subscribe and publish config
+        client = mqtt.Client()
+
+        import threading
+        state_received = threading.Event()
+        connected = threading.Event()
+        
+        def on_message(client, userdata, message):
+            if message.topic.endswith("/state"):
+                state_received.set()
+            elif message.topic.endswith("/events/discovery"):
+                payload = json.loads(message.payload.decode())
+                messages.append(payload)
+            
+        def on_connect(client, userdata, flags, rc, properties=None):
+            connected.set()
+            
+        client.on_connect = on_connect
+        client.on_message = on_message
+        client.connect("127.0.0.1", 1883) # Connect to plain TCP port
+        client.loop_start()
+        
+        if not connected.wait(timeout=5):
+            raise RuntimeError("Test MQTT client failed to connect to local broker")
+
+        # Subscribe to discovery events and state messages
+        client.subscribe(f"/r/ZZ-TRI-FECTA/d/{client_id}/events/discovery")
+        client.subscribe(f"/r/ZZ-TRI-FECTA/d/{client_id}/state")
+        
+        # Start container on custom bridge network
+        container_proc = subprocess.Popen([
+            "docker", "run", "--rm",
+            "--network=spotter-parity-net",
+            "--ip=192.168.12.2",
+            "--name", container_name,
+            "-v", f"{self.test_dir.name}:/config_dir",
+            container_image,
+            "--config_file", config_file_in_container
+        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        try:
+            # Publish config repeatedly every 1.5 seconds until the container starts and publishes its state
+            timestamp = datetime_now_iso()
+            config_payload = {
+                "timestamp": timestamp,
+                "discovery": {
+                    "families": {
+                        "bacnet": {
+                            "generation": timestamp,
+                            "scan_duration_sec": 5,
+                            "depth": "system"
+                        }
+                    }
+                }
+            }
+            
+            success = False
+            for attempt in range(10):
+                if state_received.is_set():
+                    success = True
+                    break
+                client.publish(f"/r/ZZ-TRI-FECTA/d/{client_id}/config", json.dumps(config_payload), qos=1)
+                if state_received.wait(timeout=2.0):
+                    success = True
+                    break
+            
+            if not success:
+                print(f"\n--- ERROR: Container {container_name} failed to respond to config publishes in time. ---")
+                if os.path.exists(self.mosquitto_log_path):
+                    with open(self.mosquitto_log_path, "r") as f:
+                        print("\n--- MOSQUITTO BROKER LOGS ---")
+                        print(f.read())
+                raise RuntimeError(f"Container {container_name} failed to publish state update within timeout")
+            
+            # Wait for discovery scan to complete (scan duration is 5s, let's wait 10s)
+            time.sleep(10)
+        finally:
+            # Stop container
+            subprocess.run(["docker", "stop", container_name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            stdout, stderr = container_proc.communicate()
+            print(f"\n[{container_name} STDOUT]:\n", stdout.decode())
+            print(f"\n[{container_name} STDERR]:\n", stderr.decode())
+            
+            client.loop_stop()
+            client.disconnect()
+            
+        return messages
+
+
+    def test_discovery_parity(self):
+        # 1. Configuration for legacy container (test-discovery_node)
+        legacy_config = {
+            "mqtt": {
+                "device_id": "AHU-1",
+                "host": "192.168.12.254", # Connect to broker on the host gateway IP
+                "port": self.mqtt_port,
+                "registry_id": "ZZ-TRI-FECTA",
+                "region": "us-central1",
+                "project_id": "my-project",
+                "key_file": "/config_dir/rsa_private.pem",
+                "ca_file": "/config_dir/ca.crt",
+                "cert_file": "/config_dir/rsa_private.crt",
+                "algorithm": "RS256",
+                "authentication_mechanism": "udmi_local"
+            },
+            "bacnet": {
+                "ip": None,
+                "port": None,
+                "interface": None
+            },
+            "udmi": {
+                "discovery": {
+                    "ipv4": False,
+                    "vendor": False,
+                    "ether": False,
+                    "bacnet": True
+                }
+            }
+        }
+        legacy_config_file = os.path.join(self.test_dir.name, "legacy_config.json")
+        with open(legacy_config_file, "w") as f:
+            f.write(json.dumps(legacy_config))
+            
+        # 2. Configuration for new container (udmi-spotter)
+        spotter_config = {
+            "mqtt": {
+                "device_id": "AHU-1",
+                "host": "192.168.12.254",
+                "port": self.mqtt_port,
+                "registry_id": "ZZ-TRI-FECTA",
+                "region": "us-central1",
+                "project_id": "my-project",
+                "key_file": "/config_dir/rsa_private.pem",
+                "ca_file": "/config_dir/ca.crt",
+                "cert_file": "/config_dir/rsa_private.crt",
+                "algorithm": "RS256",
+                "authentication_mechanism": "udmi_local"
+            }
+        }
+        spotter_config_file = os.path.join(self.test_dir.name, "spotter_config.json")
+        with open(spotter_config_file, "w") as f:
+            f.write(json.dumps(spotter_config))
+
+        print("\n--- Running Parity Test: Legacy Discovery Container ---")
+        legacy_events = self.run_discovery_test(
+            "test-discovery_node:latest",
+            "parity-legacy-node",
+            "AHU-1",
+            "/config_dir/legacy_config.json"
+        )
+        
+        print("\n--- Running Parity Test: New Spotter Container ---")
+        spotter_events = self.run_discovery_test(
+            "udmi-spotter:latest",
+            "parity-spotter-node",
+            "AHU-1",
+            "/config_dir/spotter_config.json"
+        )
+        
+        # Clean timestamps and compare
+        legacy_clean = clean_events(legacy_events)
+        spotter_clean = clean_events(spotter_events)
+        
+        print("\nLegacy Events Collected:")
+        print(json.dumps(legacy_clean, indent=2))
+        print("\nSpotter Events Collected:")
+        print(json.dumps(spotter_clean, indent=2))
+        
+        # Verify we received discovery events
+        self.assertGreater(len(legacy_clean), 0, "No discovery events received from legacy container")
+        self.assertGreater(len(spotter_clean), 0, "No discovery events received from spotter container")
+        
+        # Assert parity of events
+        self.assertEqual(legacy_clean, spotter_clean, "Discovery events do not match between legacy and spotter containers!")
+        print("\nSUCCESS: 100% parity achieved!")
+
+def datetime_now_iso():
+    import datetime
+    return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+def clean_events(events):
+    # Discovery events contain fields like timestamp, generation, and version.
+    # We clean/ignore these dynamic fields to compare the core payload.
+    cleaned = []
+    for event in events:
+        # copy dict
+        evt = json.loads(json.dumps(event))
+        if "timestamp" in evt:
+            evt["timestamp"] = "CLEANED"
+        if "generation" in evt:
+            evt["generation"] = "CLEANED"
+        if "version" in evt:
+            evt["version"] = "CLEANED"
+        # If there are devices/families, clean timestamps there too
+        if "families" in evt:
+            for family, data in evt["families"].items():
+                if "generation" in data:
+                    data["generation"] = "CLEANED"
+        cleaned.append(evt)
+    return cleaned
+
+if __name__ == "__main__":
+    unittest.main()
