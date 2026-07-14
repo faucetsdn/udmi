@@ -10,7 +10,7 @@ All verification tests are categorised into **Unit Tests** and **Integration Tes
 
 ### 1.1 Automated Unit Tests
 - **Target**: Pure logical verification of internal modules (e.g., config mapping, credential parsing, password derivation) without dependencies on external running processes or Docker.
-- **Location**: [edge/spotter/tests/](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/tests)
+- **Location**: [tests/](tests)
 - **Command**:
   ```bash
   python3 -m unittest discover -s edge/spotter/tests
@@ -18,11 +18,11 @@ All verification tests are categorised into **Unit Tests** and **Integration Tes
 
 ### 1.2 Automated Integration Tests
 - **Target**: Functional pipeline, lifecycle boundaries, container isolation, and co-existence parity.
-- **Location**: [edge/spotter/bin/](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin)
+- **Location**: [bin/](bin)
 - **Executables**:
-  - [test_supervisor](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin/test_supervisor): Validates the subprocess supervisor's PID tracking, signal propagation (`SIGTERM` / `SIGINT`), and graceful termination handlers.
-  - [test_container](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin/test_container): Validates container lifecycle isolation, volume mounting of on-prem configuration files, and supervisor integration inside Docker.
-  - [test_parity](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on a custom docker network, confirming 100% functional telemetry payload parity.
+  - [test_supervisor](bin/test_supervisor): Validates the subprocess supervisor's PID tracking, signal propagation (`SIGTERM` / `SIGINT`), and graceful termination handlers.
+  - [test_container](bin/test_container): Validates container lifecycle isolation, volume mounting of on-prem configuration files, and supervisor integration inside Docker.
+  - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on a custom docker network, confirming 100% functional telemetry payload parity.
 
 To get detailed explanations of what each integration test script validates, run them with the `--help` flag:
 ```bash
@@ -32,19 +32,19 @@ To get detailed explanations of what each integration test script validates, run
 ```
 
 ### 1.3 Standalone & Container Startup Orchestration
-The startup orchestrator [start_spotter](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/bin/start_spotter) handles environment setup, builds, and execution.
-- Run in standard Docker Container Mode (default config: [spotter_config.json](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/spotter_config.json)):
+The startup orchestrator [spotter](../../bin/spotter) handles environment setup, builds, and execution.
+- Run in standard Docker Container Mode (default config: [spotter_config.json](spotter_config.json)):
   ```bash
-  ./edge/spotter/bin/start_spotter --mode container
+  ./bin/spotter --mode container
   ```
-- Run as Standalone Local Service (default config: [spotter_config.json](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/spotter_config.json)):
+- Run as Standalone Local Service (default config: [spotter_config.json](spotter_config.json)):
   ```bash
-  ./edge/spotter/bin/start_spotter --mode local
+  ./bin/spotter --mode local
   ```
   *(To use a custom configuration, append `--config /path/to/custom_config.json`)*
 - To gracefully stop all background Spotter instances (both Docker containers and local supervised processes):
   ```bash
-  ./edge/spotter/bin/stop_spotter
+  ./bin/stop_spotter
   ```
 
 ---
@@ -112,7 +112,7 @@ mqtt:on_connect on_connect Success
 ## 5. Development Plan Maintenance Policy
 
 To maintain project tracking visibility and alignment on behavioral specifications during development:
-- **Mandate**: Every agent developing the Spotter codebase must update the detailed implementation plan ([spotter_plan.md](file:///usr/local/google/home/heykhyati/Projects/udmi/edge/spotter/spotter_plan.md)) as they proceed.
+- **Mandate**: Every agent developing the Spotter codebase must update the detailed implementation plan ([spotter_plan.md](spotter_plan.md)) as they proceed.
 - **Completeness**: When a task or sub-phase is successfully implemented and verified, the agent must mark it as `[Completed]` in the plan.
 - **Traceability**: The agent must document the precise files modified/created and the specific verification methods/results directly under the task in the plan.
 - **Preservation**: The original behavioral specifications for each task must not be removed or truncated; implementation and testing details should be appended underneath them.
