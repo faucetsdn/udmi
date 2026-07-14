@@ -272,8 +272,9 @@ elif [[ "${MODE}" == "local" ]]; then
     
     echo "Installing/updating Spotter dependencies..."
     (
-        cd "${WORKSPACE_DIR}/edge/spotter"
-        "${VENV_DIR}/bin/pip" install --disable-pip-version-check --extra-index-url https://pypi.org/simple -q -r requirements.txt
+        cd "${WORKSPACE_DIR}"
+        "${VENV_DIR}/bin/pip" install --disable-pip-version-check --extra-index-url https://pypi.org/simple -q -e clientlib/python
+        "${VENV_DIR}/bin/pip" install --disable-pip-version-check --extra-index-url https://pypi.org/simple -q -r edge/spotter/requirements.txt
     )
     
     # 2. Setup Legacy Discovery Node virtual environment
