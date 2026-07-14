@@ -607,10 +607,12 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - name: Setup Base & Clone Model
+      - name: Setup Base & Generate Certificates
         run: |
           bin/setup_base
           bin/clone_model
+          UDMI_NO_SUDO=true bin/setup_ca sites/udmi_site_model localhost
+          bin/keygen CERT sites/udmi_site_model/devices/AHU-1
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -618,7 +620,7 @@ jobs:
           pip install -r edge/spotter/requirements.txt
       - name: Unit Tests
         run: |
-          PYTHONPATH=clientlib/python/src:edge/spotter/src:. python3 -m unittest discover -s edge/spotter/tests
+          PYTHONPATH=clientlib/python/src:edge/spotter/src:. python3 -m unittest discover -v -s edge/spotter/tests
       - name: Supervisor Lifecycle Integration Tests
         run: |
           edge/spotter/bin/test_supervisor
