@@ -51,7 +51,7 @@ RUN chmod +x /app/supervisor.sh
 
 # Set capability to allow tcpdump to capture packets without root (needed for Phase 2 PCAP)
 # This is a good practice to set up early.
-RUN setcap cap_net_raw,cap_net_admin=eip /usr/sbin/tcpdump || true
+RUN setcap cap_net_raw,cap_net_admin=eip $(which tcpdump || echo /usr/bin/tcpdump) || true
 
 WORKDIR /app
 ENTRYPOINT ["/bin/bash", "/app/supervisor.sh"]

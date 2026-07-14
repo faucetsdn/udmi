@@ -67,10 +67,10 @@ class TestParity(unittest.TestCase):
         self.mosquitto_conf = os.path.join(self.test_dir.name, "mosquitto.conf")
         with open(self.mosquitto_conf, "w") as f:
             f.write(f"""
-listener 1883
+listener 1883 0.0.0.0
 allow_anonymous true
 
-listener 18883
+listener 18883 0.0.0.0
 cafile {ca_src}
 certfile {server_crt_src}
 keyfile {server_key_src}

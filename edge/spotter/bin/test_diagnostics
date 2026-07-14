@@ -130,10 +130,10 @@ class TestDiagnostics(unittest.TestCase):
         
         with open(self.mosquitto_conf_path, "w") as f:
             f.write(f"""
-listener 1883
+listener 1883 0.0.0.0
 allow_anonymous true
 
-listener 18883
+listener 18883 0.0.0.0
 cafile {ca_src}
 certfile {server_crt_src}
 keyfile {server_key_src}
@@ -221,6 +221,7 @@ allow_anonymous true
         # Start container
         container_proc = subprocess.Popen([
             "docker", "run", "--rm",
+            "--cap-add=NET_RAW", "--cap-add=NET_ADMIN",
             "--network=spotter-parity-net",
             "--ip=192.168.12.2",
             "--name", "test-diagnostics-spotter",
@@ -387,6 +388,7 @@ allow_anonymous true
         # Start the spotter container
         container_proc = subprocess.Popen([
             "docker", "run", "--rm",
+            "--cap-add=NET_RAW", "--cap-add=NET_ADMIN",
             "--network=spotter-parity-net",
             "--ip=192.168.12.2",
             "--name", "test-diagnostics-spotter",

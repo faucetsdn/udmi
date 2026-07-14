@@ -20,7 +20,7 @@ def capture_packets(
         interface, filter_str, max_duration_sec, max_bytes
     )
     
-    cmd = ["nice", "-n", "19", "tcpdump", "-i", interface, "-w", "-", "-U"]
+    cmd = ["tcpdump", "-i", interface, "-w", "-", "-U"]
     if filter_str:
         cmd.append(filter_str)
         
