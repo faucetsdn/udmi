@@ -13,92 +13,131 @@ CONFIG_PATH=""
 CONFIG_DIR=""
 
 function show_help() {
-    echo "Usage: $0 SITE_PATH PROJECT_SPEC DEVICE_ID [options]"
+    echo "Usage: $0 TARGET [PROJECT_SPEC] [DEVICE_ID] [options]"
     echo "   or: $0 [options]"
     echo ""
-    echo "Positional Arguments (Pubber-style):"
-    echo "  SITE_PATH                  Path to the site model directory (e.g. sites/udmi_site_model)"
+    echo "Target Specification (Polymorphic First Argument):"
+    echo "  SITE_PATH                  Path to site model directory (requires PROJECT_SPEC and DEVICE_ID)"
+    echo "                             Example: $0 sites/udmi_site_model //mqtt/localhost AHU-1"
+    echo "  CONFIG_FILE                Path to custom JSON configuration file"
+    echo "                             Example: $0 /etc/spotter/spotter_config.json"
+    echo "  (omitted)                  Defaults to spotter_config.json"
+    echo ""
+    echo "Positional Arguments (when TARGET is a SITE_PATH directory):"
     echo "  PROJECT_SPEC               Project specification string (e.g. //mqtt/localhost:18883)"
     echo "  DEVICE_ID                  Target device ID (e.g. AHU-1)"
     echo ""
     echo "Options:"
     echo "  --mode <container|local>   Specify how to run the Spotter Agent (default: local)"
-    echo "  --config <path>            Path to spotter_config.json"
+    echo "  --config <path>            Path to spotter_config.json (alternative to positional CONFIG_FILE)"
     echo "  --config_dir <path>        Directory containing config and certificates (optional)"
     echo "  -h, --help                 Show this help message"
 }
 
-# Check for positional pubber-style arguments
+# Check for positional TARGET argument
 if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
-    if [[ $# -lt 3 ]]; then
-        echo "Error: Positional usage requires SITE_PATH, PROJECT_SPEC, and DEVICE_ID."
+    if [[ -f "$1" ]]; then
+        CONFIG_PATH=$(realpath "$1")
+        shift
+        
+        # Parse remaining options
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --mode)
+                    MODE="$2"
+                    shift 2
+                    ;;
+                --config_dir)
+                    CONFIG_DIR="$2"
+                    shift 2
+                    ;;
+                -h|--help)
+                    show_help
+                    exit 0
+                    ;;
+                *)
+                    echo "Error: Unknown option $1"
+                    show_help
+                    exit 1
+                    ;;
+            esac
+        done
+    elif [[ -d "$1" ]]; then
+        if [[ $# -lt 3 ]]; then
+            echo "Error: Site model directory target requires SITE_PATH, PROJECT_SPEC, and DEVICE_ID."
+            show_help
+            exit 1
+        fi
+        SITE_PATH=$(realpath "$1")
+        PROJECT_SPEC="$2"
+        DEVICE_ID="$3"
+        shift 3
+        
+        # Parse remaining options
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --mode)
+                    MODE="$2"
+                    shift 2
+                    ;;
+                --config_dir)
+                    CONFIG_DIR="$2"
+                    shift 2
+                    ;;
+                -h|--help)
+                    show_help
+                    exit 0
+                    ;;
+                *)
+                    echo "Error: Unknown option $1"
+                    show_help
+                    exit 1
+                    ;;
+            esac
+        done
+    else
+        echo "Error: Specified target '$1' is neither a file nor a directory."
         show_help
         exit 1
     fi
-    SITE_PATH=$(realpath "$1")
-    PROJECT_SPEC="$2"
-    DEVICE_ID="$3"
-    shift 3
     
-    # Parse remaining options
-    while [[ $# -gt 0 ]]; do
-        case "$1" in
-            --mode)
-                MODE="$2"
-                shift 2
-                ;;
-            --config_dir)
-                CONFIG_DIR="$2"
-                shift 2
-                ;;
-            -h|--help)
-                show_help
-                exit 0
-                ;;
-            *)
-                echo "Error: Unknown option $1"
-                show_help
-                exit 1
-                ;;
-        esac
-    done
-    
-    # Construct config dynamically
-    echo "Constructing configuration dynamically from site model..."
-    
-    if [[ ! -d "${SITE_PATH}" ]]; then
-        echo "Error: Site path directory not found: ${SITE_PATH}"
-        exit 1
-    fi
-    
-    SITE_CONFIG="${SITE_PATH}/cloud_iot_config.json"
-    if [[ ! -f "${SITE_CONFIG}" ]]; then
-        echo "Error: cloud_iot_config.json not found inside site path: ${SITE_CONFIG}"
-        exit 1
-    fi
-    
-    REGISTRY_ID=$(jq -r .registry_id "${SITE_CONFIG}")
-    
-    # Parse PROJECT_SPEC
-    # Format of PROJECT_SPEC is {//PROVIDER/}PROJECT[@BROKER]
-    # e.g. //mqtt/localhost:18883
-    # Extract port and host
-    PORT=18883
-    HOST="localhost"
-    
-    if [[ "${PROJECT_SPEC}" =~ localhost:([0-9]+) ]]; then
-        PORT="${BASH_REMATCH[1]}"
+    if [[ -n "${SITE_PATH:-}" ]]; then
+        # Construct config dynamically
+        echo "Constructing configuration dynamically from site model..."
+        
+        if [[ ! -d "${SITE_PATH}" ]]; then
+            echo "Error: Site path directory not found: ${SITE_PATH}"
+            exit 1
+        fi
+        
+        SITE_CONFIG="${SITE_PATH}/cloud_iot_config.json"
+        if [[ ! -f "${SITE_CONFIG}" ]]; then
+            echo "Error: cloud_iot_config.json not found inside site path: ${SITE_CONFIG}"
+            exit 1
+        fi
+        
+        REGISTRY_ID=$(jq -r .registry_id "${SITE_CONFIG}")
+        
+        # Parse PROJECT_SPEC
+        # Format of PROJECT_SPEC is {//PROVIDER/}PROJECT[@BROKER]
+        # e.g. //mqtt/localhost:18883
+        # Extract port and host
+        PORT=18883
         HOST="localhost"
-    elif [[ "${PROJECT_SPEC}" =~ :([0-9]+) ]]; then
-        PORT="${BASH_REMATCH[1]}"
-    fi
-    
-    # Check/Create device folder in site model if not present
-    DEVICE_DIR="${SITE_PATH}/devices/${DEVICE_ID}"
-    if [[ ! -d "${DEVICE_DIR}" ]]; then
-        echo "Creating device folder: ${DEVICE_DIR}..."
-        mkdir -p "${DEVICE_DIR}"
-        cat <<EOF > "${DEVICE_DIR}/metadata.json"
+        
+        if [[ "${PROJECT_SPEC}" =~ localhost:([0-9]+) ]]; then
+            PORT="${BASH_REMATCH[1]}"
+            HOST="localhost"
+        elif [[ "${PROJECT_SPEC}" =~ :([0-9]+) ]]; then
+            PORT="${BASH_REMATCH[1]}"
+        fi
+        
+        # Check/Create device folder in site model if not present
+        DEVICE_DIR="${SITE_PATH}/devices/${DEVICE_ID}"
+        if [[ ! -d "${DEVICE_DIR}" ]]; then
+            echo "Creating device folder: ${DEVICE_DIR}..."
+            mkdir -p "${DEVICE_DIR}"
+            cat <<EOF > "${DEVICE_DIR}/metadata.json"
 {
   "cloud": {
     "auth_type": "RS256_X509"
@@ -110,58 +149,58 @@ if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
   }
 }
 EOF
-    fi
-    
-    # Run mosquctl_device to ensure keys exist and are registered on broker
-    echo "Ensuring keys are generated and registered on broker..."
-    # We call it with MQTT_PORT so that it knows which port to connect to if broker is active
-    MQTT_PORT="${PORT}" "${WORKSPACE_DIR}/bin/mosquctl_device" "${SITE_PATH}" "${DEVICE_ID}" >/dev/null 2>&1 || true
-    
-    # Resolve the generated key file paths
-    PKCS8_FILE="${DEVICE_DIR}/rsa_private.pkcs8"
-    if [[ ! -f "${PKCS8_FILE}" ]]; then
-        PKCS8_FILE="${DEVICE_DIR}/ec_private.pkcs8"
-    fi
-    
-    KEY_FILE="${DEVICE_DIR}/rsa_private.pem"
-    if [[ ! -f "${KEY_FILE}" ]]; then
-        KEY_FILE="${DEVICE_DIR}/ec_private.pem"
-    fi
-    
-    CA_FILE="${SITE_PATH}/reflector/ca.crt"
-    
-    CERT_FILE="${DEVICE_DIR}/rsa_private.crt"
-    if [[ ! -f "${CERT_FILE}" ]]; then
-        CERT_FILE="${DEVICE_DIR}/ec_private.crt"
-    fi
-    
-    if [[ ! -f "${KEY_FILE}" ]]; then
-        echo "Error: Private key file not found: ${KEY_FILE}"
-        exit 1
-    fi
-    
-    # Re-register the client without client ID constraint to allow Spotter Agent and legacy node to coexist
-    DEV_USER="/r/${REGISTRY_ID}/d/${DEVICE_ID}"
-    DEV_PASS=$(sha256sum < "${PKCS8_FILE}" | cut -c1-8)
-    
-    # Source mosquitto_ctrl.sh to get MOSQUITTO_CTRL command definition
-    export MQTT_PORT="${PORT}"
-    export UDMI_ROOT="${WORKSPACE_DIR}"
-    # Temporarily turn off set -u to avoid mosquitto_ctrl.sh unbound variable errors
-    set +u
-    source "${WORKSPACE_DIR}/etc/mosquitto_ctrl.sh"
-    set -u
-    
-    echo "Updating broker dynsec rules to allow multiple client IDs for ${DEVICE_ID}..."
-    $MOSQUITTO_CTRL deleteClient $DEV_USER >/dev/null 2>&1 || true
-    $MOSQUITTO_CTRL createClient $DEV_USER -p $DEV_PASS >/dev/null 2>&1 || true
-    $MOSQUITTO_CTRL addClientRole $DEV_USER service >/dev/null 2>&1 || true
-    
-    # Create a temporary runtime config file
-    CONFIG_PATH="${WORKSPACE_DIR}/out/spotter_runtime_config.json"
-    mkdir -p "$(dirname "${CONFIG_PATH}")"
-    
-    cat <<EOF > "${CONFIG_PATH}"
+        fi
+        
+        # Run mosquctl_device to ensure keys exist and are registered on broker
+        echo "Ensuring keys are generated and registered on broker..."
+        # We call it with MQTT_PORT so that it knows which port to connect to if broker is active
+        MQTT_PORT="${PORT}" "${WORKSPACE_DIR}/bin/mosquctl_device" "${SITE_PATH}" "${DEVICE_ID}" >/dev/null 2>&1 || true
+        
+        # Resolve the generated key file paths
+        PKCS8_FILE="${DEVICE_DIR}/rsa_private.pkcs8"
+        if [[ ! -f "${PKCS8_FILE}" ]]; then
+            PKCS8_FILE="${DEVICE_DIR}/ec_private.pkcs8"
+        fi
+        
+        KEY_FILE="${DEVICE_DIR}/rsa_private.pem"
+        if [[ ! -f "${KEY_FILE}" ]]; then
+            KEY_FILE="${DEVICE_DIR}/ec_private.pem"
+        fi
+        
+        CA_FILE="${SITE_PATH}/reflector/ca.crt"
+        
+        CERT_FILE="${DEVICE_DIR}/rsa_private.crt"
+        if [[ ! -f "${CERT_FILE}" ]]; then
+            CERT_FILE="${DEVICE_DIR}/ec_private.crt"
+        fi
+        
+        if [[ ! -f "${KEY_FILE}" ]]; then
+            echo "Error: Private key file not found: ${KEY_FILE}"
+            exit 1
+        fi
+        
+        # Re-register the client without client ID constraint to allow Spotter Agent and legacy node to coexist
+        DEV_USER="/r/${REGISTRY_ID}/d/${DEVICE_ID}"
+        DEV_PASS=$(sha256sum < "${PKCS8_FILE}" | cut -c1-8)
+        
+        # Source mosquitto_ctrl.sh to get MOSQUITTO_CTRL command definition
+        export MQTT_PORT="${PORT}"
+        export UDMI_ROOT="${WORKSPACE_DIR}"
+        # Temporarily turn off set -u to avoid mosquitto_ctrl.sh unbound variable errors
+        set +u
+        source "${WORKSPACE_DIR}/etc/mosquitto_ctrl.sh"
+        set -u
+        
+        echo "Updating broker dynsec rules to allow multiple client IDs for ${DEVICE_ID}..."
+        $MOSQUITTO_CTRL deleteClient $DEV_USER >/dev/null 2>&1 || true
+        $MOSQUITTO_CTRL createClient $DEV_USER -p $DEV_PASS >/dev/null 2>&1 || true
+        $MOSQUITTO_CTRL addClientRole $DEV_USER service >/dev/null 2>&1 || true
+        
+        # Create a temporary runtime config file
+        CONFIG_PATH="${WORKSPACE_DIR}/out/spotter_runtime_config.json"
+        mkdir -p "$(dirname "${CONFIG_PATH}")"
+        
+        cat <<EOF > "${CONFIG_PATH}"
 {
   "log_level": "INFO",
   "mqtt": {
@@ -182,10 +221,11 @@ EOF
   }
 }
 EOF
-    echo "Dynamic configuration generated: ${CONFIG_PATH}"
+        echo "Dynamic configuration generated: ${CONFIG_PATH}"
+    fi
 
 else
-    # Parse command line options
+    # Parse command line options when no positional argument is provided
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --mode)
@@ -211,9 +251,15 @@ else
                 ;;
         esac
     done
-    
-    if [[ -z "${CONFIG_PATH}" ]]; then
-        echo "Error: Either positional arguments (SITE_PATH PROJECT_SPEC DEVICE_ID) or --config <path> must be specified."
+fi
+
+if [[ -z "${CONFIG_PATH:-}" ]]; then
+    if [[ -f "${WORKSPACE_DIR}/edge/spotter/spotter_config.json" ]]; then
+        CONFIG_PATH="${WORKSPACE_DIR}/edge/spotter/spotter_config.json"
+    elif [[ -f "spotter_config.json" ]]; then
+        CONFIG_PATH="spotter_config.json"
+    else
+        echo "Error: Target configuration file or site path not specified, and default spotter_config.json not found."
         show_help
         exit 1
     fi
