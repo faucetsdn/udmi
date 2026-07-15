@@ -20,7 +20,7 @@ def extract_test_timebounds(sequence_log_path: str, test_id: str) -> tuple[datet
     end_dt = None
     
     # Timestamps usually look like: 2026-05-27T05:53:09Z or 05:53:09.103
-    ts_pattern = re.compile(r'^([\d\-T:Z\.,\s]+)\s+')
+    ts_pattern = re.compile(r'^(\d{4}-\d{2}-\d{2}[T\s]\d{2}:\d{2}:\d{2}(?:\.\d+)?Z?|\d{2}:\d{2}:\d{2}(?:\.\d+)?)')
 
     with open(sequence_log_path, 'r', encoding='utf-8', errors='replace') as f:
         for line in f:
@@ -44,7 +44,7 @@ def extract_test_timebounds(sequence_log_path: str, test_id: str) -> tuple[datet
 
     return start_dt, end_dt
 
-def pull_gcloud_logs(project: str, service: str, start_dt: datetime, end_dt: datetime, padding_seconds: int) -> list[str]:
+def pull_gcloud_logs(project: str, service: str, start_dt: datetime, end_dt: datetime, padding_seconds: int, exclude_tokens: list[str] = None) -> list[str]:
     """Executes gcloud logging read with time-sliced batching to fetch complete logs without timeouts."""
     padded_start = start_dt - timedelta(seconds=padding_seconds)
     padded_end = end_dt + timedelta(seconds=padding_seconds)
@@ -99,6 +99,8 @@ def pull_gcloud_logs(project: str, service: str, start_dt: datetime, end_dt: dat
     for entry in all_entries:
         ts = entry.get("timestamp", "unknown")
         payload = entry.get("textPayload") or json.dumps(entry.get("jsonPayload", {}))
+        if exclude_tokens and any(token in payload for token in exclude_tokens):
+            continue
         log_lines.append(f"{ts} {payload.strip()}")
 
     log_lines.sort()
@@ -112,6 +114,7 @@ def main():
     parser.add_argument("--service", "-s", default="udmis", help="GCP Project ID")
     parser.add_argument("--padding", type=int, default=60, help="Padded time window in seconds")
     parser.add_argument("--output", "-o", help="Output log file path (defaults to <test_id>_cloud.log)")
+    parser.add_argument("--exclude", "-e", nargs="*", help="Optional log payload substring tokens to filter out")
 
     args = parser.parse_args()
 
@@ -129,7 +132,7 @@ def main():
     print(f"    Start: {(start_dt - timedelta(seconds=args.padding)).strftime('%Y-%m-%dT%H:%M:%SZ')}")
     print(f"    End:   {(end_dt + timedelta(seconds=args.padding)).strftime('%Y-%m-%dT%H:%M:%SZ')}")
 
-    log_lines = pull_gcloud_logs(args.project, args.service, start_dt, end_dt, args.padding)
+    log_lines = pull_gcloud_logs(args.project, args.service, start_dt, end_dt, args.padding, exclude_tokens=args.exclude)
 
     output_path = args.output or f"{args.test}_cloud.log"
     with open(output_path, "w", encoding="utf-8") as f:
