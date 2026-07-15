@@ -1,0 +1,88 @@
+#!/bin/bash -e
+
+function find_postgres_bin {
+    # Check standard system paths first
+    for dir in \
+        "/usr/lib/postgresql/*/bin" \
+        "/usr/lib/postgresql/bin" \
+        "/usr/bin" \
+        "/usr/local/bin"; do
+        # Use glob expansion to find if any postgres/pg_ctl exists
+        for path in $dir; do
+            if [[ -f "$path/pg_ctl" ]]; then
+                echo "$path"
+                return 0
+            fi
+        done
+    done
+    return 1
+}
+
+BINDIR=$(find_postgres_bin) || {
+    echo "Error: pg_ctl/postgres executables not found" >&2
+    exit 1
+}
+
+POSTGRES_LOG=out/postgresql.log
+echo pwd: $(pwd)
+mkdir -p out var/postgresql
+
+POSTGRES_PID_FILE=var/postgresql/postgresql.pid
+if [[ -f $POSTGRES_PID_FILE ]]; then
+    old_pid=$(cat $POSTGRES_PID_FILE)
+    if ps -p $old_pid > /dev/null 2>&1; then
+        echo Killing existing local postgresql pid $old_pid...
+        kill $old_pid || true
+        sleep 1
+    fi
+else
+    # Fallback to check for any local postgres process belonging to this user
+    old_pid=$(ps ax | fgrep "$BINDIR/postgres" | fgrep -v grep | awk '{print $1}') || true
+    if [[ -n $old_pid ]]; then
+        echo Killing existing postgres pid $old_pid...
+        kill $old_pid || true
+        sleep 1
+    fi
+fi
+
+postgres_port=${POSTGRES_PORT:-5432}
+postgres_user=${POSTGRES_USER:-postgres}
+postgres_db=${POSTGRES_DB:-postgres}
+
+DATA_DIR="var/postgresql/data"
+
+if [[ ! -d "$DATA_DIR" ]]; then
+    echo "Initializing new PostgreSQL database cluster at $DATA_DIR..."
+    rm -rf "$DATA_DIR"
+    # initdb requires to run under current user. We use trust auth for local development testing.
+    $BINDIR/initdb -D "$DATA_DIR" -U "${postgres_user}" --auth-local=trust --auth-host=trust --nosync
+fi
+
+echo Starting postgresql locally...
+# Start postgres process in user space with nohup
+# We use -k /tmp to ensure unix socket files are created in /tmp (where we have write permission) instead of /var/run/postgresql.
+nohup $BINDIR/postgres -D "$DATA_DIR" \
+                       -p ${postgres_port} \
+                       -h 127.0.0.1 \
+                       -k /tmp \
+                       > $POSTGRES_LOG 2>&1 &
+POSTGRES_PID=$!
+echo $POSTGRES_PID > $POSTGRES_PID_FILE
+
+echo Waiting for postgresql to start on port ${postgres_port}, log in $POSTGRES_LOG
+# Wait up to 15s, polling to check if it's ready
+for i in {1..15}; do
+    if psql -h 127.0.0.1 -p ${postgres_port} -U "${postgres_user}" -d "${postgres_db}" -c "SELECT 1;" >/dev/null 2>&1; then
+        echo "PostgreSQL started successfully."
+        break
+    fi
+    sleep 1
+done
+
+if ! ps -p $POSTGRES_PID >/dev/null 2>&1; then
+    cat $POSTGRES_LOG
+    echo "error starting postgresql"
+    exit 1
+fi
+
+echo Completed postgresql startup.
