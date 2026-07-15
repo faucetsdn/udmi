@@ -13,6 +13,44 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 
 ## Setting up the Docker environment
 
+### Quick Start: Automated Setup using `bin/start_bridgehead` (Recommended)
+
+The repository provides the `bin/start_bridgehead` helper script to automate prerequisite setup (creating host directories, generating missing X.509 reflector certificates, creating `.env` configuration, and building the Management UI WAR file) before launching Docker Compose.
+
+1. **Install docker engine:** Ensure Docker is installed and running on your system: `https://docs.docker.com/engine/install/`
+
+2. **Clone the default site model:**
+    ```bash
+    bin/clone_model
+    
+    # Alternatively, use `git clone https://github.com/faucetsdn/udmi_site_model.git` directly.
+    ```
+
+3. **Start Bridgehead Services:**
+    ```bash
+    # Standard start (using pre-built ghcr.io images):
+    bin/start_bridgehead
+
+    # Local workspace build (builds images directly from local source code):
+    bin/start_bridgehead --local
+
+    # Specify a custom site model path:
+    bin/start_bridgehead --local path/to/udmi_site_model
+    ```
+
+#### What `bin/start_bridgehead` Automates:
+- Creates required host data directories under `bridgehead/var/`.
+- Verifies site model availability and auto-generates missing X.509 reflector certificates (`rsa_private.crt`, `ca.crt`).
+- Generates a default `.env` configuration file with host IP detection and random tokens if `.env` does not already exist.
+- Checks JDK prerequisites (`javac` and `jar`), compiles Java sources, and builds `udmis/bridgeheadManager.war`.
+- Launches all services via `docker compose up -d --build`.
+
+---
+
+### Manual Setup (Step-by-Step)
+
+If you prefer to configure `.env` or build and run containers manually:
+
 1. **Install docker engine:** Ensure Docker is installed and running on your system: `https://docs.docker.com/engine/install/`
 
 2. **Navigate to bridgehead directory:** Open your terminal and change the directory to the `bridgehead/` directory:
@@ -208,4 +246,15 @@ Use the same method to setup any number of alerts, you can find useful informati
 
 ## Shutting down the docker environment
 
-To gracefully stop and remove the container, run: `docker compose down`
+To gracefully stop and remove the containers:
+
+```bash
+# Recommended: Using helper script
+bin/stop_bridgehead
+
+# Stop services and remove Docker compose volumes:
+bin/stop_bridgehead -v
+
+# Alternative: Direct Docker Compose command (from bridgehead/ directory)
+docker compose down
+```

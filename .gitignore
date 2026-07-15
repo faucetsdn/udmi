@@ -28,6 +28,7 @@ credentials.json
 /udmis/profile/
 /udmis/.idea/libraries/
 /udmis/bin/etcd_bin/
+/udmis/bin/influx_bin/
 /selfie/build/
 /pubber/build/
 /pubber/out/
@@ -95,3 +96,6 @@ bridgehead/.env
 
 # UDMI Workbench generated files
 /ui/version.txt
+
+# Bridgehead runtime output
+/bridgehead/out
