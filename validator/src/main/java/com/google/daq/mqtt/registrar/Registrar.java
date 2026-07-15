@@ -1052,7 +1052,7 @@ public class Registrar {
   }
 
   private boolean pushToCloudIoT(String localName, LocalDevice localDevice) {
-    System.err.println("Registering device " + localName + " with IoT provider...");
+    System.err.println("Registering device " + localName + "...");
     boolean created = updateCloudIoT && updateCloudIoT(localDevice);
     CloudModel device =
         checkNotNull(fetchDevice(localName, created), "missing device " + localName);

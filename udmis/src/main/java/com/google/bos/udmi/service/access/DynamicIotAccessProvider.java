@@ -75,9 +75,27 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   private IotAccessProvider getProviderFor(Envelope envelope) {
     if (ContainerBase.REFLECT_BASE.equals(envelope.deviceRegistryId)
-        && envelope.source != null
-        && getProviders().containsKey(envelope.source)) {
-      return getProviders().get(envelope.source);
+        && envelope.source != null) {
+      int index = envelope.source.indexOf(Common.SOURCE_SEPARATOR);
+      String transport = index < 0 ? envelope.source : envelope.source.substring(0, index);
+      String source = index < 0 ? null : envelope.source.substring(index + 1);
+
+      String target = transport;
+      if (source != null) {
+        if ("bridge".equals(source)) {
+          target = "implicit";
+        } else if (getProviders().containsKey(source)) {
+          target = source;
+        }
+      } else {
+        if ("bridge".equals(transport)) {
+          target = "implicit";
+        }
+      }
+
+      if (getProviders().containsKey(target)) {
+        return getProviders().get(target);
+      }
     }
     return getProviderFor(envelope.deviceRegistryId, envelope.deviceId);
   }
