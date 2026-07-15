@@ -99,7 +99,8 @@ if [[ -z ${UDMIS_CONFIG:-} ]]; then
         .iot_access.implicit.endpoint.port = '"${MQTT_PORT:-8883}"' |
         .iot_access.implicit.endpoint.ca_file = "'"$ABS_CERT_DIR/ca.crt"'" |
         .iot_access.implicit.endpoint.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
-        .iot_access.implicit.endpoint.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'"' \
+        .iot_access.implicit.endpoint.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
+        .iot_data.database.project_id = "'"${ETCD_SCHEME}"'://${ETCD_CLUSTER}:'"${ETCD_PORT}"'"' \
         $SOURCE_POD_CONFIG | sponge var/local_pod.json
     UDMIS_CONFIG=var/local_pod.json
 fi
