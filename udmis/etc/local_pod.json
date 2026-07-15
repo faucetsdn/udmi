@@ -81,12 +81,5 @@
         }
       }
     }
-  },
-  "iot_data": {
-    "database": {
-      "provider": "etcd",
-      "project_id": "${ETCD_SCHEME}://${ETCD_CLUSTER}:${ETCD_PORT}",
-      "options": "enabled=${ETCD_CLUSTER},ca_file=${ETCD_CA},cert_file=${ETCD_CERT},key_file=${ETCD_KEY}"
-    }
   }
 }
