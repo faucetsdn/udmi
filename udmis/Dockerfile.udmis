@@ -13,6 +13,8 @@ ADD build/udmi_bin/ udmi/bin/
 
 ADD bin/ bin/
 
+RUN mkdir -p udmi/udmis && ln -s /root/bin udmi/udmis/bin
+
 RUN bin/etcdctl version
 RUN find / -name "*mosquitto_dynamic_security*" || true
 

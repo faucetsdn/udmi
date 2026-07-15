@@ -31,7 +31,7 @@ sleep 25
 echo Starting udmis proper... | tee -a $UDMIS_LOG
 
 
-OLD_PID=$(ps ax | fgrep java | fgrep local_pod.json | awk '{print $1}') || true
+OLD_PID=$( (ps ax 2>/dev/null || ps) | fgrep java | fgrep local_pod.json | awk '{print $1}') || true
 if [[ -n $OLD_PID ]]; then
     echo Killing old udmis process $OLD_PID
     kill $OLD_PID
@@ -54,7 +54,7 @@ jq --arg u "$SERV_USER" --arg p "$SERV_PASS" --arg host_var "$MQTT_HOST" \
 '.flow_defaults.auth_provider.basic.username = $u | .flow_defaults.auth_provider.basic.password = $p | .flow_defaults.hostname=$host_var | .iot_access.implicit.endpoint.hostname=$host_var' \
 /root/var/local_pod.json > /root/var/local_pod.tmp && mv /root/var/local_pod.tmp /root/var/local_pod.json
 
-$UDMIS_DIR/bin/run /root/var/local_pod.json >> $LOGFILE 2>&1 &
+$(realpath $UDMIS_DIR/bin/run) /root/var/local_pod.json >> $LOGFILE 2>&1 &
 
 PID=$!
 
@@ -74,7 +74,7 @@ if [[ ! -f $POD_READY ]]; then
     echo "=== DIAGNOSTIC LOGS FOR UDMIS STARTUP FAILURE ==="
     echo "Host working directory: $PWD"
     echo "Process $PID status:"
-    ps -p $PID || echo "Process $PID not running"
+    kill -0 $PID 2>/dev/null && (ps -p $PID 2>/dev/null || ps | grep -E "^\s*${PID}\s") || echo "Process $PID not running"
     echo "Last 100 lines of $LOGFILE:"
     tail -n 100 $LOGFILE || true
     echo "=== END DIAGNOSTIC LOGS ==="
