@@ -498,9 +498,14 @@ public class ReflectProcessor extends ProcessorBase {
     debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
         stringifyTerse(toolState));
     ifNotNullThen(toolState.setup, setup -> {
-      String targetProvider = java.util.Optional.ofNullable(setup.provider).orElse(toolState.source);
-      updateProviderAffinity(envelope, targetProvider);
+      if (setup.provider != null) {
+        debug("Setting target registry affinity for %s to %s", envelope.deviceId, setup.provider);
+        iotAccess.setProviderAffinity(envelope.deviceId, null, setup.provider);
+      }
     });
+    if (toolState.source != null) {
+      updateProviderAffinity(envelope, toolState.source);
+    }
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }

@@ -50,6 +50,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private String determineProvider(String registryId) {
+    String explicitAffinity = registryProviders.get(registryId);
+    if (explicitAffinity != null) {
+      debug("Registry affinity mapping for %s is explicitly set to: %s", registryId, explicitAffinity);
+      return explicitAffinity;
+    }
     // TODO: In the future, different registries might be governed by different backends
     // using the same set of providers, so inheriting affinity from the reflector like
     // this might need to be re-evaluated.
@@ -81,16 +86,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       String source = index < 0 ? null : envelope.source.substring(index + 1);
 
       String target = transport;
-      if (source != null) {
-        if ("bridge".equals(source)) {
-          target = "implicit";
-        } else if (getProviders().containsKey(source)) {
-          target = source;
-        }
-      } else {
-        if ("bridge".equals(transport)) {
-          target = "implicit";
-        }
+      if (source != null && getProviders().containsKey(source)) {
+        target = source;
       }
 
       if (getProviders().containsKey(target)) {
