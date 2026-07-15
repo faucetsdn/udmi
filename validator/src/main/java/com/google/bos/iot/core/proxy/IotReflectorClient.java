@@ -204,6 +204,7 @@ public class IotReflectorClient implements MessagePublisher {
     reflectConfiguration.site_model = iotConfig.site_model;
     reflectConfiguration.registry_id = UDMI_REFLECT;
     reflectConfiguration.udmi_namespace = iotConfig.udmi_namespace;
+    reflectConfiguration.target_provider = iotConfig.target_provider;
     // Intentionally map registry -> device because of reflection registry semantics.
     reflectConfiguration.device_id = registryId;
 

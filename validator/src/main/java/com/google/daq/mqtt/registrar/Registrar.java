@@ -1750,6 +1750,10 @@ public class Registrar {
     }
   }
 
+  public SiteModel getSiteModel() {
+    return siteModel;
+  }
+
   @SuppressWarnings("unchecked")
   public List<MockAction> getMockActions() {
     return (List<MockAction>) (List<?>) cloudIotManager.getMockActions();

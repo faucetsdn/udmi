@@ -64,7 +64,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   }
 
   private static Entry<String, String> getBackoffKey(String registryId, String deviceId) {
-    return Map.entry(registryId, deviceId);
+    return Map.entry(registryId, deviceId == null ? "" : deviceId);
   }
 
   protected Map<String, String> fetchRegistryRegions() {

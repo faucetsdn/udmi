@@ -245,4 +245,11 @@ public class RegistrarTest {
     registrar.execute();
     return registrar.getMockActions();
   }
+
+  @Test
+  public void targetProviderCliOptionTest() {
+    Registrar registrar = getRegistrar(ImmutableList.of("-P", "mock"));
+    assertEquals("target_provider option", "mock",
+        registrar.getSiteModel().getExecutionConfiguration().target_provider);
+  }
 }

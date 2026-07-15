@@ -52,7 +52,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   private String determineProvider(String registryId) {
     String explicitAffinity = registryProviders.get(registryId);
     if (explicitAffinity != null) {
-      debug("Registry affinity mapping for %s is explicitly set to: %s", registryId, explicitAffinity);
+      debug("Registry affinity mapping for %s is explicitly set to: %s", registryId,
+          explicitAffinity);
       return explicitAffinity;
     }
     // TODO: In the future, different registries might be governed by different backends
@@ -266,8 +267,10 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       }
 
       if (!getProviders().containsKey(affinity) && !"implicit".equals(affinity)) {
-        warn(format("Requested invalid or inactive provider affinity '%s' for %s", affinity, providerKey));
-        throw new IllegalArgumentException(format("Unknown or inactive requested provider '%s'", affinity));
+        warn(format("Requested invalid or inactive provider affinity '%s' for %s", affinity,
+            providerKey));
+        throw new IllegalArgumentException(
+            format("Unknown or inactive requested provider '%s'", affinity));
       }
 
       String previous = registryProviders.put(providerKey, affinity);
@@ -285,7 +288,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private static String getProviderKey(String registryId, String deviceId) {
-    return format(PROVIDER_KEY_FORMAT, registryId, deviceId);
+    return deviceId == null ? registryId : format(PROVIDER_KEY_FORMAT, registryId, deviceId);
   }
 
   @Override

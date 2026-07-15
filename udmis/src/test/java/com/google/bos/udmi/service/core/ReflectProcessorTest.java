@@ -179,4 +179,28 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     verify(provider, times(1)).modelRegistry(eq(TEST_REGISTRY), any(),
         eq(requestModel));
   }
+
+  @Test
+  public void providerAffinityFromSetupTest() {
+    UdmiState udmiState = new UdmiState();
+    udmiState.setup = new SetupUdmiState();
+    udmiState.setup.provider = "mock";
+    Bundle bundle = new Bundle(makeEnvelope(null, null),
+        ImmutableMap.of(SubFolder.UDMI.value(), udmiState));
+    activeTestInstance(() -> getReverseDispatcher().publish(bundle));
+    verify(provider, times(1)).setProviderAffinity(eq(TEST_REGISTRY), eq(null), eq("mock"));
+  }
+
+  @Test
+  public void providerAffinityFromSourceTest() {
+    UdmiState udmiState = new UdmiState();
+    udmiState.source = "mqtt_mock";
+    Envelope envelope = makeEnvelope(null, null);
+    envelope.source = udmiState.source;
+    Bundle bundle = new Bundle(envelope,
+        ImmutableMap.of(SubFolder.UDMI.value(), udmiState));
+    activeTestInstance(() -> getReverseDispatcher().publish(bundle));
+    verify(provider, times(1)).setProviderAffinity(eq(REFLECT_REGISTRY), eq(TEST_REGISTRY),
+        eq("mqtt_mock"));
+  }
 }
