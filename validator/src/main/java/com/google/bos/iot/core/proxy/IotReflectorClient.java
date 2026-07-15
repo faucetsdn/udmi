@@ -247,6 +247,7 @@ public class IotReflectorClient implements MessagePublisher {
     udmiState.setup.udmi_commit = executionConfig.udmi_commit;
     udmiState.setup.udmi_ref = executionConfig.udmi_ref;
     udmiState.setup.udmi_timever = executionConfig.udmi_timever;
+    udmiState.setup.provider = executionConfig.target_provider;
     try {
       debug(format("Setting state version %s timestamp %s%n",
           udmiVersion, isoConvert(SYSTEM_START_TIMESTAMP)));

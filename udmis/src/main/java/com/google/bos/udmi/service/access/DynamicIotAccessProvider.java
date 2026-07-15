@@ -74,6 +74,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private IotAccessProvider getProviderFor(Envelope envelope) {
+    if (ContainerBase.REFLECT_BASE.equals(envelope.deviceRegistryId)
+        && envelope.source != null
+        && getProviders().containsKey(envelope.source)) {
+      return getProviders().get(envelope.source);
+    }
     return getProviderFor(envelope.deviceRegistryId, envelope.deviceId);
   }
 
@@ -243,6 +248,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
         if ("bridge".equals(transport)) {
           affinity = "implicit";
         }
+      }
+
+      if (!getProviders().containsKey(affinity) && !"implicit".equals(affinity)) {
+        warn(format("Requested invalid or inactive provider affinity '%s' for %s", affinity, providerKey));
+        throw new IllegalArgumentException(format("Unknown or inactive requested provider '%s'", affinity));
       }
 
       String previous = registryProviders.put(providerKey, affinity);

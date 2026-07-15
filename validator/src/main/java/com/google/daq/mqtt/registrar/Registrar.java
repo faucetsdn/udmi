@@ -1762,6 +1762,12 @@ public class Registrar {
     siteModel.getExecutionConfiguration().alt_registry = null;
   }
 
+  @CommandLineOption(short_form = "-P", arg_name = "provider",
+      description = "Set target provider override for reflector session")
+  private void setTargetProvider(String provider) {
+    siteModel.getExecutionConfiguration().target_provider = provider;
+  }
+
   @CommandLineOption(short_form = "-A", description = "Auto process alt_registry from config")
   private void setAutoAltRegistry() {
     autoAltRegistry = true;

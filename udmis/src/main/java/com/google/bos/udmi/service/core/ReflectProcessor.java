@@ -497,7 +497,10 @@ public class ReflectProcessor extends ProcessorBase {
   void updateAwareness(Envelope envelope, UdmiState toolState) {
     debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
         stringifyTerse(toolState));
-    ifNotNullThen(toolState.setup, setup -> updateProviderAffinity(envelope, toolState.source));
+    ifNotNullThen(toolState.setup, setup -> {
+      String targetProvider = firstNonNull(setup.provider, toolState.source);
+      updateProviderAffinity(envelope, targetProvider);
+    });
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }
