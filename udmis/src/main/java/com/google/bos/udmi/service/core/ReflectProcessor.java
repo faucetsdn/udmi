@@ -498,7 +498,7 @@ public class ReflectProcessor extends ProcessorBase {
     debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
         stringifyTerse(toolState));
     ifNotNullThen(toolState.setup, setup -> {
-      String targetProvider = firstNonNull(setup.provider, toolState.source);
+      String targetProvider = java.util.Optional.ofNullable(setup.provider).orElse(toolState.source);
       updateProviderAffinity(envelope, targetProvider);
     });
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
