@@ -1,5 +1,5 @@
 #!/bin/bash -e
-set -x
+
 # Navigate to bridgehead directory
 BRIDGEHEAD_DIR=$(dirname $(realpath $0))/..
 cd "$BRIDGEHEAD_DIR"
