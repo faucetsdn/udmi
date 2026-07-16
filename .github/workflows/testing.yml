@@ -381,11 +381,44 @@ jobs:
           name: udmi-support_${{ github.run_id }}-blobupdates
           path: '*_udmi-support_*.tgz'
 
+  regdynamic:
+    name: Dynamic Registrar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      TARGET_PROJECT: //mqtt/localhost:9001
+      UDMI_REGISTRY_SUFFIX: _RD
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: base setup
+        run: bin/run_tests install_dependencies
+      - name: bin/test_registrar_dynamic
+        run: bin/test_registrar_dynamic $TARGET_PROJECT
+      - name: registrar logs
+        if: ${{ !cancelled() }}
+        run: more out/registrar*.log | cat
+      - name: udmis logs
+        if: ${{ !cancelled() }}
+        run: cat out/udmis*.log || true
+      - name: support bundle
+        if: ${{ !cancelled() }}
+        run: UDMI_REGISTRY_SUFFIX=_regdynamic bin/support ${{ github.repository_owner }}_${{ github.job }}_
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          if-no-files-found: error
+          name: udmi-support_${{ github.run_id }}-regdynamic
+          path: '*_udmi-support_*.tgz'
+
   posttest:
     name: Post-test Summarization
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    needs: [ baseline, sequencer, endpoint, runlocal, blobupdates ]
+    needs: [ baseline, sequencer, endpoint, runlocal, blobupdates, regdynamic ]
     if: ${{ !cancelled() }}
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
