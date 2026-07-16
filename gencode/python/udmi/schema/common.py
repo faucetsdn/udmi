@@ -44,6 +44,7 @@ class IotProvider(Enum):
     etcd = 'etcd'
     jwt = 'jwt'
     clearblade = 'clearblade'
+    temporary = 'temporary'
 
 
 class Operation(Enum):

@@ -19,6 +19,7 @@ class Setup(DataModel):
     udmi_timever: Optional[str] = None
     msg_source: Optional[str] = None
     update_to: Optional[str] = None
+    provider: Optional[str] = None
     tool_name: Optional[str] = None
     transaction_id: Optional[str] = None
 

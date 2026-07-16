@@ -79,30 +79,24 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     return providerId;
   }
 
-  private String resolveTargetProviderId(String rawSource) {
-    if (rawSource == null) {
-      return null;
-    }
-    int index = rawSource.indexOf(Common.SOURCE_SEPARATOR);
-    String transport = index < 0 ? rawSource : rawSource.substring(0, index);
-    String source = index < 0 ? null : rawSource.substring(index + 1);
+private String resolveTargetProviderId(String rawSource) {
+  if (rawSource == null) return null;
 
-    String target = transport;
-    if (source != null) {
-      if ("bridge".equals(source)) {
-        if (getProviders().containsKey("implicit")) {
-          target = "implicit";
-        }
-      } else if (getProviders().containsKey(source)) {
-        target = source;
-      }
-    } else if ("bridge".equals(transport)) {
-      if (getProviders().containsKey("implicit")) {
-        target = "implicit";
-      }
-    }
-    return target;
+  int index = rawSource.indexOf(Common.SOURCE_SEPARATOR);
+  String transport = index < 0 ? rawSource : rawSource.substring(0, index);
+  String source = index < 0 ? null : rawSource.substring(index + 1);
+
+  // Prioritize source if available, otherwise fallback to transport
+  String preferred = (source != null) ? source : transport;
+
+  if ("bridge".equals(preferred) && getProviders().containsKey("implicit")) {
+    return "implicit";
+  } else if (getProviders().containsKey(preferred)) {
+    return preferred;
   }
+
+  return transport; // default fallback
+}
 
   private IotAccessProvider getProviderFor(Envelope envelope) {
     if (ContainerBase.REFLECT_BASE.equals(envelope.deviceRegistryId)
