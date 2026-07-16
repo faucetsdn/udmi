@@ -1,0 +1,70 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd ${UDMI_ROOT}
+source etc/shell_common.sh
+
+bin/clone_model
+
+TEST_SITE=sites/udmi_site_model
+find $TEST_SITE -name out | xargs rm -rf
+(cd $TEST_SITE; git checkout .)
+
+echo '###################################' starting UDMIS
+# Create custom pod config for UDMIS
+mkdir -p var
+cat << EOF > var/dynamic_pod.json
+{
+  "include": "$UDMI_ROOT/var/local_pod.json",
+  "iot_access": {
+    "iot-access": {
+      "provider": "dynamic",
+      "project_id": "implicit, temporary"
+    },
+    "temporary": {
+      "provider": "temporary"
+    }
+  }
+}
+EOF
+
+# Start standard local setup (it will create var/local_pod.json and start UDMIS with it)
+bin/start_local ${TEST_SITE} //mqtt/localhost
+
+# Stop udmis (but keep mosquitto)
+OLD_PID=$(cat var/udmis.pid)
+sudo kill $OLD_PID || true
+sleep 2
+
+# Start UDMIS with our custom pod config
+export UDMIS_CONFIG=var/dynamic_pod.json
+bin/start_udmis
+
+echo '###################################' starting test section processing
+bin/registrar ${TEST_SITE} //mqtt/localhost -P temporary > out/registrar_1.log 2>&1
+
+clean_devices=$(jq -r .status ${TEST_SITE}/out/registration_summary.json | fgrep CLEAN | wc -l)
+echo "Run 1 clean devices: $clean_devices"
+
+if grep -q "Updating 0 existing devices" out/registrar_1.log; then
+    echo "First run OK: 0 existing devices."
+else
+    echo "First run FAILED. Expected 'Updating 0 existing devices'."
+    cat out/registrar_1.log
+    exit 1
+fi
+
+echo '###################################' second run
+bin/registrar ${TEST_SITE} //mqtt/localhost -P temporary > out/registrar_2.log 2>&1
+clean_devices2=$(jq -r .status ${TEST_SITE}/out/registration_summary.json | fgrep CLEAN | wc -l)
+echo "Run 2 clean devices: $clean_devices2"
+
+if grep -q "Processing 0 new devices" out/registrar_2.log; then
+    echo "Second run OK: all devices existing."
+else
+    echo "Second run FAILED. Expected 'Processing 0 new devices'."
+    cat out/registrar_2.log
+    exit 1
+fi
+
+echo '###################################' done

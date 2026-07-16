@@ -78,22 +78,19 @@ rm -rf venv out sites/udmi_site_model/out
 echo "Running install_dependencies..."
 bin/run_tests install_dependencies
 
-  export TARGET_PROJECT=${TARGET_PROJECT:-//mqtt/localhost:9001}
-  echo "Starting local services with TARGET_PROJECT=$TARGET_PROJECT..."
-  bin/start_local sites/udmi_site_model "$TARGET_PROJECT"
-
-  echo "Running registrar clean test..."
+  echo "Running test_registrar_dynamic..."
   set +e
-  bin/test_regclean solo "$TARGET_PROJECT"
+  bin/test_registrar_dynamic
   TEST_RESULT=$?
   set -e
 
   if [ $TEST_RESULT -eq 0 ]; then
-    echo "Registrar clean test PASSED"
+    echo "test_registrar_dynamic PASSED"
     exit 0
   else
-    echo "Registrar clean test FAILED with exit code: $TEST_RESULT"
+    echo "test_registrar_dynamic FAILED with exit code: $TEST_RESULT"
     show_logs
-    echo "Starting interactive bash shell for debugging..."
-    exec /bin/bash
+#    echo "Starting interactive bash shell for debugging..."
+#    exec /bin/bash
+exit 1
   fi

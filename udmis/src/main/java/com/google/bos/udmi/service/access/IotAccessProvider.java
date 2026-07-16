@@ -26,7 +26,8 @@ public interface IotAccessProvider extends UdmiComponent {
       IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
       IotProvider.PUBSUB, PubSubIotAccessProvider.class,
       IotProvider.IMPLICIT, ImplicitIotAccessProvider.class,
-      IotProvider.LOCAL, LocalIotAccessProvider.class
+      IotProvider.LOCAL, LocalIotAccessProvider.class,
+      IotProvider.TEMPORARY, TemporaryIotAccessProvider.class
   );
 
   /**

@@ -160,7 +160,7 @@ public class IotReflectorClient implements IotProvider {
     if (operation == DELETE && cloudOperation == BOUND) {
       throw new DeviceGatewayBoundException(cloudModel);
     }
-    if (cloudNumId == null || cloudOperation != operation) {
+    if (cloudOperation != operation) {
       throw new RuntimeException(
           format("Invalid return receipt: %s / %s", cloudOperation, cloudNumId));
     }

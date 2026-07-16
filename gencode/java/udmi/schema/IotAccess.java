@@ -88,7 +88,8 @@ public class IotAccess {
         GREF("gref"),
         ETCD("etcd"),
         JWT("jwt"),
-        CLEARBLADE("clearblade");
+        CLEARBLADE("clearblade"),
+        TEMPORARY("temporary");
         private final String value;
         private final static Map<String, IotAccess.IotProvider> CONSTANTS = new HashMap<String, IotAccess.IotProvider>();
 

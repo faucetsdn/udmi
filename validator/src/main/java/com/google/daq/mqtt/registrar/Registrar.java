@@ -1665,6 +1665,9 @@ public class Registrar {
       throw new IllegalArgumentException("Project id starts with dash options flag " + projectId);
     }
     this.projectId = projectId;
+    if (siteModel != null && siteModel.getExecutionConfiguration() != null) {
+      siteModel.getExecutionConfiguration().project_id = projectId;
+    }
   }
 
   @CommandLineOption(short_form = "-r", arg_name = "root_path", description = "Set tool root")
