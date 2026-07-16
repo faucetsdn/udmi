@@ -79,29 +79,36 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     return providerId;
   }
 
-  private IotAccessProvider getProviderFor(Envelope envelope) {
-    if (ContainerBase.REFLECT_BASE.equals(envelope.deviceRegistryId)
-        && envelope.source != null) {
-      int index = envelope.source.indexOf(Common.SOURCE_SEPARATOR);
-      String transport = index < 0 ? envelope.source : envelope.source.substring(0, index);
-      String source = index < 0 ? null : envelope.source.substring(index + 1);
+  private String resolveTargetProviderId(String rawSource) {
+    if (rawSource == null) {
+      return null;
+    }
+    int index = rawSource.indexOf(Common.SOURCE_SEPARATOR);
+    String transport = index < 0 ? rawSource : rawSource.substring(0, index);
+    String source = index < 0 ? null : rawSource.substring(index + 1);
 
-      String target = transport;
-      if (source != null) {
-        if ("bridge".equals(source)) {
-          if (getProviders().containsKey("implicit")) {
-            target = "implicit";
-          }
-        } else if (getProviders().containsKey(source)) {
-          target = source;
-        }
-      } else if ("bridge".equals(transport)) {
+    String target = transport;
+    if (source != null) {
+      if ("bridge".equals(source)) {
         if (getProviders().containsKey("implicit")) {
           target = "implicit";
         }
+      } else if (getProviders().containsKey(source)) {
+        target = source;
       }
+    } else if ("bridge".equals(transport)) {
+      if (getProviders().containsKey("implicit")) {
+        target = "implicit";
+      }
+    }
+    return target;
+  }
 
-      if (getProviders().containsKey(target)) {
+  private IotAccessProvider getProviderFor(Envelope envelope) {
+    if (ContainerBase.REFLECT_BASE.equals(envelope.deviceRegistryId)
+        && envelope.source != null) {
+      String target = resolveTargetProviderId(envelope.source);
+      if (target != null && getProviders().containsKey(target)) {
         return getProviders().get(target);
       }
     }
@@ -259,28 +266,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     String providerKey = getProviderKey(registryId, deviceId);
     if (providerId != null) {
-      int index = providerId.indexOf(Common.SOURCE_SEPARATOR);
-      String transport = providerId.substring(0, index < 0 ? providerId.length() : index);
-      String source = index < 0 ? null : providerId.substring(index + 1);
-
-      String affinity = transport;
-      if (source != null) {
-        if ("bridge".equals(source)) {
-          if (getProviders().containsKey("implicit")) {
-            affinity = "implicit";
-          }
-        } else if (getProviders().containsKey(source)) {
-          affinity = source;
-        }
-      } else {
-        if ("bridge".equals(transport)) {
-          if (getProviders().containsKey("implicit")) {
-            affinity = "implicit";
-          }
-        }
-      }
-
-      if (!getProviders().containsKey(affinity) && !"implicit".equals(affinity)) {
+      String affinity = resolveTargetProviderId(providerId);
+      if (!getProviders().containsKey(affinity)) {
         warn(format("Requested invalid or inactive provider affinity '%s' for %s", affinity,
             providerKey));
         throw new IllegalArgumentException(
@@ -297,6 +284,10 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       if (previous != null) {
         debug(format("Cleared registry affinity for %s (was %s)", providerKey, previous));
       }
+    }
+    if (deviceId == null) {
+      String prefix = registryId + "/";
+      registryProviders.keySet().removeIf(k -> k.startsWith(prefix));
     }
     super.setProviderAffinity(registryId, deviceId, providerId);
   }

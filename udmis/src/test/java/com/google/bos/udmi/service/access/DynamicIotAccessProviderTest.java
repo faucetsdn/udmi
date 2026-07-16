@@ -133,4 +133,33 @@ class DynamicIotAccessProviderTest {
     verify(mockProviderTwo).fetchConfig(TEST_REGISTRY, TEST_DEVICE);
     verifyNoInteractions(mockProviderOne);
   }
+
+  @Test
+  void registryAffinityClearsStaleDeviceCache() {
+    // First query caches TEST_REGISTRY/TEST_DEVICE -> implicit
+    provider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+    verify(mockProviderOne).fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+
+    // Now update registry-wide affinity to PROVIDER_TWO (mock)
+    provider.setProviderAffinity(TEST_REGISTRY, null, PROVIDER_TWO);
+
+    // Subsequent device query should pick up PROVIDER_TWO because device cache was cleared
+    provider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+    verify(mockProviderTwo).fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+  }
+
+  @Test
+  void missingImplicitProviderRejection() {
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.project_id = PROVIDER_TWO; // implicit is NOT enabled
+    DynamicIotAccessProvider noImplicitProvider = new DynamicIotAccessProvider(iotAccess);
+    noImplicitProvider.activate();
+    try {
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> noImplicitProvider.setProviderAffinity(TEST_REGISTRY, null, "implicit"));
+    } finally {
+      noImplicitProvider.shutdown();
+    }
+  }
 }

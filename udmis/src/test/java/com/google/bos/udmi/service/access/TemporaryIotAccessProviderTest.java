@@ -8,6 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import udmi.schema.CloudModel;
@@ -99,6 +103,40 @@ public class TemporaryIotAccessProviderTest {
     String newConfig = "{\"test\":true}";
     String result = provider.updateConfig(envelope, newConfig, 1L);
     assertEquals(newConfig, result);
+    Entry<Long, String> fetched = provider.fetchConfig(REGISTRY_ID, DEVICE_ID);
+    assertEquals(1L, fetched.getKey());
+    assertEquals(newConfig, fetched.getValue());
+  }
+
+  @Test
+  public void testConcurrentAccess() throws InterruptedException {
+    int threadCount = 20;
+    int operationsPerThread = 100;
+    ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+    CountDownLatch latch = new CountDownLatch(threadCount);
+
+    for (int i = 0; i < threadCount; i++) {
+      final int threadId = i;
+      executor.submit(() -> {
+        try {
+          for (int j = 0; j < operationsPerThread; j++) {
+            String devId = "device-" + threadId + "-" + j;
+            CloudModel createModel = new CloudModel();
+            createModel.operation = ModelOperation.CREATE;
+            provider.modelDevice(REGISTRY_ID, devId, createModel, null);
+            provider.listDevices(REGISTRY_ID, null);
+            provider.fetchDevice(REGISTRY_ID, devId);
+          }
+        } finally {
+          latch.countDown();
+        }
+      });
+    }
+
+    latch.await(10, TimeUnit.SECONDS);
+    executor.shutdown();
+    CloudModel listModel = provider.listDevices(REGISTRY_ID, null);
+    assertEquals(threadCount * operationsPerThread, listModel.device_ids.size());
   }
 
   @Test
