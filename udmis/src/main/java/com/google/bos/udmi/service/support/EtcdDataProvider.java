@@ -60,6 +60,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final int THRESHOLD_MIN = 10;
   private static final int HEARTBEAT_SEC = THRESHOLD_MIN * 60 / 4;
   private static final Duration CLIENT_THRESHOLD = Duration.ofMinutes(THRESHOLD_MIN);
+  public static final String MAX_INBOUND_MESSAGE_SIZE_KEY = "max_inbound_message_size";
+  public static final int DEFAULT_MAX_INBOUND_MESSAGE_SIZE = Integer.MAX_VALUE;
   private static final GetOption LIST_OPT = GetOption.newBuilder().isPrefix(true).build();
   private final IotAccess config;
   private final Client client;
@@ -190,13 +192,28 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     }
   }
 
+  int getMaxInboundMessageSize() {
+    String sizeStr = cleanOption(options.get(MAX_INBOUND_MESSAGE_SIZE_KEY));
+    if (sizeStr != null) {
+      try {
+        return Integer.parseInt(sizeStr);
+      } catch (NumberFormatException e) {
+        warn("Invalid max_inbound_message_size option: %s, using default %d", sizeStr,
+            DEFAULT_MAX_INBOUND_MESSAGE_SIZE);
+      }
+    }
+    return DEFAULT_MAX_INBOUND_MESSAGE_SIZE;
+  }
+
   private Client initializeClient() {
     String target = variableSubstitution(config.project_id, "undefined project_id");
     boolean isSecure = target.startsWith(HTTPS_PREFIX);
     String expectedPrefix = isSecure ? HTTPS_PREFIX : HTTP_PREFIX;
     SslContext sslContext = getSslContext();
+    int maxInboundMessageSize = getMaxInboundMessageSize();
 
-    ClientBuilder tmpClientBuilder = Client.builder().target(target);
+    ClientBuilder tmpClientBuilder = Client.builder().target(target)
+        .maxInboundMessageSize(maxInboundMessageSize);
     if (sslContext != null) {
       tmpClientBuilder.sslContext(sslContext);
     }
@@ -216,7 +233,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       String targets = RESULTING_PREFIX + collected;
       info("Gleaned etcd client targets %s", targets);
       ClientBuilder clientBuilder = Client.builder().target(targets)
-          .connectTimeout(CONNECT_TIMEOUT);
+          .connectTimeout(CONNECT_TIMEOUT)
+          .maxInboundMessageSize(maxInboundMessageSize);
       if (sslContext != null) {
         clientBuilder.sslContext(sslContext);
       }
