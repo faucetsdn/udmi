@@ -263,6 +263,8 @@ jobs:
         run: bin/test_etcd_prerun
       - name: bin/test_influx_prerun
         run: bin/test_influx_prerun
+      - name: bin/test_postgresql_prerun
+        run: bin/test_postgresql_prerun
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_regclean
@@ -279,6 +281,8 @@ jobs:
         run: bin/test_etcd_postrun
       - name: bin/test_influx_postrun
         run: bin/test_influx_postrun
+      - name: bin/test_postgresql_postrun
+        run: bin/test_postgresql_postrun
       - name: mosquitto debug
         if: ${{ !cancelled() }}
         run: |
