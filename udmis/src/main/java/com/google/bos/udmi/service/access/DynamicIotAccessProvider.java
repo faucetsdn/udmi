@@ -117,8 +117,10 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   private IotAccessProvider getProviderFor(String registryId, String deviceId) {
     String entryKey = getProviderKey(registryId, deviceId);
-    String providerKey =
-        registryProviders.computeIfAbsent(entryKey, k -> determineProvider(registryId));
+    String providerKey = registryProviders.get(entryKey);
+    if (providerKey == null) {
+      providerKey = determineProvider(registryId);
+    }
     IotAccessProvider provider = getProviders().get(providerKey);
     return requireNonNull(provider,
         format("Could not determine provider for %s from %s", providerKey, entryKey));
