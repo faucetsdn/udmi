@@ -25,12 +25,22 @@ BINDIR=$(find_postgres_bin) || {
 
 POSTGRES_LOG=out/postgresql.log
 echo pwd: $(pwd)
-mkdir -p out var/postgresql
+
+if [[ $(id -u) -eq 0 ]]; then
+    # We are root (inside the container). Ensure directories exist and are owned by postgres.
+    # We also make sure parent directories are traversable and /tmp is world-writable so postgres user can write lock files and sockets.
+    chmod 755 /root $(pwd) || true
+    chmod 777 /tmp || true
+    mkdir -p out var/postgresql
+    chown -R postgres:postgres out var/postgresql
+else
+    mkdir -p out var/postgresql
+fi
 
 POSTGRES_PID_FILE=var/postgresql/postgresql.pid
 if [[ -f $POSTGRES_PID_FILE ]]; then
     old_pid=$(cat $POSTGRES_PID_FILE)
-    if ps -p $old_pid > /dev/null 2>&1; then
+    if kill -0 $old_pid > /dev/null 2>&1; then
         echo Killing existing local postgresql pid $old_pid...
         kill $old_pid || true
         sleep 1
@@ -54,18 +64,29 @@ DATA_DIR="var/postgresql/data"
 if [[ ! -d "$DATA_DIR" ]]; then
     echo "Initializing new PostgreSQL database cluster at $DATA_DIR..."
     rm -rf "$DATA_DIR"
-    # initdb requires to run under current user. We use trust auth for local development testing.
-    $BINDIR/initdb -D "$DATA_DIR" -U "${postgres_user}" --auth-local=trust --auth-host=trust --nosync
+    if [[ $(id -u) -eq 0 ]]; then
+        mkdir -p $(dirname "$DATA_DIR")
+        chown -R postgres:postgres var/postgresql
+        su -s /bin/bash postgres -c "$BINDIR/initdb -D '$DATA_DIR' -U '${postgres_user}' --auth-local=trust --auth-host=trust --nosync"
+    else
+        # initdb requires to run under current user. We use trust auth for local development testing.
+        $BINDIR/initdb -D "$DATA_DIR" -U "${postgres_user}" --auth-local=trust --auth-host=trust --nosync
+    fi
 fi
 
 echo Starting postgresql locally...
 # Start postgres process in user space with nohup
 # We use -k /tmp to ensure unix socket files are created in /tmp (where we have write permission) instead of /var/run/postgresql.
-nohup $BINDIR/postgres -D "$DATA_DIR" \
-                       -p ${postgres_port} \
-                       -h 127.0.0.1 \
-                       -k /tmp \
-                       > $POSTGRES_LOG 2>&1 &
+if [[ $(id -u) -eq 0 ]]; then
+    chown -R postgres:postgres out var/postgresql
+    nohup su -s /bin/bash postgres -c "$BINDIR/postgres -D '$DATA_DIR' -p ${postgres_port} -h 127.0.0.1 -k /tmp" > $POSTGRES_LOG 2>&1 &
+else
+    nohup $BINDIR/postgres -D "$DATA_DIR" \
+                           -p ${postgres_port} \
+                           -h 127.0.0.1 \
+                           -k /tmp \
+                           > $POSTGRES_LOG 2>&1 &
+fi
 POSTGRES_PID=$!
 echo $POSTGRES_PID > $POSTGRES_PID_FILE
 
@@ -79,7 +100,7 @@ for i in {1..15}; do
     sleep 1
 done
 
-if ! ps -p $POSTGRES_PID >/dev/null 2>&1; then
+if ! kill -0 $POSTGRES_PID >/dev/null 2>&1; then
     cat $POSTGRES_LOG
     echo "error starting postgresql"
     exit 1
