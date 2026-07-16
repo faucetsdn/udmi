@@ -131,7 +131,10 @@ public class UdmiServicePod extends ContainerBase {
     return udmiConfig;
   }
 
-  private static PodConfiguration loadRecursive(File loadFile) {
+  /**
+   * Load pod configuration file recursively resolving include directives.
+   */
+  public static PodConfiguration loadRecursive(File loadFile) {
     System.err.println("Loading config file " + loadFile.getAbsolutePath());
     PodConfiguration loaded = loadFileStrictRequired(PodConfiguration.class, loadFile);
     return ifNotNullGet(loaded.include, include -> {

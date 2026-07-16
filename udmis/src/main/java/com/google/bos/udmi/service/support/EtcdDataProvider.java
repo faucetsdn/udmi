@@ -114,6 +114,37 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     }
   }
 
+  /**
+   * Get all keys strictly matching a prefix (keys only, no values retrieved).
+   */
+  public List<String> getPrefixKeys(String prefixPath) {
+    try {
+      GetOption keysOnlyOpt = GetOption.newBuilder().isPrefix(true).withKeysOnly(true).build();
+      GetResponse response =
+          kvClient.get(bytes(prefixPath), keysOnlyOpt).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      return response.getKvs().stream()
+          .map(kv -> asString(kv.getKey()))
+          .toList();
+    } catch (Exception e) {
+      throw new RuntimeException("While listing keys for prefix " + prefixPath, e);
+    }
+  }
+
+  /**
+   * Get all entries (keys and values) matching a prefix.
+   */
+  public Map<String, String> getPrefixEntries(String prefixPath) {
+    try {
+      GetResponse response =
+          kvClient.get(bytes(prefixPath), PREFIXED_OPTION).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      return response.getKvs().stream().collect(Collectors.toMap(
+          kv -> asString(kv.getKey()), kv -> asString(kv.getValue()), (v1, v2) -> v2));
+    } catch (Exception e) {
+      throw new RuntimeException("While listing entries for prefix " + prefixPath, e);
+    }
+  }
+
+
   private String getKey(String key) {
     try {
       GetResponse response = kvClient.get(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);

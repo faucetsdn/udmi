@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>UDMI ETCD Visual Explorer</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+  <header class="app-header">
+    <div class="header-left">
+      <h1>UDMI ETCD Explorer</h1>
+      <span id="connection-status" class="status badge connected">ip:///localhost:2379</span>
+    </div>
+    <div class="header-right">
+      <button id="theme-toggle" class="btn theme-btn" title="Toggle Dark/Light Mode">🌗 Theme</button>
+    </div>
+  </header>
+
+  <main class="grid-container">
+    <!-- Column 1: Registries -->
+    <section class="column col-registries">
+      <div class="col-header">
+        <div class="title-row">
+          <h2>Registries <span id="registries-count" class="count-badge">0</span></h2>
+          <button id="refresh-registries" class="btn refresh-btn" title="Refresh Registries">↻</button>
+        </div>
+        <div class="search-row">
+          <input type="text" id="search-registries" class="search-input" placeholder="🔍 Filter registries...">
+        </div>
+      </div>
+      <div id="registries-list" class="list-container">
+        <div class="loading-state">Loading registries...</div>
+      </div>
+    </section>
+
+    <!-- Column 2: Devices -->
+    <section class="column col-devices">
+      <div class="col-header">
+        <div class="title-row">
+          <h2>Devices <span id="devices-count" class="count-badge">0</span></h2>
+          <button id="refresh-devices" class="btn refresh-btn" title="Refresh Devices" disabled>↻</button>
+        </div>
+        <div id="active-registry-label" class="subtitle">No registry selected</div>
+        <div class="search-row">
+          <input type="text" id="search-devices" class="search-input" placeholder="🔍 Filter devices..." disabled>
+        </div>
+      </div>
+      <div id="devices-list" class="list-container">
+        <div class="empty-state">Select a registry to view devices</div>
+      </div>
+    </section>
+
+    <!-- Column 3: Properties -->
+    <section class="column col-properties">
+      <div class="col-header">
+        <div class="title-row">
+          <h2>Properties</h2>
+          <button id="refresh-properties" class="btn refresh-btn" title="Refresh Properties" disabled>↻</button>
+        </div>
+        <div id="active-device-label" class="subtitle">No device selected</div>
+      </div>
+      <div id="properties-content" class="content-container">
+        <div class="empty-state">Select a device to view properties</div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
