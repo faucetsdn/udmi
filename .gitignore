@@ -90,5 +90,6 @@ tests/dbo/basic/test_site_model/
 # UDMI Workbench generated files
 /ui/version.txt
 
-
+# Bridgehead runtime output
+/bridgehead/out
 

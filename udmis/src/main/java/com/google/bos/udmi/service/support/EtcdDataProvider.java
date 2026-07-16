@@ -11,15 +11,23 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
 import io.etcd.jetcd.ByteSequence;
 import io.etcd.jetcd.Client;
+import io.etcd.jetcd.ClientBuilder;
 import io.etcd.jetcd.KV;
 import io.etcd.jetcd.KeyValue;
 import io.etcd.jetcd.Lock;
 import io.etcd.jetcd.cluster.Member;
 import io.etcd.jetcd.kv.GetResponse;
+import io.etcd.jetcd.kv.TxnResponse;
+import io.etcd.jetcd.op.Cmp;
+import io.etcd.jetcd.op.CmpTarget;
 import io.etcd.jetcd.op.Op;
 import io.etcd.jetcd.options.DeleteOption;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
+import io.grpc.netty.GrpcSslContexts;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import java.io.File;
 import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
@@ -39,7 +47,11 @@ import udmi.schema.IotAccess;
 public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
   public static final GetOption PREFIXED_OPTION = GetOption.newBuilder().isPrefix(true).build();
-  private static final String EXPECTED_PREFIX = "http://";
+  private static final String HTTP_PREFIX = "http://";
+  private static final String HTTPS_PREFIX = "https://";
+  private static final String CA_FILE_KEY = "ca_file";
+  private static final String CERT_FILE_KEY = "cert_file";
+  private static final String KEY_FILE_KEY = "key_file";
   private static final String RESULTING_PREFIX = "ip:///";
   private static final long QUERY_TIMEOUT_SEC = 10;
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(QUERY_TIMEOUT_SEC);
@@ -117,9 +129,48 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     }
   }
 
+  private String cleanOption(String value) {
+    if (value == null || value.trim().isEmpty()) {
+      return null;
+    }
+    return value;
+  }
+
+  private SslContext getSslContext() {
+    String caFile = cleanOption(options.get(CA_FILE_KEY));
+    String certFile = cleanOption(options.get(CERT_FILE_KEY));
+    String keyFile = cleanOption(options.get(KEY_FILE_KEY));
+
+    if (caFile == null && certFile == null && keyFile == null) {
+      return null;
+    }
+
+    try {
+      SslContextBuilder sslContextBuilder = GrpcSslContexts.forClient();
+      if (caFile != null) {
+        sslContextBuilder.trustManager(new File(caFile));
+      }
+      if (certFile != null && keyFile != null) {
+        sslContextBuilder.keyManager(new File(certFile), new File(keyFile));
+      }
+      return sslContextBuilder.build();
+    } catch (Exception e) {
+      throw new RuntimeException("While building SSL context for etcd", e);
+    }
+  }
+
   private Client initializeClient() {
     String target = variableSubstitution(config.project_id, "undefined project_id");
-    try (Client tmpClient = Client.builder().target(target).build()) {
+    boolean isSecure = target.startsWith(HTTPS_PREFIX);
+    String expectedPrefix = isSecure ? HTTPS_PREFIX : HTTP_PREFIX;
+    SslContext sslContext = getSslContext();
+
+    ClientBuilder tmpClientBuilder = Client.builder().target(target);
+    if (sslContext != null) {
+      tmpClientBuilder.sslContext(sslContext);
+    }
+
+    try (Client tmpClient = tmpClientBuilder.build()) {
       info("Connecting to etcd target %s to glean client list", target);
       List<Member> members =
           tmpClient.getClusterClient().listMember().get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS)
@@ -127,13 +178,18 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       Set<String> uris = members.stream().flatMap(member -> member.getClientURIs().stream())
           .map(URI::toString).collect(Collectors.toSet());
       checkState(!uris.isEmpty(), "no member uris found");
-      checkState(uris.stream().allMatch(uri -> uri.startsWith(EXPECTED_PREFIX)),
+      checkState(uris.stream().allMatch(uri -> uri.startsWith(expectedPrefix)),
           "inconsistent prefix");
-      String collected = uris.stream().map(uri -> uri.substring(EXPECTED_PREFIX.length()))
+      String collected = uris.stream().map(uri -> uri.substring(expectedPrefix.length()))
           .collect(Collectors.joining(","));
       String targets = RESULTING_PREFIX + collected;
       info("Gleaned etcd client targets %s", targets);
-      Client client = Client.builder().target(targets).connectTimeout(CONNECT_TIMEOUT).build();
+      ClientBuilder clientBuilder = Client.builder().target(targets)
+          .connectTimeout(CONNECT_TIMEOUT);
+      if (sslContext != null) {
+        clientBuilder.sslContext(sslContext);
+      }
+      Client client = clientBuilder.build();
       updateConnectedKey(client);
       reapConnectedKeys(client);
       return client;
@@ -300,6 +356,45 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
         }
       } catch (Exception e) {
         throw new RuntimeException("While executing batch update on " + getKeyPath(""), e);
+      }
+    }
+
+    @Override
+    public boolean updateIfMatch(String matchKey, String expectedValue, Map<String, String> puts,
+        Set<String> deletes) {
+      try {
+        List<Op> ops = new ArrayList<>();
+        if (puts != null) {
+          puts.forEach((key, value) -> {
+            if (value != null) {
+              ops.add(Op.put(bytes(getKeyPath(key)), bytes(value), PutOption.DEFAULT));
+            }
+          });
+        }
+        if (deletes != null) {
+          deletes.forEach(key -> {
+            if (key != null) {
+              ops.add(Op.delete(bytes(getKeyPath(key)), DeleteOption.DEFAULT));
+            }
+          });
+        }
+        if (!ops.isEmpty()) {
+          Cmp cmp = expectedValue == null
+              ? new Cmp(bytes(getKeyPath(matchKey)), Cmp.Op.EQUAL, CmpTarget.version(0))
+              : new Cmp(bytes(getKeyPath(matchKey)), Cmp.Op.EQUAL,
+                  CmpTarget.value(bytes(expectedValue)));
+
+          TxnResponse response = kvClient.txn()
+              .If(cmp)
+              .Then(ops.toArray(new Op[0]))
+              .commit()
+              .get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+          return response.isSucceeded();
+        }
+        return true;
+      } catch (Exception e) {
+        throw new RuntimeException(
+            "While executing conditional batch update on " + getKeyPath(""), e);
       }
     }
   }
