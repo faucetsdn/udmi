@@ -88,6 +88,44 @@ class DynamicIotAccessProviderTest {
   }
 
   @Test
+  void reflectorEnvelopeBridgeSourceRouting() {
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = ContainerBase.REFLECT_BASE;
+    envelope.deviceId = TEST_REGISTRY;
+    envelope.source = PROVIDER_TWO + Common.SOURCE_SEPARATOR + "bridge";
+
+    @SuppressWarnings("unchecked")
+    Function<Entry<Long, String>, String> munger = mock(Function.class);
+    provider.modifyConfig(envelope, munger);
+
+    verify(mockProviderOne).modifyConfig(eq(envelope), eq(munger));
+    verifyNoInteractions(mockProviderTwo);
+  }
+
+  @Test
+  void reflectorBridgeSourceRoutingWithoutImplicit() {
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.project_id = PROVIDER_TWO;
+    DynamicIotAccessProvider noImplicitProvider = new DynamicIotAccessProvider(iotAccess);
+    noImplicitProvider.activate();
+    try {
+      Envelope envelope = new Envelope();
+      envelope.deviceRegistryId = ContainerBase.REFLECT_BASE;
+      envelope.deviceId = TEST_REGISTRY;
+      envelope.source = PROVIDER_TWO + Common.SOURCE_SEPARATOR + "bridge";
+
+      @SuppressWarnings("unchecked")
+      Function<Entry<Long, String>, String> munger = mock(Function.class);
+      noImplicitProvider.modifyConfig(envelope, munger);
+
+      verify(mockProviderTwo).modifyConfig(eq(envelope), eq(munger));
+      verifyNoInteractions(mockProviderOne);
+    } finally {
+      noImplicitProvider.shutdown();
+    }
+  }
+
+  @Test
   void reflectorAffinityInheritance() {
     provider.setProviderAffinity(ContainerBase.REFLECT_BASE, TEST_REGISTRY, PROVIDER_TWO);
     provider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);

@@ -87,8 +87,18 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       String source = index < 0 ? null : envelope.source.substring(index + 1);
 
       String target = transport;
-      if (source != null && getProviders().containsKey(source)) {
-        target = source;
+      if (source != null) {
+        if ("bridge".equals(source)) {
+          if (getProviders().containsKey("implicit")) {
+            target = "implicit";
+          }
+        } else if (getProviders().containsKey(source)) {
+          target = source;
+        }
+      } else if ("bridge".equals(transport)) {
+        if (getProviders().containsKey("implicit")) {
+          target = "implicit";
+        }
       }
 
       if (getProviders().containsKey(target)) {
@@ -256,13 +266,17 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       String affinity = transport;
       if (source != null) {
         if ("bridge".equals(source)) {
-          affinity = "implicit";
+          if (getProviders().containsKey("implicit")) {
+            affinity = "implicit";
+          }
         } else if (getProviders().containsKey(source)) {
           affinity = source;
         }
       } else {
         if ("bridge".equals(transport)) {
-          affinity = "implicit";
+          if (getProviders().containsKey("implicit")) {
+            affinity = "implicit";
+          }
         }
       }
 
