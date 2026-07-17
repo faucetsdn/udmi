@@ -387,6 +387,7 @@ jobs:
     timeout-minutes: 15
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
+      UDMIS_CONFIG: var/dynamic_pod.json
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -395,6 +396,8 @@ jobs:
           java-version: '21'
       - name: base setup
         run: bin/run_tests install_dependencies
+      - name: local setup
+        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: bin/test_registrar_dynamic
         run: bin/test_registrar_dynamic $TARGET_PROJECT
       - name: registrar logs

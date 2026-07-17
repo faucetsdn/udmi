@@ -4,42 +4,10 @@ UDMI_ROOT=$(dirname $0)/..
 cd ${UDMI_ROOT}
 source etc/shell_common.sh
 
-bin/clone_model
-
 TEST_SITE=sites/udmi_site_model
 PROJECT_SPEC=${1:-//mqtt/localhost}
 find $TEST_SITE -name out | xargs rm -rf
 (cd $TEST_SITE; git checkout .)
-
-echo '###################################' starting UDMIS
-# Create custom pod config for UDMIS
-mkdir -p var
-cat << EOF > var/dynamic_pod.json
-{
-  "include": "$UDMI_ROOT/var/local_pod.json",
-  "iot_access": {
-    "iot-access": {
-      "provider": "dynamic",
-      "project_id": "implicit, temporary"
-    },
-    "temporary": {
-      "provider": "temporary"
-    }
-  }
-}
-EOF
-
-# Start standard local setup (it will create var/local_pod.json and start UDMIS with it)
-bin/start_local ${TEST_SITE} $PROJECT_SPEC
-
-# Stop udmis (but keep mosquitto)
-OLD_PID=$(cat var/udmis.pid)
-sudo kill $OLD_PID || true
-sleep 2
-
-# Start UDMIS with our custom pod config
-export UDMIS_CONFIG=var/dynamic_pod.json
-bin/start_udmis
 
 echo '###################################' starting test section processing
 bin/registrar ${TEST_SITE} $PROJECT_SPEC -P temporary > out/registrar_1.log 2>&1
