@@ -5,7 +5,7 @@ import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
+import static com.google.udmi.util.GeneralUtils.isNullOrTruthy;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
@@ -60,6 +60,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final int THRESHOLD_MIN = 10;
   private static final int HEARTBEAT_SEC = THRESHOLD_MIN * 60 / 4;
   private static final Duration CLIENT_THRESHOLD = Duration.ofMinutes(THRESHOLD_MIN);
+  public static final String MAX_INBOUND_MESSAGE_SIZE_KEY = "max_inbound_message_size";
+  public static final int DEFAULT_MAX_INBOUND_MESSAGE_SIZE = Integer.MAX_VALUE;
   private static final GetOption LIST_OPT = GetOption.newBuilder().isPrefix(true).build();
   private final IotAccess config;
   private final Client client;
@@ -74,7 +76,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
    */
   public EtcdDataProvider(IotAccess iotConfig) {
     options = parseOptions(iotConfig);
-    enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
+    enabled = isNullOrTruthy(options.get(ENABLED_KEY));
     config = iotConfig;
     client = enabled ? initializeClient() : null;
     kvClient = ifNotNullGet(client, Client::getKVClient);
@@ -113,6 +115,37 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       throw new RuntimeException("While listing db keys " + keyPath, e);
     }
   }
+
+  /**
+   * Get all keys strictly matching a prefix (keys only, no values retrieved).
+   */
+  public List<String> getPrefixKeys(String prefixPath) {
+    try {
+      GetOption keysOnlyOpt = GetOption.newBuilder().isPrefix(true).withKeysOnly(true).build();
+      GetResponse response =
+          kvClient.get(bytes(prefixPath), keysOnlyOpt).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      return response.getKvs().stream()
+          .map(kv -> asString(kv.getKey()))
+          .toList();
+    } catch (Exception e) {
+      throw new RuntimeException("While listing keys for prefix " + prefixPath, e);
+    }
+  }
+
+  /**
+   * Get all entries (keys and values) matching a prefix.
+   */
+  public Map<String, String> getPrefixEntries(String prefixPath) {
+    try {
+      GetResponse response =
+          kvClient.get(bytes(prefixPath), PREFIXED_OPTION).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      return response.getKvs().stream().collect(Collectors.toMap(
+          kv -> asString(kv.getKey()), kv -> asString(kv.getValue()), (v1, v2) -> v2));
+    } catch (Exception e) {
+      throw new RuntimeException("While listing entries for prefix " + prefixPath, e);
+    }
+  }
+
 
   private String getKey(String key) {
     try {
@@ -159,13 +192,28 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     }
   }
 
+  int getMaxInboundMessageSize() {
+    String sizeStr = cleanOption(options.get(MAX_INBOUND_MESSAGE_SIZE_KEY));
+    if (sizeStr != null) {
+      try {
+        return Integer.parseInt(sizeStr);
+      } catch (NumberFormatException e) {
+        warn("Invalid max_inbound_message_size option: %s, using default %d", sizeStr,
+            DEFAULT_MAX_INBOUND_MESSAGE_SIZE);
+      }
+    }
+    return DEFAULT_MAX_INBOUND_MESSAGE_SIZE;
+  }
+
   private Client initializeClient() {
     String target = variableSubstitution(config.project_id, "undefined project_id");
     boolean isSecure = target.startsWith(HTTPS_PREFIX);
     String expectedPrefix = isSecure ? HTTPS_PREFIX : HTTP_PREFIX;
     SslContext sslContext = getSslContext();
+    int maxInboundMessageSize = getMaxInboundMessageSize();
 
-    ClientBuilder tmpClientBuilder = Client.builder().target(target);
+    ClientBuilder tmpClientBuilder = Client.builder().target(target)
+        .maxInboundMessageSize(maxInboundMessageSize);
     if (sslContext != null) {
       tmpClientBuilder.sslContext(sslContext);
     }
@@ -185,7 +233,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       String targets = RESULTING_PREFIX + collected;
       info("Gleaned etcd client targets %s", targets);
       ClientBuilder clientBuilder = Client.builder().target(targets)
-          .connectTimeout(CONNECT_TIMEOUT);
+          .connectTimeout(CONNECT_TIMEOUT)
+          .maxInboundMessageSize(maxInboundMessageSize);
       if (sslContext != null) {
         clientBuilder.sslContext(sslContext);
       }
