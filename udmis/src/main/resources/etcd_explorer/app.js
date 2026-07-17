@@ -425,7 +425,7 @@ function updateCounts() {
     regCountEl.textContent = regQuery ? `${filteredRegs.length}/${cachedRegistries.length}` : cachedRegistries.length;
   }
   if (topRegEl) {
-    topRegEl.textContent = regQuery ? `Registries: ${filteredRegs.length}/${cachedRegistries.length}` : `Registries: ${cachedRegistries.length}`;
+    topRegEl.textContent = `Registries: ${cachedRegistries.length}`;
   }
 
   const devQuery = (document.getElementById('search-devices')?.value || '').toLowerCase().trim();
@@ -437,12 +437,6 @@ function updateCounts() {
     devCountEl.textContent = devQuery ? `${filteredDevs.length}/${cachedDevices.length}` : cachedDevices.length;
   }
   if (topDevEl) {
-    if (activeRegistry) {
-      topDevEl.textContent = devQuery ? `Devices: ${filteredDevs.length}/${cachedDevices.length}` : `Devices: ${cachedDevices.length}`;
-    } else if (totalClusterDevices > 0) {
-      topDevEl.textContent = `Devices: ${totalClusterDevices} total`;
-    } else {
-      topDevEl.textContent = `Devices: 0`;
-    }
+    topDevEl.textContent = `Devices: ${totalClusterDevices}`;
   }
 }
