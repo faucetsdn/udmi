@@ -35,6 +35,7 @@ Format: `scheme://[user@]host[:port][/path]`
 - **Subscription:** `{topic}+{user}`.
 - **Filtering:** Subscriptions should filter for messages where the `principal` attribute matches the local identity or is absent.
 - **Constraint:** `:port` is prohibited.
+- **Authentication:** Authentication and authorization for the `pubsub://` transport is managed out-of-band using standard Cloud IAM and Application Default Credentials (ADC). The connection string specifies the project and topic routing coordinates, whereas credential resolution is a transport-level prerequisite.
 
 #### MQTT and MQTTS (`mqtt://`, `mqtts://`)
 - **Host/Port:** Standard network mapping.
@@ -56,6 +57,21 @@ Format: `scheme://[user@]host[:port][/path]`
 - **State Query Service:**
   - **Query:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
   - **Response:** System immediately replies by publishing the last known cached device State report on the device's state topic `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/state/blobset` (or the corresponding state topic matching the query's subFolder).
+  - **Correlation & Timeout:** The query envelope MUST include a unique `transactionId`. The resulting state response envelope MUST copy this exact `transactionId` in its envelope metadata. If no response is received within 15 seconds, the Client SHOULD consider the state query timed out.
+- **Telemetry and Event Service:**
+  - **Telemetry (Pointset):** Devices or clients publish pointset telemetry reports to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/events/pointset`.
+  - **Discovery:** Devices or clients publish discovery reports to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/events/discovery`.
+  - **Structure:** Event payloads MUST conform strictly to their respective authoritative UDMI schemas (`pointset.json` or `discovery.json`) nested within the standard `payload` key for MQTT or the root of the message data object for PubSub.
+- **System Status and Error Service:**
+  - **Status Events:** The System and devices report runtime errors, command validation failures, or schema violation messages on the status channel: `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/events/status`.
+  - **Structure:** Payload MUST conform strictly to the standard UDMI `status` / `Entry` schema (conforming to `entry.json`), containing `category`, `level`, `message`, and optionally `timestamp`.
+  - **Correlation:** When status events are published in response to a failed client command, the envelope MUST copy the `transactionId` from the preceding client message to enable exact error correlation.
+
+### 2.3. Resource Identifier Constraints
+To ensure compatibility with MQTT topic parsing structures and PubSub attribute indexing, all identifier strings utilized in UUFI connection coordinates and paths MUST conform to the following character and length restrictions:
+- **Allowed Characters:** Registry IDs (`{deviceRegistryId}`) and Device IDs (`{deviceId}`) MUST contain only uppercase and lowercase alphanumeric characters, hyphens (`-`), and underscores (`_`).
+- **Length Limit:** Identifiers MUST be between 1 and 256 characters in length.
+- **Prohibited Characters:** Spaces, slashes (`/`), backslashes (`\`), wildcards (`+`, `#`), and special punctuation characters are strictly prohibited.
 
 ## 3. Handshake Protocol
 
@@ -73,6 +89,9 @@ To guarantee parsing interoperability and avoid protocol timeouts, Handshake pay
 
 - **Transaction Correlation:** 
   To ensure reliable request-response correlation on shared handshake channels (e.g., `/uufi/c/config/udmi`), the handshake configuration reply message's envelope MUST include a `"transactionId"` attribute matching the exact transaction ID from the client's handshake request envelope. Receivers MUST validate this correlation and reject mismatched responses.
+
+- **Functional Capability Negotiation (`functions_ver`):**
+  The `functions_ver` integer specified under the `setup` payload block represents the supported functional capability set of the client/system interface. If the System's maximum supported version is lower than the Client's requested version, the System MUST respond with its highest supported version in the Step 2 reply. Clients MUST gracefully handle this negotiation and determine whether to operate in fallback/degraded mode or terminate the session based on the negotiated `functions_ver`.
 
 ### Step 1: State Declaration (Handshake Request)
 The Client publishes a UDMI `state` message to `/uufi/c/state/udmi`.
@@ -291,6 +310,11 @@ To tear down or stop running test infrastructure and DUT simulations in isolated
   bin/start_dut stop <serial_no>
   ```
 - **Execution Policy:** External test orchestrators MUST rely exclusively on these high-level stop commands to tear down the environment. Manual process termination or global system-wide commands are unsupported and may result in partial teardowns or configuration corruption.
+
+### 9.6. Non-Privileged Execution Trigger
+* **Trigger Mechanism:** Non-privileged execution mode MUST be automatically enabled whenever an explicit, custom MQTT port is specified in the connection string (e.g., `//mqtt/localhost:<port>`).
+* **Environment-Free Bypasses:** The use of `UDMI_NO_SUDO` is deprecated. Instead, any port specification other than system-default ports (or any explicit port for local execution) automatically instructs all scripts to run in user-space.
+* **User-Space Relocation:** When non-privileged mode is triggered, the system operates entirely in user-space without attempting system-wide directory modifications or system service management (e.g., `systemctl`). Instead, the broker is started as a local user background process utilizing configuration and log directories located inside the local workspace relative to the UDMI root.
 
 ---
 
