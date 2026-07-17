@@ -5,7 +5,7 @@ import static com.google.bos.udmi.service.core.DistributorPipe.clientId;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.isNullOrNotEmpty;
+import static com.google.udmi.util.GeneralUtils.isNullOrTruthy;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
@@ -76,7 +76,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
    */
   public EtcdDataProvider(IotAccess iotConfig) {
     options = parseOptions(iotConfig);
-    enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
+    enabled = isNullOrTruthy(options.get(ENABLED_KEY));
     config = iotConfig;
     client = enabled ? initializeClient() : null;
     kvClient = ifNotNullGet(client, Client::getKVClient);

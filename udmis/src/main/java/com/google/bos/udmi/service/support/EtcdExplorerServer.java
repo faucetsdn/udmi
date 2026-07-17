@@ -97,6 +97,7 @@ public class EtcdExplorerServer {
   private void handleGetRegistries(HttpExchange exchange) throws IOException {
     List<String> keys = etcdProvider.getPrefixKeys("/r/");
     Set<String> uniqueRegistries = new TreeSet<>();
+    Set<String> uniqueDevices = new TreeSet<>();
     for (String key : keys) {
       if (key.startsWith("/r/")) {
         String sub = key.substring(3);
@@ -108,10 +109,23 @@ public class EtcdExplorerServer {
         if (!reg.isEmpty()) {
           uniqueRegistries.add(reg);
         }
+        int deviceIndex = sub.indexOf("/d/");
+        if (deviceIndex >= 0) {
+          String devSub = sub.substring(deviceIndex + 3);
+          int devSlashIdx = devSub.indexOf('/');
+          int devColonIdx = devSub.indexOf(':');
+          int devEndIdx = devSlashIdx >= 0 && devColonIdx >= 0 ? Math.min(devSlashIdx, devColonIdx)
+              : Math.max(devSlashIdx, devColonIdx);
+          String dev = devEndIdx >= 0 ? devSub.substring(0, devEndIdx) : devSub;
+          if (!reg.isEmpty() && !dev.isEmpty()) {
+            uniqueDevices.add(reg + "/" + dev);
+          }
+        }
       }
     }
     sendResponse(exchange, HttpURLConnection.HTTP_OK, "application/json",
-        JsonUtil.stringify(Map.of("registries", new ArrayList<>(uniqueRegistries))));
+        JsonUtil.stringify(Map.of("registries", new ArrayList<>(uniqueRegistries),
+            "totalDevicesCount", uniqueDevices.size())));
   }
 
   private void handleGetDevices(HttpExchange exchange, String registryId) throws IOException {

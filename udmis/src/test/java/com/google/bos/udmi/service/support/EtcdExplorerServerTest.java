@@ -62,6 +62,7 @@ class EtcdExplorerServerTest {
     @SuppressWarnings("unchecked")
     List<String> registries = (List<String>) body.get("registries");
     assertEquals(2, registries.size());
+    assertEquals(3, ((Number) body.get("totalDevicesCount")).intValue());
     assertTrue(registries.contains("acme_corp"));
     assertTrue(registries.contains("cloud_iot_registry"));
     verify(mockEtcdProvider).getPrefixKeys("/r/");

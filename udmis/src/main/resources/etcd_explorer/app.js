@@ -2,6 +2,7 @@
 
 let cachedRegistries = [];
 let cachedDevices = [];
+let totalClusterDevices = 0;
 let activeRegistry = null;
 let activeDevice = null;
 let activeProperty = null;
@@ -48,6 +49,7 @@ function initEventListeners() {
         const query = e.target.value.toLowerCase().trim();
         const filtered = cachedRegistries.filter(r => r.toLowerCase().includes(query));
         renderRegistriesList(filtered, activeRegistry);
+        updateCounts();
       }, 150);
     });
   }
@@ -61,6 +63,7 @@ function initEventListeners() {
         const query = e.target.value.toLowerCase().trim();
         const filtered = cachedDevices.filter(d => d.toLowerCase().includes(query));
         renderDevicesList(filtered, activeDevice);
+        updateCounts();
       }, 150);
     });
   }
@@ -159,7 +162,8 @@ async function loadRegistries() {
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     cachedRegistries = data.registries || [];
-    document.getElementById('registries-count').textContent = cachedRegistries.length;
+    totalClusterDevices = data.totalDevicesCount !== undefined ? data.totalDevicesCount : 0;
+    updateCounts();
     renderRegistriesList(cachedRegistries, activeRegistry);
   } catch (err) {
     container.innerHTML = `<div class="empty-state">❌ Error: ${err.message}</div>`;
@@ -214,7 +218,7 @@ async function loadDevices(registryId) {
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     cachedDevices = data.devices || [];
-    document.getElementById('devices-count').textContent = cachedDevices.length;
+    updateCounts();
     renderDevicesList(cachedDevices, activeDevice);
   } catch (err) {
     container.innerHTML = `<div class="empty-state">❌ Error: ${err.message}</div>`;
@@ -247,7 +251,7 @@ function clearDeviceSelection() {
   activeDevice = null;
   activeProperty = null;
   cachedDevices = [];
-  document.getElementById('devices-count').textContent = '0';
+  updateCounts();
   document.getElementById('devices-list').innerHTML = '<div class="empty-state">Select a registry to view devices</div>';
   document.getElementById('active-device-label').textContent = 'No device selected';
   document.getElementById('refresh-properties').disabled = true;
@@ -294,6 +298,15 @@ function renderPropertiesTable(properties) {
 
   const table = document.createElement('table');
   table.className = 'properties-table';
+
+  const colgroup = document.createElement('colgroup');
+  const colKey = document.createElement('col');
+  colKey.className = 'col-property-key';
+  const colVal = document.createElement('col');
+  colVal.className = 'col-property-val';
+  colgroup.appendChild(colKey);
+  colgroup.appendChild(colVal);
+  table.appendChild(colgroup);
 
   const devProps = keys.filter(k => !k.startsWith('/c/'));
   const colProps = keys.filter(k => k.startsWith('/c/'));
@@ -400,4 +413,36 @@ function showToast(message) {
   setTimeout(() => {
     toast.classList.add('hidden');
   }, 3500);
+}
+
+function updateCounts() {
+  const regQuery = (document.getElementById('search-registries')?.value || '').toLowerCase().trim();
+  const filteredRegs = regQuery ? cachedRegistries.filter(r => r.toLowerCase().includes(regQuery)) : cachedRegistries;
+  
+  const regCountEl = document.getElementById('registries-count');
+  const topRegEl = document.getElementById('top-registries-count');
+  if (regCountEl) {
+    regCountEl.textContent = regQuery ? `${filteredRegs.length}/${cachedRegistries.length}` : cachedRegistries.length;
+  }
+  if (topRegEl) {
+    topRegEl.textContent = regQuery ? `Registries: ${filteredRegs.length}/${cachedRegistries.length}` : `Registries: ${cachedRegistries.length}`;
+  }
+
+  const devQuery = (document.getElementById('search-devices')?.value || '').toLowerCase().trim();
+  const filteredDevs = devQuery ? cachedDevices.filter(d => d.toLowerCase().includes(devQuery)) : cachedDevices;
+
+  const devCountEl = document.getElementById('devices-count');
+  const topDevEl = document.getElementById('top-devices-count');
+  if (devCountEl) {
+    devCountEl.textContent = devQuery ? `${filteredDevs.length}/${cachedDevices.length}` : cachedDevices.length;
+  }
+  if (topDevEl) {
+    if (activeRegistry) {
+      topDevEl.textContent = devQuery ? `Devices: ${filteredDevs.length}/${cachedDevices.length}` : `Devices: ${cachedDevices.length}`;
+    } else if (totalClusterDevices > 0) {
+      topDevEl.textContent = `Devices: ${totalClusterDevices} total`;
+    } else {
+      topDevEl.textContent = `Devices: 0`;
+    }
+  }
 }
