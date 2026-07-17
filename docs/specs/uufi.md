@@ -2,7 +2,9 @@
 
 # Unified UDMI Functional Interface (UUFI)
 
-The **Unified UDMI Functional Interface (UUFI)** defines a standardized messaging mechanism for external applications (the **Client**) to integrate with a UDMI-managed system (the **System**). UUFI serves as an application-side interface to UDMI, enabling management and control of devices.
+The **Unified UDMI Functional Interface (UUFI)** defines a standardized messaging mechanism for external applications (the **Client**) to integrate with a UDMI-managed system (the **System**). UUFI serves exclusively as an **external-facing, application-side interface** to UDMI, enabling management and control of devices.
+
+As an external interface specification, this document focuses solely on the public-facing contract: the exchange message formats, connectivity schemas, and the tools available to start or stop test environments. It **does not expose or document the underlying system internals** or implementation mechanisms (such as process IDs, internal databases, or local host execution steps), which are treated as private implementation details.
 
 ## 1. Architecture
 
@@ -276,6 +278,19 @@ bin/site_trigger update sites/udmi_site_model AHU-1 system 1.0.0 //mqtt/localhos
 ```
 
 - **Format Constraint:** Enforces `//mqtt/localhost:$port` syntax as the final argument to target custom ports correctly.
+
+### 9.5. Hermetic Environment Teardown
+To tear down or stop running test infrastructure and DUT simulations in isolated or non-privileged environments, use the provided high-level tool commands:
+
+- **System Infrastructure Teardown:** Stop all local infrastructure services (such as the broker and registry plane) using the stop subcommand on the control service:
+  ```bash
+  bin/start_udmis stop
+  ```
+- **DUT Simulation Teardown:** Stop individual emulated devices using the stop subcommand followed by the device's unique identifier or serial number:
+  ```bash
+  bin/start_dut stop <serial_no>
+  ```
+- **Execution Policy:** External test orchestrators MUST rely exclusively on these high-level stop commands to tear down the environment. Manual process termination or global system-wide commands are unsupported and may result in partial teardowns or configuration corruption.
 
 ---
 
