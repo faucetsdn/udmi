@@ -1,0 +1,12 @@
+{
+  "include": "local_pod.json",
+  "iot_access": {
+    "iot-access": {
+      "provider": "dynamic",
+      "project_id": "implicit, temporary"
+    },
+    "temporary": {
+      "provider": "temporary"
+    }
+  }
+}
