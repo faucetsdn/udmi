@@ -125,6 +125,12 @@ public class UufiProcessor extends ProcessorBase {
     Envelope innerEnvelope = convertTo(Envelope.class, mutableMap);
     innerEnvelope.payload = null;
     innerEnvelope.gatewayId = null; // Remove the uufi marker for internal bus
+    if (innerEnvelope.deviceRegistryId == null) {
+      innerEnvelope.deviceRegistryId = envelope.deviceRegistryId;
+    }
+    if (innerEnvelope.deviceId == null) {
+      innerEnvelope.deviceId = envelope.deviceId;
+    }
 
     debug("Forwarding UUFI message %s/%s from %s to internal bus",
         innerEnvelope.subType, innerEnvelope.subFolder, envelope.source);

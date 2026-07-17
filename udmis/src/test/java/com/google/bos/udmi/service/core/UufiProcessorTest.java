@@ -10,12 +10,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.PointsetEvents;
 import udmi.schema.SetupUdmiState;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
@@ -117,6 +120,48 @@ public class UufiProcessorTest extends ProcessorTestBase {
     Map<String, Object> wrapped = toMap(captured.get(0));
     assertNotNull(wrapped.get("payload"), "wrapped payload should not be null");
     assertEquals(SubType.EVENTS.value(), wrapped.get("subType"));
+  }
+
+  /**
+   * Test that inbound UUFI-wrapped messages from compliant clients (omitting device registry/ID)
+   * are correctly routed by copying device identity from the outer envelope to innerEnvelope.
+   */
+  @Test
+  public void inboundRoutingRedundancyTest() {
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.EVENTS;
+    innerEnvelope.subFolder = SubFolder.POINTSET;
+    // Omit device identity from the inner payload according to redundancy rule
+    innerEnvelope.deviceId = null;
+    innerEnvelope.deviceRegistryId = null;
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    uufiWrapper.put("payload", Map.of(
+        "points", Map.of(),
+        "version", "1",
+        "timestamp", "2026-07-17T12:00:00Z"
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceId = "dev-1";
+    transportEnvelope.deviceRegistryId = "reg-1";
+
+    List<Envelope> capturedEnvelopes = new ArrayList<>();
+    getReverseDispatcher().registerHandler(PointsetEvents.class, (message) -> {
+      Envelope env = getReverseDispatcher().getContinuation(message).getEnvelope();
+      capturedEnvelopes.add(env);
+    });
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    // Verify that the unwrapped message was published with the copied device registry and device ID
+    assertEquals(1, capturedEnvelopes.size(), "captured envelopes count");
+    Envelope publishedEnvelope = capturedEnvelopes.get(0);
+    assertEquals("dev-1", publishedEnvelope.deviceId);
+    assertEquals("reg-1", publishedEnvelope.deviceRegistryId);
   }
 
   private UufiProcessor getProcessor() {
