@@ -153,7 +153,13 @@ public class EtcdExplorerServer {
   private void handleGetProperties(HttpExchange exchange, String registryId, String deviceId)
       throws IOException {
     String prefix = "/r/" + registryId + "/d/" + deviceId;
-    Map<String, String> entries = etcdProvider.getPrefixEntries(prefix);
+    Map<String, String> entries = new TreeMap<>();
+    entries.putAll(etcdProvider.getPrefixEntries(prefix + ":"));
+    entries.putAll(etcdProvider.getPrefixEntries(prefix + "/"));
+    String exactValue = etcdProvider.getEntry(prefix);
+    if (exactValue != null) {
+      entries.put(prefix, exactValue);
+    }
     Map<String, String> properties = new TreeMap<>();
     for (Map.Entry<String, String> entry : entries.entrySet()) {
       String key = entry.getKey();
@@ -163,8 +169,6 @@ public class EtcdExplorerServer {
           propKey = ":value";
         }
         properties.put(propKey, entry.getValue());
-      } else {
-        properties.put(key, entry.getValue());
       }
     }
     sendResponse(exchange, HttpURLConnection.HTTP_OK, "application/json",

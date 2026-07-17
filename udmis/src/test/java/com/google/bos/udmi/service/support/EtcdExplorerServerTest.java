@@ -96,10 +96,13 @@ class EtcdExplorerServerTest {
 
   @Test
   void testGetProperties() throws Exception {
-    when(mockEtcdProvider.getPrefixEntries("/r/cloud_iot_registry/d/AHU-1")).thenReturn(Map.of(
-        "/r/cloud_iot_registry/d/AHU-1:numId", "12345",
+    when(mockEtcdProvider.getPrefixEntries("/r/cloud_iot_registry/d/AHU-1:")).thenReturn(Map.of(
+        "/r/cloud_iot_registry/d/AHU-1:numId", "12345"
+    ));
+    when(mockEtcdProvider.getPrefixEntries("/r/cloud_iot_registry/d/AHU-1/")).thenReturn(Map.of(
         "/r/cloud_iot_registry/d/AHU-1/c/state:latest", "{\"ver\":1}"
     ));
+    when(mockEtcdProvider.getEntry("/r/cloud_iot_registry/d/AHU-1")).thenReturn(null);
 
     HttpRequest request = HttpRequest.newBuilder()
         .uri(URI.create(baseUrl + "/api/registries/cloud_iot_registry/devices/AHU-1/properties"))
@@ -117,7 +120,11 @@ class EtcdExplorerServerTest {
     assertNotNull(properties);
     assertEquals("12345", properties.get(":numId"));
     assertEquals("{\"ver\":1}", properties.get("/c/state:latest"));
-    verify(mockEtcdProvider).getPrefixEntries("/r/cloud_iot_registry/d/AHU-1");
+    assertEquals(2, properties.size(),
+        "Properties should not include keys from AHU-10 or AHU-11: " + properties.keySet());
+    verify(mockEtcdProvider).getPrefixEntries("/r/cloud_iot_registry/d/AHU-1:");
+    verify(mockEtcdProvider).getPrefixEntries("/r/cloud_iot_registry/d/AHU-1/");
+    verify(mockEtcdProvider).getEntry("/r/cloud_iot_registry/d/AHU-1");
   }
 
   @Test
