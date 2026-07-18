@@ -101,6 +101,14 @@ port = url.port or (8883 if is_ssl else 1883)
 # Build model update payload adhering strictly to flat CloudModel schema
 now_utc_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+udmi_metadata_val = json.dumps({
+    "system": {
+        "software": {
+            blob_id: version
+        }
+    }
+})
+
 payload = {
     "projectId": "vibrant",
     "transactionId": f"TXN-{os.urandom(4).hex()}",
@@ -111,12 +119,8 @@ payload = {
         "timestamp": now_utc_str,
         "auth_type": "RS256",
         "blocked": False,
-        "config": {
-            "system": {
-                "software": {
-                    blob_id: version
-                }
-            }
+        "metadata": {
+            "udmi_metadata": udmi_metadata_val
         }
     }
 }
