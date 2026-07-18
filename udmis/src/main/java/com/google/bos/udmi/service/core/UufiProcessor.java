@@ -131,6 +131,12 @@ public class UufiProcessor extends ProcessorBase {
     if (innerEnvelope.deviceId == null) {
       innerEnvelope.deviceId = envelope.deviceId;
     }
+    if (innerEnvelope.subType == null) {
+      innerEnvelope.subType = envelope.subType;
+    }
+    if (innerEnvelope.subFolder == null) {
+      innerEnvelope.subFolder = envelope.subFolder;
+    }
 
     debug("Forwarding UUFI message %s/%s from %s to internal bus",
         innerEnvelope.subType, innerEnvelope.subFolder, envelope.source);

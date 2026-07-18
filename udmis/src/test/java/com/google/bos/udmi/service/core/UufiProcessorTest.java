@@ -164,6 +164,44 @@ public class UufiProcessorTest extends ProcessorTestBase {
     assertEquals("reg-1", publishedEnvelope.deviceRegistryId);
   }
 
+  /**
+   * Test that inbound UUFI-wrapped messages with omitted subType and subFolder
+   * in the payload map copy these fields from the outer transport envelope.
+   */
+  @Test
+  public void inboundRoutingSubTypeRedundancyTest() {
+    // Payload map has NO subType/subFolder
+    Map<String, Object> uufiWrapper = new java.util.HashMap<>();
+    uufiWrapper.put("payload", Map.of(
+        "points", Map.of(),
+        "version", "1",
+        "timestamp", "2026-07-17T12:00:00Z"
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceId = "dev-1";
+    transportEnvelope.deviceRegistryId = "reg-1";
+    transportEnvelope.subType = SubType.EVENTS;
+    transportEnvelope.subFolder = SubFolder.POINTSET;
+
+    List<Envelope> capturedEnvelopes = new ArrayList<>();
+    getReverseDispatcher().registerHandler(PointsetEvents.class, (message) -> {
+      Envelope env = getReverseDispatcher().getContinuation(message).getEnvelope();
+      capturedEnvelopes.add(env);
+    });
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    // Verify that the unwrapped message was published with correct subType/subFolder copied
+    assertEquals(1, capturedEnvelopes.size(), "captured envelopes count");
+    Envelope publishedEnvelope = capturedEnvelopes.get(0);
+    assertEquals(SubType.EVENTS, publishedEnvelope.subType);
+    assertEquals(SubFolder.POINTSET, publishedEnvelope.subFolder);
+  }
+
   private UufiProcessor getProcessor() {
     return (UufiProcessor) UdmiServicePod.getComponent(UufiProcessor.class);
   }
