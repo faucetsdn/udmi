@@ -240,7 +240,7 @@ bin/start_local sites/udmi_site_model //mqtt/localhost:46432
 ```
 
 - **Format Constraint:** The target connection spec MUST be provided in the format `//mqtt/localhost:$port`. This satisfies internal parameter expansions (`${project_spec%/*}` and `${project_spec#//}`) within `start_local`, permitting custom isolated port execution without modifying UDMI binaries.
-- **Shutdown & Lifecycle Provisions:** Service processes are managed directly via the tooling rather than manual process matching or `kill`/`pkill` commands. To stop the control plane service, execute `bin/start_udmis stop`. Re-executing `bin/start_local` automatically stops and cleans up any existing background instances before starting fresh.
+- **Shutdown & Lifecycle Provisions:** Service processes are managed directly via the tooling rather than manual process matching or `kill`/`pkill` commands. To stop the local system infrastructure, execute `bin/start_local stop`. Re-executing `bin/start_local` automatically stops and cleans up any existing background instances before starting fresh.
 
 Upon successful startup, the local environment exposes the following connection parameters:
 - **Broker Endpoint:** `mqtt://localhost:46432` (or `ssl://localhost:46432` for mTLS)
@@ -301,9 +301,9 @@ bin/site_trigger update sites/udmi_site_model AHU-1 system 1.0.0 //mqtt/localhos
 ### 9.5. Hermetic Environment Teardown
 To tear down or stop running test infrastructure and DUT simulations in isolated or non-privileged environments, use the provided high-level tool commands:
 
-- **System Infrastructure Teardown:** Stop all local infrastructure services (such as the broker and registry plane) using the stop subcommand on the control service:
+- **System Infrastructure Teardown:** Stop all local infrastructure services (such as the broker, etcd, influxd database, and registry plane) using the stop subcommand on the local startup service:
   ```bash
-  bin/start_udmis stop
+  bin/start_local stop
   ```
 - **DUT Simulation Teardown:** Stop individual emulated devices using the stop subcommand followed by the device's unique identifier or serial number:
   ```bash
