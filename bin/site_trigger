@@ -82,9 +82,19 @@ if not registry_id:
   )
 
 # Parse connection spec
-url = urlparse(conn_spec)
+spec = conn_spec
+provider_ssl = False
+
+if spec.startswith("//"):
+  spec_body = spec[2:]
+  if "/" in spec_body:
+    provider, endpoint = spec_body.split("/", 1)
+    provider_ssl = provider in ("ssl", "mqtts", "tcps", "wss")
+    spec = f"mqtt://{endpoint}"
+
+url = urlparse(spec)
 host = url.hostname or "localhost"
-is_ssl = url.scheme in ("ssl", "mqtts", "tcps", "wss")
+is_ssl = provider_ssl or url.scheme in ("ssl", "mqtts", "tcps", "wss")
 port = url.port or (8883 if is_ssl else 1883)
 
 # Build model update payload adhering strictly to flat CloudModel schema
