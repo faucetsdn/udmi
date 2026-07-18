@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Site trigger utility to emulate database mutations and model updates."""
 from datetime import datetime, timezone
+import hashlib
 import json
 import os
 import subprocess
@@ -138,11 +139,33 @@ cmd = [
 if registry_id:
   cmd.extend(["-i", f"/uufi/{registry_id}/client"])
 
-# Add credentials if username/password are in conn_spec
+# Add credentials if username/password are in conn_spec,
+# otherwise derive from key if available.
 if url.username:
   cmd.extend(["-u", url.username])
-if url.password:
-  cmd.extend(["-P", url.password])
+  if url.password:
+    cmd.extend(["-P", url.password])
+else:
+  # Check if reflector/rsa_private.pkcs8 exists
+  key_path = os.path.join(site_path, "reflector", "rsa_private.pkcs8")
+  if os.path.exists(key_path):
+    try:
+      with open(key_path, "rb") as f:
+        key_bytes = f.read()
+      # Compute sha256 hex digest
+      sha256_hash = hashlib.sha256(key_bytes).hexdigest()
+      derived_password = sha256_hash[:8]
+      suffix = os.environ.get("UDMI_REGISTRY_SUFFIX", "")
+      registry_id_with_suffix = registry_id + suffix
+      derived_username = f"/r/UDMI-REFLECT/d/{registry_id_with_suffix}"
+      print(f"Using derived credentials for user: {derived_username}")
+      cmd.extend(["-u", derived_username])
+      cmd.extend(["-P", derived_password])
+    except OSError as e:
+      print(
+          f"Warning: Failed to derive credentials from key: {e}",
+          file=sys.stderr,
+      )
 
 # Add CA cert if SSL is used (or port 8883 or custom MQTT_PORT)
 env_mqtt_port = os.environ.get("MQTT_PORT")
