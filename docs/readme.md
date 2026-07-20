@@ -37,6 +37,13 @@ The following documents give a high level overview of UDMI:
 - [Validation Workflow](guides/workflow.md)
 - [UDMIS architecture](udmis/readme.md)
 
+## System Interfaces
+
+UDMI functions within three primary interfaces to manage devices, registries, and applications:
+*   **[Devices (UDMI proper)](specs/compliance.md):** Edge-side device-to-system interface used by physical or simulated on-premise hardware to report telemetry streams (`events`) and dynamically receive or acknowledge operational `config`.
+*   **[Internal Tools (Reflector)](specs/tech_stack.md):** Administrative database-to-system interface used by backend registration and synchronization tooling (such as `registrar`) to manage site models, provision cryptographic keys, and reconcile device records.
+*   **[Applications (UUFI)](specs/uufi.md):** App-to-system messaging interface used by external applications, dashboards, and operators to query system state, update model specifications, and command devices.
+
 ## Use Cases
 
 The essence behind UDMI is an automated mechanism for IoT system management. Many current

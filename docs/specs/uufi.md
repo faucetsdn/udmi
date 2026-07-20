@@ -6,6 +6,13 @@ The **Unified UDMI Functional Interface (UUFI)** defines a standardized messagin
 
 As an external interface specification, this document focuses solely on the public-facing contract: the exchange message formats, connectivity schemas, and the tools available to start or stop test environments. It **does not expose or document the underlying system internals** or implementation mechanisms (such as process IDs, internal databases, or local host execution steps), which are treated as private implementation details.
 
+## System Interfaces
+
+This document details the application-facing **[Applications (UUFI)](uufi.md)** interface, which represents one of three core system interfaces into the UDMIS ecosystem:
+*   **[Devices (UDMI proper)](compliance.md):** Edge-side device-to-system interface used by physical or simulated on-premise hardware to report telemetry streams (`events`) and dynamically receive or acknowledge operational `config`.
+*   **[Internal Tools (Reflector)](tech_stack.md):** Administrative database-to-system interface used by backend registration and synchronization tooling (such as `registrar`) to manage site models, provision cryptographic keys, and reconcile device records.
+*   **[Applications (UUFI)](uufi.md):** App-to-system messaging interface used by external applications, dashboards, and operators to query system state, update model specifications, and command devices.
+
 ## 1. Architecture
 
 UUFI utilizes a messaging transport where Clients and Systems interact via dedicated topics and subscriptions.
