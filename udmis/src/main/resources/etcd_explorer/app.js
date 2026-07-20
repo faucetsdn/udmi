@@ -8,6 +8,10 @@ let activeDevice = null;
 let activeProperty = null;
 let isUpdatingHash = false;
 
+function naturalCompare(a, b) {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initEventListeners();
@@ -161,7 +165,7 @@ async function loadRegistries() {
     const res = await fetch('/api/registries');
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    cachedRegistries = data.registries || [];
+    cachedRegistries = (data.registries || []).sort(naturalCompare);
     totalClusterDevices = data.totalDevicesCount !== undefined ? data.totalDevicesCount : 0;
     updateCounts();
     renderRegistriesList(cachedRegistries, activeRegistry);
@@ -217,7 +221,7 @@ async function loadDevices(registryId) {
     const res = await fetch(`/api/registries/${encodeURIComponent(registryId)}/devices`);
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    cachedDevices = data.devices || [];
+    cachedDevices = (data.devices || []).sort(naturalCompare);
     updateCounts();
     renderDevicesList(cachedDevices, activeDevice);
   } catch (err) {
@@ -308,8 +312,8 @@ function renderPropertiesTable(properties) {
   colgroup.appendChild(colVal);
   table.appendChild(colgroup);
 
-  const devProps = keys.filter(k => !k.startsWith('/c/'));
-  const colProps = keys.filter(k => k.startsWith('/c/'));
+  const devProps = keys.filter(k => !k.startsWith('/c/')).sort(naturalCompare);
+  const colProps = keys.filter(k => k.startsWith('/c/')).sort(naturalCompare);
 
   if (devProps.length > 0) {
     appendGroupHeader(table, 'Device Properties');

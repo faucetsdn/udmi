@@ -95,6 +95,33 @@ class EtcdExplorerServerTest {
   }
 
   @Test
+  void testGetDevicesNaturalOrdering() throws Exception {
+    when(mockEtcdProvider.getPrefixKeys("/r/site_registry/d/")).thenReturn(List.of(
+        "/r/site_registry/d/AA-1:numId",
+        "/r/site_registry/d/AA-10:numId",
+        "/r/site_registry/d/AA-2:numId",
+        "/r/site_registry/d/AA-9:numId",
+        "/r/site_registry/d/AB-1:numId",
+        "/r/site_registry/d/AB-10:numId",
+        "/r/site_registry/d/AB-2:numId"
+    ));
+
+    HttpRequest request = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl + "/api/registries/site_registry/devices"))
+        .GET()
+        .build();
+
+    HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+    assertEquals(200, response.statusCode());
+
+    Map<String, Object> body = JsonUtil.asMap(response.body());
+    @SuppressWarnings("unchecked")
+    List<String> devices = (List<String>) body.get("devices");
+    List<String> expected = List.of("AA-1", "AA-2", "AA-9", "AA-10", "AB-1", "AB-2", "AB-10");
+    assertEquals(expected, devices, "Devices should be returned in natural order");
+  }
+
+  @Test
   void testGetProperties() throws Exception {
     when(mockEtcdProvider.getPrefixEntries("/r/cloud_iot_registry/d/AHU-1:")).thenReturn(Map.of(
         "/r/cloud_iot_registry/d/AHU-1:numId", "12345"
