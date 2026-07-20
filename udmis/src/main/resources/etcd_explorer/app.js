@@ -321,7 +321,7 @@ function renderPropertiesTable(properties) {
   }
 
   if (colProps.length > 0) {
-    appendGroupHeader(table, 'Collections');
+    appendGroupHeader(table, `Collections (${colProps.length})`);
     colProps.forEach(k => appendPropertyRow(table, k, properties[k]));
   }
 
@@ -343,7 +343,7 @@ function appendPropertyRow(table, key, value) {
   tr.className = 'property-row';
   tr.dataset.key = key;
   tr.addEventListener('click', (e) => {
-    if (!e.target.classList.contains('copy-btn')) {
+    if (!e.target.classList.contains('copy-btn') && !e.target.classList.contains('device-link') && e.target.tagName !== 'A') {
       activeProperty = key;
       setHash(activeRegistry, activeDevice, key);
       highlightPropertyRow(key);
@@ -352,7 +352,36 @@ function appendPropertyRow(table, key, value) {
 
   const tdKey = document.createElement('td');
   tdKey.className = 'property-key';
-  tdKey.textContent = key;
+
+  let targetDeviceId = null;
+  if (key.startsWith('/c/') && key.includes(':')) {
+    const colonIdx = key.indexOf(':');
+    const potentialDev = key.substring(colonIdx + 1);
+    if (key.startsWith('/c/bound_devices:') || (cachedDevices && cachedDevices.includes(potentialDev))) {
+      targetDeviceId = potentialDev;
+    }
+  }
+
+  if (targetDeviceId && activeRegistry) {
+    const colonIdx = key.indexOf(':');
+    const prefixSpan = document.createElement('span');
+    prefixSpan.textContent = key.substring(0, colonIdx + 1);
+
+    const link = document.createElement('a');
+    link.href = `#/${encodeURIComponent(activeRegistry)}/${encodeURIComponent(targetDeviceId)}`;
+    link.className = 'device-link';
+    link.title = `Navigate to device ${targetDeviceId}`;
+    link.textContent = targetDeviceId;
+    link.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectDevice(targetDeviceId, true);
+    });
+
+    tdKey.appendChild(prefixSpan);
+    tdKey.appendChild(link);
+  } else {
+    tdKey.textContent = key;
+  }
 
   const tdVal = document.createElement('td');
   tdVal.className = 'property-val';
