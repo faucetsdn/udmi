@@ -418,7 +418,9 @@ public class ReflectProcessor extends ProcessorBase {
     switch (attributes.subFolder) {
       case UPDATE:
         return queryDeviceState(attributes);
-      // TODO: UNRESOLVED - When model/cloud is replaced by model/system, support SYSTEM subFolder here.
+      case SYSTEM:
+      // TODO: UNRESOLVED - When model/cloud is replaced by model/system,
+      // support SYSTEM subFolder here.
       case CLOUD:
         return reflectQueryCloud(attributes);
       default:

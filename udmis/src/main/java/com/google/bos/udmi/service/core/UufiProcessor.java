@@ -10,10 +10,13 @@ import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import java.util.Map;
 import java.util.Optional;
+import udmi.schema.CloudModel;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.Metadata;
+import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
@@ -154,9 +157,29 @@ public class UufiProcessor extends ProcessorBase {
   }
 
   private void handleUufiOutbound(Envelope envelope, Object message) {
+    Object outboundMessage = message;
+
+    if (envelope.subFolder == SubFolder.SYSTEM && message instanceof CloudModel) {
+      CloudModel cloudModel = (CloudModel) message;
+      String metadataStr = (cloudModel.metadata != null)
+          ? cloudModel.metadata.get("udmi_metadata") : null;
+      SystemModel systemModel = null;
+      if (metadataStr != null) {
+        Metadata metadata = convertTo(Metadata.class, metadataStr);
+        systemModel = metadata.system;
+      }
+      if (systemModel == null) {
+        systemModel = new SystemModel();
+      }
+      Map<String, Object> payloadMap = toMap(systemModel);
+      payloadMap.put("timestamp", envelope.publishTime);
+      payloadMap.put("version", Optional.ofNullable(cloudModel.version).orElse("1.5.2"));
+      outboundMessage = payloadMap;
+    }
+
     // Wrap system message for UUFI clients
     Map<String, Object> uufiMessage = toMap(envelope);
-    uufiMessage.put(PAYLOAD_KEY, message);
+    uufiMessage.put(PAYLOAD_KEY, outboundMessage);
     uufiMessage.put("principal", UdmiServicePod.INSTANCE_ID); // For loopback protection
 
     Envelope uufiEnvelope = new Envelope();

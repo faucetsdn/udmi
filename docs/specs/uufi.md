@@ -52,7 +52,7 @@ Format: `scheme://[user@]host[:port][/path]`
 - **Project Identity:** For the MQTT transport, the `projectId` field in the envelope SHOULD be treated as a general environment or project identifier. All components within a single UUFI session MUST use a consistent `projectId` (default: `vibrant`) to avoid ambiguity in message processing.
 - **System Model Service:**
   - **Query:** Clients publish a `query/system` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/system`.
-  - **Response (Model Reply):** System publishes the device system model to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`. Sourcing model updates from `[/{prefix}]/uufi/c/config/system` or other unscoped/registry-less topics is strictly prohibited.
+  - **Response (Model Reply):** System publishes the device system model to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`.
   - **Structure:** Uses standard flat **SystemModel** payloads addressed via device-scoped envelope attributes and topic paths (Section 5.1).
 - **State Query Service:**
   - **Query:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
@@ -183,9 +183,9 @@ To report a device's actual or currently running software subsystem version, imp
 | State Event | `state` | *varies* | Receive | |
 | Telemetry | `events` | `pointset` | Receive | |
 | Discovery | `events` | `discovery` | Receive | |
-| Model Query | `query` | `system` | Publish | Registry and device-scoped |
-| Model Update | `model` | `system` | Publish | Registry and device-scoped |
-| Model Reply | `model` | `system` | Receive | Registry and device-scoped (config/system is prohibited) |
+| System Model Query | `query` | `system` | Publish | Registry and device-scoped |
+| System Model Update | `model` | `system` | Publish | Registry and device-scoped |
+| System Model Reply | `model` | `system` | Receive | Registry and device-scoped |
 | State Query | `query` | `state` | Publish | |
 | Blobset Config | `config` | `blobset` | Publish | |
 | Blobset State | `state` | `blobset` | Receive | |
