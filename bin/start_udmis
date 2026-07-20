@@ -80,28 +80,40 @@ else
 fi
 
 # Default config preprocessing
-if [[ -z ${UDMIS_CONFIG:-} ]]; then
-    mkdir -p var
-    if [[ -f /root/var/local_pod.json ]]; then
-        SOURCE_POD_CONFIG=/root/var/local_pod.json
-        INCLUDE_PATH=/root/var/prod_pod.json
-    else
-        SOURCE_POD_CONFIG=$UDMIS_DIR/etc/local_pod.json
-        INCLUDE_PATH="$UDMI_ROOT/udmis/etc/prod_pod.json"
-    fi
-    ABS_CERT_DIR=$(realpath $CERT_DIR)
-    jq '.include = "'"$INCLUDE_PATH"'" |
-        .flow_defaults.ca_file = "'"$ABS_CERT_DIR/ca.crt"'" |
-        .flow_defaults.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
-        .flow_defaults.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
-        .flow_defaults.port = '"${MQTT_PORT:-8883}"' |
-        .iot_access.implicit.project_id = "'"${ETCD_SCHEME}"'://${ETCD_CLUSTER}:'"${ETCD_PORT}"'" |
-        .iot_access.implicit.endpoint.port = '"${MQTT_PORT:-8883}"' |
-        .iot_access.implicit.endpoint.ca_file = "'"$ABS_CERT_DIR/ca.crt"'" |
-        .iot_access.implicit.endpoint.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
-        .iot_access.implicit.endpoint.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
-        .iot_data.database.project_id = "'"${ETCD_SCHEME}"'://${ETCD_CLUSTER}:'"${ETCD_PORT}"'"' \
-        $SOURCE_POD_CONFIG | sponge var/local_pod.json
+mkdir -p var
+if [[ -f /root/var/local_pod.json ]]; then
+    SOURCE_POD_CONFIG=/root/var/local_pod.json
+    INCLUDE_PATH=/root/var/prod_pod.json
+else
+    SOURCE_POD_CONFIG=$UDMIS_DIR/etc/local_pod.json
+    INCLUDE_PATH="$UDMI_ROOT/udmis/etc/prod_pod.json"
+fi
+ABS_CERT_DIR=$(realpath $CERT_DIR)
+jq '.include = "'"$INCLUDE_PATH"'" |
+    .flow_defaults.ca_file = "'"$ABS_CERT_DIR/ca.crt"'" |
+    .flow_defaults.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
+    .flow_defaults.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
+    .flow_defaults.port = '"${MQTT_PORT:-8883}"' |
+    .iot_access.implicit.project_id = "'"${ETCD_SCHEME}"'://${ETCD_CLUSTER}:'"${ETCD_PORT}"'" |
+    .iot_access.implicit.endpoint.port = '"${MQTT_PORT:-8883}"' |
+    .iot_access.implicit.endpoint.ca_file = "'"$ABS_CERT_DIR/ca.crt"'" |
+    .iot_access.implicit.endpoint.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
+    .iot_access.implicit.endpoint.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
+    .iot_data.database.project_id = "'"${ETCD_SCHEME}"'://${ETCD_CLUSTER}:'"${ETCD_PORT}"'"' \
+    $SOURCE_POD_CONFIG | sponge var/local_pod.json
+
+if [[ -f /root/var/dynamic_pod.json ]]; then
+    SOURCE_DYNAMIC_CONFIG=/root/var/dynamic_pod.json
+else
+    SOURCE_DYNAMIC_CONFIG=$UDMIS_DIR/etc/dynamic_pod.json
+fi
+if [[ -f $SOURCE_DYNAMIC_CONFIG ]]; then
+    jq '.include = "local_pod.json"' $SOURCE_DYNAMIC_CONFIG | sponge var/dynamic_pod.json
+fi
+
+if [[ ${UDMIS_CONFIG:-} == dynamic || ${UDMIS_CONFIG:-} == *dynamic_pod.json ]]; then
+    UDMIS_CONFIG=var/dynamic_pod.json
+elif [[ -z ${UDMIS_CONFIG:-} ]]; then
     UDMIS_CONFIG=var/local_pod.json
 fi
 
