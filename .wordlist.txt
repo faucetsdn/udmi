@@ -243,6 +243,7 @@ subTypes
 swapped
 SWE
 systemd
+SystemModel
 tagabase
 Tagabase
 tcp

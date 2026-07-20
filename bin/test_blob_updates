@@ -67,7 +67,7 @@ else
     fail "Blob success NOT detected."
 fi
 
-if jq -e --arg gen "$generation_payload" '.blobset.blobs.pubber_module.phase == "final" and .blobset.blobs.pubber_module.generation == $gen' pubber/out/state.json > /dev/null; then
+if jq -e --arg gen "$generation_payload" '.blobset.blobs.system.phase == "final" and .blobset.blobs.system.generation == $gen' pubber/out/state.json > /dev/null; then
     log "Blob state phase: FINAL verified in state"
 else
     fail "Blob state phase: FINAL NOT found in state"
