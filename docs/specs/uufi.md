@@ -50,10 +50,10 @@ Format: `scheme://[user@]host[:port][/path]`
   - **Standardized Client ID Format:** Client IDs MUST be formatted strictly as `[/{prefix}]/{registry_id}/{client_id}`. If the registry is unknown or not applicable, the Client ID MUST be formatted as `[/{prefix}]/{client_id}`.
   - **Uniqueness and Nonces:** To ensure absolute uniqueness and prevent session hijacking or connection drops when multiple clients share a broker, implementations MAY append a random, unique alphanumeric suffix (e.g., `_sess123` or a secure random nonce) to the formatted Client ID.
 - **Project Identity:** For the MQTT transport, the `projectId` field in the envelope SHOULD be treated as a general environment or project identifier. All components within a single UUFI session MUST use a consistent `projectId` (default: `vibrant`) to avoid ambiguity in message processing.
-- **Cloud Model Service:**
-  - **Query:** Clients publish a `query/cloud` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/cloud`.
-  - **Response (Model Reply):** System publishes the device cloud model to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/cloud`. Sourcing model updates from `[/{prefix}]/uufi/c/config/cloud` or other unscoped/registry-less topics is strictly prohibited.
-  - **Structure:** Uses standard flat **CloudModel** payloads addressed via device-scoped envelope attributes and topic paths (Section 5.1).
+- **System Model Service:**
+  - **Query:** Clients publish a `query/system` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/system`.
+  - **Response (Model Reply):** System publishes the device system model to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`. Sourcing model updates from `[/{prefix}]/uufi/c/config/system` or other unscoped/registry-less topics is strictly prohibited.
+  - **Structure:** Uses standard flat **SystemModel** payloads addressed via device-scoped envelope attributes and topic paths (Section 5.1).
 - **State Query Service:**
   - **Query:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
   - **Response:** System immediately replies by publishing the last known cached device State report on the device's state topic `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/state/blobset` (or the corresponding state topic matching the query's subFolder).
@@ -146,22 +146,22 @@ To ensure protocol compatibility, data integrity, and protection against replay 
   All configuration envelopes (at the envelope metadata level) and their inner payloads (at the payload root level) MUST include a standard `"version"` attribute matching the UDMI version schema (e.g., `"1.5.2"`).
   Receivers MUST parse and validate this version attribute to guarantee protocol compatibility. Any configuration message that lacks this attribute or contains an invalid or unparseable version schema MUST be treated as non-compliant, rejected immediately, and failed.
 
-## 5. Cloud Model Operations
+## 5. System Model Operations
 
 ### 5.1. Schema and Addressing
 - **Operation:** `READ`, `CREATE`, `UPDATE`, `DELETE`, `BIND`, `UNBIND`.
 - **Addressing (Topic & Envelope Attributes):**
-  To ensure consistent routing and avoid parsing complexity, all cloud model updates, queries, and replies MUST NOT use a nested JSON registries hierarchy (such as `"registries"` or `"devices"`) inside the payload. Instead, the registry ID and device ID MUST be specified strictly as message attributes (envelope level) or MQTT topic path segments:
-  - **MQTT Topic:** `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/cloud`
-  - **PubSub Attributes:** Envelope attributes MUST include `deviceRegistryId` and `deviceId` (along with `subFolder` set to `"cloud"` and `subType` set to `"model"` or `"query"`).
+  To ensure consistent routing and avoid parsing complexity, all system model updates, queries, and replies MUST NOT use a nested JSON registries hierarchy (such as `"registries"` or `"devices"`) inside the payload. Instead, the registry ID and device ID MUST be specified strictly as message attributes (envelope level) or MQTT topic path segments:
+  - **MQTT Topic:** `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`
+  - **PubSub Attributes:** Envelope attributes MUST include `deviceRegistryId` and `deviceId` (along with `subFolder` set to `"system"` and `subType` set to `"model"` or `"query"`).
 - **Payload Structure:**
-  The inner message payload MUST follow the flat, unnested `CloudModel` schema representing only the specified device (conforming directly to `model_cloud.json`).
+  The inner message payload MUST follow the flat, unnested `SystemModel` schema representing only the specified device (conforming directly to `model_system.json`).
 - **Prohibited Formats:** 
-  - Nested payload hierarchies (e.g., nesting under a `"registries"`, `"devices"`, or `"cloud"` root key inside the JSON payload) are strictly prohibited.
-  - Sourcing or publishing cloud model updates from `/uufi/c/config/cloud` or any other unscoped/registry-less topics is strictly prohibited.
+  - Nested payload hierarchies (e.g., nesting under a `"registries"`, `"devices"`, or `"system"` root key inside the JSON payload) are strictly prohibited.
+  - Sourcing or publishing system model updates from `/uufi/c/config/system` or any other unscoped/registry-less topics is strictly prohibited.
 
 ### 5.2. Update Semantics (Partial Merge)
-The `UPDATE` operation for the `cloud` subfolder is a partial merge at the device subsystem level. Existing fields not in the payload MUST NOT be modified.
+The `UPDATE` operation for the `system` subfolder is a partial merge at the device subsystem level. Existing fields not in the payload MUST NOT be modified.
 
 ### 5.3. Device System Configuration
 To configure a device's expected or desired software subsystem version, implementations MUST adhere to exactly ONE standard schema:
@@ -183,9 +183,9 @@ To report a device's actual or currently running software subsystem version, imp
 | State Event | `state` | *varies* | Receive | |
 | Telemetry | `events` | `pointset` | Receive | |
 | Discovery | `events` | `discovery` | Receive | |
-| Model Query | `query` | `cloud` | Publish | Registry and device-scoped |
-| Model Update | `model` | `cloud` | Publish | Registry and device-scoped |
-| Model Reply | `model` | `cloud` | Receive | Registry and device-scoped (config/cloud is prohibited) |
+| Model Query | `query` | `system` | Publish | Registry and device-scoped |
+| Model Update | `model` | `system` | Publish | Registry and device-scoped |
+| Model Reply | `model` | `system` | Receive | Registry and device-scoped (config/system is prohibited) |
 | State Query | `query` | `state` | Publish | |
 | Blobset Config | `config` | `blobset` | Publish | |
 | Blobset State | `state` | `blobset` | Receive | |
@@ -534,12 +534,12 @@ This appendix references the formal JSON schemas and provides message examples f
 }
 ```
 
-### A.1.7. Cloud Model Update (PubSub)
+### A.1.7. System Model Update (PubSub)
 
 **Attributes:**
 ```json
 {
-  "subFolder": "cloud",
+  "subFolder": "system",
   "subType": "model",
   "transactionId": "UUFI:sess123:004",
   "source": "orchestrator",
@@ -554,21 +554,15 @@ This appendix references the formal JSON schemas and provides message examples f
 {
   "version": "1.5.2",
   "timestamp": "2026-04-29T10:15:00Z",
-  "auth_type": "RS256",
-  "blocked": false,
-  "config": {
-    "system": {
-      "software": {
+  "software": {
         "system": "2.1.0"
-      }
-    }
   }
 }
 ```
 
-### A.1.8. Cloud Model Update (MQTT)
+### A.1.8. System Model Update (MQTT)
 
-**Topic:** `/uufi/r/reg-1/d/dev-1/c/model/cloud`
+**Topic:** `/uufi/r/reg-1/d/dev-1/c/model/system`
 
 **Payload:**
 ```json
@@ -581,14 +575,8 @@ This appendix references the formal JSON schemas and provides message examples f
   "payload": {
     "version": "1.5.2",
     "timestamp": "2026-04-29T10:15:00Z",
-    "auth_type": "RS256",
-    "blocked": false,
-    "config": {
-      "system": {
-        "software": {
-          "system": "2.1.0"
-        }
-      }
+    "software": {
+      "system": "2.1.0"
     }
   }
 }
@@ -603,6 +591,6 @@ UUFI implementations MUST adhere to the following schemas from the UDMI reposito
 | **Message Envelope** | `envelope.json` |
 | **Handshake State** | `state_udmi.json` |
 | **Handshake Config** | `config_udmi.json` |
-| **Cloud Model** | `model_cloud.json` |
+| **System Model** | `model_system.json` |
 | **Blobset Config** | `config_blobset.json` |
 | **Blobset State** | `state_blobset.json` |
