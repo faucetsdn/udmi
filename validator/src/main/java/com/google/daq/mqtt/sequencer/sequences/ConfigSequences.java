@@ -135,6 +135,7 @@ public class ConfigSequences extends SequenceBase {
   @ValidateSchema(SubFolder.SYSTEM)
   @DefaultLogLevel(Level.INFO)
   public void broken_config() {
+    allowDeviceStateChange("system.operation.");
     expectedStatusLevel(Level.ERROR);
 
     deviceConfig.system.min_loglevel = Level.DEBUG.value();

@@ -121,22 +121,6 @@ public class MessageUpgrader {
       throw new IllegalArgumentException("Starting major version " + major);
     }
 
-    if (STATE_SCHEMA.equals(schemaName) && !message.has("system")) {
-      java.util.List<String> systemFields = java.util.Arrays.asList(
-          "hardware", "software", "operation", "serial_no", "status", "last_config");
-      boolean hasSystemFields = systemFields.stream().anyMatch(message::has);
-      if (hasSystemFields) {
-        ObjectNode system = new ObjectNode(NODE_FACTORY);
-        for (String field : systemFields) {
-          JsonNode value = message.remove(field);
-          if (value != null) {
-            system.set(field, value);
-          }
-        }
-        message.set("system", system);
-      }
-    }
-
     boolean upgraded = false;
 
     if (forceUpgrade || minor < 0) {
