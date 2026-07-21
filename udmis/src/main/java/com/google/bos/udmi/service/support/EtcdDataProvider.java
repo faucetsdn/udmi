@@ -371,6 +371,21 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
       deleteEntry(getKeyPath(key));
     }
 
+    @Override
+    public boolean hasSubCollections() {
+      checkState(deviceId != null && registryId != null,
+          "sub-collections check requires registry and device");
+      String subCollectionPrefix =
+          REGISTRY_PATH + registryId + DEVICE_PATH + deviceId + COLLECT_PATH;
+      try {
+        GetResponse response = kvClient.get(bytes(subCollectionPrefix), LIST_OPT)
+            .get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+        return response.getCount() > 0;
+      } catch (Exception e) {
+        throw new RuntimeException("While checking sub-collections for " + toString(), e);
+      }
+    }
+
     public Map<String, String> entries() {
       return getEntries(getKeyPath(""));
     }
