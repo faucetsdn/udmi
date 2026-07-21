@@ -1,0 +1,144 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $(realpath $0))/..
+INVOCATION_DIR="$PWD"
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: $(basename $0) [--local|--from-workspace] [site_model_path] [docker-compose-options...]"
+    echo ""
+    echo "Prepares prerequisites (WAR build, certificates, .env, directories)"
+    echo "and brings up the UDMI Bridgehead architecture using Docker Compose."
+    echo ""
+    echo "Options / Arguments:"
+    echo "  --local, --from-workspace Build base container images (udmis, validator, pubber)"
+    echo "                          from local workspace source instead of using ghcr.io latest."
+    echo "  site_model_path         (Optional) Path to site model directory."
+    echo "                          Overrides SITE_MODEL_PATH env variable."
+    echo "  -h, --help              Show this help message and exit."
+    echo ""
+    echo "Environment Variables:"
+    echo "  SITE_MODEL_PATH         Path to site model directory (default: sites/udmi_site_model)."
+    echo "  UDMIS_BASE_IMAGE        Base image for udmis (default: ghcr.io/faucetsdn/udmi:udmis-latest)."
+    echo "  VALIDATOR_BASE_IMAGE    Base image for validator (default: ghcr.io/faucetsdn/udmi:validator-latest)."
+    echo ""
+    echo "Examples:"
+    echo "  $(basename $0)                             # Default: uses ghcr.io latest images"
+    echo "  $(basename $0) --local                     # Build base images from workspace source"
+    echo "  $(basename $0) --local sites/udmi_site_model"
+    exit 0
+fi
+
+# Parse options
+LOCAL_BUILD=false
+SITE_MODEL_ARG=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --local|--from-workspace)
+            LOCAL_BUILD=true
+            shift
+            ;;
+        *)
+            if [[ -z "$SITE_MODEL_ARG" && "$1" != -* ]]; then
+                SITE_MODEL_ARG="$1"
+                shift
+            else
+                break
+            fi
+            ;;
+    esac
+done
+
+# Resolve site model path from positional argument or environment variable
+if [[ -n "$SITE_MODEL_ARG" ]]; then
+    SITE_MODEL_PATH="$SITE_MODEL_ARG"
+fi
+
+if [[ -n "${SITE_MODEL_PATH:-}" ]]; then
+    if [[ "$SITE_MODEL_PATH" != /* ]]; then
+        SITE_MODEL_PATH="$INVOCATION_DIR/$SITE_MODEL_PATH"
+    fi
+    SITE_MODEL_PATH=$(realpath -m "$SITE_MODEL_PATH")
+else
+    SITE_MODEL_PATH="$UDMI_ROOT/sites/udmi_site_model"
+fi
+export SITE_MODEL_PATH
+
+if [[ "$LOCAL_BUILD" == "true" ]]; then
+    echo "Building base container images from local workspace source..."
+    "$UDMI_ROOT/bin/container" validator build --no-check
+    "$UDMI_ROOT/bin/container" udmis build --no-check
+    "$UDMI_ROOT/bin/container" pubber build --no-check
+    export UDMIS_BASE_IMAGE=udmis:latest
+    export VALIDATOR_BASE_IMAGE=validator:latest
+    export PUBBER_IMAGE=pubber:latest
+fi
+
+cd "$UDMI_ROOT/bridgehead"
+
+echo "=== Setting up Bridgehead prerequisites ==="
+
+# 1. Create var directories on host
+echo "Creating var directories..."
+mkdir -p var/mosquitto/data var/mosquitto/log var/mosquitto/certs var/etcd var/tmp var/sshKeys var/influxdb-storage
+
+# 2. Verify site model exists
+if [[ ! -d "$SITE_MODEL_PATH" ]]; then
+    fail "Site model directory '$SITE_MODEL_PATH' does not exist."
+fi
+
+# Ensure reflector certificate exists if site model is available
+if [[ -d "$SITE_MODEL_PATH/reflector" ]]; then
+    if [[ ! -f "$SITE_MODEL_PATH/reflector/rsa_private.crt" && -f "$SITE_MODEL_PATH/reflector/rsa_private.pem" ]]; then
+        echo "Generating X.509 certificate for reflector client..."
+        openssl req -x509 -new -nodes -key "$SITE_MODEL_PATH/reflector/rsa_private.pem" -sha256 -days 3650 -out "$SITE_MODEL_PATH/reflector/rsa_private.crt" -subj "/CN=UDMI-reflector" || true
+    fi
+    if [[ ! -f "$SITE_MODEL_PATH/reflector/ca.crt" && -f "$SITE_MODEL_PATH/reflector/rsa_private.crt" ]]; then
+        cp "$SITE_MODEL_PATH/reflector/rsa_private.crt" "$SITE_MODEL_PATH/reflector/ca.crt"
+    fi
+fi
+
+mkdir -p "$SITE_MODEL_PATH/out"
+
+# 3. Setup .env if missing
+if [[ ! -f .env ]]; then
+    echo "Generating .env file..."
+    HOST_IP=$(hostname -I | awk '{print $1}')
+    cat <<EOF > .env
+HOST_IP=${HOST_IP:-127.0.0.1}
+SITE_MODEL_PATH=${SITE_MODEL_PATH}
+AUTH_USER=scrumptious
+AUTH_PASS=aardvark
+SERV_USER=rocket
+SERV_PASS=monkey
+INFLUXDB_TOKEN=$(openssl rand -hex 32)
+INFLUX_USER=bridgehead
+INFLUX_PASSWORD=password
+GRAFANA_USER=bridgehead
+GRAFANA_PASSWORD=password
+EOF
+    echo ".env created successfully."
+fi
+
+# 4. Build Management UI WAR file (udmis/bridgeheadManager.war)
+echo "Building Management UI (bridgeheadManager.war)..."
+if ! command -v javac &>/dev/null; then
+    fail "'javac' is required to build Management UI, but it was not found in PATH. Please install Java JDK."
+fi
+if ! command -v jar &>/dev/null; then
+    fail "'jar' is required to package Management UI, but it was not found in PATH. Please install Java JDK."
+fi
+
+mkdir -p udmis/UI/ManagementWebapp/webapp/WEB-INF/classes
+javac -cp "udmis/UI/ManagementWebapp/webapp/WEB-INF/lib/*" -d udmis/UI/ManagementWebapp/webapp/WEB-INF/classes udmis/UI/ManagementWebapp/src/webapp/*.java udmis/UI/ManagementWebapp/src/webapp/mqtt/*.java
+jar -cf udmis/bridgeheadManager.war -C udmis/UI/ManagementWebapp/webapp .
+
+echo "Management UI built successfully."
+
+# 5. Bring up Docker compose
+echo "Starting bridgehead services via docker compose (Site model: $SITE_MODEL_PATH)..."
+docker compose up -d --build "$@"
+
+echo "=== Bridgehead deployment started successfully ==="

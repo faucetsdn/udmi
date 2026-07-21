@@ -1,4 +1,5 @@
-FROM ghcr.io/faucetsdn/udmi:udmis-latest AS udmi 
+ARG UDMIS_BASE_IMAGE=ghcr.io/faucetsdn/udmi:udmis-latest
+FROM ${UDMIS_BASE_IMAGE} AS udmi 
 FROM eclipse-mosquitto:latest
 
 RUN apk add --no-cache bash jq sudo git mosquitto mosquitto-clients openssl sed

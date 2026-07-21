@@ -261,6 +261,10 @@ jobs:
           bin/pull_messages $TARGET_PROJECT > out/message_capture.log 2>&1 &
       - name: bin/test_etcd_prerun
         run: bin/test_etcd_prerun
+      - name: bin/test_influx_prerun
+        run: bin/test_influx_prerun
+      - name: bin/test_postgresql_prerun
+        run: bin/test_postgresql_prerun
       - name: bin/test_mosquitto
         run: bin/test_mosquitto
       - name: bin/test_regclean
@@ -275,6 +279,10 @@ jobs:
         run: bin/test_udmis
       - name: bin/test_etcd_postrun
         run: bin/test_etcd_postrun
+      - name: bin/test_influx_postrun
+        run: bin/test_influx_postrun
+      - name: bin/test_postgresql_postrun
+        run: bin/test_postgresql_postrun
       - name: mosquitto debug
         if: ${{ !cancelled() }}
         run: |
@@ -556,6 +564,42 @@ jobs:
           cd clientlib/python
           poetry run pylint src
 
+  bridgehead:
+    name: Bridgehead Test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Setup Base
+        run: bin/setup_base
+      - name: Run Bridgehead Test
+        run: |
+          bridgehead/tests/test_bridgehead
+      - name: udmis.log
+        if: ${{ !cancelled() }}
+        run: cat out/bridgehead_udmis.log || true
+      - name: validator.log
+        if: ${{ !cancelled() }}
+        run: cat out/bridgehead_validator.log || true
+      - name: pubber.log
+        if: ${{ !cancelled() }}
+        run: cat out/bridgehead_pubber.log || true
+      - name: ahu1_exceptions.txt
+        if: ${{ !cancelled() }}
+        run: cat out/bridgehead_ahu1_exceptions.txt || true
+      - name: Upload logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: bridgehead-logs
+          path: |
+            bridgehead/var/mosquitto/log/
+            out/bridgehead_*
+
   openbridge:
     name: Openbridge Test
     runs-on: ubuntu-24.04
@@ -578,28 +622,3 @@ jobs:
           name: openbridge-logs
           path: |
             out/
-
-  # Temporarily disabled until the test is fixed
-  # bridgehead:
-  #   name: Bridgehead Test
-  #   runs-on: ubuntu-24.04
-  #   timeout-minutes: 20
-  #   steps:
-  #     - uses: actions/checkout@v6
-  #     - uses: actions/setup-java@v5
-  #       with:
-  #         distribution: 'temurin'
-  #         java-version: '21'
-  #     - name: Setup Base
-  #       run: bin/setup_base
-  #     - name: Run Bridgehead Test
-  #       run: |
-  #         bridgehead/tests/test_bridgehead
-  #     - name: Upload logs
-  #       if: ${{ !cancelled() }}
-  #       uses: actions/upload-artifact@v7
-  #       with:
-  #         name: bridgehead-logs
-  #         path: |
-  #           bridgehead/var/mosquitto/log/
-  #           bridgehead/var/tmp/udmis.log

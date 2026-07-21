@@ -9,6 +9,8 @@ import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.base.Splitter;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.protobuf.ByteString;
@@ -86,11 +88,20 @@ public class MqttToPubSubBridge {
   private static final Pattern TOPIC_PATTERN = Pattern.compile("/r/([^/]+)/d/([^/]+)/?(.*)");
   private static final Logger logger = LoggerFactory.getLogger(MqttToPubSubBridge.class);
 
-  private static final int MAX_QUEUE_SIZE = 99;
-  private static final int NUM_THREADS = Runtime.getRuntime().availableProcessors() * 2;
+  private static final int MAX_QUEUE_SIZE = 1000;
+  private static final int NUM_THREADS = 24;
+
+  private static final Cache<String, String> numIdCache = CacheBuilder.newBuilder()
+      .expireAfterWrite(1, TimeUnit.MINUTES)
+      .maximumSize(10000)
+      .build();
 
   private final ThreadPoolExecutor executor;
   private volatile boolean tripped = false;
+
+  static void clearCacheForTest() {
+    numIdCache.invalidateAll();
+  }
 
   /**
    * Initializes a new instance of the bridge, configuring the underlying executor.
@@ -101,7 +112,7 @@ public class MqttToPubSubBridge {
         0L, TimeUnit.MILLISECONDS,
         new ArrayBlockingQueue<>(MAX_QUEUE_SIZE),
         new ThreadFactoryBuilder().setNameFormat("mqtt-bridge-%d").setDaemon(true).build(),
-        new ThreadPoolExecutor.CallerRunsPolicy());
+        new ThreadPoolExecutor.AbortPolicy());
   }
 
   /**
@@ -177,7 +188,8 @@ public class MqttToPubSubBridge {
     String mqttClientCertPath = commandLine.getOptionValue("mqtt_client_cert_path");
     String mqttClientKeyPath = commandLine.getOptionValue("mqtt_client_key_path");
     String etcdTarget = commandLine.getOptionValue("etcd_target");
-    String etcdOptions = commandLine.getOptionValue("etcd_options");
+    String etcdOptions = getEtcdOptions(commandLine);
+
     String sourceAttribute = commandLine.getOptionValue("source_attribute", "bridge");
     String sharedSubscription = commandLine.getOptionValue("shared_subscription");
 
@@ -279,7 +291,7 @@ public class MqttToPubSubBridge {
     }
   }
 
-  private static CommandLine parseArgs(String[] args) throws ParseException {
+  static CommandLine parseArgs(String[] args) throws ParseException {
     Options options = new Options();
     options.addOption(null, "mqtt_broker_url", true, "MQTT broker URL.");
     options.addOption(null, "mqtt_subscription_topic", true, "MQTT subscription topic.");
@@ -296,6 +308,11 @@ public class MqttToPubSubBridge {
     options.addOption(null, "mqtt_client_key_path", true, "Path to client private key for TLS.");
     options.addOption(null, "etcd_target", true, "etcd endpoint URL.");
     options.addOption(null, "etcd_options", true, "etcd provider options (comma-separated).");
+    options.addOption(null, "etcd_ca_path", true, "Path to CA certificate for etcd TLS.");
+    options.addOption(null, "etcd_client_cert_path", true,
+        "Path to client certificate for etcd TLS.");
+    options.addOption(null, "etcd_client_key_path", true,
+        "Path to client private key for etcd TLS.");
     options.addOption(null, "source_attribute", true, "Value for the source attribute.");
     options.addOption(null, "shared_subscription", true, "Shared subscription name.");
     options.addOption("h", "help", false, "Print usage info.");
@@ -310,6 +327,38 @@ public class MqttToPubSubBridge {
     }
 
     return commandLine;
+  }
+
+  static String getEtcdOptions(CommandLine commandLine) {
+    String etcdTarget = commandLine.getOptionValue("etcd_target");
+    if (etcdTarget == null) {
+      return null;
+    }
+    String etcdOptions = commandLine.getOptionValue("etcd_options");
+    String etcdCaPath = commandLine.getOptionValue("etcd_ca_path");
+    String etcdClientCertPath = commandLine.getOptionValue("etcd_client_cert_path");
+    String etcdClientKeyPath = commandLine.getOptionValue("etcd_client_key_path");
+
+    StringBuilder optionsBuilder = new StringBuilder(etcdOptions != null ? etcdOptions : "");
+    if (etcdCaPath != null) {
+      if (optionsBuilder.length() > 0) {
+        optionsBuilder.append(",");
+      }
+      optionsBuilder.append("ca_file=").append(etcdCaPath);
+    }
+    if (etcdClientCertPath != null) {
+      if (optionsBuilder.length() > 0) {
+        optionsBuilder.append(",");
+      }
+      optionsBuilder.append("cert_file=").append(etcdClientCertPath);
+    }
+    if (etcdClientKeyPath != null) {
+      if (optionsBuilder.length() > 0) {
+        optionsBuilder.append(",");
+      }
+      optionsBuilder.append("key_file=").append(etcdClientKeyPath);
+    }
+    return optionsBuilder.toString();
   }
 
   /**
@@ -624,6 +673,13 @@ public class MqttToPubSubBridge {
     if (etcdProvider == null || "unknown".equals(registryId) || "unknown".equals(deviceId)) {
       return null;
     }
+
+    String cacheKey = registryId + "/" + deviceId;
+    String cachedNumId = numIdCache.getIfPresent(cacheKey);
+    if (cachedNumId != null) {
+      return cachedNumId.isEmpty() ? null : cachedNumId;
+    }
+
     try {
       String numId = etcdProvider.ref()
           .registry(registryId)
@@ -631,14 +687,17 @@ public class MqttToPubSubBridge {
           .get("num_id");
       if (numId != null) {
         logger.debug("Found numId {} in etcd for device {}/{}", numId, registryId, deviceId);
+        numIdCache.put(cacheKey, numId);
       } else {
         logger.debug("numId not found in etcd for device {}/{}", registryId, deviceId);
+        numIdCache.put(cacheKey, ""); // Cache empty string for negative lookups
       }
       return numId;
     } catch (Exception e) {
       // etcd returning a device ID is CLEAN for a NULL/No Value - not an error case
       logger.debug("No numId value or error reading from etcd for device {}/{}",
           registryId, deviceId);
+      numIdCache.put(cacheKey, ""); // Cache empty string for negative lookups
       return null;
     }
   }

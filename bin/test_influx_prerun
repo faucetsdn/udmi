@@ -1,0 +1,7 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+
+source $ROOT/etc/shell_common.sh
+
+$ROOT/udmis/bin/influxctl ping

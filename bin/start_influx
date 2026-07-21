@@ -1,15 +1,75 @@
 #!/bin/bash -e
 
-# https://lucassardois.medium.com/handling-iot-data-with-mqtt-telegraf-influxdb-and-grafana-5a431480217
+IMAGE=influxdb:v2.7.1
 
-docker run --name influxdb \
-       -v $PWD/influxdb-data:/var/lib/influxdb \
-       influxdb
+UDMI_ROOT=$(dirname "$0")/..
+BINDIR="${UDMI_ROOT}/udmis/bin/influx_bin"
 
-docker run --rm --name telegraf \
-       -v $PWD/telegraf.conf:/etc/telegraf/telegraf.conf:ro \
-       telegraf
-  
-docker run -d -p 3000:3000 --name grafana \
-       -v $PWD/grafana-data:/var/lib/grafana \
-       grafana/grafana
+if [[ ! -f "$BINDIR/influxd" ]]; then
+    echo "influxd not found in $BINDIR. Attempting to download via influxctl..."
+    "${UDMI_ROOT}/udmis/bin/influxctl" version || true
+fi
+
+if [[ ! -f "$BINDIR/influxd" ]]; then
+    echo "Error: influxd executable not found at $BINDIR/influxd" >&2
+    exit 1
+fi
+
+INFLUX_LOG=out/influx.log
+
+echo pwd: $(pwd)
+mkdir -p out var/influx
+
+INFLUX_PID_FILE=var/influx/influxd.pid
+if [[ -f $INFLUX_PID_FILE ]]; then
+    old_pid=$(cat $INFLUX_PID_FILE)
+    if ps -p $old_pid > /dev/null 2>&1; then
+        echo Killing existing local influxd pid $old_pid...
+        kill $old_pid || true
+        sleep 1
+    fi
+else
+    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+        old_pid=$(ps ax | fgrep influxd | fgrep -v grep | awk '{print $1}') || true
+        if [[ -n $old_pid ]]; then
+            echo Killing existing influxd pid $old_pid...
+            kill $old_pid || true
+        fi
+    fi
+fi
+
+$BINDIR/influxd version
+
+rm -rf var/influx/*
+mkdir -p var/influx/engine
+
+influx_port=${INFLUX_PORT:-8086}
+
+nohup $BINDIR/influxd \
+             --http-bind-address=0.0.0.0:${influx_port} \
+             --engine-path var/influx/engine \
+             --bolt-path var/influx/influxd.bolt \
+             --sqlite-path var/influx/influxd.sqlite \
+             > $INFLUX_LOG 2>&1 &
+INFLUX_PID=$!
+echo $INFLUX_PID > $INFLUX_PID_FILE
+
+echo Waiting 10s for influxd to start on port ${influx_port}, log in $INFLUX_LOG
+sleep 10
+[[ -d /proc/$INFLUX_PID ]] || (cat $INFLUX_LOG && echo error starting influxd && false)
+
+echo Initializing InfluxDB default organization and bucket...
+INFLUX_USER=${INFLUX_USER:-bridgehead}
+INFLUX_PASSWORD=${INFLUX_PASSWORD:-password}
+INFLUXDB_ORG=${INFLUXDB_ORG:-bridgehead}
+INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home}
+INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-test-influx-token-12345}
+
+udmis/bin/influxctl setup --force --name default \
+    --username "$INFLUX_USER" \
+    --password "$INFLUX_PASSWORD" \
+    --org "$INFLUXDB_ORG" \
+    --bucket "$INFLUXDB_BUCKET" \
+    --token "$INFLUXDB_TOKEN" || true
+
+echo Completed influxd startup.
