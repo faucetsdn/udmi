@@ -159,6 +159,68 @@ class ImplicitIotAccessProviderTest {
         eq("/r/test-reg/d/proxy-device-4"));
   }
 
+  @Test
+  void testUpdateConfigOnNewlyCreatedDevice() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    udmi.schema.Envelope envelope = new udmi.schema.Envelope();
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    envelope.deviceId = TEST_DEVICE;
+    String configPayload = "{\"foo\":\"bar\"}";
+    provider.updateConfig(envelope, configPayload, 1L);
+
+    Map.Entry<Long, String> fetched = provider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+    org.junit.jupiter.api.Assertions.assertEquals(2L, fetched.getKey(),
+        "incremented version mismatch");
+    org.junit.jupiter.api.Assertions.assertEquals(configPayload, fetched.getValue(),
+        "config payload mismatch");
+  }
+
+  @Test
+  void testCreateDeviceDoesNotWipeExistingConfig() {
+    String existingConfig = "{\"existing\":true}";
+    store.put("r/test-reg/d/test-dev:last_config", existingConfig);
+    store.put("r/test-reg/d/test-dev:config_ver", "5");
+
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    Map.Entry<Long, String> fetched = provider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+    org.junit.jupiter.api.Assertions.assertEquals(5L, fetched.getKey(),
+        "preserved config version mismatch");
+    org.junit.jupiter.api.Assertions.assertEquals(existingConfig, fetched.getValue(),
+        "preserved config payload mismatch");
+  }
+
+  @Test
+  void testCreateDeviceSeedsUdmiConfig() {
+    String seedConfig = "{\"initial\":true}";
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.metadata = Map.of(com.google.udmi.util.MetadataMapKeys.UDMI_CONFIG, seedConfig);
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    Map.Entry<Long, String> fetched = provider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+    org.junit.jupiter.api.Assertions.assertEquals(1L, fetched.getKey(),
+        "seeded config version mismatch");
+    org.junit.jupiter.api.Assertions.assertEquals(seedConfig, fetched.getValue(),
+        "seeded config payload mismatch");
+  }
+
+  @Test
+  void testDeleteDeviceFailsWithExistingSubCollections() {
+    store.put("r/test-reg/d/test-dev:num_id", "12345");
+    store.put("r/test-reg/d/test-dev/c/custom_collection:entry", "some_value");
+
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.DELETE;
+    org.junit.jupiter.api.Assertions.assertThrows(RuntimeException.class,
+        () -> provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null));
+  }
+
   class FakeDataRef extends DataRef {
     private final Map<String, String> data;
 
@@ -177,6 +239,14 @@ class ImplicitIotAccessProviderTest {
     @Override
     public void delete(String key) {
       data.remove(getKeyPath(key));
+    }
+
+    @Override
+    public boolean hasSubCollections() {
+      String subCollectionPrefix = (registryId != null ? "r/" + registryId : "")
+          + (deviceId != null ? "/d/" + deviceId : "")
+          + "/c/";
+      return data.keySet().stream().anyMatch(k -> k.startsWith(subCollectionPrefix));
     }
 
     @Override

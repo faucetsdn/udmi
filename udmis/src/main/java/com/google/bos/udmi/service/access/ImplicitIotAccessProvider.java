@@ -20,7 +20,6 @@ import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
 import static udmi.schema.CloudModel.ModelOperation.DELETE;
 import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
@@ -42,6 +41,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.MetadataMapKeys;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -288,7 +288,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
     Map<String, String> map = toDeviceMap(cloudModel, timestamp);
     DataRef props = mungeDevice(registryId, deviceId, map);
-    props.entries().keySet().stream().filter(not(map::containsKey)).forEach(props::delete);
+    String udmiConfig = ifNotNullGet(cloudModel.metadata,
+        m -> m.get(MetadataMapKeys.UDMI_CONFIG));
+    if (udmiConfig == null && cloudModel.config != null) {
+      udmiConfig = stringifyTerse(cloudModel.config);
+    }
+    if (udmiConfig != null) {
+      props.put(LAST_CONFIG_KEY, udmiConfig);
+      props.put(CONFIG_VER_KEY, "1");
+    }
   }
 
   private void deleteDevice(String registryId, String deviceId, CloudModel cloudModel) {
@@ -300,6 +308,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       unbindGatewayDevices(registryId, deviceId);
     }
 
+    if (properties.hasSubCollections()) {
+      throw new IllegalStateException(
+          format("Cannot delete device %s/%s while sub-collections exist", registryId, deviceId));
+    }
     String gatewayId = properties.get(BOUND_TO_KEY);
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
@@ -802,10 +814,13 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     DataRef dataRef = registryDeviceRef(registryId, deviceId);
     try (AutoCloseable lock = dataRef.lock()) {
       String prev = dataRef.get(CONFIG_VER_KEY);
-      if (prevVersion != null && !prevVersion.toString().equals(prev)) {
-        throw new RuntimeException("Config version update mismatch");
+      boolean versionMatch = prevVersion == null
+          || (prev == null && (prevVersion == 0L || prevVersion == 1L))
+          || (prev != null && prevVersion.toString().equals(prev));
+      if (!versionMatch) {
+        throw new RuntimeException(
+            format("Config version update mismatch: expected #%s but was #%s", prevVersion, prev));
       }
-
       String update = ofNullable(prevVersion).map(v -> v + 1)
           .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(1L)).toString();
 

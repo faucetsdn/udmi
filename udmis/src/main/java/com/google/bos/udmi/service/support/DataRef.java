@@ -28,6 +28,8 @@ public abstract class DataRef {
 
   public abstract void delete(String key);
 
+  public abstract boolean hasSubCollections();
+
   /**
    * Add a device specification.
    */
