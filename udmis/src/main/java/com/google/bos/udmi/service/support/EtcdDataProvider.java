@@ -147,6 +147,13 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   }
 
 
+  /**
+   * Get value for an exact key entry.
+   */
+  public String getEntry(String key) {
+    return getKey(key);
+  }
+
   private String getKey(String key) {
     try {
       GetResponse response = kvClient.get(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);

@@ -8,6 +8,10 @@ let activeDevice = null;
 let activeProperty = null;
 let isUpdatingHash = false;
 
+function naturalCompare(a, b) {
+  return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initEventListeners();
@@ -161,7 +165,7 @@ async function loadRegistries() {
     const res = await fetch('/api/registries');
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    cachedRegistries = data.registries || [];
+    cachedRegistries = (data.registries || []).sort(naturalCompare);
     totalClusterDevices = data.totalDevicesCount !== undefined ? data.totalDevicesCount : 0;
     updateCounts();
     renderRegistriesList(cachedRegistries, activeRegistry);
@@ -217,7 +221,7 @@ async function loadDevices(registryId) {
     const res = await fetch(`/api/registries/${encodeURIComponent(registryId)}/devices`);
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
-    cachedDevices = data.devices || [];
+    cachedDevices = (data.devices || []).sort(naturalCompare);
     updateCounts();
     renderDevicesList(cachedDevices, activeDevice);
   } catch (err) {
@@ -308,8 +312,8 @@ function renderPropertiesTable(properties) {
   colgroup.appendChild(colVal);
   table.appendChild(colgroup);
 
-  const devProps = keys.filter(k => !k.startsWith('/c/'));
-  const colProps = keys.filter(k => k.startsWith('/c/'));
+  const devProps = keys.filter(k => !k.startsWith('/c/')).sort(naturalCompare);
+  const colProps = keys.filter(k => k.startsWith('/c/')).sort(naturalCompare);
 
   if (devProps.length > 0) {
     appendGroupHeader(table, 'Device Properties');
@@ -317,7 +321,7 @@ function renderPropertiesTable(properties) {
   }
 
   if (colProps.length > 0) {
-    appendGroupHeader(table, 'Collections');
+    appendGroupHeader(table, `Collections (${colProps.length})`);
     colProps.forEach(k => appendPropertyRow(table, k, properties[k]));
   }
 
@@ -339,7 +343,7 @@ function appendPropertyRow(table, key, value) {
   tr.className = 'property-row';
   tr.dataset.key = key;
   tr.addEventListener('click', (e) => {
-    if (!e.target.classList.contains('copy-btn')) {
+    if (!e.target.classList.contains('copy-btn') && !e.target.classList.contains('device-link') && e.target.tagName !== 'A') {
       activeProperty = key;
       setHash(activeRegistry, activeDevice, key);
       highlightPropertyRow(key);
@@ -348,7 +352,36 @@ function appendPropertyRow(table, key, value) {
 
   const tdKey = document.createElement('td');
   tdKey.className = 'property-key';
-  tdKey.textContent = key;
+
+  let targetDeviceId = null;
+  if (key.startsWith('/c/') && key.includes(':')) {
+    const colonIdx = key.indexOf(':');
+    const potentialDev = key.substring(colonIdx + 1);
+    if (key.startsWith('/c/bound_devices:') || (cachedDevices && cachedDevices.includes(potentialDev))) {
+      targetDeviceId = potentialDev;
+    }
+  }
+
+  if (targetDeviceId && activeRegistry) {
+    const colonIdx = key.indexOf(':');
+    const prefixSpan = document.createElement('span');
+    prefixSpan.textContent = key.substring(0, colonIdx + 1);
+
+    const link = document.createElement('a');
+    link.href = `#/${encodeURIComponent(activeRegistry)}/${encodeURIComponent(targetDeviceId)}`;
+    link.className = 'device-link';
+    link.title = `Navigate to device ${targetDeviceId}`;
+    link.textContent = targetDeviceId;
+    link.addEventListener('click', (e) => {
+      e.stopPropagation();
+      selectDevice(targetDeviceId, true);
+    });
+
+    tdKey.appendChild(prefixSpan);
+    tdKey.appendChild(link);
+  } else {
+    tdKey.textContent = key;
+  }
 
   const tdVal = document.createElement('td');
   tdVal.className = 'property-val';

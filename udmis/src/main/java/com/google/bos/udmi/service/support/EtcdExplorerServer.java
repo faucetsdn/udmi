@@ -10,10 +10,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,52 @@ import udmi.schema.PodConfiguration;
  * Lightweight web server and REST API for exploring ETCD hierarchical data.
  */
 public class EtcdExplorerServer {
+
+  public static final Comparator<String> NATURAL_COMPARATOR = (s1, s2) -> {
+    if (s1 == null && s2 == null) {
+      return 0;
+    }
+    if (s1 == null) {
+      return -1;
+    }
+    if (s2 == null) {
+      return 1;
+    }
+
+    Pattern chunkPattern = Pattern.compile("(\\d+|\\D+)");
+    Matcher m1 = chunkPattern.matcher(s1);
+    Matcher m2 = chunkPattern.matcher(s2);
+
+    while (m1.find() && m2.find()) {
+      String chunk1 = m1.group();
+      String chunk2 = m2.group();
+
+      int result;
+      if (Character.isDigit(chunk1.charAt(0)) && Character.isDigit(chunk2.charAt(0))) {
+        try {
+          BigInteger num1 = new BigInteger(chunk1);
+          BigInteger num2 = new BigInteger(chunk2);
+          result = num1.compareTo(num2);
+        } catch (Exception e) {
+          result = chunk1.compareTo(chunk2);
+        }
+        if (result == 0) {
+          result = Integer.compare(chunk1.length(), chunk2.length());
+        }
+      } else {
+        result = chunk1.compareToIgnoreCase(chunk2);
+        if (result == 0) {
+          result = chunk1.compareTo(chunk2);
+        }
+      }
+
+      if (result != 0) {
+        return result;
+      }
+    }
+
+    return Integer.compare(s1.length(), s2.length());
+  };
 
   private static final Pattern DEVICES_PATTERN =
       Pattern.compile("^/api/registries/([^/]+)/devices/?$");
@@ -96,8 +144,8 @@ public class EtcdExplorerServer {
 
   private void handleGetRegistries(HttpExchange exchange) throws IOException {
     List<String> keys = etcdProvider.getPrefixKeys("/r/");
-    Set<String> uniqueRegistries = new TreeSet<>();
-    Set<String> uniqueDevices = new TreeSet<>();
+    Set<String> uniqueRegistries = new TreeSet<>(NATURAL_COMPARATOR);
+    Set<String> uniqueDevices = new TreeSet<>(NATURAL_COMPARATOR);
     for (String key : keys) {
       if (key.startsWith("/r/")) {
         String sub = key.substring(3);
@@ -131,7 +179,7 @@ public class EtcdExplorerServer {
   private void handleGetDevices(HttpExchange exchange, String registryId) throws IOException {
     String prefix = "/r/" + registryId + "/d/";
     List<String> keys = etcdProvider.getPrefixKeys(prefix);
-    Set<String> uniqueDevices = new TreeSet<>();
+    Set<String> uniqueDevices = new TreeSet<>(NATURAL_COMPARATOR);
     for (String key : keys) {
       if (key.startsWith(prefix)) {
         String sub = key.substring(prefix.length());
@@ -153,8 +201,14 @@ public class EtcdExplorerServer {
   private void handleGetProperties(HttpExchange exchange, String registryId, String deviceId)
       throws IOException {
     String prefix = "/r/" + registryId + "/d/" + deviceId;
-    Map<String, String> entries = etcdProvider.getPrefixEntries(prefix);
-    Map<String, String> properties = new TreeMap<>();
+    Map<String, String> entries = new TreeMap<>(NATURAL_COMPARATOR);
+    entries.putAll(etcdProvider.getPrefixEntries(prefix + ":"));
+    entries.putAll(etcdProvider.getPrefixEntries(prefix + "/"));
+    String exactValue = etcdProvider.getEntry(prefix);
+    if (exactValue != null) {
+      entries.put(prefix, exactValue);
+    }
+    Map<String, String> properties = new TreeMap<>(NATURAL_COMPARATOR);
     for (Map.Entry<String, String> entry : entries.entrySet()) {
       String key = entry.getKey();
       if (key.startsWith(prefix)) {
@@ -163,8 +217,6 @@ public class EtcdExplorerServer {
           propKey = ":value";
         }
         properties.put(propKey, entry.getValue());
-      } else {
-        properties.put(key, entry.getValue());
       }
     }
     sendResponse(exchange, HttpURLConnection.HTTP_OK, "application/json",

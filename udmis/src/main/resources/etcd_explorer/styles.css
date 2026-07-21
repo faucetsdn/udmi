@@ -283,6 +283,18 @@ body {
   overflow-wrap: anywhere;
 }
 
+.device-link {
+  color: var(--accent-hover);
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.device-link:hover {
+  color: var(--text-main);
+  text-decoration: none;
+}
+
 .property-val {
   padding: 10px 16px;
   vertical-align: top;
