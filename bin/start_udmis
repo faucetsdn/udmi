@@ -53,6 +53,19 @@ mkdir -p out
 date >> $LOGFILE
 
 export ETCD_CLUSTER=127.0.0.1
+export ETCD_PORT=${ETCD_PORT:-2379}
+export ETCD_SCHEME=${ETCD_SCHEME:-http}
+export ETCD_CA=${ETCD_CA:-}
+export ETCD_CERT=${ETCD_CERT:-}
+export ETCD_KEY=${ETCD_KEY:-}
+
+if [[ ${ETCD_USE_SSL:-false} == true ]]; then
+    export ETCD_SCHEME=${ETCD_SCHEME:-https}
+    export ETCD_CA=${ETCD_CA:-$(realpath $CERT_DIR/ca.crt)}
+    export ETCD_CERT=${ETCD_CERT:-$(realpath $CERT_DIR/rsa_private.crt)}
+    export ETCD_KEY=${ETCD_KEY:-$(realpath $CERT_DIR/rsa_private.pem)}
+fi
+
 export SSL_SECRETS_DIR=$(realpath $CERT_DIR)
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
     export MOSQUITTO_LOG_PATH=$(realpath $ETC_DIR/log/mosquitto.log)
@@ -82,12 +95,12 @@ if [[ -z ${UDMIS_CONFIG:-} ]]; then
         .flow_defaults.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
         .flow_defaults.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
         .flow_defaults.port = '"${MQTT_PORT:-8883}"' |
-        .iot_access.implicit.project_id = "http://${ETCD_CLUSTER}:'"${ETCD_PORT:-2379}"'" |
+        .iot_access.implicit.project_id = "'"${ETCD_SCHEME}"'://${ETCD_CLUSTER}:'"${ETCD_PORT}"'" |
         .iot_access.implicit.endpoint.port = '"${MQTT_PORT:-8883}"' |
         .iot_access.implicit.endpoint.ca_file = "'"$ABS_CERT_DIR/ca.crt"'" |
         .iot_access.implicit.endpoint.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
         .iot_access.implicit.endpoint.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
-        .iot_data.database.project_id = "http://${ETCD_CLUSTER}:'"${ETCD_PORT:-2379}"'"' \
+        .iot_data.database.project_id = "'"${ETCD_SCHEME}"'://${ETCD_CLUSTER}:'"${ETCD_PORT}"'"' \
         $SOURCE_POD_CONFIG | sponge var/local_pod.json
     UDMIS_CONFIG=var/local_pod.json
 fi

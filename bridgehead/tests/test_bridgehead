@@ -1,28 +1,50 @@
 #!/bin/bash -e
 
 # Navigate to bridgehead directory
-cd $(dirname $(realpath $0))/..
+BRIDGEHEAD_DIR=$(dirname $(realpath $0))/..
+cd "$BRIDGEHEAD_DIR"
 
-# Create var directories on host to ensure they are owned by host user, not root
-mkdir -p var/mosquitto/data var/mosquitto/log var/mosquitto/certs var/etcd var/tmp var/sshKeys var/influxdb-storage
+UDMI_ROOT=$(realpath "$BRIDGEHEAD_DIR/..")
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: $(basename $0) [-h|--help]"
+    echo ""
+    echo "Runs end-to-end integration tests for the UDMI Bridgehead architecture."
+    echo ""
+    echo "Options:"
+    echo "  -h, --help              Show this help message and exit."
+    echo ""
+    echo "Test Description:"
+    echo "  1. Clones/prepares default test site model using bin/clone_model."
+    echo "  2. Launches Bridgehead services using bin/start_bridgehead --local."
+    echo "  3. Prepares device registrar and starts Pubber container to send telemetry."
+    echo "  4. Executes discovery sequence and registrar verification."
+    echo ""
+    echo "Expected Result:"
+    echo "  - UDMIS becomes ready within timeout."
+    echo "  - Output matches expected summary count (Device extra: 6, Device status: 5)."
+    echo "  - Registrar processes discovery results for expected devices (AHU-22, SNS-4, GAT-123, UNK-1)."
+    echo "  - Prints 'Test PASSED' with exit code 0."
+    exit 0
+fi
 
-echo "Cloning default site model..."
-# Remove existing udmi_site_model if it exists to avoid conflicts
-rm -rf udmi_site_model 2>/dev/null
+SITE_MODEL_PATH="$UDMI_ROOT/sites/bridgehead_site_model"
 
-git clone https://github.com/faucetsdn/udmi_site_model.git udmi_site_model
-
-echo "Generating missing X.509 certificate for reflector client..."
-openssl req -x509 -new -nodes -key udmi_site_model/reflector/rsa_private.pem -sha256 -days 3650 -out udmi_site_model/reflector/rsa_private.crt -subj "/CN=UDMI-reflector" || true
-[ -f udmi_site_model/reflector/ca.crt ] || cp udmi_site_model/reflector/rsa_private.crt udmi_site_model/reflector/ca.crt
-
-# Clean up extra keys in AHU-1 that cause validation errors
-rm -f udmi_site_model/devices/AHU-1/rsa_private.pem
-rm -f udmi_site_model/devices/AHU-1/rsa_private.pkcs8
-rm -f udmi_site_model/devices/AHU-1/rsa_public.pem
-
-mkdir -p udmi_site_model/out
-chmod a+rwx udmi_site_model/out
+clone_site_model() {
+    local target_dir="$1"
+    local model_ver="1.23"
+    local repo_url="https://github.com/faucetsdn/udmi_site_model.git"
+    
+    echo "Cloning test site model into $target_dir..."
+    rm -rf "$target_dir"
+    mkdir -p "$(dirname "$target_dir")"
+    git clone "$repo_url" "$target_dir"
+    
+    pushd "$target_dir" >/dev/null
+    git fetch origin "$model_ver"
+    git checkout -q "$model_ver"
+    git log -n 1
+    popd >/dev/null
+}
 
 # Backup existing .env if it exists
 if [ -f .env ]; then
@@ -30,73 +52,59 @@ if [ -f .env ]; then
     cp .env .env.bak
 fi
 
-echo "Generating .env file..."
-HOST_IP=$(hostname -I | awk '{print $1}')
-cat <<EOF > .env
-HOST_IP=$HOST_IP
-AUTH_USER=scrumptious
-AUTH_PASS=aardvark
-SERV_USER=rocket
-SERV_PASS=monkey
-INFLUXDB_TOKEN=$(openssl rand -hex 32)
-INFLUX_USER=bridgehead
-INFLUX_PASSWORD=password
-GRAFANA_USER=bridgehead
-GRAFANA_PASSWORD=password
-EOF
-
-echo "Ensuring bridgeheadManager.war exists..."
-mkdir -p udmis
-[ -f udmis/bridgeheadManager.war ] || touch udmis/bridgeheadManager.war
-if [ -f udmis/build.sh ]; then
-    ./udmis/build.sh || { echo "ERROR: UDMIS Gradle compilation failed!" >&2; exit 1; }
-fi
-
-echo "Starting services with docker-compose..."
-docker rm -f $(docker ps -aq) 2>/dev/null || true
-docker network rm $(docker network ls -q) 2>/dev/null || true
-docker compose down -v --remove-orphans 2>/dev/null || true
-rm -rf var/mosquitto/data var/etcd 2>/dev/null
-
-sleep 15
-docker compose up -d --build
-
 # Function to clean up on exit
 cleanup() {
-    echo "Cleaning up..."
-    echo "Dumping UDMIS logs:"
-    docker logs udmis || true
-    echo "Dumping Validator logs:"
-    docker logs validator || true
+    echo "----- Cleaning up... -----"
+    mkdir -p "$UDMI_ROOT/out"
+    docker logs udmis > "$UDMI_ROOT/out/bridgehead_udmis.log" 2>&1 || true
+    docker logs validator > "$UDMI_ROOT/out/bridgehead_validator.log" 2>&1 || true
+    docker logs pubber > "$UDMI_ROOT/out/bridgehead_pubber.log" 2>&1 || true
     
-    echo "Dumping Pubber logs:"
-    docker logs pubber || true
-    
-    if [ -f udmi_site_model/devices/AHU-1/out/exceptions.txt ]; then
-        echo "Dumping AHU-1 exceptions.txt:"
-        cat udmi_site_model/devices/AHU-1/out/exceptions.txt || true
+    if [ -f "$SITE_MODEL_PATH/devices/AHU-1/out/exceptions.txt" ]; then
+        cp "$SITE_MODEL_PATH/devices/AHU-1/out/exceptions.txt" "$UDMI_ROOT/out/bridgehead_ahu1_exceptions.txt" 2>/dev/null || true
     fi
     
     echo "Stopping Pubber container..."
     docker stop pubber || true
+    
     echo "Fixing permissions..."
-    docker exec validator chown -R $(id -u):$(id -g) /root/site_model || true
-    docker exec udmis chown -R $(id -u):$(id -g) /root/udmi/var/etcd || true
-    docker exec mosquitto chown -R $(id -u):$(id -g) /mosquitto/data || true
+    docker exec validator chown -R $(id -u):$(id -g) /root/site_model 2>/dev/null || true
+    docker exec udmis chown -R $(id -u):$(id -g) /root/udmi/var/etcd 2>/dev/null || true
+    docker exec mosquitto chown -R $(id -u):$(id -g) /mosquitto/data 2>/dev/null || true
     
     echo "Stopping docker-compose services..."
-    docker compose down
-    rm -rf udmi_site_model var/mosquitto/data var/etcd 2>/dev/null
+    "$UDMI_ROOT/bin/stop_bridgehead" || docker compose down
+    rm -rf "$SITE_MODEL_PATH" var/mosquitto/data var/etcd 2>/dev/null || true
     
     # Restore .env if backup exists
     if [ -f .env.bak ]; then
         echo "Restoring .env"
         mv .env.bak .env
-    else
-        rm -f .env
     fi
 }
 trap cleanup EXIT
+
+# Clean up existing containers and data
+docker rm -f $(docker ps -aq) 2>/dev/null || true
+docker network rm $(docker network ls -q) 2>/dev/null || true
+"$UDMI_ROOT/bin/stop_bridgehead" -v 2>/dev/null || docker compose down -v --remove-orphans 2>/dev/null || true
+rm -rf var/mosquitto/data var/etcd "$SITE_MODEL_PATH" 2>/dev/null || true
+
+mkdir -p out
+
+echo "Cloning test site model..."
+clone_site_model "$SITE_MODEL_PATH"
+
+# Clean up extra keys in AHU-1 that cause validation errors
+rm -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_private.pem"
+rm -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_private.pkcs8"
+rm -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_public.pem"
+
+mkdir -p "$SITE_MODEL_PATH/out"
+chmod a+rwx "$SITE_MODEL_PATH/out" 2>/dev/null || true
+
+echo "Launching bridgehead services with local workspace build..."
+"$UDMI_ROOT/bin/start_bridgehead" --local "$SITE_MODEL_PATH"
 
 echo "Waiting for services to be healthy..."
 for i in {1..60}; do
@@ -115,7 +123,6 @@ if ! docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
     exit 1
 fi
 
-
 echo "Executing discovery sequence..."
 sleep 5
 
@@ -128,7 +135,7 @@ echo "Step 1: Registrar initial setup completed."
 
 # 2. Start Pubber container
 docker rm -f pubber 2>/dev/null || true
-docker run -d --rm --name pubber --network udminet -v "$(realpath udmi_site_model)":/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"
+docker run -d --rm --name pubber --network udminet -v "$SITE_MODEL_PATH":/root/site_model "${PUBBER_IMAGE:-pubber:latest}" /bin/bash -c "tail -f /dev/null"
 echo "Step 2: Pubber container started."
 
 # 3. Run Pubber inside container (using mosquitto service name)
@@ -144,25 +151,26 @@ docker exec validator /root/discovery.sh GAT-123
 echo "Step 4: Discovery script executed."
 
 # 5. Run registrar to check results
-docker exec validator bin/registrar site_model/ //mqtt/mosquitto > registrar_output.txt 2>&1 || true
+docker exec validator bin/registrar site_model/ //mqtt/mosquitto > out/registrar_output.txt 2>&1 || true
 echo "Step 5: Ran Registrar to check results."
 
 echo "Verifying output..."
-cat registrar_output.txt
+cat out/registrar_output.txt
 
 # Verify expected summary
 failed=0
-grep -q "Device extra: 6" registrar_output.txt || failed=1
-grep -q "Device status: 5" registrar_output.txt || failed=1
+grep -q "Device extra: 6" out/registrar_output.txt || failed=1
+grep -q "Device status: 5" out/registrar_output.txt || failed=1
 
 # Also verify specific processed lines as per sample output
-grep -q "Processed AHU-22" registrar_output.txt || failed=1
-grep -q "Processed SNS-4" registrar_output.txt || failed=1
-grep -q "Processed GAT-123" registrar_output.txt || failed=1
+grep -q "Processed AHU-22" out/registrar_output.txt || failed=1
+grep -q "Processed SNS-4" out/registrar_output.txt || failed=1
+grep -q "Processed GAT-123" out/registrar_output.txt || failed=1
+grep -q "Processed UNK-1" out/registrar_output.txt || failed=1
 
 if [ $failed -eq 0 ]; then
-    echo "Test PASSED"
+    echo "----- Test PASSED -----"
 else
-    echo "Test FAILED"
+    echo "----- Test FAILED -----"
     exit 1
 fi

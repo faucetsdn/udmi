@@ -47,13 +47,26 @@ class UDMICore:
     # Setup state
     self.state = udmi.schema.state.State()
 
-    try:
-      installed_version_file =  pathlib.Path(__file__).with_name(UDMICore.INSTALLED_VERSION_FILE)
-      with open(installed_version_file, encoding="utf-8") as f:
-        if (installed_version := f.read()) != "":
-          self.state.system.software.version = installed_version
-    except FileNotFoundError:
-      self.state.system.software.version = "1"
+    version_paths = [
+      pathlib.Path(__file__).with_name(UDMICore.INSTALLED_VERSION_FILE),
+      pathlib.Path(__file__).parent.parent / UDMICore.INSTALLED_VERSION_FILE,
+    ]
+
+    installed_version = None
+    for path in version_paths:
+      try:
+        with open(path, encoding="utf-8") as f:
+          if (content := f.read().strip()) != "":
+            installed_version = content
+            break
+      except FileNotFoundError:
+        continue
+
+    if installed_version is not None:
+        self.state.system.software.version = installed_version
+    else:
+        self.state.system.software.version = "unknown"
+
     
     self.state.system.hardware.make = "unknown"
     self.state.system.hardware.model = "unknown"

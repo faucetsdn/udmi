@@ -1,0 +1,28 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $(realpath $0))/..
+INVOCATION_DIR="$PWD"
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: $(basename $0) [-v|--volumes] [docker-compose-options...]"
+    echo ""
+    echo "Stops the UDMI Bridgehead architecture services using Docker Compose."
+    echo ""
+    echo "Options / Arguments:"
+    echo "  -v, --volumes           Remove named volumes declared in the volumes section of the Compose file."
+    echo "  -h, --help              Show this help message and exit."
+    echo ""
+    echo "Examples:"
+    echo "  $(basename $0)                             # Stop containers"
+    echo "  $(basename $0) -v                          # Stop containers and remove volumes"
+    exit 0
+fi
+
+cd "$UDMI_ROOT/bridgehead"
+
+echo "Stopping bridgehead services..."
+docker compose down "$@"
+
+echo "=== Bridgehead deployment stopped successfully ==="

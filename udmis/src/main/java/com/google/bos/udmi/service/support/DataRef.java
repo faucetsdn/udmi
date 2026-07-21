@@ -46,6 +46,9 @@ public abstract class DataRef {
 
   public abstract void update(Map<String, String> puts, Set<String> deletes);
 
+  public abstract boolean updateIfMatch(String matchKey, String expectedValue,
+      Map<String, String> puts, Set<String> deletes);
+
   /**
    * Add a registry specification.
    */

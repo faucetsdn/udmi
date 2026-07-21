@@ -84,12 +84,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.bacnet = BAC0.lite(
         ip=bacnet_ip,
         port=bacnet_port,
-        deviceId=BACNET_DEVICE_ID,
-        modelName=BACNET_MODEL_NAME,
-        localObjName=bacnet_device_name,
-        firmwareRevision=bacnet_firmware_version,
-        location=None,
-        description=None
+        deviceId=BACNET_DEVICE_ID
     )
     
     super().__init__(state, publisher)

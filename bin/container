@@ -27,12 +27,19 @@ echo Processing Dockerfile "${dockerfile}"
 
 cd ${UDMI_ROOT}/${target}
 
-git_branch=$(git rev-parse --abbrev-ref HEAD)
-git_remote=$(git config --get branch.$git_branch.remote) || echo missing git remote
-git_url=$(git config --get remote.$git_remote.url) || git_url=unknown
-git_prefix=${git_url%.*}
-git_prefix=${git_prefix#*.com/}
-git_repo=${git_prefix#*.com:}
+if [[ -n "${GITHUB_REPOSITORY:-}" ]]; then
+    git_repo="${GITHUB_REPOSITORY}"
+else
+    git_branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null) || git_branch=HEAD
+    git_remote=$(git config --get branch.$git_branch.remote 2>/dev/null) || git_remote=origin
+    git_url=$(git config --get remote.$git_remote.url 2>/dev/null) || git_url=unknown
+    git_url=${git_url%.git}
+    if [[ $git_url =~ github\.com[:/]([^/]+/[^/]+) ]]; then
+        git_repo="${BASH_REMATCH[1]}"
+    else
+        git_repo="faucetsdn/udmi"
+    fi
+fi
 
 GCP_PROJECT=$(gcloud config get project) || true
 REPOSITORY=ghcr.io/${git_repo}
@@ -106,9 +113,7 @@ if [[ -z $prep ]]; then
 fi
 
 if [[ -n $prep ]]; then
-    rm -rf var tmp && mkdir -p var tmp
-    mkdir -p build/schema
-
+    rm -rf var tmp build && mkdir -p var tmp build
     cp -f etc/*.json var/ || true
     cp -a ../schema build/schema
 

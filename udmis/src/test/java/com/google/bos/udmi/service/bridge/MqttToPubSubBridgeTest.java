@@ -12,13 +12,20 @@ import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.pubsub.v1.PubsubMessage;
 import java.util.Map;
+import org.apache.commons.cli.CommandLine;
 import org.eclipse.paho.mqttv5.client.IMqttClient;
 import org.eclipse.paho.mqttv5.client.MqttCallback;
 import org.eclipse.paho.mqttv5.common.MqttMessage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 class MqttToPubSubBridgeTest {
+
+  @BeforeEach
+  void setUp() {
+    MqttToPubSubBridge.clearCacheForTest();
+  }
 
   @Test
   void testSetupBridge() throws Exception {
@@ -363,6 +370,54 @@ class MqttToPubSubBridgeTest {
     assertEquals(originalTopic, attributes.get("mqttTopic"));
     assertEquals("my-device", attributes.get("deviceId"));
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
+  }
+
+  @Test
+  void testGetEtcdOptions() throws Exception {
+    String[] args = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client",
+        "--etcd_target=https://localhost:2379",
+        "--etcd_ca_path=/path/to/ca.crt",
+        "--etcd_client_cert_path=/path/to/client.crt",
+        "--etcd_client_key_path=/path/to/client.key",
+        "--etcd_options=enabled=true"
+    };
+    CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
+    String etcdOptions = MqttToPubSubBridge.getEtcdOptions(commandLine);
+    String expected = "enabled=true,ca_file=/path/to/ca.crt,cert_file=/path/to/client.crt,"
+        + "key_file=/path/to/client.key";
+    assertEquals(expected, etcdOptions);
+  }
+
+  @Test
+  void testGetEtcdOptionsNoTarget() throws Exception {
+    String[] args = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client",
+        "--etcd_ca_path=/path/to/ca.crt",
+        "--etcd_options=enabled=true"
+    };
+    CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
+    String etcdOptions = MqttToPubSubBridge.getEtcdOptions(commandLine);
+    // Should be null because etcd_target is missing, so it's ignored
+    assertEquals(null, etcdOptions);
+  }
+
+  @Test
+  void testGetEtcdOptionsPartialSsl() throws Exception {
+    String[] args = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client",
+        "--etcd_target=https://localhost:2379",
+        "--etcd_ca_path=/path/to/ca.crt"
+    };
+    CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
+    String etcdOptions = MqttToPubSubBridge.getEtcdOptions(commandLine);
+    assertEquals("ca_file=/path/to/ca.crt", etcdOptions);
   }
 }
 

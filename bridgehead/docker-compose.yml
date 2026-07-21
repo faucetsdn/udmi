@@ -2,9 +2,11 @@ services:
   mosquitto:
     build:
       context: ./mosquitto
+      args:
+        UDMIS_BASE_IMAGE: ${UDMIS_BASE_IMAGE:-ghcr.io/faucetsdn/udmi:udmis-latest}
     container_name: mosquitto
     volumes:
-      - ./udmi_site_model:/site_model
+      - ${SITE_MODEL_PATH:-./udmi_site_model}:/site_model
       - ./var/mosquitto:/etc/mosquitto
       - ./var/mosquitto/data:/mosquitto/data
       - ./var/mosquitto/log:/var/log/mosquitto/
@@ -36,9 +38,11 @@ services:
     build:
       context: .
       dockerfile: udmis/Dockerfile
+      args:
+        UDMIS_BASE_IMAGE: ${UDMIS_BASE_IMAGE:-ghcr.io/faucetsdn/udmi:udmis-latest}
     container_name: udmis
     volumes:
-      - ./udmi_site_model:/root/site_model
+      - ${SITE_MODEL_PATH:-./udmi_site_model}:/root/site_model
       - ./var/tmp:/tmp
       - ./var/etcd:/root/udmi/var/etcd
       - ./var/mosquitto/log:/var/log/mosquitto
@@ -70,9 +74,11 @@ services:
   validator:
     build:
       context: ./validator
+      args:
+        VALIDATOR_BASE_IMAGE: ${VALIDATOR_BASE_IMAGE:-ghcr.io/faucetsdn/udmi:validator-latest}
     container_name: validator
     volumes:
-      - ./udmi_site_model:/root/site_model
+      - ${SITE_MODEL_PATH:-./udmi_site_model}:/root/site_model
       - ./var/mosquitto/log:/var/log/mosquitto
       - ./var/mosquitto/certs:/etc/mosquitto/certs
       - ./var/tmp:/usr/local/bin/udmis

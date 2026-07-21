@@ -1,0 +1,33 @@
+#!/bin/bash -e
+
+INFLUXD_VER=2.7.1
+INFLUX_CLI_VER=2.7.5
+SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
+TARGET_DIR=${SCRIPT_DIR}/influx_bin
+
+if [[ ! -d ${TARGET_DIR} || ! -f ${TARGET_DIR}/influxd || ! -f ${TARGET_DIR}/influx ]]; then
+   rm -f /tmp/influxdb2-${INFLUXD_VER}-linux-amd64.tar.gz /tmp/influxdb2-client-${INFLUX_CLI_VER}-linux-amd64.tar.gz
+   mkdir -p ${TARGET_DIR}
+
+   curl -sL https://dl.influxdata.com/influxdb/releases/influxdb2-${INFLUXD_VER}-linux-amd64.tar.gz -o /tmp/influxdb2-${INFLUXD_VER}-linux-amd64.tar.gz
+   tar xzf /tmp/influxdb2-${INFLUXD_VER}-linux-amd64.tar.gz -C ${TARGET_DIR} --strip-components=1
+   rm -f /tmp/influxdb2-${INFLUXD_VER}-linux-amd64.tar.gz
+
+   curl -sL https://dl.influxdata.com/influxdb/releases/influxdb2-client-${INFLUX_CLI_VER}-linux-amd64.tar.gz -o /tmp/influxdb2-client-${INFLUX_CLI_VER}-linux-amd64.tar.gz
+   tar xzf /tmp/influxdb2-client-${INFLUX_CLI_VER}-linux-amd64.tar.gz -C ${TARGET_DIR}
+   rm -f /tmp/influxdb2-client-${INFLUX_CLI_VER}-linux-amd64.tar.gz
+
+   ${TARGET_DIR}/influxd version
+   ${TARGET_DIR}/influx version
+
+   echo
+   echo Download complete.
+   echo
+fi
+
+export INFLUX_HOST="http://127.0.0.1:${INFLUX_PORT:-8086}"
+export INFLUX_CONFIGS_PATH="${SCRIPT_DIR}/../../var/influx/configs"
+
+if [[ $# -gt 0 ]]; then
+    exec ${TARGET_DIR}/influx "$@"
+fi

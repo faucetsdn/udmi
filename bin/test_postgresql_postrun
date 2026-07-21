@@ -1,0 +1,30 @@
+#!/bin/bash -e
+set -x
+
+ROOT=$(dirname $0)/..
+
+source $ROOT/etc/shell_common.sh
+
+postgres_user=${POSTGRES_USER:-postgres}
+postgres_db=${POSTGRES_DB:-postgres}
+postgres_port=${POSTGRES_PORT:-5432}
+
+echo "Verifying PostgreSQL operation..."
+
+# Create a test table
+psql -h 127.0.0.1 -p "${postgres_port}" -U "${postgres_user}" -d "${postgres_db}" -c "DROP TABLE IF EXISTS test_table; CREATE TABLE test_table (id SERIAL PRIMARY KEY, value VARCHAR(50));"
+
+# Insert a test row
+psql -h 127.0.0.1 -p "${postgres_port}" -U "${postgres_user}" -d "${postgres_db}" -c "INSERT INTO test_table (value) VALUES ('hello_udmi');"
+
+# Query the test row and format output to extract just the value
+GOT_VAL=$(psql -h 127.0.0.1 -p "${postgres_port}" -U "${postgres_user}" -d "${postgres_db}" -t -A -c "SELECT value FROM test_table WHERE value = 'hello_udmi';")
+
+if [[ "$GOT_VAL" == "hello_udmi" ]]; then
+    echo "SUCCESS: Value correctly written and read from postgresql."
+    # Clean up
+    psql -h 127.0.0.1 -p "${postgres_port}" -U "${postgres_user}" -d "${postgres_db}" -c "DROP TABLE test_table;"
+else
+    echo "FAILURE: Value NOT found or incorrect in postgresql. Got: '$GOT_VAL'"
+    exit 1
+fi

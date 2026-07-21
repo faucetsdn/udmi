@@ -7,11 +7,11 @@ import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.udmi.util.CertManager;
 import com.google.udmi.util.JsonUtil;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -56,12 +56,14 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
   private static final String RESPONSE_TOPIC = "$CONTROL/dynamic-security/v1/response";
 
+  private final String clientId;
+  private final String responseTopic;
   private final EndpointConfiguration endpoint;
   private final BlockingQueue<CommandRequest> commandQueue;
   private final MqttClient mqttClient;
   private final ExecutorService executor;
   private final ScheduledExecutorService scheduler;
-  private final ObjectMapper objectMapper = JsonUtil.OBJECT_MAPPER;
+  private final ObjectMapper objectMapper = JsonUtil.TERSE_MAPPER;
 
   private final int batchSizeLimit;
   private final long batchBytesLimit;
@@ -132,6 +134,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     this.batchBytesLimit = batchBytesLimit;
     this.minPublishIntervalMs = minPublishIntervalMs;
     this.batchTimeoutMs = batchTimeoutMs;
+    this.clientId = "dynsec-service-" + format("%08x", (long) (Math.random() * 0x100000000L));
+    this.responseTopic = RESPONSE_TOPIC;
     this.mqttClient = createMqttClient();
     this.executor = Executors.newSingleThreadExecutor();
     this.scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -152,6 +156,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   ) {
     this.endpoint = endpoint;
     this.mqttClient = mqttClient;
+    this.clientId = mqttClient.getClientId();
+    this.responseTopic = RESPONSE_TOPIC;
     this.mqttClient.setCallback(this);
     this.commandQueue = commandQueue;
     this.batchSizeLimit = batchSizeLimit;
@@ -163,11 +169,10 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   }
 
   private MqttClient createMqttClient() {
-    String clientId = "dynsec-service-" + format("%08x", (long) (Math.random() * 0x100000000L));
     String brokerUrl = makeBrokerUrl(endpoint);
-    log.info("Creating Dynamic Security MQTT client {} to {}", clientId, brokerUrl);
+    log.info("Creating Dynamic Security MQTT client {} to {}", this.clientId, brokerUrl);
     try {
-      MqttClient client = new MqttClient(brokerUrl, clientId, new MemoryPersistence());
+      MqttClient client = new MqttClient(brokerUrl, this.clientId, new MemoryPersistence());
       client.setCallback(this);
       return client;
     } catch (MqttException e) {
@@ -220,8 +225,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
       log.info("Connecting Dynamic Security Service to MQTT broker...");
       mqttClient.connect(options);
-      log.info("Connected! Subscribing to response topic: {}", RESPONSE_TOPIC);
-      mqttClient.subscribe(RESPONSE_TOPIC, 1);
+      log.info("Connected! Subscribing to response topic: {}", this.responseTopic);
+      mqttClient.subscribe(this.responseTopic, 1);
     } catch (Exception e) {
       throw new RuntimeException("Failed to connect Dynamic Security Service to MQTT broker", e);
     }
@@ -310,17 +315,18 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
   private void publishBatchToBroker(List<CommandRequest> batch) {
     try {
-      byte[] payload = serializeBatch(batch);
+      String batchId = format("%06x", (int) (Math.random() * 0x1000000L));
+      this.inFlightBatchId = batchId;
+
+      byte[] payload = serializeBatch(batch, batchId);
       MqttMessage message = new MqttMessage();
       message.setPayload(payload);
       message.setQos(1);
 
       MqttProperties properties = new MqttProperties();
-      properties.setResponseTopic(RESPONSE_TOPIC);
+      properties.setResponseTopic(this.responseTopic);
+      properties.setCorrelationData(batchId.getBytes(StandardCharsets.UTF_8));
       message.setProperties(properties);
-
-      String batchId = format("%06x", (int) (Math.random() * 0x1000000L));
-      this.inFlightBatchId = batchId;
 
       log.info("[Batch {}] Publishing batch containing {} commands ({} bytes) to {}",
           batchId, batch.size(), payload.length, CONTROL_TOPIC);
@@ -369,39 +375,61 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     }
   }
 
-  private byte[] serializeBatch(List<CommandRequest> batch) {
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
+  @SuppressWarnings("unchecked")
+  private byte[] serializeBatch(List<CommandRequest> batch, String batchId) {
+    List<Map<String, Object>> commandsList = new ArrayList<>(batch.size());
     try {
-      out.write("{\"commands\":[".getBytes(StandardCharsets.UTF_8));
-      for (int i = 0; i < batch.size(); i++) {
-        if (i > 0) {
-          out.write((int) ',');
-        }
-        out.write(batch.get(i).serializedPayload);
+      for (CommandRequest req : batch) {
+        Map<String, Object> cmdMap = objectMapper.readValue(req.serializedPayload, Map.class);
+        cmdMap.put("correlationData", batchId);
+        commandsList.add(cmdMap);
       }
-      out.write("]}".getBytes(StandardCharsets.UTF_8));
+      return objectMapper.writeValueAsBytes(Collections.singletonMap("commands", commandsList));
     } catch (IOException e) {
-      // Bypassed exception as ByteArrayOutputStream does not throw IOException
+      throw new RuntimeException("Failed to serialize dynamic security batch", e);
     }
-    return out.toByteArray();
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public synchronized void messageArrived(String topic, MqttMessage message) {
-    if (!RESPONSE_TOPIC.equals(topic)) {
+    if (!this.responseTopic.equals(topic)) {
       return;
     }
+
     List<CommandRequest> batchCopy = this.inFlightBatch;
-    if (batchCopy == null) {
-      log.warn("Received dynamic security response but no batch was in-flight");
+    String batchId = this.inFlightBatchId;
+    if (batchCopy == null || batchId == null) {
+      log.debug("Received dynamic security response on shared topic but no batch was in-flight");
       return;
     }
+
+    try {
+      Map<String, Object> responseMap = objectMapper.readValue(message.getPayload(), Map.class);
+      List<Map<String, Object>> responsesList =
+          (List<Map<String, Object>>) responseMap.get("responses");
+      if (responsesList == null || responsesList.isEmpty()) {
+        log.debug("Received response on shared topic with empty or missing responses list");
+        return;
+      }
+      Object corrData = responsesList.get(0).get("correlationData");
+      if (!batchId.equals(corrData)) {
+        log.debug(
+            "[Batch {}] Ignoring response on shared topic with non-matching correlationData: {}",
+            batchId, corrData);
+        return;
+      }
+    } catch (Exception e) {
+      log.warn("Failed to parse incoming response on shared topic, ignoring: {}",
+          new String(message.getPayload(), StandardCharsets.UTF_8));
+      return;
+    }
+
     if (timeoutTask != null) {
       timeoutTask.cancel(false);
       timeoutTask = null;
     }
     long durationMs = System.currentTimeMillis() - batchPublishTime;
-    String batchId = this.inFlightBatchId;
     log.info(
         "[Batch {}] Received dynamic security response for batch containing {} commands in {}ms",
         batchId, batchCopy.size(), durationMs);
@@ -533,7 +561,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     log.info("MQTT connect completed. Reconnect: {}, URI: {}", reconnect, serverUri);
     if (reconnect) {
       try {
-        mqttClient.subscribe(RESPONSE_TOPIC, 1);
+        mqttClient.subscribe(this.responseTopic, 1);
       } catch (MqttException e) {
         log.error("Failed to re-subscribe to response topic on reconnect", e);
       }

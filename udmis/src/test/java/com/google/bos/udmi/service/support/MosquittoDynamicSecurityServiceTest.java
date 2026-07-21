@@ -63,6 +63,7 @@ class MosquittoDynamicSecurityServiceTest {
     endpoint.port = 1883;
 
     mockMqttClient = mock(MqttClient.class);
+    org.mockito.Mockito.when(mockMqttClient.getClientId()).thenReturn("test-client-id");
     mockExecutor = mock(ExecutorService.class);
     mockScheduler = mock(ScheduledExecutorService.class);
 
@@ -145,8 +146,8 @@ class MosquittoDynamicSecurityServiceTest {
     MqttMessage publishedMessage = messageCaptor.getValue();
     assertNotNull(publishedMessage);
     String payloadStr = new String(publishedMessage.getPayload(), StandardCharsets.UTF_8);
-    assertTrue(payloadStr.contains("{\"cmd\":\"1\"}"));
-    assertTrue(payloadStr.contains("{\"cmd\":\"2\"}"));
+    assertTrue(payloadStr.contains("\"cmd\":\"1\""));
+    assertTrue(payloadStr.contains("\"cmd\":\"2\""));
     assertEquals(1, publishedMessage.getQos());
 
     // Verify a timeout task was scheduled
@@ -154,8 +155,17 @@ class MosquittoDynamicSecurityServiceTest {
     assertEquals(30000, scheduledTasks.get(0).delay);
 
     // Simulate broker response
-    String responseJson = "{\"responses\":[{\"status\":0},{\"status\":0}]}";
+    String batchId = new String(
+        publishedMessage.getProperties().getCorrelationData(), StandardCharsets.UTF_8);
+    String responseJson = String.format(
+        "{\"responses\":[{\"status\":0,\"correlationData\":\"%s\"},"
+            + "{\"status\":0,\"correlationData\":\"%s\"}]}",
+        batchId, batchId);
     MqttMessage responseMsg = new MqttMessage(responseJson.getBytes(StandardCharsets.UTF_8));
+    org.eclipse.paho.mqttv5.common.packet.MqttProperties props =
+        new org.eclipse.paho.mqttv5.common.packet.MqttProperties();
+    props.setCorrelationData(publishedMessage.getProperties().getCorrelationData());
+    responseMsg.setProperties(props);
 
     // Call messageArrived (simulated callback from MQTT client)
     service.messageArrived("$CONTROL/dynamic-security/v1/response", responseMsg);

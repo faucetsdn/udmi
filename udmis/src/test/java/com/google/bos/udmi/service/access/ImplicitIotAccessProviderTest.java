@@ -215,5 +215,17 @@ class ImplicitIotAccessProviderTest {
         deletes.forEach(this::delete);
       }
     }
+
+    @Override
+    public boolean updateIfMatch(String matchKey, String expectedValue, Map<String, String> puts,
+        Set<String> deletes) {
+      String current = get(matchKey);
+      if ((expectedValue == null && current == null)
+          || (expectedValue != null && expectedValue.equals(current))) {
+        update(puts, deletes);
+        return true;
+      }
+      return false;
+    }
   }
 }
