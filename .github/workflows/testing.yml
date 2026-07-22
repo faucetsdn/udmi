@@ -388,7 +388,7 @@ jobs:
     name: Post-test Summarization
     runs-on: ubuntu-24.04
     timeout-minutes: 5
-    needs: [ baseline, sequencer, endpoint, runlocal, blobupdates, regdynamic ]
+    needs: [ baseline, sequencer, endpoint, runlocal, blobupdates ]
     if: ${{ !cancelled() }}
     env:
       TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
