@@ -1,8 +1,11 @@
 package com.google.bos.udmi.service.access;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -45,7 +48,7 @@ class DynamicIotAccessProviderTest {
     iotAccess.project_id = PROVIDER_ONE + ", " + PROVIDER_TWO;
     provider = new DynamicIotAccessProvider(iotAccess);
     provider.activate();
-    org.mockito.Mockito.clearInvocations(mockProviderOne, mockProviderTwo);
+    clearInvocations(mockProviderOne, mockProviderTwo);
   }
 
   @AfterEach
@@ -131,13 +134,13 @@ class DynamicIotAccessProviderTest {
     provider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);
 
     verify(mockProviderOne).fetchConfig(TEST_REGISTRY, TEST_DEVICE);
-    org.mockito.Mockito.verify(mockProviderTwo, org.mockito.Mockito.never()).fetchConfig(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+    verify(mockProviderTwo, never()).fetchConfig(anyString(), anyString());
   }
 
   @Test
   void deviceOperationsIgnoreReflectorPubSubAffinity() {
-    PubSubIotAccessProvider mockPubSub = org.mockito.Mockito.mock(PubSubIotAccessProvider.class);
-    org.mockito.Mockito.when(mockPubSub.isEnabled()).thenReturn(true);
+    PubSubIotAccessProvider mockPubSub = mock(PubSubIotAccessProvider.class);
+    when(mockPubSub.isEnabled()).thenReturn(true);
     String pubSubProviderName = "pubsub";
     UdmiServicePod.putComponent(pubSubProviderName, () -> mockPubSub);
     IotAccess iotAccess = new IotAccess();
@@ -145,10 +148,11 @@ class DynamicIotAccessProviderTest {
     DynamicIotAccessProvider testProvider = new DynamicIotAccessProvider(iotAccess);
     testProvider.activate();
     try {
-      testProvider.setProviderAffinity(ContainerBase.REFLECT_BASE, TEST_REGISTRY, pubSubProviderName);
+      testProvider.setProviderAffinity(
+          ContainerBase.REFLECT_BASE, TEST_REGISTRY, pubSubProviderName);
       testProvider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);
       verify(mockProviderOne).fetchConfig(TEST_REGISTRY, TEST_DEVICE);
-      org.mockito.Mockito.verify(mockPubSub, org.mockito.Mockito.never()).fetchConfig(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+      verify(mockPubSub, never()).fetchConfig(anyString(), anyString());
     } finally {
       testProvider.shutdown();
     }
