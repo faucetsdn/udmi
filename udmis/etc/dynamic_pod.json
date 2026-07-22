@@ -7,7 +7,7 @@
     "ca_file": "${ABS_CERT_DIR}/ca.crt",
     "cert_file": "${ABS_CERT_DIR}/rsa_private.crt",
     "key_file": "${ABS_CERT_DIR}/rsa_private.pem",
-    "port": "${MQTT_PORT}",
+    "port": ${MQTT_PORT},
     "auth_provider": {
       "basic": {
         "username": "rocket",
@@ -75,7 +75,7 @@
         "protocol": "mqtt",
         "transport": "ssl",
         "hostname": "localhost",
-        "port": "${MQTT_PORT:}",
+        "port": "${MQTT_PORT}",
         "ca_file": "${ABS_CERT_DIR}/ca.crt",
         "cert_file": "${ABS_CERT_DIR}/rsa_private.crt",
         "key_file": "${ABS_CERT_DIR}/rsa_private.pem",
