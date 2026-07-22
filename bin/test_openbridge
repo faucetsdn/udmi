@@ -128,21 +128,6 @@ if command -v docker >/dev/null 2>&1 && docker ps -a --format '{{.Names}}' | gre
 fi
 clean_var_directory
 
-echo "Generating missing device certificates..."
-for device_dir in sites/udmi_site_model/devices/*; do
-  if [ -d "$device_dir" ]; then
-    device_id=$(basename "$device_dir")
-    # Check if we have a private key (either rsa or ec) and generate cert if missing
-    if [ -f "$device_dir/rsa_private.pem" ] && [ ! -f "$device_dir/rsa_private.crt" ]; then
-      echo "Generating cert for RSA device $device_id..."
-      bin/keygen CERT "$device_dir"
-    elif [ -f "$device_dir/ec_private.pem" ] && [ ! -f "$device_dir/ec_private.crt" ]; then
-      echo "Generating cert for EC device $device_id..."
-      bin/keygen CERT "$device_dir"
-    fi
-  fi
-done
-
 # 4. Port Check
 echo "Checking ports..."
 for port in 8883 2379 8085; do
@@ -172,6 +157,22 @@ bin/start_etcd
 
 echo "Starting Mosquitto natively with Dynamic Security and TLS..."
 bin/setup_ca "$SITE_MODEL" localhost
+
+echo "Generating missing device certificates..."
+for device_dir in sites/udmi_site_model/devices/*; do
+  if [ -d "$device_dir" ]; then
+    device_id=$(basename "$device_dir")
+    # Check if we have a private key (either rsa or ec) and generate cert if missing
+    if [ -f "$device_dir/rsa_private.pem" ] && [ ! -f "$device_dir/rsa_private.crt" ]; then
+      echo "Generating cert for RSA device $device_id..."
+      bin/keygen CERT "$device_dir"
+    elif [ -f "$device_dir/ec_private.pem" ] && [ ! -f "$device_dir/ec_private.crt" ]; then
+      echo "Generating cert for EC device $device_id..."
+      bin/keygen CERT "$device_dir"
+    fi
+  fi
+done
+
 bin/start_mosquitto
 chmod 0600 var/mosquitto/mosquitto.passwd 2>/dev/null || true
 
