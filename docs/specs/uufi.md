@@ -213,9 +213,10 @@ To report a device's actual or currently running software subsystem version, imp
 - **Subsystem Nesting:** For `blobset` config and state payloads, data MUST be nested within a subsystem-id key (e.g., `system`) to support multi-subsystem devices. Subsystem nesting is strictly required for all UUFI-compliant messages; unnested (flat) payloads are not supported.
 - **Mandatory Fields:** `timestamp` and `version` MUST be at the root of the `payload` object.
 - **Metadata:** The `make` and `model` fields are mandatory for all `blobset` subfolder payloads (state and config) within the subsystem nesting.
-- **Blobset Config URL:** The `url` field in a `blobset` config payload MUST be a valid URI. Implementations MUST support both absolute and relative path mapping using the `file://` scheme:
+- **Blobset Config URL:** The `url` field in a `blobset` config payload MUST be a valid URI. Implementations MUST support absolute and relative path mapping using the `file://` scheme, as well as inline payloads using the `data:` scheme:
   - **Absolute Paths:** If the URI has three leading slashes (e.g., `file:///var/tmp/bundle.bin`), the scheme is stripped and resolved as an absolute path (e.g., `/var/tmp/bundle.bin`).
   - **Relative Paths:** If the URI has two leading slashes (e.g., `file://relative/path/bundle.bin`), the scheme is stripped and resolved as a path relative to the designated application or site-model root.
+  - **Inline Data Payloads:** If the URI uses the `data:` scheme (e.g., `data:text/plain;base64,MS4xLjA=` or `data:application/json;base64,...`), implementations MUST parse the MIME-type and decode the trailing base64 segment (the portion immediately following `;base64,`) to retrieve the raw bytes.
 
 ### 8.2. Timestamp Format
 - **Format:** RFC 3339 minimal precision (e.g., `2026-05-01T22:32:17Z`).
