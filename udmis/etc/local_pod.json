@@ -81,10 +81,5 @@
         }
       }
     }
-  },
-  "iot_data": {
-    "database": {
-      "project_id": "${ETCD_SCHEME}://${ETCD_CLUSTER}:${ETCD_PORT}"
-    }
   }
 }

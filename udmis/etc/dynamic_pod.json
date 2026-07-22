@@ -1,12 +1,96 @@
 {
   "include": "local_pod.json",
+  "flow_defaults": {
+    "protocol": "mqtt",
+    "transport": "ssl",
+    "hostname": "localhost",
+    "ca_file": "${ABS_CERT_DIR}/ca.crt",
+    "cert_file": "${ABS_CERT_DIR}/rsa_private.crt",
+    "key_file": "${ABS_CERT_DIR}/rsa_private.pem",
+    "port": "${MQTT_PORT}",
+    "auth_provider": {
+      "basic": {
+        "username": "rocket",
+        "password": "monkey"
+      }
+    }
+  },
+  "flows": {
+    "reflect": {
+      "recv_id": "reflect",
+      "send_id": "c/control"
+    },
+    "target": {
+      "recv_id": "events/#"
+    },
+    "state": {
+      "recv_id": "state"
+    },
+    "control": {
+      "recv_id": "c/control/#"
+    },
+    "provision": {
+      "recv_id": "events/discovery",
+      "send_id": "events",
+      "enabled": "yes"
+    },
+    "distributor": {
+      "enabled": "false"
+    },
+    "uufi": {
+      "recv_id": "/uufi/#",
+      "send_id": "${UDMI_PREFIX}udmi_target"
+    },
+    "uufi_out": {
+      "recv_id": "reflect",
+      "send_id": "/uufi/#"
+    },
+    "uufi_state": {
+      "recv_id": "state/#",
+      "send_id": "/uufi/#"
+    },
+    "uufi_events": {
+      "recv_id": "events/#",
+      "send_id": "/uufi/#"
+    }
+  },
+  "crons": {
+    "sendgroot": {
+      "send_id": "c/control"
+    }
+  },
   "iot_access": {
-    "iot-access": {
+   "iot-access": {
       "provider": "dynamic",
       "project_id": "implicit, temporary"
     },
     "temporary": {
       "provider": "temporary"
+    },
+    "implicit": {
+      "project_id": "${ETCD_SCHEME}://${ETCD_CLUSTER}:${ETCD_PORT}",
+      "provider": "implicit",
+      "options": "enabled=${ETCD_CLUSTER}",
+      "endpoint": {
+        "protocol": "mqtt",
+        "transport": "ssl",
+        "hostname": "localhost",
+        "port": "${MQTT_PORT:}",
+        "ca_file": "${ABS_CERT_DIR}/ca.crt",
+        "cert_file": "${ABS_CERT_DIR}/rsa_private.crt",
+        "key_file": "${ABS_CERT_DIR}/rsa_private.pem",
+        "auth_provider": {
+          "basic": {
+            "username": "scrumptious",
+            "password": "aardvark"
+          }
+        }
+      }
+    }
+  },
+  "iot_data": {
+    "database": {
+      "project_id": "${ETCD_SCHEME}://${ETCD_CLUSTER}:${ETCD_PORT}"
     }
   }
 }
