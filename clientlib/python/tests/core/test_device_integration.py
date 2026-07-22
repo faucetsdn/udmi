@@ -148,7 +148,7 @@ def test_device_connection_failed(
     mock_paho_client_instance.publish.assert_not_called()
 
     on_disconnect_callback = mock_paho_client_instance.on_disconnect
-    on_disconnect_callback(mock_paho_client_instance, None, 5)
+    on_disconnect_callback(mock_paho_client_instance, None, None, 5)
 
     mock_disconnect_callback.assert_called_with(5)
 

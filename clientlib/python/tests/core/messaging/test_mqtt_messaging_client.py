@@ -68,7 +68,9 @@ def test_init_configures_paho(mock_paho_client_class,
         auth_provider=None
     )
 
-    assert mock_paho_client_class.call_args.kwargs["client_id"] == base_endpoint_config.client_id
+    mock_paho_client_class.assert_called_with(
+        client_id=base_endpoint_config.client_id
+    )
 
     assert mock_paho_client_instance.on_connect == client._on_connect
     assert mock_paho_client_instance.on_message == client._on_message
@@ -214,6 +216,6 @@ def test_on_disconnect_calls_callback(mqtt_client):
     mock_disconnect_handler = MagicMock()
     mqtt_client.set_on_disconnect_handler(mock_disconnect_handler)
 
-    mqtt_client._on_disconnect(None, None, 5)
+    mqtt_client._on_disconnect(None, None, None, 5)
 
     mock_disconnect_handler.assert_called_once_with(5)

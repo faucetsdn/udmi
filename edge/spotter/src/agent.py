@@ -42,6 +42,7 @@ def calculate_local_password(key_file: str) -> str:
 def build_endpoint_config(config: Dict[str, Any]) -> EndpointConfiguration:
     mqtt_config = config.get("mqtt", {})
     device_id = mqtt_config.get("device_id")
+    spotter_device_id = mqtt_config.get("spotter_device_id", device_id)
     registry_id = mqtt_config.get("registry_id")
     host = mqtt_config.get("host", "localhost")
     port = int(mqtt_config.get("port", 8883))
@@ -56,27 +57,27 @@ def build_endpoint_config(config: Dict[str, Any]) -> EndpointConfiguration:
     # because create_device wires it up.
     if auth_mechanism == "jwt_gcp":
         topic_prefix = f"/devices/"
-        client_id = f"projects/{mqtt_config.get('project_id')}/locations/{mqtt_config.get('region')}/registries/{registry_id}/devices/{device_id}"
+        client_id = f"projects/{mqtt_config.get('project_id')}/locations/{mqtt_config.get('region')}/registries/{registry_id}/devices/{spotter_device_id}"
     else:
         topic_prefix = f"/r/{registry_id}/d/"
-        client_id = f"/r/{registry_id}/d/{device_id}"
-        # We append -spotter to the client ID if configured, or run as a distinct client
-        # In a real environment, the client ID must be registered, so let's allow setting it.
-        # But wait! To avoid disconnecting the legacy discovery node, the Spotter Agent
-        # must use a different client ID.
-        # We can specify `client_id` inside the spotter config if needed, or default to suffixing it.
-        # If we use basic auth, we might have to use the same username but a different client ID
-        # if dynsec allows it.
-        client_id = mqtt_config.get("spotter_client_id", f"{client_id}-spotter")
+        client_id = f"/r/{registry_id}/d/{spotter_device_id}"
+        client_id = mqtt_config.get("spotter_client_id", client_id)
 
     auth_provider = None
     if auth_mechanism == "udmi_local":
-        username = f"/r/{registry_id}/d/{device_id}"
+        username = f"/r/{registry_id}/d/{spotter_device_id}"
         password = calculate_local_password(key_file)
         auth_provider = AuthProvider(
             basic=Basic(
                 username=username,
                 password=password
+            )
+        )
+    elif auth_mechanism in ("jwt_gcp", "jwt"):
+        from udmi.schema import Jwt
+        auth_provider = AuthProvider(
+            jwt=Jwt(
+                audience=mqtt_config.get("project_id")
             )
         )
 

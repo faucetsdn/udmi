@@ -9,11 +9,15 @@ LEGACY_VENV="${LEGACY_VENV:-/venv_legacy/bin/python3}"
 SPOTTER_VENV="${SPOTTER_VENV:-/venv_spotter/bin/python3}"
 
 
+SERIAL_NO=""
+
 # Parse arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --config_file) CONFIG_FILE="$2"; shift ;;
         --config_file=*) CONFIG_FILE="${1#*=}" ;;
+        --serial_no) SERIAL_NO="$2"; shift ;;
+        --serial_no=*) SERIAL_NO="${1#*=}" ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift

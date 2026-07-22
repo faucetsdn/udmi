@@ -3,17 +3,27 @@
 
 set -eo pipefail
 
+SERIAL_NO=""
 MODE="all"
 
 function show_help() {
-    echo "Usage: $0 [options]"
+    echo "Usage: $0 [SERIAL_NO] [options]"
+    echo ""
+    echo "Arguments:"
+    echo "  SERIAL_NO                    Specific Spotter serial number to stop (optional, default: stops all)"
     echo ""
     echo "Options:"
-    echo "  --mode <container|local|all>   Specify which Spotter Agent execution to stop (default: all)"
-    echo "  -h, --help                     Show this help message"
+    echo "  --mode <container|local|all> Specify execution environment to stop (default: all)"
+    echo "  -h, --help                   Show this help message"
 }
 
-# Parse command line options
+# Parse positional argument if present
+if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+    SERIAL_NO="$1"
+    shift
+fi
+
+# Parse remaining options
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --mode)
@@ -33,37 +43,52 @@ while [[ $# -gt 0 ]]; do
 done
 
 stop_container() {
-    if docker ps -q --filter "name=udmi-spotter-agent" | grep -q .; then
-        echo "Stopping running Spotter Agent container (udmi-spotter-agent)..."
-        docker stop udmi-spotter-agent
-        echo "Container stopped successfully."
+    local search_filter="udmi-spotter-agent"
+    if [[ -n "${SERIAL_NO}" ]]; then
+        search_filter="udmi-spotter-agent-${SERIAL_NO}"
+    fi
+
+    local matching_containers
+    matching_containers=$(docker ps -q --filter "name=${search_filter}" || true)
+
+    if [[ -n "${matching_containers}" ]]; then
+        echo "Stopping matching Spotter Agent container(s) (${search_filter})..."
+        docker stop ${matching_containers}
+        echo "Container(s) stopped successfully."
     else
-        echo "No running Spotter Agent container found."
+        echo "No running Spotter Agent container found matching '${search_filter}'."
     fi
 }
 
 stop_local() {
     echo "Searching for local supervised Spotter processes..."
     
-    # Locate supervisor.sh processes that are running with spotter config arguments
+    local pgrep_pattern="supervisor.sh"
+    if [[ -n "${SERIAL_NO}" ]]; then
+        pgrep_pattern="supervisor.sh .*--serial_no ${SERIAL_NO}"
+    fi
+
     local supervisor_pids
-    supervisor_pids=$(pgrep -f "supervisor.sh --config_file" || true)
+    supervisor_pids=$(pgrep -f "${pgrep_pattern}" || true)
     
     if [[ -n "${supervisor_pids}" ]]; then
-        echo "Found running local supervisor(s) with PID(s): ${supervisor_pids}"
+        echo "Found running local supervisor(s) matching '${SERIAL_NO:-all}' with PID(s): ${supervisor_pids}"
         for pid in ${supervisor_pids}; do
             echo "Sending SIGTERM to supervisor process ${pid}..."
             kill -TERM "${pid}" 2>/dev/null || true
         done
         
-        # Wait a moment for processes to clean up and exit
         echo "Waiting for child processes to terminate gracefully..."
         sleep 2
         echo "Local services stopped."
     else
         # Fallback search directly for agent.py processes if supervisor wasn't found
+        local agent_pattern="agent.py"
+        if [[ -n "${SERIAL_NO}" ]]; then
+            agent_pattern="agent.py .*--serial_no ${SERIAL_NO}"
+        fi
         local agent_pids
-        agent_pids=$(pgrep -f "agent.py --config_file" || true)
+        agent_pids=$(pgrep -f "${agent_pattern}" || true)
         if [[ -n "${agent_pids}" ]]; then
             echo "Found orphan Spotter Agent process(es) with PID(s): ${agent_pids}"
             for pid in ${agent_pids}; do
@@ -73,8 +98,8 @@ stop_local() {
         fi
         
         local legacy_pids
-        legacy_pids=$(pgrep -f "discoverynode/src/main.py --config_file" || true)
-        if [[ -n "${legacy_pids}" ]]; then
+        legacy_pids=$(pgrep -f "discoverynode/src/main.py" || true)
+        if [[ -n "${legacy_pids}" && -z "${SERIAL_NO}" ]]; then
             echo "Found orphan Legacy Discovery process(es) with PID(s): ${legacy_pids}"
             for pid in ${legacy_pids}; do
                 echo "Sending SIGTERM to discovery process ${pid}..."
@@ -83,7 +108,7 @@ stop_local() {
         fi
         
         if [[ -z "${agent_pids}" && -z "${legacy_pids}" ]]; then
-            echo "No active local Spotter processes found."
+            echo "No active local Spotter processes found matching '${SERIAL_NO:-all}'."
         fi
     fi
 }

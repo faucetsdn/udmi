@@ -17,18 +17,23 @@ All verification tests are categorised into **Unit Tests** and **Integration Tes
   ```
 
 ### 1.2 Automated Integration Tests
-- **Target**: Functional pipeline, lifecycle boundaries, container isolation, and co-existence parity.
-- **Location**: [bin/](bin)
+- **Target**: Functional pipeline, lifecycle boundaries, container isolation, resource contention, and co-existence parity.
+- **Location**: [bin/](bin) & [tests/](tests)
 - **Executables**:
   - [test_supervisor](bin/test_supervisor): Validates the subprocess supervisor's PID tracking, signal propagation (`SIGTERM` / `SIGINT`), and graceful termination handlers.
   - [test_container](bin/test_container): Validates container lifecycle isolation, volume mounting of on-prem configuration files, and supervisor integration inside Docker.
   - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on a custom docker network, confirming 100% functional telemetry payload parity.
+  - [test_resource_contention](bin/test_resource_contention): Validates dual-process CPU, memory cgroups, file descriptor limits, and telemetry heartbeat latency under concurrent heavy workloads.
+  - [test_fault_injection](bin/test_fault_injection): Validates network fault tolerance, proxy disconnection fallbacks (HTTP -> MQTT base64 chunking), and socket reconnect logic.
+  - [self_test.py](tests/self_test.py): In-container micro-self-test suite executed by supervisor post-OTA staging to verify imports, credentials, raw socket access, and loop sanity.
 
 To get detailed explanations of what each integration test script validates, run them with the `--help` flag:
 ```bash
 ./edge/spotter/bin/test_supervisor --help
 ./edge/spotter/bin/test_container --help
 ./edge/spotter/bin/test_parity --help
+./edge/spotter/bin/test_resource_contention --help
+./edge/spotter/bin/test_fault_injection --help
 ```
 
 ### 1.3 Standalone & Container Startup Orchestration
@@ -116,3 +121,52 @@ To maintain project tracking visibility and alignment on behavioral specificatio
 - **Completeness**: When a task or sub-phase is successfully implemented and verified, the agent must mark it as `[Completed]` in the plan.
 - **Traceability**: The agent must document the precise files modified/created and the specific verification methods/results directly under the task in the plan.
 - **Preservation**: The original behavioral specifications for each task must not be removed or truncated; implementation and testing details should be appended underneath them.
+
+---
+
+## 6. Production Release Cycle & Execution Matrix
+
+To move towards a regular, methodological release cycle while protecting live OT infrastructure, tests are categorized by target execution safety:
+
+### 6.1 Target Execution Matrix
+| Test Executable / Profile | Synthetic Local Testbed | Production Edge Targets | Rationale |
+| :--- | :---: | :---: | :--- |
+| **`tests/test_agent.py`** | **Yes** | **No** | Unit test suite; requires local test runner environment. |
+| **`bin/test_supervisor`** | **Yes** | **No** | Destructive process signaling and `sys.exit` crash handlers. |
+| **`bin/test_container`** | **Yes** | **No** | Local container build and volume mount lifecycle checks. |
+| **`bin/test_parity`** | **Yes** | **No** | Uses custom bridge network and mock local Mosquitto instances. |
+| **`bin/test_fault_injection`** | **Yes** | **No** | Induces artificial proxy drops and latency (`tc/netem`). |
+| **`bin/test_resource_contention`** | **Yes** | **Canary Only** | Full local stress run; production runs in non-destructive canary mode. |
+| **`tests/self_test.py`** | **Yes** | **Yes** | Non-destructive <10s in-container post-OTA staging validation. |
+| **`system.diagnostics.resource_audit`** | **Yes** | **Yes** | Non-destructive on-device cgroup & telemetry health probe. |
+
+### 6.2 3-Tier Release Pipeline
+1. **Tier 1 (Local Pre-Submit Gate)**: Stage 1/2 unit & schema tests plus Stage 3 local integration (`test_container`, `test_resource_contention`).
+2. **Tier 2 (In-Container Staging Rollback)**: OTA wheel packages deployed to `/opt/spotter/staging/venv`. Supervisor executes `self_test.py`. Any non-zero exit code triggers instant rollback without promoting the active symlink.
+3. **Tier 3 (Progressive Production Canary)**: Rollout progresses in stages (1% -> 10% -> 100%). Automated cloud monitoring inspects telemetry latency, cgroup metrics, and heartbeat rates, auto-triggering rollbacks upon anomaly detection.
+
+---
+
+## 7. Observability Standards & Metrics Telemetry Specification
+
+### 7.1 Telemetry Delivery Channels
+Spotter supports three distinct metric delivery mechanisms depending on deployment architecture:
+1. **Prometheus / OpenTelemetry (Open-Source)**: HTTP `/metrics` scrape endpoint exposed on container internal port `9090` (or push via OpenTelemetry OTLP exporter).
+2. **Google Murdock Daemon (`murdockd`) Integration**: Internal Unix domain socket interface (`/healthz` liveness & metrics stream) piping edge telemetry to Monarch and Google Cloud Monitoring.
+3. **Native UDMI MQTT Channel (`events/metrics`)**: Periodic JSON metric events published over mTLS MQTT for firewall-restricted OT environments where inbound HTTP ports cannot be exposed.
+
+### 7.2 Metric Catalog
+| Metric Identifier | Metric Type | Labels | Description |
+| :--- | :---: | :--- | :--- |
+| `spotter_cpu_usage_ratio` | Gauge | `process="spotter\|legacy"` | CPU utilization ratio vs allocated quota. |
+| `spotter_memory_bytes` | Gauge | `type="rss\|cgroup_limit"` | Memory consumption vs cgroup memory bounds. |
+| `spotter_open_fds` | Gauge | — | Count of open file descriptors (`ulimit -n`). |
+| `spotter_pcap_packets_total` | Counter | `status="captured\|dropped"` | Count of network packets captured in PCAP driver. |
+| `spotter_pcap_bytes_transferred_total` | Counter | `transport="gcs\|mqtt"` | Diagnostic stream volume uploaded to cloud. |
+| `spotter_pcap_upload_duration_seconds` | Histogram | — | Latency bucket distributions for GCS/MQTT uploads. |
+| `spotter_ota_events_total` | Counter | `result="success\|rollback"` | Outcome counters for staged OTA packages. |
+| `spotter_mqtt_connection_status` | Gauge | — | Connectivity indicator (`1`=connected, `0`=disconnected). |
+
+### 7.3 Distributed Tracing & Logging Standards
+- **W3C OpenTelemetry Trace Context**: Spotter injects `traceparent` context headers into MQTT events and GCS upload HTTP headers to correlate edge packet captures with cloud reassembly pipelines.
+- **Single-Line Structured JSON Logs**: stdout/stderr logs are formatted as single-line JSON (`timestamp`, `severity`, `component`, `trace_id`, `message`) for parsing by Cloud Logging or Vector.

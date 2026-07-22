@@ -62,7 +62,7 @@ class TestAgentConfig(unittest.TestCase):
         
         self.assertEqual(endpoint.hostname, "127.0.0.1")
         self.assertEqual(endpoint.port, 8883)
-        self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/GAT-1-spotter")
+        self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/GAT-1")
         self.assertEqual(endpoint.topic_prefix, "/r/ZZ-TRI-FECTA/d/")
         self.assertEqual(endpoint.algorithm, "RS256")
         self.assertEqual(endpoint.key_file, self.key_file)
@@ -102,7 +102,8 @@ class TestAgentConfig(unittest.TestCase):
         self.assertEqual(endpoint.client_id, "projects/my-project/locations/us-central1/registries/ZZ-TRI-FECTA/devices/GAT-1")
         self.assertEqual(endpoint.topic_prefix, "/devices/")
         self.assertEqual(endpoint.algorithm, "RS256")
-        self.assertIsNone(endpoint.auth_provider) # Clientlib JwtAuthProvider is created inside messaging layer, not endpoint_config
+        self.assertIsNotNone(endpoint.auth_provider)
+        self.assertEqual(endpoint.auth_provider.jwt.audience, "my-project")
 
     def test_build_endpoint_config_custom_client_id(self):
         config = {
@@ -119,6 +120,23 @@ class TestAgentConfig(unittest.TestCase):
         
         endpoint = build_endpoint_config(config)
         self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/custom-spotter-id")
+
+    def test_build_endpoint_config_spotter_device_id(self):
+        config = {
+            "mqtt": {
+                "device_id": "AHU-1",
+                "spotter_device_id": "AHU-1-spotter",
+                "host": "localhost",
+                "port": 18883,
+                "registry_id": "ZZ-TRI-FECTA",
+                "key_file": self.key_file,
+                "authentication_mechanism": "udmi_local"
+            }
+        }
+        
+        endpoint = build_endpoint_config(config)
+        self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/AHU-1-spotter")
+        self.assertEqual(endpoint.auth_provider.basic.username, "/r/ZZ-TRI-FECTA/d/AHU-1-spotter")
 
 if __name__ == "__main__":
     unittest.main()

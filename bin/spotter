@@ -10,26 +10,31 @@ WORKSPACE_DIR=$(realpath "${SCRIPT_DIR}/..")
 # Default values
 MODE="local"
 CONFIG_PATH=""
-CONFIG_DIR=""
+SERIAL_NO=""
 
 function show_help() {
-    echo "Usage: $0 TARGET [PROJECT_SPEC] [DEVICE_ID] [options]"
-    echo "   or: $0 [options]"
+    echo "Usage:"
+    echo "  1. From Site Model (Local Dev / Sequencer):"
+    echo "     $0 SITE_PATH PROJECT_SPEC DEVICE_ID [SPOTTER_DEVICE_ID] [SERIAL_NO] [options]"
     echo ""
-    echo "Target Specification (Polymorphic First Argument):"
-    echo "  SITE_PATH                  Path to site model directory (requires PROJECT_SPEC and DEVICE_ID)"
-    echo "                             Example: $0 sites/udmi_site_model //mqtt/localhost AHU-1"
-    echo "  CONFIG_FILE                Path to custom JSON configuration file"
-    echo "                             Example: $0 /etc/spotter/spotter_config.json"
-    echo "  (omitted)                  Defaults to spotter_config.json"
+    echo "  2. From Configuration File (Production / Deployed Device):"
+    echo "     $0 CONFIG_FILE [SERIAL_NO] [options]"
     echo ""
-    echo "Positional Arguments (when TARGET is a SITE_PATH directory):"
+    echo "Examples:"
+    echo "  $0 sites/udmi_site_model //mqtt/localhost AHU-1 AHU-1-spotter"
+    echo "  $0 sites/udmi_site_model //mqtt/localhost AHU-1 AHU-1-spotter 1234"
+    echo "  $0 edge/spotter/spotter_config.json 1234 --mode container"
+    echo ""
+    echo "Arguments:"
+    echo "  SITE_PATH                  Path to site model directory"
     echo "  PROJECT_SPEC               Project specification string (e.g. //mqtt/localhost:18883)"
     echo "  DEVICE_ID                  Target device ID (e.g. AHU-1)"
+    echo "  SPOTTER_DEVICE_ID          Spotter agent device ID (default: DEVICE_ID-spotter)"
+    echo "  CONFIG_FILE                Path to spotter_config.json file"
+    echo "  SERIAL_NO                  Serial number for this Spotter instance (default: NA)"
     echo ""
     echo "Options:"
     echo "  --mode <container|local>   Specify how to run the Spotter Agent (default: local)"
-    echo "  --config <path>            Path to spotter_config.json (alternative to positional CONFIG_FILE)"
     echo "  --config_dir <path>        Directory containing config and certificates (optional)"
     echo "  -h, --help                 Show this help message"
 }
@@ -39,6 +44,10 @@ if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
     if [[ -f "$1" ]]; then
         CONFIG_PATH=$(realpath "$1")
         shift
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            SERIAL_NO="$1"
+            shift
+        fi
         
         # Parse remaining options
         while [[ $# -gt 0 ]]; do
@@ -72,6 +81,17 @@ if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
         PROJECT_SPEC="$2"
         DEVICE_ID="$3"
         shift 3
+
+        SPOTTER_DEVICE_ID=""
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            SPOTTER_DEVICE_ID="$1"
+            shift
+        fi
+
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            SERIAL_NO="$1"
+            shift
+        fi
         
         # Parse remaining options
         while [[ $# -gt 0 ]]; do
@@ -116,58 +136,112 @@ if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
             exit 1
         fi
         
-        REGISTRY_ID=$(jq -r .registry_id "${SITE_CONFIG}")
-        
+        REGISTRY_BASE=$(jq -r .registry_id "${SITE_CONFIG}")
+        CLOUD_REGION=$(jq -r .cloud_region "${SITE_CONFIG}" 2>/dev/null || true)
+        [[ "${CLOUD_REGION}" == "null" || -z "${CLOUD_REGION}" ]] && CLOUD_REGION="us-central1"
+
         # Parse PROJECT_SPEC
-        # Format of PROJECT_SPEC is {//PROVIDER/}PROJECT[@BROKER]
-        # e.g. //mqtt/localhost:18883
-        # Extract port and host
-        PORT=18883
-        HOST="localhost"
-        
-        if [[ "${PROJECT_SPEC}" =~ localhost:([0-9]+) ]]; then
+        # Format: [//PROVIDER/]PROJECT_ID[/UDMI_NAMESPACE][@BROKER][:PORT]
+        # e.g. //mqtt/localhost:18883, //gbos/bos-platform-dev/faucetsdn, //clearblade/bos-platform-dev/my-namespace
+        RAW_SPEC="${PROJECT_SPEC#//}"
+        IOT_PROVIDER=""
+        UDMI_PREFIX=""
+        PORT=""
+        HOST=""
+        BROKER_SPEC=""
+        AUTH_MECHANISM="udmi_local"
+
+        if [[ "${PROJECT_SPEC}" =~ ^// ]]; then
+            IOT_PROVIDER="${RAW_SPEC%%/*}"
+            SPEC_NO_PROVIDER="${RAW_SPEC#*/}"
+        else
+            IOT_PROVIDER="mqtt"
+            SPEC_NO_PROVIDER="${RAW_SPEC}"
+        fi
+
+        # Extract target host/broker if @ is present
+        if [[ "${SPEC_NO_PROVIDER}" =~ @ ]]; then
+            BROKER_SPEC="${SPEC_NO_PROVIDER#*@}"
+            SPEC_TARGET="${SPEC_NO_PROVIDER%@*}"
+        else
+            BROKER_SPEC=""
+            SPEC_TARGET="${SPEC_NO_PROVIDER}"
+        fi
+
+        # Extract UDMI namespace if present (e.g. bos-platform-dev/faucetsdn or bos-platform-dev+heykhyati)
+        if [[ "${SPEC_TARGET}" == *"/"* ]]; then
+            PROJECT_ID="${SPEC_TARGET%%/*}"
+            UDMI_NAMESPACE="${SPEC_TARGET#*/}"
+            if [[ -n "${UDMI_NAMESPACE}" ]]; then
+                UDMI_PREFIX="${UDMI_NAMESPACE}~"
+            fi
+        elif [[ "${SPEC_TARGET}" == *"+"* ]]; then
+            PROJECT_ID="${SPEC_TARGET%%+*}"
+            UDMI_NAMESPACE="${SPEC_TARGET#*+}"
+            if [[ -n "${UDMI_NAMESPACE}" ]]; then
+                UDMI_PREFIX="${UDMI_NAMESPACE}~"
+            fi
+        else
+            PROJECT_ID="${SPEC_TARGET}"
+        fi
+
+        REGISTRY_ID="${UDMI_PREFIX}${REGISTRY_BASE}"
+
+        # Determine Host, Port, and Auth Mechanism based on IOT_PROVIDER
+        if [[ "${IOT_PROVIDER}" == "clearblade" ]]; then
+            HOST="${CLOUD_REGION}-mqtt.clearblade.com"
+            PORT=8883
+            AUTH_MECHANISM="jwt_gcp"
+        elif [[ "${IOT_PROVIDER}" == "gbos" ]]; then
+            HOST="mqtt.bos.goog"
+            PORT=8883
+            AUTH_MECHANISM="jwt_gcp"
+        elif [[ "${IOT_PROVIDER}" == "gcp" || "${IOT_PROVIDER}" == "gref" ]]; then
+            HOST="mqtt.googleapis.com"
+            PORT=8883
+            AUTH_MECHANISM="jwt_gcp"
+        else # default: mqtt
+            AUTH_MECHANISM="udmi_local"
+            PORT=18883
+            HOST="${PROJECT_ID}"
+        fi
+
+        # Override host/port if explicit @BROKER or port specified
+        if [[ -n "${BROKER_SPEC}" ]]; then
+            if [[ "${BROKER_SPEC}" =~ :([0-9]+) ]]; then
+                PORT="${BASH_REMATCH[1]}"
+                HOST="${BROKER_SPEC%:*}"
+            else
+                HOST="${BROKER_SPEC}"
+            fi
+        elif [[ "${PROJECT_ID}" =~ :([0-9]+) ]]; then
             PORT="${BASH_REMATCH[1]}"
-            HOST="localhost"
-        elif [[ "${PROJECT_SPEC}" =~ :([0-9]+) ]]; then
-            PORT="${BASH_REMATCH[1]}"
+            PROJECT_ID="${PROJECT_ID%:*}"
+            if [[ "${IOT_PROVIDER}" == "mqtt" ]]; then
+                HOST="localhost"
+            fi
+        fi
+
+        # Fallback to site_config if PROJECT_ID is empty
+        if [[ -z "${PROJECT_ID}" || "${PROJECT_ID}" == "localhost" && "${IOT_PROVIDER}" != "mqtt" ]]; then
+            PROJECT_ID=$(jq -r .project_id "${SITE_CONFIG}" 2>/dev/null || true)
+            [[ "${PROJECT_ID}" == "null" || -z "${PROJECT_ID}" ]] && PROJECT_ID="my-project"
         fi
         
-        # Check/Create device folder in site model if not present
+        SPOTTER_DEVICE_ID="${SPOTTER_DEVICE_ID:-${DEVICE_ID}-spotter}"
+
+        # Verify device folder exists in site model
         DEVICE_DIR="${SITE_PATH}/devices/${DEVICE_ID}"
         if [[ ! -d "${DEVICE_DIR}" ]]; then
-            echo "Creating device folder: ${DEVICE_DIR}..."
-            mkdir -p "${DEVICE_DIR}"
-            cat <<EOF > "${DEVICE_DIR}/metadata.json"
-{
-  "cloud": {
-    "auth_type": "RS256_X509"
-  },
-  "system": {
-    "location": {
-      "site": "spotter-testing"
-    }
-  }
-}
-EOF
+            echo "Error: Device directory does not exist: ${DEVICE_DIR}"
+            exit 1
         fi
         
-        # Run mosquctl_device to ensure keys exist and are registered on broker
-        echo "Ensuring keys are generated and registered on broker..."
-        # We call it with MQTT_PORT so that it knows which port to connect to if broker is active
-        MQTT_PORT="${PORT}" "${WORKSPACE_DIR}/bin/mosquctl_device" "${SITE_PATH}" "${DEVICE_ID}" >/dev/null 2>&1 || true
-        
-        # Resolve the generated key file paths
-        PKCS8_FILE="${DEVICE_DIR}/rsa_private.pkcs8"
-        if [[ ! -f "${PKCS8_FILE}" ]]; then
-            PKCS8_FILE="${DEVICE_DIR}/ec_private.pkcs8"
-        fi
-        
+        # Resolve key and certificate paths from site model device directory
         KEY_FILE="${DEVICE_DIR}/rsa_private.pem"
         if [[ ! -f "${KEY_FILE}" ]]; then
             KEY_FILE="${DEVICE_DIR}/ec_private.pem"
         fi
-        
-        CA_FILE="${SITE_PATH}/reflector/ca.crt"
         
         CERT_FILE="${DEVICE_DIR}/rsa_private.crt"
         if [[ ! -f "${CERT_FILE}" ]]; then
@@ -178,23 +252,23 @@ EOF
             echo "Error: Private key file not found: ${KEY_FILE}"
             exit 1
         fi
-        
-        # Re-register the client without client ID constraint to allow Spotter Agent and legacy node to coexist
-        DEV_USER="/r/${REGISTRY_ID}/d/${DEVICE_ID}"
-        DEV_PASS=$(sha256sum < "${PKCS8_FILE}" | cut -c1-8)
-        
-        # Source mosquitto_ctrl.sh to get MOSQUITTO_CTRL command definition
-        export MQTT_PORT="${PORT}"
-        export UDMI_ROOT="${WORKSPACE_DIR}"
-        # Temporarily turn off set -u to avoid mosquitto_ctrl.sh unbound variable errors
-        set +u
-        source "${WORKSPACE_DIR}/etc/mosquitto_ctrl.sh"
-        set -u
-        
-        echo "Updating broker dynsec rules to allow multiple client IDs for ${DEVICE_ID}..."
-        $MOSQUITTO_CTRL deleteClient $DEV_USER >/dev/null 2>&1 || true
-        $MOSQUITTO_CTRL createClient $DEV_USER -p $DEV_PASS >/dev/null 2>&1 || true
-        $MOSQUITTO_CTRL addClientRole $DEV_USER service >/dev/null 2>&1 || true
+
+        # Resolve spotter device key file (falling back to DEVICE_DIR if spotter device dir doesn't exist)
+        SPOTTER_DEVICE_DIR="${SITE_PATH}/devices/${SPOTTER_DEVICE_ID}"
+        SPOTTER_KEY_FILE="${KEY_FILE}"
+        SPOTTER_CERT_FILE="${CERT_FILE}"
+        if [[ -d "${SPOTTER_DEVICE_DIR}" ]]; then
+            [[ -f "${SPOTTER_DEVICE_DIR}/rsa_private.pem" ]] && SPOTTER_KEY_FILE="${SPOTTER_DEVICE_DIR}/rsa_private.pem"
+            [[ -f "${SPOTTER_DEVICE_DIR}/ec_private.pem" ]] && SPOTTER_KEY_FILE="${SPOTTER_DEVICE_DIR}/ec_private.pem"
+            [[ -f "${SPOTTER_DEVICE_DIR}/rsa_private.crt" ]] && SPOTTER_CERT_FILE="${SPOTTER_DEVICE_DIR}/rsa_private.crt"
+            [[ -f "${SPOTTER_DEVICE_DIR}/ec_private.crt" ]] && SPOTTER_CERT_FILE="${SPOTTER_DEVICE_DIR}/ec_private.crt"
+        fi
+
+        # CA_FILE is only for local mTLS reflector. Cloud providers use system Root CAs.
+        CA_JSON="null"
+        if [[ "${IOT_PROVIDER}" == "mqtt" ]]; then
+            CA_JSON="\"${SITE_PATH}/reflector/ca.crt\""
+        fi
         
         # Create a temporary runtime config file
         CONFIG_PATH="${WORKSPACE_DIR}/out/spotter_runtime_config.json"
@@ -205,15 +279,16 @@ EOF
   "log_level": "INFO",
   "mqtt": {
     "device_id": "${DEVICE_ID}",
+    "spotter_device_id": "${SPOTTER_DEVICE_ID}",
     "registry_id": "${REGISTRY_ID}",
     "host": "${HOST}",
     "port": ${PORT},
-    "authentication_mechanism": "udmi_local",
-    "region": "us-central1",
-    "project_id": "my-project",
-    "key_file": "${KEY_FILE}",
-    "cert_file": "${CERT_FILE}",
-    "ca_file": "${CA_FILE}",
+    "authentication_mechanism": "${AUTH_MECHANISM}",
+    "region": "${CLOUD_REGION}",
+    "project_id": "${PROJECT_ID}",
+    "key_file": "${SPOTTER_KEY_FILE}",
+    "cert_file": "${SPOTTER_CERT_FILE}",
+    "ca_file": ${CA_JSON},
     "algorithm": "RS256"
   },
   "bacnet": {
@@ -253,6 +328,10 @@ else
     done
 fi
 
+if [[ -z "${SERIAL_NO}" ]]; then
+    SERIAL_NO="NA"
+fi
+
 if [[ -z "${CONFIG_PATH:-}" ]]; then
     if [[ -f "${WORKSPACE_DIR}/edge/spotter/spotter_config.json" ]]; then
         CONFIG_PATH="${WORKSPACE_DIR}/edge/spotter/spotter_config.json"
@@ -283,7 +362,8 @@ cd "${CONFIG_DIR}"
 VENV_DIR="${WORKSPACE_DIR}/venv"
 
 if [[ "${MODE}" == "container" ]]; then
-    echo "=== Running Spotter Agent in CONTAINER mode ==="
+    CONTAINER_NAME="udmi-spotter-agent-${SERIAL_NO}"
+    echo "=== Running Spotter Agent (${SERIAL_NO}) in CONTAINER mode ==="
     
     # 1. Verify Docker daemon is running
     if ! docker info >/dev/null 2>&1; then
@@ -299,16 +379,17 @@ if [[ "${MODE}" == "container" ]]; then
     mkdir -p "${CONFIG_DIR}/logs"
     
     # 4. Run the container
-    echo "Starting Spotter Agent container..."
+    echo "Starting Spotter Agent container '${CONTAINER_NAME}'..."
     docker run -it --rm \
-        --name udmi-spotter-agent \
+        --name "${CONTAINER_NAME}" \
         -v "${CONFIG_DIR}:/config_dir" \
         -v "${CONFIG_DIR}/logs:/var/log/spotter" \
         udmi-spotter:latest \
-        --config_file "/config_dir/$(basename "${CONFIG_PATH}")"
+        --config_file "/config_dir/$(basename "${CONFIG_PATH}")" \
+        --serial_no "${SERIAL_NO}"
 
 elif [[ "${MODE}" == "local" ]]; then
-    echo "=== Running Spotter Agent in LOCAL mode ==="
+    echo "=== Running Spotter Agent (${SERIAL_NO}) in LOCAL mode ==="
     
     # 1. Setup Spotter virtual environment
     if [[ ! -d "${VENV_DIR}" ]]; then
@@ -348,8 +429,8 @@ elif [[ "${MODE}" == "local" ]]; then
     mkdir -p "${WORKSPACE_DIR}/out/logs/spotter"
     
     # 4. Run supervisor
-    echo "Starting supervised local services..."
-    exec "${WORKSPACE_DIR}/edge/spotter/container/supervisor.sh" --config_file "${CONFIG_PATH}"
+    echo "Starting supervised local services for Serial No '${SERIAL_NO}'..."
+    exec "${WORKSPACE_DIR}/edge/spotter/container/supervisor.sh" --config_file "${CONFIG_PATH}" --serial_no "${SERIAL_NO}"
 
 else
     echo "Error: Invalid mode '${MODE}'. Allowed modes: container, local."
