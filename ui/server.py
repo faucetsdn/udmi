@@ -110,13 +110,13 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         
         path_parts = parsed_url.path.strip('/').split('/')
         if len(path_parts) >= 2 and path_parts[0] == 'ui':
-            feature_name = path_parts[1]
-            if feature_name in {'sequencer', 'mantis'} and feature_name not in ALLOWED_FEATURES:
-                self.send_response(403)
-                self.send_header('Content-Type', 'text/plain')
-                self.end_headers()
-                self.wfile.write(f"Forbidden: The '{feature_name}' tool is disabled on this server.".encode('utf-8'))
-                return
+            for feature_name in {'sequencer', 'mantis'}:
+                if feature_name in path_parts and feature_name not in ALLOWED_FEATURES:
+                    self.send_response(403)
+                    self.send_header('Content-Type', 'text/plain')
+                    self.end_headers()
+                    self.wfile.write(f"Forbidden: The '{feature_name}' tool is disabled on this server.".encode('utf-8'))
+                    return
 
         if parsed_url.path == '/api/features':
             self.handle_api_features()

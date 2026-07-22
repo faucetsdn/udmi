@@ -11,14 +11,14 @@ UDMI Workbench is built on a **Micro-Frontend Architecture** using sandboxed `<i
 ```
               ┌──────────────────────────────────────────┐
               │          Parent Orchestrator             │
-              │         (ui/index.html & main.js)        │
+              │       (ui/src/index.html & main.js)      │
               └───────┬──────────────────────────┬───────┘
                       │                          │
            postMessage│(siteModel)    postMessage│(siteModel)
                       ▼                          ▼
         ┌──────────────────────────┐┌──────────────────────────┐
         │  Sequencer Dashboard     ││     Mantis Debugger      │
-        │ (ui/sequencer/index.html)││  (ui/mantis/index.html)  │
+        │(ui/src/sequencer/index)  ││ (ui/src/mantis/index.html│
         │  - Run/Stop Compliance   ││  - Chronological Trace   │
         │  - Live Log Streamer     ││  - Payload Tree Inspector│
         └──────────────────────────┘└──────────────────────────┘
@@ -35,21 +35,24 @@ UDMI Workbench is built on a **Micro-Frontend Architecture** using sandboxed `<i
 
 ```
 ui/
-├── assets/                  # Shared image assets (logos, icons)
-├── shared/                  # Shared Design System & Components
-│   ├── components/          # Reusable UI components (JSON Tree, Log Terminal)
-│   └── theme.css            # Material 3 design tokens & unified form styles
-├── sequencer/               # Standalone Sequencer Micro-Frontend
-│   ├── index.html           # Sequencer UI layout & local toolbar
-│   ├── main.js              # Sequencer controller (local DUT scan & run)
-│   └── style.css            # Local viewport-locked styles
-├── mantis/                  # Standalone Mantis Debugger Micro-Frontend
-│   ├── index.html           # Mantis UI layout & local scenario toolbar
-│   ├── main.js              # Mantis controller (scenario scan & timeline)
-│   └── style.css            # Local transition tree & JSON viewer styles
-├── index.html               # Parent Shell HTML (Nav Rail & Iframe mounts)
-├── main.js                  # Parent Shell Orchestrator (State sync, modals)
-├── style.css                # Parent Shell Styles (Outer layouts, modal overlays)
+├── spec/                    # Framework-agnostic UI Specification Documents
+├── src/                     # Application Source Code
+│   ├── assets/              # Shared image assets (logos, icons)
+│   ├── shared/              # Shared Design System & Components
+│   │   ├── components/      # Reusable UI components (JSON Tree, Log Terminal)
+│   │   └── theme.css        # Material 3 design tokens & unified form styles
+│   ├── sequencer/           # Standalone Sequencer Micro-Frontend
+│   │   ├── index.html       # Sequencer UI layout & local toolbar
+│   │   ├── main.js          # Sequencer controller (local DUT scan & run)
+│   │   └── style.css        # Local viewport-locked styles
+│   ├── mantis/              # Standalone Mantis Debugger Micro-Frontend
+│   │   ├── index.html       # Mantis UI layout & local scenario toolbar
+│   │   ├── main.js          # Mantis controller (scenario scan & timeline)
+│   │   └── style.css        # Local transition tree & JSON viewer styles
+│   ├── index.html           # Parent Shell HTML (Nav Rail & Iframe mounts)
+│   ├── main.js              # Parent Shell Orchestrator (State sync, modals)
+│   └── style.css            # Parent Shell Styles (Outer layouts, modal overlays)
+├── tests/                   # Python server unit tests
 └── server.py                # Python API & Static File Server (Request guards)
 ```
 
@@ -57,7 +60,7 @@ ui/
 
 ## State Sync Engine (PostMessage API)
 
-The parent orchestrator (`ui/main.js`) manages the global **Site Model Path** selection. To keep the child tools updated without forcing iframe reloads, the shell broadcasts state changes downstream using the HTML5 **PostMessage API**.
+The parent orchestrator (`ui/src/main.js`) manages the global **Site Model Path** selection. To keep the child tools updated without forcing iframe reloads, the shell broadcasts state changes downstream using the HTML5 **PostMessage API**.
 
 ### 1. Parent Broadcast
 Whenever a user changes the Site Model (via the text input or the Browse modal), the parent shell broadcasts the update:
@@ -75,7 +78,7 @@ syncStateToIframe(iframe) {
 *   **Late-Bound Sync**: To ensure an iframe receives the state even if it is still loading, the parent shell listens for the `load` event of each iframe and pushes the active Site Model path the exact millisecond the frame finishes loading, ensuring zero-latency initializations.
 
 ### 2. Child Subscription
-Inside each micro-frontend (e.g., `ui/sequencer/main.js`), the tool listens for this message to trigger its local scans:
+Inside each micro-frontend (e.g., `ui/src/sequencer/main.js`), the tool listens for this message to trigger its local scans:
 ```javascript
 window.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'udmi_state_change') {
@@ -111,15 +114,15 @@ The Workbench Python server (`ui/server.py`) provides non-blocking REST and stre
 Adding a new developer tool (for example, a **`config_editor`**) is incredibly simple and requires **zero changes** to the business logic of existing tools.
 
 ### Step 1: Create a Plugin Directory
-Create a new folder under `ui/` for your tool:
+Create a new folder under `ui/src/` for your tool:
 ```bash
-mkdir -p ui/config_editor
+mkdir -p ui/src/config_editor
 ```
 
 ### Step 2: Create your Standalone HTML/JS/CSS Files
 Create your tool layout and logic. 
 
-**`ui/config_editor/index.html`**:
+**`ui/src/config_editor/index.html`**:
 Make sure to load the shared design system styles (`../shared/theme.css`) and your local assets:
 ```html
 <!DOCTYPE html>
@@ -141,7 +144,7 @@ Make sure to load the shared design system styles (`../shared/theme.css`) and yo
 </html>
 ```
 
-**`ui/config_editor/main.js`**:
+**`ui/src/config_editor/main.js`**:
 Subscribe to the parent orchestrator's state broadcasts. The shell will automatically push the active Site Model path whenever it loads or changes:
 ```javascript
 class ConfigEditorController {
@@ -167,7 +170,7 @@ window.addEventListener('DOMContentLoaded', () => new ConfigEditorController());
 ```
 
 ### Step 3: Mount your Tool in the Parent Shell
-Open **`ui/index.html`**:
+Open **`ui/src/index.html`**:
 1.  Add your iframe inside the `<section class="app-content">` block:
     ```html
     <iframe id="iframe-config" class="app-iframe" src="config_editor/index.html" data-feature="config_editor"></iframe>

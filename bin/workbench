@@ -108,7 +108,7 @@ else
 fi
 
 # Build URL
-URL="http://localhost:8080/ui/index.html?features=${FEATURES_PARAM}"
+URL="http://localhost:8080/ui/src/index.html?features=${FEATURES_PARAM}"
 
 echo "Opening UDMI Workbench (${FEATURE}) in your default browser..."
 echo "Workbench running at: ${URL}"
