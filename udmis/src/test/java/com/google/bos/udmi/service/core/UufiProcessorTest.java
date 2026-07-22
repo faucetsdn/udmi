@@ -202,6 +202,46 @@ public class UufiProcessorTest extends ProcessorTestBase {
     assertEquals(SubFolder.POINTSET, publishedEnvelope.subFolder);
   }
 
+  /**
+   * Test that outbound monolithic state messages (having null or UPDATE subfolder)
+   * are correctly sharded into individual sub-blocks and published on compliant paths.
+   */
+  @Test
+  public void outboundMonolithicStateShardingTest() {
+    Envelope stateEnvelope = new Envelope();
+    stateEnvelope.subType = SubType.STATE;
+    stateEnvelope.subFolder = SubFolder.UPDATE;
+    stateEnvelope.deviceId = "dev-1";
+    stateEnvelope.deviceRegistryId = "reg-1";
+
+    com.google.bos.udmi.service.messaging.StateUpdate monolithicState =
+        new com.google.bos.udmi.service.messaging.StateUpdate();
+    monolithicState.version = "1";
+    monolithicState.timestamp = new java.util.Date();
+    monolithicState.system = new udmi.schema.SystemState();
+    monolithicState.pointset = new udmi.schema.PointsetState();
+
+    // Send the system monolithic state update message to the processor's input
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(stateEnvelope, monolithicState)));
+
+    // Since monolithicState has 'system' and 'pointset' fields non-null,
+    // it should shard them and publish 2 messages: one for system, one for pointset.
+    assertEquals(2, captured.size(), "captured message count should match sharded count");
+
+    Map<String, Object> wrappedMsg1 = toMap(captured.get(0));
+    Map<String, Object> wrappedMsg2 = toMap(captured.get(1));
+
+    // Verify subfolders are correctly sharded
+    java.util.Set<String> subFolders = new java.util.HashSet<>();
+    subFolders.add((String) wrappedMsg1.get("subFolder"));
+    subFolders.add((String) wrappedMsg2.get("subFolder"));
+
+    java.util.Set<String> expectedSubFolders =
+        java.util.Set.of(SubFolder.SYSTEM.value(), SubFolder.POINTSET.value());
+    assertEquals(expectedSubFolders, subFolders, "sharded subfolders mismatch");
+  }
+
   private UufiProcessor getProcessor() {
     return (UufiProcessor) UdmiServicePod.getComponent(UufiProcessor.class);
   }

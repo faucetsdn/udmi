@@ -1,13 +1,17 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toObject;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
 import udmi.schema.CloudModel;
@@ -157,6 +161,39 @@ public class UufiProcessor extends ProcessorBase {
   }
 
   private void handleUufiOutbound(Envelope envelope, Object message) {
+    boolean isStateUpdate = envelope.subType == SubType.STATE
+        && (envelope.subFolder == null || envelope.subFolder == SubFolder.UPDATE);
+    if (isStateUpdate) {
+      try {
+        StateUpdate stateUpdate = convertTo(StateUpdate.class, message);
+        Arrays.stream(udmi.schema.State.class.getFields()).forEach(field -> {
+          try {
+            String fieldName = field.getName();
+            Object fieldMessage = field.get(stateUpdate);
+            if (fieldMessage != null) {
+              SubFolder subFolder = catchToNull(() -> SubFolder.fromValue(fieldName));
+              if (subFolder != null) {
+                Map<String, Object> shardedPayload = toMap(fieldMessage);
+                shardedPayload.put("version", stateUpdate.version);
+                shardedPayload.put("timestamp", stateUpdate.timestamp);
+
+                Envelope shardedEnvelope = deepCopy(envelope);
+                shardedEnvelope.subFolder = subFolder;
+
+                handleUufiOutbound(shardedEnvelope, shardedPayload);
+              }
+            }
+          } catch (Exception e) {
+            error("Error sharding outbound state field " + field.getName() + ": "
+                + friendlyStackTrace(e));
+          }
+        });
+        return;
+      } catch (Exception e) {
+        error("Error processing monolithic outbound state update: " + friendlyStackTrace(e));
+      }
+    }
+
     Object outboundMessage = message;
 
     if (envelope.subFolder == SubFolder.SYSTEM && message instanceof CloudModel) {
