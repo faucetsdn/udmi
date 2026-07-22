@@ -387,7 +387,6 @@ jobs:
     timeout-minutes: 15
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
-      UDMIS_CONFIG: udmis/etc/dynamic_pod.json
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
