@@ -126,12 +126,32 @@ class DynamicIotAccessProviderTest {
   }
 
   @Test
-  void reflectorAffinityInheritance() {
+  void reflectorAffinitySeparation() {
     provider.setProviderAffinity(ContainerBase.REFLECT_BASE, TEST_REGISTRY, PROVIDER_TWO);
     provider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);
 
-    verify(mockProviderTwo).fetchConfig(TEST_REGISTRY, TEST_DEVICE);
-    verifyNoInteractions(mockProviderOne);
+    verify(mockProviderOne).fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+    org.mockito.Mockito.verify(mockProviderTwo, org.mockito.Mockito.never()).fetchConfig(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+  }
+
+  @Test
+  void deviceOperationsIgnoreReflectorPubSubAffinity() {
+    PubSubIotAccessProvider mockPubSub = org.mockito.Mockito.mock(PubSubIotAccessProvider.class);
+    org.mockito.Mockito.when(mockPubSub.isEnabled()).thenReturn(true);
+    String pubSubProviderName = "pubsub";
+    UdmiServicePod.putComponent(pubSubProviderName, () -> mockPubSub);
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.project_id = pubSubProviderName + ", " + PROVIDER_ONE;
+    DynamicIotAccessProvider testProvider = new DynamicIotAccessProvider(iotAccess);
+    testProvider.activate();
+    try {
+      testProvider.setProviderAffinity(ContainerBase.REFLECT_BASE, TEST_REGISTRY, pubSubProviderName);
+      testProvider.fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+      verify(mockProviderOne).fetchConfig(TEST_REGISTRY, TEST_DEVICE);
+      org.mockito.Mockito.verify(mockPubSub, org.mockito.Mockito.never()).fetchConfig(org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.anyString());
+    } finally {
+      testProvider.shutdown();
+    }
   }
 
   @Test
