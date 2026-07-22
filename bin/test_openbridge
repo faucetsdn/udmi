@@ -15,7 +15,7 @@ TEST_PASSED=false
 export JAVA_TOOL_OPTIONS="-Xmx512m"
 
 # 2. Environment Check
-echo "Checking environment for native bare-metal execution..."
+echo "Checking environment for local execution..."
 for cmd in java nc base64 openssl curl tar jq gcloud mosquitto; do
   if ! command -v "$cmd" &> /dev/null; then
     echo "Error: $cmd is not installed or not in PATH." >&2
@@ -197,25 +197,35 @@ bin/mosquctl_site "$SITE_MODEL" > out/mosquctl_site.log 2>&1
 $MOSQUITTO_CTRL addClientRole $AUTH_USER service >/dev/null 2>&1 || true
 
 # 9. Start Pub/Sub Emulator (Native-First with Ephemeral Container Fallback)
-echo "Starting Pub/Sub Emulator..."
-gcloud beta emulators pubsub start --host-port=127.0.0.1:8085 --project=udmis > out/pubsub_emulator.log 2>&1 &
-PUBSUB_PID=$!
-sleep 2
+echo "Checking native Pub/Sub Emulator component availability..."
+if ! gcloud --quiet beta emulators pubsub env-init >/dev/null 2>&1; then
+  echo "Native pubsub-emulator component missing; attempting automated package or component install..."
+  if [[ "${GITHUB_ACTIONS:-}" == "true" ]] || [[ $(id -u) -eq 0 ]]; then
+    if command -v apt-get >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+      sudo -n apt-get update -y -qq 2>/dev/null || true
+      sudo -n apt-get install -y -o Dpkg::Options::=--force-overwrite google-cloud-cli-pubsub-emulator 2>/dev/null || \
+        sudo -n apt-get install -y -o Dpkg::Options::=--force-overwrite google-cloud-sdk-pubsub-emulator >out/pubsub_install.log 2>&1 || true
+    fi
+  fi
+  if ! gcloud --quiet beta emulators pubsub env-init >/dev/null 2>&1; then
+    gcloud --quiet components install pubsub-emulator >>out/pubsub_install.log 2>&1 || true
+  fi
+fi
 
-if ! kill -0 "$PUBSUB_PID" 2>/dev/null || grep -q -i "You need the \[pubsub-emulator\] component\|ERROR:" out/pubsub_emulator.log 2>/dev/null; then
-  echo "Native Pub/Sub emulator component missing or disabled; falling back to ephemeral standalone emulator container..."
-  kill_process "$PUBSUB_PID" 2>/dev/null || true
+if gcloud --quiet beta emulators pubsub env-init >/dev/null 2>&1; then
+  echo "Starting native gcloud Pub/Sub emulator host process..."
+  gcloud --quiet beta emulators pubsub start --host-port=127.0.0.1:8085 --project=udmis > out/pubsub_emulator.log 2>&1 < /dev/null &
+  PUBSUB_PID=$!
+else
+  echo "Native Pub/Sub emulator unavailable or administratively disabled; falling back to ephemeral standalone emulator container..."
   PUBSUB_PID=""
   if command -v docker >/dev/null 2>&1; then
     docker rm -f pubsub-emulator >/dev/null 2>&1 || true
     docker run -d --name pubsub-emulator -p 8085:8085 gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 > out/pubsub_docker.log 2>&1
   else
     echo "Error: Neither native gcloud pubsub-emulator nor Docker is available to run the Pub/Sub emulator." >&2
-    cat out/pubsub_emulator.log >&2
     exit 1
   fi
-else
-  echo "Using native gcloud Pub/Sub emulator host process..."
 fi
 
 echo "Waiting for Pub/Sub Emulator to be ready..."
