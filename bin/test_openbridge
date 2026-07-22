@@ -15,18 +15,22 @@ TEST_PASSED=false
 export JAVA_TOOL_OPTIONS="-Xmx512m"
 
 # 2. Environment Check
-echo "Checking environment..."
-for cmd in java docker nc base64 openssl curl tar jq; do
+echo "Checking environment for native bare-metal execution..."
+for cmd in java nc base64 openssl curl tar jq gcloud mosquitto; do
   if ! command -v "$cmd" &> /dev/null; then
     echo "Error: $cmd is not installed or not in PATH." >&2
     exit 1
   fi
 done
 
-if ! docker compose version &>/dev/null; then
-  echo "Error: docker compose plugin is not installed." >&2
+if [ ! -f "udmis/bin/etcd_bin/etcd" ] && ! command -v etcd &> /dev/null; then
+  echo "Error: etcd binary not found in udmis/bin/etcd_bin/ or PATH." >&2
   exit 1
 fi
+
+export UDMI_NO_SUDO=true
+export HOST_IP="127.0.0.1"
+export MOSQUITTO_LOG_PATH="$(pwd)/var/mosquitto/log/mosquitto.log"
 
 if [ ! -d "sites/udmi_site_model" ]; then
   echo "Site model directory missing. Cloning..."
@@ -43,7 +47,7 @@ BRIDGE_EVENTS_PID=""
 BRIDGE_STATE_PID=""
 BRIDGE_REFLECT_PID=""
 UDMIS_PID=""
-CREATED_SYMLINK=false
+PUBSUB_PID=""
 
 kill_process() {
   local pid=$1
@@ -66,89 +70,45 @@ kill_process() {
 }
 
 clean_var_directory() {
-  echo "Initializing and cleaning bridgehead/var..."
-  # 1. Try host-side cleanup first (works for files owned by us)
-  if [ -d bridgehead/var ]; then
-    find bridgehead/var -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} + 2>/dev/null || true
-    rm -rf bridgehead/var/tmp/* bridgehead/var/tmp/.* 2>/dev/null || true
-  fi
-
-  # 2. If there are still files left (e.g. root-owned), try using our docker image if it exists
-  if [ -d bridgehead/var ] && [ "$(ls -A bridgehead/var 2>/dev/null | grep -v '^tmp$')" ]; then
-    if docker image inspect bridgehead-mosquitto:latest &>/dev/null; then
-      echo "Using bridgehead-mosquitto image to clean root-owned files..."
-      docker run --rm --entrypoint "" -v "$(pwd)/bridgehead/var:/var_dir" bridgehead-mosquitto sh -c "
-        find /var_dir -mindepth 1 -maxdepth 1 ! -name 'tmp' -exec rm -rf {} +
-      " || true
-    else
-      echo "Warning: Some files in bridgehead/var could not be cleaned (permission denied) and bridgehead-mosquitto image is not built yet." >&2
-    fi
-  fi
-
-  # 3. Pre-create directories so they are owned by the host user
-  mkdir -p bridgehead/var/mosquitto/data
-  mkdir -p bridgehead/var/mosquitto/log
-  mkdir -p bridgehead/var/mosquitto/certs
-  mkdir -p bridgehead/var/etcd
-  mkdir -p bridgehead/var/tmp
-
-  # Explicitly set permissions to ensure they remain readable/traversable by host
-  # even after container chowns them to mosquitto (1883) or root
-  chmod 755 bridgehead/var
-  chmod 755 bridgehead/var/mosquitto
-  chmod 755 bridgehead/var/mosquitto/data
-  chmod 755 bridgehead/var/mosquitto/log
-  chmod 755 bridgehead/var/mosquitto/certs
-  chmod 755 bridgehead/var/etcd
-  chmod 777 bridgehead/var/tmp
+  echo "Cleaning local var and out directories..."
+  rm -rf var/etcd var/mosquitto out/* 2>/dev/null || true
+  mkdir -p var/etcd var/mosquitto/log var/mosquitto/data var/mosquitto/certs out
 }
 
 cleanup() {
   trap - EXIT INT TERM
   
   if [ "$TEST_PASSED" = false ]; then
-    echo "Test failed. Saving Docker logs to out/..." >&2
-    # Files should be readable as they are in pre-created directories
-    if [ -f bridgehead/var/mosquitto/log/mosquitto.log ]; then
-      echo "Saving Mosquitto broker log..." >&2
-      cp bridgehead/var/mosquitto/log/mosquitto.log out/mosquitto.log
+    echo "Test failed. Logs are available in 'out/' and 'var/mosquitto/log/'" >&2
+    if [ -f var/mosquitto/log/mosquitto.log ]; then
+      cp var/mosquitto/log/mosquitto.log out/mosquitto.log 2>/dev/null || true
     fi
-    if [ -f bridgehead/var/mosquitto/dynamic_security.json ]; then
-      echo "Saving Mosquitto dynamic security config..." >&2
-      # Run cp and chmod inside the container to ensure the copied file is readable by the host runner user
-      docker run --rm --entrypoint "" \
-        -v "$(pwd)/bridgehead/var:/var_dir" \
-        -v "$(pwd)/out:/out_dir" \
-        bridgehead-mosquitto \
-        sh -c "cp /var_dir/mosquitto/dynamic_security.json /out_dir/dynamic_security.json && chmod 644 /out_dir/dynamic_security.json" 2>/dev/null || true
+    if [ -f var/mosquitto/dynamic_security.json ]; then
+      cp var/mosquitto/dynamic_security.json out/dynamic_security.json 2>/dev/null || true
     fi
-    docker compose -f bridgehead/docker-compose.yml logs mosquitto > out/mosquitto_docker.log 2>&1 || true
-    docker compose -f bridgehead/docker-compose.yml logs etcd > out/etcd_docker.log 2>&1 || true
-    docker logs pubsub-emulator > out/pubsub_emulator.log 2>&1 || true
-    echo "All logs (Udmis, Bridges, Pubber, Mosquitto, Etcd, PubSub Emulator, Mosquitto Broker, Mosquitto DynSec) are available in the 'out/' directory." >&2
+    echo "All logs (UDMIS, Bridges, Pubber, Mosquitto, Etcd, PubSub Emulator) are available in the 'out/' directory." >&2
   fi
 
-  echo "Cleaning up background processes and containers..."
-  
+  echo "Cleaning up background processes..."
   kill_process "$PUBBER_PID"
   kill_process "$BRIDGE_EVENTS_PID"
   kill_process "$BRIDGE_STATE_PID"
   kill_process "$BRIDGE_REFLECT_PID"
   kill_process "$UDMIS_PID"
+  kill_process "$PUBSUB_PID"
 
-  echo "Removing pubsub-emulator container..."
-  docker rm -f pubsub-emulator >/dev/null 2>&1 || true
+  if [ -f var/etcd/etcd.pid ]; then kill_process "$(cat var/etcd/etcd.pid)" 2>/dev/null || true; fi
+  if [ -f var/mosquitto/mosquitto.pid ]; then kill_process "$(cat var/mosquitto/mosquitto.pid)" 2>/dev/null || true; fi
 
-  echo "Stopping compose services..."
-  docker compose -f bridgehead/docker-compose.yml --env-file bridgehead/.env down || true
-
-  clean_var_directory
-
-  if [ "$CREATED_SYMLINK" = true ]; then
-    echo "Removing created symlink bridgehead/udmi_site_model..."
-    rm -f bridgehead/udmi_site_model
+  if pgrep -f "emulators pubsub" >/dev/null 2>&1; then pkill -f "emulators pubsub" 2>/dev/null || true; fi
+  if pgrep -f "etcd.*var/etcd" >/dev/null 2>&1; then pkill -f "etcd.*var/etcd" 2>/dev/null || true; fi
+  if pgrep -f "mosquitto.*var/mosquitto" >/dev/null 2>&1; then pkill -f "mosquitto.*var/mosquitto" 2>/dev/null || true; fi
+  if command -v docker >/dev/null 2>&1 && docker ps -a --format '{{.Names}}' | grep -q "^pubsub-emulator$"; then
+    docker rm -f pubsub-emulator >/dev/null 2>&1 || true
   fi
 
+  echo "Removing temporary database runtime directories..."
+  rm -rf var/etcd var/mosquitto 2>/dev/null || true
   echo "Cleanup complete."
 }
 
@@ -156,21 +116,13 @@ trap cleanup EXIT INT TERM
 
 # 3. Clean Prior Runs
 echo "Cleaning up prior runs..."
-docker compose -f bridgehead/docker-compose.yml --env-file bridgehead/.env down || true
-docker rm -f pubsub-emulator >/dev/null 2>&1 || true
-
-clean_var_directory
-
-echo "Generating and copying Mosquitto certs on host..."
-# Generate CA and server certs in site model reflector if not present
-if [ ! -f sites/udmi_site_model/reflector/ca.crt ]; then
-  bin/keygen CA/mosquitto sites/udmi_site_model/reflector
-  bin/keygen CERT/mosquitto sites/udmi_site_model/reflector
+if pgrep -f "emulators pubsub" >/dev/null 2>&1; then pkill -f "emulators pubsub" 2>/dev/null || true; fi
+if pgrep -f "etcd.*var/etcd" >/dev/null 2>&1; then pkill -f "etcd.*var/etcd" 2>/dev/null || true; fi
+if pgrep -f "mosquitto.*var/mosquitto" >/dev/null 2>&1; then pkill -f "mosquitto.*var/mosquitto" 2>/dev/null || true; fi
+if command -v docker >/dev/null 2>&1 && docker ps -a --format '{{.Names}}' | grep -q "^pubsub-emulator$"; then
+  docker rm -f pubsub-emulator >/dev/null 2>&1 || true
 fi
-# Copy to mosquitto certs dir
-cp sites/udmi_site_model/reflector/ca.crt bridgehead/var/mosquitto/certs/
-cp sites/udmi_site_model/reflector/rsa_private.crt bridgehead/var/mosquitto/certs/
-cp sites/udmi_site_model/reflector/rsa_private.pem bridgehead/var/mosquitto/certs/
+clean_var_directory
 
 echo "Generating missing device certificates..."
 for device_dir in sites/udmi_site_model/devices/*; do
@@ -196,98 +148,70 @@ for port in 8883 2379 8085; do
   fi
 done
 
-# 5. Site Model Setup
-echo "Setting up site model link..."
-rm -rf bridgehead/udmi_site_model
-ln -s ../sites/udmi_site_model bridgehead/udmi_site_model
-CREATED_SYMLINK=true
-
-# 7. Build Udmis and Validator
+# 7. Build UDMIS and Validator
 echo "Building Validator..."
 validator/bin/build
-echo "Building Udmis..."
+echo "Building UDMIS..."
 udmis/bin/build
 echo "Building Pubber..."
 pubber/bin/build
 
-# 8. Start Docker Services
-echo "Configuring environment..."
-HOST_IP=$(hostname -I 2>/dev/null | awk '{print $1}') || HOST_IP=""
-if [ -z "$HOST_IP" ]; then
-  HOST_IP="127.0.0.1"
-fi
-export HOST_IP
-export MOSQUITTO_LOG_PATH="$(pwd)/bridgehead/var/mosquitto/log/mosquitto.log"
+# 8. Start Native Infrastructure Services (Etcd, Mosquitto, Pub/Sub Emulator)
 export AUTH_USER=scrumptious
 export AUTH_PASS=aardvark
 export SERV_USER=rocket
 export SERV_PASS=monkey
-export INFLUXDB_TOKEN=$(openssl rand -hex 32)
-export INFLUX_USER=bridgehead
-export INFLUX_PASSWORD=password
-export GRAFANA_USER=bridgehead
-export GRAFANA_PASSWORD=password
+export registry_id="$REGISTRY_ID"
 
-mkdir -p out
-cat << 'EOF' > out/docker-compose.override.yml
-services:
-  etcd:
-    command: ["etcd", "-listen-client-urls=http://0.0.0.0:2379", "-advertise-client-urls=http://127.0.0.1:2379", "--data-dir", "/var/etcd"]
-EOF
+echo "Starting Etcd natively..."
+bin/start_etcd
 
-echo "Starting mosquitto and etcd via docker-compose..."
-docker compose -f bridgehead/docker-compose.yml -f out/docker-compose.override.yml --env-file bridgehead/.env up -d --build mosquitto etcd
+echo "Starting Mosquitto natively with Dynamic Security and TLS..."
+bin/setup_ca "$SITE_MODEL" localhost
+bin/start_mosquitto
+chmod 0600 var/mosquitto/mosquitto.passwd 2>/dev/null || true
 
-echo "Waiting for ports 8883 and 2379..."
-timeout=30
-while [ $timeout -gt 0 ]; do
-  if nc -z 127.0.0.1 8883 && nc -z 127.0.0.1 2379; then
-    echo "Ports 8883 and 2379 are open."
-    break
+source etc/mosquitto_ctrl.sh
+$MOSQUITTO_CTRL deleteClient $SERV_USER >/dev/null 2>&1 || true
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS >/dev/null 2>&1 # No client_id to allow multiple backend connections.
+$MOSQUITTO_CTRL addClientRole $SERV_USER service >/dev/null 2>&1
+
+echo "Configuring Mosquitto client ACLs for devices..."
+for device_dir in "$SITE_MODEL"/devices/*; do
+  if [ -d "$device_dir" ]; then
+    device_id=$(basename "$device_dir")
+    metadata_file="$device_dir/metadata.json"
+    if [ -f "$metadata_file" ] && jq -e '.cloud.auth_type != null' "$metadata_file" >/dev/null 2>&1; then
+      bin/mosquctl_device "$SITE_MODEL" "$device_id" > "out/mosquctl_${device_id}.log" 2>&1
+    fi
   fi
-  sleep 1
-  timeout=$((timeout - 1))
 done
-if [ $timeout -le 0 ]; then
-  echo "Error: Timeout waiting for ports 8883 and 2379." >&2
-  exit 1
-fi
 
-echo "Waiting for Mosquitto initialization to complete..."
-timeout=30
-while [ $timeout -gt 0 ]; do
-  if docker logs mosquitto 2>&1 | grep -q "Registered sites:"; then
-    echo "Mosquitto initialization completed."
-    break
-  fi
-  sleep 1
-  timeout=$((timeout - 1))
-done
-if [ $timeout -le 0 ]; then
-  echo "Error: Timeout waiting for Mosquitto initialization." >&2
-  docker logs mosquitto >&2
-  exit 1
-fi
+echo "Initializing site on Mosquitto..."
+bin/mosquctl_site "$SITE_MODEL" > out/mosquctl_site.log 2>&1
+$MOSQUITTO_CTRL addClientRole $AUTH_USER service >/dev/null 2>&1 || true
 
-echo "Waiting for Mosquitto log file to be readable on host..."
-timeout=30
-while [ $timeout -gt 0 ]; do
-  if [ -r "bridgehead/var/mosquitto/log/mosquitto.log" ]; then
-    echo "Mosquitto log file is readable."
-    break
-  fi
-  sleep 1
-  timeout=$((timeout - 1))
-done
-if [ $timeout -le 0 ]; then
-  echo "Error: Timeout waiting for Mosquitto log file to be readable." >&2
-  ls -la bridgehead/var/mosquitto/log/ || true
-  exit 1
-fi
-
-# 9. Start Pub/Sub Emulator
+# 9. Start Pub/Sub Emulator (Native-First with Ephemeral Container Fallback)
 echo "Starting Pub/Sub Emulator..."
-docker run -d --name pubsub-emulator -p 8085:8085 gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085
+gcloud beta emulators pubsub start --host-port=127.0.0.1:8085 --project=udmis > out/pubsub_emulator.log 2>&1 &
+PUBSUB_PID=$!
+sleep 2
+
+if ! kill -0 "$PUBSUB_PID" 2>/dev/null || grep -q -i "You need the \[pubsub-emulator\] component\|ERROR:" out/pubsub_emulator.log 2>/dev/null; then
+  echo "Native Pub/Sub emulator component missing or disabled; falling back to ephemeral standalone emulator container..."
+  kill_process "$PUBSUB_PID" 2>/dev/null || true
+  PUBSUB_PID=""
+  if command -v docker >/dev/null 2>&1; then
+    docker rm -f pubsub-emulator >/dev/null 2>&1 || true
+    docker run -d --name pubsub-emulator -p 8085:8085 gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 > out/pubsub_docker.log 2>&1
+  else
+    echo "Error: Neither native gcloud pubsub-emulator nor Docker is available to run the Pub/Sub emulator." >&2
+    cat out/pubsub_emulator.log >&2
+    exit 1
+  fi
+else
+  echo "Using native gcloud Pub/Sub emulator host process..."
+fi
 
 echo "Waiting for Pub/Sub Emulator to be ready..."
 timeout=30
@@ -301,7 +225,7 @@ while [ $timeout -gt 0 ]; do
   timeout=$((timeout - 1))
 done
 if [ $timeout -le 0 ]; then
-  echo "Error: Timeout waiting for Pub/Sub Emulator to be ready." >&2
+  echo "Error: Timeout waiting for Pub/Sub Emulator to be ready. See out/pubsub_emulator.log for details." >&2
   exit 1
 fi
 
@@ -349,8 +273,8 @@ echo "Verifying subscriptions in Pub/Sub Emulator..."
 curl -f -v "http://127.0.0.1:8085/v1/projects/udmis/subscriptions"
 echo
 
-# 11. Start Host Udmis (Pub/Sub Mode)
-echo "Starting Host Udmis (Pub/Sub Mode)..."
+# 11. Start Host UDMIS (Pub/Sub Mode)
+echo "Starting Host UDMIS (Pub/Sub Mode)..."
 export GCP_PROJECT=udmis
 export ETCD_CLUSTER=127.0.0.1
 export PUBSUB_EMULATOR_HOST=127.0.0.1:8085
@@ -374,7 +298,7 @@ mkdir -p udmis/var
 EOF
 )
 
-echo "Generating Udmis Host Pub/Sub config..."
+echo "Generating UDMIS Host Pub/Sub config..."
 jq --arg auth_user "$AUTH_USER" \
    --arg auth_pass "$AUTH_PASS" \
    --arg serv_user "$SERV_USER" \
@@ -389,9 +313,9 @@ jq --arg auth_user "$AUTH_USER" \
         "transport": "ssl",
         "hostname": "localhost",
         "port": 8883,
-        "ca_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/ca.crt",
-        "cert_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.crt",
-        "key_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.pem",
+        "ca_file": "'$(pwd)'/var/mosquitto/certs/ca.crt",
+        "cert_file": "'$(pwd)'/var/mosquitto/certs/rsa_private.crt",
+        "key_file": "'$(pwd)'/var/mosquitto/certs/rsa_private.pem",
         "auth_provider": {
           "basic": {
             "username": $auth_user,
@@ -414,9 +338,9 @@ jq --arg auth_user "$AUTH_USER" \
         "hostname": "localhost",
         "port": 8883,
         "send_id": "reply",
-        "ca_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/ca.crt",
-        "cert_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.crt",
-        "key_file": "'$(pwd)'/bridgehead/var/mosquitto/certs/rsa_private.pem",
+        "ca_file": "'$(pwd)'/var/mosquitto/certs/ca.crt",
+        "cert_file": "'$(pwd)'/var/mosquitto/certs/rsa_private.crt",
+        "key_file": "'$(pwd)'/var/mosquitto/certs/rsa_private.pem",
         "auth_provider": {
           "basic": {
             "username": $serv_user,
@@ -431,24 +355,22 @@ rm -f /tmp/pod_ready.txt
 udmis/bin/run out/prod_pod_host.json > out/udmis_host.log 2>&1 &
 UDMIS_PID=$!
 
-echo "Waiting for Host Udmis (Pub/Sub Mode) to be ready..."
+echo "Waiting for Host UDMIS (Pub/Sub Mode) to be ready..."
 timeout=30
 while [ $timeout -gt 0 ]; do
   if [ -f /tmp/pod_ready.txt ]; then
-    echo "Host Udmis (Pub/Sub Mode) is ready."
+    echo "Host UDMIS (Pub/Sub Mode) is ready."
     break
   fi
   if ! kill -0 "$UDMIS_PID" 2>/dev/null; then
-    echo "Error: Host Udmis (Pub/Sub Mode) process exited unexpectedly." >&2
-    cat out/udmis_host.log >&2
+    echo "Error: Host UDMIS (Pub/Sub Mode) process exited unexpectedly. See out/udmis_host.log for details." >&2
     exit 1
   fi
   sleep 1
   timeout=$((timeout - 1))
 done
 if [ $timeout -le 0 ]; then
-  echo "Error: Timeout waiting for Host Udmis (Pub/Sub Mode) to start." >&2
-  cat out/udmis_host.log >&2
+  echo "Error: Timeout waiting for Host UDMIS (Pub/Sub Mode) to start. See out/udmis_host.log for details." >&2
   exit 1
 fi
 
@@ -520,8 +442,7 @@ wait_for_bridge() {
   echo "Waiting for $name to connect to MQTT broker..."
   while [ $timeout -gt 0 ]; do
     if ! kill -0 "$pid" 2>/dev/null; then
-      echo "Error: $name process exited unexpectedly. Logs:" >&2
-      cat "$log_file" >&2
+      echo "Error: $name process exited unexpectedly. See $log_file for details." >&2
       exit 1
     fi
     if grep -q "Connected to MQTT broker." "$log_file" 2>/dev/null; then
@@ -531,8 +452,7 @@ wait_for_bridge() {
     sleep 1
     timeout=$((timeout - 1))
   done
-  echo "Error: Timeout waiting for $name to connect. Logs:" >&2
-  cat "$log_file" >&2
+  echo "Error: Timeout waiting for $name to connect. See $log_file for details." >&2
   exit 1
 }
 
@@ -572,12 +492,7 @@ wait_for_device_config() {
     echo "Device $device_id config is available on MQTT (ACL verified)."
     return 0
   else
-    echo "Error: Timeout or failure waiting for device $device_id config on MQTT." >&2
-    if [ -f "$sub_err_log" ]; then
-      echo "=== mosquitto_sub error log ===" >&2
-      cat "$sub_err_log" >&2
-      echo "===============================" >&2
-    fi
+    echo "Error: Timeout or failure waiting for device $device_id config on MQTT. See $sub_err_log for details." >&2
     echo "This indicates UDMIS failed to publish config, or Mosquitto ACLs blocked it." >&2
     return 1
   fi
@@ -592,8 +507,7 @@ echo "Registering devices via All-Pub/Sub Pipeline..."
 bin/registrar "$SITE_MODEL" //gref/udmis
 
 if ! wait_for_device_config "$DEVICE_ID" "$REGISTRY_ID" "$SITE_MODEL"; then
-  echo "Pre-verification failed. Dumping UDMIS logs..." >&2
-  cat out/udmis_host.log >&2
+  echo "Pre-verification failed. See out/udmis_host.log for details." >&2
   exit 1
 fi
 
