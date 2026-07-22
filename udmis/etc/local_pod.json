@@ -64,7 +64,7 @@
     },
     "implicit": {
       "provider": "implicit",
-      "options": "enabled=${ETCD_CLUSTER}",
+      "options": "enabled=${ETCD_SCHEME}://${ETCD_CLUSTER}:${ETCD_PORT}",
       "endpoint": {
         "protocol": "mqtt",
         "transport": "ssl",
