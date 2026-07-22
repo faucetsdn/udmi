@@ -1,0 +1,26 @@
+#!/bin/bash -e
+set -x
+
+ROOT=$(dirname $0)/..
+
+source $ROOT/etc/shell_common.sh
+
+INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-test-influx-token-12345}
+INFLUXDB_ORG=${INFLUXDB_ORG:-bridgehead}
+INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home}
+
+echo "Verifying organization and buckets in influxdb..."
+$ROOT/udmis/bin/influxctl bucket list --token "$INFLUXDB_TOKEN"
+
+echo "Writing test point to influxdb..."
+$ROOT/udmis/bin/influxctl write --token "$INFLUXDB_TOKEN" --org "$INFLUXDB_ORG" --bucket "$INFLUXDB_BUCKET" "test_metric,host=localhost value=42.0"
+
+echo "Querying test point from influxdb..."
+GOT_VAL=$($ROOT/udmis/bin/influxctl query --token "$INFLUXDB_TOKEN" --org "$INFLUXDB_ORG" 'from(bucket: "'"$INFLUXDB_BUCKET"'") |> range(start: -1m) |> filter(fn: (r) => r._measurement == "test_metric")' | fgrep test_metric || true)
+
+if [[ -n "$GOT_VAL" ]]; then
+    echo "SUCCESS: Metric correctly found in influxdb."
+else
+    echo "FAILURE: Metric NOT found in influxdb."
+    exit 1
+fi
