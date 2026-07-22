@@ -24,8 +24,12 @@ for cmd in java nc base64 openssl curl tar jq gcloud mosquitto; do
 done
 
 if [ ! -f "udmis/bin/etcd_bin/etcd" ] && ! command -v etcd &> /dev/null; then
-  echo "Error: etcd binary not found in udmis/bin/etcd_bin/ or PATH." >&2
-  exit 1
+  echo "Downloading local etcd binaries via udmis/bin/etcdctl..."
+  udmis/bin/etcdctl version >/dev/null 2>&1 || true
+  if [ ! -f "udmis/bin/etcd_bin/etcd" ] && ! command -v etcd &> /dev/null; then
+    echo "Error: etcd binary not found in udmis/bin/etcd_bin/ or PATH after running etcdctl." >&2
+    exit 1
+  fi
 fi
 
 export UDMI_NO_SUDO=true
