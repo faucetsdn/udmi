@@ -63,6 +63,7 @@ Some caveats:
 * [family_ipv6_addr](#family_ipv6_addr-preview): Test skipped: No ipv6 address defined in metadata
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices Test skipped: Not a gateway
 * [gateway_proxy_state](#gateway_proxy_state-preview): Check that a gateway proxies state updates for indicated devices Test skipped: Not a gateway
+* [pointset_numeric_values](#pointset_numeric_values-stable): Check that numerical values in pointset payloads are reported as JSON numbers and not strings
 * [pointset_publish](#pointset_publish-stable): Check that a device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-stable): Check handling of sample_rate_sec and sample_limit_sec
 * [pointset_remove_point](#pointset_remove_point-stable): Check that pointset state does not report an unconfigured point
@@ -562,6 +563,16 @@ Check that a gateway proxies state updates for indicated devices
 
 
 Test skipped: Not a gateway
+
+## pointset_numeric_values (STABLE)
+
+Check that numerical values in pointset payloads are reported as JSON numbers and not strings
+
+1. Update config before receive a pointset event
+    * Set `pointset.sample_rate_sec` = `10`
+1. Wait for receive a pointset event
+
+Test passed.
 
 ## pointset_publish (STABLE)
 

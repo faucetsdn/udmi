@@ -58,7 +58,7 @@ pluggy==1.5.0
 proto-plus==1.24.0
 protobuf==5.29.6
 pyasn1==0.6.4
-pyasn1_modules==0.4.2
+pyasn1_modules==0.4.1
 pycparser==2.22
 pydantic==2.13.4
 pydantic_core==2.46.4
