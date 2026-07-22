@@ -64,7 +64,7 @@
     },
     "implicit": {
       "provider": "implicit",
-      "options": "enabled=${ETCD_SCHEME}://${ETCD_CLUSTER}:${ETCD_PORT}",
+      "options": "enabled=${ETCD_CLUSTER}",
       "endpoint": {
         "protocol": "mqtt",
         "transport": "ssl",
@@ -80,6 +80,11 @@
           }
         }
       }
+    }
+  },
+  "iot_data": {
+    "database": {
+      "project_id": "${ETCD_SCHEME}://${ETCD_CLUSTER}:${ETCD_PORT}"
     }
   }
 }
