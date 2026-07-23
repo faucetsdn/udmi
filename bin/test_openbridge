@@ -83,118 +83,62 @@ cleanup() {
   trap - EXIT INT TERM
   
   if [ "$TEST_PASSED" = false ]; then
-    echo "Test failed. Logs are available in 'out/' and 'var/mosquitto/log/'" >&2
-    if [ -f var/mosquitto/log/mosquitto.log ]; then
-      cp var/mosquitto/log/mosquitto.log out/mosquitto.log 2>/dev/null || true
-    fi
-    if [ -f var/mosquitto/dynamic_security.json ]; then
-      cp var/mosquitto/dynamic_security.json out/dynamic_security.json 2>/dev/null || true
-    fi
-    echo "All logs (UDMIS, Bridges, Pubber, Mosquitto, Etcd, PubSub Emulator) are available in the 'out/' directory." >&2
+    echo "Test failed. Diagnostic logs are available in 'out/' directory." >&2
   fi
 
-  echo "Cleaning up background processes..."
+  echo "Cleaning up openbridge test processes..."
   kill_process "$PUBBER_PID"
   kill_process "$BRIDGE_EVENTS_PID"
   kill_process "$BRIDGE_STATE_PID"
   kill_process "$BRIDGE_REFLECT_PID"
   kill_process "$UDMIS_PID"
-  kill_process "$PUBSUB_PID"
-
-  if [ -f var/etcd/etcd.pid ]; then kill_process "$(cat var/etcd/etcd.pid)" 2>/dev/null || true; fi
-  if [ -f var/mosquitto/mosquitto.pid ]; then kill_process "$(cat var/mosquitto/mosquitto.pid)" 2>/dev/null || true; fi
-
-  if pgrep -f "emulators pubsub" >/dev/null 2>&1; then pkill -f "emulators pubsub" 2>/dev/null || true; fi
-  if pgrep -f "etcd.*var/etcd" >/dev/null 2>&1; then pkill -f "etcd.*var/etcd" 2>/dev/null || true; fi
-  if pgrep -f "mosquitto.*var/mosquitto" >/dev/null 2>&1; then pkill -f "mosquitto.*var/mosquitto" 2>/dev/null || true; fi
-  if command -v docker >/dev/null 2>&1 && docker ps -a --format '{{.Names}}' | grep -q "^pubsub-emulator$"; then
-    docker rm -f pubsub-emulator >/dev/null 2>&1 || true
+  if [ -n "$PUBSUB_PID" ]; then
+    kill_process "$PUBSUB_PID"
   fi
-
-  echo "Removing temporary database runtime directories..."
-  rm -rf var/etcd var/mosquitto 2>/dev/null || true
-  echo "Cleanup complete."
+  echo "Test cleanup complete."
 }
 
 trap cleanup EXIT INT TERM
 
-# 3. Clean Prior Runs
-echo "Cleaning up prior runs..."
-if pgrep -f "emulators pubsub" >/dev/null 2>&1; then pkill -f "emulators pubsub" 2>/dev/null || true; fi
-if pgrep -f "etcd.*var/etcd" >/dev/null 2>&1; then pkill -f "etcd.*var/etcd" 2>/dev/null || true; fi
-if pgrep -f "mosquitto.*var/mosquitto" >/dev/null 2>&1; then pkill -f "mosquitto.*var/mosquitto" 2>/dev/null || true; fi
-if command -v docker >/dev/null 2>&1 && docker ps -a --format '{{.Names}}' | grep -q "^pubsub-emulator$"; then
-  docker rm -f pubsub-emulator >/dev/null 2>&1 || true
-fi
-clean_var_directory
-
-# 4. Port Check
-echo "Checking ports..."
-for port in 8883 2379 8085; do
-  if nc -z 127.0.0.1 "$port" &>/dev/null; then
-    echo "Error: Port $port is already in use." >&2
-    exit 1
-  fi
-done
-
-# 7. Build UDMIS and Validator
-echo "Building Validator..."
-validator/bin/build
-echo "Building UDMIS..."
-udmis/bin/build
-echo "Building Pubber..."
-pubber/bin/build
-
-# 8. Start Native Infrastructure Services (Etcd, Mosquitto, Pub/Sub Emulator)
 export AUTH_USER=scrumptious
 export AUTH_PASS=aardvark
 export SERV_USER=rocket
 export SERV_PASS=monkey
 export registry_id="$REGISTRY_ID"
 
-echo "Starting Etcd natively..."
-bin/start_etcd
+# 2. Check Base Infrastructure Services (Etcd & Mosquitto)
+echo "Checking base infrastructure services..."
+if ! nc -z 127.0.0.1 2379 &>/dev/null; then
+  echo "Etcd is not running on 127.0.0.1:2379. Starting Etcd natively..."
+  bin/start_etcd
+fi
 
-echo "Starting Mosquitto natively with Dynamic Security and TLS..."
-bin/setup_ca "$SITE_MODEL" localhost
-
-echo "Generating missing device certificates..."
-for device_dir in sites/udmi_site_model/devices/*; do
-  if [ -d "$device_dir" ]; then
-    device_id=$(basename "$device_dir")
-    # Check if we have a private key (either rsa or ec) and generate cert if missing
-    if [ -f "$device_dir/rsa_private.pem" ] && [ ! -f "$device_dir/rsa_private.crt" ]; then
-      echo "Generating cert for RSA device $device_id..."
-      bin/keygen CERT "$device_dir"
-    elif [ -f "$device_dir/ec_private.pem" ] && [ ! -f "$device_dir/ec_private.crt" ]; then
-      echo "Generating cert for EC device $device_id..."
-      bin/keygen CERT "$device_dir"
+if ! nc -z 127.0.0.1 8883 &>/dev/null; then
+  echo "Mosquitto is not running on 127.0.0.1:8883. Starting Mosquitto natively..."
+  bin/setup_ca "$SITE_MODEL" localhost
+  
+  echo "Generating missing device certificates..."
+  for device_dir in "$SITE_MODEL"/devices/*; do
+    if [ -d "$device_dir" ]; then
+      dev_id=$(basename "$device_dir")
+      if [ -f "$device_dir/rsa_private.pem" ] && [ ! -f "$device_dir/rsa_private.crt" ]; then
+        bin/keygen CERT "$device_dir"
+      elif [ -f "$device_dir/ec_private.pem" ] && [ ! -f "$device_dir/ec_private.crt" ]; then
+        bin/keygen CERT "$device_dir"
+      fi
     fi
-  fi
-done
+  done
 
-bin/start_mosquitto
-chmod 0600 var/mosquitto/mosquitto.passwd 2>/dev/null || true
+  bin/start_mosquitto
+  chmod 0600 var/mosquitto/mosquitto.passwd 2>/dev/null || true
 
-source etc/mosquitto_ctrl.sh
-$MOSQUITTO_CTRL deleteClient $SERV_USER >/dev/null 2>&1 || true
-$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS >/dev/null 2>&1 # No client_id to allow multiple backend connections.
-$MOSQUITTO_CTRL addClientRole $SERV_USER service >/dev/null 2>&1
-
-echo "Configuring Mosquitto client ACLs for devices..."
-for device_dir in "$SITE_MODEL"/devices/*; do
-  if [ -d "$device_dir" ]; then
-    device_id=$(basename "$device_dir")
-    metadata_file="$device_dir/metadata.json"
-    if [ -f "$metadata_file" ] && jq -e '.cloud.auth_type != null' "$metadata_file" >/dev/null 2>&1; then
-      bin/mosquctl_device "$SITE_MODEL" "$device_id" > "out/mosquctl_${device_id}.log" 2>&1
-    fi
-  fi
-done
-
-echo "Initializing site on Mosquitto..."
-bin/mosquctl_site "$SITE_MODEL" > out/mosquctl_site.log 2>&1
-$MOSQUITTO_CTRL addClientRole $AUTH_USER service >/dev/null 2>&1 || true
+  source etc/mosquitto_ctrl.sh
+  $MOSQUITTO_CTRL deleteClient $SERV_USER >/dev/null 2>&1 || true
+  $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS >/dev/null 2>&1 || true
+  $MOSQUITTO_CTRL addClientRole $SERV_USER service >/dev/null 2>&1 || true
+  bin/mosquctl_site "$SITE_MODEL" > out/mosquctl_site.log 2>&1 || true
+  $MOSQUITTO_CTRL addClientRole $AUTH_USER service >/dev/null 2>&1 || true
+fi
 
 # 9. Start Pub/Sub Emulator (Native-First with Ephemeral Container Fallback)
 echo "Checking native Pub/Sub Emulator component availability..."

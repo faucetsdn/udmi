@@ -604,6 +604,8 @@ jobs:
     name: Openbridge Test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    env:
+      UDMI_NO_SUDO: true
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -611,7 +613,12 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
       - name: Setup Base
-        run: bin/setup_base
+        run: |
+          bin/setup_base
+          bin/clone_model
+      - name: Start Local Services
+        run: |
+          bin/start_local sites/udmi_site_model //mqtt/localhost
       - name: Run Openbridge Test
         run: |
           bin/test_openbridge
