@@ -78,6 +78,11 @@ public interface IotAccessProvider extends UdmiComponent {
 
   void sendCommandBase(Envelope envelope, SubFolder folder, String message);
 
+  /**
+   * Set the provider affinity identifier for a specific registry or device.
+   */
+  void setProviderAffinity(String registryId, String deviceId, String providerId);
+
   String updateConfig(Envelope envelope, String config, Long version);
 
   void updateRegistryRegions(Map<String, String> regions);

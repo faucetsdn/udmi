@@ -105,6 +105,14 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     return getProviderFor(envelope.deviceRegistryId, envelope.deviceId);
   }
 
+  private IotAccessProvider getProviderFor(String registryId, String deviceId) {
+    String providerKey = getProviderAffinity(registryId, deviceId);
+    IotAccessProvider provider = getProviders().get(providerKey);
+    return requireNonNull(provider,
+        format("Could not determine provider for %s from %s", providerKey,
+            getProviderKey(registryId, deviceId)));
+  }
+
   @Override
   public String getProviderAffinity(String registryId, String deviceId) {
     String entryKey = getProviderKey(registryId, deviceId);
@@ -113,13 +121,6 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       providerKey = determineProvider(registryId);
     }
     return providerKey;
-  }
-
-  private IotAccessProvider getProviderFor(String registryId, String deviceId) {
-    String providerKey = getProviderAffinity(registryId, deviceId);
-    IotAccessProvider provider = getProviders().get(providerKey);
-    return requireNonNull(provider,
-        format("Could not determine provider for %s from %s", providerKey, getProviderKey(registryId, deviceId)));
   }
 
   private IotAccessProvider getRegistryProvider(Envelope envelope) {

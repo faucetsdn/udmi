@@ -51,13 +51,18 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   private static final Duration REGISTRY_REFRESH = Duration.ofMinutes(10);
   private static final Duration REGISTRY_BACKOFF = Duration.ofMinutes(1);
   final Map<String, String> options;
+  protected final IotAccess iotAccess;
   private final AtomicReference<Instant> lastRegistryFetch =
       new AtomicReference<>(Instant.ofEpochSecond(0));
   private CompletableFuture<Map<String, String>> registryRegions;
   private DistributorPipe distributor;
 
+  /**
+   * Base constructor for IotAccess provider instances.
+   */
   public IotAccessBase(IotAccess iotAccess) {
     super(iotAccess.name, 0, null);
+    this.iotAccess = iotAccess;
     options = parseOptions(iotAccess);
   }
 

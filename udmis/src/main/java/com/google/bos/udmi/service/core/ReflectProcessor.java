@@ -132,7 +132,8 @@ public class ReflectProcessor extends ProcessorBase {
         }
 
         updateProviderAffinity(reflect, reflect.source);
-        String targetAffinity = iotAccess.getProviderAffinity(envelope.deviceRegistryId, envelope.deviceId);
+        String targetAffinity = iotAccess.getProviderAffinity(envelope.deviceRegistryId,
+            envelope.deviceId);
         envelope.source = firstNonNull(targetAffinity, reflect.source);
         reflect.transactionId = firstNonNull(envelope.transactionId, reflect.transactionId,
             ReflectProcessor::makeTransactionId);

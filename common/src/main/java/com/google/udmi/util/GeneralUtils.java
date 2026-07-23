@@ -162,8 +162,22 @@ public class GeneralUtils {
   }
 
   /**
-   * TODO: Update to use varargs, and create non-supplier version.
+   * Returns the first non-null argument, or null if all are null.
    */
+  public static <T> T firstNonNull(T obj1, T obj2) {
+    return ofNullable(obj1).orElse(obj2);
+  }
+
+  @SafeVarargs
+  public static <T> T firstNonNull(T... objects) {
+    for (T obj : objects) {
+      if (obj != null) {
+        return obj;
+      }
+    }
+    return null;
+  }
+
   public static <T> T firstNonNull(T obj1, T obj2, Supplier<T> supplier) {
     return ofNullable(ofNullable(obj1).orElse(obj2)).orElseGet(supplier);
   }
