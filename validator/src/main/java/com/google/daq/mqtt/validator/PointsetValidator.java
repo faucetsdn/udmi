@@ -56,8 +56,7 @@ public class PointsetValidator {
 
     if (message instanceof State stateMessage) {
       timestamp = stateMessage.timestamp;
-      pointsetDiff = validateMessage(stateMessage,
-          timestamp == null ? null : timestamp.toInstant());
+      pointsetDiff = validateMessage(stateMessage);
     } else if (message instanceof PointsetState pointsetState) {
       pointsetDiff = validateMessage(pointsetState);
       timestamp = pointsetState.timestamp;
@@ -93,7 +92,7 @@ public class PointsetValidator {
     }
   }
 
-  MetadataDiff validateMessage(State message, Instant now) {
+  MetadataDiff validateMessage(State message) {
     if (message.pointset != null) {
       return validateMessage(message.pointset);
     }
@@ -102,7 +101,8 @@ public class PointsetValidator {
       return null;
     }
 
-    if (now != null && !device.hasSeenTelemetry(now)) {
+    Instant checkInstant = getEffectiveTimestamp(message.timestamp);
+    if (!device.hasSeenTelemetry(checkInstant)) {
       return null;
     }
 
@@ -134,6 +134,16 @@ public class PointsetValidator {
     metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
     metadataDiff.missingPoints.removeAll(deliveredPoints);
     return metadataDiff;
+  }
+
+  private Instant getEffectiveTimestamp(Date timestamp) {
+    if (timestamp != null) {
+      return timestamp.toInstant();
+    }
+    if (device.getLastSeen() != null) {
+      return device.getLastSeen().toInstant();
+    }
+    return Instant.now();
   }
 
   private Set<String> validatePointValues(

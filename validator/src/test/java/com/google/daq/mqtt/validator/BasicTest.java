@@ -5,6 +5,7 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Level.INFO;
@@ -29,7 +30,9 @@ import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
+import udmi.schema.State;
 import udmi.schema.SystemModel;
+import udmi.schema.SystemState;
 import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
 
@@ -215,6 +218,36 @@ public class BasicTest extends TestBase {
     assertTrue(reportingDevices.containsKey(newDeviceId));
     assertEquals(messageObject.system.description,
         reportingDevices.get(newDeviceId).getMetadata().system.description);
+  }
+
+  @Test
+  public void pendingDeviceLifecycle() {
+    // 1. Device sends state message only -> should be marked as pending_devices
+    State state = new State();
+    state.timestamp = new Date();
+    state.version = TestCommon.UDMI_VERSION;
+    state.system = new SystemState();
+    state.system.last_config = new Date();
+    state.system.serial_no = "12345";
+    state.system.hardware = new udmi.schema.StateSystemHardware();
+    state.system.hardware.make = "Google";
+    state.system.hardware.model = "UDMI";
+    state.system.software = new java.util.HashMap<>();
+    state.system.operation = new udmi.schema.StateSystemOperation();
+    state.system.operation.operational = true;
+    validator.validateMessage(getMessageBundle(STATE_SUBTYPE, UPDATE_SUBFOLDER, state));
+    ValidationState report1 = getValidationReport();
+    assertTrue("Device should be pending when only state received",
+        report1.summary.pending_devices.contains(TestCommon.DEVICE_ID));
+
+    // 2. Device subsequently sends telemetry -> transitions from pending_devices to correct_devices
+    PointsetEvents pointsetEvents = basePointsetEvents();
+    validator.validateMessage(getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, pointsetEvents));
+    ValidationState report2 = getValidationReport();
+    assertFalse("Device should no longer be pending after telemetry",
+        report2.summary.pending_devices.contains(TestCommon.DEVICE_ID));
+    assertTrue("Device should be marked correct after both state and telemetry",
+        report2.summary.correct_devices.contains(TestCommon.DEVICE_ID));
   }
 
 }
