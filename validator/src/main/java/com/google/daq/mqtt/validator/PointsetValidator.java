@@ -152,7 +152,6 @@ public class PointsetValidator {
         continue;
       }
 
-      PointPointsetEvents point = points.get(pointName);
       if (point == null || point.present_value == null) {
         continue;
       }

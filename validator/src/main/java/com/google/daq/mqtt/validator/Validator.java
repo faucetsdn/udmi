@@ -693,19 +693,12 @@ public class Validator {
     if (msgObject instanceof Map) {
       Map<String, Object> mapped = mapCast(msgObject);
       String timestamp = (String) mapped.get(TIMESTAMP_KEY);
-      if (timestamp != null) {
-        try {
-          return JsonUtil.getInstant(timestamp);
-        } catch (Exception e) {
-          // Ignore and fallback to publish time.
-        }
+      Instant instant = catchToNull(() -> JsonUtil.getInstant(timestamp));
+      if (instant != null) {
+        return instant;
       }
     }
-    try {
-      return JsonUtil.getInstant(attributes.get(PUBLISH_TIME_KEY));
-    } catch (Exception e) {
-      return null;
-    }
+    return catchToNull(() -> JsonUtil.getInstant(attributes.get(PUBLISH_TIME_KEY)));
   }
 
   private ReportingDevice validateMessageCore(Object messageObj, Map<String, String> attributes) {
