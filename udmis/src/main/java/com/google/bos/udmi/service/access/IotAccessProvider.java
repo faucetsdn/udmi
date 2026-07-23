@@ -51,6 +51,11 @@ public interface IotAccessProvider extends UdmiComponent {
 
   String fetchRegistryMetadata(String registryId, String metadataKey);
 
+  /**
+   * Get the provider affinity identifier for a specific registry or device.
+   */
+  String getProviderAffinity(String registryId, String deviceId);
+
   String fetchState(String registryId, String deviceId);
 
   /**
