@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+ROOT=$(dirname $0)/..
+
+source $ROOT/etc/shell_common.sh
+
+postgres_user=${POSTGRES_USER:-postgres}
+postgres_db=${POSTGRES_DB:-postgres}
+postgres_port=${POSTGRES_PORT:-5432}
+
+echo "Pinging PostgreSQL database..."
+psql -h 127.0.0.1 -p "${postgres_port}" -U "${postgres_user}" -d "${postgres_db}" -c "SELECT 1;"

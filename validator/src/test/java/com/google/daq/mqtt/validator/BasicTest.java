@@ -90,6 +90,16 @@ public class BasicTest extends TestBase {
   }
 
   @Test
+  public void numericStringPointsetEvents() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.get(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT).present_value = "20.0";
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error devices", 1, report.summary.error_devices.size());
+  }
+
+  @Test
   public void missingPointsetEvents() {
     PointsetEvents messageObject = basePointsetEvents();
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
