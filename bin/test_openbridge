@@ -116,19 +116,6 @@ fi
 if ! nc -z 127.0.0.1 8883 &>/dev/null; then
   echo "Mosquitto is not running on 127.0.0.1:8883. Starting Mosquitto natively..."
   bin/setup_ca "$SITE_MODEL" localhost
-  
-  echo "Generating missing device certificates..."
-  for device_dir in "$SITE_MODEL"/devices/*; do
-    if [ -d "$device_dir" ]; then
-      dev_id=$(basename "$device_dir")
-      if [ -f "$device_dir/rsa_private.pem" ] && [ ! -f "$device_dir/rsa_private.crt" ]; then
-        bin/keygen CERT "$device_dir"
-      elif [ -f "$device_dir/ec_private.pem" ] && [ ! -f "$device_dir/ec_private.crt" ]; then
-        bin/keygen CERT "$device_dir"
-      fi
-    fi
-  done
-
   bin/start_mosquitto
   chmod 0600 var/mosquitto/mosquitto.passwd 2>/dev/null || true
 
@@ -139,6 +126,18 @@ if ! nc -z 127.0.0.1 8883 &>/dev/null; then
   bin/mosquctl_site "$SITE_MODEL" > out/mosquctl_site.log 2>&1 || true
   $MOSQUITTO_CTRL addClientRole $AUTH_USER service >/dev/null 2>&1 || true
 fi
+
+echo "Ensuring device certificates exist for all devices in site model..."
+for device_dir in "$SITE_MODEL"/devices/*; do
+  if [ -d "$device_dir" ]; then
+    dev_id=$(basename "$device_dir")
+    if [ -f "$device_dir/rsa_private.pem" ] && [ ! -f "$device_dir/rsa_private.crt" ]; then
+      bin/keygen CERT "$device_dir"
+    elif [ -f "$device_dir/ec_private.pem" ] && [ ! -f "$device_dir/ec_private.crt" ]; then
+      bin/keygen CERT "$device_dir"
+    fi
+  fi
+done
 
 # 9. Start Pub/Sub Emulator (Native-First with Ephemeral Container Fallback)
 echo "Checking native Pub/Sub Emulator component availability..."
