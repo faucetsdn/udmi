@@ -815,4 +815,19 @@ public class GeneralUtils {
     return items.size() > SET_SIZE_THRESHOLD
         ? format("%d devices", items.size()) : items.toString();
   }
+
+  /**
+   * Check if a string represents a numerical value.
+   */
+  public static boolean isNumericString(String value) {
+    if (value == null) {
+      return false;
+    }
+    try {
+      double d = Double.parseDouble(value);
+      return !Double.isNaN(d) && !Double.isInfinite(d);
+    } catch (NumberFormatException e) {
+      return false;
+    }
+  }
 }

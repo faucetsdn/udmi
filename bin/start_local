@@ -69,6 +69,12 @@ registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 echo Starting etcd... | tee -a $UDMIS_LOG
 $UDMI_ROOT/bin/start_etcd >> $UDMIS_LOG 2>&1
 
+echo Starting influx... | tee -a $UDMIS_LOG
+$UDMI_ROOT/bin/start_influx >> $UDMIS_LOG 2>&1
+
+echo Starting postgresql... | tee -a $UDMIS_LOG
+$UDMI_ROOT/bin/start_postgresql >> $UDMIS_LOG 2>&1
+
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 mkdir -p $CERT_DIR
 

@@ -2,7 +2,7 @@
 Sample: Connect to Generic Broker (Basic Auth)
 
 This script demonstrates how to connect a UDMI device to a standard MQTT broker
-(like Mosquitto, HiveMQ, or RabbitMQ) using Username/Password authentication.
+(like Mosquitto or RabbitMQ) using Username/Password authentication.
 
 Use Cases:
 1.  **Local Development**: Testing against a local Mosquitto container.

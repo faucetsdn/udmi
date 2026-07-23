@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.udmi.util.GeneralUtils.isNumericString;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 
@@ -145,14 +146,26 @@ public class PointsetValidator {
         continue;
       }
 
+      PointPointsetEvents point = points.get(pointName);
+      if (point == null || point.present_value == null) {
+        continue;
+      }
+
+      if (point.present_value instanceof String stringValue && isNumericString(stringValue)) {
+        outOfRangeErrors.add(
+            String.format(
+                "%s: present_value '%s' is a numerical string, expected JSON number",
+                pointName, stringValue));
+        continue;
+      }
+
       if (pointModel.range_min == null && pointModel.range_max == null) {
         continue;
       }
 
-      PointPointsetEvents point = points.get(pointName);
-
       if (!Number.class.isInstance(point.present_value)) {
         outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
+        continue;
       }
 
       Double presentValue = ((Number) point.present_value).doubleValue();
