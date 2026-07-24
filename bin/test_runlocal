@@ -23,11 +23,11 @@ if [[ ! -d out/registries ]]; then
     fi
     echo "Checking for running mosquitto_sub processes:"
     ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
-    fail "Expected 269 system operations, but out/registries/ is missing."
+    fail "Expected 348 system operations, but out/registries/ is missing."
 fi
 
 systems=$(find out/registries/ -name \*update_model.json | xargs jq .system | fgrep -v null | wc -l) || true
-[[ $systems == 274 ]] || fail Expected 269 system operations, found $systems
+[[ $systems == 348 ]] || fail Expected 348 system operations, found $systems
 
 deletes=$(find out/registries/ -name \*update_model.json | xargs jq .operation | fgrep DELETE | wc -l) || true
 [[ $deletes == 1 ]] || fail Expected 1 delete operations, found $deletes

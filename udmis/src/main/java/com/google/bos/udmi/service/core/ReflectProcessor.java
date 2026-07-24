@@ -504,7 +504,9 @@ public class ReflectProcessor extends ProcessorBase {
       debug("Setting target registry affinity for %s to %s", envelope.deviceId, setup.provider);
       iotAccess.setProviderAffinity(envelope.deviceId, null, setup.provider);
     });
-    updateProviderAffinity(envelope, toolState.source);
+    if (toolState.source != null) {
+      updateProviderAffinity(envelope, toolState.source);
+    }
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }
