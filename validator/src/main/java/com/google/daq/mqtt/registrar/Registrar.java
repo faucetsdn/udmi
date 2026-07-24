@@ -1052,7 +1052,7 @@ public class Registrar {
   }
 
   private boolean pushToCloudIoT(String localName, LocalDevice localDevice) {
-    System.err.println("Registering device " + localName + " with IoT provider...");
+    System.err.println("Registering device " + localName + "...");
     boolean created = updateCloudIoT && updateCloudIoT(localDevice);
     CloudModel device =
         checkNotNull(fetchDevice(localName, created), "missing device " + localName);
@@ -1665,6 +1665,9 @@ public class Registrar {
       throw new IllegalArgumentException("Project id starts with dash options flag " + projectId);
     }
     this.projectId = projectId;
+    if (siteModel != null && siteModel.getExecutionConfiguration() != null) {
+      siteModel.getExecutionConfiguration().project_id = projectId;
+    }
   }
 
   @CommandLineOption(short_form = "-r", arg_name = "root_path", description = "Set tool root")
@@ -1750,6 +1753,10 @@ public class Registrar {
     }
   }
 
+  public SiteModel getSiteModel() {
+    return siteModel;
+  }
+
   @SuppressWarnings("unchecked")
   public List<MockAction> getMockActions() {
     return (List<MockAction>) (List<?>) cloudIotManager.getMockActions();
@@ -1760,6 +1767,12 @@ public class Registrar {
   private void setTargetRegistry(String altRegistry) {
     siteModel.getExecutionConfiguration().registry_id = altRegistry;
     siteModel.getExecutionConfiguration().alt_registry = null;
+  }
+
+  @CommandLineOption(short_form = "-P", arg_name = "provider",
+      description = "Set target provider override for reflector session")
+  private void setTargetProvider(String provider) {
+    siteModel.getExecutionConfiguration().target_provider = provider;
   }
 
   @CommandLineOption(short_form = "-A", description = "Auto process alt_registry from config")

@@ -50,6 +50,7 @@ class ExecutionConfiguration(DataModel):
     update_to: Optional[str] = None
     alt_project: Optional[str] = None
     alt_registry: Optional[str] = None
+    target_provider: Optional[str] = None
     block_unknown: Optional[bool] = None
     sequences: Optional[List[str]] = None
     mapping_configuration: Optional[MappingConfig] = None

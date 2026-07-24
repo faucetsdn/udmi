@@ -26,7 +26,8 @@ public interface IotAccessProvider extends UdmiComponent {
       IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
       IotProvider.PUBSUB, PubSubIotAccessProvider.class,
       IotProvider.IMPLICIT, ImplicitIotAccessProvider.class,
-      IotProvider.LOCAL, LocalIotAccessProvider.class
+      IotProvider.LOCAL, LocalIotAccessProvider.class,
+      IotProvider.TEMPORARY, TemporaryIotAccessProvider.class
   );
 
   /**
@@ -50,6 +51,11 @@ public interface IotAccessProvider extends UdmiComponent {
 
   String fetchRegistryMetadata(String registryId, String metadataKey);
 
+  /**
+   * Get the provider affinity identifier for a specific registry or device.
+   */
+  String getProviderAffinity(String registryId, String deviceId);
+
   String fetchState(String registryId, String deviceId);
 
   /**
@@ -71,6 +77,11 @@ public interface IotAccessProvider extends UdmiComponent {
   void saveState(String registryId, String deviceId, String stateBlob);
 
   void sendCommandBase(Envelope envelope, SubFolder folder, String message);
+
+  /**
+   * Set the provider affinity identifier for a specific registry or device.
+   */
+  void setProviderAffinity(String registryId, String deviceId, String providerId);
 
   String updateConfig(Envelope envelope, String config, Long version);
 

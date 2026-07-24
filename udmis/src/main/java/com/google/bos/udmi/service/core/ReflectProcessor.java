@@ -43,7 +43,6 @@ import static udmi.schema.CloudModel.ModelOperation.PREVIEW;
 import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.REGISTRY;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
-import static udmi.schema.IotAccess.IotProvider.IMPLICIT;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
 import com.google.bos.udmi.service.messaging.ModelUpdate;
@@ -132,8 +131,10 @@ public class ReflectProcessor extends ProcessorBase {
                   reflect.deviceId));
         }
 
-        envelope.source = reflect.source;
         updateProviderAffinity(reflect, reflect.source);
+        String targetAffinity = iotAccess.getProviderAffinity(envelope.deviceRegistryId,
+            envelope.deviceId);
+        envelope.source = firstNonNull(targetAffinity, reflect.source);
         reflect.transactionId = firstNonNull(envelope.transactionId, reflect.transactionId,
             ReflectProcessor::makeTransactionId);
         processReflection(reflect, envelope, payload);
@@ -330,7 +331,9 @@ public class ReflectProcessor extends ProcessorBase {
 
   private Envelope makeTargetEnvelope(Envelope attributes) {
     Envelope target = deepCopy(attributes);
-    target.source = IMPLICIT.toString();
+    if (target.source == null) {
+      target.source = iotAccess.getProviderAffinity(target.deviceRegistryId, target.deviceId);
+    }
     return target;
   }
 
@@ -497,7 +500,13 @@ public class ReflectProcessor extends ProcessorBase {
   void updateAwareness(Envelope envelope, UdmiState toolState) {
     debug("Processing UdmiState for %s/%s: %s", envelope.deviceRegistryId, envelope.deviceId,
         stringifyTerse(toolState));
-    ifNotNullThen(toolState.setup, setup -> updateProviderAffinity(envelope, toolState.source));
+    ifNotNullThen(toolState.setup, setup -> {
+      debug("Setting target registry affinity for %s to %s", envelope.deviceId, setup.provider);
+      iotAccess.setProviderAffinity(envelope.deviceId, null, setup.provider);
+    });
+    if (toolState.source != null) {
+      updateProviderAffinity(envelope, toolState.source);
+    }
     ifNotNullThen(toolState.regions, this::updateRegistryRegions);
   }
 }

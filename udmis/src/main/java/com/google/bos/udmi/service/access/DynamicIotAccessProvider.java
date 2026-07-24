@@ -50,22 +50,17 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   private String determineProvider(String registryId) {
-    // TODO: In the future, different registries might be governed by different backends
-    // using the same set of providers, so inheriting affinity from the reflector like
-    // this might need to be re-evaluated.
-    // For now, we assume the only active backend is Mosquitto (ImplicitIotAccessProvider),
-    // and inheriting the reflector's affinity is necessary to resolve the cold-start
-    // deadlock where the device hasn't sent a message yet but needs its config.
-    String reflectorKey = getProviderKey(ContainerBase.REFLECT_BASE, registryId);
-    String reflectorAffinity = registryProviders.get(reflectorKey);
-    if (reflectorAffinity != null) {
-      debug("Registry affinity mapping for %s inherited from reflector %s: %s",
-          registryId, reflectorKey, reflectorAffinity);
-      return reflectorAffinity;
+    String explicitAffinity = registryProviders.get(registryId);
+    if (explicitAffinity != null) {
+      debug("Registry affinity mapping for %s is explicitly set to: %s", registryId,
+          explicitAffinity);
+      return explicitAffinity;
     }
+    boolean isReflector = ContainerBase.REFLECT_BASE.equals(registryId);
     getProviders();
     TreeMap<String, String> sortedMap = getProviders().entrySet().stream()
         .filter(access -> access.getValue().isEnabled())
+        .filter(access -> isReflector || !(access.getValue() instanceof PubSubIotAccessProvider))
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
     checkState(!sortedMap.isEmpty(), "no viable iot providers found");
     String providerId = sortedMap.lastEntry().getValue();
@@ -73,17 +68,59 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     return providerId;
   }
 
+  private String resolveTargetProviderId(String rawSource) {
+    if (rawSource == null) {
+      return null;
+    }
+
+    int index = rawSource.indexOf(Common.SOURCE_SEPARATOR);
+    String transport = index < 0 ? rawSource : rawSource.substring(0, index);
+    String source = index < 0 ? null : rawSource.substring(index + 1);
+
+    // Prioritize source if available, otherwise fallback to transport
+    String preferred = (source != null) ? source : transport;
+
+    if ("bridge".equals(preferred) && getProviders().containsKey("implicit")) {
+      return "implicit";
+    } else if (getProviders().containsKey(preferred)) {
+      return preferred;
+    }
+
+    return transport; // default fallback
+  }
+
   private IotAccessProvider getProviderFor(Envelope envelope) {
+    String entryKey = getProviderKey(envelope.deviceRegistryId, envelope.deviceId);
+    String registered = registryProviders.get(entryKey);
+    if (registered != null && getProviders().containsKey(registered)) {
+      return getProviders().get(registered);
+    }
+    if (ContainerBase.REFLECT_BASE.equals(envelope.deviceRegistryId)
+        && envelope.source != null) {
+      String target = resolveTargetProviderId(envelope.source);
+      if (target != null && getProviders().containsKey(target)) {
+        return getProviders().get(target);
+      }
+    }
     return getProviderFor(envelope.deviceRegistryId, envelope.deviceId);
   }
 
   private IotAccessProvider getProviderFor(String registryId, String deviceId) {
-    String entryKey = getProviderKey(registryId, deviceId);
-    String providerKey =
-        registryProviders.computeIfAbsent(entryKey, k -> determineProvider(registryId));
+    String providerKey = getProviderAffinity(registryId, deviceId);
     IotAccessProvider provider = getProviders().get(providerKey);
     return requireNonNull(provider,
-        format("Could not determine provider for %s from %s", providerKey, entryKey));
+        format("Could not determine provider for %s from %s", providerKey,
+            getProviderKey(registryId, deviceId)));
+  }
+
+  @Override
+  public String getProviderAffinity(String registryId, String deviceId) {
+    String entryKey = getProviderKey(registryId, deviceId);
+    String providerKey = registryProviders.get(entryKey);
+    if (providerKey == null) {
+      providerKey = determineProvider(registryId);
+    }
+    return providerKey;
   }
 
   private IotAccessProvider getRegistryProvider(Envelope envelope) {
@@ -228,21 +265,12 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     String providerKey = getProviderKey(registryId, deviceId);
     if (providerId != null) {
-      int index = providerId.indexOf(Common.SOURCE_SEPARATOR);
-      String transport = providerId.substring(0, index < 0 ? providerId.length() : index);
-      String source = index < 0 ? null : providerId.substring(index + 1);
-
-      String affinity = transport;
-      if (source != null) {
-        if ("bridge".equals(source)) {
-          affinity = "implicit";
-        } else if (getProviders().containsKey(source)) {
-          affinity = source;
-        }
-      } else {
-        if ("bridge".equals(transport)) {
-          affinity = "implicit";
-        }
+      String affinity = resolveTargetProviderId(providerId);
+      if (!getProviders().containsKey(affinity)) {
+        warn(format("Requested invalid or inactive provider affinity '%s' for %s", affinity,
+            providerKey));
+        throw new IllegalArgumentException(
+            format("Unknown or inactive requested provider '%s'", affinity));
       }
 
       String previous = registryProviders.put(providerKey, affinity);
@@ -256,11 +284,15 @@ public class DynamicIotAccessProvider extends IotAccessBase {
         debug(format("Cleared registry affinity for %s (was %s)", providerKey, previous));
       }
     }
+    if (deviceId == null) {
+      String prefix = registryId + "/";
+      registryProviders.keySet().removeIf(k -> k.startsWith(prefix));
+    }
     super.setProviderAffinity(registryId, deviceId, providerId);
   }
 
   private static String getProviderKey(String registryId, String deviceId) {
-    return format(PROVIDER_KEY_FORMAT, registryId, deviceId);
+    return deviceId == null ? registryId : format(PROVIDER_KEY_FORMAT, registryId, deviceId);
   }
 
   @Override

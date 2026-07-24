@@ -60,7 +60,11 @@
   },
   "iot_access": {
     "iot-access": {
-      "project_id": "implicit"
+      "provider": "dynamic",
+      "project_id": "implicit, temporary"
+    },
+    "temporary": {
+      "provider": "temporary"
     },
     "implicit": {
       "provider": "implicit",

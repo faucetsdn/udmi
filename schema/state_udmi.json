@@ -67,6 +67,10 @@
           "type": "string",
           "description": "Optional version for a udmis update trigger"
         },
+        "provider": {
+          "type": "string",
+          "description": "Target IoT access provider override for this tool session"
+        },
         "tool_name": {
           "type": "string",
           "description": "Name of the tool being used" 

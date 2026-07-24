@@ -241,7 +241,7 @@ jobs:
   runlocal:
     name: UDMIS Local Setup
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
     steps:
@@ -269,6 +269,8 @@ jobs:
         run: bin/test_mosquitto
       - name: bin/test_regclean
         run: bin/test_regclean $TARGET_PROJECT
+      - name: bin/test_registrar_dynamic
+        run: bin/test_registrar_dynamic $TARGET_PROJECT
       - name: bin/test_runlocal
         run: bin/test_runlocal
       - name: bin/test_sequencer
@@ -388,6 +390,7 @@ jobs:
           if-no-files-found: error
           name: udmi-support_${{ github.run_id }}-blobupdates
           path: '*_udmi-support_*.tgz'
+
 
   posttest:
     name: Post-test Summarization

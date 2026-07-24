@@ -45,7 +45,8 @@
         "gref",
         "etcd",
         "jwt",
-        "clearblade"
+        "clearblade",
+        "temporary"
       ],
       "$presentation": {
         "display": "show",

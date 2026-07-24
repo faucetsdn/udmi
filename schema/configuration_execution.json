@@ -227,6 +227,14 @@
         "style": "bold"
       }
     },
+    "target_provider": {
+      "type": "string",
+      "description": "Target IoT access provider override for reflector sessions",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
     "block_unknown": {
       "type": "boolean",
       "$presentation": {

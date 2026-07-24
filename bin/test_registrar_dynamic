@@ -1,0 +1,80 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+cd ${UDMI_ROOT}
+source etc/shell_common.sh
+
+TEST_SITE=sites/udmi_site_model
+PROJECT_SPEC=${1:-//mqtt/localhost}
+
+site_path=$TEST_SITE
+project_spec=$PROJECT_SPEC
+
+echo '###################################' cleaning out registry
+bin/registrar ${TEST_SITE} $PROJECT_SPEC -P temporary -d -x
+
+find $TEST_SITE -name out | xargs rm -rf
+(cd $TEST_SITE; git checkout .)
+
+echo '###################################' starting test section processing
+bin/registrar ${TEST_SITE} $PROJECT_SPEC -P temporary > out/registrar_1.log 2>&1
+
+clean_devices=$(jq -r .status ${TEST_SITE}/out/registration_summary.json | fgrep CLEAN | wc -l)
+
+if ! grep -q "Fetched 0 device models from cloud registry" out/registrar_1.log; then
+    got=$(grep -E "Fetched [0-9]+ device models from cloud registry" out/registrar.log)
+    echo "Expected `Fetched 0 device models from cloud registry`"
+    echo "Instead got: $out"
+    echo "Failed"
+    exit 1
+fi
+
+echo '###################################' second run
+bin/registrar ${TEST_SITE} $PROJECT_SPEC -P temporary > out/registrar_2.log 2>&1
+if ! grep -q "Fetched 4 device models from cloud registry" out/registrar_2.log; then
+    got=$(grep -E "Fetched [0-9]+ device models from cloud registry" out/registrar.log)
+    echo "Expected `Fetched 4 device models from cloud registry`"
+    echo "Instead got: $out"
+    echo "Failed"
+    exit 1
+fi
+
+
+echo "################################### provider migration test"
+bin/registrar ${TEST_SITE} $PROJECT_SPEC > out/registrar_implicit.log 2>&1
+bin/registrar ${TEST_SITE} $PROJECT_SPEC -P temporary -d -x
+bin/registrar ${TEST_SITE} $PROJECT_SPEC -P temporary > out/registrar_migrate.log 2>&1
+if grep -q "Processing 0 new devices" out/registrar_migrate.log || grep -q "Updating 0 existing devices" out/registrar_migrate.log; then
+    echo "Provider migration test OK."
+else
+    echo "Provider migration test FAILED."
+    cat out/registrar_migrate.log
+    exit 1
+fi
+
+echo "################################### active connected devices test"
+pubber_bg AHU-1
+bin/registrar ${TEST_SITE} $PROJECT_SPEC -P temporary > out/registrar_active.log 2>&1
+pkill -f "bin/pubber" || true
+
+if grep -q "Updating 4 existing devices" out/registrar_active.log; then
+    echo "Active device test OK: temporary provider override succeeded over active implicit device."
+else
+    echo "Active device test FAILED. Expected 'Updating 4 existing devices' in temporary provider."
+    cat out/registrar_active.log
+    exit 1
+fi
+
+echo "################################### invalid provider test"
+if bin/registrar ${TEST_SITE} $PROJECT_SPEC -P foo_bar > out/registrar_invalid.log 2>&1; then
+    echo "Invalid provider test FAILED. Expected 'bin/registrar ... -P foo_bar' to fail."
+    cat out/registrar_invalid.log
+    exit 1
+else
+    echo "Invalid provider test OK: 'bin/registrar ... -P foo_bar' failed as expected."
+    if [[ -f out/udmis.log ]]; then
+        grep -E "Unknown or inactive requested provider|invalid or inactive provider affinity" out/udmis.log || (echo "Expected error in udmis.log not found" && tail -n 20 out/udmis.log && exit 1)
+    fi
+fi
+
+echo "################################### done"

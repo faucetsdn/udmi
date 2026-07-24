@@ -751,6 +751,13 @@
       "section": "cloud_iot_config",
       "type": "string"
     },
+    "target_provider": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Target IoT access provider override for reflector sessions"
+    },
     "block_unknown": {
       "display": "show",
       "style": "bold",

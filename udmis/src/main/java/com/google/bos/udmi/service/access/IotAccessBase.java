@@ -9,6 +9,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.DistributorPipe;
 import com.google.bos.udmi.service.core.ProcessorBase.PreviousParseException;
@@ -32,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.UdmiState;
 
 /**
@@ -49,13 +51,18 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   private static final Duration REGISTRY_REFRESH = Duration.ofMinutes(10);
   private static final Duration REGISTRY_BACKOFF = Duration.ofMinutes(1);
   final Map<String, String> options;
+  protected final IotAccess iotAccess;
   private final AtomicReference<Instant> lastRegistryFetch =
       new AtomicReference<>(Instant.ofEpochSecond(0));
   private CompletableFuture<Map<String, String>> registryRegions;
   private DistributorPipe distributor;
 
+  /**
+   * Base constructor for IotAccess provider instances.
+   */
   public IotAccessBase(IotAccess iotAccess) {
     super(iotAccess.name, 0, null);
+    this.iotAccess = iotAccess;
     options = parseOptions(iotAccess);
   }
 
@@ -64,7 +71,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   }
 
   private static Entry<String, String> getBackoffKey(String registryId, String deviceId) {
-    return Map.entry(registryId, deviceId);
+    return Map.entry(registryId, deviceId == null ? "" : deviceId);
   }
 
   protected Map<String, String> fetchRegistryRegions() {
@@ -305,6 +312,12 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     }
   }
 
+  @Override
+  public String getProviderAffinity(String registryId, String deviceId) {
+    return ofNullable(iotAccess.provider).map(IotProvider::value).orElse(null);
+  }
+
+  @Override
   public void setProviderAffinity(String registryId, String deviceId, String providerId) {
     registryBackoffClear(registryId, deviceId);
   }
