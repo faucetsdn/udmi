@@ -14,9 +14,17 @@ if [[ -f $ETC_DIR/mosquitto.pid ]]; then
     OLD_PID=$(cat $ETC_DIR/mosquitto.pid)
     if ps -p $OLD_PID > /dev/null 2>&1; then
         echo "Killing existing local mosquitto process with PID $OLD_PID..."
-        kill $OLD_PID || true
+        $SUDO kill $OLD_PID 2>/dev/null || kill $OLD_PID || true
         sleep 1
     fi
+fi
+
+if [[ ${1:-} == stop ]]; then
+    if [[ ${UDMI_NO_SUDO:-false} != true ]] && command -v systemctl >/dev/null 2>&1; then
+        echo "Stopping mosquitto systemd service..."
+        sudo systemctl stop mosquitto || true
+    fi
+    exit 0
 fi
 
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then

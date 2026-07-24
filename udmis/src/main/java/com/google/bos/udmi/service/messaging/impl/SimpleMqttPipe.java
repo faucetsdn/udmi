@@ -394,6 +394,15 @@ public class SimpleMqttPipe extends MessageBase {
     return format("MP:%08x", (long) (Math.random() * 0x100000000L));
   }
 
+  private String extractTransactionId(String payload) {
+    try {
+      Map<String, String> payloadMap = toStringMap(payload);
+      return payloadMap == null ? null : payloadMap.get(TRANSACTION_KEY);
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
   private boolean shouldRetainMessage(Bundle bundle) {
     return bundle.envelope.subType == SubType.CONFIG;
   }
@@ -469,7 +478,13 @@ public class SimpleMqttPipe extends MessageBase {
         debug("MQTT message arrived on %s: %s", topic, payload);
         Map<String, String> envelopeMap = parseEnvelopeTopic(topic);
         envelopeMap.put(PUBLISH_TIME_KEY, isoConvert());
-        envelopeMap.put(TRANSACTION_KEY, makeTransactionId());
+
+        String transactionId = extractTransactionId(payload);
+        if (transactionId == null) {
+          transactionId = makeTransactionId();
+        }
+
+        envelopeMap.put(TRANSACTION_KEY, transactionId);
         envelopeMap.put(SOURCE_KEY, IMPLICIT_CHANNEL);
         receiveMessage(envelopeMap, payload);
       } catch (Exception e) {

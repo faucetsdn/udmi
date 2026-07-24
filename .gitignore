@@ -51,6 +51,10 @@ __pycache__/
 /tests/sites/*/devices/*/out/
 /tests/sites/basic/extras/
 /tests/sites/*/reflector/
+tests/sites/*/devices/*/*.crt
+tests/sites/*/devices/*/*.csr
+tests/sites/*/devices/*/rsa_private.*
+tests/sites/*/devices/*/rsa_public.*
 /udmi_*.log
 
 .vscode
@@ -81,6 +85,9 @@ wordlist.dic
 # Test output directories
 tests/dbo/basic/test_site_model/
 
+# Bridgehead local environment file
+bridgehead/.env
+
 # Mantis output and bundle directories
 /tools/mantis/.idea/
 /tools/mantis/out/
@@ -92,4 +99,3 @@ tests/dbo/basic/test_site_model/
 
 # Bridgehead runtime output
 /bridgehead/out
-

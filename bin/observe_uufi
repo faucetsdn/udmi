@@ -4,7 +4,7 @@
 # This script acts as a passive observer on the UUFI topic tree.
 # It can be used to monitor traffic between clients and the system for debugging.
 
-UDMI_ROOT=$(dirname $0)/..
+UDMI_ROOT=$(realpath $(dirname $0)/..)
 cd ${UDMI_ROOT}
 source etc/shell_common.sh
 

@@ -97,9 +97,10 @@ if [[ $project_spec =~ ^// ]]; then
     no_prefix=${project_spec#//}
     iot_provider=\"${no_prefix%%/*}\"
     no_provider=${no_prefix#*/}
-    project_id=${no_provider%/*}
+    project_id=${no_provider%%/*}
     udmi_namespace=${no_provider#$project_id}
     if [[ $project_id == *:* ]]; then
+        [[ -n ${broker_hostname:-} ]] || broker_hostname=$project_id
         project_id=${project_id%:*}
     fi
     [[ -n $udmi_namespace ]] && registry_prefix=${udmi_namespace#/}~

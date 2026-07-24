@@ -1,19 +1,26 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.decodeBase64;
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toObject;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
+import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Optional;
+import udmi.schema.CloudModel;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.Metadata;
+import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
 
@@ -125,6 +132,18 @@ public class UufiProcessor extends ProcessorBase {
     Envelope innerEnvelope = convertTo(Envelope.class, mutableMap);
     innerEnvelope.payload = null;
     innerEnvelope.gatewayId = null; // Remove the uufi marker for internal bus
+    if (innerEnvelope.deviceRegistryId == null) {
+      innerEnvelope.deviceRegistryId = envelope.deviceRegistryId;
+    }
+    if (innerEnvelope.deviceId == null) {
+      innerEnvelope.deviceId = envelope.deviceId;
+    }
+    if (innerEnvelope.subType == null) {
+      innerEnvelope.subType = envelope.subType;
+    }
+    if (innerEnvelope.subFolder == null) {
+      innerEnvelope.subFolder = envelope.subFolder;
+    }
 
     debug("Forwarding UUFI message %s/%s from %s to internal bus",
         innerEnvelope.subType, innerEnvelope.subFolder, envelope.source);
@@ -142,9 +161,62 @@ public class UufiProcessor extends ProcessorBase {
   }
 
   private void handleUufiOutbound(Envelope envelope, Object message) {
+    boolean isStateUpdate = envelope.subType == SubType.STATE
+        && (envelope.subFolder == null || envelope.subFolder == SubFolder.UPDATE);
+    if (isStateUpdate) {
+      try {
+        StateUpdate stateUpdate = convertTo(StateUpdate.class, message);
+        Arrays.stream(udmi.schema.State.class.getFields()).forEach(field -> {
+          try {
+            String fieldName = field.getName();
+            Object fieldMessage = field.get(stateUpdate);
+            if (fieldMessage != null) {
+              SubFolder subFolder = catchToNull(() -> SubFolder.fromValue(fieldName));
+              if (subFolder != null) {
+                Map<String, Object> shardedPayload = toMap(fieldMessage);
+                shardedPayload.put("version", stateUpdate.version);
+                shardedPayload.put("timestamp", stateUpdate.timestamp);
+
+                Envelope shardedEnvelope = deepCopy(envelope);
+                shardedEnvelope.subFolder = subFolder;
+
+                handleUufiOutbound(shardedEnvelope, shardedPayload);
+              }
+            }
+          } catch (Exception e) {
+            error("Error sharding outbound state field " + field.getName() + ": "
+                + friendlyStackTrace(e));
+          }
+        });
+        return;
+      } catch (Exception e) {
+        error("Error processing monolithic outbound state update: " + friendlyStackTrace(e));
+      }
+    }
+
+    Object outboundMessage = message;
+
+    if (envelope.subFolder == SubFolder.SYSTEM && message instanceof CloudModel) {
+      CloudModel cloudModel = (CloudModel) message;
+      String metadataStr = (cloudModel.metadata != null)
+          ? cloudModel.metadata.get("udmi_metadata") : null;
+      SystemModel systemModel = null;
+      if (metadataStr != null) {
+        Metadata metadata = convertTo(Metadata.class, metadataStr);
+        systemModel = metadata.system;
+      }
+      if (systemModel == null) {
+        systemModel = new SystemModel();
+      }
+      Map<String, Object> payloadMap = toMap(systemModel);
+      payloadMap.put("timestamp", envelope.publishTime);
+      payloadMap.put("version", Optional.ofNullable(cloudModel.version).orElse("1.5.2"));
+      outboundMessage = payloadMap;
+    }
+
     // Wrap system message for UUFI clients
     Map<String, Object> uufiMessage = toMap(envelope);
-    uufiMessage.put(PAYLOAD_KEY, message);
+    uufiMessage.put(PAYLOAD_KEY, outboundMessage);
     uufiMessage.put("principal", UdmiServicePod.INSTANCE_ID); // For loopback protection
 
     Envelope uufiEnvelope = new Envelope();

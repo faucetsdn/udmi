@@ -10,12 +10,15 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.PointsetEvents;
 import udmi.schema.SetupUdmiState;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
@@ -117,6 +120,126 @@ public class UufiProcessorTest extends ProcessorTestBase {
     Map<String, Object> wrapped = toMap(captured.get(0));
     assertNotNull(wrapped.get("payload"), "wrapped payload should not be null");
     assertEquals(SubType.EVENTS.value(), wrapped.get("subType"));
+  }
+
+  /**
+   * Test that inbound UUFI-wrapped messages from compliant clients (omitting device registry/ID)
+   * are correctly routed by copying device identity from the outer envelope to innerEnvelope.
+   */
+  @Test
+  public void inboundRoutingRedundancyTest() {
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.EVENTS;
+    innerEnvelope.subFolder = SubFolder.POINTSET;
+    // Omit device identity from the inner payload according to redundancy rule
+    innerEnvelope.deviceId = null;
+    innerEnvelope.deviceRegistryId = null;
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    uufiWrapper.put("payload", Map.of(
+        "points", Map.of(),
+        "version", "1",
+        "timestamp", "2026-07-17T12:00:00Z"
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceId = "dev-1";
+    transportEnvelope.deviceRegistryId = "reg-1";
+
+    List<Envelope> capturedEnvelopes = new ArrayList<>();
+    getReverseDispatcher().registerHandler(PointsetEvents.class, (message) -> {
+      Envelope env = getReverseDispatcher().getContinuation(message).getEnvelope();
+      capturedEnvelopes.add(env);
+    });
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    // Verify that the unwrapped message was published with the copied device registry and device ID
+    assertEquals(1, capturedEnvelopes.size(), "captured envelopes count");
+    Envelope publishedEnvelope = capturedEnvelopes.get(0);
+    assertEquals("dev-1", publishedEnvelope.deviceId);
+    assertEquals("reg-1", publishedEnvelope.deviceRegistryId);
+  }
+
+  /**
+   * Test that inbound UUFI-wrapped messages with omitted subType and subFolder
+   * in the payload map copy these fields from the outer transport envelope.
+   */
+  @Test
+  public void inboundRoutingSubTypeRedundancyTest() {
+    // Payload map has NO subType/subFolder
+    Map<String, Object> uufiWrapper = new java.util.HashMap<>();
+    uufiWrapper.put("payload", Map.of(
+        "points", Map.of(),
+        "version", "1",
+        "timestamp", "2026-07-17T12:00:00Z"
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceId = "dev-1";
+    transportEnvelope.deviceRegistryId = "reg-1";
+    transportEnvelope.subType = SubType.EVENTS;
+    transportEnvelope.subFolder = SubFolder.POINTSET;
+
+    List<Envelope> capturedEnvelopes = new ArrayList<>();
+    getReverseDispatcher().registerHandler(PointsetEvents.class, (message) -> {
+      Envelope env = getReverseDispatcher().getContinuation(message).getEnvelope();
+      capturedEnvelopes.add(env);
+    });
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    // Verify that the unwrapped message was published with correct subType/subFolder copied
+    assertEquals(1, capturedEnvelopes.size(), "captured envelopes count");
+    Envelope publishedEnvelope = capturedEnvelopes.get(0);
+    assertEquals(SubType.EVENTS, publishedEnvelope.subType);
+    assertEquals(SubFolder.POINTSET, publishedEnvelope.subFolder);
+  }
+
+  /**
+   * Test that outbound monolithic state messages (having null or UPDATE subfolder)
+   * are correctly sharded into individual sub-blocks and published on compliant paths.
+   */
+  @Test
+  public void outboundMonolithicStateShardingTest() {
+    Envelope stateEnvelope = new Envelope();
+    stateEnvelope.subType = SubType.STATE;
+    stateEnvelope.subFolder = SubFolder.UPDATE;
+    stateEnvelope.deviceId = "dev-1";
+    stateEnvelope.deviceRegistryId = "reg-1";
+
+    com.google.bos.udmi.service.messaging.StateUpdate monolithicState =
+        new com.google.bos.udmi.service.messaging.StateUpdate();
+    monolithicState.version = "1";
+    monolithicState.timestamp = new java.util.Date();
+    monolithicState.system = new udmi.schema.SystemState();
+    monolithicState.pointset = new udmi.schema.PointsetState();
+
+    // Send the system monolithic state update message to the processor's input
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(stateEnvelope, monolithicState)));
+
+    // Since monolithicState has 'system' and 'pointset' fields non-null,
+    // it should shard them and publish 2 messages: one for system, one for pointset.
+    assertEquals(2, captured.size(), "captured message count should match sharded count");
+
+    Map<String, Object> wrappedMsg1 = toMap(captured.get(0));
+    Map<String, Object> wrappedMsg2 = toMap(captured.get(1));
+
+    // Verify subfolders are correctly sharded
+    java.util.Set<String> subFolders = new java.util.HashSet<>();
+    subFolders.add((String) wrappedMsg1.get("subFolder"));
+    subFolders.add((String) wrappedMsg2.get("subFolder"));
+
+    java.util.Set<String> expectedSubFolders =
+        java.util.Set.of(SubFolder.SYSTEM.value(), SubFolder.POINTSET.value());
+    assertEquals(expectedSubFolders, subFolders, "sharded subfolders mismatch");
   }
 
   private UufiProcessor getProcessor() {

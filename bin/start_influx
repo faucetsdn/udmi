@@ -38,6 +38,10 @@ else
     fi
 fi
 
+if [[ ${1:-} == stop ]]; then
+    exit 0
+fi
+
 $BINDIR/influxd version
 
 rm -rf var/influx/*

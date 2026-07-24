@@ -232,10 +232,12 @@ public interface PublisherHost extends ManagerHost {
    * Acquires and validates blob data from a given URL encoded in Base64 format.
    */
   static String acquireBlobData(String url, String sha256) {
-    if (!url.startsWith(DATA_URL_JSON_BASE64)) {
+    if (!url.startsWith("data:") || !url.contains(";base64,")) {
       throw new RuntimeException(format("URL encoding not supported: %s", url));
     }
-    byte[] dataBytes = Base64.getDecoder().decode(url.substring(DATA_URL_JSON_BASE64.length()));
+    int base64MarkerIndex = url.indexOf(";base64,");
+    String base64Data = url.substring(base64MarkerIndex + ";base64,".length());
+    byte[] dataBytes = Base64.getDecoder().decode(base64Data);
     String dataSha256 = GeneralUtils.sha256(dataBytes);
     if (!dataSha256.equals(sha256)) {
       throw new RuntimeException("Blob data hash mismatch");

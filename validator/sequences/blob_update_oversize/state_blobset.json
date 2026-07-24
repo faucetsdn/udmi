@@ -1,6 +1,6 @@
 {
   "blobs" : {
-    "pubber_module" : {
+    "system" : {
       "generation" : "TIMESTAMP",
       "phase" : "final",
       "status" : {

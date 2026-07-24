@@ -26,6 +26,13 @@ else
     JDWP=
 fi
 
+if [[ $# -ge 2 && "$util_name" == "registrar" ]]; then
+    site_path=$1
+    project_spec=$(normalize_conn_spec "$2")
+    shift 2
+    set -- "$site_path" "$project_spec" "$@"
+fi
+
 cmd="java -cp $UDMI_JAR $JDWP $JAVA_CLASS $util_name $@"
 echo $cmd
 $cmd 2>&1 | tee $OUT_DIR/$util_name.log

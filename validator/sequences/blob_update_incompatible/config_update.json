@@ -1,7 +1,7 @@
 {
   "blobset" : {
     "blobs" : {
-      "pubber_module" : {
+      "system" : {
         "generation" : "TIMESTAMP",
         "phase" : "final",
         "sha256" : "@@@blob data hash###9b9f95fb7a37147bfd7cf3e4e6a0979f040455a8e2994f6431f7ad0838419188",
