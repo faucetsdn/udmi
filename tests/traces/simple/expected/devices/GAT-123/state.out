@@ -1,9 +1,24 @@
 {
+<<<<<<< HEAD
   "errors" : [ ],
   "status" : {
     "category" : "validation.device.receive",
     "level" : 200,
     "message" : "Successful validation",
+=======
+  "errors" : [ {
+    "category" : "validation.device.content",
+    "detail" : "While validating pointset message at 1999-10-20T01:02:03Z",
+    "level" : 500,
+    "message" : "missing pointset subblock",
+    "timestamp" : "1999-10-20T01:02:03Z"
+  } ],
+  "status" : {
+    "category" : "validation.device.content",
+    "detail" : "While validating pointset message at 1999-10-20T01:02:03Z",
+    "level" : 500,
+    "message" : "missing pointset subblock",
+>>>>>>> 221938b618a53e7191de4a5a81a3cecf72c25630
     "timestamp" : "1999-10-20T01:02:03Z"
   },
   "sub_folder" : "update",
