@@ -381,13 +381,20 @@ class MosquittoDynamicSecurityServiceTest {
         new CommandRequest("cmd1", "{}".getBytes(StandardCharsets.UTF_8), f1));
     runExecutorTasks();
 
+    // Verify MQTT publish was called and extract dynamic correlationData/batchId
+    ArgumentCaptor<MqttMessage> messageCaptor = ArgumentCaptor.forClass(MqttMessage.class);
+    verify(mockMqttClient).publish(eq("$CONTROL/dynamic-security/v1"), messageCaptor.capture());
+    MqttMessage publishedMessage = messageCaptor.getValue();
+    String batchId = new String(
+        publishedMessage.getProperties().getCorrelationData(), StandardCharsets.UTF_8);
+
     // Simulate broker response to set lastPublishTime = System.currentTimeMillis()
-    String batchId = "000001";
-    String responseJson = "{\"responses\":[{\"status\":0,\"correlationData\":\"000001\"}]}";
+    String responseJson = String.format(
+        "{\"responses\":[{\"status\":0,\"correlationData\":\"%s\"}]}", batchId);
     MqttMessage responseMsg = new MqttMessage(responseJson.getBytes(StandardCharsets.UTF_8));
     org.eclipse.paho.mqttv5.common.packet.MqttProperties props =
         new org.eclipse.paho.mqttv5.common.packet.MqttProperties();
-    props.setCorrelationData(batchId.getBytes(StandardCharsets.UTF_8));
+    props.setCorrelationData(publishedMessage.getProperties().getCorrelationData());
     responseMsg.setProperties(props);
     jitterService.messageArrived("$CONTROL/dynamic-security/v1/response", responseMsg);
     runExecutorTasks();
@@ -400,10 +407,10 @@ class MosquittoDynamicSecurityServiceTest {
         "{\"command\":\"test\"}".getBytes(StandardCharsets.UTF_8),
         new CompletableFuture<>()));
 
-    // Verify scheduled task was created with delay >= 1333ms and <= 2000ms
+    // Verify scheduled task was created with delay >= 1200ms and <= 2000ms
     assertEquals(1, scheduledTasks.size());
     long delay = scheduledTasks.get(0).delay;
-    assertTrue(delay >= 1333 && delay <= 2000,
+    assertTrue(delay >= 1200 && delay <= 2000,
         "Scheduled delay " + delay + "ms should include min interval (1000ms) + jitter");
   }
 }

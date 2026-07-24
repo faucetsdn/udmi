@@ -353,7 +353,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       executor.submit(this::drainAndPublishBatch);
     } else {
       scheduledTask = scheduler.schedule(
-          () -> executor.submit(this::drainAndPublishBatch),
+          (Runnable) () -> executor.submit(this::drainAndPublishBatch),
           delay,
           TimeUnit.MILLISECONDS);
     }
