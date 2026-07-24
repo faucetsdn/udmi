@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
+import udmi.schema.Category;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.Config;
@@ -215,6 +216,41 @@ public class BasicTest extends TestBase {
     assertTrue(reportingDevices.containsKey(newDeviceId));
     assertEquals(messageObject.system.description,
         reportingDevices.get(newDeviceId).getMetadata().system.description);
+  }
+
+  @Test
+  public void invalidTimestampFormat() throws Exception {
+    PointsetEvents messageObject = basePointsetEvents();
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    bundle.message.put("timestamp", "Jun 11, 2026, 8:04:00 AM");
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error summary", 1, report.summary.error_devices.size());
+    ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+        POINTSET_SUBFOLDER);
+    boolean hasTimestampError = result.errors.stream()
+        .anyMatch(entry -> (entry.message.toLowerCase().contains("timestamp")
+            || entry.detail.toLowerCase().contains("timestamp")
+            || entry.message.contains("could not be parsed"))
+            && Category.VALIDATION_DEVICE_CONTENT.equals(entry.category));
+    assertTrue("Should have timestamp error", hasTimestampError);
+  }
+
+  @Test
+  public void excessivePresentValuePrecision() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.get(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT)
+        .present_value = 296.04999961853025;
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error summary", 1, report.summary.error_devices.size());
+    ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+        POINTSET_SUBFOLDER);
+    boolean hasPrecisionError = result.errors.stream()
+        .anyMatch(entry -> entry.message.contains("excessive decimal precision")
+            && Category.VALIDATION_DEVICE_CONTENT.equals(entry.category));
+    assertTrue("Should have precision error", hasPrecisionError);
   }
 
 }
