@@ -324,6 +324,10 @@ To tear down or stop running test infrastructure and DUT simulations in isolated
 * **Environment-Free Bypasses:** The use of `UDMI_NO_SUDO` is deprecated. Instead, any port specification other than system-default ports (or any explicit port for local execution) automatically instructs all scripts to run in user-space.
 * **User-Space Relocation:** When non-privileged mode is triggered, the system operates entirely in user-space without attempting system-wide directory modifications or system service management (e.g., `systemctl`). Instead, the broker is started as a local user background process utilizing configuration and log directories located inside the local workspace relative to the UDMI root.
 
+### 9.7. Utility Usage Restrictions
+* **Permitted Utilities:** _Only_ utilities explicitly listed in the testing spec are allowed to be used by outside agents.
+* **Prohibition:** The direct use of any other utility is prohibited and is not supported.
+
 ---
 
 # Appendix A: Schemas and Examples
