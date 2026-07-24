@@ -33,7 +33,7 @@ deletes=$(find out/registries/ -name \*update_model.json | xargs jq .operation |
 [[ $deletes == 1 ]] || fail Expected 1 delete operations, found $deletes
 
 binds=$(find out/registries/ -name \*update_model.json | xargs jq .operation | fgrep BIND | wc -l) || true
-[[ $binds == 3 ]] || fail Expected 3 bind operations, found $binds
+[[ $binds == 3 ]] || fail Expected 4 bind operations, found $binds
 
 blocks=$(find out/registries/ -name \*update_model.json | xargs jq .operation | fgrep BLOCK | wc -l) || true
 [[ $blocks == 1 ]] || fail Expected 1 block operations, found $blocks
