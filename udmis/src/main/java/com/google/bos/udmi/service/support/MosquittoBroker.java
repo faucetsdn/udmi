@@ -70,7 +70,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   }
 
   /**
-   * Create a new broker connection provider with logging controls, min publish interval, and jitter ratio.
+   * Create a new broker connection provider with logging controls, min publish interval,
+   * and jitter ratio.
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
       boolean disableLogging, Long minPublishIntervalMs, Double jitterRatio) {

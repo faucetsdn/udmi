@@ -123,7 +123,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   }
 
   /**
-   * Constructs and connects the Dynamic Security Service with custom min publish interval and jitter ratio.
+   * Constructs and connects the Dynamic Security Service with custom min publish interval
+   * and jitter ratio.
    */
   public MosquittoDynamicSecurityService(
       EndpointConfiguration endpoint, long minPublishIntervalMs, double jitterRatio) {
@@ -151,7 +152,8 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   }
 
   /**
-   * Calculates random jitter in milliseconds according to the jitter ratio and minimum publish interval.
+   * Calculates random jitter in milliseconds according to the jitter ratio and minimum publish
+   * interval.
    * If jitterRatio <= 0, returns 0.
    * Otherwise returns a random number between (1/3 * jitterRatio * minPublishIntervalMs)
    * and (jitterRatio * minPublishIntervalMs).

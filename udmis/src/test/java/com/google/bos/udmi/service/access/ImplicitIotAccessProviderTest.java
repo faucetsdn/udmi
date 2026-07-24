@@ -181,7 +181,8 @@ class ImplicitIotAccessProviderTest {
     IotAccess iotAccess = new IotAccess();
     iotAccess.options =
         "enable, use_password=" + TEST_PASSWORD
-            + ", disable_logging=true, mosquitto_dynsec_min_interval_ms=500, mosquitto_dynsec_jitter_ratio=0.5";
+            + ", disable_logging=true, mosquitto_dynsec_min_interval_ms=500"
+            + ", mosquitto_dynsec_jitter_ratio=0.5";
     ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
     try {
       MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();

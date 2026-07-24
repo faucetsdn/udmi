@@ -361,7 +361,7 @@ class MosquittoDynamicSecurityServiceTest {
   }
 
   @Test
-  void testEnqueueWithJitterScheduling() {
+  void testEnqueueWithJitterScheduling() throws Exception {
     BlockingQueue<CommandRequest> queue = MosquittoDynamicSecurityService.createCommandQueue(100);
     MosquittoDynamicSecurityService jitterService = new MosquittoDynamicSecurityService(
         endpoint,
@@ -375,16 +375,35 @@ class MosquittoDynamicSecurityServiceTest {
         mockExecutor,
         mockScheduler);
 
-    // Enqueue command
+    // First command: initializes lastPublishTime upon response arrival
+    CompletableFuture<udmi.schema.MosquittoClientResponse> f1 = new CompletableFuture<>();
+    jitterService.enqueueCommand(
+        new CommandRequest("cmd1", "{}".getBytes(StandardCharsets.UTF_8), f1));
+    runExecutorTasks();
+
+    // Simulate broker response to set lastPublishTime = System.currentTimeMillis()
+    String batchId = "000001";
+    String responseJson = "{\"responses\":[{\"status\":0,\"correlationData\":\"000001\"}]}";
+    MqttMessage responseMsg = new MqttMessage(responseJson.getBytes(StandardCharsets.UTF_8));
+    org.eclipse.paho.mqttv5.common.packet.MqttProperties props =
+        new org.eclipse.paho.mqttv5.common.packet.MqttProperties();
+    props.setCorrelationData(batchId.getBytes(StandardCharsets.UTF_8));
+    responseMsg.setProperties(props);
+    jitterService.messageArrived("$CONTROL/dynamic-security/v1/response", responseMsg);
+    runExecutorTasks();
+
+    scheduledTasks.clear();
+
+    // Enqueue second command right after
     jitterService.enqueueCommand(new CommandRequest(
         "test-command",
         "{\"command\":\"test\"}".getBytes(StandardCharsets.UTF_8),
         new CompletableFuture<>()));
 
-    // Verify scheduled task was created with delay >= 1333ms (1000ms + min jitter 333ms) and <= 2000ms
+    // Verify scheduled task was created with delay >= 1333ms and <= 2000ms
     assertEquals(1, scheduledTasks.size());
     long delay = scheduledTasks.get(0).delay;
     assertTrue(delay >= 1333 && delay <= 2000,
-        "Scheduled delay " + delay + "ms should incorporate minimum interval (1000ms) + jitter (333ms-1000ms)");
+        "Scheduled delay " + delay + "ms should include min interval (1000ms) + jitter");
   }
 }
