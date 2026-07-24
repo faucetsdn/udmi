@@ -192,7 +192,7 @@ if is_ssl or port == 8883 or is_custom_port:
     cmd.extend(["--key", client_key])
   cmd.extend(["--insecure"])
 
-print(f"Publishing model/cloud update to {topic}...")
+print(f"Publishing model/system update to {topic}...")
 try:
   subprocess.run(cmd, check=True)
   print("Model update message triggered successfully.")

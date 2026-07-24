@@ -60,7 +60,7 @@ Format: `scheme://[user@]host[:port][/path]`
 - **System Model Service:**
   - **Query:** Clients publish a `query/system` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/system`.
   - **Response (Model Reply):** System publishes the device system model to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`.
-  - **Structure:** Uses standard flat **SystemModel** payloads addressed via device-scoped envelope attributes and topic paths (Section 5.1).
+  - **Structure:** Uses standard flat `schema/model_system.json` payloads addressed via device-scoped envelope attributes and topic paths (Section 5.1).
 - **State Query Service:**
   - **Query:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
   - **Response:** System immediately replies by publishing the last known cached device State report on the device's state topic `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/state/blobset` (or the corresponding state topic matching the query's subFolder).
@@ -68,10 +68,10 @@ Format: `scheme://[user@]host[:port][/path]`
 - **Telemetry and Event Service:**
   - **Telemetry (Pointset):** Devices or clients publish pointset telemetry reports to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/events/pointset`.
   - **Discovery:** Devices or clients publish discovery reports to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/events/discovery`.
-  - **Structure:** Event payloads MUST conform strictly to their respective authoritative UDMI schemas (`pointset.json` or `discovery.json`) nested within the standard `payload` key for MQTT or the root of the message data object for PubSub.
+  - **Structure:** Event payloads MUST conform strictly to their respective authoritative UDMI schemas (`schema/events_pointset.json` or `schema/events_discovery.json`) nested within the standard `payload` key for MQTT or the root of the message data object for PubSub.
 - **System Status and Error Service:**
   - **Status Events:** The System and devices report runtime errors, command validation failures, or schema violation messages on the status channel: `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/events/status`.
-  - **Structure:** Payload MUST conform strictly to the standard UDMI `status` / `Entry` schema (conforming to `entry.json`), containing `category`, `level`, `message`, and optionally `timestamp`.
+  - **Structure:** Payload MUST conform strictly to `schema/entry.json`, containing `category`, `level`, `message`, and optionally `timestamp`.
   - **Correlation:** When status events are published in response to a failed client command, the envelope MUST copy the `transactionId` from the preceding client message to enable exact error correlation.
 
 ### 2.3. Resource Identifier Constraints
@@ -162,7 +162,7 @@ To ensure protocol compatibility, data integrity, and protection against replay 
   - **MQTT Topic:** `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`
   - **PubSub Attributes:** Envelope attributes MUST include `deviceRegistryId` and `deviceId` (along with `subFolder` set to `"system"` and `subType` set to `"model"` or `"query"`).
 - **Payload Structure:**
-  The inner message payload MUST follow the flat, unnested `SystemModel` schema representing only the specified device (conforming directly to `model_system.json`).
+  The inner message payload MUST follow the flat, unnested `schema/model_system.json` schema representing only the specified device.
 - **Prohibited Formats:** 
   - Nested payload hierarchies (e.g., nesting under a `"registries"`, `"devices"`, or `"system"` root key inside the JSON payload) are strictly prohibited.
   - Sourcing or publishing system model updates from `/uufi/c/config/system` or any other unscoped/registry-less topics is strictly prohibited.
@@ -305,6 +305,28 @@ bin/site_trigger update sites/udmi_site_model AHU-1 system 1.0.0 //mqtt/localhos
 ```
 
 - **Format Constraint:** Enforces `//mqtt/localhost:$port` syntax as the final argument to target custom ports correctly.
+- **Expected Console Output:** When executed successfully, the utility confirms the atomic update of the target device's metadata file on disk and reports publishing the model update to the device-scoped system channel:
+  ```text
+  Successfully updated expected version of system to '1.0.0' in sites/udmi_site_model/devices/AHU-1/metadata.json.
+  Publishing model/system update to /uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/model/system...
+  Model update message triggered successfully.
+  ```
+- **Expected Wire-Level Message Output:** The utility publishes a flat, device-scoped system model update message directly to the topic path `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system` (for example, `/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/model/system`). The published MQTT payload contains the standard envelope metadata and the flat `schema/model_system.json` structure:
+  ```json
+  {
+    "projectId": "vibrant",
+    "transactionId": "TXN-a1b2c3d4",
+    "publishTime": "2026-07-24T06:57:00Z",
+    "source": "site_trigger",
+    "payload": {
+      "version": "1.5.2",
+      "timestamp": "2026-07-24T06:57:00Z",
+      "software": {
+        "system": "1.0.0"
+      }
+    }
+  }
+  ```
 
 ### 9.5. Hermetic Environment Teardown
 To tear down or stop running test infrastructure and DUT simulations in isolated or non-privileged environments, use the provided high-level tool commands:
@@ -603,9 +625,9 @@ UUFI implementations MUST adhere to the following schemas from the UDMI reposito
 
 | UUFI Component | Authoritative UDMI Schema |
 | :--- | :--- |
-| **Message Envelope** | `envelope.json` |
-| **Handshake State** | `state_udmi.json` |
-| **Handshake Config** | `config_udmi.json` |
-| **System Model** | `model_system.json` |
-| **Blobset Config** | `config_blobset.json` |
-| **Blobset State** | `state_blobset.json` |
+| **Message Envelope** | `schema/envelope.json` |
+| **Handshake State** | `schema/state_udmi.json` |
+| **Handshake Config** | `schema/config_udmi.json` |
+| **System Model** | `schema/model_system.json` |
+| **Blobset Config** | `schema/config_blobset.json` |
+| **Blobset State** | `schema/state_blobset.json` |
