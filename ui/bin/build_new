@@ -228,65 +228,136 @@ if [ "$DRY_RUN" = false ]; then
     $AI_CMD run --prompt-file "$WORKTREE_PROMPT_FILE" || true
   fi
 
-  # 7. Agentic Self-Correction Feedback Loop (Unit Tests + Selenium E2E Tests)
+  # 7. Agentic Actor-Critic Review Loop (Empirical Tests + Design Critic Audit)
   MAX_ATTEMPTS=3
   ATTEMPT=1
-  TEST_PASSED=false
+  BUILD_SUCCESS=false
 
   while [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
-    echo -e "\n${BOLD}${CYAN}🔄 [Attempt ${ATTEMPT}/${MAX_ATTEMPTS}] Verifying generated UI with workbench unit & Selenium E2E tests...${NC}"
+    echo -e "\n${BOLD}${CYAN}🔄 [Attempt ${ATTEMPT}/${MAX_ATTEMPTS}] Phase 1: Running empirical test suite (unit tests + Selenium E2E browser tests)...${NC}"
     
     TEST_LOG="${ABS_WORKTREE_DIR}/out/test_verification_attempt_${ATTEMPT}.log"
     mkdir -p "$(dirname "$TEST_LOG")"
     
+    EMPIRICAL_PASSED=false
     if bin/test_workbench > "$TEST_LOG" 2>&1; then
       cat "$TEST_LOG"
-      echo -e "\n${GREEN}${BOLD}🎉 Success! New UI implementation generated and verified in worktree on Attempt ${ATTEMPT}.${NC}"
-      TEST_PASSED=true
-      break
+      echo -e "\n${GREEN}${BOLD}✅ Empirical verification tests passed on Attempt ${ATTEMPT}.${NC}"
+      EMPIRICAL_PASSED=true
     else
       cat "$TEST_LOG"
-      echo -e "\n${YELLOW}⚠️ Test verification failed on Attempt ${ATTEMPT}/${MAX_ATTEMPTS}.${NC}"
+      echo -e "\n${YELLOW}⚠️ Empirical tests failed on Attempt ${ATTEMPT}/${MAX_ATTEMPTS}.${NC}"
+    fi
+
+    CRITIC_VERDICT="APPROVED"
+    CRITIC_FEEDBACK=""
+
+    if [ "$EMPIRICAL_PASSED" = true ] && [ "$DRY_RUN" = false ]; then
+      echo -e "\n${BOLD}${MAGENTA}🕵️ Phase 2: Invoking Design & Architectural Critic Agent audit...${NC}"
       
-      if [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; then
-        echo -e "${MAGENTA}${BOLD}🤖 Launching Agentic Self-Correction Loop: feeding Selenium & unit test errors back to AI CLI...${NC}\n"
-        
-        REPAIR_PROMPT_FILE="${ABS_WORKTREE_DIR}/out/ui_repair_attempt_${ATTEMPT}.txt"
-        cat << REPAIR_EOF > "$REPAIR_PROMPT_FILE"
-You are an expert Frontend Architect fixing automated test failures in the UDMI Workbench UI implementation.
+      CRITIC_PROMPT_FILE="${ABS_WORKTREE_DIR}/out/critic_prompt_attempt_${ATTEMPT}.txt"
+      CRITIC_REPORT_FILE="${ABS_WORKTREE_DIR}/out/critic_report_attempt_${ATTEMPT}.txt"
+
+      cat << CRITIC_EOF > "$CRITIC_PROMPT_FILE"
+You are an uncompromising Senior Principal Frontend Architect and UI Design Critic acting as the QUALITY GUARD for the UDMI Workbench UI.
+
+Your mission is to evaluate the generated code in ui/src/ and documentation in ui/spec/impl/ against the project's design standards and core domain contracts.
+
+PERMANENT CORE SPECIFICATIONS:
+Review permanent core requirements in ui/spec/core/ (01-architecture.md, 02-functional-requirements.md, 03-data-and-api-contracts.md, 04-state-and-events.md, user-flows.md, tools/).
+
+REQUESTED VISUAL AESTHETIC VIBE:
+"${SELECTED_VIBE}"
+
+FILES TO CRITIQUE:
+Inspect the source files under ui/src/ (index.html, style.css, main.js, shared/, sequencer/, mantis/) and specs under ui/spec/impl/.
+
+CRITIQUE AUDIT CHECKLIST:
+1. Visual Polish & Aesthetic Impact:
+   - Did the builder achieve a genuinely high-end, bespoke UI aesthetic matching "${SELECTED_VIBE}" (curated color palettes, dark modes, glassmorphism/neon glows, custom scrollbars, typography scales)?
+   - REJECT if the design looks like plain default un-styled HTML or generic white/grey MVP cards.
+2. Micro-Frontend Sandboxing & postMessage State Protocol:
+   - Are Sequencer and Mantis isolated in iframe sandbox containers?
+   - Is siteModel state broadcast downstream via postMessage 'udmi_state_change'?
+3. Functional Domain Completeness:
+   - Is Project Spec Builder ([//provider/]project[/namespace][+user]) prominent and functional?
+   - Do WSL shortcuts (~, /, /mnt/c, /mnt/d) exist in directory selection?
+   - Are Sequencer device compliance matrix and live terminal log components implemented?
+   - Are Mantis trace timelines, raw JSON payload trees, and Markdown AI reports implemented?
+
+MANDATORY VERDICT:
+At the end of your analysis, output your verdict on a single line matching either:
+VERDICT: APPROVED
+or
+VERDICT: REJECTED
+
+If REJECTED, detail the exact required design and code modifications below your verdict.
+CRITIC_EOF
+
+      if [[ "$AI_CMD" == *"agentapi"* ]]; then
+        $AI_CMD --title="Critic Review Attempt ${ATTEMPT}" "$(cat "$CRITIC_PROMPT_FILE")" > "$CRITIC_REPORT_FILE" 2>&1 || true
+      else
+        $AI_CMD -p "$(cat "$CRITIC_PROMPT_FILE")" --approval-mode yolo > "$CRITIC_REPORT_FILE" 2>&1 || \
+        $AI_CMD -p "$(cat "$CRITIC_PROMPT_FILE")" --approval-mode auto_edit > "$CRITIC_REPORT_FILE" 2>&1 || true
+      fi
+
+      cat "$CRITIC_REPORT_FILE"
+
+      if grep -i "VERDICT: REJECTED" "$CRITIC_REPORT_FILE" > /dev/null 2>&1; then
+        CRITIC_VERDICT="REJECTED"
+        CRITIC_FEEDBACK=$(cat "$CRITIC_REPORT_FILE")
+        echo -e "\n${RED}${BOLD}❌ Critic Agent REJECTED the implementation design quality on Attempt ${ATTEMPT}.${NC}"
+      else
+        echo -e "\n${GREEN}${BOLD}✨ Critic Agent APPROVED the implementation visual & architectural quality!${NC}"
+      fi
+    fi
+
+    if [ "$EMPIRICAL_PASSED" = true ] && [ "$CRITIC_VERDICT" = "APPROVED" ]; then
+      echo -e "\n${GREEN}${BOLD}🎉 COMPLETE VICTORY! Empirical tests PASSED and Critic Agent APPROVED on Attempt ${ATTEMPT}.${NC}"
+      BUILD_SUCCESS=true
+      break
+    fi
+
+    if [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ] && [ "$DRY_RUN" = false ]; then
+      echo -e "\n${MAGENTA}${BOLD}🤖 Launching Builder Agent Repair Loop (Attempt $((ATTEMPT+1))): feeding Selenium test logs + Critic review feedback to AI CLI...${NC}\n"
+      
+      REPAIR_PROMPT_FILE="${ABS_WORKTREE_DIR}/out/ui_repair_attempt_${ATTEMPT}.txt"
+      cat << REPAIR_EOF > "$REPAIR_PROMPT_FILE"
+You are an expert Frontend Architect fixing test failures and design critique issues in the UDMI Workbench UI implementation.
 
 Visual Vibe Directive: "${SELECTED_VIBE}"
 
-=== AUTOMATED TEST FAILURE LOG (UNIT TESTS + HEADLESS SELENIUM BROWSER TESTS) ===
+=== EMPIRICAL TEST LOG (UNIT TESTS + HEADLESS SELENIUM BROWSER TESTS) ===
 $(cat "$TEST_LOG")
-==================================================================================
+========================================================================
+
+=== CRITIC AGENT AUDIT & REVIEW REPORT ===
+${CRITIC_FEEDBACK:-No empirical failures, but review architectural and visual quality.}
+==========================================
 
 INSTRUCTIONS FOR SELF-CORRECTION:
-1. Carefully analyze the test failure log above.
-   - If unit tests in test_server.py failed, fix API handling or server routing.
-   - If Selenium E2E browser tests in test_e2e.py failed (e.g. element assertions, missing buttons, iframe context errors, or JavaScript runtime errors), fix the HTML structure, DOM IDs, CSS selectors, and JavaScript wiring in ui/src/.
-2. Review core domain specifications in ui/spec/core/ (01-architecture.md, 02-functional-requirements.md, 03-data-and-api-contracts.md, 04-state-and-events.md, user-flows.md, tools/) to verify required element contracts.
-3. Apply precise modifications to files inside ui/src/ and ui/spec/impl/ so that all unit tests and headless Chrome Selenium tests pass without error.
-4. Do NOT leave broken placeholder buttons or dummy forms; wire up real DOM action triggers.
+1. Address any empirical automated test failures from Selenium / Unit tests.
+2. Address all concrete Critic Agent critiques regarding visual polish, glassmorphism/neon styling, Google typography, iframe sandboxing, and missing domain components (Project Spec Builder, WSL shortcuts, Sequencer log search, Mantis JSON viewer and Markdown report).
+3. Read permanent core specs in ui/spec/core/ to confirm design invariants.
+4. Modify files inside ui/src/ and ui/spec/impl/ directly.
 
-Please edit and fix all necessary files to resolve the automated test failures.
+Please apply all needed code and style fixes into the repository.
 REPAIR_EOF
 
-        if [[ "$AI_CMD" == *"agentapi"* ]]; then
-          $AI_CMD --title="Fix UI Tests Attempt ${ATTEMPT}" "$(cat "$REPAIR_PROMPT_FILE")"
-        else
-          $AI_CMD -p "$(cat "$REPAIR_PROMPT_FILE")" --approval-mode yolo || \
-          $AI_CMD -p "$(cat "$REPAIR_PROMPT_FILE")" --approval-mode auto_edit || \
-          $AI_CMD --prompt "$(cat "$REPAIR_PROMPT_FILE")" --approval-mode auto_edit || true
-        fi
+      if [[ "$AI_CMD" == *"agentapi"* ]]; then
+        $AI_CMD --title="Fix UI Code Attempt ${ATTEMPT}" "$(cat "$REPAIR_PROMPT_FILE")"
+      else
+        $AI_CMD -p "$(cat "$REPAIR_PROMPT_FILE")" --approval-mode yolo || \
+        $AI_CMD -p "$(cat "$REPAIR_PROMPT_FILE")" --approval-mode auto_edit || \
+        $AI_CMD --prompt "$(cat "$REPAIR_PROMPT_FILE")" --approval-mode auto_edit || true
       fi
     fi
     
     ATTEMPT=$((ATTEMPT + 1))
   done
 
-  if [ "$TEST_PASSED" = false ]; then
-    echo -e "\n${RED}${BOLD}❌ UI generation completed after ${MAX_ATTEMPTS} attempts, but automated test issues persist. Check out/test_verification_attempt_*.log.${NC}"
+  if [ "$BUILD_SUCCESS" = false ]; then
+    echo -e "\n${RED}${BOLD}❌ UI generation completed after ${MAX_ATTEMPTS} attempts, but tests or critic reviews still flagged issues. Review logs in out/.${NC}"
   fi
 else
   echo -e "${GREEN}${BOLD}Prompt context is ready!${NC}"
