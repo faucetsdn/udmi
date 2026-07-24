@@ -328,6 +328,9 @@ To tear down or stop running test infrastructure and DUT simulations in isolated
 * **Permitted Utilities:** _Only_ utilities explicitly listed in the testing spec are allowed to be used by outside agents.
 * **Prohibition:** The direct use of any other utility is prohibited and is not supported.
 
+### 9.8. Environment Variable Restrictions
+* **Prohibition:** For test compliance, it is forbidden to set any environment variable to try and influence or impact the UDMI implementation.
+
 ---
 
 # Appendix A: Schemas and Examples
