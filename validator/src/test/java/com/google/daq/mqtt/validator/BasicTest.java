@@ -249,7 +249,9 @@ public class BasicTest extends TestBase {
         report2.summary.pending_devices.contains(TestCommon.DEVICE_ID));
     assertTrue("Device should be marked correct after both state and telemetry",
         report2.summary.correct_devices.contains(TestCommon.DEVICE_ID));
+  }
 
+  @Test
   public void invalidTimestampFormat() throws Exception {
     PointsetEvents messageObject = basePointsetEvents();
     MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
