@@ -29,24 +29,60 @@ fi
 
 # Parse arguments
 FEATURE="all"
-if [ "$#" -gt 0 ]; then
+MANUAL_PORT=""
+
+show_usage() {
+  echo "Usage: $0 [sequencer | mantis | all] [--port=PORT | -p PORT | PORT]"
+  echo ""
+  echo "Arguments:"
+  echo "  sequencer, seq    Launch with Sequencer tool only"
+  echo "  mantis, man       Launch with Mantis tool only"
+  echo "  all, suite        Launch with all tools (default)"
+  echo "  --port=N, -p N    Specify custom TCP port (default: 8080)"
+}
+
+while [ "$#" -gt 0 ]; do
   case "$1" in
     sequencer|seq)
       FEATURE="sequencer"
+      shift
       ;;
     mantis|man)
       FEATURE="mantis"
+      shift
       ;;
     all|suite)
       FEATURE="all"
+      shift
+      ;;
+    --port=*)
+      MANUAL_PORT="${1#*=}"
+      shift
+      ;;
+    --port|-p)
+      if [ -z "$2" ]; then
+        echo "Error: Option '$1' requires a port argument."
+        show_usage
+        exit 1
+      fi
+      MANUAL_PORT="$2"
+      shift 2
+      ;;
+    [0-9]*)
+      MANUAL_PORT="$1"
+      shift
+      ;;
+    -h|--help)
+      show_usage
+      exit 0
       ;;
     *)
-      echo "Error: Unknown tool argument '$1'"
-      echo "Usage: $0 [sequencer | mantis | all]"
+      echo "Error: Unknown argument '$1'"
+      show_usage
       exit 1
       ;;
   esac
-fi
+done
 
 # Determine features query param
 if [ "$FEATURE" = "all" ]; then
@@ -55,58 +91,103 @@ else
   FEATURES_PARAM="$FEATURE"
 fi
 
-# Check if the backend server is running on port 8080
+# Function to check whether port is used by Workbench or non-Workbench process
+check_port_owner() {
+  local check_port="$1"
+  if ! lsof -i :"$check_port" > /dev/null 2>&1; then
+    echo "free"
+    return
+  fi
+  
+  local pid=$(lsof -t -i :"$check_port" 2>/dev/null | head -n 1 || true)
+  if [ -n "$pid" ]; then
+    local cmdline=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null || true)
+    if [[ "$cmdline" == *"ui/server.py"* ]]; then
+      echo "workbench"
+      return
+    fi
+  fi
+  echo "other"
+}
+
+PORT="${MANUAL_PORT:-8080}"
 SERVER_RUNNING=true
 RESTART_NEEDED=false
 
-if ! lsof -i :8080 > /dev/null 2>&1; then
-  SERVER_RUNNING=false
+if [ -n "$MANUAL_PORT" ]; then
+  # Manual port specified by user
+  PORT_OWNER=$(check_port_owner "$PORT")
+  if [ "$PORT_OWNER" = "other" ]; then
+    echo "Error: Specified port ${PORT} is occupied by another process (not UDMI Workbench)."
+    exit 1
+  elif [ "$PORT_OWNER" = "free" ]; then
+    SERVER_RUNNING=false
+  fi
 else
-  # Server is running, check if its active feature set matches the requested one
-  RUNNING_FEATURES=$(curl -s --max-time 1 http://localhost:8080/api/features | tr -d '[]" ' || echo "")
-  
-  # Normalize features list to compare (sort comma-separated strings)
+  # Default port 8080 requested: check if occupied by non-workbench process
+  PORT_OWNER=$(check_port_owner "$PORT")
+  if [ "$PORT_OWNER" = "other" ]; then
+    echo "Notice: Default port ${PORT} is being used by another application."
+    # Auto-seek next available port
+    while [ "$PORT_OWNER" = "other" ]; do
+      PORT=$((PORT + 1))
+      PORT_OWNER=$(check_port_owner "$PORT")
+    done
+    
+    if [ "$PORT_OWNER" = "free" ]; then
+      echo "Selected alternate available port: ${PORT}"
+      SERVER_RUNNING=false
+    else
+      echo "Reusing existing UDMI Workbench running on port ${PORT}"
+    fi
+  elif [ "$PORT_OWNER" = "free" ]; then
+    SERVER_RUNNING=false
+  fi
+fi
+
+if [ "$SERVER_RUNNING" = true ]; then
+  # Server is running on $PORT, check active features
+  RUNNING_FEATURES=$(curl -s --max-time 1 "http://localhost:${PORT}/api/features" | tr -d '[]" ' || echo "")
   NORM_RUNNING=$(echo "$RUNNING_FEATURES" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
   NORM_REQUESTED=$(echo "$FEATURES_PARAM" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
   
   if [ "$NORM_RUNNING" != "$NORM_REQUESTED" ]; then
-    echo "UDMI Workbench server is running with different features (${RUNNING_FEATURES:-unknown})."
+    echo "UDMI Workbench server on port ${PORT} is running with different features (${RUNNING_FEATURES:-unknown})."
     RESTART_NEEDED=true
   fi
 fi
 
 if [ "$SERVER_RUNNING" = false ] || [ "$RESTART_NEEDED" = true ]; then
   if [ "$RESTART_NEEDED" = true ]; then
-    echo "Restarting backend server with requested features (${FEATURES_PARAM})..."
-    bin/stop_workbench
+    echo "Restarting backend server on port ${PORT} with requested features (${FEATURES_PARAM})..."
+    bin/stop_workbench --port="${PORT}"
   else
-    echo "Starting UDMI Workbench backend server..."
+    echo "Starting UDMI Workbench backend server on port ${PORT}..."
   fi
   
-  # Start the server in the background, logging to a temporary file in the workspace
   mkdir -p out
-  nohup python3 ui/server.py --features="${FEATURES_PARAM}" > out/workbench_server.log 2>&1 &
+  nohup python3 ui/server.py --port="${PORT}" --features="${FEATURES_PARAM}" > out/workbench_server.log 2>&1 &
   disown
   
   # Wait for the server to spin up
   for i in {1..10}; do
-    if lsof -i :8080 > /dev/null 2>&1; then
+    if lsof -i :"${PORT}" > /dev/null 2>&1; then
       break
     fi
     sleep 0.5
   done
   
-  if ! lsof -i :8080 > /dev/null 2>&1; then
-    echo "Error: Failed to start the backend server. Check logs in out/workbench_server.log"
+  if ! lsof -i :"${PORT}" > /dev/null 2>&1; then
+    echo "Error: Failed to start the backend server on port ${PORT}. Check logs in out/workbench_server.log"
     exit 1
   fi
-  echo "Backend server started successfully on port 8080."
+  echo "Backend server started successfully on port ${PORT}."
 else
-  echo "UDMI Workbench backend server is already running on port 8080 with the correct feature set."
+  echo "UDMI Workbench backend server is already running on port ${PORT} with the correct feature set."
 fi
 
 # Build URL
-URL="http://localhost:8080/ui/src/index.html?features=${FEATURES_PARAM}"
+URL="http://localhost:${PORT}/ui/src/index.html?features=${FEATURES_PARAM}"
 
 echo "Opening UDMI Workbench (${FEATURE}) in your default browser..."
 echo "Workbench running at: ${URL}"
@@ -118,5 +199,3 @@ elif command -v open > /dev/null 2>&1; then
 elif command -v python3 > /dev/null 2>&1; then
   python3 -m webbrowser "$URL" > /dev/null 2>&1 &
 fi
-
-

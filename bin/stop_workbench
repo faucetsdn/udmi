@@ -1,23 +1,37 @@
 #!/bin/bash
 # ==========================================================================
 # UDMI Workbench Stop Script
-# Stops any running UDMI Workbench backend server process on port 8080
-# or running ui/server.py, regardless of workspace working directory.
+# Stops any running UDMI Workbench backend server process.
+# Usage: bin/stop_workbench [--port=PORT | PORT]
 # ==========================================================================
 
 set -e
 
+PORT="8080"
+for arg in "$@"; do
+  case "$arg" in
+    --port=*)
+      PORT="${arg#*=}"
+      ;;
+    [0-9]*)
+      PORT="$arg"
+      ;;
+  esac
+done
+
 echo "Stopping any running UDMI Workbench server instances..."
 
-# Terminate process listening on port 8080
-if command -v fuser > /dev/null 2>&1; then
-  fuser -k 8080/tcp > /dev/null 2>&1 || true
-fi
+# Terminate process listening on target port
+if [ -n "$PORT" ]; then
+  if command -v fuser > /dev/null 2>&1; then
+    fuser -k "${PORT}/tcp" > /dev/null 2>&1 || true
+  fi
 
-if command -v lsof > /dev/null 2>&1; then
-  PIDS=$(lsof -t -i :8080 2>/dev/null || true)
-  if [ -n "$PIDS" ]; then
-    kill -9 $PIDS 2>/dev/null || true
+  if command -v lsof > /dev/null 2>&1; then
+    PIDS=$(lsof -t -i :"${PORT}" 2>/dev/null || true)
+    if [ -n "$PIDS" ]; then
+      kill -9 $PIDS 2>/dev/null || true
+    fi
   fi
 fi
 
