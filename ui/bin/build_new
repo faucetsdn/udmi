@@ -228,12 +228,65 @@ if [ "$DRY_RUN" = false ]; then
     $AI_CMD run --prompt-file "$WORKTREE_PROMPT_FILE" || true
   fi
 
-  # Run server unit test verification in worktree
-  echo -e "\n${BOLD}Verifying generated UI with workbench unit tests...${NC}"
-  if bin/test_workbench; then
-    echo -e "\n${GREEN}${BOLD}✅ Success! New UI implementation generated and verified in worktree.${NC}"
-  else
-    echo -e "\n${YELLOW}⚠️ UI generated, but unit tests encountered issues. Review worktree changes.${NC}"
+  # 7. Agentic Self-Correction Feedback Loop (Unit Tests + Selenium E2E Tests)
+  MAX_ATTEMPTS=3
+  ATTEMPT=1
+  TEST_PASSED=false
+
+  while [ "$ATTEMPT" -le "$MAX_ATTEMPTS" ]; do
+    echo -e "\n${BOLD}${CYAN}🔄 [Attempt ${ATTEMPT}/${MAX_ATTEMPTS}] Verifying generated UI with workbench unit & Selenium E2E tests...${NC}"
+    
+    TEST_LOG="${ABS_WORKTREE_DIR}/out/test_verification_attempt_${ATTEMPT}.log"
+    mkdir -p "$(dirname "$TEST_LOG")"
+    
+    if bin/test_workbench > "$TEST_LOG" 2>&1; then
+      cat "$TEST_LOG"
+      echo -e "\n${GREEN}${BOLD}🎉 Success! New UI implementation generated and verified in worktree on Attempt ${ATTEMPT}.${NC}"
+      TEST_PASSED=true
+      break
+    else
+      cat "$TEST_LOG"
+      echo -e "\n${YELLOW}⚠️ Test verification failed on Attempt ${ATTEMPT}/${MAX_ATTEMPTS}.${NC}"
+      
+      if [ "$ATTEMPT" -lt "$MAX_ATTEMPTS" ]; then
+        echo -e "${MAGENTA}${BOLD}🤖 Launching Agentic Self-Correction Loop: feeding Selenium & unit test errors back to AI CLI...${NC}\n"
+        
+        REPAIR_PROMPT_FILE="${ABS_WORKTREE_DIR}/out/ui_repair_attempt_${ATTEMPT}.txt"
+        cat << REPAIR_EOF > "$REPAIR_PROMPT_FILE"
+You are an expert Frontend Architect fixing automated test failures in the UDMI Workbench UI implementation.
+
+Visual Vibe Directive: "${SELECTED_VIBE}"
+
+=== AUTOMATED TEST FAILURE LOG (UNIT TESTS + HEADLESS SELENIUM BROWSER TESTS) ===
+$(cat "$TEST_LOG")
+==================================================================================
+
+INSTRUCTIONS FOR SELF-CORRECTION:
+1. Carefully analyze the test failure log above.
+   - If unit tests in test_server.py failed, fix API handling or server routing.
+   - If Selenium E2E browser tests in test_e2e.py failed (e.g. element assertions, missing buttons, iframe context errors, or JavaScript runtime errors), fix the HTML structure, DOM IDs, CSS selectors, and JavaScript wiring in ui/src/.
+2. Review core domain specifications in ui/spec/core/ (01-architecture.md, 02-functional-requirements.md, 03-data-and-api-contracts.md, 04-state-and-events.md, user-flows.md, tools/) to verify required element contracts.
+3. Apply precise modifications to files inside ui/src/ and ui/spec/impl/ so that all unit tests and headless Chrome Selenium tests pass without error.
+4. Do NOT leave broken placeholder buttons or dummy forms; wire up real DOM action triggers.
+
+Please edit and fix all necessary files to resolve the automated test failures.
+REPAIR_EOF
+
+        if [[ "$AI_CMD" == *"agentapi"* ]]; then
+          $AI_CMD --title="Fix UI Tests Attempt ${ATTEMPT}" "$(cat "$REPAIR_PROMPT_FILE")"
+        else
+          $AI_CMD -p "$(cat "$REPAIR_PROMPT_FILE")" --approval-mode yolo || \
+          $AI_CMD -p "$(cat "$REPAIR_PROMPT_FILE")" --approval-mode auto_edit || \
+          $AI_CMD --prompt "$(cat "$REPAIR_PROMPT_FILE")" --approval-mode auto_edit || true
+        fi
+      fi
+    fi
+    
+    ATTEMPT=$((ATTEMPT + 1))
+  done
+
+  if [ "$TEST_PASSED" = false ]; then
+    echo -e "\n${RED}${BOLD}❌ UI generation completed after ${MAX_ATTEMPTS} attempts, but automated test issues persist. Check out/test_verification_attempt_*.log.${NC}"
   fi
 else
   echo -e "${GREEN}${BOLD}Prompt context is ready!${NC}"
