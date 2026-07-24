@@ -72,7 +72,7 @@ public class ReportingDevice implements ErrorCollector {
     entry.detail = detail == null ? Common.getExceptionDetail(error, ReportingDevice.class,
         ReportingDevice::validationMessage) : detail;
     assertTrue("valid entry category", Category.LEVEL.containsKey(category));
-    entry.category = Category.VALIDATION_DEVICE_SCHEMA;
+    entry.category = category;
     entry.level = Level.ERROR.value();
     entry.timestamp = getTimestamp();
     return entry;
