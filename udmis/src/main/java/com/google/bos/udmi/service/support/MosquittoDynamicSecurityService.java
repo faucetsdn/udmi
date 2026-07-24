@@ -109,12 +109,27 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    * Constructs and connects the Dynamic Security Service with default limits.
    */
   public MosquittoDynamicSecurityService(EndpointConfiguration endpoint) {
+    this(endpoint, DEFAULT_MIN_PUBLISH_INTERVAL_MS);
+  }
+
+  /**
+   * Constructs and connects the Dynamic Security Service with custom min publish interval.
+   */
+  public MosquittoDynamicSecurityService(
+      EndpointConfiguration endpoint, long minPublishIntervalMs) {
     this(endpoint,
          createCommandQueue(DEFAULT_MAX_QUEUE_SIZE),
          DEFAULT_BATCH_SIZE_LIMIT,
          DEFAULT_BATCH_BYTES_LIMIT,
-         DEFAULT_MIN_PUBLISH_INTERVAL_MS,
+         minPublishIntervalMs,
          DEFAULT_BATCH_TIMEOUT_MS);
+  }
+
+  /**
+   * Returns the minimum publish interval in milliseconds.
+   */
+  public long getMinPublishIntervalMs() {
+    return minPublishIntervalMs;
   }
 
   /**

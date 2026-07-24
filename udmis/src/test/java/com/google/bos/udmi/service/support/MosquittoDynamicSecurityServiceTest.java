@@ -285,4 +285,20 @@ class MosquittoDynamicSecurityServiceTest {
       assertTrue(e.getCause().getMessage().contains("Service shutdown"));
     }
   }
+
+  @Test
+  void testCustomMinPublishIntervalMsConstructor() {
+    BlockingQueue<CommandRequest> queue = MosquittoDynamicSecurityService.createCommandQueue(100);
+    MosquittoDynamicSecurityService customService = new MosquittoDynamicSecurityService(
+        endpoint,
+        mockMqttClient,
+        queue,
+        2,
+        1024 * 1024,
+        500,
+        30000,
+        mockExecutor,
+        mockScheduler);
+    assertEquals(500L, customService.getMinPublishIntervalMs());
+  }
 }

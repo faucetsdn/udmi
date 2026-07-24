@@ -43,11 +43,13 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private MosquittoDynamicSecurityService dynSecService;
   private final ObjectMapper objectMapper = JsonUtil.OBJECT_MAPPER;
 
+  private final Long minPublishIntervalMs;
+
   /**
    * Create a new broker connection provider.
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig) {
-    this(container, endpointConfig, false);
+    this(container, endpointConfig, false, null);
   }
 
   /**
@@ -55,9 +57,18 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
       boolean disableLogging) {
+    this(container, endpointConfig, disableLogging, null);
+  }
+
+  /**
+   * Create a new broker connection provider with logging controls and min publish interval.
+   */
+  public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
+      boolean disableLogging, Long minPublishIntervalMs) {
     this.container = container;
     this.endpointConfig = endpointConfig;
     this.disableLogging = disableLogging;
+    this.minPublishIntervalMs = minPublishIntervalMs;
     if (!disableLogging) {
       File logFile = new File(getMosquittoLogPath());
       if (!logFile.canRead()) {
@@ -94,9 +105,27 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   private synchronized MosquittoDynamicSecurityService getDynSecService() {
     if (dynSecService == null) {
-      dynSecService = new MosquittoDynamicSecurityService(endpointConfig);
+      dynSecService = minPublishIntervalMs != null
+          ? new MosquittoDynamicSecurityService(endpointConfig, minPublishIntervalMs)
+          : new MosquittoDynamicSecurityService(endpointConfig);
     }
     return dynSecService;
+  }
+
+  /**
+   * Gets configured minimum publish interval in milliseconds.
+   */
+  public Long getMinPublishIntervalMs() {
+    return minPublishIntervalMs != null
+        ? minPublishIntervalMs
+        : MosquittoDynamicSecurityService.DEFAULT_MIN_PUBLISH_INTERVAL_MS;
+  }
+
+  /**
+   * Visible for testing.
+   */
+  public MosquittoDynamicSecurityService getDynSecServiceForTest() {
+    return getDynSecService();
   }
 
   private CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommandInternal(

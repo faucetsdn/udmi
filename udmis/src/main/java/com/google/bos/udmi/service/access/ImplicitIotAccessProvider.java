@@ -87,12 +87,16 @@ import udmi.schema.IotAccess.IotProvider;
  * still needs to enforce ACLs based on username.</li>
  * <li><code>disable_logging</code>: If set to true, disables tailing the
  * mosquitto log file.</li>
+ * <li><code>mosquitto_dynsec_min_interval_ms</code>: Minimum interval (in ms)
+ * between publishing dynamic security command batches.</li>
  * </ul>
  */
 public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private static final String CONFIG_VER_KEY = "config_ver";
   private static final String DISABLE_LOGGING_KEY = "disable_logging";
+  private static final String MOSQUITTO_DYNSEC_MIN_INTERVAL_MS_KEY =
+      "mosquitto_dynsec_min_interval_ms";
   private static final String USE_PASSWORD_KEY = "use_password";
   private static final String BROKER_USER_KEY = "broker_user";
   private static final String BROKER_PASS_KEY = "broker_pass";
@@ -178,9 +182,16 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
 
     boolean disableLogging = TRUE_OPTION.equals(options.get(DISABLE_LOGGING_KEY));
-    broker = new MosquittoBroker(this, endpointConfig, disableLogging);
+    Long minPublishIntervalMs = ifNotNullGet(
+        options.get(MOSQUITTO_DYNSEC_MIN_INTERVAL_MS_KEY), Long::parseLong);
+    broker = new MosquittoBroker(this, endpointConfig, disableLogging, minPublishIntervalMs);
 
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
+  }
+
+  // Visible for testing
+  ConnectionBroker getBroker() {
+    return broker;
   }
 
   /**
