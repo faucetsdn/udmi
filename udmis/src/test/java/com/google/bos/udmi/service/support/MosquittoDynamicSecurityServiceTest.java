@@ -300,5 +300,91 @@ class MosquittoDynamicSecurityServiceTest {
         mockExecutor,
         mockScheduler);
     assertEquals(500L, customService.getMinPublishIntervalMs());
+    assertEquals(0.0, customService.getJitterRatio());
+  }
+
+  @Test
+  void testCustomJitterRatioConstructor() {
+    BlockingQueue<CommandRequest> queue = MosquittoDynamicSecurityService.createCommandQueue(100);
+    MosquittoDynamicSecurityService customService = new MosquittoDynamicSecurityService(
+        endpoint,
+        mockMqttClient,
+        queue,
+        2,
+        1024 * 1024,
+        600,
+        0.5,
+        30000,
+        mockExecutor,
+        mockScheduler);
+    assertEquals(600L, customService.getMinPublishIntervalMs());
+    assertEquals(0.5, customService.getJitterRatio());
+  }
+
+  @Test
+  void testCalculateJitterMs() {
+    // When jitterRatio is 0
+    BlockingQueue<CommandRequest> queue1 = MosquittoDynamicSecurityService.createCommandQueue(100);
+    MosquittoDynamicSecurityService serviceNoJitter = new MosquittoDynamicSecurityService(
+        endpoint,
+        mockMqttClient,
+        queue1,
+        2,
+        1024 * 1024,
+        1000,
+        0.0,
+        30000,
+        mockExecutor,
+        mockScheduler);
+    assertEquals(0L, serviceNoJitter.calculateJitterMs());
+
+    // When jitterRatio is 1.0 and min interval is 1000
+    // minJitter = 1/3 * 1.0 * 1000 = 333.33ms (333ms)
+    // maxJitter = 1.0 * 1000 = 1000ms
+    BlockingQueue<CommandRequest> queue2 = MosquittoDynamicSecurityService.createCommandQueue(100);
+    MosquittoDynamicSecurityService serviceJitter = new MosquittoDynamicSecurityService(
+        endpoint,
+        mockMqttClient,
+        queue2,
+        2,
+        1024 * 1024,
+        1000,
+        1.0,
+        30000,
+        mockExecutor,
+        mockScheduler);
+    for (int i = 0; i < 100; i++) {
+      long jitter = serviceJitter.calculateJitterMs();
+      assertTrue(jitter >= 333 && jitter <= 1000,
+          "Jitter " + jitter + " should be between 333 and 1000");
+    }
+  }
+
+  @Test
+  void testEnqueueWithJitterScheduling() {
+    BlockingQueue<CommandRequest> queue = MosquittoDynamicSecurityService.createCommandQueue(100);
+    MosquittoDynamicSecurityService jitterService = new MosquittoDynamicSecurityService(
+        endpoint,
+        mockMqttClient,
+        queue,
+        2,
+        1024 * 1024,
+        1000,
+        1.0, // jitterRatio = 1.0
+        30000,
+        mockExecutor,
+        mockScheduler);
+
+    // Enqueue command
+    jitterService.enqueueCommand(new CommandRequest(
+        "test-command",
+        "{\"command\":\"test\"}".getBytes(StandardCharsets.UTF_8),
+        new CompletableFuture<>()));
+
+    // Verify scheduled task was created with delay >= 1333ms (1000ms + min jitter 333ms) and <= 2000ms
+    assertEquals(1, scheduledTasks.size());
+    long delay = scheduledTasks.get(0).delay;
+    assertTrue(delay >= 1333 && delay <= 2000,
+        "Scheduled delay " + delay + "ms should incorporate minimum interval (1000ms) + jitter (333ms-1000ms)");
   }
 }
