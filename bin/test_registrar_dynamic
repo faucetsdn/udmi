@@ -20,28 +20,25 @@ echo '###################################' starting test section processing
 bin/registrar ${TEST_SITE} $PROJECT_SPEC -P temporary > out/registrar_1.log 2>&1
 
 clean_devices=$(jq -r .status ${TEST_SITE}/out/registration_summary.json | fgrep CLEAN | wc -l)
-echo "Run 1 clean devices: $clean_devices"
 
-if grep -q "Updating 0 existing devices" out/registrar_1.log; then
-    echo "First run OK: 0 existing devices."
-else
-    echo "First run FAILED. Expected 'Updating 0 existing devices'."
-    cat out/registrar_1.log
+if ! grep -q "Fetched 0 device models from cloud registry" out/registrar_1.log; then
+    got=$(grep -E "Fetched [0-9]+ device models from cloud registry" out/registrar.log)
+    echo "Expected `Fetched 0 device models from cloud registry`"
+    echo "Instead got: $out"
+    echo "Failed"
     exit 1
 fi
 
 echo '###################################' second run
 bin/registrar ${TEST_SITE} $PROJECT_SPEC -P temporary > out/registrar_2.log 2>&1
-clean_devices2=$(jq -r .status ${TEST_SITE}/out/registration_summary.json | fgrep CLEAN | wc -l)
-echo "Run 2 clean devices: $clean_devices2"
-
-if grep -q "Processing 0 new devices" out/registrar_2.log; then
-    echo "Second run OK: all devices existing."
-else
-    echo "Second run FAILED. Expected 'Processing 0 new devices'."
-    cat out/registrar_2.log
+if ! grep -q "Fetched 4 device models from cloud registry" out/registrar_2.log; then
+    got=$(grep -E "Fetched [0-9]+ device models from cloud registry" out/registrar.log)
+    echo "Expected `Fetched 4 device models from cloud registry`"
+    echo "Instead got: $out"
+    echo "Failed"
     exit 1
 fi
+
 
 echo "################################### provider migration test"
 bin/registrar ${TEST_SITE} $PROJECT_SPEC > out/registrar_implicit.log 2>&1
