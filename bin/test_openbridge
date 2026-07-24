@@ -23,15 +23,6 @@ for cmd in java nc base64 openssl curl tar jq gcloud mosquitto; do
   fi
 done
 
-if [ ! -f "udmis/bin/etcd_bin/etcd" ] && ! command -v etcd &> /dev/null; then
-  echo "Downloading local etcd binaries via udmis/bin/etcdctl..."
-  udmis/bin/etcdctl version >/dev/null 2>&1 || true
-  if [ ! -f "udmis/bin/etcd_bin/etcd" ] && ! command -v etcd &> /dev/null; then
-    echo "Error: etcd binary not found in udmis/bin/etcd_bin/ or PATH after running etcdctl." >&2
-    exit 1
-  fi
-fi
-
 export UDMI_NO_SUDO=true
 export HOST_IP="127.0.0.1"
 export MOSQUITTO_LOG_PATH="$(pwd)/var/mosquitto/log/mosquitto.log"
@@ -45,7 +36,7 @@ fi
 REGISTRY_ID=$(jq -r .registry_id "$SITE_MODEL/cloud_iot_config.json")
 DEVICE_ID=$(jq -r .device_id "$SITE_MODEL/cloud_iot_config.json")
 
-# Cleanup Hook (Trap) and Process Helpers
+# Process Helpers and Cleanup Hook
 PUBBER_PID=""
 BRIDGE_EVENTS_PID=""
 BRIDGE_STATE_PID=""
@@ -62,7 +53,6 @@ kill_process() {
     for child in $children; do
       kill "$child" 2>/dev/null || true
     done
-    # Wait up to 5s
     for i in {1..10}; do
       if ! kill -0 "$pid" 2>/dev/null; then
         return 0
@@ -73,19 +63,11 @@ kill_process() {
   fi
 }
 
-clean_var_directory() {
-  echo "Cleaning local var and out directories..."
-  rm -rf var/etcd var/mosquitto out/* 2>/dev/null || true
-  mkdir -p var/etcd var/mosquitto/log var/mosquitto/data var/mosquitto/certs out
-}
-
 cleanup() {
   trap - EXIT INT TERM
-  
   if [ "$TEST_PASSED" = false ]; then
     echo "Test failed. Diagnostic logs are available in 'out/' directory." >&2
   fi
-
   echo "Cleaning up openbridge test processes..."
   kill_process "$PUBBER_PID"
   kill_process "$BRIDGE_EVENTS_PID"
@@ -109,22 +91,13 @@ export registry_id="$REGISTRY_ID"
 # 2. Check Base Infrastructure Services (Etcd & Mosquitto)
 echo "Checking base infrastructure services..."
 if ! nc -z 127.0.0.1 2379 &>/dev/null; then
-  echo "Etcd is not running on 127.0.0.1:2379. Starting Etcd natively..."
-  bin/start_etcd
+  echo "Error: Etcd is not running on 127.0.0.1:2379. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost' first." >&2
+  exit 1
 fi
 
 if ! nc -z 127.0.0.1 8883 &>/dev/null; then
-  echo "Mosquitto is not running on 127.0.0.1:8883. Starting Mosquitto natively..."
-  bin/setup_ca "$SITE_MODEL" localhost
-  bin/start_mosquitto
-  chmod 0600 var/mosquitto/mosquitto.passwd 2>/dev/null || true
-
-  source etc/mosquitto_ctrl.sh
-  $MOSQUITTO_CTRL deleteClient $SERV_USER >/dev/null 2>&1 || true
-  $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS >/dev/null 2>&1 || true
-  $MOSQUITTO_CTRL addClientRole $SERV_USER service >/dev/null 2>&1 || true
-  bin/mosquctl_site "$SITE_MODEL" > out/mosquctl_site.log 2>&1 || true
-  $MOSQUITTO_CTRL addClientRole $AUTH_USER service >/dev/null 2>&1 || true
+  echo "Error: Mosquitto is not running on 127.0.0.1:8883. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost' first." >&2
+  exit 1
 fi
 
 echo "Ensuring device certificates exist for all devices in site model..."
@@ -197,30 +170,37 @@ curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_control" >/d
 curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_reply" >/dev/null || true
 
 echo "Creating subscriptions in Pub/Sub Emulator..."
+curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-udmis" >/dev/null || true
 curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null || true
 
+curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-provision" >/dev/null || true
 curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-provision" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null || true
 
+curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_state-udmis" >/dev/null || true
 curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_state-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_state"}' >/dev/null || true
 
+curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reflect-udmis" >/dev/null || true
 curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reflect-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reflect"}' >/dev/null || true
 
+curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_control-udmis" >/dev/null || true
 curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_control-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_control"}' >/dev/null || true
 
+curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply-bridge" >/dev/null || true
 curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply-bridge" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reply"}' >/dev/null || true
 
+curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" >/dev/null || true
 curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reply"}' >/dev/null || true
