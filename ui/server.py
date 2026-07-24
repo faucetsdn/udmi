@@ -893,6 +893,8 @@ if __name__ == '__main__':
         if arg.startswith('--features='):
             features_str = arg.split('=', 1)[1].lower()
             ALLOWED_FEATURES = set(f.strip() for f in features_str.split(',') if f.strip())
+        elif arg.startswith('--port='):
+            PORT = int(arg.split('=', 1)[1])
 
     print(f"Starting UDMI custom API & Static server on port {PORT} serving directory {ROOT_DIR}")
     print(f"Enforced server-side features: {list(ALLOWED_FEATURES)}")
