@@ -8,20 +8,6 @@ This document details the architectural invariants, micro-frontend plugin model,
 
 The Workbench UI utilizes a **Host Shell and Micro-Frontend Architecture**.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                            Global Host Shell                                │
-│  ┌───────────────────────────────────────────────────────────────────────┐  │
-│  │ Global Context Orchestration (State Broadcasting & Security Guard)    │  │
-│  └───────────────────────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────────┐   ┌──────────────────────────┐                │
-│  │ Plugin Tool View 1       │   │ Plugin Tool View 2       │                │
-│  │ (e.g. Sequencer)         │   │ (e.g. Mantis)            │                │
-│  │ - Sandboxed Context      │   │ - Sandboxed Context      │                │
-│  └──────────────────────────┘   └──────────────────────────┘                │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
-
 ### 1.1 Host Shell Responsibility
 The **Host Shell** acts as the parent container and system orchestrator. Its responsibilities are strictly limited to:
 - Managing global security policies and URL feature flag enforcement.
