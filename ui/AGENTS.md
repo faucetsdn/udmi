@@ -36,7 +36,7 @@ This document provides essential instructions, architectural guidelines, and ver
 
 3. **Backend API Integration**:
    - Do NOT attempt to run local shell subprocesses directly from frontend scripts.
-   - Route all device discovery, file listing, test execution, and log streaming through the backend endpoints specified in [`ui/spec/03-data-and-api-contracts.md`](./spec/03-data-and-api-contracts.md) provided by `ui/server.py`.
+   - Route all device discovery, file listing, test execution, and log streaming through the backend endpoints specified in [`ui/spec/core/03-data-and-api-contracts.md`](./spec/core/03-data-and-api-contracts.md) provided by `ui/server.py`.
 
 ---
 
@@ -55,3 +55,11 @@ Before marking any task as complete when working on `ui/`:
    bin/workbench
    ```
    Confirm that the backend server spins up cleanly on port 8080 and serves `http://localhost:8080/ui/src/index.html`.
+
+---
+
+## 🚀 UI Automation Scripts (`ui/bin/`)
+
+- **`ui/bin/build_new`**: Creates an isolated git worktree, clears disposable UI files (`ui/src/` and `ui/spec/impl/`), prompts for a visual vibe or picks a random theme, and invokes the Gemini AI CLI to rebuild the UI from scratch without touching HEAD.
+- **`ui/bin/promote`**: Promotes a generated UI implementation from an isolated worktree branch into workspace HEAD.
+- **`ui/bin/iterate`**: Refines an existing UI implementation based on specific user instructions using Gemini AI.

@@ -21,27 +21,9 @@ This document specifies the HTTP REST endpoints, Server-Sent Event (SSE) streams
 ### 2.1 Directory Listing (Folder Browser)
 - **Endpoint**: `GET /api/list`
 - **Query Parameters**:
-  - `path` *(string, optional)*: Absolute or home-relative (`~`) path to list. Defaults to repo root or user home directory.
-- **Response**: `200 OK`
-  ```json
-  {
-    "current_path": "~/Projects/udmi/sites",
-    "parent_path": "~/Projects/udmi",
-    "items": [
-      {
-        "name": "udmi_site_model",
-        "is_dir": true,
-        "path": "~/Projects/udmi/sites/udmi_site_model"
-      }
-    ]
-  }
-  ```
-
-### 2.2 File Content Reader
-- **Endpoint**: `GET /api/read_file`
-- **Query Parameters**:
-  - `path` *(string, required)*: Path to file to read.
-- **Response**: `200 OK` (Raw text or JSON content of requested file).
+  - `path` *(string, optional)*: Absolute path, home-relative (`~`), or system root (`/` / `/mnt/c` on WSL) to list. Defaults to repo root or user home directory.
+- **Cross-Platform / WSL Resolution Rules**:
+  - Paths starting with `/mnt/` (WSL Windows drive mounts) or system root `/` MUST be accessible for directory listing and selection to support Windows Subsystem for Linux users whose site models reside outside `/home`.
 
 ---
 
@@ -92,6 +74,7 @@ This document specifies the HTTP REST endpoints, Server-Sent Event (SSE) streams
 - **Parameters / Payload**:
   - `site_model` *(string, required)*
   - `device_id` *(string, optional)*
+  - `project_spec` *(string, optional)*: Formatted target environment string matching `[//provider/]project[/namespace][+user]` (e.g. `//gref/bos-platform-dev/faucetsdn+heykhyati`, `//mqtt/localhost`).
   - `serial_no` *(string, optional)*
   - `log_level` *(string, optional)*: e.g., `INFO`, `DEBUG`
   - `min_stage` *(string, optional)*: e.g., `ALPHA`, `BETA`, `PREVIEW`
@@ -131,6 +114,7 @@ This document specifies the HTTP REST endpoints, Server-Sent Event (SSE) streams
   - `site_model` *(string, required)*
   - `device_id` *(string, required)*
   - `test_id` *(string, required)*
+  - `project_spec` *(string, optional)*: Formatted target environment string matching `[//provider/]project[/namespace][+user]`.
   - `playbook` *(string, optional)*
   - `gemini_api_key` / `use_vertex` *(string, optional)*
 - **Response**: `200 OK`

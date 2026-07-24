@@ -94,5 +94,22 @@ The font system is divided into two primary functional categories:
 - **Requirements**:
   - Breadcrumb navigation path displaying the active folder path.
   - Directory listing table showing folder names and modification indicators.
+  - Quick-access location chips for **Home (`~`)**, **Root (`/`)**, and **WSL Mounts (`/mnt/c`, `/mnt/d`)** to ensure seamless navigation across WSL and non-standard filesystem setups.
   - "Parent Folder" (`..`) navigation action.
   - Confirm selection button that returns the chosen path to the calling input.
+
+### 4.7 High-Prominence Site Model Selection Control
+- **Usage**: Primary workspace selector located prominently in the top header.
+- **Visual Design Requirements**:
+  - **High Visual Prominence**: Must catch the eye immediately upon initial UI load. Uses high-contrast borders, bold accent styling, or a distinct elevated surface background.
+  - **Status Indicator Badge**: Shows a clear visual badge (`LOADED` in success green vs. `NO SITE MODEL` in warning amber) to immediately signal to the user whether a valid workspace is connected.
+  - **Initial Setup Hero Callout**: When no site model path is configured on first launch, an interactive setup banner or pulsing focus ring prompts the user to select a site model path before proceeding.
+
+### 4.8 Structured Project Spec Builder Component
+- **Usage**: Disambiguating and building target environment strings (`project_spec`) according to UDMI regex rules `[//provider/]project[/namespace][+user]`.
+- **Component Layout & Controls**:
+  - **Provider Selection (Dropdown)**: Allows choosing the IoT transport layer (`gbos`, `gref`, `mqtt`, `pubsub`, `clearblade`).
+  - **Project Name (Text Input, Required)**: Cloud GCP Project ID (e.g. `bos-platform-dev`) or broker hostname (e.g. `localhost`).
+  - **Namespace (Text Input, Optional)**: Logical prefix used for isolated topic/registry naming (e.g., `faucetsdn` or `heykhyati`). Automatically formatted with leading `/` (e.g., `/faucetsdn`).
+  - **User Segment (Text Input, Optional)**: User isolation suffix (e.g., `+heykhyati`). **Validation Rule**: Automatically disabled with an inline explanatory tooltip when `gbos` or `mqtt` is selected, as user suffixes are only supported by `gref` and `pubsub`.
+  - **Live Preview Bar**: Dynamically generates and displays the formatted syntax string (e.g., `//gref/bos-platform-dev/faucetsdn+heykhyati` vs. `//gbos/bos-platform-dev/faucetsdn`), helping users clearly distinguish between delimiter styles (`/namespace` vs. `+user`).

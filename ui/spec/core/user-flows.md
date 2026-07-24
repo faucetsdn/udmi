@@ -15,10 +15,13 @@ This document details the primary user journeys, step-by-step interaction loops,
 ```
 
 1. **Launch Application**: User opens the Workbench URL.
-2. **Restore Context**: Application loads cached `siteModel` path from client storage (or falls back to default `sites/udmi_site_model`).
+2. **Restore Context & Prominent Callout**:
+   - Application loads cached `siteModel` path from client storage (or falls back to default `sites/udmi_site_model`).
+   - If no site model path is set or invalid, the top header displays a **high-contrast callout banner / highlight ring** around the `Site Model Path` input, ensuring it immediately catches the user's eye upon first opening the UI.
 3. **Directory Selection Options**:
-   - *Option A*: User manually edits the `Site Model Path` input text field.
-   - *Option B*: User clicks the "Browse" icon button next to the input, opening the Directory Browser Modal. User navigates directory levels, selects a site model folder, and confirms.
+   - *Option A*: User manually types or pastes an absolute or home-relative path in the high-contrast `Site Model Path` input field.
+   - *Option B*: User clicks the "Browse" icon button, opening the Directory Browser Modal.
+   - *WSL Support*: Users on WSL can click quick-access chips for **WSL Drives (`/mnt/c/`, `/mnt/d/`)** or **System Root (`/`)** to pick site models stored outside Linux home directories.
 4. **Broadcast & Scan**: Host Shell updates global state and broadcasts `udmi_state_change`. Active tool views automatically scan the selected site model path to populate available devices and test results.
 
 ---
@@ -26,10 +29,17 @@ This document details the primary user journeys, step-by-step interaction loops,
 ## Journey 2: Executing Sequencer Compliance Tests
 
 1. **View Selection**: User opens the **Sequencer** tool tab.
-2. **Device Filtering**: User selects a specific target device from the device dropdown (or selects "All Devices").
+2. **Device & Target Environment Setup**:
+   - User selects a specific target device from the device dropdown (or selects "All Devices").
+   - User configures the **Project Spec Builder** controls:
+     - Selects provider (`gbos`, `gref`, `mqtt`, `pubsub`, `clearblade`).
+     - Enters project / host (`bos-platform-dev` or `localhost`).
+     - Enters optional namespace (`/faucetsdn`).
+     - Enters optional user segment (`+heykhyati`), observing that the input is disabled for `gbos` and `mqtt`.
+     - Inspects the generated preview string (`//gref/bos-platform-dev/faucetsdn+heykhyati`).
 3. **Execution Trigger**: User clicks the "Run Sequencer" primary action button.
    - UI updates button state to "Running / Stopping".
-   - UI sends execution command to backend (`POST /api/run_sequencer`).
+   - UI sends execution command with `project_spec` payload to backend (`POST /api/run_sequencer`).
 4. **Live Stream Monitoring**:
    - UI connects to live log stream (`GET /api/stream`).
    - Terminal log panel streams real-time test execution output line-by-line with color-coded log levels.

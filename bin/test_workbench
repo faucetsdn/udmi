@@ -3,8 +3,16 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd "$ROOT_DIR"
 
+COMMON_GIT=$(git rev-parse --git-common-dir 2>/dev/null || true)
+MAIN_ROOT=""
+if [ -n "$COMMON_GIT" ]; then
+  MAIN_ROOT=$(realpath "$COMMON_GIT/..")
+fi
+
 if [ -d "venv" ]; then
   PYTHON_BIN="venv/bin/python3"
+elif [ -n "$MAIN_ROOT" ] && [ -d "$MAIN_ROOT/venv" ]; then
+  PYTHON_BIN="$MAIN_ROOT/venv/bin/python3"
 else
   PYTHON_BIN="python3"
 fi

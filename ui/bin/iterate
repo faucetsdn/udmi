@@ -1,0 +1,138 @@
+#!/bin/bash
+# ==============================================================================
+# UDMI Workbench: Iterate on Existing UI
+# ==============================================================================
+# Refines and iterates on an existing UI implementation (in current workspace
+# or in a worktree) by feeding current source code, core specs, and disposable
+# implementation specs alongside user refinement instructions to the Gemini AI CLI.
+# ==============================================================================
+
+set -e
+
+# Resolve repo root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+UI_DIR="$(dirname "$SCRIPT_DIR")"
+REPO_ROOT="$(dirname "$UI_DIR")"
+
+cd "$REPO_ROOT"
+
+# Text Styling
+BOLD='\033[1m'
+CYAN='\033[0;36m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
+
+echo -e "${BOLD}${CYAN}🔄 UDMI Workbench: Refine & Iterate Existing UI${NC}\n"
+
+# 1. Determine AI CLI tool command
+DRY_RUN=true
+AI_CMD=""
+
+if [ -n "$GEMINI_CMD" ]; then
+  AI_CMD="$GEMINI_CMD"
+  FIRST_WORD=$(echo "$AI_CMD" | awk '{print $1}')
+  if command -v "$FIRST_WORD" > /dev/null 2>&1; then
+    DRY_RUN=false
+  else
+    echo -e "${YELLOW}Notice: Specified GEMINI_CMD binary '$FIRST_WORD' not found in PATH.${NC}"
+  fi
+elif [ -n "$AI_CLI" ]; then
+  AI_CMD="$AI_CLI"
+  FIRST_WORD=$(echo "$AI_CMD" | awk '{print $1}')
+  if command -v "$FIRST_WORD" > /dev/null 2>&1; then
+    DRY_RUN=false
+  fi
+elif command -v agentapi > /dev/null 2>&1; then
+  AI_CMD="agentapi new-conversation"
+  DRY_RUN=false
+elif command -v gemini > /dev/null 2>&1; then
+  AI_CMD="gemini"
+  DRY_RUN=false
+elif command -v gemini-cli > /dev/null 2>&1; then
+  AI_CMD="gemini-cli"
+  DRY_RUN=false
+elif [ -x "/google/bin/releases/gemini-cli/tools/gemini" ]; then
+  AI_CMD="/google/bin/releases/gemini-cli/tools/gemini"
+  DRY_RUN=false
+fi
+
+if [ "$DRY_RUN" = true ]; then
+  echo -e "${YELLOW}Notice: No active AI CLI binary found in PATH.${NC}"
+  echo -e "Prompt files will be generated for manual or AI-assisted execution."
+  echo -e "To enable direct invocation, export ${BOLD}GEMINI_CMD=\"path/to/cli\"${NC} or ensure ${BOLD}agentapi${NC} / ${BOLD}gemini${NC} is in PATH.\n"
+else
+  echo -e "${GREEN}Using AI CLI command:${NC} ${BOLD}${AI_CMD}${NC}\n"
+fi
+
+# 2. Get User Iteration Instructions
+ITERATION_PROMPT=""
+if [ "$#" -gt 0 ]; then
+  ITERATION_PROMPT="$*"
+else
+  read -p "Enter UI refinement instructions (e.g. 'Add dark mode toggle to header'): " ITERATION_PROMPT
+fi
+
+if [ -z "$ITERATION_PROMPT" ]; then
+  echo -e "${RED}Error: Iteration prompt cannot be empty.${NC}"
+  exit 1
+fi
+
+echo -e "\n${BOLD}Refinement Request:${NC} ${GREEN}${ITERATION_PROMPT}${NC}\n"
+
+# 3. Assemble Prompt File
+PROMPT_FILE="${REPO_ROOT}/out/ui_iteration_prompt.txt"
+mkdir -p "${REPO_ROOT}/out"
+
+cat << EOF > "$PROMPT_FILE"
+You are an expert Frontend Developer refining an existing UDMI Workbench UI implementation.
+
+CORE SPECIFICATIONS (Permanent Invariants):
+Review all files in ui/spec/core/ (01-architecture.md, 02-functional-requirements.md, 03-data-and-api-contracts.md, 04-state-and-events.md, user-flows.md, tools/).
+
+CURRENT IMPLEMENTATION & STYLE PRESETS:
+Review existing layout and styling guidelines in ui/spec/impl/ and source code in ui/src/.
+
+USER REFINEMENT REQUEST:
+"${ITERATION_PROMPT}"
+
+INSTRUCTIONS:
+1. Apply the requested changes to the relevant files inside ui/src/.
+2. If the visual layout or styling rules changed, update ui/spec/impl/layout-and-viewport.md and design-guidelines.md accordingly.
+3. Preserve existing functional capabilities, state synchronization, and backend API integration specified in ui/spec/core/.
+
+Please apply the requested code modifications to the repository.
+EOF
+
+echo -e "${GREEN}${BOLD}✅ Prompt file successfully created at:${NC}"
+echo -e "  • ${CYAN}file://${PROMPT_FILE}${NC}\n"
+
+# 4. Invoke AI Iteration (Headless Mode with -p)
+if [ "$DRY_RUN" = false ]; then
+  echo -e "${BOLD}${CYAN}🚀 Invoking ${AI_CMD} CLI...${NC}"
+  echo -e "${YELLOW}⏳ Please wait: Gemini AI is actively applying your requested UI refinements.${NC}"
+  echo -e "${YELLOW}   (This process typically takes 1-2 minutes. Please do not interrupt.)${NC}\n"
+  if [[ "$AI_CMD" == *"agentapi"* ]]; then
+    $AI_CMD --title="Iterate UI (${ITERATION_PROMPT})" "$(cat "$PROMPT_FILE")"
+  else
+    $AI_CMD -p "$(cat "$PROMPT_FILE")" --approval-mode auto_edit || \
+    $AI_CMD --prompt "$(cat "$PROMPT_FILE")" --approval-mode auto_edit || \
+    $AI_CMD -p "$(cat "$PROMPT_FILE")" || \
+    $AI_CMD run --prompt-file "$PROMPT_FILE" || true
+  fi
+
+  # Run server unit test verification
+  echo -e "\n${BOLD}Verifying iterated UI with workbench unit tests...${NC}"
+  if bin/test_workbench; then
+    echo -e "\n${GREEN}${BOLD}✅ Success! UI implementation refined and verified.${NC}"
+  else
+    echo -e "\n${YELLOW}⚠️ UI modifications applied, but unit tests encountered issues.${NC}"
+  fi
+else
+  echo -e "${GREEN}${BOLD}Prompt context is ready!${NC}"
+  echo -e "You can pass ${CYAN}out/ui_iteration_prompt.txt${NC} to your AI assistant or run it with your AI CLI.\n"
+fi
+
+echo -e "${BOLD}Current status:${NC}"
+git status --short ui/src ui/spec/impl
