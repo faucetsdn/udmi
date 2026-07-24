@@ -44,7 +44,7 @@ if [[ $# -lt 3 ]]; then
 fi
 
 site_path=$1
-project_id=$2
+project_id=$(normalize_conn_spec "$2")
 device_id=$3
 serial_no=${4:-dut-$RANDOM}
 pubber_opts=${5:-}

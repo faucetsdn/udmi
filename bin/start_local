@@ -66,9 +66,11 @@ echo Starting local services at $(date -u -Is) | tee $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
 if [[ -n ${project_spec:-} ]]; then
-    project_target=${project_spec##*/}
-    iot_provider=${project_spec%/*}
-    iot_provider=${iot_provider#//}
+    project_spec=$(normalize_conn_spec "$project_spec")
+    no_prefix=${project_spec#//}
+    iot_provider=${no_prefix%%/*}
+    no_provider=${no_prefix#*/}
+    project_target=${no_provider%%/*}
     if [[ $project_target == *:* ]]; then
         project_target=${project_target%:*}
     fi

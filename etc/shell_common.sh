@@ -7,6 +7,36 @@
 set -eu
 set -o pipefail
 
+function normalize_conn_spec {
+    local spec="${1:-}"
+    if [[ -z "$spec" || "$spec" =~ ^// ]]; then
+        echo "$spec"
+        return 0
+    fi
+    if [[ "$spec" =~ ^(mqtt|mqtts|ssl)://(.*)$ ]]; then
+        local body="${BASH_REMATCH[2]%/}"
+        local prefix=""
+        local endpoint="$body"
+        if [[ "$body" == *"/"* ]]; then
+            prefix="${body#*/}"
+            endpoint="${body%%/*}"
+        fi
+        if [[ "$endpoint" == *@* && "$endpoint" != *":"*@* ]]; then
+            [[ -z "$prefix" ]] && prefix="${endpoint%%@*}"
+            endpoint="${endpoint#*@}"
+        elif [[ "$endpoint" == *":"*@* ]]; then
+            endpoint="${endpoint#*@}"
+        fi
+        if [[ -n "$prefix" ]]; then
+            echo "//mqtt/${endpoint}/${prefix}"
+        else
+            echo "//mqtt/${endpoint}"
+        fi
+        return 0
+    fi
+    echo "$spec"
+}
+
 # Auto-detect isolated mode from any command-line arguments or variables matching localhost:<port>
 for arg in "${@:-}" "${TARGET_PROJECT:-}" "${project_spec:-}" "${project_id:-}"; do
     if [[ -n $arg && $arg =~ localhost:([0-9]+) ]]; then
