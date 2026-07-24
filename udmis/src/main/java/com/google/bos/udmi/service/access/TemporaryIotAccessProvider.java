@@ -47,6 +47,16 @@ public class TemporaryIotAccessProvider extends IotAccessBase {
     return cloudModel;
   }
 
+  private CloudModel augmentCloudModel(String registryId, String deviceId, CloudModel cloudModel) {
+    if (cloudModel.num_id == null) {
+      CloudModel existingDevice = store.getOrDefault(registryId, Map.of()).get(deviceId);
+      cloudModel.num_id = existingDevice != null && existingDevice.num_id != null
+          ? existingDevice.num_id
+          : ImplicitIotAccessProvider.hashedDeviceId(registryId, deviceId);
+    }
+    return cloudModel;
+  }
+
   @Override
   public CloudModel modelDevice(String registryId, String deviceId, CloudModel cloudModel,
       Consumer<String> progress) {
@@ -55,7 +65,7 @@ public class TemporaryIotAccessProvider extends IotAccessBase {
     if (CloudModel.ModelOperation.DELETE == cloudModel.operation) {
       registryStore.remove(deviceId);
     } else {
-      registryStore.put(deviceId, cloudModel);
+      registryStore.put(deviceId, augmentCloudModel(registryId, deviceId, cloudModel));
     }
     if (progress != null) {
       progress.accept(deviceId);
