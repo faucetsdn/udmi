@@ -18,6 +18,8 @@ public class ValidationSummary {
 
     @JsonProperty("correct_devices")
     public List<String> correct_devices;
+    @JsonProperty("pending_devices")
+    public List<String> pending_devices;
     @JsonProperty("extra_devices")
     public List<String> extra_devices;
     @JsonProperty("missing_devices")
@@ -28,6 +30,7 @@ public class ValidationSummary {
     @Override
     public int hashCode() {
         int result = 1;
+        result = ((result* 31)+((this.pending_devices == null)? 0 :this.pending_devices.hashCode()));
         result = ((result* 31)+((this.error_devices == null)? 0 :this.error_devices.hashCode()));
         result = ((result* 31)+((this.correct_devices == null)? 0 :this.correct_devices.hashCode()));
         result = ((result* 31)+((this.extra_devices == null)? 0 :this.extra_devices.hashCode()));
@@ -44,7 +47,7 @@ public class ValidationSummary {
             return false;
         }
         ValidationSummary rhs = ((ValidationSummary) other);
-        return (((((this.error_devices == rhs.error_devices)||((this.error_devices!= null)&&this.error_devices.equals(rhs.error_devices)))&&((this.correct_devices == rhs.correct_devices)||((this.correct_devices!= null)&&this.correct_devices.equals(rhs.correct_devices))))&&((this.extra_devices == rhs.extra_devices)||((this.extra_devices!= null)&&this.extra_devices.equals(rhs.extra_devices))))&&((this.missing_devices == rhs.missing_devices)||((this.missing_devices!= null)&&this.missing_devices.equals(rhs.missing_devices))));
+        return ((((((this.pending_devices == rhs.pending_devices)||((this.pending_devices!= null)&&this.pending_devices.equals(rhs.pending_devices)))&&((this.error_devices == rhs.error_devices)||((this.error_devices!= null)&&this.error_devices.equals(rhs.error_devices))))&&((this.correct_devices == rhs.correct_devices)||((this.correct_devices!= null)&&this.correct_devices.equals(rhs.correct_devices))))&&((this.extra_devices == rhs.extra_devices)||((this.extra_devices!= null)&&this.extra_devices.equals(rhs.extra_devices))))&&((this.missing_devices == rhs.missing_devices)||((this.missing_devices!= null)&&this.missing_devices.equals(rhs.missing_devices))));
     }
 
 }

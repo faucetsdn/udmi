@@ -10,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.validator.ReportingDevice.MetadataDiff;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.ValidationException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
@@ -32,12 +33,20 @@ public class PointsetValidator {
 
   private final Metadata metadata;
   private final ErrorCollector errorCollector;
+  private final ReportingDevice device;
   private Set<String> missingPoints;
   private Set<String> extraPoints;
   private Set<String> outOfRangePoints;
 
-  public PointsetValidator(ErrorCollector errorCollector, Metadata metadata) {
-    this.errorCollector = errorCollector;
+  /**
+   * Create a new instance.
+   *
+   * @param device   reporting device
+   * @param metadata metadata
+   */
+  public PointsetValidator(ReportingDevice device, Metadata metadata) {
+    this.errorCollector = device;
+    this.device = device;
     this.metadata = metadata;
   }
 
@@ -48,8 +57,8 @@ public class PointsetValidator {
     final Map<String, PointPointsetEvents> points;
 
     if (message instanceof State stateMessage) {
-      pointsetDiff = validateMessage(stateMessage);
       timestamp = stateMessage.timestamp;
+      pointsetDiff = validateMessage(stateMessage);
     } else if (message instanceof PointsetState pointsetState) {
       pointsetDiff = validateMessage(pointsetState);
       timestamp = pointsetState.timestamp;
@@ -94,6 +103,11 @@ public class PointsetValidator {
       return null;
     }
 
+    Instant checkInstant = getEffectiveTimestamp(message.timestamp);
+    if (!device.hasSeenTelemetry(checkInstant)) {
+      return null;
+    }
+
     // Return with internal fields null, to indicate that entire subsection is missing.
     return new MetadataDiff();
   }
@@ -122,6 +136,16 @@ public class PointsetValidator {
     metadataDiff.missingPoints = new TreeSet<>(expectedPoints);
     metadataDiff.missingPoints.removeAll(deliveredPoints);
     return metadataDiff;
+  }
+
+  private Instant getEffectiveTimestamp(Date timestamp) {
+    if (timestamp != null) {
+      return timestamp.toInstant();
+    }
+    if (device.getLastSeen() != null) {
+      return device.getLastSeen().toInstant();
+    }
+    return Instant.now();
   }
 
   private Set<String> validatePointValues(

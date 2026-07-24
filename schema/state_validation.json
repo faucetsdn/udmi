@@ -68,6 +68,12 @@
             "type": "string"
           }
         },
+        "pending_devices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
         "extra_devices": {
           "type": "array",
           "items": {
