@@ -236,7 +236,9 @@ public class CloudIotManager {
       try {
         String prefix = getCredentialPrefix(credential.key_format);
         File privateKey = new File(siteModel, format(PRIVATE_KEY_BYTES_FMT, deviceId, prefix));
-        settings.password = makePassword(readAllBytes(privateKey.toPath()));
+        if (privateKey.exists()) {
+          settings.password = makePassword(readAllBytes(privateKey.toPath()));
+        }
       } catch (Exception e) {
         throw new RuntimeException("While generating password for " + deviceId, e);
       }
