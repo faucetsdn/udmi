@@ -170,26 +170,17 @@ else:
           file=sys.stderr,
       )
 
-# Add CA cert if SSL is used (or port 8883 or custom MQTT_PORT)
-env_mqtt_port = os.environ.get("MQTT_PORT")
-try:
-  env_port_val = int(env_mqtt_port) if env_mqtt_port else None
-except ValueError:
-  env_port_val = None
-
-is_custom_port = (
-    env_port_val and port == env_port_val and port != 1883
-)
-if is_ssl or port == 8883 or is_custom_port:
-  ca_cert = os.path.join(site_path, "reflector", "ca.crt")
-  if os.path.exists(ca_cert):
-    cmd.extend(["--cafile", ca_cert])
-  client_cert = os.path.join(site_path, "reflector", "rsa_private.crt")
-  if os.path.exists(client_cert):
-    cmd.extend(["--cert", client_cert])
-  client_key = os.path.join(site_path, "reflector", "rsa_private.pem")
-  if os.path.exists(client_key):
-    cmd.extend(["--key", client_key])
+# Attach mTLS certificates and keys directly from the site model directory if available.
+ca_cert = os.path.join(site_path, "reflector", "ca.crt")
+if os.path.exists(ca_cert):
+  cmd.extend(["--cafile", ca_cert])
+client_cert = os.path.join(site_path, "reflector", "rsa_private.crt")
+if os.path.exists(client_cert):
+  cmd.extend(["--cert", client_cert])
+client_key = os.path.join(site_path, "reflector", "rsa_private.pem")
+if os.path.exists(client_key):
+  cmd.extend(["--key", client_key])
+if os.path.exists(ca_cert) or os.path.exists(client_cert) or os.path.exists(client_key):
   cmd.extend(["--insecure"])
 
 print(f"Publishing model/system update to {topic}...")

@@ -9,7 +9,14 @@ set -o pipefail
 
 function normalize_conn_spec {
     local spec="${1:-}"
-    if [[ -z "$spec" || "$spec" =~ ^// ]]; then
+    if [[ -z "$spec" ]]; then
+        echo "$spec"
+        return 0
+    fi
+    if [[ "$spec" =~ ^//(mqtts|ssl)/(.*)$ ]]; then
+        spec="//mqtt/${BASH_REMATCH[2]}"
+    fi
+    if [[ "$spec" =~ ^// ]]; then
         echo "$spec"
         return 0
     fi
