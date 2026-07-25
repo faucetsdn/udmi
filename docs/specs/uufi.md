@@ -86,7 +86,63 @@ Handshake is **Client-initiated**. The **System MUST NOT initiate a handshake** 
 
 The handshake has a 60-second timeout. On timeout, the Client should handle the failure and retry or fail-fast.
 
-### 3.1. Handshake Steps and Payload Standards
+### 3.1. Logical Handshake Separation Layers
+
+The UUFI interface separates network-level presence mapping from device-level operational control. Every component on the bus operates across two logical protocol layers:
+
+1. **Layer 1: Service Handshake (Infrastructure-Level):**
+   * Establishes communication presence and connection mapping on the bus between a Client and the Service.
+   * Upon startup, every client MUST perform this handshake to verify connection integrity and register its active routing coordinates and prefix.
+2. **Layer 2: Application Orchestration (Application-Level):**
+   * Represents functional interactions (such as cloud model queries, telemetry publishing, or software updates).
+   * These operations MUST only occur after the Layer 1 Service Handshaking of all participating components is complete.
+
+### 3.2. Single-Responder Standard
+
+To guarantee deterministic state transitions on shared handshake channels:
+- **Only the central Service processes handshake requests on `/uufi/c/state/udmi` and publishes responses on `/uufi/c/config/udmi`.**
+- Other application-layer services (such as coordinators, orchestrators like Butler, or compliance verifiers) MUST act strictly as handshake clients and **MUST NOT** publish handshake responses or act as responders on `/uufi/c/state/udmi`.
+
+### 3.3. Service Handshake for Application-Level Clients
+
+All active application-layer clients (such as orchestrators, parsers, or compliance verifiers) MUST execute their own Layer 1 Service Handshake upon initialization. This ensures that:
+- The Service registers their connection.
+- Other observers or verification engines can verify that the client is fully initialized, connected, and subscribed before sending subsequent updates.
+
+### 3.4. Standard Handshake Flow and Payload Routing
+
+For any client initializing on the bus, the handshake sequence MUST follow the **Request-Reply pattern** below:
+
+```
+ [ Client Entity ]                                                [ The Service ]
+         │                                                            │
+         │─── (1) Handshake Request (state/udmi) ────────────────────►│
+         │    Topic: [/{prefix}]/uufi/c/state/udmi                    │
+         │    Envelope:                                               │
+         │      - transactionId: "UUID-A"                             │
+         │      - principal: "{implementation_id}.{entity_suffix}"    │
+         │    Payload:                                                │
+         │      - setup: { "transaction_id": "UUID-A" }               │
+         │                                                            │
+         │◄── (2) Handshake Config Reply (config/udmi) ───────────────│
+         │    Topic: [/{prefix}]/uufi/c/config/udmi                   │
+         │    Envelope:                                               │
+         │      - transactionId: "UUID-A" (Symmetric Match)           │
+         │      - principal: "uufi"                                   │
+         │    Payload:                                                │
+         │      - setup: { "deviceRegistryId": "testing" }            │
+         │      - reply: { "transaction_id": "UUID-A" }               │
+         ▼                                                            ▼
+```
+
+### 3.5. Symmetric Envelope Transaction ID Gating
+
+To prevent packet collisions and support trace correlation across shared handshake channels:
+1. **Symmetric Trace Propagation:** The Service MUST copy the `transactionId` value from the incoming request envelope directly into the `transactionId` field of the outgoing reply envelope.
+2. **Strict Request Gating:** The client MUST discard any handshake replies whose envelope `transactionId` does not match its original request's `transactionId`.
+3. **Trace-Level Tracking:** Clients and verifiers MUST track and propagate this `transactionId` across subsequent configurations and states to support end-to-end correlation.
+
+### 3.6. Handshake Steps and Payload Standards
 
 To guarantee parsing interoperability and avoid protocol timeouts, Handshake payloads and correlation MUST strictly adhere to the following rules:
 
@@ -114,7 +170,7 @@ The System publishes a UDMI `config` message to `/uufi/c/config/udmi`.
 
 **Activation:** The Client is **Active** when `reply.transaction_id` matches the original `state.setup.transaction_id`.
 
-### 3.2. Registry ID Discovery
+### 3.7. Registry ID Discovery
 - **Default:** `default`
 - **Discovery:** The System MAY provide a `deviceRegistryId` in the `config.udmi` handshake reply to the Client. To ensure interoperability, the `deviceRegistryId` SHOULD be placed within the `setup` block of the payload. The Client SHOULD use this `deviceRegistryId` for all subsequent registry-scoped topics. The System MUST NOT expect to discover its own `deviceRegistryId` from Client-initiated handshakes. To prevent collisions in multi-registry environments where device IDs may not be globally unique, the Client identity (`source` in envelope and `msg_source` in setup payload) SHOULD be a structured identifier in the format `{registry_id}/{device_id}` if the client already has knowledge of its designated registry. Otherwise, if the registry is unknown, the Client identity is the bare `{device_id}`, and the System will assign a default registry ID (e.g., `default`). (Note: Use `deviceRegistryId` camelCase exactly as specified; case-insensitive or snake_case matching is NOT guaranteed).
 
