@@ -160,6 +160,15 @@ public class ReportingDevice implements ErrorCollector {
     return lastSeen.after(getThreshold(now));
   }
 
+  public boolean seenSchemaRecently(String schemaName, Instant now) {
+    Date seen = messageMarks.get(schemaName);
+    return seen != null && seen.after(getThreshold(now));
+  }
+
+  public boolean hasSeenTelemetry(Instant now) {
+    return seenSchemaRecently("events_pointset", now);
+  }
+
   /**
    * Check if this device as errors.
    *
