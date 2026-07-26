@@ -37,6 +37,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private final ContainerBase container;
   private final EndpointConfiguration endpointConfig;
   private final boolean disableLogging;
+  private final boolean brokerAuth;
   private final Object tailLock = new Object();
   private Process tailProcess;
 
@@ -47,7 +48,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
    * Create a new broker connection provider.
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig) {
-    this(container, endpointConfig, false);
+    this(container, endpointConfig, false, true);
   }
 
   /**
@@ -55,9 +56,18 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
       boolean disableLogging) {
+    this(container, endpointConfig, disableLogging, true);
+  }
+
+  /**
+   * Create a new broker connection provider with logging controls and broker auth control.
+   */
+  public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
+      boolean disableLogging, boolean brokerAuth) {
     this.container = container;
     this.endpointConfig = endpointConfig;
     this.disableLogging = disableLogging;
+    this.brokerAuth = brokerAuth;
     if (!disableLogging) {
       File logFile = new File(getMosquittoLogPath());
       if (!logFile.canRead()) {
@@ -101,6 +111,10 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   private CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommandInternal(
       String commandName, Map<String, Object> cmd) {
+    if (!brokerAuth) {
+      info("Broker auth disabled, skipping command %s", commandName);
+      return CompletableFuture.completedFuture(new udmi.schema.MosquittoClientResponse());
+    }
     try {
       byte[] bytes = objectMapper.writeValueAsBytes(cmd);
       CompletableFuture<udmi.schema.MosquittoClientResponse> future = new CompletableFuture<>();
@@ -377,11 +391,19 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   @Override
   public CompletableFuture<Void> authorize(String clientId, String password) {
+    if (!brokerAuth) {
+      info("Broker auth disabled, skipping authorize for %s", clientId);
+      return CompletableFuture.completedFuture(null);
+    }
     return provisionClient(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
   }
 
   @Override
   public CompletableFuture<Void> bindGateway(String gatewayId, String deviceId) {
+    if (!brokerAuth) {
+      info("Broker auth disabled, skipping bindGateway for %s and %s", gatewayId, deviceId);
+      return CompletableFuture.completedFuture(null);
+    }
     String roleName = "role_" + gatewayId.replace("/", "_");
 
     CompletableFuture<Void> a1 =
@@ -408,6 +430,10 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   @Override
   public CompletableFuture<Void> unbindGateway(String gatewayId, String deviceId) {
+    if (!brokerAuth) {
+      info("Broker auth disabled, skipping unbindGateway for %s and %s", gatewayId, deviceId);
+      return CompletableFuture.completedFuture(null);
+    }
     info("Unbind device Id: %s from gateway Id: %s", deviceId, gatewayId);
     String roleName = "role_" + gatewayId.replace("/", "_");
 
