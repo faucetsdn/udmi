@@ -70,6 +70,8 @@ class MqttToPubSubBridgeTest {
     assertEquals("bridge", attributes.get("source"));
     org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("receiveTime"));
     assertEquals("test-client", attributes.get("distributorClientId"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("gatewayId"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subType"));
   }
 
   @Test
@@ -105,6 +107,8 @@ class MqttToPubSubBridgeTest {
     assertEquals("subfolder_name", attributes.get("subFolder"));
     org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("receiveTime"));
     assertEquals("test-client", attributes.get("distributorClientId"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("gatewayId"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subType"));
   }
 
   @Test
@@ -418,6 +422,72 @@ class MqttToPubSubBridgeTest {
     CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
     String etcdOptions = MqttToPubSubBridge.getEtcdOptions(commandLine);
     assertEquals("ca_file=/path/to/ca.crt", etcdOptions);
+  }
+
+  @Test
+  void testNoGatewayIdOrSubTypeInAttributes() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/my-registry/d/my-device/events";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    new MqttToPubSubBridge().setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("gatewayId"),
+        "pub/sub attributes should not contain gatewayId");
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subType"),
+        "pub/sub attributes should not contain subType");
+  }
+
+  @Test
+  void testNoGatewayIdOrSubTypeForStateAndReflectTopics() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/my-registry/d/my-device/state";
+    String payloadStr = "State Payload";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    new MqttToPubSubBridge().setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("gatewayId"),
+        "pub/sub attributes should not contain gatewayId for state topics");
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subType"),
+        "pub/sub attributes should not contain subType for state topics");
   }
 }
 

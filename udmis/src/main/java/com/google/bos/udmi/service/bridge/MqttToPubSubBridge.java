@@ -489,6 +489,10 @@ public class MqttToPubSubBridge {
                     }
                   }
 
+                  // Ensure there is no gatewayId pub/sub attribute, and do not set subType at all
+                  attributes.remove("gatewayId");
+                  attributes.remove("subType");
+
                   ByteString data = ByteString.copyFrom(payload);
                   PubsubMessage.Builder pubsubMessageBuilder =
                       PubsubMessage.newBuilder().setData(data);
