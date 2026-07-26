@@ -196,6 +196,7 @@ fi
 echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
 
+sleep 2  # Let message capture settle
 echo Cleaning message capture output out/registries/
 rm -rf out/registries/
 
