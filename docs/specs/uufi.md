@@ -303,7 +303,7 @@ Example:
 bin/start_local sites/udmi_site_model //mqtt/localhost:46432
 ```
 
-- **Format Constraint:** The target connection spec MUST be provided in the format `//mqtt/localhost:$port`. This satisfies internal parameter expansions (`${project_spec%/*}` and `${project_spec#//}`) within `start_local`, permitting custom isolated port execution without modifying UDMI binaries.
+- **Format Constraint:** The target connection spec MUST be provided in the format `//mqtt/localhost:$port` to ensure correct port parsing and target identification by the local environment.
 - **Shutdown & Lifecycle Provisions:** Service processes are managed directly via the tooling rather than manual process matching or `kill`/`pkill` commands. To stop the local system infrastructure, execute `bin/start_local stop`. Re-executing `bin/start_local` automatically stops and cleans up any existing background instances before starting fresh.
 
 Upon successful startup, the local environment exposes the following connection parameters:
@@ -326,7 +326,7 @@ Example:
 bin/start_dut sites/udmi_site_model //mqtt/localhost:46432 AHU-1 uufi-serial
 ```
 
-- **Format Constraint:** The second positional argument MUST begin with `//` (e.g. `//mqtt/localhost:$port`). Omitting `//` or passing explicit schemes like `mqtts://` causes internal initialization (`reset_config`) to select `iot_provider="jwt"`, resulting in a fatal runtime error (`Unknown iotProvider jwt`).
+- **Format Constraint:** The second positional argument MUST begin with `//` (e.g. `//mqtt/localhost:$port`). Omitting `//` or passing explicit schemes like `mqtts://` is not supported for local test execution and will result in a connection configuration error.
 - **Function:** Registers device `AHU-1` (or specified device ID) with serial number `uufi-serial` and begins standard message exchange between the DUT and the local System.
 - **Shutdown Provision:** To stop a running DUT process without manual process manipulation, invoke the `stop` subcommand with the target serial number:
   ```bash
