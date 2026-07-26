@@ -128,7 +128,8 @@ For any client initializing on the bus, the handshake sequence MUST follow the *
          │    Topic: [/{prefix}]/uufi/c/config/udmi                   │
          │    Envelope:                                               │
          │      - transactionId: "UUID-A" (Symmetric Match)           │
-         │      - principal: "uufi"                                   │
+         │      - source: "udmis"                                     │
+         │      - principal: "{implementation_id}.{entity_suffix}"    │
          │    Payload:                                                │
          │      - setup: { "deviceRegistryId": "testing" }            │
          │      - reply: { "transaction_id": "UUID-A" }               │
@@ -164,7 +165,7 @@ The Client publishes a UDMI `state` message to `/uufi/c/state/udmi`.
 ### Step 2: Configuration Confirmation (Handshake Response)
 The System publishes a UDMI `config` message to `/uufi/c/config/udmi`.
 - **Payload:** Must include `setup` and `reply` directly at the root (see Appendix A.1.1.a and A.1.2.a).
-- **Addressing:** Envelope `principal` MUST match Client's identity. For handshake replies, the System MUST use the `principal` or `source` from the received state message to ensure the reply reaches the correct client. If the received message has a `principal`, it SHOULD be used; otherwise, the `source` SHOULD be used as a fallback.
+- **Addressing:** Envelope `principal` MUST match Client's identity (the static identity of the external application entity endpoints of the communication session). For handshake replies, the System MUST use the `principal` or `source` from the received state message to ensure the reply reaches the correct client. If the received message has a `principal`, it SHOULD be used; otherwise, the `source` SHOULD be used as a fallback. Senders MUST NOT set `principal` to `"uufi"` or a server instance ID. For broadcast messages with no specific receiver, `principal` MUST be left blank. The System MUST set `source` to `"udmis"` on outgoing messages for loopback prevention.
 
 **Retries:** The Client SHOULD periodically republish the Step 1 state message (e.g., every 5 seconds) if a valid Step 2 confirmation has not been received, until the 60-second timeout.
 
@@ -191,7 +192,7 @@ Inner JSON `payload` object MUST include:
 | **MQTT** | JSON Wrapper | Payload `payload` key |
 
 #### MQTT Constraints
-- **Redundancy:** Envelope fields MUST NOT include data encoded in the topic path (`subType`, `subFolder`, and if present, `deviceRegistryId`, `deviceId`).
+- **Envelope Consistency:** Senders MUST populate all defined envelope fields (`subType`, `subFolder`, and when applicable `deviceRegistryId`, `deviceId`) across all transport mechanisms. The contents of the envelope MUST NOT depend on the transport, ensuring a consistent envelope structure (e.g., across MQTT and PubSub). Receivers MUST require that incoming envelope fields are populated appropriately.
 - **Mandatory Envelope Fields:**
   - **Outgoing Messages:** Outgoing messages from compliant systems and verifiers MUST populate all standard envelope fields (`projectId`, `transactionId`, `publishTime`, `source`, `principal`, and `payload`).
   - **Incoming Messages:** Incoming messages received from external or upstream services/utilities MUST be parsed gracefully with robust fallback handling (e.g., defaulting a missing `"projectId"` to `"vibrant"` or the active project/prefix, and treating a missing `"principal"` as absent or falling back to `"source"`).
@@ -284,7 +285,7 @@ To report a device's actual or currently running software subsystem version, imp
 - **Metadata Fallbacks:** For mandatory string fields like `make` and `model`, if the value is unknown or uninitialized, implementations SHOULD use `"unknown"` as a standard fallback value.
 
 ### 8.4. MQTT Specific Rules
-- **Redundancy Rule:** Implementations MUST reject messages where envelope fields duplicate topic-encoded data.
+- **Envelope Consistency Rule:** Implementations MUST NOT omit envelope fields when transporting via MQTT; all defined envelope attributes MUST be consistently populated across all transport layers.
 - **Leading Slash:** For MQTT transport, all UUFI topics MUST start with a leading slash `/`. Implementations MUST NOT accept or publish to topics lacking the leading slash.
 
 ## 9. Test Setup for External Clients

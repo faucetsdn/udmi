@@ -52,9 +52,9 @@ public class UufiProcessor extends ProcessorBase {
       if (isUufi) {
         // Message from MQTT (Client or Loopback)
 
-        // Loopback protection using instance ID
-        if (UdmiServicePod.INSTANCE_ID.equals(principal)) {
-          debug("Ignoring loopback of message from this instance: " + UdmiServicePod.INSTANCE_ID);
+        // Loopback protection using source attribute
+        if ("udmis".equals(envelope.source)) {
+          debug("Ignoring loopback of message from udmis source");
           return;
         }
 
@@ -110,8 +110,8 @@ public class UufiProcessor extends ProcessorBase {
     Envelope replyEnvelope = new Envelope();
     replyEnvelope.subType = SubType.CONFIG;
     replyEnvelope.subFolder = SubFolder.UDMI;
-    // Set instance ID as principal for loop detection
-    replyEnvelope.principal = UdmiServicePod.INSTANCE_ID;
+    replyEnvelope.source = "udmis";
+    replyEnvelope.principal = Optional.ofNullable(envelope.principal).orElse(source);
     replyEnvelope.transactionId = transactionId;
     replyEnvelope.gatewayId = "uufi";
 
@@ -120,7 +120,6 @@ public class UufiProcessor extends ProcessorBase {
     Map<String, Object> wrappedConfig = toMap(replyEnvelope);
     UdmiConfig config = UdmiServicePod.getUdmiConfig(state);
     wrappedConfig.put(PAYLOAD_KEY, config);
-    wrappedConfig.put("principal", UdmiServicePod.INSTANCE_ID); // For loopback protection
 
     publish(replyEnvelope, wrappedConfig);
   }
@@ -130,6 +129,15 @@ public class UufiProcessor extends ProcessorBase {
     final Object payloadRaw = mutableMap.remove(PAYLOAD_KEY);
 
     Envelope innerEnvelope = convertTo(Envelope.class, mutableMap);
+    if (innerEnvelope.subType == null || innerEnvelope.subFolder == null
+        || (envelope.deviceRegistryId != null && innerEnvelope.deviceRegistryId == null)
+        || (envelope.deviceId != null && innerEnvelope.deviceId == null)) {
+      String msg = String.format("Missing required UUFI envelope fields: "
+          + "subType=%s, subFolder=%s, registry=%s, device=%s",
+          innerEnvelope.subType, innerEnvelope.subFolder,
+          innerEnvelope.deviceRegistryId, innerEnvelope.deviceId);
+      throw new IllegalArgumentException(msg);
+    }
     innerEnvelope.payload = null;
     innerEnvelope.gatewayId = null; // Remove the uufi marker for internal bus
     if (innerEnvelope.deviceRegistryId == null) {
@@ -217,14 +225,20 @@ public class UufiProcessor extends ProcessorBase {
     // Wrap system message for UUFI clients
     Map<String, Object> uufiMessage = toMap(envelope);
     uufiMessage.put(PAYLOAD_KEY, outboundMessage);
-    uufiMessage.put("principal", UdmiServicePod.INSTANCE_ID); // For loopback protection
+    uufiMessage.put("source", "udmis"); // For loopback protection
+    if (envelope.principal != null) {
+      uufiMessage.put("principal", envelope.principal);
+    } else {
+      uufiMessage.remove("principal");
+    }
 
     Envelope uufiEnvelope = new Envelope();
     uufiEnvelope.subType = envelope.subType;
     uufiEnvelope.subFolder = envelope.subFolder;
     uufiEnvelope.deviceRegistryId = envelope.deviceRegistryId;
     uufiEnvelope.deviceId = envelope.deviceId;
-    uufiEnvelope.principal = UdmiServicePod.INSTANCE_ID; // Set instance ID
+    uufiEnvelope.source = "udmis"; // Set udmis source
+    uufiEnvelope.principal = envelope.principal;
     uufiEnvelope.gatewayId = "uufi";
 
     debug("Forwarding system message %s/%s to UUFI clients",

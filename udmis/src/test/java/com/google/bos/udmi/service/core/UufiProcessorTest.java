@@ -123,15 +123,15 @@ public class UufiProcessorTest extends ProcessorTestBase {
   }
 
   /**
-   * Test that inbound UUFI-wrapped messages from compliant clients (omitting device registry/ID)
-   * are correctly routed by copying device identity from the outer envelope to innerEnvelope.
+   * Test that inbound UUFI-wrapped messages omitting required device registry/ID
+   * are rejected according to strict envelope requirements.
    */
   @Test
   public void inboundRoutingRedundancyTest() {
     Envelope innerEnvelope = new Envelope();
     innerEnvelope.subType = SubType.EVENTS;
     innerEnvelope.subFolder = SubFolder.POINTSET;
-    // Omit device identity from the inner payload according to redundancy rule
+    // Omit device identity from the inner payload
     innerEnvelope.deviceId = null;
     innerEnvelope.deviceRegistryId = null;
 
@@ -157,16 +157,13 @@ public class UufiProcessorTest extends ProcessorTestBase {
     activeTestInstance(() -> getReverseDispatcher().publish(
         new Bundle(transportEnvelope, uufiWrapper)));
 
-    // Verify that the unwrapped message was published with the copied device registry and device ID
-    assertEquals(1, capturedEnvelopes.size(), "captured envelopes count");
-    Envelope publishedEnvelope = capturedEnvelopes.get(0);
-    assertEquals("dev-1", publishedEnvelope.deviceId);
-    assertEquals("reg-1", publishedEnvelope.deviceRegistryId);
+    // Verify that the message omitting required device identity was rejected (not published)
+    assertEquals(0, capturedEnvelopes.size(), "captured envelopes count");
   }
 
   /**
    * Test that inbound UUFI-wrapped messages with omitted subType and subFolder
-   * in the payload map copy these fields from the outer transport envelope.
+   * are rejected according to strict envelope requirements.
    */
   @Test
   public void inboundRoutingSubTypeRedundancyTest() {
@@ -195,11 +192,8 @@ public class UufiProcessorTest extends ProcessorTestBase {
     activeTestInstance(() -> getReverseDispatcher().publish(
         new Bundle(transportEnvelope, uufiWrapper)));
 
-    // Verify that the unwrapped message was published with correct subType/subFolder copied
-    assertEquals(1, capturedEnvelopes.size(), "captured envelopes count");
-    Envelope publishedEnvelope = capturedEnvelopes.get(0);
-    assertEquals(SubType.EVENTS, publishedEnvelope.subType);
-    assertEquals(SubFolder.POINTSET, publishedEnvelope.subFolder);
+    // Verify that the message omitting required subType/subFolder was rejected (not published)
+    assertEquals(0, capturedEnvelopes.size(), "captured envelopes count");
   }
 
   /**

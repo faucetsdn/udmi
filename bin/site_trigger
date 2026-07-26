@@ -170,7 +170,7 @@ else:
           file=sys.stderr,
       )
 
-# Attach mTLS certificates and keys directly from the site model directory if available.
+# Attach mTLS certificates and keys directly from site model if available.
 ca_cert = os.path.join(site_path, "reflector", "ca.crt")
 if os.path.exists(ca_cert):
   cmd.extend(["--cafile", ca_cert])
@@ -180,7 +180,12 @@ if os.path.exists(client_cert):
 client_key = os.path.join(site_path, "reflector", "rsa_private.pem")
 if os.path.exists(client_key):
   cmd.extend(["--key", client_key])
-if os.path.exists(ca_cert) or os.path.exists(client_cert) or os.path.exists(client_key):
+has_certs = (
+    os.path.exists(ca_cert)
+    or os.path.exists(client_cert)
+    or os.path.exists(client_key)
+)
+if has_certs:
   cmd.extend(["--insecure"])
 
 print(f"Publishing model/system update to {topic}...")
