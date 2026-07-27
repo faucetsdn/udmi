@@ -225,6 +225,7 @@ subFolders
 Subprocess
 subType
 subTypes
+sudo
 swapped
 SWE
 systemd
