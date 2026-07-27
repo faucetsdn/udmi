@@ -195,6 +195,33 @@ class ImplicitIotAccessProviderTest {
     }
   }
 
+  @Test
+  void testModelRegistryAndGetRegistries() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.metadata = Map.of("location", "building-a");
+
+    provider.modelRegistry(TEST_REGISTRY, null, cloudModel);
+
+    Set<String> registries = provider.getRegistries();
+    org.junit.jupiter.api.Assertions.assertTrue(registries.contains(TEST_REGISTRY));
+    org.junit.jupiter.api.Assertions.assertEquals("building-a",
+        provider.fetchRegistryMetadata(TEST_REGISTRY, "location"));
+  }
+
+  @Test
+  void testModelDeviceAddsRegistryToGetRegistries() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.auth_type = Auth_type.RS_256;
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    Set<String> registries = provider.getRegistries();
+    org.junit.jupiter.api.Assertions.assertTrue(registries.contains(TEST_REGISTRY));
+  }
+
+
   class FakeDataRef extends DataRef {
     private final Map<String, String> data;
 
