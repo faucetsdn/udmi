@@ -684,7 +684,7 @@ public class MqttToPubSubBridge {
       String numId = etcdProvider.ref()
           .registry(registryId)
           .device(deviceId)
-          .get("num_id");
+          .getAsSerializable("num_id");
       if (numId != null) {
         logger.debug("Found numId {} in etcd for device {}/{}", numId, registryId, deviceId);
         numIdCache.put(cacheKey, numId);

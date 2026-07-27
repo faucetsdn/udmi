@@ -17,6 +17,7 @@ from .state_validation_schema import SchemaValidationState
 @dataclass
 class Summary(DataModel):
     correct_devices: Optional[List[str]] = None
+    pending_devices: Optional[List[str]] = None
     extra_devices: Optional[List[str]] = None
     missing_devices: Optional[List[str]] = None
     error_devices: Optional[List[str]] = None

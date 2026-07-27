@@ -18,7 +18,7 @@ else
     req_src="<(sed -E 's/^(grpcio|grpcio-status|cryptography|cffi)==/\1>=/' etc/requirements.txt)"
 fi
 
-sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients
+sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
 
 python3 --version
 python3 -m venv $venv_opts venv

@@ -161,6 +161,7 @@ class MqttToPubSubBridgeTest {
     when(mockDataRef.registry("my-registry")).thenReturn(mockDataRef);
     when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
     when(mockDataRef.get("num_id")).thenReturn("123456");
+    when(mockDataRef.getAsSerializable("num_id")).thenReturn("123456");
 
     new MqttToPubSubBridge()
         .setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
@@ -201,6 +202,7 @@ class MqttToPubSubBridgeTest {
     when(mockDataRef.registry("my-registry")).thenReturn(mockDataRef);
     when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
     when(mockDataRef.get("num_id")).thenReturn(null);
+    when(mockDataRef.getAsSerializable("num_id")).thenReturn(null);
 
     new MqttToPubSubBridge()
         .setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
@@ -241,6 +243,7 @@ class MqttToPubSubBridgeTest {
     when(mockDataRef.registry("my-registry")).thenReturn(mockDataRef);
     when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
     when(mockDataRef.get("num_id")).thenThrow(new RuntimeException("etcd error"));
+    when(mockDataRef.getAsSerializable("num_id")).thenThrow(new RuntimeException("etcd error"));
 
     new MqttToPubSubBridge()
         .setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);

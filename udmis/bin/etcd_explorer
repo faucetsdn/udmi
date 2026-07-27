@@ -1,0 +1,22 @@
+#!/bin/bash -eu
+
+set -o pipefail
+
+ROOT_DIR=$(realpath $(dirname $0)/../..)
+UDMIS_JAR="${ROOT_DIR}/udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar"
+
+if [[ -f "${ROOT_DIR}/etc/shell_common.sh" ]]; then
+  source "${ROOT_DIR}/etc/shell_common.sh"
+fi
+
+if [[ ! -f "$UDMIS_JAR" ]] || (type up_to_date >/dev/null 2>&1 && ! up_to_date "$UDMIS_JAR" "${ROOT_DIR}/udmis/src"); then
+  echo "Building $UDMIS_JAR..."
+  "${ROOT_DIR}/udmis/bin/build"
+fi
+
+JAVA_CLASS="com.google.bos.udmi.service.support.EtcdExplorerServer"
+
+echo "Starting EtcdExplorerServer ($JAVA_CLASS)..."
+cmd="java -cp $UDMIS_JAR $JAVA_CLASS $@"
+echo "$cmd"
+exec $cmd

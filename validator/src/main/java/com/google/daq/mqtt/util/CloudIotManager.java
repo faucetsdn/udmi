@@ -13,6 +13,7 @@ import static java.nio.file.Files.readAllBytes;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.GBOS;
+import static udmi.schema.IotAccess.IotProvider.GREF;
 import static udmi.schema.IotAccess.IotProvider.MQTT;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
@@ -180,7 +181,8 @@ public class CloudIotManager {
   }
 
   private IotProvider makeIotProvider() {
-    usePasswords = executionConfiguration.iot_provider == MQTT;
+    usePasswords = executionConfiguration.iot_provider == MQTT
+        || executionConfiguration.iot_provider == GREF;
 
     if (projectId.equals(SiteModel.MOCK_PROJECT) || projectId.equals(SiteModel.MOCK_CLEAN)) {
       System.err.println("Using mock iot client for special client " + projectId);
@@ -234,7 +236,9 @@ public class CloudIotManager {
       try {
         String prefix = getCredentialPrefix(credential.key_format);
         File privateKey = new File(siteModel, format(PRIVATE_KEY_BYTES_FMT, deviceId, prefix));
-        settings.password = makePassword(readAllBytes(privateKey.toPath()));
+        if (privateKey.exists()) {
+          settings.password = makePassword(readAllBytes(privateKey.toPath()));
+        }
       } catch (Exception e) {
         throw new RuntimeException("While generating password for " + deviceId, e);
       }
