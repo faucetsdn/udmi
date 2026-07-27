@@ -79,6 +79,7 @@ public class EtcdExplorerServer {
     return Integer.compare(s1.length(), s2.length());
   };
 
+  private static final String LAST_STATE_KEY_SUFFIX = ":last_state";
   private static final Pattern DEVICES_PATTERN =
       Pattern.compile("^/api/registries/([^/]+)/devices/?$");
   private static final Pattern PROPERTIES_PATTERN =
@@ -147,7 +148,7 @@ public class EtcdExplorerServer {
     Set<String> uniqueRegistries = new TreeSet<>(NATURAL_COMPARATOR);
     Set<String> uniqueDevices = new TreeSet<>(NATURAL_COMPARATOR);
     for (String key : keys) {
-      if (key.startsWith("/r/")) {
+      if (key.startsWith("/r/") && !key.endsWith(LAST_STATE_KEY_SUFFIX)) {
         String sub = key.substring(3);
         int slashIdx = sub.indexOf('/');
         int colonIdx = sub.indexOf(':');
@@ -181,7 +182,7 @@ public class EtcdExplorerServer {
     List<String> keys = etcdProvider.getPrefixKeys(prefix);
     Set<String> uniqueDevices = new TreeSet<>(NATURAL_COMPARATOR);
     for (String key : keys) {
-      if (key.startsWith(prefix)) {
+      if (key.startsWith(prefix) && !key.endsWith(LAST_STATE_KEY_SUFFIX)) {
         String sub = key.substring(prefix.length());
         int slashIdx = sub.indexOf('/');
         int colonIdx = sub.indexOf(':');
