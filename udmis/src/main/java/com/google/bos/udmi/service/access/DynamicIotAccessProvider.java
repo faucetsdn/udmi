@@ -58,7 +58,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     // deadlock where the device hasn't sent a message yet but needs its config.
     String reflectorKey = getProviderKey(ContainerBase.REFLECT_BASE, registryId);
     String reflectorAffinity = registryProviders.get(reflectorKey);
-    if (reflectorAffinity != null) {
+    if (reflectorAffinity != null && getProviders().containsKey(reflectorAffinity)) {
       debug("Registry affinity mapping for %s inherited from reflector %s: %s",
           registryId, reflectorKey, reflectorAffinity);
       return reflectorAffinity;
@@ -245,10 +245,17 @@ public class DynamicIotAccessProvider extends IotAccessBase {
         }
       }
 
-      String previous = registryProviders.put(providerKey, affinity);
-      if (!affinity.equals(previous)) {
-        debug(format("Switched registry affinity for %s from %s -> %s", providerKey, previous,
-            affinity));
+      if (getProviders().containsKey(affinity)) {
+        String previous = registryProviders.put(providerKey, affinity);
+        if (!affinity.equals(previous)) {
+          debug(format("Switched registry affinity for %s from %s -> %s", providerKey, previous,
+              affinity));
+        }
+      } else {
+        String previous = registryProviders.remove(providerKey);
+        if (previous != null) {
+          debug(format("Cleared invalid registry affinity for %s (was %s)", providerKey, previous));
+        }
       }
     } else {
       String previous = registryProviders.remove(providerKey);

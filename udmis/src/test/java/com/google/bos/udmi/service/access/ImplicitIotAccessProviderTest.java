@@ -164,12 +164,13 @@ class ImplicitIotAccessProviderTest {
     if (provider != null) {
       provider.shutdown();
     }
-    ConnectionBroker authDisabledBroker = mock(ConnectionBroker.class);
     IotAccess iotAccess = new IotAccess();
-    iotAccess.options = "enable, use_password=" + TEST_PASSWORD + ", disable_logging=true, broker_auth=false";
+    iotAccess.options =
+        "enable, use_password=" + TEST_PASSWORD + ", disable_logging=true, broker_auth=false";
     provider = new ImplicitIotAccessProvider(iotAccess);
     provider.activate();
 
+    ConnectionBroker authDisabledBroker = mock(ConnectionBroker.class);
     Field brokerField = ImplicitIotAccessProvider.class.getDeclaredField("broker");
     brokerField.setAccessible(true);
     brokerField.set(provider, authDisabledBroker);
