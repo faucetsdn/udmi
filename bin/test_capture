@@ -6,8 +6,8 @@
 UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$UDMI_ROOT"
 
-echo "=== Running pull_files | pull_capture pipeline..."
-bin/pull_files tests/traces/simple | bin/pull_capture
+echo "=== Running pull_files | pull_save db pipeline..."
+bin/pull_files tests/traces/simple | bin/pull_save db
 
 echo "=== Verifying PostgreSQL records..."
 postgres_count=$(psql -h 127.0.0.1 -p ${POSTGRES_PORT:-5432} -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres} -t -A -c "SELECT count(*) FROM udmi_messages;")

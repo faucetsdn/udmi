@@ -3,6 +3,22 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
+[[ $# -le 1 ]] || usage [target]
+
+target=${1:-disk}
+
+case "$target" in
+    ""|disk)
+        # Continue with local disk saving below
+        ;;
+    db)
+        exec $UDMI_ROOT/bin/pull_capture
+        ;;
+    *)
+        fail unknown pull_save target: "$target"
+        ;;
+esac
+
 while read -r line; do
     if [[ -z $line ]]; then
         continue

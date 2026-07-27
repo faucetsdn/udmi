@@ -28,7 +28,7 @@ To ensure technical integrity in this multi-component system (comprising Python,
 - **Principle**: Prevent cross-contamination between test runs.
 - **Mandate**: Before performing final verification, you must ensure all persistent state (Docker volumes, cached credentials, database entries, and temporary files) is explicitly cleared.
 - **Proof of Failure**: Before any verification run, you must provide log evidence that the failure is **currently active** in the environment. A fix is only valid if applied to a demonstrably broken state.
-- **Warning**: If permissions (e.g., `sudo`) prevent full sanitization, the environment must be treated as "Untrusted" and verification cannot be considered conclusive.
+- **Warning**: If permissions (e.g., `sudo`) prevent full sanitization, the environment must be treated as "Untrusted" and verification cannot be considered conclusive. Note that when running local services in unprivileged environments, specifying an explicit port number in the project spec (e.g., `//mqtt/localhost:18833`) triggers automatic isolated mode without requiring sudo.
 
 ### 6. Staged Final Verification (Project-Wide Integrity)
 To prevent regressions in this reflectively-coupled system, verification MUST proceed in three distinct stages. You may only proceed to the next stage if the previous one passes completely.
@@ -47,10 +47,13 @@ To prevent regressions in this reflectively-coupled system, verification MUST pr
 - **Goal**: Verify the end-to-end message pipeline (Validator -> Sequencer -> UDMIS) handles both standard and "unknown" cases without reflective failures.
 - **Mandate**: Run the comprehensive local integration suite. This stage is non-negotiable for any change touching `common`, `gencode`, or message-processing logic.
 - **Commands**:
-  1. `bin/run_tests install_dependencies` (Ensure clean local environment)
-  2. `bin/start_local sites/udmi_site_model //mqtt/localhost` (Start local services)
-  3. `bin/test_validator //mqtt/localhost` (Telemetry validation)
-  4. `bin/test_sequencer nostate full //mqtt/localhost` (Exhaustive pipeline verification)
+  1. `bin/setup_base` and `bin/clone_model` (Privileged environments only: install dependencies and set up local environment. For unprivileged environments, skip `bin/setup_base` as it requires sudo; assume setup has already been done.)
+  2. `bin/start_local sites/udmi_site_model $PROJECT_SPEC` (Start local services)
+  3. `bin/test_validator $PROJECT_SPEC` (Telemetry validation)
+  4. `bin/test_sequencer nostate full $PROJECT_SPEC` (Exhaustive pipeline verification)
   5. `bin/test_runlocal` (UDMIS component verification)
+- **Project Spec Options (`$PROJECT_SPEC`)**:
+  - **Privileged / Root Environments**: Use `//mqtt/localhost` (binds standard ports like 8883, requires root/sudo).
+  - **Unprivileged / Non-Root Environments**: Use an explicit port number such as `//mqtt/localhost:18833`. This triggers automatic isolated mode in `shell_common.sh`, configuring unprivileged ports (`MQTT_PORT=18833`, `ETCD_PORT=18834`) and setting `UDMI_NO_SUDO=true` automatically without requiring root or sudo permissions.
 
 **Authoritative Source**: If in doubt, audit `.github/workflows/testing.yml` for the current set of `run:` commands. Declaring a task "DONE" without completing all three stages is a violation of engineering standards.

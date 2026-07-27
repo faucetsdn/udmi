@@ -61,18 +61,8 @@ chmod +x "$TMP_BIN/gcloud"
 export PATH="$TMP_BIN:$PATH"
 
 echo "Running pull_pubsub tests..."
-# We pass a fake spec and pipe output or read it. Since pull_pubsub runs in a loop,
-# we can run it for a brief moment and kill/terminate it, or let it run once.
-# Wait, let's look at the pull_pubsub loop:
-# It runs `while true; do ... done`.
-# To capture its output and terminate it, we can run it in background, sleep 2, then kill it.
 output_file=$(mktemp)
-bin/pull_pubsub //pubsub/test-project/test-namespace+test-suffix > "$output_file" 2>/dev/null &
-PID=$!
-
-sleep 2
-kill $PID || true
-wait $PID 2>/dev/null || true
+bin/pull_pubsub //pubsub/test-project/test-namespace+test-suffix 2>/dev/null | head -n 3 > "$output_file"
 
 echo "Verifying stdout output lines..."
 output=$(cat "$output_file")
