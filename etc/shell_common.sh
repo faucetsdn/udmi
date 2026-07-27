@@ -10,14 +10,14 @@ set -o pipefail
 function normalize_conn_spec {
     local spec="${1:-}"
     if [[ -z "$spec" ]]; then
-        echo "$spec"
+        printf '%s\n' "$spec"
         return 0
     fi
     if [[ "$spec" =~ ^//(mqtts|ssl)/(.*)$ ]]; then
         spec="//mqtt/${BASH_REMATCH[2]}"
     fi
     if [[ "$spec" =~ ^// ]]; then
-        echo "$spec"
+        printf '%s\n' "$spec"
         return 0
     fi
     if [[ "$spec" =~ ^(mqtt|mqtts|ssl)://(.*)$ ]]; then
@@ -35,13 +35,13 @@ function normalize_conn_spec {
             endpoint="${endpoint#*@}"
         fi
         if [[ -n "$prefix" ]]; then
-            echo "//mqtt/${endpoint}/${prefix}"
+            printf '%s\n' "//mqtt/${endpoint}/${prefix}"
         else
-            echo "//mqtt/${endpoint}"
+            printf '%s\n' "//mqtt/${endpoint}"
         fi
         return 0
     fi
-    echo "$spec"
+    printf '%s\n' "$spec"
 }
 
 # Auto-detect isolated mode from any command-line arguments or variables matching localhost:<port>
