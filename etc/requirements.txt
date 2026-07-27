@@ -65,7 +65,7 @@ pydantic_core==2.46.4
 Pygments==2.20.0
 PyJWT==2.13.0
 pylint==4.0.5
-pyparsing==3.1
+pyparsing==3.1.0
 pytest==9.0.3
 pytest-xdist==3.7.0
 pytz==2021.3
