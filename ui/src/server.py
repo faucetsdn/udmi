@@ -11,7 +11,7 @@ from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
 PORT = 8080
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 HOME_DIR = os.path.abspath(os.path.expanduser('~'))
 
 

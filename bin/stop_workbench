@@ -27,7 +27,7 @@ if [ -n "$PORT" ] && command -v lsof > /dev/null 2>&1; then
   PIDS=$(lsof -t -i :"${PORT}" 2>/dev/null || true)
   for pid in $PIDS; do
     cmdline=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null || true)
-    if [[ "$cmdline" == *"ui/server.py"* ]]; then
+    if [[ "$cmdline" == *"ui/src/server.py"* ]]; then
       echo "Stopping UDMI Workbench process (PID ${pid}) on port ${PORT}..."
       kill -9 "$pid" 2>/dev/null || true
     else
@@ -37,7 +37,7 @@ if [ -n "$PORT" ] && command -v lsof > /dev/null 2>&1; then
 fi
 
 # Fallback: kill any remaining python process matching ui/server.py
-pkill -9 -f "ui/server.py" 2>/dev/null || true
+pkill -9 -f "ui/src/server.py" 2>/dev/null || true
 
 sleep 0.5
 echo "Workbench server stop check completed."

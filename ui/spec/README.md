@@ -1,57 +1,87 @@
-# 📐 UDMI Workbench UI Specification
+# UDMI Workbench UI Specification Suite
 
 Welcome to the canonical specification suite for the **UDMI Workbench UI**.
 
-This directory separates **Permanent Core Specifications** (domain requirements, invariants, API contracts) from **Disposable Implementation Presets** (visual styling and layout grids).
+The UDMI Workbench is a user interface layer built on top of existing UDMI tools to provide a friendly, accessible, and high-productivity user experience for IoT device testing and debugging.
 
 ---
 
-## 📂 Specification Directory Index
+## Architecture & Plugin Model
+
+1. **Host Shell & Micro-Frontend Sandboxing**:
+   - The UI is built around a **Host Shell Container** that manages security policies, global application state, site model selection, and plugin navigation.
+   - Individual tools operate as **isolated micro-frontend plugins** that communicate with the Host Shell via cross-module events.
+
+2. **Dynamic Feature Flagging**:
+   - Different tools are enabled or disabled dynamically using feature flags.
+   - If only a single plugin is active, the navigation rail automatically collapses to 0-width to maximize screen space for the active tool.
+
+3. **Future Extensibility**:
+   - While initial workflows focus on the testing infrastructure, the plugin model is designed to seamlessly integrate future capabilities such as:
+     - Update Management
+     - Site Model Management
+     - Fleet Monitoring & Alert Management
+
+---
+
+## Testing User Workflows in Scope
+
+### 1. Testbed Architecture & Setup Validation
+- **Goal**: Bring up the testing architecture and verify all required components - DUT (either simulated or actual device), MQTT broker, UDMIS, Sequencer - are up, connected, and operating correctly before starting tests.
+- **Key Capability**: Interactive, dynamic topology diagrams that visually represent the connected setup based on current configuration.
+
+### 2. Sequencer Test Execution & Monitoring
+- **Goal**: Run automated compliance test suites against target devices and inspect pass/fail statuses and generate test reports.
+- **Key Capability**: Real-time console log streaming with severity highlights, device test matrix, and **differential log analysis** against past successful execution runs to pinpoint regressions.
+
+### 3. AI Assistant Integration (Mantis)
+- **Goal**: Debug failed sequencer tests, execute natural language queries, and diagnose complex system failures across the workbench.
+- **Key Capability**: Responsive **expandable sidebar** that can expand into a **full-screen workspace mode**. Integrates chronological event timelines, telemetry payload JSON inspection, and AI root cause report generation. 
+
+---
+
+## Specification Directory Structure
+
+The `ui/spec/` directory is strictly organized into **3 Types of Specification Files**:
 
 ```
 ui/spec/
-├── core/                                # PERMANENT CORE SPECIFICATIONS (Kept during UI rebuilds)
-│   ├── 01-architecture.md               # System invariants, micro-frontend plugin model, sandboxing, WSL path rules
-│   ├── 02-functional-requirements.md    # WHAT to display & control (domain capabilities, controls, device matrix)
-│   ├── 03-data-and-api-contracts.md     # REST API endpoints & SSE log stream contracts
-│   ├── 04-state-and-events.md           # Global state keys, postMessage schemas, late-bound sync
-│   ├── user-flows.md                    # End-to-end user journeys
-│   └── tools/                           # Tool core requirements (shell.md, sequencer.md, mantis.md)
-└── implementation/                      # DISPOSABLE IMPLEMENTATION PRESETS (UI v1 Presentation)
-    ├── layout-and-viewport.md           # Spatial layout regions, viewport locking, panel scroll models
-    └── design-guidelines.md             # Visual design tokens, color roles, typography, component CSS specs
+├── README.md                           # Master specification suite index & system overview (this document)
+│
+├── server/                             # [TYPE 1] SERVER TECHNICAL SPECIFICATION
+│   └── TECHNICAL_SPEC.md               # Technical spec for server.py (REST endpoints, SSE streams, process management)
+│
+├── shell/                              # HOST SHELL SPECIFICATIONS
+│   ├── ARCHITECTURE.md                 # [TYPE 2] Technical architecture & integrations for the Host Shell
+│   └── DESIGN.md                       # [TYPE 3] Layout & visual design spec for the Host Shell
+│
+└── plugins/                            # MICRO-FRONTEND TOOL PLUGIN SPECIFICATIONS
+    ├── testbed/                        # Testbed Validation Plugin
+    │   ├── ARCHITECTURE.md             # [TYPE 2] Technical architecture & backend integrations
+    │   └── DESIGN.md                   # [TYPE 3] Layout & design spec (dynamic topology diagrams, component status)
+    ├── sequencer/                      # Sequencer Test Execution Plugin
+    │   ├── ARCHITECTURE.md             # [TYPE 2] Technical architecture & backend integrations (log diff, process lifecycle)
+    │   └── DESIGN.md                   # [TYPE 3] Layout & design spec (device matrix, live terminal, diff viewer)
+    └── mantis/                         # Mantis Plugin
+        ├── ARCHITECTURE.md             # [TYPE 2] Technical architecture & backend integrations (triage API, trace timeline)
+        └── DESIGN.md                   # [TYPE 3] Layout & design spec (expandable sidebar, full-screen mode, payload inspector)
 ```
 
 ---
 
-## 🏛️ 1. Permanent Core Specifications ([`ui/spec/core/`](./core/README.md))
+## The 3 Specification File Types
 
-These documents define **WHAT** the UI does, its system invariants, backend API contracts, and user interactions. **These specs remain constant across any UI rebuild or framework migration.**
-
-| Core Document | Description |
-| :--- | :--- |
-| **[core/01-architecture.md](./core/01-architecture.md)** | System invariants, micro-frontend plugin model, frame sandboxing, security policy guards, and WSL path resolution. |
-| **[core/02-functional-requirements.md](./core/02-functional-requirements.md)** | **WHAT to display & control**: Workspace context, Project Spec Builder, device matrix, log streaming, and AI triage views. |
-| **[core/03-data-and-api-contracts.md](./core/03-data-and-api-contracts.md)** | REST API endpoints, query parameter schemas, Server-Sent Event (SSE) log stream formats, and backend subprocess integration. |
-| **[core/04-state-and-events.md](./core/04-state-and-events.md)** | Global application state, cross-module event messaging schemas, late-bound synchronization, and local storage persistence. |
-| **[core/user-flows.md](./core/user-flows.md)** | End-to-end user journeys, site model selection workflows, execution loops, AI triage investigation, and error scenarios. |
-| **[core/tools/](./core/tools/)** | Functional requirements for individual tools ([shell.md](./core/tools/shell.md), [sequencer.md](./core/tools/sequencer.md), [mantis.md](./core/tools/mantis.md)). |
+| Type | Document Name | Purpose & Contents |
+| :--- | :--- | :--- |
+| **Type 1** | `server/TECHNICAL_SPEC.md` | Technical specification for `server.py`: REST API endpoints, Server-Sent Event (SSE) streams, process lifecycle management, security policy enforcement, and cross-platform path normalization. |
+| **Type 2** | `ARCHITECTURE.md` | Component Technical Architecture: Details internal state management, backend service integrations, cross-module messaging protocols, sandboxing, data contracts, and event streams for a specific component (Shell or Plugin). |
+| **Type 3** | `DESIGN.md` | Component Layout & Visual Design: Details spatial layout regions, viewport locking, responsive breakpoints, semantic color roles, accessibility standards (WCAG 2.1 AA, keyboard nav, ARIA attributes), and reusable component specs. |
 
 ---
 
-## 🎨 2. Disposable Implementation Presets ([`ui/spec/impl/`](./impl/README.md))
+## Accessibility & Quality Invariants
 
-These documents define **HOW** the current UI presentation layer is laid out and styled. **If you throw away the current UI and build a new UI from scratch, you can discard or overwrite this directory completely.**
-
-| Implementation Preset | Description |
-| :--- | :--- |
-| **[impl/layout-and-viewport.md](./impl/layout-and-viewport.md)** | Spatial layout regions, viewport locking, panel scroll models, and responsiveness. |
-| **[impl/design-guidelines.md](./impl/design-guidelines.md)** | Visual design tokens, semantic color roles, typography scale, and component styling specs. |
-
----
-
-## 🛠️ Ground-Rule Principles for Implementers
-
-1. **Strict Sandboxing**: Each tool micro-frontend MUST operate in isolation. A failure or script exception in one tool view MUST NEVER crash the parent orchestrator or neighbor tools.
-2. **Late-Bound State Synchronization**: When switching active tool views or loading a new tool, the global state (such as the active `siteModel` path) MUST be pushed immediately upon view readiness.
-3. **No Direct Backend Subprocess Invocation**: The UI frontend never executes local processes directly; all execution and log streaming MUST route through backend API contracts ([`core/03-data-and-api-contracts.md`](./core/03-data-and-api-contracts.md)).
+- **WCAG 2.1 AA Compliance**: All text and interactive elements must satisfy strict color contrast ratios (minimum 4.5:1 for standard text).
+- **Keyboard Navigability**: Every feature must be accessible via keyboard shortcuts and standard focus sequences (`Tab`, `Shift+Tab`, `Escape`, `Enter`).
+- **ARIA Standards**: Proper landmark roles (`role="navigation"`, `role="banner"`, `role="main"`, `role="dialog"`), live regions (`aria-live="polite"` for log streams), and explicit state flags (`aria-expanded`, `aria-selected`).
+- **Cross-Platform Support**: Full path resolution support for Windows Subsystem for Linux (WSL) drive mounts (`/mnt/c/`, `/mnt/d/`) and POSIX path normalization.

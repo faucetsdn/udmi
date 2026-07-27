@@ -102,7 +102,7 @@ check_port_owner() {
   local pid=$(lsof -t -i :"$check_port" 2>/dev/null | head -n 1 || true)
   if [ -n "$pid" ]; then
     local cmdline=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null || true)
-    if [[ "$cmdline" == *"ui/server.py"* ]]; then
+    if [[ "$cmdline" == *"ui/src/server.py"* ]]; then
       echo "workbench"
       return
     fi
@@ -166,7 +166,7 @@ if [ "$SERVER_RUNNING" = false ] || [ "$RESTART_NEEDED" = true ]; then
   fi
   
   mkdir -p out
-  nohup python3 ui/server.py --port="${PORT}" --features="${FEATURES_PARAM}" > out/workbench_server.log 2>&1 &
+  nohup python3 ui/src/server.py --port="${PORT}" --features="${FEATURES_PARAM}" > out/workbench_server.log 2>&1 &
   disown
   
   # Wait for the server to spin up

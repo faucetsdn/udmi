@@ -5,8 +5,8 @@ import urllib.parse
 import threading
 import time
 from http.server import HTTPServer
-import ui.server
-from ui.server import UDMIRequestHandler
+import ui.src.server as ui_server
+from ui.src.server import UDMIRequestHandler
 
 class TestUIServer(unittest.TestCase):
     @classmethod
@@ -40,7 +40,7 @@ class TestUIServer(unittest.TestCase):
                 if response.status == 200 and res_body.get("status") == "Started":
                     self.assertIn("session_id", res_body)
                     session_id = res_body["session_id"]
-                    self.assertIn(session_id, ui.server.active_processes)
+                    self.assertIn(session_id, ui_server.active_processes)
         except urllib.error.HTTPError as e:
             # 412 is acceptable if sequence log is missing for AHU-1 in demo environment
             self.assertIn(e.code, [200, 412])
@@ -126,14 +126,14 @@ class TestUIServer(unittest.TestCase):
     def test_prune_old_sessions(self):
         import os
         import shutil
-        sessions_dir = os.path.join(ui.server.ROOT_DIR, 'out', 'sessions')
+        sessions_dir = os.path.join(ui_server.ROOT_DIR, 'out', 'sessions')
         os.makedirs(sessions_dir, exist_ok=True)
         # Create dummy session directories
         for i in range(15):
             d = os.path.join(sessions_dir, f"test_dummy_session_{i}")
             os.makedirs(d, exist_ok=True)
         
-        ui.server.prune_old_sessions(10)
+        ui_server.prune_old_sessions(10)
         
         # Clean up any remaining test_dummy folders
         remaining_dummies = [e for e in os.listdir(sessions_dir) if e.startswith("test_dummy_session_")]

@@ -49,11 +49,11 @@ ui/
 │   │   ├── index.html       # Mantis UI layout & local scenario toolbar
 │   │   ├── main.js          # Mantis controller (scenario scan & timeline)
 │   │   └── style.css        # Local transition tree & JSON viewer styles
+│   ├── server.py            # Python API & Static File Server (Request guards)
 │   ├── index.html           # Parent Shell HTML (Nav Rail & Iframe mounts)
 │   ├── main.js              # Parent Shell Orchestrator (State sync, modals)
 │   └── style.css            # Parent Shell Styles (Outer layouts, modal overlays)
-├── tests/                   # Python server unit tests
-└── server.py                # Python API & Static File Server (Request guards)
+└── tests/                   # Python server unit tests
 ```
 
 ---
