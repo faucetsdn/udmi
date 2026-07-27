@@ -485,7 +485,7 @@ public class SimpleMqttPipe extends MessageBase {
         }
 
         envelopeMap.put(TRANSACTION_KEY, transactionId);
-        envelopeMap.put(SOURCE_KEY, IMPLICIT_CHANNEL);
+        envelopeMap.putIfAbsent(SOURCE_KEY, IMPLICIT_CHANNEL);
         receiveMessage(envelopeMap, payload);
       } catch (Exception e) {
         error("Exception receiving message on %s: %s", clientId, friendlyStackTrace(e));

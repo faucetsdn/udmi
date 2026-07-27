@@ -53,7 +53,7 @@ public class UufiProcessor extends ProcessorBase {
         // Message from MQTT (Client or Loopback)
 
         // Loopback protection using source attribute
-        if ("udmis".equals(envelope.source)) {
+        if ("udmis".equals(envelope.source) || "udmis".equals(messageMap.get("source"))) {
           debug("Ignoring loopback of message from udmis source");
           return;
         }
