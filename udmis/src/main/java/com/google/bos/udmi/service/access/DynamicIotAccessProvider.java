@@ -59,13 +59,17 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     String reflectorKey = getProviderKey(ContainerBase.REFLECT_BASE, registryId);
     String reflectorAffinity = registryProviders.get(reflectorKey);
     if (reflectorAffinity != null && getProviders().containsKey(reflectorAffinity)) {
-      debug("Registry affinity mapping for %s inherited from reflector %s: %s",
-          registryId, reflectorKey, reflectorAffinity);
-      return reflectorAffinity;
+      IotAccessProvider provider = getProviders().get(reflectorAffinity);
+      if (!(provider instanceof PubSubIotAccessProvider)) {
+        debug("Registry affinity mapping for %s inherited from reflector %s: %s",
+            registryId, reflectorKey, reflectorAffinity);
+        return reflectorAffinity;
+      }
     }
     getProviders();
     TreeMap<String, String> sortedMap = getProviders().entrySet().stream()
         .filter(access -> access.getValue().isEnabled())
+        .filter(access -> !(access.getValue() instanceof PubSubIotAccessProvider))
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
     checkState(!sortedMap.isEmpty(), "no viable iot providers found");
     String providerId = sortedMap.lastEntry().getValue();
