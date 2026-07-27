@@ -51,6 +51,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   public static final int DEFAULT_BATCH_SIZE_LIMIT = 2000;
   public static final long DEFAULT_BATCH_BYTES_LIMIT = 10 * 1024 * 1024; // 10 MB
   public static final long DEFAULT_MIN_PUBLISH_INTERVAL_MS = 1000; // 1 second
+  public static final double DEFAULT_JITTER_RATIO = 0.0;
   public static final long DEFAULT_BATCH_TIMEOUT_MS = 30000; // 30 seconds
   public static final int MAX_RETRIES = 20;
   private static final String CONTROL_TOPIC = "$CONTROL/dynamic-security/v1";
@@ -68,6 +69,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   private final int batchSizeLimit;
   private final long batchBytesLimit;
   private final long minPublishIntervalMs;
+  private final double jitterRatio;
   private final long batchTimeoutMs;
 
   private long lastPublishTime = 0;
@@ -109,12 +111,61 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
    * Constructs and connects the Dynamic Security Service with default limits.
    */
   public MosquittoDynamicSecurityService(EndpointConfiguration endpoint) {
+    this(endpoint, DEFAULT_MIN_PUBLISH_INTERVAL_MS, DEFAULT_JITTER_RATIO);
+  }
+
+  /**
+   * Constructs and connects the Dynamic Security Service with custom min publish interval.
+   */
+  public MosquittoDynamicSecurityService(
+      EndpointConfiguration endpoint, long minPublishIntervalMs) {
+    this(endpoint, minPublishIntervalMs, DEFAULT_JITTER_RATIO);
+  }
+
+  /**
+   * Constructs and connects the Dynamic Security Service with custom min publish interval
+   * and jitter ratio.
+   */
+  public MosquittoDynamicSecurityService(
+      EndpointConfiguration endpoint, long minPublishIntervalMs, double jitterRatio) {
     this(endpoint,
          createCommandQueue(DEFAULT_MAX_QUEUE_SIZE),
          DEFAULT_BATCH_SIZE_LIMIT,
          DEFAULT_BATCH_BYTES_LIMIT,
-         DEFAULT_MIN_PUBLISH_INTERVAL_MS,
+         minPublishIntervalMs,
+         jitterRatio,
          DEFAULT_BATCH_TIMEOUT_MS);
+  }
+
+  /**
+   * Returns the minimum publish interval in milliseconds.
+   */
+  public long getMinPublishIntervalMs() {
+    return minPublishIntervalMs;
+  }
+
+  /**
+   * Returns the jitter ratio.
+   */
+  public double getJitterRatio() {
+    return jitterRatio;
+  }
+
+  /**
+   * Calculates random jitter in milliseconds according to the jitter ratio and minimum publish
+   * interval.
+   * If jitterRatio <= 0, returns 0.
+   * Otherwise returns a random number between (1/3 * jitterRatio * minPublishIntervalMs)
+   * and (jitterRatio * minPublishIntervalMs).
+   */
+  public long calculateJitterMs() {
+    if (jitterRatio <= 0) {
+      return 0;
+    }
+    double minJitter = (1.0 / 3.0) * jitterRatio * minPublishIntervalMs;
+    double maxJitter = jitterRatio * minPublishIntervalMs;
+    double jitter = minJitter + Math.random() * (maxJitter - minJitter);
+    return (long) jitter;
   }
 
   /**
@@ -128,11 +179,28 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       long minPublishIntervalMs,
       long batchTimeoutMs
   ) {
+    this(endpoint, commandQueue, batchSizeLimit, batchBytesLimit, minPublishIntervalMs,
+        DEFAULT_JITTER_RATIO, batchTimeoutMs);
+  }
+
+  /**
+   * Constructs and connects the Dynamic Security Service with custom limits and jitter ratio.
+   */
+  public MosquittoDynamicSecurityService(
+      EndpointConfiguration endpoint,
+      BlockingQueue<CommandRequest> commandQueue,
+      int batchSizeLimit,
+      long batchBytesLimit,
+      long minPublishIntervalMs,
+      double jitterRatio,
+      long batchTimeoutMs
+  ) {
     this.endpoint = endpoint;
     this.commandQueue = commandQueue;
     this.batchSizeLimit = batchSizeLimit;
     this.batchBytesLimit = batchBytesLimit;
     this.minPublishIntervalMs = minPublishIntervalMs;
+    this.jitterRatio = jitterRatio;
     this.batchTimeoutMs = batchTimeoutMs;
     this.clientId = "dynsec-service-" + format("%08x", (long) (Math.random() * 0x100000000L));
     this.responseTopic = RESPONSE_TOPIC;
@@ -154,6 +222,23 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       ExecutorService executor,
       ScheduledExecutorService scheduler
   ) {
+    this(endpoint, mqttClient, commandQueue, batchSizeLimit, batchBytesLimit,
+        minPublishIntervalMs, DEFAULT_JITTER_RATIO, batchTimeoutMs, executor, scheduler);
+  }
+
+  // Visible for testing
+  MosquittoDynamicSecurityService(
+      EndpointConfiguration endpoint,
+      MqttClient mqttClient,
+      BlockingQueue<CommandRequest> commandQueue,
+      int batchSizeLimit,
+      long batchBytesLimit,
+      long minPublishIntervalMs,
+      double jitterRatio,
+      long batchTimeoutMs,
+      ExecutorService executor,
+      ScheduledExecutorService scheduler
+  ) {
     this.endpoint = endpoint;
     this.mqttClient = mqttClient;
     this.clientId = mqttClient.getClientId();
@@ -163,6 +248,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     this.batchSizeLimit = batchSizeLimit;
     this.batchBytesLimit = batchBytesLimit;
     this.minPublishIntervalMs = minPublishIntervalMs;
+    this.jitterRatio = jitterRatio;
     this.batchTimeoutMs = batchTimeoutMs;
     this.executor = executor;
     this.scheduler = scheduler;
@@ -261,13 +347,13 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
     }
     long now = System.currentTimeMillis();
     long timeSinceLastPublish = now - lastPublishTime;
-    long delay = minPublishIntervalMs - timeSinceLastPublish;
+    long delay = (minPublishIntervalMs + calculateJitterMs()) - timeSinceLastPublish;
 
     if (delay <= 0) {
       executor.submit(this::drainAndPublishBatch);
     } else {
       scheduledTask = scheduler.schedule(
-          () -> executor.submit(this::drainAndPublishBatch),
+          (Runnable) () -> executor.submit(this::drainAndPublishBatch),
           delay,
           TimeUnit.MILLISECONDS);
     }
