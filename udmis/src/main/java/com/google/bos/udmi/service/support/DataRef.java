@@ -40,6 +40,10 @@ public abstract class DataRef {
 
   public abstract String get(String key);
 
+  public String getAsSerializable(String key) {
+    return get(key);
+  }
+
   public abstract AutoCloseable lock();
 
   public abstract void put(String key, String value);

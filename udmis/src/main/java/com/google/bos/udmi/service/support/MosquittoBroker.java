@@ -43,11 +43,14 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private MosquittoDynamicSecurityService dynSecService;
   private final ObjectMapper objectMapper = JsonUtil.OBJECT_MAPPER;
 
+  private final Long minPublishIntervalMs;
+  private final Double jitterRatio;
+
   /**
    * Create a new broker connection provider.
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig) {
-    this(container, endpointConfig, false);
+    this(container, endpointConfig, false, null, null);
   }
 
   /**
@@ -55,9 +58,28 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
       boolean disableLogging) {
+    this(container, endpointConfig, disableLogging, null, null);
+  }
+
+  /**
+   * Create a new broker connection provider with logging controls and min publish interval.
+   */
+  public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
+      boolean disableLogging, Long minPublishIntervalMs) {
+    this(container, endpointConfig, disableLogging, minPublishIntervalMs, null);
+  }
+
+  /**
+   * Create a new broker connection provider with logging controls, min publish interval,
+   * and jitter ratio.
+   */
+  public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
+      boolean disableLogging, Long minPublishIntervalMs, Double jitterRatio) {
     this.container = container;
     this.endpointConfig = endpointConfig;
     this.disableLogging = disableLogging;
+    this.minPublishIntervalMs = minPublishIntervalMs;
+    this.jitterRatio = jitterRatio;
     if (!disableLogging) {
       File logFile = new File(getMosquittoLogPath());
       if (!logFile.canRead()) {
@@ -94,9 +116,40 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   private synchronized MosquittoDynamicSecurityService getDynSecService() {
     if (dynSecService == null) {
-      dynSecService = new MosquittoDynamicSecurityService(endpointConfig);
+      long minInterval = minPublishIntervalMs != null
+          ? minPublishIntervalMs
+          : MosquittoDynamicSecurityService.DEFAULT_MIN_PUBLISH_INTERVAL_MS;
+      double jitter = jitterRatio != null
+          ? jitterRatio
+          : MosquittoDynamicSecurityService.DEFAULT_JITTER_RATIO;
+      dynSecService = new MosquittoDynamicSecurityService(endpointConfig, minInterval, jitter);
     }
     return dynSecService;
+  }
+
+  /**
+   * Gets configured minimum publish interval in milliseconds.
+   */
+  public Long getMinPublishIntervalMs() {
+    return minPublishIntervalMs != null
+        ? minPublishIntervalMs
+        : MosquittoDynamicSecurityService.DEFAULT_MIN_PUBLISH_INTERVAL_MS;
+  }
+
+  /**
+   * Gets configured jitter ratio.
+   */
+  public Double getJitterRatio() {
+    return jitterRatio != null
+        ? jitterRatio
+        : MosquittoDynamicSecurityService.DEFAULT_JITTER_RATIO;
+  }
+
+  /**
+   * Visible for testing.
+   */
+  public MosquittoDynamicSecurityService getDynSecServiceForTest() {
+    return getDynSecService();
   }
 
   private CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommandInternal(
