@@ -136,6 +136,7 @@ localhost
 localnet
 logentry
 loglevel
+loopback
 lsb
 LWT
 macos
@@ -204,6 +205,8 @@ Readme
 reconciler
 Reconciler
 repo
+Responder
+responders
 RPC
 RSA
 rtu
