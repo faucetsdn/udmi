@@ -196,9 +196,9 @@ fi
 echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
 
-sleep 10  # Let message capture settle
 echo Cleaning message capture output out/registries/
-rm -rf out/registries/
+mv out/registries out/registries_old 2>/dev/null || true
+rm -rf out/registries_old/
 
 echo Check for failure in running pubber...
 echo $UDMI_ROOT/bin/pubber $pubber_config
