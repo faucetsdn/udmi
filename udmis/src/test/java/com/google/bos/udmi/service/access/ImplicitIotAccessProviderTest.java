@@ -1,6 +1,8 @@
 package com.google.bos.udmi.service.access;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -169,8 +171,7 @@ class ImplicitIotAccessProviderTest {
     ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
     try {
       MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
-      org.junit.jupiter.api.Assertions.assertEquals(
-          500L, customBroker.getMinPublishIntervalMs());
+      assertEquals(500L, customBroker.getMinPublishIntervalMs());
     } finally {
       customProvider.shutdown();
     }
@@ -186,10 +187,8 @@ class ImplicitIotAccessProviderTest {
     ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
     try {
       MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
-      org.junit.jupiter.api.Assertions.assertEquals(
-          500L, customBroker.getMinPublishIntervalMs());
-      org.junit.jupiter.api.Assertions.assertEquals(
-          0.5, customBroker.getJitterRatio());
+      assertEquals(500L, customBroker.getMinPublishIntervalMs());
+      assertEquals(0.5, customBroker.getJitterRatio());
     } finally {
       customProvider.shutdown();
     }
@@ -204,9 +203,8 @@ class ImplicitIotAccessProviderTest {
     provider.modelRegistry(TEST_REGISTRY, null, cloudModel);
 
     Set<String> registries = provider.getRegistries();
-    org.junit.jupiter.api.Assertions.assertTrue(registries.contains(TEST_REGISTRY));
-    org.junit.jupiter.api.Assertions.assertEquals("building-a",
-        provider.fetchRegistryMetadata(TEST_REGISTRY, "location"));
+    assertTrue(registries.contains(TEST_REGISTRY));
+    assertEquals("building-a", provider.fetchRegistryMetadata(TEST_REGISTRY, "location"));
   }
 
   @Test
@@ -218,7 +216,7 @@ class ImplicitIotAccessProviderTest {
     provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
 
     Set<String> registries = provider.getRegistries();
-    org.junit.jupiter.api.Assertions.assertTrue(registries.contains(TEST_REGISTRY));
+    assertTrue(registries.contains(TEST_REGISTRY));
   }
 
 
