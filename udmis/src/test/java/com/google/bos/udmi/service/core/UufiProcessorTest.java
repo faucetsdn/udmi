@@ -245,6 +245,45 @@ public class UufiProcessorTest extends ProcessorTestBase {
   }
 
   /**
+   * Test that inbound UUFI-wrapped messages with conflicting topic coordinates vs inner envelope
+   * are rejected according to strict envelope header duplication requirements.
+   */
+  @Test
+  public void inboundRoutingCoordinateMismatchTest() {
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.CONFIG;
+    innerEnvelope.subFolder = SubFolder.SYSTEM;
+    innerEnvelope.deviceId = "dev-1";
+    innerEnvelope.deviceRegistryId = "reg-1";
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    uufiWrapper.put("payload", Map.of(
+        "version", "1",
+        "timestamp", "2026-07-17T12:00:00Z"
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceId = "dev-1";
+    transportEnvelope.deviceRegistryId = "reg-1";
+    transportEnvelope.subType = SubType.EVENTS; // Mismatch with inner envelope subType
+    transportEnvelope.subFolder = SubFolder.SYSTEM;
+
+    List<Envelope> capturedEnvelopes = new ArrayList<>();
+    getReverseDispatcher().registerHandler(PointsetEvents.class, (message) -> {
+      Envelope env = getReverseDispatcher().getContinuation(message).getEnvelope();
+      capturedEnvelopes.add(env);
+    });
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    // Verify that the message with mismatched coordinates was rejected (not published)
+    assertEquals(0, capturedEnvelopes.size(), "captured envelopes count");
+  }
+
+  /**
    * Test that outbound monolithic state messages (having null or UPDATE subfolder)
    * are correctly sharded into individual sub-blocks and published on compliant paths.
    */
