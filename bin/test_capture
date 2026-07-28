@@ -5,6 +5,7 @@
 
 UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$UDMI_ROOT"
+source "$UDMI_ROOT/etc/shell_common.sh"
 
 echo "=== Running pull_files | pull_save db pipeline..."
 bin/pull_files tests/traces/simple | bin/pull_save db
