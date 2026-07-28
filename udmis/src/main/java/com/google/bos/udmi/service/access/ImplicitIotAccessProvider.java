@@ -89,6 +89,10 @@ import udmi.schema.IotAccess.IotProvider;
  * mosquitto log file.</li>
  * <li><code>broker_auth</code>: If set to false, disables all requests to
  * MosquittoDynamicSecurityService (defaults to true).</li>
+ * <li><code>mosquitto_dynsec_min_interval_ms</code>: Minimum interval (in ms)
+ * between publishing dynamic security command batches.</li>
+ * <li><code>mosquitto_dynsec_jitter_ratio</code>: Jitter ratio applied to the minimum
+ * interval between publishing dynamic security command batches.</li>
  * </ul>
  */
 public class ImplicitIotAccessProvider extends IotAccessBase {
@@ -96,6 +100,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String CONFIG_VER_KEY = "config_ver";
   private static final String DISABLE_LOGGING_KEY = "disable_logging";
   private static final String BROKER_AUTH_KEY = "broker_auth";
+  private static final String MOSQUITTO_DYNSEC_MIN_INTERVAL_MS_KEY =
+      "mosquitto_dynsec_min_interval_ms";
+  private static final String MOSQUITTO_DYNSEC_JITTER_RATIO_KEY =
+      "mosquitto_dynsec_jitter_ratio";
+  private static final String MOSQUITTO_DYNSEC_JITTER_KEY =
+      "mosquitto_dynsec_jitter";
   private static final String USE_PASSWORD_KEY = "use_password";
   private static final String BROKER_USER_KEY = "broker_user";
   private static final String BROKER_PASS_KEY = "broker_pass";
@@ -183,9 +193,20 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
 
     boolean disableLogging = TRUE_OPTION.equals(options.get(DISABLE_LOGGING_KEY));
-    broker = new MosquittoBroker(this, endpointConfig, disableLogging, brokerAuth);
+    Long minPublishIntervalMs = ifNotNullGet(
+        options.get(MOSQUITTO_DYNSEC_MIN_INTERVAL_MS_KEY), Long::parseLong);
+    String jitterStr = ofNullable(options.get(MOSQUITTO_DYNSEC_JITTER_RATIO_KEY))
+        .orElseGet(() -> options.get(MOSQUITTO_DYNSEC_JITTER_KEY));
+    Double jitterRatio = ifNotNullGet(jitterStr, Double::parseDouble);
+    broker = new MosquittoBroker(
+        this, endpointConfig, disableLogging, brokerAuth, minPublishIntervalMs, jitterRatio);
 
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
+  }
+
+  // Visible for testing
+  ConnectionBroker getBroker() {
+    return broker;
   }
 
   /**

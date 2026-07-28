@@ -18,6 +18,11 @@ fi
 config_file=$1
 shift
 
+serial_no=$(jq -r .serialNo $config_file)
+if [[ $serial_no == "null" || -z $serial_no ]]; then
+    serial_no="unknown"
+fi
+
 # For the first run, don't persist the store.
 orig_persist=`jq -r .options.noPersist $config_file`
 echo Original noPersist is $orig_persist
@@ -29,6 +34,7 @@ result=192  # Exit code used to indicate intentional system restart.
 
 while [[ $result -eq 192 ]]; do
     cmd="java -Dorg.slf4j.simpleLogger.showThreadName=false \
+         -Dpubber.serialNo=$serial_no \
          --add-opens=java.base/java.net=ALL-UNNAMED \
          -jar $ROOT_DIR/pubber/build/libs/pubber-1.0-SNAPSHOT-all.jar \
          $config_file"

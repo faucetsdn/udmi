@@ -1,6 +1,6 @@
 {
   "blobs" : {
-    "pubber_module" : {
+    "system" : {
       "generation" : "TIMESTAMP",
       "phase" : "final",
       "sha256" : "@@@blob data hash###80858a2561ad177f6563c3f87b4943ca296c9ba4e6da14fe7400638568d8ccd5",

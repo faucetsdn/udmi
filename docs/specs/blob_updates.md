@@ -89,9 +89,9 @@ Granular observability relies on consistent telemetry. When tracking the lifecyc
   "timestamp": "2026-05-04T13:00:00.000Z",
   "blobset": {
     "blobs": {
-      "pubber_module": {
+      "system": {
         "phase": "final",
-        "url": "https://storage.googleapis.com/udmi-device-blobs/pubber_module_v2.bin",
+        "url": "https://storage.googleapis.com/udmi-device-blobs/system_v2.bin",
         "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
         "generation": "2026-05-04T12:30:00.000Z"
       }
@@ -107,7 +107,7 @@ Granular observability relies on consistent telemetry. When tracking the lifecyc
   "timestamp": "2026-05-04T13:00:15.000Z",
   "blobset": {
     "blobs": {
-      "pubber_module": {
+      "system": {
         "phase": "final",
         "generation": "2026-05-04T12:30:00.000Z"
       }
@@ -123,7 +123,7 @@ Granular observability relies on consistent telemetry. When tracking the lifecyc
   "timestamp": "2026-05-04T13:00:08.000Z",
   "blobset": {
     "blobs": {
-      "pubber_module": {
+      "system": {
         "phase": "final",
         "generation": "2026-05-04T12:30:00.000Z",
         "status": {

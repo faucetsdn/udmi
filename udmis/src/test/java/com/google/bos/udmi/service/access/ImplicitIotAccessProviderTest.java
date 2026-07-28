@@ -15,6 +15,7 @@ import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.bos.udmi.service.support.ConnectionBroker;
 import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.IotDataProvider;
+import com.google.bos.udmi.service.support.MosquittoBroker;
 import com.google.bos.udmi.service.support.QueueFullException;
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -218,6 +219,41 @@ class ImplicitIotAccessProviderTest {
     provider.modelDevice(TEST_REGISTRY, "gateway-1", deleteGatewayModel, null);
 
     verifyNoInteractions(authDisabledBroker);
+  }
+
+  @Test
+  void testMosquittoDynsecMinIntervalMsOption() {
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.options =
+        "enable, use_password=" + TEST_PASSWORD
+            + ", disable_logging=true, mosquitto_dynsec_min_interval_ms=500";
+    ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
+    try {
+      MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
+      org.junit.jupiter.api.Assertions.assertEquals(
+          500L, customBroker.getMinPublishIntervalMs());
+    } finally {
+      customProvider.shutdown();
+    }
+  }
+
+  @Test
+  void testMosquittoDynsecJitterRatioOption() {
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.options =
+        "enable, use_password=" + TEST_PASSWORD
+            + ", disable_logging=true, mosquitto_dynsec_min_interval_ms=500"
+            + ", mosquitto_dynsec_jitter_ratio=0.5";
+    ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
+    try {
+      MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
+      org.junit.jupiter.api.Assertions.assertEquals(
+          500L, customBroker.getMinPublishIntervalMs());
+      org.junit.jupiter.api.Assertions.assertEquals(
+          0.5, customBroker.getJitterRatio());
+    } finally {
+      customProvider.shutdown();
+    }
   }
 
   class FakeDataRef extends DataRef {
