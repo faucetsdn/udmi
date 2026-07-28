@@ -56,13 +56,13 @@ graph TD
 
 ---
 
-## Phase 1: Containerization & Legacy Co-existence MVP
+## ~~Phase 1: Containerization & Legacy Co-existence MVP [Completed]~~
 
 The goal of Phase 1 is to package the legacy discovery node into a containerized environment alongside the new Spotter Agent, ensuring functional parity with the existing bare-metal deployment without rewriting active discovery logic.
 
-### Sub-phase 1.1: Dual-Process Container Architecture
+### ~~Sub-phase 1.1: Dual-Process Container Architecture [Completed]~~
 
-#### Task 1.1.1: Container Entrypoint & Process Supervision [Completed]
+#### ~~Task 1.1.1: Container Entrypoint & Process Supervision [Completed]~~
 * **Target Location**: `edge/spotter/container/`
 * **Behavioral Specification**:
   * Define a container configuration (Dockerfile/Podman) that installs dependencies for both the legacy discovery node (e.g., `nmap`) and the Python Spotter Agent.
@@ -76,7 +76,7 @@ The goal of Phase 1 is to package the legacy discovery node into a containerized
   * [test_supervisor](bin/test_supervisor) - Bash-based verification of graceful shutdown under signals, and exit status code validation (101/102) when child processes crash.
   * [test_supervisor_integration](bin/test_supervisor_integration) - Python unittest verification of container execution, volume mounts, and child process lifecycle inside the built docker container.
 
-#### Task 1.1.2: Shared Credentials & Connection Lifecycle [Completed]
+#### ~~Task 1.1.2: Shared Credentials & Connection Lifecycle [Completed]~~
 * **Behavioral Specification**:
   * Configure the container to share on-prem credential paths (mTLS certificates/keys) so both the legacy discovery node and the Spotter Agent can authenticate with ClearBlade/Mosquitto.
   * Ensure the Spotter Agent initializes its own UDMI connection using clientlib abstractions (`CredentialManager`), establishing the management channel for new features (OTA, diagnostics).
@@ -84,7 +84,7 @@ The goal of Phase 1 is to package the legacy discovery node into a containerized
   * [agent.py](src/agent.py) - Spotter Core Agent connects using clientlib factory and maps shared configuration credentials (`key_file`, `cert_file`, `ca_file`). Supports `udmi_local` basic authentication by automatically deriving password from the sha256 hash of on-prem private keys.
   * [test_agent.py](tests/test_agent.py) - Checks correct construction of `EndpointConfiguration` for different authentication types and client ID configurations.
 
-#### Task 1.1.3: Port & Resource Contention Audit [Completed]
+#### ~~Task 1.1.3: Port & Resource Contention Audit [Completed]~~
 * **Behavioral Specification**:
   * Identify and document all network ports used by both processes (e.g., legacy node binding to UDP 47808 for BACnet).
   * Configure the Spotter Agent to run without binding to any static inbound ports, avoiding conflicts with the legacy node.
@@ -97,9 +97,9 @@ The goal of Phase 1 is to package the legacy discovery node into a containerized
 
 ---
 
-### Sub-phase 1.2: Legacy Discovery Integration
+### ~~Sub-phase 1.2: Legacy Discovery Integration [Completed]~~
 
-#### Task 1.2.1: Legacy Configuration Pass-Through [Completed]
+#### ~~Task 1.2.1: Legacy Configuration Pass-Through [Completed]~~
 * **Behavioral Specification**:
   * The legacy discovery node continues to receive its `discovery` configurations directly from the MQTT broker.
   * Spotter Agent ignores legacy discovery configuration blocks, avoiding conflicts.
@@ -142,9 +142,9 @@ To ensure robustness, resource safety, and signal reliability, the following tes
 ---
 
 
-### Sub-phase 1.3: Co-existence Parity Verification
+### ~~Sub-phase 1.3: Co-existence Parity Verification [Completed]~~
 
-#### Task 1.3.1: Differential Parity Testbed [Completed]
+#### ~~Task 1.3.1: Differential Parity Testbed [Completed]~~
 * **Target Location**: `edge/spotter/bin`
 * **Behavioral Specification**:
   * Deploy a virtual test network with simulated BACnet devices.
@@ -161,9 +161,9 @@ To ensure robustness, resource safety, and signal reliability, the following tes
 
 Phase 2 focuses on delivering the high-impact diagnostic features: remote triggering via standard UDMI blobsets, RAM-safe streaming, and robust transport modes for restricted networks.
 
-### Sub-phase 2.1: Declarative Diagnostic Job Trigger (via UDMI Blobset)
+### ~~Sub-phase 2.1: Declarative Diagnostic Job Trigger (via UDMI Blobset) [Completed]~~
 
-#### Task 2.1.1: UDMI Blobset Job Manager (`BlobsetManager`) [Completed]
+#### ~~Task 2.1.1: UDMI Blobset Job Manager (`BlobsetManager`) [Completed]~~
 * **Target Location**: `udmi.core.managers.blobset_manager` (Spotter Agent)
 * **Behavioral Specification**:
   * Monitor configuration updates in the standard `blobset.blobs` block.
@@ -176,7 +176,7 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * [agent.py](src/agent.py) - Registers a custom pcap_capture blob handler, validates checksums, and decodes inline Base64 diagnostic payloads.
   * [system_manager.py](../../clientlib/python/src/udmi/core/managers/system_manager.py) - Incorporates support for standard `blobset.blobs` configuration schemas, tracks generation versions, and manages asynchronous worker thread lifecycles.
 
-#### Task 2.1.2: PCAP Driver Execution [Completed]
+#### ~~Task 2.1.2: PCAP Driver Execution [Completed]~~
 * **Target Location**: `udmi.core.diagnostics.pcap`
 * **Behavioral Specification**:
   * Parse the downloaded JSON diagnostic profile, which contains:
@@ -192,9 +192,9 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 
 ---
 
-### Sub-phase 2.2: Ephemeral PCAP & Streaming MQTT Transport Engine
+### ~~Sub-phase 2.2: Ephemeral PCAP & Streaming MQTT Transport Engine [Completed]~~
 
-#### Task 2.2.1: Streaming MQTT Protocol Driver [Completed]
+#### ~~Task 2.2.1: Streaming MQTT Protocol Driver [Completed]~~
 * **Target Location**: `udmi.core.blob.uploader` & `udmi.core.diagnostics.pcap`
 * **Behavioral Specification**:
   * Adopt **Streaming MQTT Protocol** as the primary first-class transport mechanism for packet export, avoiding edge GCS credential distribution and secret rotation hurdles.
@@ -207,9 +207,9 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 
 ---
 
-### Sub-phase 2.3: Cloud Ingestion & Edge Secret Decoupling
+### ~~Sub-phase 2.3: Cloud Ingestion & Edge Secret Decoupling [Completed]~~
 
-#### Task 2.3.1: Edge Credential Decoupling & Optional Direct HTTP Upload [Completed]
+#### ~~Task 2.3.1: Edge Credential Decoupling & Optional Direct HTTP Upload [Completed]~~
 * **Behavioral Specification**:
   * **Edge Authentication Decoupling**: Edge nodes rely solely on standard mTLS broker certificates. No GCP Service Account keys or OAuth tokens are required or distributed to the edge.
   * **Future Mosquitto Migration Compatibility**: Dedicated cloud bridge workers consume streaming MQTT topics directly from Mosquitto and handle GCS reassembly and object storage writes in the cloud.
@@ -218,15 +218,15 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * [uploader.py](src/uploader.py) - Maintains optional chunked HTTP uploader supporting pre-signed URLs.
   * [agent.py](src/agent.py) - Defaults to zero-secret Streaming MQTT Protocol for all standard diagnostic jobs.
 
-#### Sub-phase 2.4: Startup & Dependency Management [Completed]
+#### ~~Sub-phase 2.4: Startup & Dependency Management [Completed]~~
 
-#### Task 2.4.1: Standalone Dependency Declarations [Completed]
+#### ~~Task 2.4.1: Standalone Dependency Declarations [Completed]~~
 * **Behavioral Specification**:
   * Provide a dedicated `requirements.txt` listing all Spotter Python dependencies to support local developer environment builds without container rebuild requirements.
 * **Implementation & Verification**:
   * [requirements.txt](requirements.txt) - Declares explicit python dependency versions (`requests>=2.32.5`).
 
-#### Task 2.4.2: Unified Startup Orchestrator (`spotter`) [Completed]
+#### ~~Task 2.4.2: Unified Startup Orchestrator (`spotter`) [Completed]~~
 * **Behavioral Specification**:
   * Provide a startup script (`spotter`) that automatically prepares the environment and launches Spotter either in containerized mode or standalone local mode.
   * In local mode, it must build distinct virtual environments for both the legacy discovery node and the Spotter agent, configure PYTHONPATH, and start both processes under the lightweight supervisor.
@@ -234,6 +234,34 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * [spotter](../../bin/spotter) - Integrated into the root `bin/` directory. Added support for positional arguments (mimicking `bin/pubber`) allowing running against any device in any site model. Refactored into a modular CLI entry point sourcing `shell_common.sh`, extracting site model config generation into Python ([config_generator.py](src/config_generator.py)), virtualenv bootstrap into ([setup_env](bin/setup_env)), and process cleanup into ([stop_spotter](bin/stop_spotter)). Added unit test suite ([test_config_generator.py](tests/test_config_generator.py)).
 
 ---
+
+
+### Sub-phase 2.5: Test Suite Realignment & Unit Testing Coverage
+
+#### Task 2.5.1: Unit Test Suite Expansion for PCAP Driver (`tests/test_pcap.py`)
+* **Target Location**: `edge/spotter/tests/test_pcap.py`
+* **Behavioral Specification**:
+  * Implement pure unit test suite for [pcap.py](src/pcap.py) using `unittest.mock` to mock `subprocess.Popen`.
+  * Validate command-line parameter construction and BPF filter string escaping.
+  * Validate duration limit timeout cutoffs and byte limit stopping logic.
+  * Validate graceful subprocess termination (`SIGTERM` -> `SIGKILL` fallback) and error/stderr log capturing.
+  * Ensure tests run fast (<2 seconds) without requiring Docker, `tcpdump` binaries, or real network interfaces.
+
+#### Task 2.5.2: Unit Test Suite Expansion for Agent Blob Handler (`tests/test_agent.py`)
+* **Target Location**: `edge/spotter/tests/test_agent.py`
+* **Behavioral Specification**:
+  * Expand [test_agent.py](tests/test_agent.py) to test `process_pcap_blob()` in isolation.
+  * Validate 128KB chunking calculations, base64 payload encoding, and `PcapChunkEvent` model data mapping.
+  * Test negative paths and edge cases: malformed/missing JSON payload profiles, invalid BPF filter strings, zero-byte packet capture output, and permission denied errors.
+
+#### Task 2.5.3: Unified Test Orchestrator & Execution Hygiene (`bin/run_spotter_tests`)
+* **Target Location**: `edge/spotter/bin/run_spotter_tests`
+* **Behavioral Specification**:
+  * Provide a unified test runner script `bin/run_spotter_tests` that automatically sets up `PYTHONPATH`, invokes the workspace `venv` Python interpreter, and runs unit tests (`edge/spotter/tests`), static analysis, and local integration tests.
+  * Update [GEMINI.md](GEMINI.md) documentation to recommend `bin/run_spotter_tests` for consistent execution across developer environments and CI workflows.
+
+---
+
 
 ## Phase 3: Autonomous OTA Engine & Test Cadre
 
@@ -355,13 +383,16 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 
 ## Definition of Done (DoD) Criteria
 
-1. **Dual-Process Parity**: Parity verified against bare-metal `discovery_node` using the `diff_validator` suite.
-2. **Declarative Triggering**: PCAP capture trigger and parameter mapping verified via `system.diagnostics.pcap` config block.
-3. **RAM-Safe Streaming MQTT Transport**: Ephemeral packet capture verified to stream sequentially over `events/pcap` using small frame chunks without local disk storage or edge GCS service account credentials.
-4. **Edge Secret Decoupling & Cloud Reassembly**: Zero cloud service account secrets required on edge devices; verified cloud-side ingestion bridge compatibility with Mosquitto architecture.
-5. **OTA Verification**: Safe OTA update flow verified: successful sandbox self-testing promotes the package, while simulated syntax/dependency errors trigger immediate rollback before promotion.
-6. **Standard Compliance**: Zero-code plan compliance and 3-stage validation gate completion (Unit, Schema, Local Integration) as per `GEMINI.md`.
-7. **Resource Contention Immunity**: Simultaneous legacy discovery sweeps and high-throughput diagnostic PCAP sessions verified to operate without OOM kills, FD exhaustion, or delayed MQTT telemetry heartbeats both in local synthetic testbeds (`bin/test_resource_contention`) and on deployed production target nodes.
-8. **Network Fault Resiliency**: Automatic fallback to chunked MQTT telemetry and backoff retry logic verified under simulated proxy failures and socket interruptions (`bin/test_fault_injection`).
-9. **Production Canary Verification**: Safe execution of non-destructive production micro-audit probes (`self_test.py` and `resource_audit`) confirmed on deployed instances.
-10. **Observability & Metrics Verification**: End-to-end telemetry metric export (Prometheus `/metrics` and native UDMI `events/metrics`) verified alongside W3C trace context propagation across diagnostic PCAP streaming sessions.
+- [x] ~~**1. Dual-Process Parity**: Parity verified against bare-metal `discovery_node` using the `test_parity` suite.~~
+- [x] ~~**2. Declarative Triggering**: PCAP capture trigger and parameter mapping verified via `blobset.blobs.pcap_capture` config block.~~
+- [x] ~~**3. RAM-Safe Streaming MQTT Transport**: Ephemeral packet capture verified to stream sequentially over `events/pcap` using small frame chunks without local disk storage or edge GCS service account credentials.~~
+- [x] ~~**4. Edge Secret Decoupling & Cloud Reassembly**: Zero cloud service account secrets required on edge devices; verified cloud-side ingestion bridge compatibility with Mosquitto architecture.~~
+- [ ] **5. OTA Verification**: Safe OTA update flow verified: successful sandbox self-testing promotes the package, while simulated syntax/dependency errors trigger immediate rollback before promotion.
+- [x] ~~**6. Standard Compliance**: Zero-code plan compliance and 3-stage validation gate completion (Unit, Schema, Local Integration) as per `GEMINI.md`.~~
+- [ ] **7. Resource Contention Immunity**: Simultaneous legacy discovery sweeps and high-throughput diagnostic PCAP sessions verified to operate without OOM kills, FD exhaustion, or delayed MQTT telemetry heartbeats both in local synthetic testbeds (`bin/test_resource_contention`) and on deployed production target nodes.
+- [ ] **8. Network Fault Resiliency**: Automatic fallback to chunked MQTT telemetry and backoff retry logic verified under simulated proxy failures and socket interruptions (`bin/test_fault_injection`).
+- [ ] **9. Production Canary Verification**: Safe execution of non-destructive production micro-audit probes (`self_test.py` and `resource_audit`) confirmed on deployed instances.
+- [ ] **10. Observability & Metrics Verification**: End-to-end telemetry metric export (Prometheus `/metrics` and native UDMI `events/metrics`) verified alongside W3C trace context propagation across diagnostic PCAP streaming sessions.
+- [ ] **11. Unit Test & Execution Hygiene**: High unit test coverage for pure logic modules (`pcap.py` subprocess management, `agent.py` chunking, payload validation) runnable via `bin/run_spotter_tests` without environment configuration errors.
+
+
