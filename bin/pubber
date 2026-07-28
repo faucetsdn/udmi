@@ -107,7 +107,7 @@ elif [[ $project_id =~ ^// ]]; then
     no_prefix=${project_id#//}
     iot_provider=${no_prefix%%/*}
     no_provider=${no_prefix#*/}
-    project_target=${no_provider%/*}
+    project_target=${no_provider%%/*}
     udmi_namespace=${no_provider#$project_target}
     [[ -n $udmi_namespace ]] && udmi_prefix=${udmi_namespace#/}~
 elif [[ $project_id =~ @ ]]; then
@@ -120,6 +120,7 @@ elif [[ -z ${iot_provider:-} ]]; then
 fi
 
 if [[ $project_target == *:* ]]; then
+    [[ -n $broker_hostname ]] || broker_hostname=$project_target
     project_target=${project_target%:*}
 fi
 if [[ $broker_hostname == *:* ]]; then

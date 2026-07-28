@@ -3,6 +3,9 @@
 UDMI_ROOT=$(dirname $0)/..
 # cd $UDMI_ROOT
 
+export MQTT_HOST=${MQTT_HOST:-localhost}
+export MQTT_PORT=${MQTT_PORT:-8883}
+
 source $UDMI_ROOT/etc/shell_common.sh
 
 if [[ $# != 0 ]]; then
@@ -24,7 +27,7 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 CLNT_USER=kiwi
 CLNT_PASS=possum
-CLNT_ID=$registry_id/client
+CLNT_ID=/uufi/$registry_id/client
 
 SUDO=sudo
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
@@ -33,7 +36,7 @@ fi
 $SUDO chmod a+r $CERT_DIR/rsa_private.* || true
 $UDMI_ROOT/bin/keygen CERT $CLIENT_DIR
 
-CLIENT_OPTS="-h ${MQTT_HOST:-localhost} -p ${MQTT_PORT:-8883} -i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
+CLIENT_OPTS="-h $MQTT_HOST -p $MQTT_PORT -i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"
 
 $MOSQUITTO_CTRL deleteClient $CLNT_USER
 $MOSQUITTO_CTRL createClient $CLNT_USER -p $CLNT_PASS -c $CLNT_ID
@@ -46,7 +49,7 @@ topic=/r/mqtt/d/test
 
 
 echo Subscribing to all topics in the background...
-$MOSQUITTO_SUB $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' > out/mosquitto.sub &
+$MOSQUITTO_SUB $SERVER_OPTS -F "%t %p" -t '/r/+/d/+/#' -t '/uufi/#' > out/mosquitto.sub &
 sub_pid=$!
 
 sleep 1
@@ -85,7 +88,7 @@ cat <<EOF > out/pubber_config_test_mosquitto.json
       "hostname": "127.0.0.1",
       "topic_prefix": "/r/$registry_id/d/$device_id",
       "config_sync_sec": -1,
-      "port": ${MQTT_PORT:-8883},
+      "port": $MQTT_PORT,
       "auth_provider": {
         "basic": {
           "username": "$dev_id",
@@ -134,6 +137,34 @@ if [[ -z "$operational_line" ]]; then
     fail "FATAL: Timed out waiting for operational state message."
 fi
 
+echo "Testing site_trigger utility..."
+# Back up metadata.json
+cp sites/udmi_site_model/devices/AHU-1/metadata.json sites/udmi_site_model/devices/AHU-1/metadata.json.bak
+
+# Set up cleanup trap for metadata.json
+trap 'mv sites/udmi_site_model/devices/AHU-1/metadata.json.bak sites/udmi_site_model/devices/AHU-1/metadata.json 2>/dev/null || true' EXIT
+
+# Run site_trigger
+bin/site_trigger update sites/udmi_site_model AHU-1 system v2 "mqtts://${CLNT_USER}:${CLNT_PASS}@${MQTT_HOST}:${MQTT_PORT}"
+
+# Verify file was updated on disk
+updated_version=$(jq -r '.system.software.system' sites/udmi_site_model/devices/AHU-1/metadata.json)
+if [[ "$updated_version" != "v2" ]]; then
+    fail "site_trigger failed to update metadata.json on disk"
+fi
+
+# Wait for message to be received by the subscriber
+sleep 2
+
+# Verify message was published and received
+fgrep site_trigger out/mosquitto.sub || fail "did not find expected site_trigger message in out/mosquitto.sub"
+
+# Restore metadata.json and clear trap
+mv sites/udmi_site_model/devices/AHU-1/metadata.json.bak sites/udmi_site_model/devices/AHU-1/metadata.json
+trap - EXIT
+
+echo "site_trigger test successful!"
+
 echo Cleanup subscribers and clients...
 echo "DEBUG: Listing all mosquitto_sub processes before target kill:"
 ps aux | grep mosquitto_sub | grep -v grep || echo "No active mosquitto_sub processes found."
@@ -163,5 +194,5 @@ expected_topic=/r/$registry_id/d/$device_id/state
 
 [[ $received_no != $serial_no ]] && fail Mismatched/missing serial no: $received_no != $serial_no
 
-echo export MQTT_TEST_BROKER=tcp://localhost:${MQTT_PORT:-8883}
+echo export MQTT_TEST_BROKER=tcp://${MQTT_HOST}:${MQTT_PORT}
 echo Done with mosquitto pubber check.
