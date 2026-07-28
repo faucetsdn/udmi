@@ -32,7 +32,17 @@ REPLY_FILE=$(mktemp)
 mosquitto_sub $MQTT_ARGS -t "/uufi/c/config/udmi" -F "%p" | while read -r line; do
     echo "$line" > "$REPLY_FILE"
     REPLY_TXN=$(jq -r .payload.reply.transaction_id < "$REPLY_FILE" 2>/dev/null)
+    REPLY_PRINCIPAL=$(jq -r .principal < "$REPLY_FILE" 2>/dev/null)
+    REPLY_SOURCE=$(jq -r .source < "$REPLY_FILE" 2>/dev/null)
     if [[ "$REPLY_TXN" == "$TXN_ID" ]]; then
+        if [[ "$REPLY_PRINCIPAL" != "$CLIENT_ID" ]]; then
+            echo "ERROR: Expected principal $CLIENT_ID in handshake reply but got $REPLY_PRINCIPAL" >&2
+            exit 1
+        fi
+        if [[ "$REPLY_SOURCE" != "udmis" ]]; then
+            echo "ERROR: Expected source udmis in handshake reply but got $REPLY_SOURCE" >&2
+            exit 1
+        fi
         kill -USR1 $$ 2>/dev/null || true
         exit 0
     fi
@@ -74,8 +84,13 @@ mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_I
     echo "$line" > "$STATE_REPLY_FILE"
     # We look for the updated point value we're about to send in config
     VALUE_STATE=$(jq -r .payload.points.filter_differential_pressure_setpoint.value_state < "$STATE_REPLY_FILE" 2>/dev/null)
+    STATE_SOURCE=$(jq -r .source < "$STATE_REPLY_FILE" 2>/dev/null)
     if [[ "$VALUE_STATE" == "applied" ]]; then
-        echo "Found expected value_state applied!"
+        if [[ "$STATE_SOURCE" != "udmis" ]]; then
+            echo "ERROR: Expected source udmis in state reply but got $STATE_SOURCE" >&2
+            exit 1
+        fi
+        echo "Found expected value_state applied with source udmis!"
         kill -USR2 $$ 2>/dev/null || true
         exit 0
     fi
@@ -117,5 +132,69 @@ fi
 kill $SUB_STATE_PID 2>/dev/null || true
 echo "Comprehensive Exchange SUCCESS: Received matching state update"
 
+# 3. System Model Update Test
+echo "Starting System Model Update test..."
+METADATA_FILE="$SITE_MODEL/devices/$DUT_ID/metadata.json"
+cp "$METADATA_FILE" "${METADATA_FILE}.bak"
+restore_metadata() {
+    mv "${METADATA_FILE}.bak" "$METADATA_FILE" 2>/dev/null || true
+}
+trap "restore_metadata; kill $SUB_PID $SUB_STATE_PID 2>/dev/null || true" EXIT
+
+MODEL_REPLY_FILE=$(mktemp)
+echo "Subscribing to /uufi/r/$REGISTRY_ID/d/$DUT_ID/c/model/system..."
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_model_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/model/system" -F "%p" | while read -r line; do
+    echo "Received UUFI System Model update: $line"
+    echo "$line" > "$MODEL_REPLY_FILE"
+    VERSION_VAL=$(jq -r .payload.software.system_firmware < "$MODEL_REPLY_FILE" 2>/dev/null)
+    MODEL_SOURCE=$(jq -r .source < "$MODEL_REPLY_FILE" 2>/dev/null)
+    if [[ "$VERSION_VAL" == "v3" ]]; then
+        if [[ "$MODEL_SOURCE" != "site_trigger" ]]; then
+            echo "ERROR: Expected source site_trigger in model update but got $MODEL_SOURCE" >&2
+            exit 1
+        fi
+        echo "Found expected system_firmware version v3 in System Model with source site_trigger!"
+        kill -USR1 $$ 2>/dev/null || true
+        exit 0
+    fi
+done &
+SUB_MODEL_PID=$!
+
+GOT_MODEL=0
+trap "GOT_STATE=1" USR2
+trap "GOT_MODEL=1" USR1
+
+sleep 2
+
+echo "Triggering System Model update using site_trigger..."
+$UDMI_ROOT/bin/site_trigger update "$SITE_MODEL" "$DUT_ID" "system_firmware" "v3" "mqtt://$USER:$PASS@$HOST:$PORT"
+
+echo "Waiting for System Model Update on the bus..."
+TIMEOUT=30
+while [ $GOT_MODEL -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
+    echo "Waiting for system model update... ($TIMEOUT)"
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+done
+
+if [ $GOT_MODEL -eq 0 ]; then
+    echo "Timed out waiting for System Model Update"
+    if [[ -f "$MODEL_REPLY_FILE" && -s "$MODEL_REPLY_FILE" ]]; then
+        echo "=== DIAGNOSTIC: Last received system model update ==="
+        cat "$MODEL_REPLY_FILE"
+        echo "=============================================="
+    else
+        echo "DIAGNOSTIC: No system model updates were received at all."
+    fi
+    kill $SUB_MODEL_PID 2>/dev/null || true
+    restore_metadata
+    exit 1
+fi
+
+kill $SUB_MODEL_PID 2>/dev/null || true
+restore_metadata
+trap - EXIT
+echo "System Model Update SUCCESS: Received matching model update message on bus"
+
 echo "UUFI Comprehensive Integration Test PASSED"
-rm -f "$REPLY_FILE" "$STATE_REPLY_FILE"
+rm -f "$REPLY_FILE" "$STATE_REPLY_FILE" "$MODEL_REPLY_FILE"

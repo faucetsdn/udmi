@@ -46,6 +46,7 @@ To prevent regressions in this reflectively-coupled system, verification MUST pr
 #### Stage 3: Functional Pipeline Integrity (Local Integration)
 - **Goal**: Verify the end-to-end message pipeline (Validator -> Sequencer -> UDMIS) handles both standard and "unknown" cases without reflective failures.
 - **Mandate**: Run the comprehensive local integration suite. This stage is non-negotiable for any change touching `common`, `gencode`, or message-processing logic.
+- **Startup Timeout Hard Stop**: `bin/start_local` must be ready (`UUFI Service is READY`) within **90 seconds**. If local services are not ready after 90 seconds, treat it as an unrecoverable core system failure — stop execution immediately and report the failure. Do NOT attempt to diagnose, debug, or repair the environment.
 - **Commands**:
   1. `bin/setup_base` and `bin/clone_model` (Privileged environments only: install dependencies and set up local environment. For unprivileged environments, skip `bin/setup_base` as it requires sudo; assume setup has already been done.)
   2. `bin/start_local sites/udmi_site_model $PROJECT_SPEC` (Start local services)

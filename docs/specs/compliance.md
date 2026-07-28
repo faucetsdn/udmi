@@ -12,6 +12,13 @@ intended function of the device.
 * [_gateway_ proxy](gateway.md), used to proxy data for non-MQTT devices.
 * [_system_ basics](../messages/system.md), used for general monitoring and logging.
 
+## System Interfaces
+
+This document details the edge-facing **[Devices (UDMI proper)](compliance.md)** interface, which represents one of three core system interfaces into the UDMIS ecosystem:
+*   **[Devices (UDMI proper)](compliance.md):** Edge-side device-to-system interface used by physical or simulated on-premise hardware to report telemetry streams (`events`) and dynamically receive or acknowledge operational `config`.
+*   **[Internal Tools (Reflector)](tech_stack.md):** Administrative database-to-system interface used by backend registration and synchronization tooling (such as `registrar`) to manage site models, provision cryptographic keys, and reconcile device records.
+*   **[Applications (UUFI)](uufi.md):** App-to-system messaging interface used by external applications, dashboards, and operators to query system state, update model specifications, and command devices.
+
 The [Tech Primer](../tech_primer.md) gives a primer for smart-ready building assembly requirements
 
 ## Feature Buckets

@@ -96,7 +96,7 @@ TIMESTAMP WARNING device.log: Updating persistent store:
   "restart_count" : 1
 }
 TIMESTAMP INFO device.log: Starting pubber AHU-1, serial sequencer-10987, mac null, gateway null, options noPersist
-TIMESTAMP INFO device.log: Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/pubber_module_repo_sequencer-10987
+TIMESTAMP INFO device.log: Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/system_repo_sequencer-10987
 TIMESTAMP INFO device.log: Isolated JGit repo initialized successfully.
 TIMESTAMP WARNING device.log: Starting connection 1780930385839 with 0
 TIMESTAMP INFO device.log: Loading device key bytes from /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
@@ -263,7 +263,7 @@ TIMESTAMP INFO    Initial state #001:     },
 TIMESTAMP INFO    Initial state #001:     "serial_no" : "sequencer-10987",
 TIMESTAMP INFO    Initial state #001:     "software" : {
 TIMESTAMP INFO    Initial state #001:       "firmware" : "v1",
-TIMESTAMP INFO    Initial state #001:       "pubber_module" : "v1"
+TIMESTAMP INFO    Initial state #001:       "system" : "v1"
 TIMESTAMP INFO    Initial state #001:     },
 TIMESTAMP INFO    Initial state #001:     "status" : {
 TIMESTAMP INFO    Initial state #001:       "category" : "system.config.parse",
@@ -297,7 +297,7 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-10987",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1",
-TIMESTAMP TRACE   Received state_system:     "pubber_module" : "v1"
+TIMESTAMP TRACE   Received state_system:     "system" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "status" : {
 TIMESTAMP TRACE   Received state_system:     "category" : "system.config.parse",
@@ -393,7 +393,7 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-10987",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1",
-TIMESTAMP TRACE   Received state_system:     "pubber_module" : "v1"
+TIMESTAMP TRACE   Received state_system:     "system" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "status" : {
 TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
@@ -507,7 +507,7 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-10987",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1",
-TIMESTAMP TRACE   Received state_system:     "pubber_module" : "v1"
+TIMESTAMP TRACE   Received state_system:     "system" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "status" : {
 TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
@@ -641,7 +641,7 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-10987",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1",
-TIMESTAMP TRACE   Received state_system:     "pubber_module" : "v1"
+TIMESTAMP TRACE   Received state_system:     "system" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "status" : {
 TIMESTAMP TRACE   Received state_system:     "category" : "system.config.parse",
@@ -741,7 +741,7 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-10987",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1",
-TIMESTAMP TRACE   Received state_system:     "pubber_module" : "v1"
+TIMESTAMP TRACE   Received state_system:     "system" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "status" : {
 TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
@@ -770,7 +770,7 @@ TIMESTAMP TRACE   Stage suspend waiting for starting test wrapper at @17s
 TIMESTAMP INFO    Stage start waiting for executing test at @17s
 TIMESTAMP DEBUG   stage begin waiting for executing test at @17s
 TIMESTAMP DEBUG   Allowing device state change blobset
-TIMESTAMP INFO    Testing blob update for blob key pubber_module, version v2
+TIMESTAMP INFO    Testing blob update for blob key system, version v2
 TIMESTAMP is 1989ms
 TIMESTAMP DEBUG   Rate-limiting config by 1989ms
 TIMESTAMP DEBUG   System config extra field null
@@ -786,7 +786,7 @@ TIMESTAMP DEBUG   Update config_blobset, adding configTransaction RC:7515cd.0000
 TIMESTAMP TRACE   Updated check config_discovery: true
 TIMESTAMP DEBUG   Update config_discovery, adding configTransaction RC:7515cd.0000000c
 TIMESTAMP
-TIMESTAMP, because trigger blob update for pubber_module
+TIMESTAMP, because trigger blob update for system
 TIMESTAMP TRACE   Stage suspend waiting for executing test at @19s
 TIMESTAMP INFO    Stage start waiting for config update synchronized at @19s
 TIMESTAMP DEBUG   Received command AHU-1/state/localnet as MP:1de4aed9-2
@@ -886,7 +886,7 @@ TIMESTAMP DEBUG   Removed configTransaction RC:7515cd.00000008
 TIMESTAMP
 TIMESTAMP RC:7515cd.00000008
 TIMESTAMP INFO    Updated config #005: Changed 1 fields:
-TIMESTAMP INFO    Updated config #005:   Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+TIMESTAMP INFO    Updated config #005:   Add `blobset` = { "blobs": { "system": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
 TIMESTAMP
 TIMESTAMP DEBUG   Received command AHU-1/state/update as MP:8a5c20ca
 TIMESTAMP DEBUG   Received state_update
@@ -922,7 +922,7 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-10987",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1",
-TIMESTAMP TRACE   Received state_system:     "pubber_module" : "v1"
+TIMESTAMP TRACE   Received state_system:     "system" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "status" : {
 TIMESTAMP TRACE   Received state_system:     "category" : "system.config.parse",
@@ -1040,7 +1040,7 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-10987",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1",
-TIMESTAMP TRACE   Received state_system:     "pubber_module" : "v1"
+TIMESTAMP TRACE   Received state_system:     "system" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "status" : {
 TIMESTAMP TRACE   Received state_system:     "category" : "system.config.apply",
@@ -1139,7 +1139,7 @@ TIMESTAMP MP:c0c5a7c4
 TIMESTAMP INFO    Updated state #009: Changed 7 fields:
 TIMESTAMP`
 TIMESTAMP INFO    Updated state #009:   Set `system.status.level` = `100`
-TIMESTAMP INFO    Updated state #009:   Set `system.status.message` = `Received blob update config for pubber_module`
+TIMESTAMP INFO    Updated state #009:   Set `system.status.message` = `Received blob update config for system`
 TIMESTAMP INFO    Updated state #009:   Set `system.status.category` = `blobset.blob.receive`
 TIMESTAMP`
 TIMESTAMP` } } }
@@ -1161,12 +1161,12 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-10987",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1",
-TIMESTAMP TRACE   Received state_system:     "pubber_module" : "v1"
+TIMESTAMP TRACE   Received state_system:     "system" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "status" : {
 TIMESTAMP TRACE   Received state_system:     "category" : "blobset.blob.receive",
 TIMESTAMP TRACE   Received state_system:     "level" : 100,
-TIMESTAMP TRACE   Received state_system:     "message" : "Received blob update config for pubber_module",
+TIMESTAMP TRACE   Received state_system:     "message" : "Received blob update config for system",
 TIMESTAMP"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
@@ -1181,9 +1181,9 @@ TIMESTAMP DEBUG   Config sync took 5s
 TIMESTAMP DEBUG   Finished wait for config sync pending: null
 TIMESTAMP
 TIMESTAMP
-TIMESTAMP DEBUG   Recorded sequence: 1. Update config trigger blob update for pubber_module
-TIMESTAMP INFO    Device config Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
-TIMESTAMP TRACE   Update config trigger blob update for pubber_module: Add `blobset` = { "blobs": { "pubber_module": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+TIMESTAMP DEBUG   Recorded sequence: 1. Update config trigger blob update for system
+TIMESTAMP INFO    Device config Add `blobset` = { "blobs": { "system": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
+TIMESTAMP TRACE   Update config trigger blob update for system: Add `blobset` = { "blobs": { "system": { "phase": `final`, "generation": `blob generation`, "sha256": `blob data hash`, "url": `software data` } } }
 TIMESTAMP TRACE   Stage suspend waiting for executing test at @24s
 TIMESTAMP INFO    Stage start waiting for system logs level `DEBUG` category `blobset.blob.receive` at @24s
 TIMESTAMP is 1996ms
@@ -1277,7 +1277,7 @@ TIMESTAMP TRACE   Ignoring partial state update
 TIMESTAMP DEBUG   Received command AHU-1/state/blobset as MP:c0c5a7c4-3
 TIMESTAMP TRACE   Received state_blobset: {
 TIMESTAMP TRACE   Received state_blobset:   "blobs" : {
-TIMESTAMP TRACE   Received state_blobset:     "pubber_module" : {
+TIMESTAMP TRACE   Received state_blobset:     "system" : {
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_blobset:       "phase" : "apply"
 TIMESTAMP TRACE   Received state_blobset:     }
@@ -1313,12 +1313,12 @@ TIMESTAMP DEBUG   Capturing AHU-1 message state_update
 TIMESTAMP MP:f85f623c
 TIMESTAMP INFO    Updated state #010: Changed 8 fields:
 TIMESTAMP INFO    Updated state #010:   Set `system.status.level` = `500`
-TIMESTAMP INFO    Updated state #010:   Add `system.status.detail` = `udmi.lib.base.UdmiException: Simulated incompatibility for pubber_module;`
-TIMESTAMP INFO    Updated state #010:   Set `system.status.message` = `Simulated incompatibility for pubber_module`
+TIMESTAMP INFO    Updated state #010:   Add `system.status.detail` = `udmi.lib.base.UdmiException: Simulated incompatibility for system;`
+TIMESTAMP INFO    Updated state #010:   Set `system.status.message` = `Simulated incompatibility for system`
 TIMESTAMP INFO    Updated state #010:   Set `system.status.category` = `blobset.blob.parse`
 TIMESTAMP`
-TIMESTAMP INFO    Updated state #010:   Set `blobset.blobs.pubber_module.phase` = `final`
-TIMESTAMP INFO    Updated state #010:   Add `blobset.blobs.pubber_module.status` = { "level": `500`, "detail": `udmi.lib.base.UdmiException: Simulated incompatibility for pubber_module...
+TIMESTAMP INFO    Updated state #010:   Set `blobset.blobs.system.phase` = `final`
+TIMESTAMP INFO    Updated state #010:   Add `blobset.blobs.system.status` = { "level": `500`, "detail": `udmi.lib.base.UdmiException: Simulated incompatibility for system...
 TIMESTAMP`
 TIMESTAMP)
 TIMESTAMP DEBUG   Received command AHU-1/state/system as MP:f85f623c-0
@@ -1337,13 +1337,13 @@ TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "serial_no" : "sequencer-10987",
 TIMESTAMP TRACE   Received state_system:   "software" : {
 TIMESTAMP TRACE   Received state_system:     "firmware" : "v1",
-TIMESTAMP TRACE   Received state_system:     "pubber_module" : "v1"
+TIMESTAMP TRACE   Received state_system:     "system" : "v1"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP TRACE   Received state_system:   "status" : {
 TIMESTAMP TRACE   Received state_system:     "category" : "blobset.blob.parse",
-TIMESTAMP TRACE   Received state_system:     "detail" : "udmi.lib.base.UdmiException: Simulated incompatibility for pubber_module;",
+TIMESTAMP TRACE   Received state_system:     "detail" : "udmi.lib.base.UdmiException: Simulated incompatibility for system;",
 TIMESTAMP TRACE   Received state_system:     "level" : 500,
-TIMESTAMP TRACE   Received state_system:     "message" : "Simulated incompatibility for pubber_module",
+TIMESTAMP TRACE   Received state_system:     "message" : "Simulated incompatibility for system",
 TIMESTAMP"
 TIMESTAMP TRACE   Received state_system:   },
 TIMESTAMP",
@@ -1383,14 +1383,14 @@ TIMESTAMP TRACE   Ignoring partial state update
 TIMESTAMP DEBUG   Received command AHU-1/state/blobset as MP:f85f623c-3
 TIMESTAMP TRACE   Received state_blobset: {
 TIMESTAMP TRACE   Received state_blobset:   "blobs" : {
-TIMESTAMP TRACE   Received state_blobset:     "pubber_module" : {
+TIMESTAMP TRACE   Received state_blobset:     "system" : {
 TIMESTAMP",
 TIMESTAMP TRACE   Received state_blobset:       "phase" : "final",
 TIMESTAMP TRACE   Received state_blobset:       "status" : {
 TIMESTAMP TRACE   Received state_blobset:         "category" : "blobset.blob.apply",
-TIMESTAMP TRACE   Received state_blobset:         "detail" : "udmi.lib.base.UdmiException: Simulated incompatibility for pubber_module\n\tat daq.pubber.impl.blob.PubberBlobLifecycleHandler.stagePubberModuleUpdate(PubberBlobLifecycleHandler.java:136)\n\tat daq.pubber.impl.blob.PubberBlobLifecycleHandler.stageBlob(PubberBlobLifecycleHandler.java:92)\n\tat udmi.lib.client.host.PublisherHost.orchestrateTwoPhaseDeployment(PublisherHost.java:399)\n\tat udmi.lib.client.host.PublisherHost.lambda$evaluateAndDeployBlob$3(PublisherHost.java:367)\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804)\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796)\n\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387)\n\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312)\n\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843)\n\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808)\n\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188)\n",
+TIMESTAMP TRACE   Received state_blobset:         "detail" : "udmi.lib.base.UdmiException: Simulated incompatibility for system\n\tat daq.pubber.impl.blob.PubberBlobLifecycleHandler.stagePubberModuleUpdate(PubberBlobLifecycleHandler.java:136)\n\tat daq.pubber.impl.blob.PubberBlobLifecycleHandler.stageBlob(PubberBlobLifecycleHandler.java:92)\n\tat udmi.lib.client.host.PublisherHost.orchestrateTwoPhaseDeployment(PublisherHost.java:399)\n\tat udmi.lib.client.host.PublisherHost.lambda$evaluateAndDeployBlob$3(PublisherHost.java:367)\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804)\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncRun.exec(CompletableFuture.java:1796)\n\tat java.base/java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:387)\n\tat java.base/java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1312)\n\tat java.base/java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1843)\n\tat java.base/java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1808)\n\tat java.base/java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:188)\n",
 TIMESTAMP TRACE   Received state_blobset:         "level" : 500,
-TIMESTAMP TRACE   Received state_blobset:         "message" : "Simulated incompatibility for pubber_module",
+TIMESTAMP TRACE   Received state_blobset:         "message" : "Simulated incompatibility for system",
 TIMESTAMP"
 TIMESTAMP TRACE   Received state_blobset:       }
 TIMESTAMP TRACE   Received state_blobset:     }
@@ -1481,25 +1481,25 @@ TIMESTAMP
 TIMESTAMP DEBUG device.log: value of noWriteback: false
 TIMESTAMP DEBUG device.log: value of noWriteback: false
 TIMESTAMP DEBUG device.log: value of noWriteback: false
-TIMESTAMP DEBUG blobset.blob.receive: Received blob update config for pubber_module
+TIMESTAMP DEBUG blobset.blob.receive: Received blob update config for system
 TIMESTAMP
 TIMESTAMP WARNING device.log: State update delay 1225ms
 TIMESTAMP DEBUG device.log: State update AHU-1 (blob_update_incompatible)
-TIMESTAMP DEBUG blobset.blob.fetch: Fetch blob data for pubber_module
+TIMESTAMP DEBUG blobset.blob.fetch: Fetch blob data for system
 TIMESTAMP NOTICE system.config.apply: success
 TIMESTAMP DEBUG device.log: State update defer 1998ms
 TIMESTAMP NOTICE blobset.blob.apply: Staging blob update...
 TIMESTAMP DEBUG device.log: State update defer 1997ms
 TIMESTAMP DEBUG device.log: State update defer 1997ms
-TIMESTAMP ERROR device.log: Failed to apply blob pubber_module: Simulated incompatibility for pubber_module
-TIMESTAMP ERROR blobset.blob.parse: Simulated incompatibility for pubber_module
+TIMESTAMP ERROR device.log: Failed to apply blob system: Simulated incompatibility for system
+TIMESTAMP ERROR blobset.blob.parse: Simulated incompatibility for system
 TIMESTAMP DEBUG device.log: State update defer 1994ms
 TIMESTAMP DEBUG device.log: State update defer -1ms
 TIMESTAMP
 TIMESTAMP DEBUG device.log: State update AHU-1 (blob_update_incompatible)
 TIMESTAMP DEBUG   Handling device message events_system MP:2dafa627
 TIMESTAMP DEBUG   Capturing AHU-1 message events_system
-TIMESTAMP DEBUG blobset.blob.receive: Received blob update config for pubber_module
+TIMESTAMP DEBUG blobset.blob.receive: Received blob update config for system
 TIMESTAMP DEBUG   Detail system logs level `DEBUG` category `blobset.blob.receive` is now: null
 TIMESTAMP DEBUG   Recorded sequence: 1. Wait until system logs level `DEBUG` category `blobset.blob.receive`
 TIMESTAMP DEBUG   Stage finished waiting for system logs level `DEBUG` category `blobset.blob.receive` at @27s after 3s
@@ -1517,8 +1517,8 @@ TIMESTAMP TRACE   Updated check config_blobset: false
 TIMESTAMP TRACE   Updated check config_discovery: false
 TIMESTAMP
 TIMESTAMP
-TIMESTAMP DEBUG blobset.blob.fetch: Fetch blob data for pubber_module
-TIMESTAMP DEBUG blobset.blob.fetch: Fetch blob data for pubber_module
+TIMESTAMP DEBUG blobset.blob.fetch: Fetch blob data for system
+TIMESTAMP DEBUG blobset.blob.fetch: Fetch blob data for system
 TIMESTAMP DEBUG   Recorded sequence: 1. Wait until system logs level `DEBUG` category `blobset.blob.fetch`
 TIMESTAMP DEBUG   Stage finished waiting for system logs level `DEBUG` category `blobset.blob.fetch` at @28s after 0s
 TIMESTAMP TRACE   Stage resume waiting for executing test at @28s
@@ -1535,13 +1535,13 @@ TIMESTAMP TRACE   Updated check config_blobset: false
 TIMESTAMP TRACE   Updated check config_discovery: false
 TIMESTAMP
 TIMESTAMP
-TIMESTAMP ERROR blobset.blob.parse: Simulated incompatibility for pubber_module
-TIMESTAMP ERROR blobset.blob.parse: Simulated incompatibility for pubber_module
+TIMESTAMP ERROR blobset.blob.parse: Simulated incompatibility for system
+TIMESTAMP ERROR blobset.blob.parse: Simulated incompatibility for system
 TIMESTAMP DEBUG   Recorded sequence: 1. Wait until system logs level `ERROR` category `blobset.blob.parse`
 TIMESTAMP DEBUG   Stage finished waiting for system logs level `ERROR` category `blobset.blob.parse` at @30s after 2s
 TIMESTAMP TRACE   Stage resume waiting for executing test at @30s
 TIMESTAMP TRACE   Stage suspend waiting for executing test at @30s
-TIMESTAMP INFO    Stage start waiting for pubber_module phase transitions at @30s
+TIMESTAMP INFO    Stage start waiting for system phase transitions at @30s
 TIMESTAMP is 1997ms
 TIMESTAMP DEBUG   Rate-limiting config by 1997ms
 TIMESTAMP DEBUG   System config extra field null
@@ -1553,11 +1553,11 @@ TIMESTAMP TRACE   Updated check config_blobset: false
 TIMESTAMP TRACE   Updated check config_discovery: false
 TIMESTAMP
 TIMESTAMP
-TIMESTAMP DEBUG   Recorded sequence: 1. Wait for pubber_module phase transitions
-TIMESTAMP DEBUG   Stage finished waiting for pubber_module phase transitions at @32s after 2s
+TIMESTAMP DEBUG   Recorded sequence: 1. Wait for system phase transitions
+TIMESTAMP DEBUG   Stage finished waiting for system phase transitions at @32s after 2s
 TIMESTAMP TRACE   Stage resume waiting for executing test at @32s
 TIMESTAMP TRACE   Stage suspend waiting for executing test at @32s
-TIMESTAMP INFO    Stage start waiting for pubber_module phase is FINAL at @32s
+TIMESTAMP INFO    Stage start waiting for system phase is FINAL at @32s
 TIMESTAMP is 1997ms
 TIMESTAMP DEBUG   Rate-limiting config by 1997ms
 TIMESTAMP DEBUG   System config extra field null
@@ -1569,10 +1569,10 @@ TIMESTAMP TRACE   Updated check config_blobset: false
 TIMESTAMP TRACE   Updated check config_discovery: false
 TIMESTAMP
 TIMESTAMP
-TIMESTAMP DEBUG   Recorded sequence: 1. Wait for pubber_module phase is FINAL
-TIMESTAMP DEBUG   Stage finished waiting for pubber_module phase is FINAL at @34s after 2s
+TIMESTAMP DEBUG   Recorded sequence: 1. Wait for system phase is FINAL
+TIMESTAMP DEBUG   Stage finished waiting for system phase is FINAL at @34s after 2s
 TIMESTAMP TRACE   Stage resume waiting for executing test at @34s
-TIMESTAMP DEBUG   Recorded sequence: 1. Check that pubber_module state indicates error
+TIMESTAMP DEBUG   Recorded sequence: 1. Check that system state indicates error
 TIMESTAMP DEBUG   stage done waiting for executing test at @34s
 TIMESTAMP DEBUG   Removing implicit system capability LAST_CONFIG
 TIMESTAMP NOTICE  RESULT pass system.software.updates blob_update_incompatible PREVIEW 10/10 Sequence complete

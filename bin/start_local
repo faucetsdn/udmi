@@ -3,6 +3,25 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
+if [[ "${1:-}" == "stop" ]]; then
+    echo "Stopping local UDMI infrastructure..."
+    
+    echo "Stopping UDMIS..."
+    $UDMI_ROOT/bin/start_udmis stop || true
+
+    echo "Stopping etcd..."
+    $UDMI_ROOT/bin/start_etcd stop || true
+
+    echo "Stopping influx..."
+    $UDMI_ROOT/bin/start_influx stop || true
+
+    echo "Stopping mosquitto..."
+    $UDMI_ROOT/bin/start_mosquitto stop || true
+
+    echo "Local UDMI infrastructure stopped cleanly."
+    exit 0
+fi
+
 block=
 if [[ ${1:-} == block ]]; then
     block=$1
@@ -47,9 +66,11 @@ echo Starting local services at $(date -u -Is) | tee $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
 if [[ -n ${project_spec:-} ]]; then
-    project_target=${project_spec##*/}
-    iot_provider=${project_spec%/*}
-    iot_provider=${iot_provider#//}
+    project_spec=$(normalize_conn_spec "$project_spec")
+    no_prefix=${project_spec#//}
+    iot_provider=${no_prefix%%/*}
+    no_provider=${no_prefix#*/}
+    project_target=${no_provider%%/*}
     if [[ $project_target == *:* ]]; then
         project_target=${project_target%:*}
     fi

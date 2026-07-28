@@ -97,9 +97,10 @@ if [[ $project_spec =~ ^// ]]; then
     no_prefix=${project_spec#//}
     iot_provider=\"${no_prefix%%/*}\"
     no_provider=${no_prefix#*/}
-    project_id=${no_provider%/*}
+    project_id=${no_provider%%/*}
     udmi_namespace=${no_provider#$project_id}
     if [[ $project_id == *:* ]]; then
+        [[ -n ${broker_hostname:-} ]] || broker_hostname=$project_id
         project_id=${project_id%:*}
     fi
     [[ -n $udmi_namespace ]] && registry_prefix=${udmi_namespace#/}~
@@ -196,7 +197,8 @@ echo Checking reported cloud version info
 jq .cloud_version.udmi_ref $output_file
 
 echo Cleaning message capture output out/registries/
-rm -rf out/registries/
+mv out/registries out/registries_old 2>/dev/null || true
+rm -rf out/registries_old/
 
 echo Check for failure in running pubber...
 echo $UDMI_ROOT/bin/pubber $pubber_config
