@@ -122,9 +122,58 @@ class EtcdExplorerServerTest {
   }
 
   @Test
+  void testExcludeLastStateFromLists() throws Exception {
+    when(mockEtcdProvider.getPrefixKeys("/r/")).thenReturn(List.of(
+        "/r/cloud_iot_registry/d/AHU-1:numId",
+        "/r/cloud_iot_registry/d/AHU-1:last_state",
+        "/r/cloud_iot_registry/d/UNREGISTERED_DEV:last_state",
+        "/r/unregistered_reg/d/GHOST_DEV:last_state"
+    ));
+    when(mockEtcdProvider.getPrefixKeys("/r/cloud_iot_registry/d/")).thenReturn(List.of(
+        "/r/cloud_iot_registry/d/AHU-1:numId",
+        "/r/cloud_iot_registry/d/AHU-1:last_state",
+        "/r/cloud_iot_registry/d/UNREGISTERED_DEV:last_state"
+    ));
+
+    HttpRequest registriesReq = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl + "/api/registries"))
+        .GET()
+        .build();
+    HttpResponse<String> registriesResp =
+        httpClient.send(registriesReq, HttpResponse.BodyHandlers.ofString());
+    assertEquals(200, registriesResp.statusCode());
+    Map<String, Object> regBody = JsonUtil.asMap(registriesResp.body());
+    System.err.println("REPRODUCTION REGISTRIES RESULT: " + regBody);
+
+    @SuppressWarnings("unchecked")
+    List<String> registries = (List<String>) regBody.get("registries");
+    assertEquals(1, registries.size(), "Unregistered registry should not be included");
+    assertEquals(1, ((Number) regBody.get("totalDevicesCount")).intValue(),
+        "Devices with only last_state should not be counted");
+    assertTrue(registries.contains("cloud_iot_registry"));
+
+    HttpRequest devicesReq = HttpRequest.newBuilder()
+        .uri(URI.create(baseUrl + "/api/registries/cloud_iot_registry/devices"))
+        .GET()
+        .build();
+    HttpResponse<String> devicesResp =
+        httpClient.send(devicesReq, HttpResponse.BodyHandlers.ofString());
+    assertEquals(200, devicesResp.statusCode());
+    Map<String, Object> devBody = JsonUtil.asMap(devicesResp.body());
+    System.err.println("REPRODUCTION DEVICES RESULT: " + devBody);
+
+    @SuppressWarnings("unchecked")
+    List<String> devices = (List<String>) devBody.get("devices");
+    assertEquals(1, devices.size(),
+        "Unregistered device with only last_state should not be listed");
+    assertTrue(devices.contains("AHU-1"));
+  }
+
+  @Test
   void testGetProperties() throws Exception {
     when(mockEtcdProvider.getPrefixEntries("/r/cloud_iot_registry/d/AHU-1:")).thenReturn(Map.of(
-        "/r/cloud_iot_registry/d/AHU-1:numId", "12345"
+        "/r/cloud_iot_registry/d/AHU-1:numId", "12345",
+        "/r/cloud_iot_registry/d/AHU-1:last_state", "{\"timestamp\":\"2024-07-19T04:20:12Z\"}"
     ));
     when(mockEtcdProvider.getPrefixEntries("/r/cloud_iot_registry/d/AHU-1/")).thenReturn(Map.of(
         "/r/cloud_iot_registry/d/AHU-1/c/state:latest", "{\"ver\":1}"
@@ -147,7 +196,8 @@ class EtcdExplorerServerTest {
     assertNotNull(properties);
     assertEquals("12345", properties.get(":numId"));
     assertEquals("{\"ver\":1}", properties.get("/c/state:latest"));
-    assertEquals(2, properties.size(),
+    assertEquals("{\"timestamp\":\"2024-07-19T04:20:12Z\"}", properties.get(":last_state"));
+    assertEquals(3, properties.size(),
         "Properties should not include keys from AHU-10 or AHU-11: " + properties.keySet());
     verify(mockEtcdProvider).getPrefixEntries("/r/cloud_iot_registry/d/AHU-1:");
     verify(mockEtcdProvider).getPrefixEntries("/r/cloud_iot_registry/d/AHU-1/");

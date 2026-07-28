@@ -45,6 +45,13 @@ gcloud pubsub topics publish target \
 The reason for the redirection of any data through a PubSub topic is so that the Cloud IoT registry, if necessary,
 can be housed in a different cloud project from the backend applications.
 
+### System Interfaces
+
+This document details the administrative-facing **[Internal Tools (Reflector)](tech_stack.md)** interface, which represents one of three core system interfaces into the UDMIS ecosystem:
+*   **[Devices (UDMI proper)](compliance.md):** Edge-side device-to-system interface used by physical or simulated on-premise hardware to report telemetry streams (`events`) and dynamically receive or acknowledge operational `config`.
+*   **[Internal Tools (Reflector)](tech_stack.md):** Administrative database-to-system interface used by backend registration and synchronization tooling (such as `registrar`) to manage site models, provision cryptographic keys, and reconcile device records.
+*   **[Applications (UUFI)](uufi.md):** App-to-system messaging interface used by external applications, dashboards, and operators to query system state, update model specifications, and command devices.
+
 ### Internal Control Channels vs Device Topics
 
 When running a local broker setup or utilizing the UDMI Server (UDMIS) infrastructure, you may observe two distinct but related MQTT configuration topics. It is important to distinguish between communication bound for the edge device, and communication intended for internal backend orchestration.

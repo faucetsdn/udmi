@@ -28,13 +28,18 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.api.client.util.Base64;
+import com.google.api.gax.core.NoCredentialsProvider;
+import com.google.api.gax.grpc.GrpcTransportChannel;
+import com.google.api.gax.rpc.FixedTransportChannelProvider;
 import com.google.api.gax.rpc.NotFoundException;
+import com.google.api.gax.rpc.TransportChannelProvider;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.cloud.pubsub.v1.AckReplyConsumer;
 import com.google.cloud.pubsub.v1.MessageReceiver;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.cloud.pubsub.v1.Subscriber;
 import com.google.cloud.pubsub.v1.SubscriptionAdminClient;
+import com.google.cloud.pubsub.v1.SubscriptionAdminSettings;
 import com.google.daq.mqtt.util.MessagePublisher;
 import com.google.daq.mqtt.validator.Validator.ErrorContainer;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
@@ -44,6 +49,8 @@ import com.google.pubsub.v1.ProjectSubscriptionName;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
 import com.google.pubsub.v1.SeekRequest;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -132,13 +139,26 @@ public class PubSubReflector implements MessagePublisher {
       if (reset) {
         resetSubscription(subscriptionName);
       }
-      subscriber = Subscriber.newBuilder(subscriptionName, new MessageProcessor()).build();
+
+      Subscriber.Builder subscriberBuilder =
+          Subscriber.newBuilder(subscriptionName, new MessageProcessor());
+      if (isEmulator()) {
+        subscriberBuilder.setChannelProvider(getEmulatorChannelProvider());
+        subscriberBuilder.setCredentialsProvider(NoCredentialsProvider.create());
+      }
+      subscriber = subscriberBuilder.build();
+
       this.userName = userName;
 
       if (updateTopic != null) {
         ProjectTopicName topicName = ProjectTopicName.of(projectId, updateTopic);
         System.err.println("Sending reflector messages to " + topicName);
-        publisher = Publisher.newBuilder(topicName).build();
+        Publisher.Builder publisherBuilder = Publisher.newBuilder(topicName);
+        if (isEmulator()) {
+          publisherBuilder.setChannelProvider(getEmulatorChannelProvider());
+          publisherBuilder.setCredentialsProvider(NoCredentialsProvider.create());
+        }
+        publisher = publisherBuilder.build();
       } else {
         publisher = null;
       }
@@ -300,7 +320,13 @@ public class PubSubReflector implements MessagePublisher {
   }
 
   private void resetSubscription(ProjectSubscriptionName subscriptionName) {
-    try (SubscriptionAdminClient subscriptionAdminClient = SubscriptionAdminClient.create()) {
+    SubscriptionAdminSettings.Builder settingsBuilder = SubscriptionAdminSettings.newBuilder();
+    if (isEmulator()) {
+      settingsBuilder.setTransportChannelProvider(getEmulatorChannelProvider());
+      settingsBuilder.setCredentialsProvider(NoCredentialsProvider.create());
+    }
+    try (SubscriptionAdminClient subscriptionAdminClient =
+        SubscriptionAdminClient.create(settingsBuilder.build())) {
       System.err.println("Resetting existing subscription " + subscriptionName);
       subscriptionAdminClient.seek(getCurrentTimeSeekRequest(subscriptionName.toString()));
       subscriptionAdminClient.shutdown();
@@ -369,5 +395,23 @@ public class PubSubReflector implements MessagePublisher {
         ofNullable(errorHandlers.get(deviceRegistryId)).orElse(defaultErrorHandler).accept(e);
       }
     }
+  }
+
+  private static boolean isEmulator() {
+    String emulatorHost = System.getenv("PUBSUB_EMULATOR_HOST");
+    return emulatorHost != null && !emulatorHost.isEmpty();
+  }
+
+  private static ManagedChannel getEmulatorChannel() {
+    String emulatorHost = System.getenv("PUBSUB_EMULATOR_HOST");
+    int lastIndex = emulatorHost.lastIndexOf(":");
+    String useHost = lastIndex < 0 ? emulatorHost
+        : String.format("localhost:%s", emulatorHost.substring(lastIndex + 1));
+    return ManagedChannelBuilder.forTarget(useHost).usePlaintext().build();
+  }
+
+  private static TransportChannelProvider getEmulatorChannelProvider() {
+    GrpcTransportChannel transportChannel = GrpcTransportChannel.create(getEmulatorChannel());
+    return FixedTransportChannelProvider.create(transportChannel);
   }
 }

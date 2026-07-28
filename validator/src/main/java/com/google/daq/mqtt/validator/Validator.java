@@ -106,6 +106,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.impl.SimpleLogger;
@@ -130,6 +131,9 @@ import udmi.schema.ValidationSummary;
  * Core class for running site-level validations of data streams.
  */
 public class Validator {
+
+  private static final Pattern RFC_3339_PATTERN = Pattern.compile(
+      "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?(Z|\\+00:00|\\+0000)$");
 
   public static final int TOOLS_FUNCTIONS_VERSION = 18;
   public static final String PROJECT_PROVIDER_PREFIX = "//";
@@ -689,11 +693,12 @@ public class Validator {
     if (msgObject instanceof Map) {
       Map<String, Object> mapped = mapCast(msgObject);
       String timestamp = (String) mapped.get(TIMESTAMP_KEY);
-      if (timestamp != null) {
-        return JsonUtil.getInstant(timestamp);
+      Instant instant = catchToNull(() -> JsonUtil.getInstant(timestamp));
+      if (instant != null) {
+        return instant;
       }
     }
-    return JsonUtil.getInstant(attributes.get(PUBLISH_TIME_KEY));
+    return catchToNull(() -> JsonUtil.getInstant(attributes.get(PUBLISH_TIME_KEY)));
   }
 
   private ReportingDevice validateMessageCore(Object messageObj, Map<String, String> attributes) {
@@ -835,11 +840,14 @@ public class Validator {
 
   private void validateTimestamp(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
-    String timestampRaw = ifNotNullGet(message, m -> (String) m.get("timestamp"));
-    Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
-    String publishRaw = attributes.get(PUBLISH_TIME_KEY);
-    Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
     try {
+      String timestampRaw = ifNotNullGet(message, m -> (String) m.get("timestamp"));
+      if (timestampRaw != null && !RFC_3339_PATTERN.matcher(timestampRaw).matches()) {
+        throw new RuntimeException("Timestamp does not follow RFC 3339 format: " + timestampRaw);
+      }
+      Instant timestamp = ifNotNullGet(timestampRaw, JsonUtil::getInstant);
+      String publishRaw = attributes.get(PUBLISH_TIME_KEY);
+      Instant publishTime = ifNotNullGet(publishRaw, JsonUtil::getInstant);
       // TODO: Validate message contests to make sure state sub-blocks don't also have timestamp.
 
       String subTypeRaw = ofNullable(attributes.get(SUBTYPE_PROPERTY_KEY))
@@ -851,12 +859,6 @@ public class Validator {
         }
         if (message != null && timestamp == null) {
           throw new RuntimeException("Missing message timestamp");
-        }
-        if (timestampRaw != null
-            && !timestampRaw.endsWith(TIMESTAMP_ZULU_SUFFIX)
-            && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_1)
-            && !timestampRaw.endsWith(TIMESTAMP_UTC_SUFFIX_2)) {
-          throw new RuntimeException("Invalid timestamp timezone " + timestampRaw);
         }
         if (publishTime != null && timestamp != null) {
           long between = Duration.between(publishTime, timestamp).getSeconds();
@@ -1038,6 +1040,7 @@ public class Validator {
     summary.extra_devices = new ArrayList<>(extraDevices);
 
     summary.correct_devices = new ArrayList<>();
+    summary.pending_devices = new ArrayList<>();
     summary.error_devices = new ArrayList<>();
 
     Map<String, DeviceValidationEvents> devices = new TreeMap<>();
@@ -1062,7 +1065,11 @@ public class Validator {
         DeviceValidationEvents event = getValidationEvents(devices, deviceInfo);
         event.status = ReportingDevice.getSummaryEntry(deviceInfo.getErrors(null, null));
         if (expected) {
-          summary.correct_devices.add(deviceId);
+          if (isPending(deviceInfo)) {
+            summary.pending_devices.add(deviceId);
+          } else {
+            summary.correct_devices.add(deviceId);
+          }
         } else {
           event.status.category = Category.VALIDATION_DEVICE_EXTRA;
           event.status.level = Level.WARNING.value();
@@ -1073,10 +1080,27 @@ public class Validator {
     summary.missing_devices = new ArrayList<>(targets);
     summary.missing_devices.removeAll(summary.error_devices);
     summary.missing_devices.removeAll(summary.correct_devices);
+    summary.missing_devices.removeAll(summary.pending_devices);
 
     System.err.println("Updating validation reports to " + outBaseDir.getAbsolutePath());
     sendValidationReport(makeValidationReport(summary, devices));
     sendDeviceValidationReports(summaries);
+  }
+
+  private boolean isPending(ReportingDevice device) {
+    Metadata metadata = device.getMetadata();
+    boolean expectsTelemetry = metadata != null && metadata.pointset != null;
+    boolean hasTelemetry = device.hasSeenTelemetry(getNow());
+    boolean hasState = device.seenSchemaRecently("state_system", getNow())
+        || device.seenSchemaRecently("state", getNow());
+
+    if (expectsTelemetry && !hasTelemetry) {
+      return true;
+    }
+    if (!hasState) {
+      return true;
+    }
+    return false;
   }
 
   private synchronized void sendDeviceValidationReports(Map<String, ValidationState> summaries) {

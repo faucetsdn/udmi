@@ -154,6 +154,27 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     return getKey(key);
   }
 
+  public String getAsSerializable(String key) {
+    return getSerializableKey(key);
+  }
+
+  private String getSerializableKey(String key) {
+    try {
+      GetOption option = GetOption.newBuilder().withSerializable(true).build();
+      GetResponse response =
+          kvClient.get(bytes(key), option).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      if (response.getCount() == 0) {
+        return null;
+      }
+      if (response.getCount() > 1) {
+        throw new IllegalStateException("Unexpected key return count " + response.getCount());
+      }
+      return asString(response.getKvs().get(0).getValue());
+    } catch (Exception e) {
+      throw new RuntimeException("While getting db entry serializable " + key, e);
+    }
+  }
+
   private String getKey(String key) {
     try {
       GetResponse response = kvClient.get(bytes(key)).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
@@ -377,6 +398,11 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
     public String get(String key) {
       return getKey(getKeyPath(key));
+    }
+
+    @Override
+    public String getAsSerializable(String key) {
+      return getSerializableKey(getKeyPath(key));
     }
 
     @Override
