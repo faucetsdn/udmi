@@ -43,6 +43,10 @@ else
     fi
 fi
 
+if [[ ${1:-} == stop ]]; then
+    exit 0
+fi
+
 if [[ ! -f $BINDIR/etcd ]]; then
     udmis/bin/etcdctl version || ../bin/etcdctl version || $(dirname $0)/etcdctl version || true
     BINDIR=$(find_etcd) || BINDIR=/tmp/etcd

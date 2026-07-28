@@ -24,7 +24,7 @@ TIMESTAMP WARNING device.log             Updating persistent store:
   "restart_count" : 1
 }
 TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-7770, mac null, gateway null, options noPersist
-TIMESTAMP INFO    device.log             Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/pubber_module_repo_sequencer-7770
+TIMESTAMP INFO    device.log             Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/system_repo_sequencer-7770
 TIMESTAMP INFO    device.log             Isolated JGit repo initialized successfully.
 TIMESTAMP WARNING device.log             Starting connection 1780930044122 with 0
 TIMESTAMP INFO    device.log             Loading device key bytes from /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
@@ -135,12 +135,12 @@ TIMESTAMP
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for pubber_module
+TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for system
 TIMESTAMP
 TIMESTAMP WARNING device.log             State update delay 572ms
 TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_success)
 TIMESTAMP NOTICE  system.config.apply    success
-TIMESTAMP DEBUG   blobset.blob.fetch     Fetch blob data for pubber_module
+TIMESTAMP DEBUG   blobset.blob.fetch     Fetch blob data for system
 TIMESTAMP DEBUG   device.log             State update defer 1997ms
 TIMESTAMP NOTICE  blobset.blob.apply     Staging blob update...
 TIMESTAMP DEBUG   device.log             State update defer 1995ms
@@ -155,13 +155,13 @@ TIMESTAMP
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for pubber_module
+TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for system
 TIMESTAMP
 TIMESTAMP WARNING device.log             State update delay 1600ms
 TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_success)
 TIMESTAMP NOTICE  system.config.apply    success
 TIMESTAMP DEBUG   device.log             State update defer 1999ms
-TIMESTAMP DEBUG   blobset.blob.fetch     Fetch blob data for pubber_module
+TIMESTAMP DEBUG   blobset.blob.fetch     Fetch blob data for system
 TIMESTAMP DEBUG   system.config.receive  success
 TIMESTAMP NOTICE  blobset.blob.apply     Staging blob update...
 TIMESTAMP DEBUG   device.log             State update defer 1998ms
@@ -174,9 +174,9 @@ TIMESTAMP
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for pubber_module
+TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for system
 TIMESTAMP
 TIMESTAMP WARNING device.log             State update delay 1993ms
 TIMESTAMP NOTICE  device.log             Mock module update completed successfully.
-TIMESTAMP NOTICE  device.log             Blob pubber_module successfully staged, publishing final state
+TIMESTAMP NOTICE  device.log             Blob system successfully staged, publishing final state
 TIMESTAMP NOTICE  validation.feature.sequence Sequence complete
