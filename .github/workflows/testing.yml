@@ -599,7 +599,7 @@ jobs:
           path: |
             bridgehead/var/mosquitto/log/
             out/bridgehead_*
-  
+
   openbridge:
     name: Openbridge Test
     runs-on: ubuntu-24.04
@@ -634,6 +634,8 @@ jobs:
     name: Spotter Agent Tests
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    env:
+      UDMI_NO_SUDO: true
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -645,12 +647,11 @@ jobs:
         uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - name: Setup Base & Generate Certificates
+      - name: Setup Base
         run: |
           bin/setup_base
           bin/clone_model
-          bin/keygen CERT sites/udmi_site_model/devices/AHU-1
-          UDMI_NO_SUDO=true bin/start_local sites/udmi_site_model //mqtt/localhost:9001
+          bin/start_local sites/udmi_site_model //mqtt/localhost:9001
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -658,7 +659,7 @@ jobs:
           pip install -r edge/spotter/requirements.txt
       - name: Unit Tests
         run: |
-          PYTHONPATH=clientlib/python/src:edge/spotter/src:. python3 -m unittest discover -v -s edge/spotter/tests
+          python3 -m unittest discover -v -s edge/spotter/tests
       - name: Supervisor Lifecycle Integration Tests
         run: |
           edge/spotter/bin/test_supervisor
@@ -670,11 +671,13 @@ jobs:
           edge/spotter/bin/test_container
       - name: Diagnostics Integration Tests
         run: |
-          PYTHONPATH=clientlib/python/src:. edge/spotter/bin/test_diagnostics
-      - name: Build Parity Test Prerequisites & Run Parity Tests
+          edge/spotter/bin/test_diagnostics
+      - name: Run Parity Tests
         run: |
+          echo "Building discovery node container..."
           misc/discoverynode/bin/build_container test-discovery_node
           bash misc/discoverynode/testing/docker/bacnet_device/build.sh
-          PYTHONPATH=clientlib/python/src:. edge/spotter/bin/test_parity
+          echo "Testing parity with discovery node"
+          edge/spotter/bin/test_parity
 
 
