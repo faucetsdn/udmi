@@ -891,3 +891,13 @@
   box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
   transform: translateY(-1px);
 }
+
+/* 14. AI Assistant Chat Bar */
+.ai-chat-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background-color: var(--bg-surface-container-low, #1e1e2e);
+  border-top: 1px solid var(--border-color, #313244);
+}

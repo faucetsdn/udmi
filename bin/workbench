@@ -32,9 +32,10 @@ FEATURE="all"
 MANUAL_PORT=""
 
 show_usage() {
-  echo "Usage: $0 [sequencer | mantis | all] [--port=PORT | -p PORT | PORT]"
+  echo "Usage: $0 [testbed | sequencer | mantis | all] [--port=PORT | -p PORT | PORT]"
   echo ""
   echo "Arguments:"
+  echo "  testbed, tb       Launch with Testbed tool only"
   echo "  sequencer, seq    Launch with Sequencer tool only"
   echo "  mantis, man       Launch with Mantis tool only"
   echo "  all, suite        Launch with all tools (default)"
@@ -43,6 +44,10 @@ show_usage() {
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    testbed|tb)
+      FEATURE="testbed"
+      shift
+      ;;
     sequencer|seq)
       FEATURE="sequencer"
       shift
@@ -84,9 +89,9 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-# Determine features query param
+# Determine backend features parameter
 if [ "$FEATURE" = "all" ]; then
-  FEATURES_PARAM="sequencer,mantis"
+  FEATURES_PARAM="testbed,sequencer,mantis"
 else
   FEATURES_PARAM="$FEATURE"
 fi
@@ -166,8 +171,7 @@ if [ "$SERVER_RUNNING" = false ] || [ "$RESTART_NEEDED" = true ]; then
   fi
   
   mkdir -p out
-  nohup python3 ui/src/server.py --port="${PORT}" --features="${FEATURES_PARAM}" > out/workbench_server.log 2>&1 &
-  disown
+  setsid python3 ui/src/server.py --port="${PORT}" --features="${FEATURES_PARAM}" > out/workbench_server.log 2>&1 &
   
   # Wait for the server to spin up
   for i in {1..10}; do
@@ -186,8 +190,8 @@ else
   echo "UDMI Workbench backend server is already running on port ${PORT} with the correct feature set."
 fi
 
-# Build URL
-URL="http://localhost:${PORT}/ui/src/index.html?features=${FEATURES_PARAM}"
+# Build URL (Purely backend feature flag construct; no URL parameters)
+URL="http://localhost:${PORT}/ui/src/index.html"
 
 echo "Opening UDMI Workbench (${FEATURE}) in your default browser..."
 echo "Workbench running at: ${URL}"

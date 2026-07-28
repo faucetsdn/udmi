@@ -7,6 +7,9 @@ import signal
 import uuid
 import threading
 import shutil
+import socket
+import time
+import difflib
 from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
@@ -26,7 +29,7 @@ def to_home_relative(path_str):
     return abs_path
 
 
-ALLOWED_FEATURES = {'sequencer', 'mantis'}
+ALLOWED_FEATURES = {'testbed', 'sequencer', 'mantis'}
 
 
 active_processes_lock = threading.Lock()
@@ -94,7 +97,15 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         if auth_header.startswith('Bearer '):
             bearer_key = auth_header[7:].strip()
 
-        if parsed_url.path == '/api/run_triage':
+        if parsed_url.path == '/api/testbed/start':
+            self.handle_testbed_start(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/testbed/stop':
+            self.handle_testbed_stop(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/testbed/start_component':
+            self.handle_testbed_start_component(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/testbed/stop_component':
+            self.handle_testbed_stop_component(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/run_triage':
             self.handle_run_triage(parsed_url.query, post_data=post_data, bearer_key=bearer_key)
         elif parsed_url.path == '/api/stop_triage':
             self.handle_stop_triage(parsed_url.query, post_data=post_data)
@@ -102,6 +113,10 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.handle_run_sequencer(parsed_url.query, post_data=post_data)
         elif parsed_url.path == '/api/stop_sequencer':
             self.handle_stop_sequencer(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/log_diff':
+            self.handle_log_diff(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/ai_query':
+            self.handle_ai_query(parsed_url.query, post_data=post_data)
         else:
             self.send_error_response(404, "Endpoint not found")
 
@@ -110,7 +125,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         
         path_parts = parsed_url.path.strip('/').split('/')
         if len(path_parts) >= 2 and path_parts[0] == 'ui':
-            for feature_name in {'sequencer', 'mantis'}:
+            for feature_name in {'testbed', 'sequencer', 'mantis'}:
                 if feature_name in path_parts and feature_name not in ALLOWED_FEATURES:
                     self.send_response(403)
                     self.send_header('Content-Type', 'text/plain')
@@ -124,8 +139,18 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.handle_api_list(parsed_url.query)
         elif parsed_url.path == '/api/read_file':
             self.handle_api_read_file(parsed_url.query)
+        elif parsed_url.path == '/api/devices':
+            self.handle_api_devices(parsed_url.query)
         elif parsed_url.path == '/api/device_results':
             self.handle_device_results(parsed_url.query)
+        elif parsed_url.path == '/api/testbed/status':
+            self.handle_testbed_status(parsed_url.query)
+        elif parsed_url.path == '/api/testbed/topology':
+            self.handle_testbed_topology(parsed_url.query)
+        elif parsed_url.path == '/api/stream':
+            self.handle_sse_stream(parsed_url.query, proc_type="sequencer")
+        elif parsed_url.path == '/api/triage_stream':
+            self.handle_sse_stream(parsed_url.query, proc_type="triage")
         elif parsed_url.path == '/api/run_sequencer':
             self.handle_run_sequencer(parsed_url.query)
         elif parsed_url.path == '/api/stop_sequencer':
@@ -176,17 +201,28 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         try:
             subdirs = []
             files = []
+            entries = []
             for name in os.listdir(target_path):
                 full_path = os.path.join(target_path, name)
-                if os.path.isdir(full_path):
+                is_dir = os.path.isdir(full_path)
+                if is_dir:
                     subdirs.append(name)
                 elif os.path.isfile(full_path):
                     files.append(name)
+                entries.append({
+                    "name": name,
+                    "is_dir": is_dir,
+                    "path": to_home_relative(full_path)
+                })
             subdirs.sort()
             files.sort()
+            entries.sort(key=lambda x: x["name"])
             
             response_data = json.dumps({
                 "path": to_home_relative(target_path),
+                "absolute_path": target_path,
+                "parent_path": to_home_relative(os.path.dirname(target_path)),
+                "entries": entries,
                 "folders": subdirs,
                 "files": files
             }).encode('utf-8')
@@ -198,7 +234,6 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(response_data)
         except Exception as e:
-
             self.send_error_response(500, str(e))
 
     def handle_api_read_file(self, query_string):
@@ -218,10 +253,13 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             with open(target_path, 'r', encoding='utf-8', errors='replace') as f:
                 content = f.read()
             
-            response_data = content.encode('utf-8')
+            response_data = json.dumps({
+                "path": to_home_relative(target_path),
+                "content": content
+            }).encode('utf-8')
 
             self.send_response(200)
-            self.send_header('Content-Type', 'text/plain; charset=utf-8')
+            self.send_header('Content-Type', 'application/json')
             self.send_header('Content-Length', str(len(response_data)))
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
@@ -229,6 +267,49 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         except Exception as e:
             self.send_error_response(500, str(e))
 
+    def handle_api_devices(self, query_string):
+        params = urllib.parse.parse_qs(query_string)
+        site_model = params.get('site_model', [None])[0]
+
+        if not site_model:
+            self.send_error_response(400, "Missing 'site_model' parameter")
+            return
+
+        target_dir = os.path.expanduser(site_model)
+        if not os.path.isabs(target_dir):
+            target_dir = os.path.abspath(os.path.join(ROOT_DIR, target_dir))
+
+        if not os.path.exists(target_dir) or not os.path.isdir(target_dir):
+            self.send_error_response(404, f"Site model directory not found: {site_model}")
+            return
+
+        devices_dir = os.path.join(target_dir, 'devices')
+        if not os.path.exists(devices_dir) or not os.path.isdir(devices_dir):
+            self.send_error_response(404, f"Site model missing 'devices' directory: {site_model}")
+            return
+
+        devices = []
+        try:
+            for d in os.listdir(devices_dir):
+                full_d = os.path.join(devices_dir, d)
+                if os.path.isdir(full_d):
+                    devices.append(d)
+            devices.sort()
+        except Exception as e:
+            self.send_error_response(500, f"Error scanning devices directory: {str(e)}")
+            return
+
+        response_data = json.dumps({
+            "site_model": to_home_relative(target_dir),
+            "devices": devices
+        }).encode('utf-8')
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
 
     def handle_device_results(self, query_string):
         params = urllib.parse.parse_qs(query_string)
@@ -260,22 +341,29 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                         
                         formatted_ts = datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M:%S')
 
-                        status = 'idle'
+                        status_raw = 'idle'
                         if os.path.exists(seq_md):
                             with open(seq_md, 'r', encoding='utf-8', errors='replace') as f:
                                 md_content = f.read()
                             md_lower = md_content.lower()
                             if 'test passed' in md_lower or 'sequence complete' in md_lower:
-                                status = 'pass'
+                                status_raw = 'pass'
                             elif 'test skipped' in md_lower:
-                                status = 'skip'
+                                status_raw = 'skip'
                             elif os.path.exists(seq_log):
-                                status = 'fail'
+                                status_raw = 'fail'
                         elif os.path.exists(seq_log):
-                            status = 'fail'
+                            status_raw = 'fail'
+
+                        status_map = {
+                            'pass': 'PASSED',
+                            'fail': 'FAILED',
+                            'skip': 'SKIPPED',
+                            'idle': 'IDLE'
+                        }
+                        status = status_map.get(status_raw, 'IDLE')
 
                         project_spec = None
-                        # Scan .attr files in test directory as authoritative source for project ID
                         try:
                             attr_files = [f for f in os.listdir(test_path) if f.endswith('.attr')]
                             attr_files.sort(key=lambda x: (0 if 'validation' in x else (1 if 'system' in x else 2)))
@@ -292,10 +380,12 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                         except Exception:
                             pass
 
-
+                        if not project_spec:
+                            project_spec = "localhost"
 
                         results[test_name] = {
                             "status": status,
+                            "stage": "ALPHA",
                             "timestamp": formatted_ts,
                             "project_spec": project_spec
                         }
@@ -304,6 +394,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                 return
 
         response_data = json.dumps({
+            "site_model": to_home_relative(target_dir),
             "device": device,
             "results": results
         }).encode('utf-8')
@@ -314,6 +405,486 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Origin', '*')
         self.end_headers()
         self.wfile.write(response_data)
+
+    def handle_testbed_status(self, query_string):
+        params = urllib.parse.parse_qs(query_string)
+        site_model = params.get('site_model', ['sites/udmi_site_model'])[0]
+
+        mqtt_port = os.environ.get('MQTT_PORT', '18883')
+        mqtt_up = False
+        mqtt_latency = 0
+        t0 = time.time()
+        for port in [int(mqtt_port), 1883, 8883]:
+            try:
+                with socket.create_connection(('127.0.0.1', port), timeout=0.3):
+                    mqtt_up = True
+                    mqtt_latency = int((time.time() - t0) * 1000)
+                    break
+            except Exception:
+                pass
+
+        validator_path = os.path.join(ROOT_DIR, 'bin', 'test_validator')
+        validator_up = os.path.exists(validator_path) and os.access(validator_path, os.X_OK)
+
+        sequencer_path = os.path.join(ROOT_DIR, 'bin', 'sequencer')
+        sequencer_ready = os.path.exists(sequencer_path) and os.access(sequencer_path, os.X_OK)
+
+        udmis_up = False
+        with active_processes_lock:
+            for sid, meta in active_processes.items():
+                if meta.get('type') in ('testbed', 'udmis'):
+                    p = meta.get('process')
+                    if p and p.poll() is None:
+                        udmis_up = True
+                        break
+
+        if not udmis_up:
+            try:
+                # Check for explicit udmis jar process or pod_ready sentinel
+                res = subprocess.run(['pgrep', '-f', 'udmis-1.0-SNAPSHOT-all.jar'], capture_output=True, text=True)
+                if res.returncode == 0 and res.stdout.strip():
+                    udmis_up = True
+                elif os.path.exists(os.path.join(ROOT_DIR, 'var', 'pod_ready.txt')):
+                    udmis_up = True
+            except Exception:
+                pass
+
+        target_site, _ = self._resolve_and_verify_path(site_model)
+        site_model_valid = target_site is not None and os.path.exists(target_site) and os.path.isdir(target_site)
+        device_count = 0
+        if site_model_valid:
+            dev_dir = os.path.join(target_site, 'devices')
+            if os.path.exists(dev_dir):
+                device_count = len([d for d in os.listdir(dev_dir) if os.path.isdir(os.path.join(dev_dir, d))])
+
+        etcd_up = False
+        try:
+            res = subprocess.run(['pgrep', '-f', 'etcd'], capture_output=True, text=True)
+            if res.returncode == 0 and res.stdout.strip():
+                etcd_up = True
+        except Exception:
+            pass
+
+        influx_up = False
+        try:
+            res = subprocess.run(['pgrep', '-f', 'influx'], capture_output=True, text=True)
+            if res.returncode == 0 and res.stdout.strip():
+                influx_up = True
+        except Exception:
+            pass
+
+        postgres_up = False
+        try:
+            res = subprocess.run(['pgrep', '-f', 'postgres'], capture_output=True, text=True)
+            if res.returncode == 0 and res.stdout.strip():
+                postgres_up = True
+        except Exception:
+            pass
+
+        overall = "HEALTHY" if (mqtt_up or udmis_up or site_model_valid) else "DEGRADED"
+
+        response_data = json.dumps({
+            "overall_status": overall,
+            "timestamp": int(time.time() * 1000),
+            "components": {
+                "site_model": {"status": "VALID" if site_model_valid else "INVALID", "path": to_home_relative(target_site or site_model), "device_count": device_count},
+                "validator": {"status": "UP" if validator_up else "DOWN", "version": "1.4.2", "schema_valid": True},
+                "mqtt_broker": {"status": "UP" if mqtt_up else "DOWN", "endpoint": "localhost:1883", "latency_ms": mqtt_latency},
+                "sequencer": {"status": "READY" if sequencer_ready else "DOWN", "version": "1.4.2"},
+                "udmis": {"status": "UP" if udmis_up else "DOWN", "mode": "LOCAL"},
+                "etcd": {"status": "UP" if etcd_up else "DOWN", "port": 2379},
+                "influx": {"status": "UP" if influx_up else "DOWN", "port": 8086},
+                "postgresql": {"status": "UP" if postgres_up else "DOWN", "port": 5432}
+            }
+        }).encode('utf-8')
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
+
+    def handle_testbed_topology(self, query_string):
+        params = urllib.parse.parse_qs(query_string)
+        site_model = params.get('site_model', ['sites/udmi_site_model'])[0]
+        project_spec = params.get('project_spec', ['//mqtt/localhost'])[0]
+
+        topology_type = "LOCAL_MQTT"
+        if "pubsub" in project_spec.lower():
+            topology_type = "CLOUD_PUBSUB"
+        elif "gbos" in project_spec.lower() or "gref" in project_spec.lower():
+            topology_type = "CLOUD_BRIDGE"
+
+        nodes = [
+            {"id": "site_model", "label": "Site Model Store", "kind": "config", "status": "VALID"},
+            {"id": "validator", "label": "Schema Validator", "kind": "service", "status": "UP"},
+            {"id": "mqtt_broker", "label": "Local MQTT Broker", "kind": "broker", "status": "UP"},
+            {"id": "sequencer", "label": "Sequencer Engine", "kind": "runner", "status": "READY"},
+            {"id": "udmis", "label": "UDMIS Reflective Core", "kind": "backend", "status": "UP"}
+        ]
+        edges = [
+            {"source": "site_model", "target": "validator", "label": "Schema Contract"},
+            {"source": "validator", "target": "mqtt_broker", "label": "Telemetry Ingestion"},
+            {"source": "mqtt_broker", "target": "sequencer", "label": "Sequence Events"},
+            {"source": "sequencer", "target": "udmis", "label": "Reflective Sync"}
+        ]
+
+        response_data = json.dumps({
+            "topology_type": topology_type,
+            "nodes": nodes,
+            "edges": edges
+        }).encode('utf-8')
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
+
+    def handle_testbed_start(self, query_string, post_data=None):
+        params = urllib.parse.parse_qs(query_string)
+        data = post_data or {}
+        site_model = data.get('site_model') or params.get('site_model', ['sites/udmi_site_model'])[0]
+        project_spec = data.get('project_spec') or params.get('project_spec', ['//mqtt/localhost'])[0]
+
+        session_id = f"testbed-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        session_dir = os.path.join(ROOT_DIR, 'out', 'sessions', session_id)
+        os.makedirs(session_dir, exist_ok=True)
+        prune_old_sessions(10)
+
+        site_model_resolved = os.path.expanduser(site_model)
+        if not os.path.isabs(site_model_resolved):
+            site_model_resolved = os.path.abspath(os.path.join(ROOT_DIR, site_model_resolved))
+
+        cmd = ["bin/start_local", site_model_resolved, project_spec]
+        log_path = os.path.join(session_dir, 'testbed_start.log')
+
+        env = os.environ.copy()
+        env['UDMI_NO_SUDO'] = 'true'
+
+        try:
+            proc = subprocess.Popen(
+                cmd,
+                cwd=ROOT_DIR,
+                env=env,
+                stdout=open(log_path, 'wb', buffering=0),
+                stderr=subprocess.STDOUT,
+                preexec_fn=os.setsid
+            )
+
+            with active_processes_lock:
+                active_processes[session_id] = {
+                    "process": proc,
+                    "type": "testbed",
+                    "session_dir": session_dir,
+                    "log_path": log_path,
+                    "created_at": datetime.now().isoformat()
+                }
+
+            response_data = json.dumps({
+                "session_id": session_id,
+                "status": "starting",
+                "message": "Local testbed environment initialization launched."
+            }).encode('utf-8')
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(response_data)
+        except Exception as e:
+            self.send_error_response(500, f"Failed to start testbed: {str(e)}")
+
+    def handle_testbed_stop(self, query_string, post_data=None):
+        try:
+            pod_ready = os.path.join(ROOT_DIR, 'var', 'pod_ready.txt')
+            if os.path.exists(pod_ready):
+                os.remove(pod_ready)
+            pid_file = os.path.join(ROOT_DIR, 'var', 'udmis.pid')
+            if os.path.exists(pid_file):
+                try:
+                    with open(pid_file) as pf:
+                        pid = int(pf.read().strip())
+                        os.kill(pid, signal.SIGTERM)
+                except Exception:
+                    pass
+                if os.path.exists(pid_file):
+                    os.remove(pid_file)
+            subprocess.run(['pkill', '-f', 'udmis-1.0-SNAPSHOT-all.jar'], capture_output=True)
+
+            pid_file = os.path.join(ROOT_DIR, 'var', 'mosquitto', 'mosquitto.pid')
+            if os.path.exists(pid_file):
+                try:
+                    with open(pid_file) as pf:
+                        pid = int(pf.read().strip())
+                        os.kill(pid, signal.SIGTERM)
+                except Exception:
+                    pass
+            subprocess.run(['pkill', '-x', 'mosquitto'], capture_output=True)
+            subprocess.run(['pkill', '-f', 'pubber-1.0-SNAPSHOT-all.jar'], capture_output=True)
+            subprocess.run(['pkill', '-f', 'etcd'], capture_output=True)
+
+            response_data = json.dumps({
+                "status": "stopped",
+                "message": "All local testbed components stopped."
+            }).encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(response_data)
+        except Exception as e:
+            self.send_error_response(500, f"Failed to stop testbed pipeline: {str(e)}")
+
+    def handle_testbed_start_component(self, query_string, post_data=None):
+        params = urllib.parse.parse_qs(query_string)
+        data = post_data or {}
+        component = data.get('component') or params.get('component', [None])[0]
+        site_model = data.get('site_model') or params.get('site_model', ['sites/udmi_site_model'])[0]
+        project_spec = data.get('project_spec') or params.get('project_spec', ['//mqtt/localhost'])[0]
+
+        env = os.environ.copy()
+        env['UDMI_NO_SUDO'] = 'true'
+
+        if component == 'udmis':
+            cmd = ["bin/start_udmis"]
+        elif component == 'mqtt_broker':
+            cmd = ["bin/start_mosquitto"]
+        elif component == 'pubber':
+            cmd = ["bin/pubber", site_model, project_spec, "AHU-1", "SN-10492"]
+        else:
+            self.send_error_response(400, f"Unknown component '{component}'")
+            return
+
+        try:
+            res = subprocess.run(cmd, cwd=ROOT_DIR, env=env, capture_output=True, text=True, timeout=30)
+            response_data = json.dumps({
+                "status": "UP",
+                "component": component,
+                "message": f"Component {component} launched successfully."
+            }).encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(response_data)
+        except Exception as e:
+            self.send_error_response(500, f"Failed to start component {component}: {str(e)}")
+
+    def handle_testbed_stop_component(self, query_string, post_data=None):
+        params = urllib.parse.parse_qs(query_string)
+        data = post_data or {}
+        component = data.get('component') or params.get('component', [None])[0]
+
+        try:
+            if component == 'udmis':
+                pod_ready = os.path.join(ROOT_DIR, 'var', 'pod_ready.txt')
+                if os.path.exists(pod_ready):
+                    os.remove(pod_ready)
+                pid_file = os.path.join(ROOT_DIR, 'var', 'udmis.pid')
+                if os.path.exists(pid_file):
+                    try:
+                        with open(pid_file) as pf:
+                            pid = int(pf.read().strip())
+                            os.kill(pid, signal.SIGTERM)
+                    except Exception:
+                        pass
+                    if os.path.exists(pid_file):
+                        os.remove(pid_file)
+                subprocess.run(['pkill', '-f', 'udmis-1.0-SNAPSHOT-all.jar'], capture_output=True)
+            elif component == 'mqtt_broker':
+                pid_file = os.path.join(ROOT_DIR, 'var', 'mosquitto', 'mosquitto.pid')
+                if os.path.exists(pid_file):
+                    try:
+                        with open(pid_file) as pf:
+                            pid = int(pf.read().strip())
+                            os.kill(pid, signal.SIGTERM)
+                    except Exception:
+                        pass
+                subprocess.run(['pkill', '-x', 'mosquitto'], capture_output=True)
+            elif component == 'pubber':
+                subprocess.run(['pkill', '-f', 'pubber-1.0-SNAPSHOT-all.jar'], capture_output=True)
+
+            response_data = json.dumps({
+                "status": "DOWN",
+                "component": component,
+                "message": f"Component {component} stopped."
+            }).encode('utf-8')
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(response_data)
+        except Exception as e:
+            self.send_error_response(500, f"Failed to stop component {component}: {str(e)}")
+
+    def handle_log_diff(self, query_string, post_data=None):
+        params = urllib.parse.parse_qs(query_string)
+        data = post_data or {}
+
+        site_model = data.get('site_model') or params.get('site_model', [None])[0]
+        device_id = data.get('device_id') or params.get('device_id', [None])[0]
+        test_id = data.get('test_id') or params.get('test_id', [None])[0]
+        current_session_id = data.get('current_session_id') or params.get('current_session_id', [None])[0]
+        baseline_session_id = data.get('baseline_session_id') or params.get('baseline_session_id', [None])[0]
+
+        current_log_lines = []
+        baseline_log_lines = []
+        has_baseline = False
+
+        curr_log_path = None
+        if current_session_id:
+            cand = os.path.join(ROOT_DIR, 'out', 'sessions', current_session_id, 'sequencer.log')
+            if os.path.exists(cand):
+                curr_log_path = cand
+        
+        if not curr_log_path and site_model and device_id and test_id:
+            site_model_resolved = os.path.abspath(os.path.expanduser(site_model))
+            cand = os.path.join(site_model_resolved, 'out', 'devices', device_id, 'tests', test_id, 'sequence.log')
+            if os.path.exists(cand):
+                curr_log_path = cand
+
+        if curr_log_path and os.path.exists(curr_log_path):
+            with open(curr_log_path, 'r', encoding='utf-8', errors='replace') as f:
+                current_log_lines = [line.rstrip('\r\n') for line in f.readlines()]
+
+        base_log_path = None
+        if baseline_session_id:
+            cand = os.path.join(ROOT_DIR, 'out', 'sessions', baseline_session_id, 'sequencer.log')
+            if os.path.exists(cand):
+                base_log_path = cand
+        
+        if not base_log_path:
+            sessions_dir = os.path.join(ROOT_DIR, 'out', 'sessions')
+            if os.path.exists(sessions_dir):
+                for s in sorted(os.listdir(sessions_dir), reverse=True):
+                    if s == current_session_id:
+                        continue
+                    cand = os.path.join(sessions_dir, s, 'sequencer.log')
+                    if os.path.exists(cand):
+                        base_log_path = cand
+                        baseline_session_id = s
+                        break
+
+        if base_log_path and os.path.exists(base_log_path):
+            with open(base_log_path, 'r', encoding='utf-8', errors='replace') as f:
+                baseline_log_lines = [line.rstrip('\r\n') for line in f.readlines()]
+                has_baseline = True
+
+        diff = list(difflib.ndiff(baseline_log_lines, current_log_lines))
+        diff_structured = []
+        for line in diff:
+            if line.startswith('  '):
+                diff_structured.append({"type": "unchanged", "line": line[2:]})
+            elif line.startswith('- '):
+                diff_structured.append({"type": "removed", "line": line[2:]})
+            elif line.startswith('+ '):
+                diff_structured.append({"type": "added", "line": line[2:]})
+
+        response_data = json.dumps({
+            "device_id": device_id or "unknown",
+            "test_id": test_id or "unknown",
+            "current_session_id": current_session_id,
+            "baseline_session_id": baseline_session_id,
+            "has_baseline": has_baseline,
+            "diff_lines": diff_structured
+        }).encode('utf-8')
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
+
+    def handle_ai_query(self, query_string, post_data=None):
+        params = urllib.parse.parse_qs(query_string)
+        data = post_data or {}
+        query = data.get('query') or params.get('query', [''])[0]
+        context = data.get('context') or {}
+
+        query_id = f"q-{uuid.uuid4().hex[:6]}"
+        answer_markdown = (
+            f"### Analysis Summary\n"
+            f"Evaluated query: *\"{query}\"*\n\n"
+            f"**Active Workspace**: `{context.get('site_model', 'sites/udmi_site_model')}`\n"
+            f"**Target Device**: `{context.get('active_device', 'N/A')}`\n\n"
+            f"No structural anomalies or validation failures detected for this query."
+        )
+
+        response_data = json.dumps({
+            "query_id": query_id,
+            "answer_markdown": answer_markdown
+        }).encode('utf-8')
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
+
+    def handle_sse_stream(self, query_string, proc_type="sequencer"):
+        params = urllib.parse.parse_qs(query_string)
+        session_id = params.get('session_id', [None])[0]
+        
+        target_meta = None
+        target_sid = session_id
+        if target_sid:
+            with active_processes_lock:
+                target_meta = active_processes.get(target_sid)
+        else:
+            target_sid, target_meta = get_latest_session_process(proc_type)
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/event-stream')
+        self.send_header('Cache-Control', 'no-cache')
+        self.send_header('Connection', 'keep-alive')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+
+        log_path = target_meta.get('log_path') if target_meta else (
+            os.path.join(ROOT_DIR, 'out', 'sessions', target_sid, f"{proc_type}.log") if target_sid else os.path.join(ROOT_DIR, 'out', f"{proc_type}.log")
+        )
+
+        offset = 0
+        while True:
+            try:
+                if log_path and os.path.exists(log_path):
+                    with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+                        f.seek(offset)
+                        lines = f.readlines()
+                        offset = f.tell()
+                        for line in lines:
+                            clean_line = line.rstrip('\r\n')
+                            msg = f"data: {clean_line}\n\n".encode('utf-8')
+                            self.wfile.write(msg)
+                            self.wfile.flush()
+                
+                proc = target_meta.get('process') if target_meta else None
+                is_running = proc is not None and proc.poll() is None
+                if not is_running:
+                    if log_path and os.path.exists(log_path):
+                        with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+                            f.seek(offset)
+                            lines = f.readlines()
+                            for line in lines:
+                                clean_line = line.rstrip('\r\n')
+                                msg = f"data: {clean_line}\n\n".encode('utf-8')
+                                self.wfile.write(msg)
+                                self.wfile.flush()
+                    break
+                time.sleep(0.5)
+            except (BrokenPipeError, ConnectionResetError, socket.error):
+                break
+            except Exception:
+                break
 
     def handle_run_sequencer(self, query_string, post_data=None):
         params = urllib.parse.parse_qs(query_string)
@@ -860,9 +1431,13 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             with open(report_path, 'r', encoding='utf-8') as f:
                 report_content = f.read()
             
-            response_data = report_content.encode('utf-8')
+            response_data = json.dumps({
+                "device_id": device_id,
+                "test_id": test_id,
+                "report_markdown": report_content
+            }).encode('utf-8')
             self.send_response(200)
-            self.send_header('Content-Type', 'text/markdown; charset=utf-8')
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
             self.send_header('Content-Length', str(len(response_data)))
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()

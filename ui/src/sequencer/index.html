@@ -26,28 +26,59 @@
   <!-- Sequencer Tool Layout -->
   <div class="tool-layout">
 
-    <!-- Local Header Toolbar (Specialized controls) -->
+    <!-- Local Header Toolbar (Structured Project Spec Builder & Controls) -->
     <header class="local-toolbar">
       <div class="toolbar-left">
         <!-- Device Under Test (DUT) Select -->
         <div class="control-group">
           <label for="device-select" class="control-label">Device Under Test</label>
-          <select id="device-select" class="form-select" style="width: 160px;" aria-label="Select DUT" disabled>
+          <select id="device-select" class="form-select" style="width: 150px;" aria-label="Select DUT" disabled>
             <option value="">-- Enter site path --</option>
           </select>
         </div>
 
-        <!-- Target Project Input -->
-        <div class="control-group">
-          <label for="project-input" class="control-label">Target Project</label>
-          <input type="text" id="project-input" class="form-input" style="width: 180px;" value="//mqtt/localhost"
-            aria-label="Target Project" />
+        <!-- Project Spec Builder Group -->
+        <div class="spec-builder-group">
+          <div class="control-group">
+            <label for="spec-provider-select" class="control-label">Provider</label>
+            <select id="spec-provider-select" class="form-select" style="width: 100px;" aria-label="Select Provider">
+              <option value="mqtt" selected>mqtt</option>
+              <option value="gref">gref</option>
+              <option value="gbos">gbos</option>
+              <option value="pubsub">pubsub</option>
+              <option value="clearblade">clearblade</option>
+            </select>
+          </div>
+
+          <div class="control-group">
+            <label for="spec-project-input" class="control-label">Project / Host</label>
+            <input type="text" id="spec-project-input" class="form-input" style="width: 130px;" value="localhost"
+              placeholder="localhost" aria-label="Project ID or Host" />
+          </div>
+
+          <div class="control-group">
+            <label for="spec-namespace-input" class="control-label">Namespace</label>
+            <input type="text" id="spec-namespace-input" class="form-input" style="width: 110px;" value=""
+              placeholder="/faucetsdn" aria-label="Namespace Segment" />
+          </div>
+
+          <div class="control-group">
+            <label for="spec-user-input" class="control-label">User Suffix</label>
+            <input type="text" id="spec-user-input" class="form-input" style="width: 100px;" value=""
+              placeholder="+heykhyati" aria-label="User Segment" disabled title="User segment supported only on gref and pubsub" />
+          </div>
+
+          <!-- Live Preview Chip -->
+          <div class="control-group">
+            <label class="control-label">Spec Syntax Preview</label>
+            <div id="spec-preview-bar" class="spec-preview-chip">//mqtt/localhost</div>
+          </div>
         </div>
 
         <!-- Version Input -->
         <div class="control-group">
-          <label for="model-input" class="control-label">Sequencer Version</label>
-          <input type="text" id="model-input" class="form-input" style="width: 100px;" value="HEAD" disabled
+          <label for="model-input" class="control-label">Version</label>
+          <input type="text" id="model-input" class="form-input" style="width: 80px;" value="HEAD" disabled
             aria-label="Abbreviated Git Commit Hash" />
         </div>
       </div>
@@ -136,11 +167,46 @@
           </div>
         </div>
 
-        <!-- Right Grid: Execution Details (Split View) -->
+        <!-- Right Grid: Execution Details (Dual Tab Live / Diff View Workspace) -->
         <div class="sequencer-workspace">
-          <!-- Top: Log Terminal -->
-          <div class="card log-terminal-card">
-            <div id="sequencer-logs" style="height: 100%;"></div>
+          
+          <!-- Top: Dual-Tab Log Workspace -->
+          <div class="card log-terminal-card" style="display: flex; flex-direction: column;">
+            <div class="tab-header-bar border-bottom">
+              <div class="segmented-tab-group">
+                <button id="tab-log-live" class="segmented-tab active" data-tab="live">
+                  <span class="material-symbols-outlined">terminal</span>
+                  <span>Live Console Stream</span>
+                </button>
+                <button id="tab-log-diff" class="segmented-tab" data-tab="diff">
+                  <span class="material-symbols-outlined">difference</span>
+                  <span>Differential Log Analysis</span>
+                </button>
+              </div>
+              <div id="diff-controls" class="diff-header-controls" style="display: none;">
+                <select id="diff-baseline-select" class="form-select" style="width: 180px; font-size: 11px;">
+                  <option value="">-- Baseline Session --</option>
+                </select>
+                <button id="btn-compare-diff" class="btn btn-outlined btn-sm">
+                  <span class="material-symbols-outlined" style="font-size:16px;">compare</span>
+                  <span>Compare Diff</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tab Page A: Live Console Stream -->
+            <div id="container-log-live" class="log-tab-container active" style="flex: 1; height: 100%;">
+              <div id="sequencer-logs" style="height: 100%;"></div>
+            </div>
+
+            <!-- Tab Page B: Differential Log Analysis Viewer -->
+            <div id="container-log-diff" class="log-tab-container" style="flex: 1; overflow: auto; padding: 12px;">
+              <div id="diff-viewer-body" class="diff-viewer-body">
+                <div class="diff-placeholder">
+                  Select a test case and baseline run, then click "Compare Diff" to perform differential log analysis.
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Bottom: Progress Stats Card -->

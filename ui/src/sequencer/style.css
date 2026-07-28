@@ -672,3 +672,122 @@
   color: #a78bfa !important;
   transform: scale(1.1);
 }
+
+/* 10. Spec Builder & Differential Log Styles */
+.spec-builder-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--bg-surface-container-low, #f3f3f6);
+  padding: 4px 10px;
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+
+.spec-preview-chip {
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-primary, #0061a4);
+  background-color: #e3f2fd;
+  padding: 4px 8px;
+  border-radius: 6px;
+  user-select: all;
+  white-space: nowrap;
+}
+
+.tab-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background-color: #252526;
+  border-bottom: 1px solid #333;
+}
+
+.segmented-tab-group {
+  display: flex;
+  gap: 4px;
+}
+
+.segmented-tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  color: #aaaaaa;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.segmented-tab:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.segmented-tab.active {
+  background-color: #37373d;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.segmented-tab .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.diff-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.log-tab-container {
+  display: none;
+}
+
+.log-tab-container.active {
+  display: block;
+}
+
+.diff-viewer-body {
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  line-height: 1.6;
+  color: #d4d4d4;
+  background-color: #1e1e1e;
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 200px;
+}
+
+.diff-placeholder {
+  color: #888;
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.diff-line {
+  padding: 2px 8px;
+  border-radius: 2px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.diff-line.removed {
+  background-color: rgba(186, 26, 26, 0.25);
+  color: #ff8a80;
+}
+
+.diff-line.added {
+  background-color: rgba(16, 185, 129, 0.25);
+  color: #a7f3d0;
+}
+
+.diff-line.unchanged {
+  color: #cccccc;
+}

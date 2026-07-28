@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testbed Workspace</title>
+
+  <!-- Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../shared/theme.css?v=1.5">
+  <link rel="stylesheet" href="style.css?v=1.5">
+</head>
+
+<body>
+
+  <div class="tool-layout">
+
+    <!-- Top Action Bar -->
+    <div class="testbed-action-bar">
+      <div class="action-bar-left">
+        <span class="material-symbols-outlined icon-blue">schema</span>
+        <h2 class="title">Testbed Setup</h2>
+        <span id="topology-completeness-badge" class="badge badge-success" style="margin-left: 12px;">
+          <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+          <span>COMPLETE SETUP</span>
+        </span>
+      </div>
+
+      <div class="action-bar-right">
+        <button id="btn-default-setup" class="btn btn-outlined"
+          title="Configure Local Setup topology (Pubber -> Local Broker -> Local UDMIS)">
+          <span class="material-symbols-outlined">auto_fix_high</span>
+          <span>Local Setup</span>
+        </button>
+        <button id="btn-cloud-setup" class="btn btn-outlined"
+          title="Configure Cloud Setup topology (Pubber -> ClearBlade Broker -> Cloud UDMIS)">
+          <span class="material-symbols-outlined">cloud_sync</span>
+          <span>Cloud Setup</span>
+        </button>
+        <button id="btn-start-pipeline" class="btn btn-success"
+          title="Start locally running background pipeline components">
+          <span class="material-symbols-outlined">play_arrow</span>
+        </button>
+        <button id="btn-stop-pipeline" class="btn btn-danger-outlined"
+          title="Stop all locally running background pipeline components">
+          <span class="material-symbols-outlined">stop</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Workspace Layout: Palette | Canvas | Inspector -->
+    <main class="testbed-workspace">
+
+      <!-- 1. Node Palette Sidebar -->
+      <aside class="palette-sidebar">
+        <div class="sidebar-header border-bottom">
+          <span class="material-symbols-outlined">devices</span>
+          <h3>Choose Devices</h3>
+        </div>
+        <div class="palette-list">
+
+          <div class="palette-item" draggable="true" data-node-type="pubber">
+            <span class="material-symbols-outlined palette-icon">smart_toy</span>
+            <div class="palette-text">
+              <span class="palette-title">Device Emulator (Pubber)</span>
+              <span class="palette-sub">Simulated UDMI device</span>
+            </div>
+          </div>
+
+          <div class="palette-item disabled" draggable="false" data-node-type="spotter">
+            <span class="material-symbols-outlined palette-icon">radar</span>
+            <div class="palette-text">
+              <span class="palette-title">Device Emulator (Spotter)</span>
+              <span class="palette-sub">Coming Soon</span>
+            </div>
+          </div>
+
+          <div class="palette-item" draggable="true" data-node-type="actual_device">
+            <span class="material-symbols-outlined palette-icon">router</span>
+            <div class="palette-text">
+              <span class="palette-title">Actual Device</span>
+              <span class="palette-sub">Physical hardware target</span>
+            </div>
+          </div>
+
+          <div class="palette-item disabled" draggable="false" data-node-type="ancillary">
+            <span class="material-symbols-outlined palette-icon">extension</span>
+            <div class="palette-text">
+              <span class="palette-title">Ancillary Test Node</span>
+              <span class="palette-sub">Coming Soon</span>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- 2. Interactive Topology Graph Canvas -->
+      <section id="canvas-container" class="canvas-container">
+        <div id="graph-canvas" class="graph-canvas">
+          <svg id="canvas-svg" width="100%" height="100%"></svg>
+          <div id="nodes-layer" class="nodes-layer"></div>
+        </div>
+      </section>
+
+      <!-- 3. Node Inspector & Config Panel -->
+      <aside id="inspector-panel" class="inspector-panel">
+        <div class="inspector-header border-bottom">
+          <div class="inspector-title-row">
+            <span id="inspector-icon" class="material-symbols-outlined icon">tune</span>
+            <h3 id="inspector-title">Node Inspector</h3>
+          </div>
+          <button id="btn-close-inspector" class="btn-icon-xs"><span
+              class="material-symbols-outlined">close</span></button>
+        </div>
+
+        <div id="inspector-body" class="inspector-body">
+          <div class="inspector-empty">
+            <span class="material-symbols-outlined">touch_app</span>
+            <p>Select a node on the canvas to configure parameters and check its health status.</p>
+          </div>
+        </div>
+      </aside>
+
+    </main>
+
+  </div>
+
+  <!-- JavaScript Modules -->
+  <script type="module" src="main.js"></script>
+</body>
+
+</html>

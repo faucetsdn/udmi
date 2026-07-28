@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>UDMI Workbench</title>
-  <link rel="icon" type="image/png" href="/assets/udmi_logo.png">
+  <link rel="icon" type="image/png" href="/assets/workbench_logo.png">
 
   <!-- Fonts & Material Icons (Google Testrun Aligned) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -27,7 +27,7 @@
   <!-- Application Loading Overlay -->
   <div id="app-loader" class="app-loader-overlay">
     <div class="loader-content">
-      <img src="/assets/udmi_logo.png" alt="UDMI Logo" class="loader-logo" />
+      <img src="/assets/workbench_logo.png" alt="UDMI Logo" class="loader-logo" />
       <div class="loader-track">
         <div class="loader"></div>
       </div>
@@ -38,56 +38,82 @@
   <!-- Main App Shell -->
   <div class="app-shell">
 
-    <!-- Top Toolbar (Global Shared Controls Only) -->
+    <!-- Top App Toolbar (Brand & Centered Site Model Path Input) -->
     <header class="app-toolbar">
       <div class="toolbar-brand">
-        <img src="/assets/udmi_logo.png" alt="UDMI Logo" class="brand-logo-img" />
+        <img src="/assets/workbench_logo.png" alt="UDMI Logo" class="brand-logo-img" />
         <div class="brand-text-group">
           <h1 class="brand-title">Workbench</h1>
-          <span id="app-subtitle" class="brand-subtitle">/ Workspace</span>
         </div>
       </div>
 
-      <div class="toolbar-controls">
-        <!-- Global Shared Control: Site Model Path Input -->
-        <div class="control-group">
-          <label for="site-input" class="control-label">Site Model Path</label>
-          <div class="input-with-button">
-            <input type="text" id="site-input" class="form-input" style="width: 280px;"
-              placeholder="e.g. sites/udmi_site_model" aria-label="Site Model Path" />
-            <button id="btn-browse-site" class="btn btn-outlined btn-icon-sm" aria-label="Browse site model folder">
-              <span class="material-symbols-outlined">folder_open</span>
-            </button>
-          </div>
+      <!-- Centered Site Model Path Input -->
+      <div class="toolbar-center">
+        <div class="input-with-button">
+          <input type="text" id="site-input" class="form-input site-input-state-unselected" style="width: 360px;"
+            placeholder="Site Model Path..." aria-label="Site Model Path" />
+          <button id="btn-browse-site" class="btn btn-outlined btn-icon-sm" aria-label="Browse site model folder">
+            <span class="material-symbols-outlined">folder_open</span>
+          </button>
         </div>
       </div>
+
+      <div class="toolbar-actions">
+        <!-- Right toolbar actions space -->
+      </div>
     </header>
+
+    <!-- Sub-Header Horizontal Material Design Tab Bar -->
+    <nav id="app-nav-tabs" class="app-tab-bar" aria-label="Main Navigation">
+      <button class="m3-tab active" data-tab="testbed" data-feature="testbed" aria-selected="true" role="tab">
+        <span class="material-symbols-outlined icon">hub</span>
+        <span>Testbed</span>
+      </button>
+      <button class="m3-tab" data-tab="sequencer" data-feature="sequencer" aria-selected="false" role="tab">
+        <span class="material-symbols-outlined icon">analytics</span>
+        <span>Sequencer</span>
+      </button>
+      <!-- Animated Active Tab Underline Indicator -->
+      <div class="m3-tab-indicator"></div>
+    </nav>
+
+    <!-- Onboarding Callout Banner (Prompt when no site model is loaded) -->
+    <div id="site-onboarding-banner" class="onboarding-banner" style="display: none;">
+      <span class="material-symbols-outlined icon">info</span>
+      <span class="text">Welcome to UDMI Workbench! Please select or enter a valid Site Model Path above to begin.</span>
+    </div>
 
     <!-- App Body -->
     <main class="app-main">
 
-      <!-- Navigation Sidebar (Only visible if > 1 feature active) -->
-      <aside class="app-sidebar">
-        <nav class="sidebar-tabs" aria-label="Main Navigation">
-          <button class="sidebar-tab active" data-tab="sequencer" data-feature="sequencer" aria-selected="true" role="tab">
-            <span class="material-symbols-outlined">analytics</span>
-            <span>Sequencer</span>
-          </button>
-          <button class="sidebar-tab" data-tab="mantis" data-feature="mantis" aria-selected="false" role="tab">
-            <span class="material-symbols-outlined">bug_report</span>
-            <span>Mantis</span>
-          </button>
-        </nav>
-      </aside>
-
       <!-- Workspace Panel Content (Micro-Frontend Iframe Containers) -->
       <section class="app-content" style="width: 100%; height: 100%; overflow: hidden; padding: 0; position: relative;">
+        <!-- Testbed Iframe -->
+        <iframe id="iframe-testbed" class="app-iframe active" src="testbed/index.html" data-feature="testbed"></iframe>
         <!-- Sequencer Iframe -->
-        <iframe id="iframe-sequencer" class="app-iframe active" src="sequencer/index.html" data-feature="sequencer"></iframe>
-        <!-- Mantis Iframe -->
-        <iframe id="iframe-mantis" class="app-iframe" src="mantis/index.html" data-feature="mantis"></iframe>
+        <iframe id="iframe-sequencer" class="app-iframe" src="sequencer/index.html" data-feature="sequencer"></iframe>
       </section>
     </main>
+
+    <!-- Mantis AI Sidebar Drawer (Global AI Assistant Side Panel with Edge Pull Tab) -->
+    <aside id="mantis-drawer" class="mantis-drawer" aria-label="Mantis AI Assistant">
+      <!-- Right Edge Pull Tab Handle -->
+      <button id="mantis-pull-tab" class="mantis-pull-tab" title="Toggle Mantis AI Assistant" aria-label="Toggle Mantis AI Assistant">
+        <span class="material-symbols-outlined icon">auto_awesome</span>
+        <span class="label">Mantis AI</span>
+      </button>
+
+      <div class="mantis-drawer-header">
+        <div class="header-title">
+          <span class="material-symbols-outlined icon">auto_awesome</span>
+          <span>Mantis AI Assistant</span>
+        </div>
+        <button id="btn-close-mantis-drawer" class="btn-close" aria-label="Close Mantis AI Drawer">&times;</button>
+      </div>
+      <div class="mantis-drawer-body">
+        <iframe id="iframe-mantis" class="mantis-drawer-iframe" src="mantis/index.html" data-feature="mantis"></iframe>
+      </div>
+    </aside>
 
   </div>
 
@@ -95,7 +121,10 @@
   <div id="folder-browser-modal" class="modal-overlay">
     <div class="modal-card glass-panel">
       <div class="modal-header">
-        <h3>Browse Site Model Directory</h3>
+        <div>
+          <h3 style="margin: 0;">Select Site Model Directory</h3>
+          <p style="margin: 4px 0 0 0; font-size: 12px; color: var(--text-secondary);">Choose your UDMI Site Model path to initialize Workbench services.</p>
+        </div>
         <button id="btn-close-browser" class="btn-close" aria-label="Close folder browser">&times;</button>
       </div>
       <div class="modal-body">

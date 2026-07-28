@@ -52,9 +52,13 @@ class SequencerController {
     this.btnSelectFailed = document.getElementById('btn-select-failed');
     this.btnSettings = document.getElementById('btn-settings');
     
-    // Inputs
+    // Inputs & Project Spec Builder
     this.deviceSelect = document.getElementById('device-select');
-    this.projectInput = document.getElementById('project-input');
+    this.specProviderSelect = document.getElementById('spec-provider-select');
+    this.specProjectInput = document.getElementById('spec-project-input');
+    this.specNamespaceInput = document.getElementById('spec-namespace-input');
+    this.specUserInput = document.getElementById('spec-user-input');
+    this.specPreviewBar = document.getElementById('spec-preview-bar');
     this.modelInput = document.getElementById('model-input');
     this.testSearch = document.getElementById('test-search');
     
@@ -63,6 +67,16 @@ class SequencerController {
     this.selectLogLevel = document.getElementById('select-log-level');
     this.selectTestStage = document.getElementById('select-test-stage');
     this.inputSerialNo = document.getElementById('input-serial-no');
+
+    // Dual-Tab Workspace Controls
+    this.tabLogLive = document.getElementById('tab-log-live');
+    this.tabLogDiff = document.getElementById('tab-log-diff');
+    this.containerLogLive = document.getElementById('container-log-live');
+    this.containerLogDiff = document.getElementById('container-log-diff');
+    this.diffControls = document.getElementById('diff-controls');
+    this.diffBaselineSelect = document.getElementById('diff-baseline-select');
+    this.btnCompareDiff = document.getElementById('btn-compare-diff');
+    this.diffViewerBody = document.getElementById('diff-viewer-body');
 
     // Layout Containers
     this.testCasesList = document.querySelector('.test-cases-list');
@@ -100,6 +114,31 @@ class SequencerController {
         this.handleGlobalStateChange(event.data.siteModel);
       }
     });
+
+    // --- 2. PROJECT SPEC BUILDER LISTENERS ---
+    if (this.specProviderSelect) {
+      this.specProviderSelect.addEventListener('change', () => this.updateProjectSpecPreview());
+    }
+    if (this.specProjectInput) {
+      this.specProjectInput.addEventListener('input', () => this.updateProjectSpecPreview());
+    }
+    if (this.specNamespaceInput) {
+      this.specNamespaceInput.addEventListener('input', () => this.updateProjectSpecPreview());
+    }
+    if (this.specUserInput) {
+      this.specUserInput.addEventListener('input', () => this.updateProjectSpecPreview());
+    }
+
+    // --- 3. DUAL-TAB WORKSPACE LISTENERS ---
+    if (this.tabLogLive) {
+      this.tabLogLive.addEventListener('click', () => this.switchLogTab('live'));
+    }
+    if (this.tabLogDiff) {
+      this.tabLogDiff.addEventListener('click', () => this.switchLogTab('diff'));
+    }
+    if (this.btnCompareDiff) {
+      this.btnCompareDiff.addEventListener('click', () => this.runLogDiff());
+    }
 
     // Local Device Select Trigger
     this.deviceSelect.addEventListener('change', (e) => {
@@ -227,10 +266,111 @@ class SequencerController {
   validateInputs() {
     const hasSite = this.siteModel !== '';
     const hasDevice = this.device !== '';
-    const hasProject = this.projectInput.value.trim() !== '';
+    const hasProject = this.getFormattedProjectSpec() !== '';
     const hasChecked = this.testCases.some(tc => tc.checked !== false);
 
     this.btnRun.disabled = !(hasSite && hasDevice && hasProject && hasChecked && !this.isRunning);
+  }
+
+  getFormattedProjectSpec() {
+    const provider = (this.specProviderSelect ? this.specProviderSelect.value : 'mqtt') || 'mqtt';
+    const project = (this.specProjectInput ? this.specProjectInput.value.trim() : 'localhost') || 'localhost';
+    let ns = (this.specNamespaceInput ? this.specNamespaceInput.value.trim() : '');
+    let user = (this.specUserInput ? this.specUserInput.value.trim() : '');
+
+    if (ns && !ns.startsWith('/')) {
+      ns = '/' + ns;
+    }
+
+    if (provider === 'mqtt' || provider === 'gbos') {
+      user = '';
+      if (this.specUserInput) {
+        this.specUserInput.disabled = true;
+        this.specUserInput.value = '';
+      }
+    } else if (this.specUserInput) {
+      this.specUserInput.disabled = false;
+    }
+
+    if (user && !user.startsWith('+')) {
+      user = '+' + user;
+    }
+
+    return `//${provider}/${project}${ns}${user}`;
+  }
+
+  updateProjectSpecPreview() {
+    const specStr = this.getFormattedProjectSpec();
+    if (this.specPreviewBar) {
+      this.specPreviewBar.textContent = specStr;
+    }
+    localStorage.setItem('udmi_target_project', specStr);
+    this.validateInputs();
+  }
+
+  switchLogTab(tabName) {
+    if (tabName === 'live') {
+      if (this.tabLogLive) this.tabLogLive.classList.add('active');
+      if (this.tabLogDiff) this.tabLogDiff.classList.remove('active');
+      if (this.containerLogLive) this.containerLogLive.classList.add('active');
+      if (this.containerLogDiff) this.containerLogDiff.classList.remove('active');
+      if (this.diffControls) this.diffControls.style.display = 'none';
+    } else {
+      if (this.tabLogDiff) this.tabLogDiff.classList.add('active');
+      if (this.tabLogLive) this.tabLogLive.classList.remove('active');
+      if (this.containerLogDiff) this.containerLogDiff.classList.add('active');
+      if (this.containerLogLive) this.containerLogLive.classList.remove('active');
+      if (this.diffControls) this.diffControls.style.display = 'flex';
+      this.runLogDiff();
+    }
+  }
+
+  async runLogDiff() {
+    if (!this.siteModel || !this.device || !this.diffViewerBody) return;
+
+    this.diffViewerBody.innerHTML = '<div class="diff-placeholder">Computing differential log analysis...</div>';
+
+    try {
+      const activeTc = this.testCases.find(tc => tc.checked) || this.testCases[0];
+      const testId = activeTc ? activeTc.id : 'system.config';
+
+      const res = await fetch('/api/log_diff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          site_model: this.siteModel,
+          device_id: this.device,
+          test_id: testId,
+          current_session_id: this.currentSessionId || null,
+          baseline_session_id: this.diffBaselineSelect ? (this.diffBaselineSelect.value || null) : null
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(`Diff request failed with status ${res.status}`);
+      }
+
+      const data = await res.json();
+      this.renderDiffLines(data.diff_lines || []);
+    } catch (e) {
+      this.diffViewerBody.innerHTML = `<div class="diff-placeholder" style="color:var(--color-error)">Error: ${e.message}</div>`;
+    }
+  }
+
+  renderDiffLines(diffLines) {
+    if (diffLines.length === 0) {
+      this.diffViewerBody.innerHTML = '<div class="diff-placeholder">No log differences detected between current run and baseline.</div>';
+      return;
+    }
+
+    this.diffViewerBody.innerHTML = '';
+    diffLines.forEach(item => {
+      const div = document.createElement('div');
+      div.className = `diff-line ${item.type}`;
+      const prefix = item.type === 'removed' ? '- ' : (item.type === 'added' ? '+ ' : '  ');
+      div.textContent = prefix + item.line;
+      this.diffViewerBody.appendChild(div);
+    });
   }
 
   // --- LOCAL CACHE LOADERS ---
@@ -251,7 +391,38 @@ class SequencerController {
 
   loadCachedProject() {
     const cached = localStorage.getItem('udmi_target_project');
-    this.projectInput.value = cached || '//mqtt/localhost';
+    if (cached && cached.startsWith('//')) {
+      try {
+        const withoutSlash = cached.substring(2);
+        const parts = withoutSlash.split('/');
+        const provider = parts[0];
+        let rest = parts.slice(1).join('/');
+
+        if (this.specProviderSelect) this.specProviderSelect.value = provider;
+
+        let user = '';
+        if (rest.includes('+')) {
+          const uParts = rest.split('+');
+          rest = uParts[0];
+          user = uParts[1];
+        }
+
+        let project = rest;
+        let ns = '';
+        if (rest.includes('/')) {
+          const pParts = rest.split('/');
+          project = pParts[0];
+          ns = '/' + pParts.slice(1).join('/');
+        }
+
+        if (this.specProjectInput) this.specProjectInput.value = project;
+        if (this.specNamespaceInput) this.specNamespaceInput.value = ns;
+        if (this.specUserInput) this.specUserInput.value = user;
+      } catch (e) {
+        console.error('Error parsing cached project spec:', e);
+      }
+    }
+    this.updateProjectSpecPreview();
   }
 
   async loadTestSequences() {
@@ -563,7 +734,10 @@ class SequencerController {
     // Disable local controls
     this.btnRun.disabled = true;
     this.btnStop.disabled = false;
-    this.projectInput.disabled = true;
+    if (this.specProviderSelect) this.specProviderSelect.disabled = true;
+    if (this.specProjectInput) this.specProjectInput.disabled = true;
+    if (this.specNamespaceInput) this.specNamespaceInput.disabled = true;
+    if (this.specUserInput) this.specUserInput.disabled = true;
     this.btnSettings.disabled = true;
     this.settingsPopover.classList.remove('active');
 
@@ -587,7 +761,7 @@ class SequencerController {
 
     const queryParams = new URLSearchParams({
       site_model: this.siteModel,
-      project_spec: this.projectInput.value.trim(),
+      project_spec: this.getFormattedProjectSpec(),
       device_id: this.device,
       tests: activeTests.map(tc => tc.id).join(','),
       log_level: this.selectLogLevel.value,
@@ -781,7 +955,12 @@ class SequencerController {
     this.isRunning = false;
     this.btnRun.disabled = false;
     this.btnStop.disabled = true;
-    this.projectInput.disabled = false;
+    if (this.specProviderSelect) this.specProviderSelect.disabled = false;
+    if (this.specProjectInput) this.specProjectInput.disabled = false;
+    if (this.specNamespaceInput) this.specNamespaceInput.disabled = false;
+    if (this.specUserInput && (this.specProviderSelect.value === 'gref' || this.specProviderSelect.value === 'pubsub')) {
+      this.specUserInput.disabled = false;
+    }
     this.btnSettings.disabled = false;
     this.renderTestCases();
   }

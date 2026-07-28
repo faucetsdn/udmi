@@ -52,7 +52,7 @@ class MantisController {
     this.projectSpec = ''; // Piped dynamically from Sequencer
 
     // Local state
-    this.activeTab = 'trace'; // 'trace' or 'diagnostics'
+    this.activeTab = 'diagnostics'; // AI Diagnostics Agent view
     this.activeTraceNodes = [];
     this.currentSelectedNodePayload = null;
     
@@ -134,12 +134,19 @@ class MantisController {
     this.testTargetBadge = document.getElementById('mantis-test-target-badge');
     this.testTimeBadge = document.getElementById('mantis-test-time-badge');
     this.deviceResults = {};
+
+    // Interactive AI Assistant Chat Controls
+    this.aiChatInput = document.getElementById('ai-chat-input');
+    this.btnSubmitAiChat = document.getElementById('btn-submit-ai-chat');
   }
 
   initComponents() {
-    // Initialize JSONViewer (Trace tab)
-    this.jsonViewer = new JSONViewer(document.getElementById('mqtt-json-viewer'));
-    this.jsonViewer.render({ message: "Waiting for Site Model selection from parent shell..." });
+    // Initialize JSONViewer (if trace tab element exists)
+    const jsonViewerEl = document.getElementById('mqtt-json-viewer');
+    if (jsonViewerEl) {
+      this.jsonViewer = new JSONViewer(jsonViewerEl);
+      this.jsonViewer.render({ message: "Waiting for Site Model selection from parent shell..." });
+    }
 
     // Initialize LogViewer (Diagnostics tab)
     this.triageLogViewer = new LogViewer(this.triageTerminalContainer);
@@ -152,12 +159,12 @@ class MantisController {
   }
 
   initEvents() {
-    // --- 1. POSTMESSAGE LISTENER (State Sync from Shell) ---
+    // --- 1. POSTMESSAGE LISTENER (State Sync from Shell & Testbed) ---
     window.addEventListener('message', (event) => {
       if (event.data) {
         if (event.data.type === 'udmi_state_change') {
           this.handleGlobalStateChange(event.data.siteModel);
-        } else if (event.data.type === 'load_diagnose') {
+        } else if (event.data.type === 'load_diagnose' || event.data.type === 'trigger_triage') {
           this.handleLoadDiagnose(event.data);
         }
       }
@@ -173,16 +180,36 @@ class MantisController {
     });
 
     // Copy to clipboard triggers
-    this.btnCopyPayload.addEventListener('click', () => this.copyPayloadToClipboard());
-    this.btnCopyReport.addEventListener('click', () => this.copyReportToClipboard());
+    if (this.btnCopyPayload) {
+      this.btnCopyPayload.addEventListener('click', () => this.copyPayloadToClipboard());
+    }
+    if (this.btnCopyReport) {
+      this.btnCopyReport.addEventListener('click', () => this.copyReportToClipboard());
+    }
 
-    // Tab buttons triggers
-    this.tabBtnTrace.addEventListener('click', () => this.switchLocalTab('trace'));
-    this.tabBtnDiagnostics.addEventListener('click', () => this.switchLocalTab('diagnostics'));
+    // Tab buttons triggers (defensive check)
+    if (this.tabBtnTrace) {
+      this.tabBtnTrace.addEventListener('click', () => this.switchLocalTab('trace'));
+    }
+    if (this.tabBtnDiagnostics) {
+      this.tabBtnDiagnostics.addEventListener('click', () => this.switchLocalTab('diagnostics'));
+    }
 
     // Triage run controls
     this.btnRunTriage.addEventListener('click', () => this.startAITriage());
     this.btnStopTriage.addEventListener('click', () => this.stopAITriage());
+
+    // AI Chat submission triggers
+    if (this.btnSubmitAiChat) {
+      this.btnSubmitAiChat.addEventListener('click', () => this.submitAiChatQuery());
+    }
+    if (this.aiChatInput) {
+      this.aiChatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          this.submitAiChatQuery();
+        }
+      });
+    }
 
     // AI Auth controls events
     this.providerSelect.addEventListener('change', () => this.toggleProviderControls());
@@ -235,6 +262,61 @@ class MantisController {
           this.loadMantisBrowserPath(e.target.value.trim());
         }
       });
+    }
+  }
+
+  async submitAiChatQuery() {
+    if (!this.aiChatInput) return;
+    const promptText = this.aiChatInput.value.trim();
+    if (!promptText) return;
+
+    this.aiChatInput.value = '';
+    this.btnSubmitAiChat.disabled = true;
+
+    // Append prompt to RCA report body
+    const promptDiv = document.createElement('div');
+    promptDiv.className = 'ai-user-query';
+    promptDiv.style.cssText = 'background: rgba(137, 180, 250, 0.1); border-left: 3px solid #89b4fa; padding: 10px 14px; margin: 12px 0; border-radius: 6px; font-weight: 500;';
+    promptDiv.textContent = `User Question: ${promptText}`;
+    this.rcaReportBody.appendChild(promptDiv);
+
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'ai-loading-response';
+    loadingDiv.style.cssText = 'color: #9399b2; font-style: italic; margin: 8px 0;';
+    loadingDiv.textContent = 'Mantis AI is pondering your question...';
+    this.rcaReportBody.appendChild(loadingDiv);
+    this.rcaReportBody.scrollTop = this.rcaReportBody.scrollHeight;
+
+    try {
+      const res = await fetch('/api/ai_query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: promptText,
+          site_model: this.siteModel,
+          device_id: this.device,
+          test_id: this.scenarioSelect ? this.scenarioSelect.value : ''
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(`AI query failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+      loadingDiv.remove();
+
+      const responseDiv = document.createElement('div');
+      responseDiv.className = 'ai-response-markdown';
+      responseDiv.style.cssText = 'background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--border-color);';
+      responseDiv.innerHTML = this.parseMarkdownToHTML(data.response || 'No answer generated.');
+      this.rcaReportBody.appendChild(responseDiv);
+      this.rcaReportBody.scrollTop = this.rcaReportBody.scrollHeight;
+    } catch (err) {
+      loadingDiv.textContent = `Error getting response: ${err.message}`;
+      loadingDiv.style.color = '#f38ba8';
+    } finally {
+      this.btnSubmitAiChat.disabled = false;
     }
   }
 
@@ -452,6 +534,38 @@ class MantisController {
     // Toggle page visibility
     this.tabPageTrace.classList.toggle('active', tabId === 'trace');
     this.tabPageDiagnostics.classList.toggle('active', tabId === 'diagnostics');
+  }
+
+  handleLoadDiagnose(data) {
+    if (data.siteModel) this.siteModel = data.siteModel;
+    if (data.projectSpec) this.projectSpec = data.projectSpec;
+    if (data.deviceId) {
+      this.device = data.deviceId;
+      if (this.deviceSelect) {
+        let opt = Array.from(this.deviceSelect.options).find(o => o.value === data.deviceId);
+        if (!opt) {
+          opt = document.createElement('option');
+          opt.value = data.deviceId;
+          opt.textContent = data.deviceId;
+          this.deviceSelect.appendChild(opt);
+        }
+        this.deviceSelect.value = data.deviceId;
+        this.deviceSelect.disabled = false;
+      }
+    }
+    if (data.testId && this.scenarioSelect) {
+      let opt = Array.from(this.scenarioSelect.options).find(o => o.value === data.testId);
+      if (!opt) {
+        opt = document.createElement('option');
+        opt.value = data.testId;
+        opt.textContent = data.testId;
+        this.scenarioSelect.appendChild(opt);
+      }
+      this.scenarioSelect.value = data.testId;
+      this.scenarioSelect.disabled = false;
+    }
+    this.switchLocalTab('diagnostics');
+    this.runAITriage();
   }
 
   // --- STATE SYNC & SCENARIO DISCOVERY ---

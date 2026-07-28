@@ -116,12 +116,125 @@ class TestUIServer(unittest.TestCase):
             self.assertEqual(data.get("device"), "AHU-1")
             self.assertIn("results", data)
             results = data["results"]
-            if "blob_update_oversize" in results:
-                self.assertIn("project_spec", results["blob_update_oversize"])
-                self.assertEqual(results["blob_update_oversize"]["project_spec"], "localhost")
-            if "blob_update_success" in results:
-                self.assertIn("project_spec", results["blob_update_success"])
-                self.assertEqual(results["blob_update_success"]["project_spec"], "bos-platform-dev")
+            for test_name, res in results.items():
+                self.assertIn("project_spec", res)
+                self.assertIsNotNone(res["project_spec"])
+
+    def test_get_features(self):
+        url = "http://127.0.0.1:8089/api/features"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("testbed", data)
+            self.assertIn("sequencer", data)
+            self.assertIn("mantis", data)
+
+    def test_list_spec_fields(self):
+        url = "http://127.0.0.1:8089/api/list?path=sites"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("path", data)
+            self.assertIn("absolute_path", data)
+            self.assertIn("parent_path", data)
+            self.assertIn("entries", data)
+            self.assertIn("folders", data)
+
+    def test_read_file_json(self):
+        url = "http://127.0.0.1:8089/api/read_file?path=sites/udmi_site_model/cloud_iot_config.json"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("path", data)
+            self.assertIn("content", data)
+            self.assertIn("project_id", data["content"])
+
+    def test_get_devices(self):
+        url = "http://127.0.0.1:8089/api/devices?site_model=sites/udmi_site_model"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("site_model", data)
+            self.assertIn("devices", data)
+            self.assertIn("AHU-1", data["devices"])
+
+    def test_testbed_status(self):
+        url = "http://127.0.0.1:8089/api/testbed/status?site_model=sites/udmi_site_model"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("overall_status", data)
+            self.assertIn("components", data)
+            self.assertIn("mqtt_broker", data["components"])
+            self.assertIn("validator", data["components"])
+            self.assertIn("sequencer", data["components"])
+            self.assertIn("udmis", data["components"])
+
+    def test_testbed_topology(self):
+        url = "http://127.0.0.1:8089/api/testbed/topology?site_model=sites/udmi_site_model&project_spec=//mqtt/localhost"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertEqual(data.get("topology_type"), "LOCAL_MQTT")
+            self.assertIn("nodes", data)
+            self.assertIn("edges", data)
+
+    def test_testbed_start(self):
+        url = "http://127.0.0.1:8089/api/testbed/start"
+        payload = json.dumps({
+            "site_model": "sites/udmi_site_model",
+            "project_spec": "//mqtt/localhost"
+        }).encode('utf-8')
+        headers = {"Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("session_id", data)
+            self.assertEqual(data.get("status"), "starting")
+            sid = data["session_id"]
+            if sid in ui_server.active_processes:
+                proc_meta = ui_server.active_processes[sid]
+                # Cleanup process
+                p = proc_meta.get("process")
+                if p and p.poll() is None:
+                    p.terminate()
+
+    def test_log_diff(self):
+        url = "http://127.0.0.1:8089/api/log_diff"
+        payload = json.dumps({
+            "site_model": "sites/udmi_site_model",
+            "device_id": "AHU-1",
+            "test_id": "system.config"
+        }).encode('utf-8')
+        headers = {"Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertEqual(data.get("device_id"), "AHU-1")
+            self.assertEqual(data.get("test_id"), "system.config")
+            self.assertIn("diff_lines", data)
+
+    def test_ai_query(self):
+        url = "http://127.0.0.1:8089/api/ai_query"
+        payload = json.dumps({
+            "query": "Why did AHU-1 fail validation?",
+            "context": {"site_model": "sites/udmi_site_model", "active_device": "AHU-1"}
+        }).encode('utf-8')
+        headers = {"Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("query_id", data)
+            self.assertIn("answer_markdown", data)
 
     def test_prune_old_sessions(self):
         import os

@@ -12,13 +12,14 @@
   background-color: var(--bg-surface-container-lowest);
 }
 
-/* 2. Top Toolbar Styles */
+/* 2. Top App Toolbar (Brand & Centered Input) */
 .app-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: var(--toolbar-height);
-    padding: 8px 24px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0 16px;
   background-color: var(--bg-surface);
   border-bottom: 1px solid var(--border-color);
   z-index: 10;
@@ -29,58 +30,94 @@
 .toolbar-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  min-width: 180px;
 }
 
-.brand-text-group {
+.toolbar-center {
+  flex: 1;
   display: flex;
-  align-items: baseline;
-  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.toolbar-actions {
+  min-width: 160px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .brand-logo-img {
-  height: 24px;
+  height: 32px;
   width: auto;
+  object-fit: contain;
 }
 
 .brand-title {
   font-family: 'Google Sans', sans-serif;
-  font-size: 19px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 600;
   color: var(--text-primary);
   margin: 0;
   letter-spacing: -0.2px;
 }
 
-.brand-subtitle {
-  font-family: 'Google Sans', sans-serif;
-  font-size: 14px;
-  color: var(--text-muted);
-}
-
-.toolbar-controls {
+/* 2b. Material 3 Secondary/Primary Sub-Header Tab Bar */
+.app-tab-bar {
   display: flex;
   align-items: center;
-  gap: 20px;
-  flex: 1;
-  justify-content: flex-end;
+  height: 38px;
+  padding: 0 16px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  z-index: 9;
+  flex-shrink: 0;
 }
 
-.control-group {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.control-label {
-  font-size: 11px;
+.m3-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #5f6368);
+  font-family: 'Google Sans', 'Roboto', sans-serif;
+  font-size: 13px;
   font-weight: 500;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease, background-color 0.2s ease;
+  user-select: none;
 }
 
+.m3-tab .icon {
+  font-size: 18px;
+}
 
+.m3-tab:hover {
+  background-color: var(--bg-surface-container-high, #f1f3f4);
+  color: var(--text-primary, #1f1f1f);
+}
+
+.m3-tab.active {
+  color: var(--color-primary, #0b57d0);
+  font-weight: 600;
+}
+
+/* Active Tab Underline Indicator */
+.m3-tab-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 3px;
+  background-color: var(--color-primary, #0b57d0);
+  border-radius: 3px 3px 0 0;
+  transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
 
 /* 3. Navigation Sidebar Styles (Material 3 Navigation Rail) */
 .app-main {
@@ -358,8 +395,9 @@
 }
 
 .loader-logo {
-  height: 44px;
+  height: 64px;
   width: auto;
+  object-fit: contain;
 }
 
 .loader-track {
@@ -445,4 +483,169 @@
     transform: rotate(45deg) translateX(-45px);
     opacity: 0.7;
   }
+}
+
+/* 7. Dynamic Site Input Field Color States */
+#site-input.site-input-state-valid,
+#site-input.site-input-state-valid:focus {
+  border: 2px solid #2e7d32 !important;
+  background-color: #f1f8e9 !important;
+  color: #1b5e20 !important;
+  font-weight: 500 !important;
+  box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.25) !important;
+}
+
+#site-input.site-input-state-invalid,
+#site-input.site-input-state-invalid:focus {
+  border: 2px solid #d32f2f !important;
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+  font-weight: 500 !important;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.25) !important;
+}
+
+#site-input.site-input-state-processing,
+#site-input.site-input-state-processing:focus,
+#site-input.site-input-state-unselected,
+#site-input.site-input-state-unselected:focus {
+  border: 2px solid #f57c00 !important;
+  background-color: #fff8e1 !important;
+  color: #e65100 !important;
+  font-weight: 500 !important;
+  box-shadow: 0 0 0 3px rgba(245, 124, 0, 0.25) !important;
+}
+
+.onboarding-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 24px;
+  background-color: #fff3e0;
+  border-bottom: 1px solid #ffe0b2;
+  color: #e65100;
+  font-size: 13px;
+  font-weight: 500;
+  animation: bannerSlideDown 0.3s ease-out;
+}
+
+.onboarding-banner .icon {
+  font-size: 20px;
+  color: #f57c00;
+}
+
+@keyframes bannerSlideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* 8. Global Mantis AI Sidebar Drawer */
+.mantis-drawer {
+  position: fixed;
+  top: 79px;
+  right: 0;
+  bottom: 0;
+  width: 620px;
+  max-width: 90vw;
+  background: var(--bg-surface, #ffffff);
+  border-left: 1px solid var(--border-color, #e0e0e0);
+  box-shadow: -6px 0 28px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mantis-drawer.open {
+  transform: translateX(0);
+}
+
+.mantis-drawer-header {
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(90deg, #f5f3ff, #eff6ff);
+  border-bottom: 1px solid #ddd6fe;
+}
+
+.mantis-drawer-header .header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  color: #6d28d9;
+}
+
+.mantis-drawer-body {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.mantis-drawer-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* 8b. Mantis Edge Pull Tab Handle (Gemini AI Spark Theme) */
+.mantis-pull-tab {
+  position: absolute;
+  top: 40%;
+  left: -44px;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 124px;
+  background: linear-gradient(135deg, #0b57d0, #7c3aed);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: none;
+  border-radius: 12px 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: -4px 0 16px rgba(124, 58, 237, 0.35);
+  z-index: 1001;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.mantis-pull-tab:hover {
+  background: linear-gradient(135deg, #0842a0, #6d28d9);
+  left: -48px;
+  width: 48px;
+  box-shadow: -6px 0 20px rgba(124, 58, 237, 0.45);
+}
+
+.mantis-pull-tab .icon {
+  font-size: 22px;
+}
+
+.mantis-pull-tab .label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-family: 'Google Sans', 'Roboto', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+}
+
+.mantis-drawer.open .mantis-pull-tab {
+  left: -36px;
+  width: 36px;
+  height: 72px;
+  border-radius: 8px 0 0 8px;
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.mantis-drawer.open .mantis-pull-tab .label {
+  display: none;
 }
