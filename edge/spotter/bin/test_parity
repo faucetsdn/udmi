@@ -338,7 +338,7 @@ allow_anonymous true
         spotter_events = self.run_discovery_test(
             "udmi-spotter:latest",
             "parity-spotter-node",
-            "SN-1",
+            "DN-1",
             "/config_dir/spotter_config.json"
         )
         
