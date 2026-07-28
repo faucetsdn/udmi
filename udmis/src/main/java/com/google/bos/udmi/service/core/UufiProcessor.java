@@ -160,23 +160,14 @@ public class UufiProcessor extends ProcessorBase {
         ? toObject(decodeBase64((String) payloadRaw))
         : payloadRaw;
 
-    // Standard UDMI devices expect config on the base topic, not folder-specific sub-topics.
+    // Standard UDMI devices expect a complete config merged with previous state.
     if (innerEnvelope.subType == SubType.CONFIG) {
-      if (innerEnvelope.subFolder != null) {
-        Map<String, Object> configMap = toMap(innerPayload);
-        Map<String, Object> wrapperMap = new java.util.HashMap<>();
-        Object timestamp = configMap.remove("timestamp");
-        Object version = configMap.remove("version");
-        if (timestamp != null) {
-          wrapperMap.put("timestamp", timestamp);
-        }
-        if (version != null) {
-          wrapperMap.put("version", version);
-        }
-        wrapperMap.put(innerEnvelope.subFolder.value(), configMap);
-        innerPayload = wrapperMap;
+      String configUpdate = processConfigChange(innerEnvelope, innerPayload, null);
+      if (configUpdate != null) {
         innerEnvelope.subFolder = null;
+        publish(innerEnvelope, com.google.udmi.util.JsonUtil.toMap(configUpdate));
       }
+      return;
     }
 
     publish(innerEnvelope, innerPayload);

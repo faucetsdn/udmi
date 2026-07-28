@@ -6,15 +6,22 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -100,7 +107,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
   }
 
   /**
-   * Test that inbound UUFI-wrapped config messages with subFolder are wrapped.
+   * Test that inbound UUFI-wrapped config messages with subFolder are merged via processConfig.
    */
   @Test
   public void inboundConfigRoutingTest() {
@@ -124,10 +131,16 @@ public class UufiProcessorTest extends ProcessorTestBase {
     activeTestInstance(() -> getReverseDispatcher().publish(
         new Bundle(transportEnvelope, uufiWrapper)));
 
-    assertEquals(1, captured.size(), "captured message count");
-    Map<String, Object> unwrapped = toMap(captured.get(0));
-    assertEquals("1.5.2", unwrapped.get("version"));
-    assertEquals("2026-07-28T00:00:00Z", unwrapped.get("timestamp"));
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Function<Entry<Long, String>, String>> configCaptor =
+        ArgumentCaptor.forClass(Function.class);
+
+    verify(provider, times(1)).modifyConfig(any(Envelope.class), configCaptor.capture());
+
+    String updatedConfigJson = configCaptor.getValue().apply(new SimpleEntry<>(0L, "{}"));
+    Map<String, Object> unwrapped = toMap(updatedConfigJson);
+    assertEquals(TEST_VERSION, unwrapped.get("version"));
+    assertNotNull(unwrapped.get("timestamp"));
     assertNotNull(unwrapped.get("pointset"), "pointset field present in top-level config");
     @SuppressWarnings("unchecked")
     Map<String, Object> pointsetMap = (Map<String, Object>) unwrapped.get("pointset");
