@@ -231,7 +231,7 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * Provide a startup script (`spotter`) that automatically prepares the environment and launches Spotter either in containerized mode or standalone local mode.
   * In local mode, it must build distinct virtual environments for both the legacy discovery node and the Spotter agent, configure PYTHONPATH, and start both processes under the lightweight supervisor.
 * **Implementation & Verification**:
-  * [spotter](../../bin/spotter) - Integrated into the root `bin/` directory. Added support for positional arguments (mimicking `bin/pubber`) allowing running against any device in any site model. Dynamically generates configurations, resolves credentials/certificates, and updates the local broker dynamic security rules to bypass Client ID constraints (allowing both processes to run under the same device ID without connection clashes). Also includes built-in `stop` subcommand and `--stop` flag to safely clean up containerized and local background supervised processes.
+  * [spotter](../../bin/spotter) - Integrated into the root `bin/` directory. Added support for positional arguments (mimicking `bin/pubber`) allowing running against any device in any site model. Refactored into a modular CLI entry point sourcing `shell_common.sh`, extracting site model config generation into Python ([config_generator.py](src/config_generator.py)), virtualenv bootstrap into ([setup_env](bin/setup_env)), and process cleanup into ([stop_spotter](bin/stop_spotter)). Added unit test suite ([test_config_generator.py](tests/test_config_generator.py)).
 
 ---
 

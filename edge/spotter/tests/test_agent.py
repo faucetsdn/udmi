@@ -46,7 +46,8 @@ class TestAgentConfig(unittest.TestCase):
     def test_build_endpoint_config_udmi_local(self):
         config = {
             "mqtt": {
-                "device_id": "GAT-1",
+                "device_id": "DN-1",
+                "spotter_device_id": "SN-1",
                 "host": "127.0.0.1",
                 "port": "8883",
                 "registry_id": "ZZ-TRI-FECTA",
@@ -62,7 +63,7 @@ class TestAgentConfig(unittest.TestCase):
         
         self.assertEqual(endpoint.hostname, "127.0.0.1")
         self.assertEqual(endpoint.port, 8883)
-        self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/GAT-1")
+        self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/SN-1")
         self.assertEqual(endpoint.topic_prefix, "/r/ZZ-TRI-FECTA/d/")
         self.assertEqual(endpoint.algorithm, "RS256")
         self.assertEqual(endpoint.key_file, self.key_file)
@@ -73,7 +74,7 @@ class TestAgentConfig(unittest.TestCase):
         # Check basic auth
         self.assertIsNotNone(endpoint.auth_provider)
         self.assertIsNotNone(endpoint.auth_provider.basic)
-        self.assertEqual(endpoint.auth_provider.basic.username, "/r/ZZ-TRI-FECTA/d/GAT-1")
+        self.assertEqual(endpoint.auth_provider.basic.username, "/r/ZZ-TRI-FECTA/d/SN-1")
         
         # Password should match pkcs8 sha256 prefix
         import hashlib
@@ -83,7 +84,8 @@ class TestAgentConfig(unittest.TestCase):
     def test_build_endpoint_config_jwt_gcp(self):
         config = {
             "mqtt": {
-                "device_id": "GAT-1",
+                "device_id": "DN-1",
+                "spotter_device_id": "SN-1",
                 "host": "mqtt.googleapis.com",
                 "port": "443",
                 "registry_id": "ZZ-TRI-FECTA",
@@ -99,7 +101,7 @@ class TestAgentConfig(unittest.TestCase):
         
         self.assertEqual(endpoint.hostname, "mqtt.googleapis.com")
         self.assertEqual(endpoint.port, 443)
-        self.assertEqual(endpoint.client_id, "projects/my-project/locations/us-central1/registries/ZZ-TRI-FECTA/devices/GAT-1")
+        self.assertEqual(endpoint.client_id, "projects/my-project/locations/us-central1/registries/ZZ-TRI-FECTA/devices/SN-1")
         self.assertEqual(endpoint.topic_prefix, "/devices/")
         self.assertEqual(endpoint.algorithm, "RS256")
         self.assertIsNotNone(endpoint.auth_provider)
@@ -108,7 +110,8 @@ class TestAgentConfig(unittest.TestCase):
     def test_build_endpoint_config_custom_client_id(self):
         config = {
             "mqtt": {
-                "device_id": "GAT-1",
+                "device_id": "DN-1",
+                "spotter_device_id": "SN-1",
                 "host": "localhost",
                 "port": 1883,
                 "registry_id": "ZZ-TRI-FECTA",
@@ -124,8 +127,8 @@ class TestAgentConfig(unittest.TestCase):
     def test_build_endpoint_config_spotter_device_id(self):
         config = {
             "mqtt": {
-                "device_id": "AHU-1",
-                "spotter_device_id": "AHU-1-spotter",
+                "device_id": "DN-1",
+                "spotter_device_id": "SN-1",
                 "host": "localhost",
                 "port": 18883,
                 "registry_id": "ZZ-TRI-FECTA",
@@ -135,8 +138,8 @@ class TestAgentConfig(unittest.TestCase):
         }
         
         endpoint = build_endpoint_config(config)
-        self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/AHU-1-spotter")
-        self.assertEqual(endpoint.auth_provider.basic.username, "/r/ZZ-TRI-FECTA/d/AHU-1-spotter")
+        self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/SN-1")
+        self.assertEqual(endpoint.auth_provider.basic.username, "/r/ZZ-TRI-FECTA/d/SN-1")
 
 if __name__ == "__main__":
     unittest.main()

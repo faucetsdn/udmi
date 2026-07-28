@@ -195,7 +195,8 @@ allow_anonymous true
         self.spotter_config = {
             "log_level": "DEBUG",
             "mqtt": {
-                "device_id": "AHU-1",
+                "device_id": "DN-1",
+                "spotter_device_id": "SN-1",
                 "registry_id": "ZZ-TRI-FECTA",
                 "host": "192.168.12.254", # Host IP
                 "port": 18883,
@@ -267,7 +268,7 @@ allow_anonymous true
             raise e
         client.loop_start()
         
-        client.subscribe("/r/ZZ-TRI-FECTA/d/AHU-1-spotter/state")
+        client.subscribe("/r/ZZ-TRI-FECTA/d/SN-1/state")
         
         # Start container
         container_proc = subprocess.Popen([
@@ -329,7 +330,7 @@ allow_anonymous true
             t_thread.start()
             
             print("Publishing blobset config to trigger packet capture...", flush=True)
-            client.publish("/r/ZZ-TRI-FECTA/d/AHU-1-spotter/config", json.dumps(config_payload), qos=1)
+            client.publish("/r/ZZ-TRI-FECTA/d/SN-1/config", json.dumps(config_payload), qos=1)
             
             # Wait for state_received to signal completion of upload
             if not state_received.wait(timeout=25):
@@ -432,8 +433,8 @@ allow_anonymous true
                     print(f.read())
             raise e
             
-        client.subscribe("/r/ZZ-TRI-FECTA/d/AHU-1-spotter/state", qos=0)
-        client.subscribe("/r/ZZ-TRI-FECTA/d/AHU-1-spotter/events/pcap", qos=1)
+        client.subscribe("/r/ZZ-TRI-FECTA/d/SN-1/state", qos=0)
+        client.subscribe("/r/ZZ-TRI-FECTA/d/SN-1/events/pcap", qos=1)
         client.loop_start()
         
         # Start the spotter container
@@ -495,7 +496,7 @@ allow_anonymous true
             t_thread.start()
             
             print("Publishing blobset config to trigger packet capture (MQTT fallback)...", flush=True)
-            client.publish("/r/ZZ-TRI-FECTA/d/AHU-1-spotter/config", json.dumps(config_payload), qos=1)
+            client.publish("/r/ZZ-TRI-FECTA/d/SN-1/config", json.dumps(config_payload), qos=1)
             
             # Wait for pcap events and final state update
             if not state_received.wait(timeout=25):

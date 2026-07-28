@@ -1,7 +1,8 @@
 {
   "log_level": "INFO",
   "mqtt": {
-    "device_id": "AHU-1",
+    "device_id": "DN-1",
+    "spotter_device_id": "SN-1",
     "registry_id": "ZZ-TRI-FECTA",
     "host": "localhost",
     "port": 18883,

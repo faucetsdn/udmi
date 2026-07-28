@@ -64,6 +64,8 @@ class TestParity(unittest.TestCase):
         # 1. Get workspace paths for certificates
         workspace_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
         ca_src = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/ca.crt")
+        server_crt_src = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/server.crt")
+        server_key_src = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/server.key")
         ahu_key_src = os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pem")
         ahu_crt_src = os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.crt")
         ahu_pkcs8_src = os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8")
@@ -172,6 +174,12 @@ allow_anonymous true
 
 
     def run_discovery_test(self, container_image, container_name, client_id, config_file_in_container):
+        if self.mosquitto_proc.poll() is not None:
+            self.mosquitto_log_file.close()
+            with open(self.mosquitto_log_path, "r") as f:
+                log_content = f.read()
+            raise RuntimeError(f"Mosquitto broker died unexpectedly:\n{log_content}")
+
         messages = []
         
         # Connect client to local mosquitto to subscribe and publish config
@@ -267,7 +275,7 @@ allow_anonymous true
         # 1. Configuration for legacy container (test-discovery_node)
         legacy_config = {
             "mqtt": {
-                "device_id": "AHU-1",
+                "device_id": "DN-1",
                 "host": "192.168.12.254", # Connect to broker on the host gateway IP
                 "port": self.mqtt_port,
                 "registry_id": "ZZ-TRI-FECTA",
@@ -300,7 +308,8 @@ allow_anonymous true
         # 2. Configuration for new container (udmi-spotter)
         spotter_config = {
             "mqtt": {
-                "device_id": "AHU-1",
+                "device_id": "DN-1",
+                "spotter_device_id": "SN-1",
                 "host": "192.168.12.254",
                 "port": self.mqtt_port,
                 "registry_id": "ZZ-TRI-FECTA",
@@ -321,7 +330,7 @@ allow_anonymous true
         legacy_events = self.run_discovery_test(
             "test-discovery_node:latest",
             "parity-legacy-node",
-            "AHU-1",
+            "DN-1",
             "/config_dir/legacy_config.json"
         )
         
@@ -329,7 +338,7 @@ allow_anonymous true
         spotter_events = self.run_discovery_test(
             "udmi-spotter:latest",
             "parity-spotter-node",
-            "AHU-1",
+            "SN-1",
             "/config_dir/spotter_config.json"
         )
         

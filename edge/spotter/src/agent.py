@@ -42,7 +42,7 @@ def calculate_local_password(key_file: str) -> str:
 def build_endpoint_config(config: Dict[str, Any]) -> EndpointConfiguration:
     mqtt_config = config.get("mqtt", {})
     device_id = mqtt_config.get("device_id")
-    spotter_device_id = mqtt_config.get("spotter_device_id", device_id)
+    spotter_device_id = mqtt_config.get("spotter_device_id") or (f"{device_id}-spotter" if device_id else None)
     registry_id = mqtt_config.get("registry_id")
     host = mqtt_config.get("host", "localhost")
     port = int(mqtt_config.get("port", 8883))
