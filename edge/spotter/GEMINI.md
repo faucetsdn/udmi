@@ -20,8 +20,8 @@ All verification tests are categorised into **Unit Tests** and **Integration Tes
 - **Target**: Functional pipeline, lifecycle boundaries, container isolation, resource contention, and co-existence parity.
 - **Location**: [bin/](bin) & [tests/](tests)
 - **Executables**:
-  - [test_supervisor](bin/test_supervisor): Validates the subprocess supervisor's PID tracking, signal propagation (`SIGTERM` / `SIGINT`), and graceful termination handlers.
   - [test_container](bin/test_container): Validates container lifecycle isolation, volume mounting of on-prem configuration files, and supervisor integration inside Docker.
+  - [test_pcap](bin/test_pcap): Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming.
   - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on a custom docker network, confirming 100% functional telemetry payload parity.
   - [test_resource_contention](bin/test_resource_contention): Validates dual-process CPU, memory cgroups, file descriptor limits, and telemetry heartbeat latency under concurrent heavy workloads.
   - [test_fault_injection](bin/test_fault_injection): Validates network fault tolerance, proxy disconnection fallbacks (HTTP -> MQTT base64 chunking), and socket reconnect logic.

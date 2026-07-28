@@ -74,7 +74,7 @@ The goal of Phase 1 is to package the legacy discovery node into a containerized
   * [Dockerfile](container/Dockerfile) - Multi-stage build with isolated virtual environments (`/venv_legacy` and `/venv_spotter`).
   * [supervisor.sh](container/supervisor.sh) - Lightweight process supervisor using `exec` in background jobs to properly track PIDs and handle signals gracefully.
   * [test_supervisor](bin/test_supervisor) - Bash-based verification of graceful shutdown under signals, and exit status code validation (101/102) when child processes crash.
-  * [test_container](bin/test_container) - Bash-based verification of container execution, volume mounts, and child process lifecycle inside the built docker container.
+  * [test_supervisor_integration](bin/test_supervisor_integration) - Python unittest verification of container execution, volume mounts, and child process lifecycle inside the built docker container.
 
 #### Task 1.1.2: Shared Credentials & Connection Lifecycle [Completed]
 * **Behavioral Specification**:
@@ -203,7 +203,7 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * **RAM Buffering & Zero-Disk Constraint**: Do not write raw packets to local disk; stream chunks dynamically from RAM buffers to the MQTT client socket.
 * **Implementation & Verification**:
   * [agent.py](src/agent.py) - Implements chunked streaming generator emitting base64-encoded `PcapChunkEvent` objects sequentially over MQTT to `events/pcap`.
-  * [test_diagnostics](bin/test_diagnostics) - Verifies streaming MQTT packet export by subscribing to `/r/ZZ-TRI-FECTA/d/AHU-1-spotter/events/pcap`, reassembling chunks, and validating PCAP headers.
+  * [test_pcap](bin/test_pcap) - Verifies streaming MQTT packet export by subscribing to `/r/ZZ-TRI-FECTA/d/SN-1/events/pcap`, reassembling chunks, and validating PCAP headers.
 
 ---
 

@@ -1,208 +1,146 @@
-#!/bin/bash
-
-# Test suite for containerized supervisor behavior inside the Docker container
-
-set -u
-
-if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
-    echo "Usage: $0"
-    echo ""
-    echo "Validates the docker container's supervisor integration:"
-    echo "1. Normal Lifecycle & Graceful Shutdown: Verifies SIGTERM to container propagates to supervisor and exits 0."
-    echo "2. Legacy Node Crash Propagation: Verifies container exits with code 101 when legacy process crashes inside container."
-    echo "3. Spotter Agent Crash Propagation: Verifies container exits with code 102 when spotter process crashes inside container."
-    echo ""
-    echo "Prerequisites:"
-    echo "- Requires local Docker daemon running."
-    echo "- Requires udmi-spotter:latest image built."
-    exit 0
-fi
-
-IMAGE_NAME="udmi-spotter:latest"
-FAILED_TESTS=0
-
-# Verify docker image exists
-if ! docker image inspect "$IMAGE_NAME" >/dev/null 2>&1; then
-    echo "Docker image $IMAGE_NAME is not available. Run docker build first."
-    exit 1
-fi
-
-setup_temp_dir() {
-    TEST_DIR=$(mktemp -d)
-    CONFIG_FILE="$TEST_DIR/config.json"
-    echo '{"log_level": "INFO"}' > "$CONFIG_FILE"
-}
-
-cleanup_temp_dir() {
-    rm -rf "$TEST_DIR"
-}
-
-create_mock_script() {
-    local name=$1
-    local behavior=$2
-    local path="$TEST_DIR/$name"
-    
-    cat <<EOF > "$path"
 #!/usr/bin/env python3
+import os
+import sys
+import time
+import tempfile
+import subprocess
+import unittest
+
+if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h"):
+    print("Usage: ./test_supervisor_integration")
+    print("")
+    print("Validates the docker container's supervisor integration:")
+    print("1. Normal Lifecycle & Graceful Shutdown: Verifies SIGTERM to container propagates to supervisor and exits 0.")
+    print("2. Legacy Node Crash Propagation: Verifies container exits with code 101 when legacy process crashes inside container.")
+    print("3. Spotter Agent Crash Propagation: Verifies container exits with code 102 when spotter process crashes inside container.")
+    print("")
+    print("Prerequisites:")
+    print("- Requires local Docker daemon running.")
+    print("- Requires udmi-spotter:latest image built.")
+    sys.exit(0)
+
+IMAGE_NAME = "udmi-spotter:latest"
+
+class TestContainer(unittest.TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        print("Checking docker image availability...", flush=True)
+        res = subprocess.run(["docker", "image", "inspect", IMAGE_NAME], 
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if res.returncode != 0:
+            print(f"Docker image {IMAGE_NAME} is not available. Run docker build first.")
+            sys.exit(1)
+        print(f"Docker image '{IMAGE_NAME}' verified successfully.", flush=True)
+
+    def setUp(self):
+        self.test_dir = tempfile.TemporaryDirectory()
+        self.config_file = os.path.join(self.test_dir.name, "config.json")
+        with open(self.config_file, "w") as f:
+            f.write('{"log_level": "INFO"}')
+
+    def tearDown(self):
+        self.test_dir.cleanup()
+
+    def create_mock_script(self, name, behavior):
+        path = os.path.join(self.test_dir.name, name)
+        script_content = f"""#!/usr/bin/env python3
 import os
 import sys
 import time
 import signal
 
-print(f"MOCK CONTAINER START: $name (PID: {os.getpid()})", flush=True)
+print(f"MOCK CONTAINER START: {name} (PID: {{os.getpid()}})", flush=True)
 
 def handler(signum, frame):
-    print(f"MOCK CONTAINER SIGTERM: $name (PID: {os.getpid()})", flush=True)
+    print(f"MOCK CONTAINER SIGTERM: {name} (PID: {{os.getpid()}})", flush=True)
     sys.exit(0)
 
 signal.signal(signal.SIGTERM, handler)
 signal.signal(signal.SIGINT, handler)
 
-$behavior
-print(f"MOCK CONTAINER EXIT: $name (PID: {os.getpid()})", flush=True)
-EOF
-    chmod +x "$path"
-    echo "$path"
-}
+{behavior}
+print(f"MOCK CONTAINER EXIT: {name} (PID: {{os.getpid()}})", flush=True)
+"""
+        with open(path, "w") as f:
+            f.write(script_content)
+        os.chmod(path, 0o755)
+        return path
 
-run_container_test() {
-    local _rct_test_name=$1
-    local _rct_legacy_behavior=$2
-    local _rct_spotter_behavior=$3
-    local _rct_action=$4
-    
-    setup_temp_dir
-    
-    local _rct_legacy_path
-    local _rct_spotter_path
-    _rct_legacy_path=$(create_mock_script "legacy.py" "$_rct_legacy_behavior")
-    _rct_spotter_path=$(create_mock_script "spotter.py" "$_rct_spotter_behavior")
-    
-    local _rct_stdout_log="$TEST_DIR/stdout.log"
-    local _rct_stderr_log="$TEST_DIR/stderr.log"
-    
-    # We run docker with volume mounts to inject our mock scripts
-    docker run --rm -i \
-        -v "$_rct_legacy_path:/app/legacy/main.py" \
-        -v "$_rct_spotter_path:/app/spotter/agent.py" \
-        -v "$TEST_DIR:/config_dir" \
-        "$IMAGE_NAME" \
-        --config_file "/config_dir/config.json" > "$_rct_stdout_log" 2> "$_rct_stderr_log" &
-    local _rct_container_pid=$!
-    
-    local _rct_exit_code
-    if [ "$_rct_action" = "shutdown" ]; then
-        # Let container boot and start python processes
-        sleep 3
-        # Send SIGTERM to the docker process
-        kill -TERM "$_rct_container_pid"
-        wait "$_rct_container_pid"
-        _rct_exit_code=$?
-    else
-        # Just wait for docker process to exit due to internal crash
-        wait "$_rct_container_pid"
-        _rct_exit_code=$?
-    fi
-    
-    local _rct_output
-    _rct_output=$(cat "$_rct_stdout_log")
-    local _rct_errors
-    _rct_errors=$(cat "$_rct_stderr_log")
-    
-    cleanup_temp_dir
-    
-    eval "$5=\$_rct_exit_code"
-    eval "$6=\$_rct_output"
-    eval "$7=\$_rct_errors"
-}
+    def run_container_test(self, legacy_behavior, spotter_behavior, action):
+        legacy_path = self.create_mock_script("legacy.py", legacy_behavior)
+        spotter_path = self.create_mock_script("spotter.py", spotter_behavior)
+        
+        cmd = [
+            "docker", "run", "--rm", "-i",
+            "-v", f"{legacy_path}:/app/legacy/main.py",
+            "-v", f"{spotter_path}:/app/spotter/agent.py",
+            "-v", f"{self.test_dir.name}:/config_dir",
+            IMAGE_NAME,
+            "--config_file", "/config_dir/config.json"
+        ]
+        
+        print(f"  Spawning container (Action: {action})...", flush=True)
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        
+        exit_code = None
+        if action == "shutdown":
+            time.sleep(3)  # Let container boot and start python processes
+            print("  Sending SIGTERM to container process...", flush=True)
+            proc.terminate()  # Sends SIGTERM to the docker process
+            try:
+                exit_code = proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                print("  Container timed out on SIGTERM, killing process...", flush=True)
+                proc.kill()
+                exit_code = proc.wait()
+        else:
+            print("  Waiting for container process completion/crash...", flush=True)
+            try:
+                exit_code = proc.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                print("  Container timed out, killing process...", flush=True)
+                proc.kill()
+                exit_code = proc.wait()
+                
+        stdout, stderr = proc.communicate()
+        print(f"  Container process exited with code: {exit_code}", flush=True)
+        print(f"\n[CONTAINER STDOUT]:\n{stdout}", flush=True)
+        if stderr.strip():
+            print(f"[CONTAINER STDERR]:\n{stderr}", flush=True)
+            
+        return exit_code, stdout, stderr
 
-# --- TEST 1: Normal Lifecycle and Shutdown ---
-test_container_normal_lifecycle_and_shutdown() {
-    echo -n "Running test_container_normal_lifecycle_and_shutdown... "
-    local exit_code=""
-    local output=""
-    local errors=""
-    run_container_test "normal" "time.sleep(60)" "time.sleep(60)" "shutdown" exit_code output errors
-    
-    if [ "$exit_code" -ne 0 ]; then
-        echo "FAIL (Expected exit code 0, got $exit_code)"
-        echo "STDOUT: $output"
-        echo "STDERR: $errors"
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-        return 1
-    fi
-    
-    if [[ ! "$output" =~ "Supervisor: Received shutdown signal" ]] || [[ ! "$output" =~ "Supervisor: All child processes terminated. Exiting." ]]; then
-        echo "FAIL (Logs missing shutdown confirmation)"
-        echo "STDOUT: $output"
-        echo "STDERR: $errors"
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-        return 1
-    fi
-    echo "PASS"
-}
+    def test_container_normal_lifecycle_and_shutdown(self):
+        print("\n=== Test: Container Normal Lifecycle & Graceful Shutdown ===", flush=True)
+        exit_code, output, errors = self.run_container_test(
+            "time.sleep(60)", "time.sleep(60)", "shutdown"
+        )
+        
+        self.assertEqual(exit_code, 0, f"Expected exit code 0, got {exit_code}\nSTDOUT:\n{output}\nSTDERR:\n{errors}")
+        self.assertIn("Supervisor: Received shutdown signal", output, f"Logs missing shutdown confirmation\nSTDOUT:\n{output}")
+        self.assertIn("Supervisor: All child processes terminated. Exiting.", output)
+        print("PASS: Normal lifecycle and shutdown verified successfully.", flush=True)
 
-# --- TEST 2: Legacy Node Crash inside Container ---
-test_container_legacy_crash() {
-    echo -n "Running test_container_legacy_crash... "
-    local exit_code=""
-    local output=""
-    local errors=""
-    run_container_test "legacy_crash" "sys.exit(1)" "time.sleep(60)" "wait" exit_code output errors
-    
-    if [ "$exit_code" -ne 101 ]; then
-        echo "FAIL (Expected exit code 101, got $exit_code)"
-        echo "STDOUT: $output"
-        echo "STDERR: $errors"
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-        return 1
-    fi
-    
-    if [[ ! "$output" =~ "Supervisor: Fatal crash detected on legacy node. Restarting container." ]]; then
-        echo "FAIL (Logs missing crash detection notice)"
-        echo "STDOUT: $output"
-        echo "STDERR: $errors"
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-        return 1
-    fi
-    echo "PASS"
-}
+    def test_container_legacy_crash(self):
+        print("\n=== Test: Legacy Node Crash Propagation ===", flush=True)
+        exit_code, output, errors = self.run_container_test(
+            "sys.exit(1)", "time.sleep(60)", "wait"
+        )
+        
+        self.assertEqual(exit_code, 101, f"Expected exit code 101, got {exit_code}\nSTDOUT:\n{output}\nSTDERR:\n{errors}")
+        self.assertIn("Supervisor: Fatal crash detected on legacy node. Restarting container.", output)
+        print("PASS: Legacy node crash propagation (Exit Code 101) verified successfully.", flush=True)
 
-# --- TEST 3: Spotter Agent Crash inside Container ---
-test_container_spotter_crash() {
-    echo -n "Running test_container_spotter_crash... "
-    local exit_code=""
-    local output=""
-    local errors=""
-    run_container_test "spotter_crash" "time.sleep(60)" "sys.exit(2)" "wait" exit_code output errors
-    
-    if [ "$exit_code" -ne 102 ]; then
-        echo "FAIL (Expected exit code 102, got $exit_code)"
-        echo "STDOUT: $output"
-        echo "STDERR: $errors"
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-        return 1
-    fi
-    
-    if [[ ! "$output" =~ "Supervisor: Fatal crash detected on Spotter agent. Restarting container." ]]; then
-        echo "FAIL (Logs missing crash detection notice)"
-        echo "STDOUT: $output"
-        echo "STDERR: $errors"
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-        return 1
-    fi
-    echo "PASS"
-}
+    def test_container_spotter_crash(self):
+        print("\n=== Test: Spotter Agent Crash Propagation ===", flush=True)
+        exit_code, output, errors = self.run_container_test(
+            "time.sleep(60)", "sys.exit(2)", "wait"
+        )
+        
+        self.assertEqual(exit_code, 102, f"Expected exit code 102, got {exit_code}\nSTDOUT:\n{output}\nSTDERR:\n{errors}")
+        self.assertIn("Supervisor: Fatal crash detected on Spotter agent. Restarting container.", output)
+        print("PASS: Spotter agent crash propagation (Exit Code 102) verified successfully.", flush=True)
 
-# Run all tests
-test_container_normal_lifecycle_and_shutdown
-test_container_legacy_crash
-test_container_spotter_crash
-
-if [ "$FAILED_TESTS" -eq 0 ]; then
-    echo "All container tests passed successfully!"
-    exit 0
-else
-    echo "$FAILED_TESTS container test(s) failed."
-    exit 1
-fi
+if __name__ == "__main__":
+    unittest.main(verbosity=2)
