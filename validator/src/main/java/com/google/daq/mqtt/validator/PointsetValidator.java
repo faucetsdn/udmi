@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.validator;
 
+import static com.google.udmi.util.GeneralUtils.isNumericString;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 
@@ -9,6 +10,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.validator.ReportingDevice.MetadataDiff;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.ValidationException;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,14 +29,24 @@ import udmi.schema.State;
 /** Manage pointset validation. */
 public class PointsetValidator {
 
+  private static final int MAX_DECIMAL_PLACES = 2;
+
   private final Metadata metadata;
   private final ErrorCollector errorCollector;
+  private final ReportingDevice device;
   private Set<String> missingPoints;
   private Set<String> extraPoints;
   private Set<String> outOfRangePoints;
 
-  public PointsetValidator(ErrorCollector errorCollector, Metadata metadata) {
-    this.errorCollector = errorCollector;
+  /**
+   * Create a new instance.
+   *
+   * @param device   reporting device
+   * @param metadata metadata
+   */
+  public PointsetValidator(ReportingDevice device, Metadata metadata) {
+    this.errorCollector = device;
+    this.device = device;
     this.metadata = metadata;
   }
 
@@ -45,8 +57,8 @@ public class PointsetValidator {
     final Map<String, PointPointsetEvents> points;
 
     if (message instanceof State stateMessage) {
-      pointsetDiff = validateMessage(stateMessage);
       timestamp = stateMessage.timestamp;
+      pointsetDiff = validateMessage(stateMessage);
     } else if (message instanceof PointsetState pointsetState) {
       pointsetDiff = validateMessage(pointsetState);
       timestamp = pointsetState.timestamp;
@@ -91,6 +103,11 @@ public class PointsetValidator {
       return null;
     }
 
+    Instant checkInstant = getEffectiveTimestamp(message.timestamp);
+    if (!device.hasSeenTelemetry(checkInstant)) {
+      return null;
+    }
+
     // Return with internal fields null, to indicate that entire subsection is missing.
     return new MetadataDiff();
   }
@@ -121,13 +138,53 @@ public class PointsetValidator {
     return metadataDiff;
   }
 
+  private Instant getEffectiveTimestamp(Date timestamp) {
+    if (timestamp != null) {
+      return timestamp.toInstant();
+    }
+    if (device.getLastSeen() != null) {
+      return device.getLastSeen().toInstant();
+    }
+    return Instant.now();
+  }
+
   private Set<String> validatePointValues(
       Map<String, PointPointsetModel> modelPoints, Map<String, PointPointsetEvents> points) {
     Set<String> outOfRangeErrors = new HashSet<>();
     for (Entry<String, PointPointsetEvents> entry : points.entrySet()) {
       String pointName = entry.getKey();
+      PointPointsetEvents point = entry.getValue();
+
+      // Check for excessive decimal precision on floating-point numbers
+      if (point.present_value instanceof Number numberValue
+          && !(point.present_value instanceof Integer || point.present_value instanceof Long)) {
+        double d = numberValue.doubleValue();
+        if (!Double.isInfinite(d) && !Double.isNaN(d)) {
+          int scale = java.math.BigDecimal.valueOf(d).scale();
+          if (scale > MAX_DECIMAL_PLACES) {
+            outOfRangeErrors.add(
+                String.format(
+                    "%s: present_value %s has excessive decimal precision "
+                        + "(%d digits after dot, recommended max is %d)",
+                    pointName, point.present_value, scale, MAX_DECIMAL_PLACES));
+          }
+        }
+      }
+
       PointPointsetModel pointModel = modelPoints.get(pointName);
       if (pointModel == null) {
+        continue;
+      }
+
+      if (point == null || point.present_value == null) {
+        continue;
+      }
+
+      if (point.present_value instanceof String stringValue && isNumericString(stringValue)) {
+        outOfRangeErrors.add(
+            String.format(
+                "%s: present_value '%s' is a numerical string, expected JSON number",
+                pointName, stringValue));
         continue;
       }
 
@@ -135,10 +192,9 @@ public class PointsetValidator {
         continue;
       }
 
-      PointPointsetEvents point = points.get(pointName);
-
       if (!Number.class.isInstance(point.present_value)) {
         outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
+        continue;
       }
 
       Double presentValue = ((Number) point.present_value).doubleValue();

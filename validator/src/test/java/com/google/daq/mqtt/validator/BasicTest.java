@@ -5,6 +5,7 @@ import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.JsonUtil.getInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static udmi.schema.Level.INFO;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.Test;
+import udmi.schema.Category;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.Config;
@@ -29,7 +31,9 @@ import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointsetEvents;
 import udmi.schema.PointsetState;
 import udmi.schema.PointsetSummary;
+import udmi.schema.State;
 import udmi.schema.SystemModel;
+import udmi.schema.SystemState;
 import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
 
@@ -86,6 +90,16 @@ public class BasicTest extends TestBase {
     String expected = isoConvert(messageObject.timestamp);
     String lastSeen = isoConvert(deviceValidationEvents.last_seen);
     assertEquals("status last_seen", expected, lastSeen);
+  }
+
+  @Test
+  public void numericStringPointsetEvents() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.get(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT).present_value = "20.0";
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error devices", 1, report.summary.error_devices.size());
   }
 
   @Test
@@ -205,6 +219,71 @@ public class BasicTest extends TestBase {
     assertTrue(reportingDevices.containsKey(newDeviceId));
     assertEquals(messageObject.system.description,
         reportingDevices.get(newDeviceId).getMetadata().system.description);
+  }
+
+  @Test
+  public void pendingDeviceLifecycle() {
+    // 1. Device sends state message only -> should be marked as pending_devices
+    State state = new State();
+    state.timestamp = new Date();
+    state.version = TestCommon.UDMI_VERSION;
+    state.system = new SystemState();
+    state.system.last_config = new Date();
+    state.system.serial_no = "12345";
+    state.system.hardware = new udmi.schema.StateSystemHardware();
+    state.system.hardware.make = "Google";
+    state.system.hardware.model = "UDMI";
+    state.system.software = new java.util.HashMap<>();
+    state.system.operation = new udmi.schema.StateSystemOperation();
+    state.system.operation.operational = true;
+    validator.validateMessage(getMessageBundle(STATE_SUBTYPE, UPDATE_SUBFOLDER, state));
+    ValidationState report1 = getValidationReport();
+    assertTrue("Device should be pending when only state received",
+        report1.summary.pending_devices.contains(TestCommon.DEVICE_ID));
+
+    // 2. Device subsequently sends telemetry -> transitions from pending_devices to correct_devices
+    PointsetEvents pointsetEvents = basePointsetEvents();
+    validator.validateMessage(getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, pointsetEvents));
+    ValidationState report2 = getValidationReport();
+    assertFalse("Device should no longer be pending after telemetry",
+        report2.summary.pending_devices.contains(TestCommon.DEVICE_ID));
+    assertTrue("Device should be marked correct after both state and telemetry",
+        report2.summary.correct_devices.contains(TestCommon.DEVICE_ID));
+  }
+
+  @Test
+  public void invalidTimestampFormat() throws Exception {
+    PointsetEvents messageObject = basePointsetEvents();
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    bundle.message.put("timestamp", "Jun 11, 2026, 8:04:00 AM");
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error summary", 1, report.summary.error_devices.size());
+    ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+        POINTSET_SUBFOLDER);
+    boolean hasTimestampError = result.errors.stream()
+        .anyMatch(entry -> (entry.message.toLowerCase().contains("timestamp")
+            || entry.detail.toLowerCase().contains("timestamp")
+            || entry.message.contains("could not be parsed"))
+            && Category.VALIDATION_DEVICE_CONTENT.equals(entry.category));
+    assertTrue("Should have timestamp error", hasTimestampError);
+  }
+
+  @Test
+  public void excessivePresentValuePrecision() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.get(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT)
+        .present_value = 296.04999961853025;
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error summary", 1, report.summary.error_devices.size());
+    ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+        POINTSET_SUBFOLDER);
+    boolean hasPrecisionError = result.errors.stream()
+        .anyMatch(entry -> entry.message.contains("excessive decimal precision")
+            && Category.VALIDATION_DEVICE_CONTENT.equals(entry.category));
+    assertTrue("Should have precision error", hasPrecisionError);
   }
 
 }
