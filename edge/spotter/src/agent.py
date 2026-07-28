@@ -157,7 +157,6 @@ def main():
 
     # Retrieve SystemManager and register our custom pcap_capture blob handler
     from pcap import capture_packets
-    from uploader import ResumableUploader
 
     def process_pcap_blob(blob_key: str, file_path: str) -> Any:
         LOGGER.info("Processing diagnostic pcap trigger from file: %s", file_path)
@@ -168,28 +167,6 @@ def main():
         filter_str = payload.get("filter", "")
         max_duration_sec = int(payload.get("max_duration_sec", 60))
         max_bytes = int(payload.get("max_bytes", 10 * 1024 * 1024))  # Default 10MB limit
-        upload_url = payload.get("upload_url")
-        
-        captured_chunks = []
-        def caching_generator(data_generator):
-            for chunk in data_generator:
-                captured_chunks.append(chunk)
-                yield chunk
-
-        use_mqtt_fallback = False
-        uploader = None
-        
-        if upload_url:
-            try:
-                LOGGER.info("Initiating upload connection to GCS...")
-                uploader = ResumableUploader(upload_url)
-                uploader.initiate_session()
-            except Exception as e:
-                LOGGER.warning("Failed to initiate GCS session: %s. Falling back to MQTT transport.", e)
-                use_mqtt_fallback = True
-        else:
-            LOGGER.info("No upload_url provided. Defaulting to MQTT transport...")
-            use_mqtt_fallback = True
 
         LOGGER.info("Starting packet sniffer...")
         data_generator = capture_packets(
@@ -199,44 +176,34 @@ def main():
             max_bytes=max_bytes
         )
 
-        if not use_mqtt_fallback and uploader:
-            try:
-                uploader.upload_stream(caching_generator(data_generator))
-                LOGGER.info("Diagnostic capture job finished successfully via HTTP.")
-            except Exception as e:
-                LOGGER.warning("HTTP/GCS diagnostic upload failed midway: %s. Falling back to MQTT transport...", e)
-                use_mqtt_fallback = True
-        else:
-            # Consume packet capture generator directly to cache chunks in memory
-            for chunk in data_generator:
-                captured_chunks.append(chunk)
+        captured_chunks = []
+        for chunk in data_generator:
+            captured_chunks.append(chunk)
 
-        if use_mqtt_fallback:
-            LOGGER.info("Publishing PCAP capture chunks over MQTT fallback...")
-            full_data = b"".join(captured_chunks)
-            chunk_size = 128 * 1024  # 128KB chunks
-            total_bytes = len(full_data)
-            total_chunks = (total_bytes + chunk_size - 1) // chunk_size if total_bytes > 0 else 1
-            session_id = f"pcap-{int(time.time())}"
+        LOGGER.info("Publishing PCAP capture chunks over MQTT...")
+        full_data = b"".join(captured_chunks)
+        chunk_size = 128 * 1024  # 128KB chunks
+        total_bytes = len(full_data)
+        total_chunks = (total_bytes + chunk_size - 1) // chunk_size if total_bytes > 0 else 1
+        session_id = f"pcap-{int(time.time())}"
+        
+        for idx in range(total_chunks):
+            start = idx * chunk_size
+            end = min(start + chunk_size, total_bytes)
+            chunk_data = full_data[start:end]
             
-            for idx in range(total_chunks):
-                start = idx * chunk_size
-                end = min(start + chunk_size, total_bytes)
-                chunk_data = full_data[start:end]
-                
-                b64_data = base64.b64encode(chunk_data).decode()
-                
-                chunk_event = PcapChunkEvent(
-                    session_id=session_id,
-                    chunk_index=idx,
-                    total_chunks=total_chunks,
-                    data=b64_data
-                )
-                device.dispatcher.publish_event("events/pcap", chunk_event)
-                LOGGER.info("Published PCAP chunk %d/%d (%d bytes)", idx + 1, total_chunks, len(chunk_data))
-                
-            LOGGER.info("MQTT PCAP fallback transmission completed.")
+            b64_data = base64.b64encode(chunk_data).decode()
             
+            chunk_event = PcapChunkEvent(
+                session_id=session_id,
+                chunk_index=idx,
+                total_chunks=total_chunks,
+                data=b64_data
+            )
+            device.dispatcher.publish_event("events/pcap", chunk_event)
+            LOGGER.info("Published PCAP chunk %d/%d (%d bytes)", idx + 1, total_chunks, len(chunk_data))
+            
+        LOGGER.info("MQTT PCAP transmission completed.")
         return "SUCCESS"
 
     system_manager = device.get_manager(SystemManager)

@@ -10,12 +10,11 @@ sys.path.insert(0, _workspace_dir)
 if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h"):
     print("Usage: ./test_diagnostics")
     print("")
-    print("Validates remote-triggered PCAP packet capture diagnostics:")
-    print("1. Spawns local HTTP mock server supporting GCS resumable upload.")
-    print("2. Starts Mosquitto broker and udmi-spotter container.")
-    print("3. Generates dummy traffic and publishes a pcap_capture blobset config.")
-    print("4. Asserts correct chunked upload streaming and parses PCAP magic headers.")
-    print("5. Verifies success status reports in the container's UDMI state.")
+    print("Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming:")
+    print("1. Starts Mosquitto broker and udmi-spotter container.")
+    print("2. Generates dummy traffic and publishes a pcap_capture blobset config.")
+    print("3. Asserts chunked MQTT streaming transmission and parses PCAP magic headers.")
+    print("4. Verifies success status reports in the container's UDMI state.")
     print("")
     print("Prerequisites:")
     print("- Requires local Docker daemon running.")
@@ -31,7 +30,6 @@ import tempfile
 import time
 import threading
 import unittest
-import http.server
 import paho.mqtt.client as mqtt
 
 def create_mqtt_client(client_id=None):
@@ -43,64 +41,11 @@ def create_mqtt_client(client_id=None):
         return mqtt.Client(client_id=client_id)
     return mqtt.Client()
 
-# Global variable to capture uploaded mock data
-UPLOADED_DATA = b""
-MOCK_SERVER_PORT = 9991
-
-class MockGCSHandler(http.server.BaseHTTPRequestHandler):
-    def log_message(self, format, *args):
-        pass # Suppress standard log output
-
-    def do_POST(self):
-        if self.path == "/initiate":
-            self.send_response(201)
-            host_port = self.headers.get("Host")
-            # Redirect to the PUT upload endpoint
-            self.send_header("Location", f"http://{host_port}/upload/session-12345")
-            self.end_headers()
-        else:
-            self.send_response(404)
-            self.end_headers()
-
-    def do_PUT(self):
-        global UPLOADED_DATA
-        if self.path == "/upload/session-12345":
-            if self.headers.get("Transfer-Encoding") == "chunked":
-                data = []
-                while True:
-                    line = self.rfile.readline().strip()
-                    if not line:
-                        break
-                    chunk_size = int(line, 16)
-                    if chunk_size == 0:
-                        self.rfile.readline()  # consume trailing empty line
-                        break
-                    chunk_data = self.rfile.read(chunk_size)
-                    data.append(chunk_data)
-                    self.rfile.readline()  # consume trailing CRLF
-                UPLOADED_DATA = b"".join(data)
-            else:
-                content_length = int(self.headers.get('Content-Length', 0))
-                UPLOADED_DATA = self.rfile.read(content_length)
-                
-            self.send_response(200)
-            self.end_headers()
-        else:
-            self.send_response(404)
-            self.end_headers()
-
-def run_mock_server():
-    server = http.server.HTTPServer(("0.0.0.0", MOCK_SERVER_PORT), MockGCSHandler)
-    server.serve_forever()
 
 class TestDiagnostics(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        # 1. Start GCS mock server in a background thread
-        cls.server_thread = threading.Thread(target=run_mock_server, daemon=True)
-        cls.server_thread.start()
-        
         subprocess.run("docker ps -q --filter network=spotter-parity-net | xargs -r docker stop", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         res = subprocess.run(["docker", "network", "inspect", "spotter-parity-net"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if res.returncode != 0:
@@ -116,9 +61,6 @@ class TestDiagnostics(unittest.TestCase):
         subprocess.run(["docker", "network", "rm", "spotter-parity-net"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
     def setUp(self):
-        global UPLOADED_DATA
-        UPLOADED_DATA = b""
-        
         self.test_dir = tempfile.TemporaryDirectory()
         os.makedirs(os.path.join(self.test_dir.name, "logs"), exist_ok=True)
         
@@ -131,7 +73,7 @@ class TestDiagnostics(unittest.TestCase):
         ahu_crt_src = os.path.join(_workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.crt")
         ahu_pkcs8_src = os.path.join(_workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8")
         
-        # Copy client certs for AHU-1 to temp config dir (which will be mounted inside container)
+        # Copy client certs to temp config dir (which will be mounted inside container)
         import shutil
         shutil.copy(ca_src, os.path.join(self.test_dir.name, "ca.crt"))
         shutil.copy(ahu_key_src, os.path.join(self.test_dir.name, "rsa_private.pem"))
@@ -148,7 +90,7 @@ class TestDiagnostics(unittest.TestCase):
             
             subprocess.run([
                 "openssl", "req", "-new", "-key", target_pem,
-                "-out", csr_file, "-subj", "/CN=AHU-1"
+                "-out", csr_file, "-subj", "/CN=DN-1"
             ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             
             subprocess.run([
@@ -191,6 +133,7 @@ allow_anonymous true
             with open(self.mosquitto_log_path, "r") as f:
                 log_content = f.read()
             raise RuntimeError(f"Mosquitto failed to start:\n{log_content}")
+
         # Write configurations for Spotter
         self.spotter_config = {
             "log_level": "DEBUG",
@@ -225,154 +168,8 @@ allow_anonymous true
         if hasattr(self, 'test_dir'):
             self.test_dir.cleanup()
 
-    def test_pcap_remote_trigger(self):
-        global UPLOADED_DATA
-        
-        # Connect client to local mosquitto to publish config and read state
-        client = create_mqtt_client()
-        
-        state_received = threading.Event()
-        device_online = threading.Event()
-        latest_state = {}
-        
-        def on_message(client, userdata, message):
-            if message.topic.endswith("/state"):
-                if not message.payload:
-                    return
-                try:
-                    payload = json.loads(message.payload.decode())
-                except Exception:
-                    return
-                if not isinstance(payload, dict):
-                    return
-                # Update status
-                nonlocal latest_state
-                latest_state = payload
-                device_online.set()
-                # We stop if the blob state indicates pcap_capture phase is final
-                blobset = payload.get("blobset") or {}
-                blobs = blobset.get("blobs") or {}
-                if blobs and "pcap_capture" in blobs:
-                    if blobs["pcap_capture"].get("phase") == "final":
-                        state_received.set()
-                        
-        client.on_message = on_message
-        try:
-            client.connect("127.0.0.1", 1883)
-        except Exception as e:
-            print("\n--- ERROR: Failed to connect to local broker ---")
-            self.mosquitto_log_file.close()
-            if os.path.exists(self.mosquitto_log_path):
-                with open(self.mosquitto_log_path, "r") as f:
-                    print("--- MOSQUITTO LOGS ---\n", f.read())
-            raise e
-        client.loop_start()
-        
-        client.subscribe("/r/ZZ-TRI-FECTA/d/SN-1/state")
-        
-        # Start container
-        container_proc = subprocess.Popen([
-            "docker", "run", "--rm",
-            "--cap-add=NET_RAW", "--cap-add=NET_ADMIN",
-            "--network=spotter-parity-net",
-            "--ip=192.168.12.2",
-            "--name", "test-diagnostics-spotter",
-            "-v", f"{self.test_dir.name}:/config_dir",
-            "-v", f"{self.test_dir.name}/logs:/var/log/spotter",
-            "udmi-spotter:latest",
-            "--config_file", "/config_dir/spotter_config.json"
-        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        
-        try:
-            # Wait for Spotter Agent container to connect and publish its state
-            print("Waiting for Spotter Agent container to connect and publish state...", flush=True)
-            if not device_online.wait(timeout=15):
-                raise RuntimeError("Test timed out waiting for Spotter Agent container to connect and publish state")
-            
-            # Formulate diagnostic profile JSON
-            profile = {
-                "interface": "any",
-                "filter": "udp port 47808",
-                "max_duration_sec": 4,
-                "max_bytes": 100000,
-                "upload_url": "http://192.168.12.254:9991/initiate"
-            }
-            profile_bytes = json.dumps(profile).encode()
-            profile_b64 = base64.b64encode(profile_bytes).decode()
-            
-            sha = hashlib.sha256(profile_bytes).hexdigest()
-            
-            # Formulate blobset config
-            timestamp = "2026-07-08T14:35:00Z"
-            config_payload = {
-                "timestamp": timestamp,
-                "version": "1.5.2",
-                "blobset": {
-                    "blobs": {
-                        "pcap_capture": {
-                            "phase": "final",
-                            "url": f"data:application/json;base64,{profile_b64}",
-                            "sha256": sha,
-                            "generation": timestamp
-                        }
-                    }
-                }
-            }
-            
-            # Start background thread to generate dummy UDP traffic on port 47808 to trigger capture packets
-            traffic_event = threading.Event()
-            def send_dummy_traffic():
-                sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-                while not traffic_event.is_set():
-                    sock.sendto(b"DUMMY PCAP PACKET payload data", ("192.168.12.2", 47808))
-                    time.sleep(0.5)
-            t_thread = threading.Thread(target=send_dummy_traffic, daemon=True)
-            t_thread.start()
-            
-            print("Publishing blobset config to trigger packet capture...", flush=True)
-            client.publish("/r/ZZ-TRI-FECTA/d/SN-1/config", json.dumps(config_payload), qos=1)
-            
-            # Wait for state_received to signal completion of upload
-            if not state_received.wait(timeout=25):
-                # Print broker logs if it times out
-                self.mosquitto_log_file.flush()
-                os.fsync(self.mosquitto_log_file.fileno())
-                if os.path.exists(self.mosquitto_log_path):
-                    with open(self.mosquitto_log_path, "r") as f:
-                        print("--- BROKER LOGS ---\n", f.read())
-                raise RuntimeError("Test timed out waiting for pcap_capture blob state transition to final")
-                
-            traffic_event.set()
-            t_thread.join()
-            
-            # Validate state reporting
-            blob_state = latest_state.get("blobset", {}).get("blobs", {}).get("pcap_capture", {})
-            self.assertEqual(blob_state.get("phase"), "final")
-            self.assertIsNone(blob_state.get("status"), f"Blob state reported failure: {blob_state.get('status')}")
-            
-            # Validate uploaded payload
-            self.assertGreater(len(UPLOADED_DATA), 0, "Uploaded PCAP payload is empty")
-            magic = UPLOADED_DATA[:4]
-            is_valid_pcap = magic in (b'\xa1\xb2\xc3\xd4', b'\xd4\xc3\xb2\xa1', b'\xa1\xb2\x3c\x4d', b'\x4d\x3c\xb2\xa1')
-            self.assertTrue(is_valid_pcap, f"Uploaded data is not a valid PCAP. Magic was: {magic.hex()}")
-            print(f"SUCCESS: PCAP Capture diagnostic verified! Upload size: {len(UPLOADED_DATA)} bytes.", flush=True)
-            
-        finally:
-            subprocess.run(["docker", "stop", "test-diagnostics-spotter"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            stdout, stderr = container_proc.communicate()
-            print("\n[CONTAINER STDOUT]:\n", stdout.decode())
-            print("\n[CONTAINER STDERR]:\n", stderr.decode())
-            
-            agent_log_path = os.path.join(self.test_dir.name, "logs", "agent.log")
-            if os.path.exists(agent_log_path):
-                with open(agent_log_path, "r") as f:
-                    print("\n[SPOTTER AGENT LOGS (agent.log)]:\n", f.read())
-                    
-            client.loop_stop()
-            client.disconnect()
-
-    def test_pcap_mqtt_fallback(self):
-        # Connect client to local mosquitto to publish config and read state/pcap fallback
+    def test_pcap_mqtt_streaming(self):
+        # Connect client to local mosquitto to publish config and read state/pcap stream
         client = create_mqtt_client()
         
         state_received = threading.Event()
@@ -393,11 +190,9 @@ allow_anonymous true
                     return
                 if not isinstance(payload, dict):
                     return
-                # Update status
                 nonlocal latest_state
                 latest_state = payload
                 device_online.set()
-                # We stop if the blob state indicates pcap_capture phase is final
                 blobset = payload.get("blobset") or {}
                 blobs = blobset.get("blobs") or {}
                 if blobs and "pcap_capture" in blobs:
@@ -416,11 +211,10 @@ allow_anonymous true
                         
                     mqtt_pcap_chunks[session_id][chunk_idx] = base64.b64decode(b64_data)
                     
-                    # Check if we have received all chunks for this session
                     if all(x is not None for x in mqtt_pcap_chunks[session_id]):
                         mqtt_pcap_received.set()
                 except Exception as e:
-                    print("Error parsing PCAP fallback chunk:", e)
+                    print("Error parsing PCAP chunk:", e)
                         
         client.on_message = on_message
         try:
@@ -451,12 +245,10 @@ allow_anonymous true
         ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         
         try:
-            # Wait for Spotter Agent container to connect and publish its state
             print("Waiting for Spotter Agent container to connect and publish state...", flush=True)
             if not device_online.wait(timeout=15):
                 raise RuntimeError("Test timed out waiting for Spotter Agent container to connect and publish state")
             
-            # Formulate diagnostic profile JSON (without upload_url to force MQTT fallback)
             profile = {
                 "interface": "any",
                 "filter": "udp port 47808",
@@ -468,7 +260,6 @@ allow_anonymous true
             
             sha = hashlib.sha256(profile_bytes).hexdigest()
             
-            # Formulate blobset config
             timestamp = "2026-07-08T14:35:00Z"
             config_payload = {
                 "timestamp": timestamp,
@@ -495,10 +286,9 @@ allow_anonymous true
             t_thread = threading.Thread(target=send_dummy_traffic, daemon=True)
             t_thread.start()
             
-            print("Publishing blobset config to trigger packet capture (MQTT fallback)...", flush=True)
+            print("Publishing blobset config to trigger packet capture over MQTT...", flush=True)
             client.publish("/r/ZZ-TRI-FECTA/d/SN-1/config", json.dumps(config_payload), qos=1)
             
-            # Wait for pcap events and final state update
             if not state_received.wait(timeout=25):
                 self.mosquitto_log_file.flush()
                 os.fsync(self.mosquitto_log_file.fileno())
@@ -508,7 +298,7 @@ allow_anonymous true
                 raise RuntimeError("Test timed out waiting for pcap_capture blob state transition to final")
                 
             if not mqtt_pcap_received.wait(timeout=10):
-                raise RuntimeError("Test timed out waiting for PCAP fallback chunks over MQTT")
+                raise RuntimeError("Test timed out waiting for PCAP streaming chunks over MQTT")
                 
             traffic_event.set()
             t_thread.join()
@@ -525,7 +315,7 @@ allow_anonymous true
             magic = assembled_data[:4]
             is_valid_pcap = magic in (b'\xa1\xb2\xc3\xd4', b'\xd4\xc3\xb2\xa1', b'\xa1\xb2\x3c\x4d', b'\x4d\x3c\xb2\xa1')
             self.assertTrue(is_valid_pcap, f"Reassembled data is not a valid PCAP. Magic was: {magic.hex()}")
-            print(f"SUCCESS: MQTT PCAP fallback transmission verified! Reassembled size: {len(assembled_data)} bytes.", flush=True)
+            print(f"SUCCESS: MQTT PCAP streaming transmission verified! Reassembled size: {len(assembled_data)} bytes.", flush=True)
             
         finally:
             subprocess.run(["docker", "stop", "test-diagnostics-spotter"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
