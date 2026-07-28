@@ -90,8 +90,9 @@ export registry_id="$REGISTRY_ID"
 
 # 2. Check Base Infrastructure Services (Etcd & Mosquitto)
 echo "Checking base infrastructure services..."
-if ! nc -z 127.0.0.1 2379 &>/dev/null; then
-  echo "Error: Etcd is not running on 127.0.0.1:2379. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost' first." >&2
+ETCD_PORT=${ETCD_PORT:-2379}
+if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
+  echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost' first." >&2
   exit 1
 fi
 
@@ -328,7 +329,7 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --mqtt_username=rocket \
   --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:2379 \
+  --etcd_target=http://127.0.0.1:${ETCD_PORT:-2379} \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_events.log 2>&1 &
@@ -347,7 +348,7 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --mqtt_username=rocket \
   --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:2379 \
+  --etcd_target=http://127.0.0.1:${ETCD_PORT:-2379} \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_state.log 2>&1 &
@@ -366,7 +367,7 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --mqtt_username=rocket \
   --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:2379 \
+  --etcd_target=http://127.0.0.1:${ETCD_PORT:-2379} \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_reflect.log 2>&1 &
@@ -475,10 +476,55 @@ udmis/bin/etcdctl get --prefix "" || true
 
 echo "STATE_VAL output: $STATE_VAL"
 
-if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
-  echo "Verification PASSED"
-  TEST_PASSED=true
-else
-  echo "Verification FAILED"
+echo "=================================================================="
+echo "Verifying Registry & Device Discovery (ImplicitIotAccessProvider)"
+echo "=================================================================="
+
+# 1. Verify Registry Discovery in etcd
+echo "Querying etcd key ':registries' for registry discovery..."
+REGISTRIES_VAL=$(udmis/bin/etcdctl get --print-value-only ":registries" 2>/dev/null || true)
+echo "Discovered Registries in etcd: $REGISTRIES_VAL"
+
+if [[ "$REGISTRIES_VAL" != *"$REGISTRY_ID"* ]]; then
+  echo "Error: Registry $REGISTRY_ID not discovered in etcd ':registries' index!" >&2
   exit 1
 fi
+echo "Registry discovery PASSED for registry: $REGISTRY_ID"
+
+# 2. Verify Device Discovery in etcd
+echo "Querying etcd for devices discovered under registry '$REGISTRY_ID'..."
+DEVICES_VAL=$(udmis/bin/etcdctl get --prefix "/r/$REGISTRY_ID/d/" 2>/dev/null || true)
+echo "Discovered Devices in etcd under $REGISTRY_ID:"
+echo "$DEVICES_VAL"
+
+if [[ "$DEVICES_VAL" != *"$DEVICE_ID"* ]]; then
+  echo "Error: Device $DEVICE_ID not discovered under registry $REGISTRY_ID in etcd!" >&2
+  exit 1
+fi
+echo "Device discovery PASSED for device: $DEVICE_ID under registry: $REGISTRY_ID"
+
+# 3. Trigger CloudQuery discovery and check UDMIS logs
+echo "Triggering CloudQuery discovery via MQTT control channel..."
+mosquitto_pub -h 127.0.0.1 -p 8883 \
+  -u "$SERV_USER" -P "$SERV_PASS" \
+  --cafile "$SITE_MODEL/reflector/ca.crt" \
+  --cert "$SITE_MODEL/reflector/rsa_private.crt" \
+  --key "$SITE_MODEL/reflector/rsa_private.pem" \
+  --insecure \
+  -t "/r/null/d/null/c/control/query/cloud" \
+  -m '{"generation":"'$(date --utc +%Y-%m-%dT%H:%M:%SZ)'","depth":"entries"}' || true
+
+sleep 2
+
+if grep -q "Starting CloudQuery" out/udmis_host.log 2>/dev/null; then
+  echo "CloudQuery discovery successfully processed in UDMIS."
+fi
+
+if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
+  echo "Integration Test PASSED"
+  TEST_PASSED=true
+else
+  echo "Integration Test FAILED"
+  exit 1
+fi
+
