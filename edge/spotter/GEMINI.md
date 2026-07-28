@@ -49,7 +49,7 @@ The startup orchestrator [spotter](../../bin/spotter) handles environment setup,
   *(To use a custom configuration, append `--config /path/to/custom_config.json`)*
 - To gracefully stop all background Spotter instances (both Docker containers and local supervised processes):
   ```bash
-  ./bin/stop_spotter
+  ./bin/spotter stop
   ```
 
 ---
@@ -152,8 +152,7 @@ To move towards a regular, methodological release cycle while protecting live OT
 ### 7.1 Telemetry Delivery Channels
 Spotter supports three distinct metric delivery mechanisms depending on deployment architecture:
 1. **Prometheus / OpenTelemetry (Open-Source)**: HTTP `/metrics` scrape endpoint exposed on container internal port `9090` (or push via OpenTelemetry OTLP exporter).
-2. **Google Murdock Daemon (`murdockd`) Integration**: Internal Unix domain socket interface (`/healthz` liveness & metrics stream) piping edge telemetry to Monarch and Google Cloud Monitoring.
-3. **Native UDMI MQTT Channel (`events/metrics`)**: Periodic JSON metric events published over mTLS MQTT for firewall-restricted OT environments where inbound HTTP ports cannot be exposed.
+2. **Native UDMI MQTT Channel (`events/metrics`)**: Periodic JSON metric events published over mTLS MQTT for firewall-restricted OT environments where inbound HTTP ports cannot be exposed.
 
 ### 7.2 Metric Catalog
 | Metric Identifier | Metric Type | Labels | Description |

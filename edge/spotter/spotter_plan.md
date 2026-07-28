@@ -2,9 +2,9 @@
 
 ## Executive Summary
 
-This document outlines the phase-by-phase implementation plan for the **UDMI Spotter Node** ([go/tdd:spotter](http://goto.google.com/tdd:spotter)). 
+This document outlines the phase-by-phase implementation plan for the **UDMI Spotter Node**. 
 
-To maximize development velocity and deliver high-impact diagnostic features before the end of the year, this plan packages the **existing legacy discovery node** alongside the new **Spotter Core Agent** inside a dual-process container. This co-existence strategy allows the team to achieve drop-in replacement parity quickly, bypassing FIE coordination, while focusing engineering effort on advanced **Over-The-Air (OTA) Updates** and **Remote Ephemeral Packet Capture (PCAP)** features triggered declaratively via the UDMI Config channel.
+To maximize development velocity and deliver high-impact diagnostic features, this plan packages the **existing legacy discovery node** alongside the new **Spotter Core Agent** inside a dual-process container. This co-existence strategy allows the team to achieve drop-in replacement parity quickly, bypassing external infrastructure dependency updates, while focusing engineering effort on advanced **Over-The-Air (OTA) Updates** and **Remote Ephemeral Packet Capture (PCAP)** features triggered declaratively via the UDMI Config channel.
 
 ---
 
@@ -45,7 +45,7 @@ graph TD
         P1_3 --> P2_1 --> P2_2 --> P2_3
     end
 
-    subgraph Phase 3: FIE-Independent OTA Engine & Test Cadre
+    subgraph Phase 3: Autonomous OTA Engine & Test Cadre
         P3_1[Sub-phase 3.1: In-Container OTA Update Engine]
         P3_2[Sub-phase 3.2: Test Cadre - ATN & DUT Modes]
         P3_3[Sub-phase 3.3: Resource Contention & Prod Release Suite]
@@ -231,12 +231,11 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * Provide a startup script (`spotter`) that automatically prepares the environment and launches Spotter either in containerized mode or standalone local mode.
   * In local mode, it must build distinct virtual environments for both the legacy discovery node and the Spotter agent, configure PYTHONPATH, and start both processes under the lightweight supervisor.
 * **Implementation & Verification**:
-  * [spotter](../../bin/spotter) - Integrated into the root `bin/` directory. Added support for positional arguments (mimicking `bin/pubber`) allowing running against any device in any site model. Dynamically generates configurations, resolves credentials/certificates, and updates the local broker dynamic security rules to bypass Client ID constraints (allowing both processes to run under the same device ID without connection clashes).
-  * [stop_spotter](../../bin/stop_spotter) - Integrated into the root `bin/` directory. Safely cleans up containerized and local background supervised processes.
+  * [spotter](../../bin/spotter) - Integrated into the root `bin/` directory. Added support for positional arguments (mimicking `bin/pubber`) allowing running against any device in any site model. Dynamically generates configurations, resolves credentials/certificates, and updates the local broker dynamic security rules to bypass Client ID constraints (allowing both processes to run under the same device ID without connection clashes). Also includes built-in `stop` subcommand and `--stop` flag to safely clean up containerized and local background supervised processes.
 
 ---
 
-## Phase 3: FIE-Independent OTA Engine & Test Cadre
+## Phase 3: Autonomous OTA Engine & Test Cadre
 
 Phase 3 enables the development team to update Spotter logic autonomously and integrates Spotter into the UDMI verification pipelines.
 
@@ -330,10 +329,10 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 
 ### Sub-phase 3.4: Edge & Cloud Observability Framework
 
-#### Task 3.4.1: Multi-Provider Metrics Pipeline (Prometheus / OpenTelemetry / `murdockd` / UDMI)
+#### Task 3.4.1: Multi-Provider Metrics Pipeline (Prometheus / OpenTelemetry / UDMI)
 * **Target Location**: `edge/spotter/src/metrics.py` & `edge/spotter/src/agent.py`
 * **Behavioral Specification**:
-  * Implement a unified metrics collection exporter supporting open-source standards, Google-internal infrastructure, and native OT messaging channels:
+  * Implement a unified metrics collection exporter supporting open-source standards and native OT messaging channels:
   * **Open-Source Prometheus / OpenTelemetry Exporter**:
     * Expose a lightweight HTTP `/metrics` endpoint on port `9090` (or OpenTelemetry OTLP daemon push client).
     * Standard Metric Instrument Catalog:
@@ -345,10 +344,6 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
       * `spotter_pcap_upload_duration_seconds` (Histogram): Upload latency buckets.
       * `spotter_ota_events_total` (Counter with label `result="success|rollback|failure"`): Staged OTA package promotions/rollbacks.
       * `spotter_mqtt_connection_status` (Gauge): Broker connectivity health (`1`=connected, `0`=disconnected).
-  * **Google Internal `murdockd` Daemon Integration**:
-    * Instrument Spotter Agent to export daemon health telemetry, heartbeat states, and daemon liveness probes over `/healthz` Unix domain sockets for Google-internal `murdockd` (Murdock Daemon) integration, piping metrics directly to Monarch and Google Cloud Monitoring.
-  * **UDMI Native Metric Telemetry Channel (`events/metrics`)**:
-    * Format metric snapshots into UDMI-compliant `events/metrics` JSON payloads published periodically over the outbound mTLS MQTT connection. This enables firewall-restricted OT environments to deliver observability telemetry to cloud backends without exposing local HTTP scrape ports.
 
 #### Task 3.4.2: Distributed Tracing Context & Structured Logging
 * **Target Location**: `edge/spotter/src/logger.py` & `edge/spotter/src/uploader.py`
@@ -369,4 +364,4 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 7. **Resource Contention Immunity**: Simultaneous legacy discovery sweeps and high-throughput diagnostic PCAP sessions verified to operate without OOM kills, FD exhaustion, or delayed MQTT telemetry heartbeats both in local synthetic testbeds (`bin/test_resource_contention`) and on deployed production target nodes.
 8. **Network Fault Resiliency**: Automatic fallback to chunked MQTT telemetry and backoff retry logic verified under simulated proxy failures and socket interruptions (`bin/test_fault_injection`).
 9. **Production Canary Verification**: Safe execution of non-destructive production micro-audit probes (`self_test.py` and `resource_audit`) confirmed on deployed instances.
-10. **Observability & Metrics Verification**: End-to-end telemetry metric export (Prometheus `/metrics`, `murdockd` integration, and native UDMI `events/metrics`) verified alongside W3C trace context propagation across diagnostic PCAP streaming sessions.
+10. **Observability & Metrics Verification**: End-to-end telemetry metric export (Prometheus `/metrics` and native UDMI `events/metrics`) verified alongside W3C trace context propagation across diagnostic PCAP streaming sessions.

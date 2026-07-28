@@ -46,12 +46,16 @@ class TestParity(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        # Verify docker images are built
-        for img in ["test-bacnet-device:latest", "test-discovery_node:latest", "udmi-spotter:latest"]:
-            try:
-                subprocess.run(["docker", "image", "inspect", img], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            except Exception:
-                raise unittest.SkipTest(f"Docker image {img} not available. Run build scripts first.")
+        # Ensure docker network spotter-parity-net exists
+        subprocess.run("docker ps -q --filter network=spotter-parity-net | xargs -r docker stop", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        res = subprocess.run(["docker", "network", "inspect", "spotter-parity-net"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if res.returncode != 0:
+            subprocess.run([
+                "docker", "network", "create",
+                "--subnet=192.168.12.0/24",
+                "--gateway=192.168.12.254",
+                "spotter-parity-net"
+            ], check=True)
 
     def setUp(self):
         self.test_dir = tempfile.TemporaryDirectory()
@@ -60,15 +64,35 @@ class TestParity(unittest.TestCase):
         # 1. Get workspace paths for certificates
         workspace_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
         ca_src = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/ca.crt")
-        server_crt_src = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/server.crt")
-        server_key_src = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/server.key")
+        ahu_key_src = os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pem")
+        ahu_crt_src = os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.crt")
+        ahu_pkcs8_src = os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8")
         
         # Copy client certs for AHU-1 to config dir
         import shutil
         shutil.copy(ca_src, os.path.join(self.test_dir.name, "ca.crt"))
-        shutil.copy(os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pem"), os.path.join(self.test_dir.name, "rsa_private.pem"))
-        shutil.copy(os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.crt"), os.path.join(self.test_dir.name, "rsa_private.crt"))
-        shutil.copy(os.path.join(workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8"), os.path.join(self.test_dir.name, "rsa_private.pkcs8"))
+        shutil.copy(ahu_key_src, os.path.join(self.test_dir.name, "rsa_private.pem"))
+        shutil.copy(ahu_pkcs8_src, os.path.join(self.test_dir.name, "rsa_private.pkcs8"))
+        
+        target_crt = os.path.join(self.test_dir.name, "rsa_private.crt")
+        if os.path.exists(ahu_crt_src):
+            shutil.copy(ahu_crt_src, target_crt)
+        else:
+            # Generate temporary certificate signed by reflector CA inside test directory
+            reflector_key = os.path.join(workspace_dir, "sites/udmi_site_model/reflector/rsa_private.pem")
+            csr_file = os.path.join(self.test_dir.name, "client.csr")
+            target_pem = os.path.join(self.test_dir.name, "rsa_private.pem")
+            
+            subprocess.run([
+                "openssl", "req", "-new", "-key", target_pem,
+                "-out", csr_file, "-subj", "/CN=AHU-1"
+            ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            subprocess.run([
+                "openssl", "x509", "-req", "-in", csr_file,
+                "-CA", ca_src, "-CAkey", reflector_key,
+                "-CAcreateserial", "-out", target_crt, "-days", "3650"
+            ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
         # 2. Start local Mosquitto broker with dual listeners:
         # Port 1883: plain TCP for host client

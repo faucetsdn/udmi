@@ -285,7 +285,9 @@ class MqttMessagingClient(AbstractMessagingClient):
         else:
             LOGGER.warning("Unexpected topic format: %s", topic)
 
-    def _on_disconnect(self, _client: Any, _userdata: Any, *args: Any, _properties: Any = None) -> None:
+    def _on_disconnect(
+        self, _client: Any, _userdata: Any, *args: Any, _properties: Any = None
+    ) -> None:
         rc = next((a for a in reversed(args) if isinstance(a, int)), 0)
         if rc != 0:
             LOGGER.warning("Unexpected disconnect (rc=%s). Reconnecting...", rc)

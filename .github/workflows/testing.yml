@@ -649,6 +649,7 @@ jobs:
         run: |
           bin/setup_base
           bin/clone_model
+          bin/keygen CERT sites/udmi_site_model/devices/AHU-1
           UDMI_NO_SUDO=true bin/start_local sites/udmi_site_model //mqtt/localhost:9001
       - name: Install dependencies
         run: |

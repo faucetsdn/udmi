@@ -1,5 +1,5 @@
 #!/bin/bash
-# Start script for UDMI Spotter Agent
+# Start/Stop script for UDMI Spotter Agent
 
 set -eo pipefail
 
@@ -12,6 +12,95 @@ MODE="local"
 CONFIG_PATH=""
 SERIAL_NO=""
 
+stop_container() {
+    local search_filter="udmi-spotter-agent"
+    if [[ -n "${SERIAL_NO}" && "${SERIAL_NO}" != "NA" ]]; then
+        search_filter="udmi-spotter-agent-${SERIAL_NO}"
+    fi
+
+    local matching_containers
+    matching_containers=$(docker ps -q --filter "name=${search_filter}" || true)
+
+    if [[ -n "${matching_containers}" ]]; then
+        echo "Stopping matching Spotter Agent container(s) (${search_filter})..."
+        docker stop ${matching_containers}
+        echo "Container(s) stopped successfully."
+    else
+        echo "No running Spotter Agent container found matching '${search_filter}'."
+    fi
+}
+
+stop_local() {
+    echo "Searching for local supervised Spotter processes..."
+    
+    local pgrep_pattern="supervisor.sh"
+    if [[ -n "${SERIAL_NO}" && "${SERIAL_NO}" != "NA" ]]; then
+        pgrep_pattern="supervisor.sh .*--serial_no ${SERIAL_NO}"
+    fi
+
+    local supervisor_pids
+    supervisor_pids=$(pgrep -f "${pgrep_pattern}" || true)
+    
+    if [[ -n "${supervisor_pids}" ]]; then
+        echo "Found running local supervisor(s) matching '${SERIAL_NO:-all}' with PID(s): ${supervisor_pids}"
+        for pid in ${supervisor_pids}; do
+            echo "Sending SIGTERM to supervisor process ${pid}..."
+            kill -TERM "${pid}" 2>/dev/null || true
+        done
+        
+        echo "Waiting for child processes to terminate gracefully..."
+        sleep 2
+        echo "Local services stopped."
+    else
+        # Fallback search directly for agent.py processes if supervisor wasn't found
+        local agent_pattern="agent.py"
+        if [[ -n "${SERIAL_NO}" && "${SERIAL_NO}" != "NA" ]]; then
+            agent_pattern="agent.py .*--serial_no ${SERIAL_NO}"
+        fi
+        local agent_pids
+        agent_pids=$(pgrep -f "${agent_pattern}" || true)
+        if [[ -n "${agent_pids}" ]]; then
+            echo "Found orphan Spotter Agent process(es) with PID(s): ${agent_pids}"
+            for pid in ${agent_pids}; do
+                echo "Sending SIGTERM to agent process ${pid}..."
+                kill -TERM "${pid}" 2>/dev/null || true
+            done
+        fi
+        
+        local legacy_pids
+        legacy_pids=$(pgrep -f "discoverynode/src/main.py" || true)
+        if [[ -n "${legacy_pids}" && ( -z "${SERIAL_NO}" || "${SERIAL_NO}" == "NA" ) ]]; then
+            echo "Found orphan Legacy Discovery process(es) with PID(s): ${legacy_pids}"
+            for pid in ${legacy_pids}; do
+                echo "Sending SIGTERM to discovery process ${pid}..."
+                kill -TERM "${pid}" 2>/dev/null || true
+            done
+        fi
+        
+        if [[ -z "${agent_pids}" && -z "${legacy_pids}" ]]; then
+            echo "No active local Spotter processes found matching '${SERIAL_NO:-all}'."
+        fi
+    fi
+}
+
+do_stop() {
+    local stop_mode="${MODE:-all}"
+    if [[ "${stop_mode}" == "container" ]]; then
+        stop_container
+    elif [[ "${stop_mode}" == "local" ]]; then
+        stop_local
+    elif [[ "${stop_mode}" == "all" ]]; then
+        stop_container
+        echo ""
+        stop_local
+    else
+        echo "Error: Invalid mode '${stop_mode}' for stop action."
+        show_help
+        exit 1
+    fi
+    exit 0
+}
+
 function show_help() {
     echo "Usage:"
     echo "  1. From Site Model (Local Dev / Sequencer):"
@@ -20,10 +109,15 @@ function show_help() {
     echo "  2. From Configuration File (Production / Deployed Device):"
     echo "     $0 CONFIG_FILE [SERIAL_NO] [options]"
     echo ""
+    echo "  3. Stop Running Instances:"
+    echo "     $0 stop [SERIAL_NO] [options]"
+    echo ""
     echo "Examples:"
     echo "  $0 sites/udmi_site_model //mqtt/localhost AHU-1 AHU-1-spotter"
     echo "  $0 sites/udmi_site_model //mqtt/localhost AHU-1 AHU-1-spotter 1234"
     echo "  $0 edge/spotter/spotter_config.json 1234 --mode container"
+    echo "  $0 stop"
+    echo "  $0 stop 1234 --mode container"
     echo ""
     echo "Arguments:"
     echo "  SITE_PATH                  Path to site model directory"
@@ -34,14 +128,39 @@ function show_help() {
     echo "  SERIAL_NO                  Serial number for this Spotter instance (default: NA)"
     echo ""
     echo "Options:"
-    echo "  --mode <container|local>   Specify how to run the Spotter Agent (default: local)"
+    echo "  --mode <container|local|all> Specify execution environment (default: local for start, all for stop)"
     echo "  --config_dir <path>        Directory containing config and certificates (optional)"
     echo "  -h, --help                 Show this help message"
 }
 
-# Check for positional TARGET argument
+# Check for positional target argument
 if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
-    if [[ -f "$1" ]]; then
+    if [[ "$1" == "stop" ]]; then
+        MODE="all"
+        shift
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            SERIAL_NO="$1"
+            shift
+        fi
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --mode)
+                    MODE="$2"
+                    shift 2
+                    ;;
+                -h|--help)
+                    show_help
+                    exit 0
+                    ;;
+                *)
+                    echo "Error: Unknown option $1"
+                    show_help
+                    exit 1
+                    ;;
+            esac
+        done
+        do_stop
+    elif [[ -f "$1" ]]; then
         CONFIG_PATH=$(realpath "$1")
         shift
         if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
@@ -116,11 +235,11 @@ if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
             esac
         done
     else
-        echo "Error: Specified target '$1' is neither a file nor a directory."
+        echo "Error: Specified target '$1' is neither 'stop' nor a valid file/directory."
         show_help
         exit 1
     fi
-    
+
     if [[ -n "${SITE_PATH:-}" ]]; then
         # Construct config dynamically
         echo "Constructing configuration dynamically from site model..."

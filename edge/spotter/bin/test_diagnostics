@@ -101,14 +101,15 @@ class TestDiagnostics(unittest.TestCase):
         cls.server_thread = threading.Thread(target=run_mock_server, daemon=True)
         cls.server_thread.start()
         
-        # 2. Setup custom bridge network
-        subprocess.run(["docker", "network", "rm", "spotter-parity-net"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run([
-            "docker", "network", "create",
-            "--subnet=192.168.12.0/24",
-            "--gateway=192.168.12.254",
-            "spotter-parity-net"
-        ], check=True)
+        subprocess.run("docker ps -q --filter network=spotter-parity-net | xargs -r docker stop", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        res = subprocess.run(["docker", "network", "inspect", "spotter-parity-net"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        if res.returncode != 0:
+            subprocess.run([
+                "docker", "network", "create",
+                "--subnet=192.168.12.0/24",
+                "--gateway=192.168.12.254",
+                "spotter-parity-net"
+            ], check=True)
                         
     @classmethod
     def tearDownClass(cls):
@@ -126,12 +127,35 @@ class TestDiagnostics(unittest.TestCase):
         server_crt_src = os.path.join(_workspace_dir, "sites/udmi_site_model/reflector/server.crt")
         server_key_src = os.path.join(_workspace_dir, "sites/udmi_site_model/reflector/server.key")
         
-        # Copy client certs for AHU-1 to config dir (which will be mounted inside container)
+        ahu_key_src = os.path.join(_workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pem")
+        ahu_crt_src = os.path.join(_workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.crt")
+        ahu_pkcs8_src = os.path.join(_workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8")
+        
+        # Copy client certs for AHU-1 to temp config dir (which will be mounted inside container)
         import shutil
         shutil.copy(ca_src, os.path.join(self.test_dir.name, "ca.crt"))
-        shutil.copy(os.path.join(_workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pem"), os.path.join(self.test_dir.name, "rsa_private.pem"))
-        shutil.copy(os.path.join(_workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.crt"), os.path.join(self.test_dir.name, "rsa_private.crt"))
-        shutil.copy(os.path.join(_workspace_dir, "sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8"), os.path.join(self.test_dir.name, "rsa_private.pkcs8"))
+        shutil.copy(ahu_key_src, os.path.join(self.test_dir.name, "rsa_private.pem"))
+        shutil.copy(ahu_pkcs8_src, os.path.join(self.test_dir.name, "rsa_private.pkcs8"))
+        
+        target_crt = os.path.join(self.test_dir.name, "rsa_private.crt")
+        if os.path.exists(ahu_crt_src):
+            shutil.copy(ahu_crt_src, target_crt)
+        else:
+            # Generate temporary certificate signed by reflector CA inside test directory
+            reflector_key = os.path.join(_workspace_dir, "sites/udmi_site_model/reflector/rsa_private.pem")
+            csr_file = os.path.join(self.test_dir.name, "client.csr")
+            target_pem = os.path.join(self.test_dir.name, "rsa_private.pem")
+            
+            subprocess.run([
+                "openssl", "req", "-new", "-key", target_pem,
+                "-out", csr_file, "-subj", "/CN=AHU-1"
+            ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            subprocess.run([
+                "openssl", "x509", "-req", "-in", csr_file,
+                "-CA", ca_src, "-CAkey", reflector_key,
+                "-CAcreateserial", "-out", target_crt, "-days", "3650"
+            ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
         # Create mosquitto configuration on temporary path
         self.mosquitto_log_path = os.path.join(self.test_dir.name, "mosquitto.log")
@@ -188,10 +212,17 @@ allow_anonymous true
             json.dump(self.spotter_config, f)
 
     def tearDown(self):
-        self.mosquitto_proc.terminate()
-        self.mosquitto_proc.wait()
-        self.mosquitto_log_file.close()
-        self.test_dir.cleanup()
+        if hasattr(self, 'mosquitto_proc') and self.mosquitto_proc.poll() is None:
+            self.mosquitto_proc.terminate()
+            try:
+                self.mosquitto_proc.wait(timeout=2)
+            except subprocess.TimeoutExpired:
+                self.mosquitto_proc.kill()
+                self.mosquitto_proc.wait()
+        if hasattr(self, 'mosquitto_log_file') and not self.mosquitto_log_file.closed:
+            self.mosquitto_log_file.close()
+        if hasattr(self, 'test_dir'):
+            self.test_dir.cleanup()
 
     def test_pcap_remote_trigger(self):
         global UPLOADED_DATA
