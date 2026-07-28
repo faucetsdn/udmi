@@ -162,7 +162,21 @@ public class UufiProcessor extends ProcessorBase {
 
     // Standard UDMI devices expect config on the base topic, not folder-specific sub-topics.
     if (innerEnvelope.subType == SubType.CONFIG) {
-      innerEnvelope.subFolder = null;
+      if (innerEnvelope.subFolder != null) {
+        Map<String, Object> configMap = toMap(innerPayload);
+        Map<String, Object> wrapperMap = new java.util.HashMap<>();
+        Object timestamp = configMap.remove("timestamp");
+        Object version = configMap.remove("version");
+        if (timestamp != null) {
+          wrapperMap.put("timestamp", timestamp);
+        }
+        if (version != null) {
+          wrapperMap.put("version", version);
+        }
+        wrapperMap.put(innerEnvelope.subFolder.value(), configMap);
+        innerPayload = wrapperMap;
+        innerEnvelope.subFolder = null;
+      }
     }
 
     publish(innerEnvelope, innerPayload);

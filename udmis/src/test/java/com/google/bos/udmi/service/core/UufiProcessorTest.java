@@ -100,6 +100,41 @@ public class UufiProcessorTest extends ProcessorTestBase {
   }
 
   /**
+   * Test that inbound UUFI-wrapped config messages with subFolder are wrapped.
+   */
+  @Test
+  public void inboundConfigRoutingTest() {
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.CONFIG;
+    innerEnvelope.subFolder = SubFolder.POINTSET;
+    innerEnvelope.deviceId = "dev-1";
+    innerEnvelope.deviceRegistryId = "reg-1";
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    Map<String, Object> innerPayload = Map.of(
+        "version", "1.5.2",
+        "timestamp", "2026-07-28T00:00:00Z",
+        "points", Map.of("temp", 22));
+    uufiWrapper.put("payload", innerPayload);
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    assertEquals(1, captured.size(), "captured message count");
+    Map<String, Object> unwrapped = toMap(captured.get(0));
+    assertEquals("1.5.2", unwrapped.get("version"));
+    assertEquals("2026-07-28T00:00:00Z", unwrapped.get("timestamp"));
+    assertNotNull(unwrapped.get("pointset"), "pointset field present in top-level config");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> pointsetMap = (Map<String, Object>) unwrapped.get("pointset");
+    assertNotNull(pointsetMap.get("points"));
+  }
+
+  /**
    * Test that outbound system messages are correctly wrapped for UUFI clients.
    */
   @Test
