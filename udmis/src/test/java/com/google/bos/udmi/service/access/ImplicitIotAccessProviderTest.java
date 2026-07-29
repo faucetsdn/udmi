@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.access;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -158,6 +159,17 @@ class ImplicitIotAccessProviderTest {
     verify(mockBroker).unbindGateway(
         eq("/r/test-reg/d/test-dev"),
         eq("/r/test-reg/d/proxy-device-4"));
+  }
+
+  @Test
+  void testDeleteDeviceWithoutNumIdInStore() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.DELETE;
+
+    CloudModel reply = provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+    assertEquals(ModelOperation.DELETE, reply.operation);
+    String expectedNumId = ImplicitIotAccessProvider.hashedDeviceId(TEST_REGISTRY, TEST_DEVICE);
+    assertEquals(expectedNumId, reply.num_id);
   }
 
   @Test
