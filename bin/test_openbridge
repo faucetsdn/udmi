@@ -504,20 +504,21 @@ fi
 echo "Device discovery PASSED for device: $DEVICE_ID under registry: $REGISTRY_ID"
 
 # 3. Trigger CloudQuery discovery and check UDMIS logs
-echo "Triggering CloudQuery discovery via MQTT control channel..."
-mosquitto_pub -h 127.0.0.1 -p 8883 \
-  -u "$SERV_USER" -P "$SERV_PASS" \
-  --cafile "$SITE_MODEL/reflector/ca.crt" \
-  --cert "$SITE_MODEL/reflector/rsa_private.crt" \
-  --key "$SITE_MODEL/reflector/rsa_private.pem" \
-  --insecure \
-  -t "/r/null/d/null/c/control/query/cloud" \
-  -m '{"generation":"'$(date --utc +%Y-%m-%dT%H:%M:%SZ)'","depth":"entries"}' || true
+echo "Triggering CloudQuery discovery via Pub/Sub control topic..."
+QUERY_PAYLOAD=$(echo -n '{"generation":"'$(date --utc +%Y-%m-%dT%H:%M:%SZ)'","depth":"entries"}' | base64 -w0)
+
+curl -s -X POST "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_control:publish" \
+  -H "Content-Type: application/json" \
+  -d "{\"messages\":[{\"data\":\"$QUERY_PAYLOAD\",\"attributes\":{\"subFolder\":\"cloud\",\"subType\":\"query\"}}]}" >/dev/null || true
 
 sleep 2
 
-if grep -q "Starting CloudQuery" out/udmis_host.log 2>/dev/null; then
-  echo "CloudQuery discovery successfully processed in UDMIS."
+if grep -q "Starting CloudQuery" out/udmis_host.log 2>/dev/null && \
+   grep -q "Project has .* registries" out/udmis_host.log 2>/dev/null; then
+  echo "CloudQuery discovery PASSED in UDMIS logs (Registries & Devices enumerated)."
+else
+  echo "Error: CloudQuery discovery execution logs not found in out/udmis_host.log!" >&2
+  exit 1
 fi
 
 if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
