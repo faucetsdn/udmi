@@ -387,7 +387,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
       String deleteId) {
     String numId = deleteId != null ? deleteId
-        : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+        : ofNullable(registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY))
+            .orElseGet(() -> ofNullable(request.num_id)
+                .orElseGet(() -> hashedDeviceId(registryId, deviceId)));
     CloudModel reply = new CloudModel();
     reply.operation = requireNonNull(request.operation, "missing operation");
     reply.num_id = requireNonNull(numId, "missing num_id");
@@ -717,7 +719,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     info("Processing modelDevice %s for %s/%s (type: %s)", operation, registryId, deviceId, type);
     try {
       String deleteNumId = operation != DELETE ? null
-          : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+          : ofNullable(registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY))
+              .orElseGet(() -> ofNullable(cloudModel.num_id)
+                  .orElseGet(() -> hashedDeviceId(registryId, deviceId)));
       switch (operation) {
         case CREATE -> createDevice(registryId, deviceId, cloudModel);
         case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
