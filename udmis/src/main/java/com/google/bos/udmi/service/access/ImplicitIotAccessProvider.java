@@ -25,6 +25,7 @@ import static udmi.schema.CloudModel.ModelOperation.DELETE;
 import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
+import static udmi.schema.CloudModel.Resource_type.PROXIED;
 
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.StateUpdate;
@@ -236,6 +237,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         if (ex == null) {
           registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
           registryDeviceRef(registryId, deviceId).put(BIND_STATUS_KEY, "bound");
+          registryDeviceRef(registryId, deviceId).put(RESOURCE_TYPE_PROPERTY, PROXIED.toString());
           gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
         } else {
           registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
@@ -718,7 +720,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       Consumer<String> progress) {
     ModelOperation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
-    checkState(type == DIRECT || type == GATEWAY, "unexpected resource type " + type);
+    checkState(type == DIRECT || type == GATEWAY || type == PROXIED,
+        "unexpected resource type " + type);
     info("Processing modelDevice %s for %s/%s (type: %s)", operation, registryId, deviceId, type);
     try {
       String deleteNumId = operation != DELETE ? null

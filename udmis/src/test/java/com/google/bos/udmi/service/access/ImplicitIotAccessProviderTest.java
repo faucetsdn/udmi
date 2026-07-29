@@ -143,6 +143,18 @@ class ImplicitIotAccessProviderTest {
     verify(mockBroker).bindGateway(
         eq("/r/test-reg/d/test-dev"),
         eq("/r/test-reg/d/proxy-device-2"));
+    assertEquals("PROXIED", store.get("r/test-reg/d/proxy-device-2:resource_type"));
+  }
+
+  @Test
+  void testModelProxiedDevice() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.resource_type = udmi.schema.CloudModel.Resource_type.PROXIED;
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    assertEquals("PROXIED", store.get("r/test-reg/d/test-dev:resource_type"));
   }
 
   @Test
