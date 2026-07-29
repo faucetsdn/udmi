@@ -158,14 +158,17 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     usePassword = options.get(USE_PASSWORD_KEY);
-    // The BrokerAuth option defines whether the broker is intended to enforce ACLs, 
+    // The BrokerAuth option defines whether the broker is intended to enforce ACLs,
     // When false, the device registeration process will not register ACL's into Mosquitto
     // via the Mosquitto Dynamic Security plugin.
     //
-    // This setting defaults to true, and should only be disbled if:
-    // - A different plugin is used for enforcing ACLs at the broker, which could use the etcd backing database
-    // - No or different ACL's are desired, e.g. to allow devices to subscribe to data from eachother
-    // - A proxy is providing ACL enforcement.
+    // This setting defaults to true, and should only be set to false with care and only
+    // if:
+    // - A different plugin is used for enforcing ACLs at the broker, which could use the
+    //   etcd backing database
+    // - Alternative ACL's are desired, e.g. to allow devices to subscribe to data from
+    //   eachother
+    // - A proxy is providing ACL enforcement
     brokerAuth = !FALSE_OPTION.equalsIgnoreCase(options.get(BROKER_AUTH_KEY));
 
     if (iotAccess.endpoint != null) {
