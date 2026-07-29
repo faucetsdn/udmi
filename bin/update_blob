@@ -37,7 +37,7 @@ if [[ ${#positional_args[@]} -lt 5 || "$help" == "true" ]]; then
     echo "  SITE_DIR        Path to the site model directory"
     echo "  PROJECT_ID      GCP Project ID or execution spec"
     echo "  DEVICE_ID       Target device ID"
-    echo "  BLOB_NAME       Name of the blob block (e.g., pubber_module, firmware)"
+    echo "  BLOB_NAME       Name of the blob block (e.g., system, firmware)"
     echo "  PAYLOAD_OR_URL  Path to local file, direct string payload, or remote URL"
     echo ""
     echo "Options:"

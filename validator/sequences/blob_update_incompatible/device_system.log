@@ -24,7 +24,7 @@ TIMESTAMP WARNING device.log             Updating persistent store:
   "restart_count" : 1
 }
 TIMESTAMP INFO    device.log             Starting pubber AHU-1, serial sequencer-10987, mac null, gateway null, options noPersist
-TIMESTAMP INFO    device.log             Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/pubber_module_repo_sequencer-10987
+TIMESTAMP INFO    device.log             Initializing mock JGit module in /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/out/system_repo_sequencer-10987
 TIMESTAMP INFO    device.log             Isolated JGit repo initialized successfully.
 TIMESTAMP WARNING device.log             Starting connection 1780930385839 with 0
 TIMESTAMP INFO    device.log             Loading device key bytes from /usr/local/google/home/heykhyati/Projects/udmi_clone/udmi/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8
@@ -156,18 +156,18 @@ TIMESTAMP
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
 TIMESTAMP DEBUG   device.log             value of noWriteback: false
-TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for pubber_module
+TIMESTAMP DEBUG   blobset.blob.receive   Received blob update config for system
 TIMESTAMP
 TIMESTAMP WARNING device.log             State update delay 1225ms
 TIMESTAMP DEBUG   device.log             State update AHU-1 (blob_update_incompatible)
-TIMESTAMP DEBUG   blobset.blob.fetch     Fetch blob data for pubber_module
+TIMESTAMP DEBUG   blobset.blob.fetch     Fetch blob data for system
 TIMESTAMP NOTICE  system.config.apply    success
 TIMESTAMP DEBUG   device.log             State update defer 1998ms
 TIMESTAMP NOTICE  blobset.blob.apply     Staging blob update...
 TIMESTAMP DEBUG   device.log             State update defer 1997ms
 TIMESTAMP DEBUG   device.log             State update defer 1997ms
-TIMESTAMP ERROR   device.log             Failed to apply blob pubber_module: Simulated incompatibility for pubber_module
-TIMESTAMP ERROR   blobset.blob.parse     Simulated incompatibility for pubber_module
+TIMESTAMP ERROR   device.log             Failed to apply blob system: Simulated incompatibility for system
+TIMESTAMP ERROR   blobset.blob.parse     Simulated incompatibility for system
 TIMESTAMP DEBUG   device.log             State update defer 1994ms
 TIMESTAMP DEBUG   device.log             State update defer -1ms
 TIMESTAMP
