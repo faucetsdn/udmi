@@ -60,7 +60,7 @@ echo Checking vendor device status is $status
 
 type=$(jq -r .resource_type $site_path/extras/discovered_vendor-20231/cloud_model.json) || true
 echo Checking vendor extracted device type $type
-[[ $type == DIRECT ]] || fail Vendor device type should be DIRECT, was $type
+[[ $type == PROXIED ]] || fail Vendor device type should be PROXIED, was $type
 
 echo Checking discovered device metadata
 addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)

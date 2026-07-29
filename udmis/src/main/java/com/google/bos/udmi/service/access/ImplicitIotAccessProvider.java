@@ -25,6 +25,7 @@ import static udmi.schema.CloudModel.ModelOperation.DELETE;
 import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
+import static udmi.schema.CloudModel.Resource_type.PROXIED;
 
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.StateUpdate;
@@ -236,6 +237,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         if (ex == null) {
           registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
           registryDeviceRef(registryId, deviceId).put(BIND_STATUS_KEY, "bound");
+          registryDeviceRef(registryId, deviceId).put(RESOURCE_TYPE_PROPERTY, PROXIED.toString());
           gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
         } else {
           registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
@@ -384,10 +386,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private String resolveDeviceNumId(String registryId, String deviceId, CloudModel cloudModel) {
+    return ofNullable(registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY))
+        .orElseGet(() -> ofNullable(cloudModel.num_id)
+            .orElseGet(() -> hashedDeviceId(registryId, deviceId)));
+  }
+
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
       String deleteId) {
-    String numId = deleteId != null ? deleteId
-        : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+    String numId = deleteId != null ? deleteId : resolveDeviceNumId(registryId, deviceId, request);
     CloudModel reply = new CloudModel();
     reply.operation = requireNonNull(request.operation, "missing operation");
     reply.num_id = requireNonNull(numId, "missing num_id");
@@ -713,11 +720,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       Consumer<String> progress) {
     ModelOperation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
-    checkState(type == DIRECT || type == GATEWAY, "unexpected resource type " + type);
+    checkState(type == DIRECT || type == GATEWAY || type == PROXIED,
+        "unexpected resource type " + type);
     info("Processing modelDevice %s for %s/%s (type: %s)", operation, registryId, deviceId, type);
     try {
       String deleteNumId = operation != DELETE ? null
-          : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+          : resolveDeviceNumId(registryId, deviceId, cloudModel);
       switch (operation) {
         case CREATE -> createDevice(registryId, deviceId, cloudModel);
         case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
