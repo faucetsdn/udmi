@@ -174,6 +174,17 @@ class ImplicitIotAccessProviderTest {
   }
 
   @Test
+  void testDeleteDeviceWithoutNumIdInStore() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.DELETE;
+
+    CloudModel reply = provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+    assertEquals(ModelOperation.DELETE, reply.operation);
+    String expectedNumId = ImplicitIotAccessProvider.hashedDeviceId(TEST_REGISTRY, TEST_DEVICE);
+    assertEquals(expectedNumId, reply.num_id);
+  }
+
+  @Test
   void testMosquittoDynsecMinIntervalMsOption() {
     IotAccess iotAccess = new IotAccess();
     iotAccess.options =
