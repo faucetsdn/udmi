@@ -4,11 +4,7 @@
     "resource_type": "GATEWAY"
   },
   "gateway": {
-    "proxy_ids": [
-      "AHU-22",
-      "SNS-4",
-      "SNS-8"
-    ]
+    "proxy_ids": [ "AHU-22", "SNS-4", "SNS-8" ]
   },
   "localnet": {
     "families": {
@@ -54,6 +50,5 @@
     }
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "upgraded_from": "1.5.2",
   "version": "1.5.7"
 }

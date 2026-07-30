@@ -4,7 +4,10 @@
     "detail": "site default for unit tests"
   },
   "gateway": {
-    "proxy_ids": [ "SNS-4", "AHU-22" ]
+    "proxy_ids": [
+      "SNS-4",
+      "AHU-22"
+    ]
   },
   "hash": "f8995442",
   "system": {

@@ -30,6 +30,7 @@
   },
   "pointset": {
     "points": {
+      "Current": { },
       "filter_alarm_pressure_status": {
         "ref": "BV11.present_value",
         "units": "No-units"
