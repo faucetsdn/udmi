@@ -51,4 +51,11 @@ To prevent regressions in this reflectively-coupled system, verification MUST pr
   5. `bin/test_sequencer nostate full //mqtt/localhost:46432` (Exhaustive pipeline verification)
   6. `bin/test_runlocal` (UDMIS component verification)
 
+### 7. Golden Expectation Integrity (Anti-Cheating Rule)
+- **Principle**: Golden test files (such as `etc/validator.out` or `etc/schema_nostate.out`) define expected system outputs and baseline test coverage.
+- **Mandate**: Updating golden files simply to force failing integration tests to pass (e.g., executing `cp out/validator.out etc/validator.out` without specific, audited technical rationale) is considered cheating and is strictly forbidden.
+- **Rules**:
+  1. Golden files may ONLY be updated when there is an intentional, documented system output change (such as an explicit schema or gencode version upgrade).
+  2. Any diff to golden files must be line-by-line audited to ensure no expected test cases or event outputs (e.g., `events_blobset.out`, `events_discovery.out`, or `events_invalid.out`) were omitted or truncated due to test timing or incomplete pubber execution.
+
 **Authoritative Source**: If in doubt, audit `.github/workflows/testing.yml` for the current set of `run:` commands. Declaring a task "DONE" without completing both stages is a violation of engineering standards.
