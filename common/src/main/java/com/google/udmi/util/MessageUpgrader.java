@@ -167,6 +167,8 @@ public class MessageUpgrader {
       upgraded |= patch <= 2 && didMessageChange(this::upgradeTo_1_5_3, patchUpdater(3));
       upgraded |= patch <= 3 && didMessageChange(this::upgradeTo_1_5_4, patchUpdater(4));
       upgraded |= patch <= 4 && didMessageChange(this::upgradeTo_1_5_5, patchUpdater(5));
+      upgraded |= patch <= 5 && didMessageChange(this::upgradeTo_1_5_6, patchUpdater(6));
+      upgraded |= patch <= 6 && didMessageChange(this::upgradeTo_1_5_7, patchUpdater(7));
     }
 
     String currentVersion = SchemaVersion.CURRENT.key();
@@ -268,6 +270,12 @@ public class MessageUpgrader {
   }
 
   private void upgradeTo_1_5_5() {
+  }
+
+  private void upgradeTo_1_5_6() {
+  }
+
+  private void upgradeTo_1_5_7() {
   }
 
   private void upgradeTo_1_5_3_metadata() {
