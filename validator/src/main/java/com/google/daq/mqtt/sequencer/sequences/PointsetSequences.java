@@ -276,7 +276,7 @@ public class PointsetSequences extends PointsetBase {
 
     popReceivedEvents(PointsetEvents.class);
     untilTrue(format("receive at least %d pointset events", messagesToSample),
-        () -> (countReceivedEvents(PointsetEvents.class) > messagesToSample)
+        () -> (countReceivedEvents(PointsetEvents.class) >= messagesToSample)
     );
 
     List<PointsetEvents> receivedEvents = popReceivedEvents(PointsetEvents.class);
