@@ -92,7 +92,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   private IotAccessProvider getRegistryProvider(String registryId, String deviceId) {
     IotAccessProvider provider = getProviderFor(registryId, deviceId);
-    if (!getOperatingProviders().containsValue(provider)) {
+    if (provider == null || !provider.supportsRegistryOperations()) {
       IotAccessProvider fallback = getOperatingProviders().values().stream()
           .findFirst()
           .orElse(null);
