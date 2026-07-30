@@ -28,36 +28,21 @@ else
 fi
 
 # Parse arguments
-FEATURE="all"
 MANUAL_PORT=""
+STOP_REQUESTED=false
 
 show_usage() {
-  echo "Usage: $0 [testbed | sequencer | mantis | all] [--port=PORT | -p PORT | PORT]"
+  echo "Usage: $0 [stop] [--port=PORT | -p PORT | PORT]"
   echo ""
   echo "Arguments:"
-  echo "  testbed, tb       Launch with Testbed tool only"
-  echo "  sequencer, seq    Launch with Sequencer tool only"
-  echo "  mantis, man       Launch with Mantis tool only"
-  echo "  all, suite        Launch with all tools (default)"
+  echo "  stop              Stop running UDMI Workbench backend server process(es)"
   echo "  --port=N, -p N    Specify custom TCP port (default: 8080)"
 }
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    testbed|tb)
-      FEATURE="testbed"
-      shift
-      ;;
-    sequencer|seq)
-      FEATURE="sequencer"
-      shift
-      ;;
-    mantis|man)
-      FEATURE="mantis"
-      shift
-      ;;
-    all|suite)
-      FEATURE="all"
+    stop)
+      STOP_REQUESTED=true
       shift
       ;;
     --port=*)
@@ -89,11 +74,35 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-# Determine backend features parameter
-if [ "$FEATURE" = "all" ]; then
-  FEATURES_PARAM="testbed,sequencer,mantis"
-else
-  FEATURES_PARAM="$FEATURE"
+# Function to stop running UDMI Workbench server on specified port
+stop_workbench_server() {
+  local target_port="$1"
+  echo "Stopping any running UDMI Workbench server instances..."
+  
+  if [ -n "$target_port" ] && command -v lsof > /dev/null 2>&1; then
+    local PIDS=$(lsof -t -i :"${target_port}" 2>/dev/null || true)
+    for pid in $PIDS; do
+      local cmdline=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null || true)
+      if [[ "$cmdline" == *"ui/src/server.py"* ]]; then
+        echo "Stopping UDMI Workbench process (PID ${pid}) on port ${target_port}..."
+        kill -9 "$pid" 2>/dev/null || true
+      else
+        echo "Port ${target_port} process (PID ${pid}) is not UDMI Workbench; leaving untouched."
+      fi
+    done
+  else
+    # Fallback: kill any remaining python process matching ui/src/server.py
+    pkill -9 -f "ui/src/server.py" 2>/dev/null || true
+  fi
+
+  sleep 0.5
+  echo "Workbench server stop check completed."
+}
+
+if [ "$STOP_REQUESTED" = true ]; then
+  PORT="${MANUAL_PORT:-8080}"
+  stop_workbench_server "$PORT"
+  exit 0
 fi
 
 # Function to check whether port is used by Workbench or non-Workbench process
@@ -117,7 +126,6 @@ check_port_owner() {
 
 PORT="${MANUAL_PORT:-8080}"
 SERVER_RUNNING=true
-RESTART_NEEDED=false
 
 if [ -n "$MANUAL_PORT" ]; then
   # Manual port specified by user
@@ -150,28 +158,10 @@ else
   fi
 fi
 
-if [ "$SERVER_RUNNING" = true ]; then
-  # Server is running on $PORT, check active features
-  RUNNING_FEATURES=$(curl -s --max-time 1 "http://localhost:${PORT}/api/features" | tr -d '[]" ' || echo "")
-  NORM_RUNNING=$(echo "$RUNNING_FEATURES" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
-  NORM_REQUESTED=$(echo "$FEATURES_PARAM" | tr ',' '\n' | sort | tr '\n' ',' | sed 's/,$//')
-  
-  if [ "$NORM_RUNNING" != "$NORM_REQUESTED" ]; then
-    echo "UDMI Workbench server on port ${PORT} is running with different features (${RUNNING_FEATURES:-unknown})."
-    RESTART_NEEDED=true
-  fi
-fi
-
-if [ "$SERVER_RUNNING" = false ] || [ "$RESTART_NEEDED" = true ]; then
-  if [ "$RESTART_NEEDED" = true ]; then
-    echo "Restarting backend server on port ${PORT} with requested features (${FEATURES_PARAM})..."
-    bin/stop_workbench --port="${PORT}"
-  else
-    echo "Starting UDMI Workbench backend server on port ${PORT}..."
-  fi
-  
+if [ "$SERVER_RUNNING" = false ]; then
+  echo "Starting UDMI Workbench backend server on port ${PORT}..."
   mkdir -p out
-  setsid python3 ui/src/server.py --port="${PORT}" --features="${FEATURES_PARAM}" > out/workbench_server.log 2>&1 &
+  setsid python3 ui/src/server.py --port="${PORT}" > out/workbench_server.log 2>&1 &
   
   # Wait for the server to spin up
   for i in {1..10}; do
@@ -187,13 +177,13 @@ if [ "$SERVER_RUNNING" = false ] || [ "$RESTART_NEEDED" = true ]; then
   fi
   echo "Backend server started successfully on port ${PORT}."
 else
-  echo "UDMI Workbench backend server is already running on port ${PORT} with the correct feature set."
+  echo "UDMI Workbench backend server is already running on port ${PORT}."
 fi
 
-# Build URL (Purely backend feature flag construct; no URL parameters)
+# Build URL
 URL="http://localhost:${PORT}/ui/src/index.html"
 
-echo "Opening UDMI Workbench (${FEATURE}) in your default browser..."
+echo "Opening UDMI Workbench in your default browser..."
 echo "Workbench running at: ${URL}"
 
 if command -v xdg-open > /dev/null 2>&1; then

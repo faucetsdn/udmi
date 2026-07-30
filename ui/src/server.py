@@ -28,10 +28,6 @@ def to_home_relative(path_str):
         return "~" + abs_path[len(HOME_DIR):]
     return abs_path
 
-
-ALLOWED_FEATURES = {'testbed', 'sequencer', 'mantis'}
-
-
 active_processes_lock = threading.Lock()
 active_processes = {}
 
@@ -122,20 +118,8 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
-        
-        path_parts = parsed_url.path.strip('/').split('/')
-        if len(path_parts) >= 2 and path_parts[0] == 'ui':
-            for feature_name in {'testbed', 'sequencer', 'mantis'}:
-                if feature_name in path_parts and feature_name not in ALLOWED_FEATURES:
-                    self.send_response(403)
-                    self.send_header('Content-Type', 'text/plain')
-                    self.end_headers()
-                    self.wfile.write(f"Forbidden: The '{feature_name}' tool is disabled on this server.".encode('utf-8'))
-                    return
 
-        if parsed_url.path == '/api/features':
-            self.handle_api_features()
-        elif parsed_url.path == '/api/list':
+        if parsed_url.path == '/api/list':
             self.handle_api_list(parsed_url.query)
         elif parsed_url.path == '/api/read_file':
             self.handle_api_read_file(parsed_url.query)
@@ -1453,26 +1437,13 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response_data)
 
-    def handle_api_features(self):
-        response_data = json.dumps(list(ALLOWED_FEATURES)).encode('utf-8')
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.send_header('Content-Length', str(len(response_data)))
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.end_headers()
-        self.wfile.write(response_data)
-
 
 if __name__ == '__main__':
     for arg in sys.argv:
-        if arg.startswith('--features='):
-            features_str = arg.split('=', 1)[1].lower()
-            ALLOWED_FEATURES = set(f.strip() for f in features_str.split(',') if f.strip())
-        elif arg.startswith('--port='):
+        if arg.startswith('--port='):
             PORT = int(arg.split('=', 1)[1])
 
     print(f"Starting UDMI custom API & Static server on port {PORT} serving directory {ROOT_DIR}")
-    print(f"Enforced server-side features: {list(ALLOWED_FEATURES)}")
     prune_old_sessions(10)
     
     try:

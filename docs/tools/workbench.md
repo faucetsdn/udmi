@@ -11,12 +11,11 @@
 The **`bin/workbench`** launcher manages the Python backend API server and opens Workbench in your browser:
 
 ```bash
-# Launch full suite
+# Launch Workbench
 bin/workbench
 
-# Launch standalone tool (Sequencer or Mantis full-screen)
-bin/workbench sequencer
-bin/workbench mantis
+# Stop running Workbench server
+bin/workbench stop
 ```
 
 ---

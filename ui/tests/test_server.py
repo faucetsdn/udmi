@@ -120,16 +120,6 @@ class TestUIServer(unittest.TestCase):
                 self.assertIn("project_spec", res)
                 self.assertIsNotNone(res["project_spec"])
 
-    def test_get_features(self):
-        url = "http://127.0.0.1:8089/api/features"
-        req = urllib.request.Request(url, method="GET")
-        with urllib.request.urlopen(req) as response:
-            self.assertEqual(response.status, 200)
-            data = json.loads(response.read().decode('utf-8'))
-            self.assertIn("testbed", data)
-            self.assertIn("sequencer", data)
-            self.assertIn("mantis", data)
-
     def test_list_spec_fields(self):
         url = "http://127.0.0.1:8089/api/list?path=sites"
         req = urllib.request.Request(url, method="GET")

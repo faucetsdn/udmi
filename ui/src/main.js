@@ -48,20 +48,9 @@ class ShellOrchestrator {
   }
 
   async initOrchestration() {
-    // 1. Fetch server's active security policy (Purely backend construct)
-    try {
-      const res = await fetch('/api/features');
-      if (res.ok) {
-        this.serverAllowedFeatures = await res.json();
-      }
-    } catch (e) {
-      console.error('Error fetching server allowed features:', e);
-    }
+    this.activeFeatures = ['testbed', 'sequencer', 'mantis'];
 
-    // Rely entirely on server-configured allowed features
-    this.activeFeatures = Array.isArray(this.serverAllowedFeatures) ? this.serverAllowedFeatures : ['testbed', 'sequencer', 'mantis'];
-
-    // 2. Initialize layout and event loops
+    // Initialize layout and event loops
     this.applyFeatureFlagsLayout();
     this.initEvents();
     this.loadCachedSiteModelPath();

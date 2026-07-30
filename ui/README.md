@@ -173,24 +173,17 @@ window.addEventListener('DOMContentLoaded', () => new ConfigEditorController());
 Open **`ui/src/index.html`**:
 1.  Add your iframe inside the `<section class="app-content">` block:
     ```html
-    <iframe id="iframe-config" class="app-iframe" src="config_editor/index.html" data-feature="config_editor"></iframe>
+    <iframe id="iframe-config" class="app-iframe" src="config_editor/index.html"></iframe>
     ```
 2.  Add a navigation rail tab inside the `<aside class="app-sidebar">` rail:
     ```html
-    <button class="sidebar-tab" data-tab="config" data-feature="config_editor">
+    <button class="sidebar-tab" data-tab="config">
       <span class="material-symbols-outlined">edit_note</span>
       <span>Config Editor</span>
     </button>
     ```
 
-### Step 4: Register the Feature Flag
-Open **`ui/server.py`**:
-Add your new feature name (`'config_editor'`) to the global `ALLOWED_FEATURES` registry to authorize its network path:
-```python
-ALLOWED_FEATURES = {'sequencer', 'mantis', 'config_editor'}
-```
-
-That's it! Your tool is now fully integrated. You can launch it using `bin/workbench config_editor` or open the unified suite and access your new tab with complete sandboxing!
+That's it! Your tool is now fully integrated into the Workbench visual suite.
 
 ---
 
