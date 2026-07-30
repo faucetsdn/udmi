@@ -35,7 +35,7 @@
   },
   "cloud": {
     "auth_type": "ES256",
-    "connection_type": "DIRECT"
+    "resource_type": "DIRECT"
   },
   "pointset": {
     "points": {
