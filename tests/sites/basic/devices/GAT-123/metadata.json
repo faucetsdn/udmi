@@ -44,7 +44,7 @@
   },
   "cloud": {
     "auth_type": "ES256",
-    "connection_type": "GATEWAY"
+    "resource_type": "GATEWAY"
   },
   "version": "1.5.7",
   "timestamp": "2020-05-01T13:39:07Z"
