@@ -36,7 +36,8 @@ To prevent regressions in this reflectively-coupled system, verification MUST pr
 #### Stage 1: Unit & Static Integration Integrity (Fast/Offline)
 - **Goal**: Catch compilation errors, logic regressions, schema & reflective mapping errors (`classForSchema`), generated code serialization, trace replay regressions, site model diffs, and utility regressions.
 - **Mandate**: Run the comprehensive unit test suite covering code, schemas, traces, registrar, and utilities.
-- **Command**: `bin/run_tests all_tests` (runs `code_tests`, `schema_tests`, `trace_tests`, `registrar_tests`, `util_tests`).
+- **Command**: `bin/run_tests all_tests`
+  * Runs `code_tests`, `schema_tests`, `trace_tests`, `registrar_tests`, and `util_tests`.
 
 #### Stage 2: Functional Pipeline Integrity (Local Integration)
 - **Goal**: Verify the end-to-end message pipeline (Validator -> Sequencer -> UDMIS) handles both standard and "unknown" cases without reflective failures.
