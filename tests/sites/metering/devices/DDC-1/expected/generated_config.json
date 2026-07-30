@@ -1,8 +1,9 @@
 {
-  "gateway": {},
   "localnet": {
     "families": {
-      "fqdn": {}
+      "bacnet": {},
+      "ipv4": {},
+      "modbus": {}
     }
   },
   "system": {
