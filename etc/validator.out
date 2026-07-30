@@ -57,7 +57,7 @@ sites/udmi_site_model/out/devices/AHU-1/config.out
   "sub_folder": "update",
   "sub_type": "config",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
@@ -93,7 +93,7 @@ sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
   "sub_folder": "pointset",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/events_system.out
@@ -118,7 +118,7 @@ sites/udmi_site_model/out/devices/AHU-1/events_system.out
   "sub_folder": "system",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state_discovery.out
@@ -143,7 +143,7 @@ sites/udmi_site_model/out/devices/AHU-1/state_discovery.out
   "sub_folder": "discovery",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
@@ -168,7 +168,7 @@ sites/udmi_site_model/out/devices/AHU-1/state_localnet.out
   "sub_folder": "localnet",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state.out
@@ -200,7 +200,7 @@ sites/udmi_site_model/out/devices/AHU-1/state.out
   "sub_folder": "update",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
@@ -229,7 +229,7 @@ sites/udmi_site_model/out/devices/AHU-1/state_pointset.out
   "sub_folder": "pointset",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-1/state_system.out
@@ -254,7 +254,7 @@ sites/udmi_site_model/out/devices/AHU-1/state_system.out
   "sub_folder": "system",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/config.out
@@ -270,7 +270,7 @@ sites/udmi_site_model/out/devices/AHU-22/config.out
   "sub_folder": "update",
   "sub_type": "config",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/events_pointset.out
@@ -301,7 +301,7 @@ sites/udmi_site_model/out/devices/AHU-22/events_pointset.out
   "sub_folder": "pointset",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/events_system.out
@@ -317,7 +317,7 @@ sites/udmi_site_model/out/devices/AHU-22/events_system.out
   "sub_folder": "system",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_gateway.out
@@ -333,7 +333,7 @@ sites/udmi_site_model/out/devices/AHU-22/state_gateway.out
   "sub_folder": "gateway",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_localnet.out
@@ -349,7 +349,7 @@ sites/udmi_site_model/out/devices/AHU-22/state_localnet.out
   "sub_folder": "localnet",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state.out
@@ -374,7 +374,7 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
   "sub_folder": "update",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
@@ -394,7 +394,7 @@ sites/udmi_site_model/out/devices/AHU-22/state_pointset.out
   "sub_folder": "pointset",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/AHU-22/state_system.out
@@ -419,7 +419,7 @@ sites/udmi_site_model/out/devices/AHU-22/state_system.out
   "sub_folder": "system",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/config.out
@@ -435,7 +435,7 @@ sites/udmi_site_model/out/devices/GAT-123/config.out
   "sub_folder": "update",
   "sub_type": "config",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/events_blobset.out
@@ -467,7 +467,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_blobset.out
   "sub_folder": "blobset",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
@@ -492,7 +492,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_discovery.out
   "sub_folder": "discovery",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/events_error.out
@@ -508,7 +508,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_error.out
   "sub_folder": "error",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/events_gateway.out
@@ -540,7 +540,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_gateway.out
   "sub_folder": "gateway",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/events_invalid.out
@@ -572,7 +572,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_invalid.out
   "sub_folder": "invalid",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/events_mapping.out
@@ -597,7 +597,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_mapping.out
   "sub_folder": "mapping",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/events_pointset.out
@@ -628,7 +628,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_pointset.out
   "sub_folder": "pointset",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/events_system.out
@@ -644,7 +644,7 @@ sites/udmi_site_model/out/devices/GAT-123/events_system.out
   "sub_folder": "system",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/state_discovery.out
@@ -660,7 +660,7 @@ sites/udmi_site_model/out/devices/GAT-123/state_discovery.out
   "sub_folder": "discovery",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/state_gateway.out
@@ -676,7 +676,7 @@ sites/udmi_site_model/out/devices/GAT-123/state_gateway.out
   "sub_folder": "gateway",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/state_localnet.out
@@ -692,7 +692,7 @@ sites/udmi_site_model/out/devices/GAT-123/state_localnet.out
   "sub_folder": "localnet",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/state.out
@@ -708,7 +708,7 @@ sites/udmi_site_model/out/devices/GAT-123/state.out
   "sub_folder": "update",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/state_pointset.out
@@ -728,7 +728,7 @@ sites/udmi_site_model/out/devices/GAT-123/state_pointset.out
   "sub_folder": "pointset",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/GAT-123/state_system.out
@@ -744,7 +744,7 @@ sites/udmi_site_model/out/devices/GAT-123/state_system.out
   "sub_folder": "system",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/config.out
@@ -760,7 +760,7 @@ sites/udmi_site_model/out/devices/SNS-4/config.out
   "sub_folder": "update",
   "sub_type": "config",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/events_pointset.out
@@ -801,7 +801,7 @@ sites/udmi_site_model/out/devices/SNS-4/events_pointset.out
   "sub_folder": "pointset",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/events_system.out
@@ -817,7 +817,7 @@ sites/udmi_site_model/out/devices/SNS-4/events_system.out
   "sub_folder": "system",
   "sub_type": "events",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/state_gateway.out
@@ -833,7 +833,7 @@ sites/udmi_site_model/out/devices/SNS-4/state_gateway.out
   "sub_folder": "gateway",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/state_localnet.out
@@ -849,7 +849,7 @@ sites/udmi_site_model/out/devices/SNS-4/state_localnet.out
   "sub_folder": "localnet",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/state.out
@@ -881,7 +881,7 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
   "sub_folder": "update",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/state_pointset.out
@@ -913,7 +913,7 @@ sites/udmi_site_model/out/devices/SNS-4/state_pointset.out
   "sub_folder": "pointset",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
 ::::::::::::::
 sites/udmi_site_model/out/devices/SNS-4/state_system.out
@@ -938,5 +938,5 @@ sites/udmi_site_model/out/devices/SNS-4/state_system.out
   "sub_folder": "system",
   "sub_type": "state",
   "timestamp": "REDACTED_TIMESTAMP",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }
