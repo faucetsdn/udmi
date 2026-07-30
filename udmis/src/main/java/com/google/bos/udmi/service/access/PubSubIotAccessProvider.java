@@ -82,6 +82,11 @@ public class PubSubIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public boolean supportsRegistryOperations() {
+    return false;
+  }
+
+  @Override
   public String updateConfig(Envelope envelope, String config, Long version) {
     publish(envelope, CONFIG_SUBTYPE, null, config);
     return config;

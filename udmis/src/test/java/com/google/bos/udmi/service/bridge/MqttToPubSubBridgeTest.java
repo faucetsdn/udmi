@@ -290,8 +290,8 @@ class MqttToPubSubBridgeTest {
 
     // Simulate automatic reconnection completed (reconnect = true)
     callback.connectComplete(true, "tcp://localhost:1883");
-    // Verify re-subscribed
-    verify(mockMqttClient, org.mockito.Mockito.times(2)).subscribe(testTopic, 1);
+    // Verify re-subscribed asynchronously
+    verify(mockMqttClient, org.mockito.Mockito.timeout(5000).times(2)).subscribe(testTopic, 1);
   }
 
   @Test

@@ -61,6 +61,7 @@ public abstract class ContainerBase implements UdmiComponent {
   private static final int JITTER_ADJ_MS = 1000; // Empirically determined to be good.
   public static final String ENABLED_KEY = "enabled";
   public static final String TRUE_OPTION = "true";
+  public static final String FALSE_OPTION = "false";
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
   protected final PodConfiguration podConfiguration;
