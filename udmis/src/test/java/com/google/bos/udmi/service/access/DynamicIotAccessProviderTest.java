@@ -25,6 +25,7 @@ class DynamicIotAccessProviderTest extends MessageTestCore {
   void setUp() {
     mockImplicitProvider = mock(IotAccessProvider.class);
     when(mockImplicitProvider.isEnabled()).thenReturn(true);
+    when(mockImplicitProvider.supportsRegistryOperations()).thenReturn(true);
     when(mockImplicitProvider.fetchRegistryMetadata(TEST_REGISTRY, "udmi_provisioned"))
         .thenReturn("2026-01-01T00:00:00Z");
 
