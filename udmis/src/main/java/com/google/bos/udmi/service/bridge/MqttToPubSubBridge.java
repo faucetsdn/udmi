@@ -424,7 +424,7 @@ public class MqttToPubSubBridge {
                   logger.debug("Successfully re-subscribed to topic: {}", actualSubscriptionTopic);
                 } catch (MqttException e) {
                   logger.error("Failed to re-subscribe to topic {} after auto-reconnect",
-                      mqttSubscriptionTopic, e);
+                      actualSubscriptionTopic, e);
                 }
               });
             } else {
