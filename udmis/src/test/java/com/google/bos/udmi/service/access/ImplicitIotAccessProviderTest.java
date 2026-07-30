@@ -174,6 +174,67 @@ class ImplicitIotAccessProviderTest {
   }
 
   @Test
+  void testBrokerAuthFalseNoInteractions() throws Exception {
+    if (provider != null) {
+      provider.shutdown();
+    }
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.options =
+        "enable, use_password=" + TEST_PASSWORD + ", disable_logging=true, broker_auth=false";
+    provider = new ImplicitIotAccessProvider(iotAccess);
+    provider.activate();
+
+    ConnectionBroker authDisabledBroker = mock(ConnectionBroker.class);
+    Field brokerField = ImplicitIotAccessProvider.class.getDeclaredField("broker");
+    brokerField.setAccessible(true);
+    brokerField.set(provider, authDisabledBroker);
+
+    CloudModel createModel = new CloudModel();
+    createModel.operation = ModelOperation.CREATE;
+    Credential credential = new Credential();
+    credential.key_format = Key_format.RS_256;
+    credential.key_data = "fake_key_data";
+    createModel.credentials = List.of(credential);
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, createModel, null);
+
+    store.put("r/test-reg/d/test-dev:num_id", "12345");
+    CloudModel bindModel = new CloudModel();
+    bindModel.operation = ModelOperation.BIND;
+    bindModel.functions_ver = 1;
+    bindModel.gateway = new udmi.schema.GatewayModel();
+    bindModel.gateway.proxy_ids = List.of("proxy-device-2");
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, bindModel, null);
+
+    CloudModel unbindModel = new CloudModel();
+    unbindModel.operation = ModelOperation.UNBIND;
+    unbindModel.functions_ver = 1;
+    unbindModel.gateway = new udmi.schema.GatewayModel();
+    unbindModel.gateway.proxy_ids = List.of("proxy-device-2");
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, unbindModel, null);
+
+    CloudModel blockModel = new CloudModel();
+    blockModel.operation = ModelOperation.BLOCK;
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, blockModel, null);
+
+    CloudModel deleteModel = new CloudModel();
+    deleteModel.operation = ModelOperation.DELETE;
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, deleteModel, null);
+
+    store.put("r/test-reg/d/gateway-1:resource_type", "GATEWAY");
+    store.put("r/test-reg/d/gateway-1:num_id", "9999");
+    store.put("r/test-reg/d/gateway-1/c/bound_devices:bound-dev-1", "bound");
+    store.put("r/test-reg/d/bound-dev-1:bound_to", "gateway-1");
+    store.put("r/test-reg/d/bound-dev-1:bind_status", "bound");
+    store.put("r/test-reg/d/bound-dev-1:num_id", "8888");
+
+    CloudModel deleteGatewayModel = new CloudModel();
+    deleteGatewayModel.operation = ModelOperation.DELETE;
+    provider.modelDevice(TEST_REGISTRY, "gateway-1", deleteGatewayModel, null);
+
+    verifyNoInteractions(authDisabledBroker);
+  }
+
+  @Test
   void testDeleteDeviceWithoutNumIdInStore() {
     CloudModel cloudModel = new CloudModel();
     cloudModel.operation = ModelOperation.DELETE;

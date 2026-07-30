@@ -181,6 +181,8 @@ public class MqttToPubSubBridge {
     String pubsubTopicId = commandLine.getOptionValue("pubsub_topic_id");
     String mqttClientId = commandLine.getOptionValue("mqtt_client_id");
     String mqttSessionExpiryInterval = commandLine.getOptionValue("mqtt_session_expiry_interval");
+    String mqttKeepAliveInterval = commandLine.getOptionValue("mqtt_keep_alive_interval", "15");
+    int keepAliveInterval = Integer.parseInt(mqttKeepAliveInterval);
     boolean mqttTls = commandLine.hasOption("mqtt_tls");
     String mqttCaPath = commandLine.getOptionValue("mqtt_ca_path");
     String mqttUsername = commandLine.getOptionValue("mqtt_username");
@@ -218,6 +220,7 @@ public class MqttToPubSubBridge {
       MqttConnectionOptions connOpts = new MqttConnectionOptions();
       connOpts.setCleanStart(false);
       connOpts.setSessionExpiryInterval(sessionExpiryInterval);
+      connOpts.setKeepAliveInterval(keepAliveInterval);
       connOpts.setAutomaticReconnect(true);
       connOpts.setReceiveMaximum(100);
 
@@ -300,6 +303,8 @@ public class MqttToPubSubBridge {
     options.addOption(null, "mqtt_client_id", true, "MQTT client ID.");
     options.addOption(null, "mqtt_session_expiry_interval", true,
         "MQTT session expiry interval (seconds).");
+    options.addOption(null, "mqtt_keep_alive_interval", true,
+        "MQTT keep-alive interval (seconds).");
     options.addOption(null, "mqtt_tls", false, "Enable TLS for MQTT connection.");
     options.addOption(null, "mqtt_ca_path", true, "Path to CA certificate for TLS.");
     options.addOption(null, "mqtt_username", true, "MQTT username for authentication.");
@@ -413,13 +418,15 @@ public class MqttToPubSubBridge {
           public void connectComplete(boolean reconnect, String serverUri) {
             if (reconnect) {
               logger.debug("MQTT automatically reconnected to broker: {}", serverUri);
-              try {
-                mqttClient.subscribe(actualSubscriptionTopic, 1);
-                logger.debug("Successfully re-subscribed to topic: {}", actualSubscriptionTopic);
-              } catch (MqttException e) {
-                logger.error("Failed to re-subscribe to topic {} after auto-reconnect",
-                    mqttSubscriptionTopic, e);
-              }
+              executor.submit(() -> {
+                try {
+                  mqttClient.subscribe(actualSubscriptionTopic, 1);
+                  logger.debug("Successfully re-subscribed to topic: {}", actualSubscriptionTopic);
+                } catch (MqttException e) {
+                  logger.error("Failed to re-subscribe to topic {} after auto-reconnect",
+                      actualSubscriptionTopic, e);
+                }
+              });
             } else {
               logger.debug("Initial MQTT connection established to broker: {}", serverUri);
             }

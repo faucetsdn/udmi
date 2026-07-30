@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.2",
+  "$udmi_version": "1.5.7",
   "title": "Alarmset Events",
   "description": "A set of alarms reporting telemetry data. [Alarmset Events Documentation](../docs/messages/alarmset.md#telemetry)",
   "$section": "Messages",

@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.2",
+  "$udmi_version": "1.5.7",
   "title": "Mapping Command",
   "description": "[Mapping command](../docs/specs/mapping.md) for provisioning",
   "type": "object",

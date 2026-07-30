@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.2",
+  "$udmi_version": "1.5.7",
   "title": "Alarm Alarmset Model",
   "description": "Information about a specific alarm name of the device.",
   "type": "object",

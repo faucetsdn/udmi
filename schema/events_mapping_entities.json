@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.2",
+  "$udmi_version": "1.5.7",
   "title": "Mapping Events Entities",
   "description": "Mapper output describing a group of devices by their guids",
   "type": "object",

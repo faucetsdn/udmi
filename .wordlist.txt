@@ -290,6 +290,7 @@ unopinionated
 unparseable
 unprocessable
 unscoped
+unstaged
 Untrusted
 unwriteable
 uplink

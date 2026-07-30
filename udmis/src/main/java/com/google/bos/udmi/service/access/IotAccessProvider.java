@@ -72,6 +72,13 @@ public interface IotAccessProvider extends UdmiComponent {
 
   void sendCommandBase(Envelope envelope, SubFolder folder, String message);
 
+  /**
+   * Returns true if this provider supports registry and device management operations.
+   */
+  default boolean supportsRegistryOperations() {
+    return true;
+  }
+
   String updateConfig(Envelope envelope, String config, Long version);
 
   void updateRegistryRegions(Map<String, String> regions);
