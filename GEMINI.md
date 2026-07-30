@@ -34,14 +34,14 @@ To ensure technical integrity in this multi-component system (comprising Python,
 To prevent regressions in this reflectively-coupled system, verification MUST proceed in three distinct stages. You may only proceed to the next stage if the previous one passes completely.
 
 #### Stage 1: Structural & Logic Integrity (Fast/Unit)
-- **Goal**: Catch compilation errors, logic regressions, and basic contract violations.
-- **Mandate**: Run all core unit tests.
-- **Command**: `bin/run_tests code_tests` and `bin/run_tests registrar_tests`.
+- **Goal**: Catch compilation errors, logic regressions, contract violations, trace replay regressions, and site model diffs.
+- **Mandate**: Run the comprehensive unit test suite covering code, schemas, traces, registrar, and utilities.
+- **Command**: `bin/run_tests all_tests` (includes `code_tests`, `schema_tests`, `trace_tests`, `registrar_tests`, `util_tests`).
 
 #### Stage 2: Schema & Reflection Integrity (Static Integration)
-- **Goal**: Ensure reflective mapping (e.g., `classForSchema`) and schema validation are intact across all message types.
-- **Mandate**: Validate the schema-to-class mapping and generated code.
-- **Command**: `bin/run_tests schema_tests` (runs `bin/test_schema`).
+- **Goal**: Ensure reflective mapping (e.g., `classForSchema`), generated code serialization, and trace replays are intact across all message types and site configurations.
+- **Mandate**: Validate schema-to-class mapping and generated Python/Java dataclass serialization.
+- **Command**: `bin/run_tests schema_tests` and `bin/run_tests trace_tests`.
 
 #### Stage 3: Functional Pipeline Integrity (Local Integration)
 - **Goal**: Verify the end-to-end message pipeline (Validator -> Sequencer -> UDMIS) handles both standard and "unknown" cases without reflective failures.
