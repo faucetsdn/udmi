@@ -31,19 +31,14 @@ To ensure technical integrity in this multi-component system (comprising Python,
 - **Warning**: If permissions (e.g., `sudo`) prevent full sanitization, the environment must be treated as "Untrusted" and verification cannot be considered conclusive.
 
 ### 6. Staged Final Verification (Project-Wide Integrity)
-To prevent regressions in this reflectively-coupled system, verification MUST proceed in three distinct stages. You may only proceed to the next stage if the previous one passes completely.
+To prevent regressions in this reflectively-coupled system, verification MUST proceed in two distinct stages. You may only proceed to Stage 2 if Stage 1 passes completely.
 
-#### Stage 1: Structural & Logic Integrity (Fast/Unit)
-- **Goal**: Catch compilation errors, logic regressions, contract violations, trace replay regressions, and site model diffs.
+#### Stage 1: Unit & Static Integration Integrity (Fast/Offline)
+- **Goal**: Catch compilation errors, logic regressions, schema & reflective mapping errors (`classForSchema`), generated code serialization, trace replay regressions, site model diffs, and utility regressions.
 - **Mandate**: Run the comprehensive unit test suite covering code, schemas, traces, registrar, and utilities.
-- **Command**: `bin/run_tests all_tests` (includes `code_tests`, `schema_tests`, `trace_tests`, `registrar_tests`, `util_tests`).
+- **Command**: `bin/run_tests all_tests` (runs `code_tests`, `schema_tests`, `trace_tests`, `registrar_tests`, `util_tests`).
 
-#### Stage 2: Schema & Reflection Integrity (Static Integration)
-- **Goal**: Ensure reflective mapping (e.g., `classForSchema`), generated code serialization, and trace replays are intact across all message types and site configurations.
-- **Mandate**: Validate schema-to-class mapping and generated Python/Java dataclass serialization.
-- **Command**: `bin/run_tests schema_tests` and `bin/run_tests trace_tests`.
-
-#### Stage 3: Functional Pipeline Integrity (Local Integration)
+#### Stage 2: Functional Pipeline Integrity (Local Integration)
 - **Goal**: Verify the end-to-end message pipeline (Validator -> Sequencer -> UDMIS) handles both standard and "unknown" cases without reflective failures.
 - **Mandate**: Run the comprehensive local integration suite. This stage is non-negotiable for any change touching `common`, `gencode`, or message-processing logic.
 - **Startup Timeout Hard Stop**: `bin/start_local` must be ready (`UUFI Service is READY`) within **90 seconds**. If local services are not ready after 90 seconds, treat it as an unrecoverable core system failure — stop execution immediately and report the failure. Do NOT attempt to diagnose, debug, or repair the environment.
@@ -54,4 +49,4 @@ To prevent regressions in this reflectively-coupled system, verification MUST pr
   4. `bin/test_sequencer nostate full //mqtt/localhost:46432` (Exhaustive pipeline verification)
   5. `bin/test_runlocal` (UDMIS component verification)
 
-**Authoritative Source**: If in doubt, audit `.github/workflows/testing.yml` for the current set of `run:` commands. Declaring a task "DONE" without completing all three stages is a violation of engineering standards.
+**Authoritative Source**: If in doubt, audit `.github/workflows/testing.yml` for the current set of `run:` commands. Declaring a task "DONE" without completing both stages is a violation of engineering standards.
