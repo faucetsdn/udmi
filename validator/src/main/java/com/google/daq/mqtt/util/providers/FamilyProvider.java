@@ -51,7 +51,14 @@ public interface FamilyProvider {
   }
 
   static String constructUrl(String family, String device, String point) {
-    return family + "://" + device + "/" + point;
+    return constructUrl(family, device, null, point);
+  }
+
+  static String constructUrl(String family, String device, String unitId, String point) {
+    if (unitId != null) {
+      return family + "://" + device + "/" + unitId + "/" + (point != null ? point : "");
+    }
+    return family + "://" + device + "/" + (point != null ? point : "");
   }
 
   /**

@@ -18,7 +18,7 @@
     "points": {
       "temp": {
         "ref": "40001",
-        "url": "modbus://null/40001"
+        "url": "modbus://null/1/40001"
       }
     }
   },
