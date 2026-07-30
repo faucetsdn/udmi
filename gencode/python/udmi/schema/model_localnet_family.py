@@ -16,6 +16,7 @@ class FamilyLocalnetModel(DataModel):
     """
 
     addr: Optional[str] = None
+    unitid: Optional[str] = None
     network: Optional[str] = None
     adjunct: Optional[Dict[str, str]] = None
     shadow_id: Optional[str] = None
