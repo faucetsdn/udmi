@@ -31,27 +31,31 @@ To ensure technical integrity in this multi-component system (comprising Python,
 - **Warning**: If permissions (e.g., `sudo`) prevent full sanitization, the environment must be treated as "Untrusted" and verification cannot be considered conclusive.
 
 ### 6. Staged Final Verification (Project-Wide Integrity)
-To prevent regressions in this reflectively-coupled system, verification MUST proceed in three distinct stages. You may only proceed to the next stage if the previous one passes completely.
+To prevent regressions in this reflectively-coupled system, verification MUST proceed in two distinct stages. You may only proceed to Stage 2 if Stage 1 passes completely.
 
-#### Stage 1: Structural & Logic Integrity (Fast/Unit)
-- **Goal**: Catch compilation errors, logic regressions, and basic contract violations.
-- **Mandate**: Run all core unit tests.
-- **Command**: `bin/run_tests code_tests` and `bin/run_tests registrar_tests`.
+#### Stage 1: Unit & Static Integration Integrity (Fast/Offline)
+- **Goal**: Catch compilation errors, logic regressions, schema & reflective mapping errors (`classForSchema`), generated code serialization, trace replay regressions, site model diffs, and utility regressions.
+- **Mandate**: Run the comprehensive unit test suite covering code, schemas, traces, registrar, and utilities.
+- **Command**: `bin/run_tests all_tests`
+  * Runs `code_tests`, `schema_tests`, `trace_tests`, `registrar_tests`, and `util_tests`.
 
-#### Stage 2: Schema & Reflection Integrity (Static Integration)
-- **Goal**: Ensure reflective mapping (e.g., `classForSchema`) and schema validation are intact across all message types.
-- **Mandate**: Validate the schema-to-class mapping and generated code.
-- **Command**: `bin/run_tests schema_tests` (runs `bin/test_schema`).
-
-#### Stage 3: Functional Pipeline Integrity (Local Integration)
+#### Stage 2: Functional Pipeline Integrity (Local Integration)
 - **Goal**: Verify the end-to-end message pipeline (Validator -> Sequencer -> UDMIS) handles both standard and "unknown" cases without reflective failures.
 - **Mandate**: Run the comprehensive local integration suite. This stage is non-negotiable for any change touching `common`, `gencode`, or message-processing logic.
 - **Startup Timeout Hard Stop**: `bin/start_local` must be ready (`UUFI Service is READY`) within **90 seconds**. If local services are not ready after 90 seconds, treat it as an unrecoverable core system failure — stop execution immediately and report the failure. Do NOT attempt to diagnose, debug, or repair the environment.
 - **Commands**:
   1. `bin/run_tests install_dependencies` (Ensure clean local environment)
-  2. `bin/start_local sites/udmi_site_model //mqtt/localhost:46432` (Start local services; wait max 90s)
-  3. `bin/test_validator //mqtt/localhost:46432` (Telemetry validation)
-  4. `bin/test_sequencer nostate full //mqtt/localhost:46432` (Exhaustive pipeline verification)
-  5. `bin/test_runlocal` (UDMIS component verification)
+  2. `bin/start_local sites/udmi_site_model //mqtt/localhost:46432` (Start local services; wait max 90s for UUFI Service is READY)
+  3. `bin/test_special //mqtt/localhost:46432` (Special sequence integration validation)
+  4. `bin/test_validator //mqtt/localhost:46432` (Telemetry validation)
+  5. `bin/test_sequencer nostate full //mqtt/localhost:46432` (Exhaustive pipeline verification)
+  6. `bin/test_runlocal` (UDMIS component verification)
 
-**Authoritative Source**: If in doubt, audit `.github/workflows/testing.yml` for the current set of `run:` commands. Declaring a task "DONE" without completing all three stages is a violation of engineering standards.
+### 7. Golden Expectation Integrity (Anti-Cheating Rule)
+- **Principle**: Golden test files (such as `etc/validator.out` or `etc/schema_nostate.out`) define expected system outputs and baseline test coverage.
+- **Mandate**: Updating golden files simply to force failing integration tests to pass (e.g., executing `cp out/validator.out etc/validator.out` without specific, audited technical rationale) is considered cheating and is strictly forbidden.
+- **Rules**:
+  1. Golden files may ONLY be updated when there is an intentional, documented system output change (such as an explicit schema or gencode version upgrade).
+  2. Any diff to golden files must be line-by-line audited to ensure no expected test cases or event outputs (e.g., `events_blobset.out`, `events_discovery.out`, or `events_invalid.out`) were omitted or truncated due to test timing or incomplete pubber execution.
+
+**Authoritative Source**: If in doubt, audit `.github/workflows/testing.yml` for the current set of `run:` commands. Declaring a task "DONE" without completing both stages is a violation of engineering standards.

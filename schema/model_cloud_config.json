@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.2",
+  "$udmi_version": "1.5.7",
   "title": "Config Cloud Model",
   "description": "Information specific to how the device communicates with the cloud.",
   "type": "object",
