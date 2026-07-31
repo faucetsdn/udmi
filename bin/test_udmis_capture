@@ -1,7 +1,8 @@
 #!/bin/bash -e
 #
 # Integration test for native UDMIS CaptureProcessor direct database capture.
-# Assumes necessary local UDMIS and database infrastructure is already running.
+# Spins up Pubber in quick-exit (smokeCheck) mode to generate telemetry and state messages,
+# then verifies system state ended up in PostgreSQL and telemetry metrics ended up in InfluxDB.
 
 UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 cd "$UDMI_ROOT"
@@ -11,57 +12,16 @@ target_project="${1:-${TARGET_PROJECT:-//mqtt/localhost:9001}}"
 source "$UDMI_ROOT/etc/shell_common.sh"
 
 SITE_MODEL="sites/udmi_site_model"
-HOST="localhost"
-PORT=${MQTT_PORT:-8883}
-USER="rocket"
-PASS="monkey"
-CA_CERT="$SITE_MODEL/reflector/ca.crt"
-CLIENT_ID="udmis-capture-test-client"
-
-MQTT_PUB_ARGS="-h $HOST -p $PORT -u $USER -P $PASS --cafile $CA_CERT --cert $SITE_MODEL/reflector/rsa_private.crt --key $SITE_MODEL/reflector/rsa_private.pem -i $CLIENT_ID --insecure"
-
-REGISTRY_ID="ZZ-TRI-FECTA"
 DEVICE_ID="AHU-1"
+SERIAL_NO="capture-smoke-check"
 
-# 1. Publish a telemetry message (pointset/events) directly to MQTT device topic
-echo "=== Publishing pointset/events telemetry message..."
-TELEMETRY_PAYLOAD=$(cat <<EOF
-{
-  "timestamp": "2026-07-30T19:00:00Z",
-  "points": {
-    "filter_differential_pressure_setpoint": {
-      "present_value": 42.5
-    },
-    "fan_status": {
-      "present_value": true
-    }
-  }
-}
-EOF
-)
+echo "=== Launching Pubber DUT for device $DEVICE_ID in quick-exit mode (smokeCheck)..."
+$UDMI_ROOT/bin/start_dut "$SITE_MODEL" "$target_project" "$DEVICE_ID" "$SERIAL_NO" "smokeCheck"
 
-mosquitto_pub $MQTT_PUB_ARGS -t "/r/$REGISTRY_ID/d/$DEVICE_ID/events/pointset" -m "$TELEMETRY_PAYLOAD"
-
-# 2. Publish a state message (system/state) directly to MQTT device topic
-echo "=== Publishing system/state message..."
-STATE_PAYLOAD=$(cat <<EOF
-{
-  "timestamp": "2026-07-30T19:00:01Z",
-  "system": {
-    "operation": {
-      "operational": true
-    }
-  }
-}
-EOF
-)
-
-mosquitto_pub $MQTT_PUB_ARGS -t "/r/$REGISTRY_ID/d/$DEVICE_ID/state/system" -m "$STATE_PAYLOAD"
-
-echo "=== Waiting for UDMIS CaptureProcessor to persist records to PostgreSQL & InfluxDB..."
+echo "=== Waiting for Pubber messages to be processed by UDMIS CaptureProcessor..."
 sleep 5
 
-# 3. Verify PostgreSQL records created by CaptureProcessor
+# 1. Verify PostgreSQL records created by CaptureProcessor
 echo "=== Verifying PostgreSQL database records..."
 PG_PORT=${POSTGRES_PORT:-5432}
 PG_USER=${POSTGRES_USER:-postgres}
@@ -79,7 +39,7 @@ else
   exit 1
 fi
 
-# 4. Verify InfluxDB records created by CaptureProcessor
+# 2. Verify InfluxDB records created by CaptureProcessor
 echo "=== Verifying InfluxDB metric records..."
 INF_PORT=${INFLUX_PORT:-8086}
 echo "Querying InfluxDB at http://localhost:$INF_PORT..."
