@@ -383,11 +383,13 @@ class LocalDevice implements SiteDevice {
       }
     }
 
-    Set<String> privateKeyFiles = getPrivateKeyFiles();
-    if (!privateKeyFiles.isEmpty() && Sets.intersection(privateKeyFiles, actualFiles).isEmpty()) {
-      System.err.printf("No private key found for device %s%n", deviceId);
-      exceptionMap.put(ExceptionCategory.credentials,
-          new ValidationWarning("No private key found in device folder"));
+    if (isGateway() || isDirect()) {
+      Set<String> privateKeyFiles = getPrivateKeyFiles();
+          if (!privateKeyFiles.isEmpty() && Sets.intersection(privateKeyFiles, actualFiles).isEmpty()) {
+        System.err.printf("No private key found for device %s%n", deviceId);
+        exceptionMap.put(ExceptionCategory.credentials,
+            new ValidationWarning("Missing private key"));
+      }
     }
 
     exceptionMap.throwIfNotEmpty();

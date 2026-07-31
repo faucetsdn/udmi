@@ -1,3 +1,2 @@
 Exceptions for DEV-2
-  Cannot read field "cloud" because "this.metadata" is null
   Points temp have defined url field, which is only allowed in generated metadata_norm.json

@@ -2,5 +2,5 @@ Exceptions for GAT-123
   While loading credentials for local device GAT-123
     Found 0 credentials
   expected files mismatch
-    No private key found in device folder
+    Missing private key
     Missing files: [ec_public.pem]
