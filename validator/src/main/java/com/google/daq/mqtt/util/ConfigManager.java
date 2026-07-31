@@ -18,6 +18,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
+import com.google.daq.mqtt.util.providers.FamilyProvider;
 import com.google.udmi.util.ExceptionList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -186,6 +187,13 @@ public class ConfigManager {
     return gatewayConfig;
   }
 
+  private FamilyProvider getFamilyProvider(String family) {
+    if (NAMED_FAMILIES.containsKey(family)) {
+      return NAMED_FAMILIES.get(family);
+    }
+    throw new RuntimeException("Unknown protocol family: " + family);
+  }
+
   private void catchIfSchemaViolation(String description, Runnable action) {
     try {
       action.run();
@@ -204,13 +212,7 @@ public class ConfigManager {
     if (!isVendorRef && addr != null) {
       catchIfSchemaViolation(
           format("%s localnet addr", family),
-          () -> {
-            if (NAMED_FAMILIES.containsKey(family)) {
-              NAMED_FAMILIES.get(family).validateAddr(addr);
-            } else {
-              throw new RuntimeException("Unknown protocol family: " + family);
-            }
-          });
+          () -> getFamilyProvider(family).validateAddr(addr));
     }
     return addr;
   }
@@ -224,13 +226,7 @@ public class ConfigManager {
     if (!isVendorRef && addr != null) {
       catchIfSchemaViolation(
           format("%s localnet network", family),
-          () -> {
-            if (NAMED_FAMILIES.containsKey(family)) {
-              NAMED_FAMILIES.get(family).validateNetwork(addr);
-            } else {
-              throw new RuntimeException("Unknown protocol family: " + family);
-            }
-          });
+          () -> getFamilyProvider(family).validateNetwork(addr));
     }
     return addr;
   }
@@ -307,11 +303,7 @@ public class ConfigManager {
               targetFamily = fullRef.substring(0, fullRef.indexOf("://"));
             }
 
-            if (NAMED_FAMILIES.containsKey(targetFamily)) {
-              NAMED_FAMILIES.get(targetFamily).validateUrl(fullRef);
-            } else {
-              throw new RuntimeException("Unknown protocol family in URL: " + targetFamily);
-            }
+            getFamilyProvider(targetFamily).validateUrl(fullRef);
           });
     }
     return pointRef;
