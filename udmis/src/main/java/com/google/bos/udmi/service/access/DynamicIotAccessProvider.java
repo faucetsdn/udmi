@@ -58,13 +58,13 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     // deadlock where the device hasn't sent a message yet but needs its config.
     String reflectorKey = getProviderKey(ContainerBase.REFLECT_BASE, registryId);
     String reflectorAffinity = registryProviders.get(reflectorKey);
-    if (reflectorAffinity != null) {
+    if (reflectorAffinity != null && getOperatingProviders().containsKey(reflectorAffinity)) {
       debug("Registry affinity mapping for %s inherited from reflector %s: %s",
           registryId, reflectorKey, reflectorAffinity);
       return reflectorAffinity;
     }
     getProviders();
-    TreeMap<String, String> sortedMap = getProviders().entrySet().stream()
+    TreeMap<String, String> sortedMap = getOperatingProviders().entrySet().stream()
         .filter(access -> access.getValue().isEnabled())
         .collect(sortedMapCollector(entry -> registryPriority(registryId, entry)));
     checkState(!sortedMap.isEmpty(), "no viable iot providers found");
@@ -92,9 +92,8 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   private IotAccessProvider getRegistryProvider(String registryId, String deviceId) {
     IotAccessProvider provider = getProviderFor(registryId, deviceId);
-    if (provider instanceof PubSubIotAccessProvider) {
-      IotAccessProvider fallback = getProviders().values().stream()
-          .filter(p -> !(p instanceof PubSubIotAccessProvider))
+    if (provider == null || !provider.supportsRegistryOperations()) {
+      IotAccessProvider fallback = getOperatingProviders().values().stream()
           .findFirst()
           .orElse(null);
       if (fallback != null) {
@@ -104,6 +103,12 @@ public class DynamicIotAccessProvider extends IotAccessBase {
       }
     }
     return provider;
+  }
+
+  private Map<String, IotAccessProvider> getOperatingProviders() {
+    return getProviders().entrySet().stream()
+        .filter(entry -> entry.getValue().supportsRegistryOperations())
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
   private Map<String, IotAccessProvider> getProviders() {
@@ -245,10 +250,17 @@ public class DynamicIotAccessProvider extends IotAccessBase {
         }
       }
 
-      String previous = registryProviders.put(providerKey, affinity);
-      if (!affinity.equals(previous)) {
-        debug(format("Switched registry affinity for %s from %s -> %s", providerKey, previous,
-            affinity));
+      if (getProviders().containsKey(affinity)) {
+        String previous = registryProviders.put(providerKey, affinity);
+        if (!affinity.equals(previous)) {
+          debug(format("Switched registry affinity for %s from %s -> %s", providerKey, previous,
+              affinity));
+        }
+      } else {
+        String previous = registryProviders.remove(providerKey);
+        if (previous != null) {
+          debug(format("Cleared invalid registry affinity for %s (was %s)", providerKey, previous));
+        }
       }
     } else {
       String previous = registryProviders.remove(providerKey);

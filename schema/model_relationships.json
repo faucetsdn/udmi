@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.3",
+  "$udmi_version": "1.5.7",
   "title": "Entity Relationships",
   "description": "Entity relationships to other devices, keyed by target device ID",
   "type": "object",

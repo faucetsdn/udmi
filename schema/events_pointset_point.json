@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.2",
+  "$udmi_version": "1.5.7",
   "title": "Point Pointset Events",
   "description": "Object representation for for a single point",
   "type": "object",

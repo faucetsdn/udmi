@@ -9,7 +9,7 @@ from udmi.schema import Blobsets
 
 # The UDMI schema version this library is built to support.
 # This is used in State and Event message headers.
-UDMI_VERSION: Final[str] = "1.5.2"
+UDMI_VERSION: Final[str] = "1.5.7"
 
 # Default file path for storing persistent device state (e.g. endpoint info).
 PERSISTENT_STORE_PATH: Final[str] = ".udmi_persistence.json"
