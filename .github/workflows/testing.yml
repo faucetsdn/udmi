@@ -24,6 +24,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -89,6 +90,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - name: base setup
         run: |
           bin/setup_base
@@ -139,6 +141,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
@@ -193,6 +196,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
@@ -250,6 +254,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - name: base setup
         run: |
           bin/setup_base
@@ -329,6 +334,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
@@ -368,6 +374,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - name: base setup
         run: bin/run_tests install_dependencies
       - name: local setup
@@ -443,6 +450,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - name: Setup prerequisites
         run: |
           bin/setup_base
@@ -574,6 +582,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - name: Setup Base
         run: bin/setup_base
       - name: Run Bridgehead Test
@@ -612,6 +621,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
       - name: Setup Base
         run: |
           bin/setup_base
