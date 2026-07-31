@@ -1,4 +1,5 @@
 Exceptions for DWN-2
+  Cannot read field "cloud" because "this.metadata" is null
   While loading device metadata for DWN-2
     While converting strict to udmi.schema.Metadata
       While converting string/string to udmi.schema.Metadata
