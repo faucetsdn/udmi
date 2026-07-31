@@ -503,19 +503,23 @@ if [[ "$DEVICES_VAL" != *"$DEVICE_ID"* ]]; then
 fi
 echo "Device discovery PASSED for device: $DEVICE_ID under registry: $REGISTRY_ID"
 
-# 3. Trigger CloudQuery discovery and check UDMIS logs
-echo "Triggering CloudQuery discovery via Pub/Sub control topic..."
-QUERY_PAYLOAD=$(echo -n '{"generation":"'$(date --utc +%Y-%m-%dT%H:%M:%SZ)'","depth":"entries"}' | base64 -w0)
+# 3. Trigger CloudQuery discovery (depth: details) and check UDMIS logs
+echo "Triggering CloudQuery discovery (depth: details) via Pub/Sub control topic..."
+QUERY_PAYLOAD=$(echo -n '{"generation":"'$(date --utc +%Y-%m-%dT%H:%M:%SZ)'","depth":"details"}' | base64 -w0)
 
 curl -s -X POST "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_control:publish" \
   -H "Content-Type: application/json" \
   -d "{\"messages\":[{\"data\":\"$QUERY_PAYLOAD\",\"attributes\":{\"subFolder\":\"cloud\",\"subType\":\"query\"}}]}" >/dev/null || true
 
-sleep 2
+sleep 3
 
 if grep -q "Starting CloudQuery" out/udmis_host.log 2>/dev/null && \
-   grep -q "Project has .* registries" out/udmis_host.log 2>/dev/null; then
-  echo "CloudQuery discovery PASSED in UDMIS logs (Registries & Devices enumerated)."
+   grep -q "Project has .* registries" out/udmis_host.log 2>/dev/null && \
+   grep -q "Listed registry $REGISTRY_ID with .* devices" out/udmis_host.log 2>/dev/null && \
+   grep -q "Detailed device $REGISTRY_ID/$DEVICE_ID" out/udmis_host.log 2>/dev/null; then
+  echo "CloudQuery discovery traces from UDMIS:"
+  grep -E "Starting CloudQuery|Project has .* registries|Listed registry|Detailed device" out/udmis_host.log 2>/dev/null | sed 's/^/  /'
+  echo "CloudQuery discovery PASSED in UDMIS logs (Registries, Devices, and Device Details for $DEVICE_ID enumerated)."
 else
   echo "Error: CloudQuery discovery execution logs not found in out/udmis_host.log!" >&2
   exit 1
