@@ -37,6 +37,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   private final ContainerBase container;
   private final EndpointConfiguration endpointConfig;
   private final boolean disableLogging;
+  private final boolean brokerAuth;
   private final Object tailLock = new Object();
   private Process tailProcess;
 
@@ -50,7 +51,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
    * Create a new broker connection provider.
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig) {
-    this(container, endpointConfig, false, null, null);
+    this(container, endpointConfig, false, true, null, null);
   }
 
   /**
@@ -58,7 +59,15 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
       boolean disableLogging) {
-    this(container, endpointConfig, disableLogging, null, null);
+    this(container, endpointConfig, disableLogging, true, null, null);
+  }
+
+  /**
+   * Create a new broker connection provider with logging controls and broker auth control.
+   */
+  public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
+      boolean disableLogging, boolean brokerAuth) {
+    this(container, endpointConfig, disableLogging, brokerAuth, null, null);
   }
 
   /**
@@ -66,7 +75,7 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
       boolean disableLogging, Long minPublishIntervalMs) {
-    this(container, endpointConfig, disableLogging, minPublishIntervalMs, null);
+    this(container, endpointConfig, disableLogging, true, minPublishIntervalMs, null);
   }
 
   /**
@@ -75,9 +84,19 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
    */
   public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
       boolean disableLogging, Long minPublishIntervalMs, Double jitterRatio) {
+    this(container, endpointConfig, disableLogging, true, minPublishIntervalMs, jitterRatio);
+  }
+
+  /**
+   * Create a new broker connection provider with logging controls, broker auth control,
+   * min publish interval, and jitter ratio.
+   */
+  public MosquittoBroker(ContainerBase container, EndpointConfiguration endpointConfig,
+      boolean disableLogging, boolean brokerAuth, Long minPublishIntervalMs, Double jitterRatio) {
     this.container = container;
     this.endpointConfig = endpointConfig;
     this.disableLogging = disableLogging;
+    this.brokerAuth = brokerAuth;
     this.minPublishIntervalMs = minPublishIntervalMs;
     this.jitterRatio = jitterRatio;
     if (!disableLogging) {
@@ -154,6 +173,10 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   private CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommandInternal(
       String commandName, Map<String, Object> cmd) {
+    if (!brokerAuth) {
+      info("Broker auth disabled, skipping command %s", commandName);
+      return CompletableFuture.completedFuture(new udmi.schema.MosquittoClientResponse());
+    }
     try {
       byte[] bytes = objectMapper.writeValueAsBytes(cmd);
       CompletableFuture<udmi.schema.MosquittoClientResponse> future = new CompletableFuture<>();
@@ -430,11 +453,19 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   @Override
   public CompletableFuture<Void> authorize(String clientId, String password) {
+    if (!brokerAuth) {
+      info("Broker auth disabled, skipping authorize for %s", clientId);
+      return CompletableFuture.completedFuture(null);
+    }
     return provisionClient(clientId, ofNullable(password).orElse(REVOKE_PASSWORD));
   }
 
   @Override
   public CompletableFuture<Void> bindGateway(String gatewayId, String deviceId) {
+    if (!brokerAuth) {
+      info("Broker auth disabled, skipping bindGateway for %s and %s", gatewayId, deviceId);
+      return CompletableFuture.completedFuture(null);
+    }
     String roleName = "role_" + gatewayId.replace("/", "_");
 
     CompletableFuture<Void> a1 =
@@ -461,6 +492,10 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
 
   @Override
   public CompletableFuture<Void> unbindGateway(String gatewayId, String deviceId) {
+    if (!brokerAuth) {
+      info("Broker auth disabled, skipping unbindGateway for %s and %s", gatewayId, deviceId);
+      return CompletableFuture.completedFuture(null);
+    }
     info("Unbind device Id: %s from gateway Id: %s", deviceId, gatewayId);
     String roleName = "role_" + gatewayId.replace("/", "_");
 
