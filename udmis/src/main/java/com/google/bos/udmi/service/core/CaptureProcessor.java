@@ -58,14 +58,22 @@ public class CaptureProcessor extends ProcessorBase {
     postgresDb = getEnvOrDefault("POSTGRES_DB", "postgres");
 
     influxHost = getEnvOrDefault("INFLUXDB_HOST", "127.0.0.1");
-    influxPort = getEnvOrDefault("INFLUXDB_PORT", "8086");
+    influxPort = getEnvOrDefault("INFLUXDB_PORT", getEnvOrDefault("INFLUX_PORT", "8086"));
     influxToken = getEnvOrDefault("INFLUXDB_TOKEN", "test-influx-token-12345");
     influxOrg = getEnvOrDefault("INFLUXDB_ORG", "bridgehead");
     influxBucket = getEnvOrDefault("INFLUXDB_BUCKET", "home");
 
     httpClient = HttpClient.newHttpClient();
 
+    registerHandler(udmi.schema.PointsetEvents.class, this::pointsetEventsHandler);
+
     initPostgres();
+  }
+
+  private void pointsetEventsHandler(udmi.schema.PointsetEvents events) {
+    MessageContinuation continuation = getContinuation(events);
+    Envelope envelope = continuation.getEnvelope();
+    saveToInflux(envelope, events);
   }
 
   private static String getEnvOrDefault(String key, String defaultValue) {
@@ -109,7 +117,11 @@ public class CaptureProcessor extends ProcessorBase {
     Envelope envelope = continuation.getEnvelope();
     Object payload = defaultedMessage;
 
-    if (envelope.subFolder == SubFolder.POINTSET && envelope.subType == SubType.EVENTS) {
+    boolean isPointsetEvents = (envelope.subFolder == SubFolder.POINTSET
+        && envelope.subType == SubType.EVENTS)
+        || (defaultedMessage instanceof udmi.schema.PointsetEvents);
+
+    if (isPointsetEvents) {
       saveToInflux(envelope, payload);
     } else {
       saveToPostgres(envelope, payload);
@@ -172,6 +184,9 @@ public class CaptureProcessor extends ProcessorBase {
       Map<String, Object> pointDef = (Map<String, Object>) pointDefObj;
       Object presentValue = pointDef.get("present_value");
       if (presentValue == null) {
+        presentValue = pointDef.get("presentValue");
+      }
+      if (presentValue == null) {
         continue;
       }
 
@@ -200,6 +215,8 @@ public class CaptureProcessor extends ProcessorBase {
     }
 
     String lineProtocolData = String.join("\n", lines);
+    info(String.format("Writing %d point_value metrics to InfluxDB for device %s",
+        lines.size(), deviceId));
     writeToInfluxHttp(lineProtocolData);
   }
 
@@ -218,6 +235,8 @@ public class CaptureProcessor extends ProcessorBase {
       if (response.statusCode() >= 400) {
         error(String.format("InfluxDB write failed with status %d: %s",
             response.statusCode(), response.body()));
+      } else {
+        info(String.format("InfluxDB write succeeded with status %d", response.statusCode()));
       }
     } catch (Exception e) {
       error("Error writing to InfluxDB: " + friendlyStackTrace(e));

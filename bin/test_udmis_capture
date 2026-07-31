@@ -1,0 +1,102 @@
+#!/bin/bash -e
+#
+# Integration test for native UDMIS CaptureProcessor direct database capture.
+# Assumes necessary local UDMIS and database infrastructure is already running.
+
+UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$UDMI_ROOT"
+
+target_project="${1:-${TARGET_PROJECT:-//mqtt/localhost:9001}}"
+
+source "$UDMI_ROOT/etc/shell_common.sh"
+
+SITE_MODEL="sites/udmi_site_model"
+HOST="localhost"
+PORT=${MQTT_PORT:-8883}
+USER="rocket"
+PASS="monkey"
+CA_CERT="$SITE_MODEL/reflector/ca.crt"
+CLIENT_ID="udmis-capture-test-client"
+
+MQTT_PUB_ARGS="-h $HOST -p $PORT -u $USER -P $PASS --cafile $CA_CERT --cert $SITE_MODEL/reflector/rsa_private.crt --key $SITE_MODEL/reflector/rsa_private.pem -i $CLIENT_ID --insecure"
+
+REGISTRY_ID="ZZ-TRI-FECTA"
+DEVICE_ID="AHU-1"
+
+# 1. Publish a telemetry message (pointset/events) directly to MQTT device topic
+echo "=== Publishing pointset/events telemetry message..."
+TELEMETRY_PAYLOAD=$(cat <<EOF
+{
+  "timestamp": "2026-07-30T19:00:00Z",
+  "points": {
+    "filter_differential_pressure_setpoint": {
+      "present_value": 42.5
+    },
+    "fan_status": {
+      "present_value": true
+    }
+  }
+}
+EOF
+)
+
+mosquitto_pub $MQTT_PUB_ARGS -t "/r/$REGISTRY_ID/d/$DEVICE_ID/events/pointset" -m "$TELEMETRY_PAYLOAD"
+
+# 2. Publish a state message (system/state) directly to MQTT device topic
+echo "=== Publishing system/state message..."
+STATE_PAYLOAD=$(cat <<EOF
+{
+  "timestamp": "2026-07-30T19:00:01Z",
+  "system": {
+    "operation": {
+      "operational": true
+    }
+  }
+}
+EOF
+)
+
+mosquitto_pub $MQTT_PUB_ARGS -t "/r/$REGISTRY_ID/d/$DEVICE_ID/state/system" -m "$STATE_PAYLOAD"
+
+echo "=== Waiting for UDMIS CaptureProcessor to persist records to PostgreSQL & InfluxDB..."
+sleep 5
+
+# 3. Verify PostgreSQL records created by CaptureProcessor
+echo "=== Verifying PostgreSQL database records..."
+PG_PORT=${POSTGRES_PORT:-5432}
+PG_USER=${POSTGRES_USER:-postgres}
+PG_DB=${POSTGRES_DB:-postgres}
+
+pg_count=$(psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -A -c "SELECT count(*) FROM udmi_messages WHERE device_id = '$DEVICE_ID';" 2>/dev/null || echo "0")
+
+echo "PostgreSQL message count for device $DEVICE_ID: $pg_count"
+if [[ $pg_count -gt 0 ]]; then
+  echo "PASS: Successfully verified $pg_count records in PostgreSQL via UDMIS CaptureProcessor!"
+else
+  echo "FAIL: No records found in PostgreSQL table udmi_messages for device $DEVICE_ID!"
+  echo "=== Tail of out/udmis.log ==="
+  tail -n 50 out/udmis.log || true
+  exit 1
+fi
+
+# 4. Verify InfluxDB records created by CaptureProcessor
+echo "=== Verifying InfluxDB metric records..."
+INF_PORT=${INFLUX_PORT:-8086}
+echo "Querying InfluxDB at http://localhost:$INF_PORT..."
+influx_out=$(udmis/bin/influxctl query --host "http://localhost:$INF_PORT" --token "test-influx-token-12345" --org "bridgehead" 'from(bucket: "home") |> range(start: -10y) |> filter(fn: (r) => r._measurement == "point_value")' 2>/dev/null || true)
+
+echo "InfluxDB output:"
+echo "$influx_out"
+
+if echo "$influx_out" | grep -q "point_value"; then
+  echo "PASS: Successfully verified telemetry point_value records in InfluxDB via UDMIS CaptureProcessor!"
+else
+  echo "FAIL: No point_value records found in InfluxDB!"
+  echo "=== Tail of out/udmis.log ==="
+  tail -n 50 out/udmis.log || true
+  exit 1
+fi
+
+echo "=========================================================================="
+echo "SUCCESS: UDMIS CaptureProcessor Integration Test Passed!"
+echo "=========================================================================="

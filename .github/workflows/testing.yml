@@ -285,6 +285,8 @@ jobs:
         run: bin/test_postgresql_postrun
       - name: bin/test_capture
         run: bin/test_capture
+      - name: bin/test_udmis_capture
+        run: bin/test_udmis_capture
       - name: mosquitto debug
         if: ${{ !cancelled() }}
         run: |

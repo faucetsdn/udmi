@@ -72,6 +72,8 @@ public class UdmiServicePod extends ContainerBase {
     PROCESSORS.put("uufi_out", UufiProcessor.class);
     PROCESSORS.put("uufi_state", UufiProcessor.class);
     PROCESSORS.put("uufi_events", UufiProcessor.class);
+    PROCESSORS.put("capture_state", CaptureProcessor.class);
+    PROCESSORS.put("capture_events", CaptureProcessor.class);
   }
 
   /**
