@@ -17,6 +17,7 @@ import static java.util.Objects.requireNonNull;
 import com.google.bos.udmi.service.access.IotAccessProvider;
 import com.google.bos.udmi.service.core.BitboxAdapter;
 import com.google.bos.udmi.service.core.BridgeProcessor;
+import com.google.bos.udmi.service.core.CaptureProcessor;
 import com.google.bos.udmi.service.core.ControlProcessor;
 import com.google.bos.udmi.service.core.CronProcessor;
 import com.google.bos.udmi.service.core.DistributorPipe;
@@ -62,7 +63,8 @@ public class UdmiServicePod extends ContainerBase {
   private static final Map<String, UdmiComponent> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class,
-      ProvisioningEngine.class, BitboxAdapter.class, DistributorPipe.class, UufiProcessor.class);
+      ProvisioningEngine.class, BitboxAdapter.class, DistributorPipe.class, UufiProcessor.class,
+      CaptureProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = new HashMap<>();
 
   static {
