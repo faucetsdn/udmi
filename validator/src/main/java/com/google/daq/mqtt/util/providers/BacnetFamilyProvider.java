@@ -18,7 +18,7 @@ public class BacnetFamilyProvider implements FamilyProvider {
   private static final Pattern BACNET_NETWORK = Pattern.compile("[1-9][0-9]{0,4}");
   private static final int MAX_NETWORK_VALUE = 65534;
   private static final Pattern BACNET_POINT = Pattern.compile(
-      "([A-Z]{2,4}):(0|[1-9][0-9]*)(#[_a-z]+)?");
+      "([A-Z]{2,4})/(0|[1-9][0-9]*)(#[_a-z]+)?");
 
   @Override
   public String familyKey() {

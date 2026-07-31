@@ -42,4 +42,23 @@ public class MessageUpgraderTest {
     assertEquals("system.auth.login", logentries.get(2).get("category").asText());
   }
 
+  @Test
+  public void metadataBacnetRefUpgrade() {
+    ObjectNode message = MessageUpgrader.NODE_FACTORY.objectNode();
+    message.put("version", "1.5.6");
+    ObjectNode pointset = message.putObject("pointset");
+    ObjectNode points = pointset.putObject("points");
+    ObjectNode point1 = points.putObject("temp_sensor");
+    point1.put("ref", "BV:11#present_value");
+    point1.put("url", "bacnet://582312/BV:11#present_value");
+
+    MessageUpgrader upgrader = new MessageUpgrader("metadata", message);
+    JsonNode upgraded = (JsonNode) upgrader.upgrade();
+
+    JsonNode upgradedPoint = upgraded.get("pointset").get("points").get("temp_sensor");
+    assertEquals("BV/11#present_value", upgradedPoint.get("ref").asText());
+    assertEquals("bacnet://582312/BV/11#present_value", upgradedPoint.get("url").asText());
+    assertEquals("1.5.7", upgraded.get("version").asText());
+  }
+
 }

@@ -3,7 +3,7 @@
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "BV:11#present_value"
+        "ref": "BV/11#present_value"
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
