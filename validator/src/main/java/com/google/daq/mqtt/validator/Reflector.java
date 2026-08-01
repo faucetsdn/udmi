@@ -134,10 +134,6 @@ public class Reflector {
             boolean isReplyOp = "REPLY".equals(
                 ifNotNullGet(messageBundle.message, m -> (String) m.get("operation")));
             if (Validator.isReplySubtype(subType) || isReplyOp) {
-              if (resultPayload == null && messageBundle.message != null
-                  && !messageBundle.message.isEmpty()) {
-                resultPayload = messageBundle.message;
-              }
               if (sendId.equals(recvId)) {
                 recvId = null;
               }
@@ -145,6 +141,10 @@ public class Reflector {
             }
             boolean isUpdate = SubFolder.UPDATE.value().equals(subFolder);
             boolean isCloud = SubFolder.CLOUD.value().equals(subFolder);
+            boolean isError = SubFolder.ERROR.value().equals(subFolder);
+            if (isError) {
+              throw new RuntimeException("Received reflector error: " + messageBundle.message);
+            }
             if (isUpdate || isCloud) {
               resultPayload = messageBundle.message;
               recvId = sendId;
