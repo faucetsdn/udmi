@@ -27,6 +27,11 @@ export UDMI_NO_SUDO=true
 export HOST_IP="127.0.0.1"
 export MOSQUITTO_LOG_PATH="$(pwd)/var/mosquitto/log/mosquitto.log"
 
+PUBSUB_PORT=${PUBSUB_PORT:-8085}
+PUBSUB_HOST_PORT="$HOST_IP:$PUBSUB_PORT"
+export PUBSUB_EMULATOR_HOST="$PUBSUB_HOST_PORT"
+PUBSUB_BASE_URL="http://$PUBSUB_HOST_PORT"
+
 SITE_MODEL="${1:-sites/udmi_site_model}"
 if [ ! -d "$SITE_MODEL" ]; then
   echo "Error: Site model directory missing at $SITE_MODEL. Please run bin/clone_model first or pass a valid site model path." >&2
@@ -114,7 +119,7 @@ for device_dir in "$SITE_MODEL"/devices/*; do
 done
 
 # 9. Start Pub/Sub Emulator if not running
-if ! nc -z 127.0.0.1 8085 &>/dev/null; then
+if ! nc -z "$HOST_IP" "$PUBSUB_PORT" &>/dev/null; then
   echo "Checking native Pub/Sub Emulator component availability..."
   if ! gcloud --quiet beta emulators pubsub env-init >/dev/null 2>&1; then
     echo "Native pubsub-emulator component missing; attempting automated package or component install..."
@@ -132,14 +137,14 @@ if ! nc -z 127.0.0.1 8085 &>/dev/null; then
 
   if gcloud --quiet beta emulators pubsub env-init >/dev/null 2>&1; then
     echo "Starting native gcloud Pub/Sub emulator host process..."
-    gcloud --quiet beta emulators pubsub start --host-port=127.0.0.1:8085 --project=udmis > out/pubsub_emulator.log 2>&1 < /dev/null &
+    gcloud --quiet beta emulators pubsub start --host-port="$PUBSUB_HOST_PORT" --project=udmis > out/pubsub_emulator.log 2>&1 < /dev/null &
     PUBSUB_PID=$!
   else
     echo "Native Pub/Sub emulator unavailable or administratively disabled; falling back to ephemeral standalone emulator container..."
     PUBSUB_PID=""
     if command -v docker >/dev/null 2>&1; then
       docker rm -f pubsub-emulator >/dev/null 2>&1 || true
-      docker run -d --name pubsub-emulator -p 8085:8085 gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 > out/pubsub_docker.log 2>&1
+      docker run -d --name pubsub-emulator -p "$PUBSUB_PORT:8085" gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 > out/pubsub_docker.log 2>&1
     else
       echo "Error: Neither native gcloud pubsub-emulator nor Docker is available to run the Pub/Sub emulator." >&2
       exit 1
@@ -149,7 +154,7 @@ if ! nc -z 127.0.0.1 8085 &>/dev/null; then
   echo "Waiting for Pub/Sub Emulator to be ready..."
   timeout=30
   while [ $timeout -gt 0 ]; do
-    if curl -s -o /dev/null "http://127.0.0.1:8085/v1/projects/udmis/topics"; then
+    if curl -s -o /dev/null "$PUBSUB_BASE_URL/v1/projects/udmis/topics"; then
       echo "Pub/Sub Emulator is ready."
       break
     fi
@@ -164,60 +169,60 @@ fi
 
 # 10. Create Topics and Subscriptions
 echo "Creating topics in Pub/Sub Emulator..."
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_target" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_state" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_reflect" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_control" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_reply" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_target" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_state" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_reflect" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_control" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_reply" >/dev/null || true
 
 echo "Creating subscriptions in Pub/Sub Emulator..."
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-udmis" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-udmis" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_target-udmis" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_target-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-provision" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-provision" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_target-provision" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_target-provision" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_state-udmis" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_state-udmis" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_state-udmis" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_state-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_state"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reflect-udmis" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reflect-udmis" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reflect-udmis" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reflect-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reflect"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_control-udmis" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_control-udmis" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_control-udmis" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_control-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_control"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply-bridge" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply-bridge" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reply-bridge" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reply-bridge" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reply"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reply"}' >/dev/null || true
 
 echo "Verifying topics in Pub/Sub Emulator..."
-curl -f -v "http://127.0.0.1:8085/v1/projects/udmis/topics"
+curl -f -v "$PUBSUB_BASE_URL/v1/projects/udmis/topics"
 echo
 echo "Verifying subscriptions in Pub/Sub Emulator..."
-curl -f -v "http://127.0.0.1:8085/v1/projects/udmis/subscriptions"
+curl -f -v "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions"
 echo
 
 # 11. Start Host UDMIS (Pub/Sub Mode)
 echo "Starting Host UDMIS (Pub/Sub Mode)..."
 export GCP_PROJECT=udmis
 export ETCD_CLUSTER=127.0.0.1
-export PUBSUB_EMULATOR_HOST=127.0.0.1:8085
+export PUBSUB_EMULATOR_HOST="$PUBSUB_HOST_PORT"
 export UDMI_NAMESPACE=""
 
 # Ensure the var directory exists and contains the required deployed_version.json
@@ -329,7 +334,7 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --mqtt_username=rocket \
   --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:${ETCD_PORT:-2379} \
+  --etcd_target=http://127.0.0.1:$ETCD_PORT \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_events.log 2>&1 &
@@ -348,7 +353,7 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --mqtt_username=rocket \
   --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:${ETCD_PORT:-2379} \
+  --etcd_target=http://127.0.0.1:$ETCD_PORT \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_state.log 2>&1 &
@@ -367,7 +372,7 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --mqtt_username=rocket \
   --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:${ETCD_PORT:-2379} \
+  --etcd_target=http://127.0.0.1:$ETCD_PORT \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_reflect.log 2>&1 &
@@ -505,14 +510,14 @@ echo "Device discovery PASSED for device: $DEVICE_ID under registry: $REGISTRY_I
 
 # 3. Trigger CloudQuery discovery (depth: details) and capture published DiscoveryEvents payloads
 echo "Subscribing probe to capture DiscoveryEvents from Pub/Sub topic 'udmi_target'..."
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_discovery_probe" \
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null
 
 echo "Triggering CloudQuery discovery (depth: details) via Pub/Sub control topic..."
 QUERY_PAYLOAD=$(echo -n '{"generation":"'$(date --utc +%Y-%m-%dT%H:%M:%SZ)'","depth":"details"}' | base64 -w0)
 
-PUB_RES=$(curl -s -X POST "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_control:publish" \
+PUB_RES=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_control:publish" \
   -H "Content-Type: application/json" \
   -d "{\"messages\":[{\"data\":\"$QUERY_PAYLOAD\",\"attributes\":{\"subFolder\":\"cloud\",\"subType\":\"query\"}}]}")
 
@@ -524,7 +529,7 @@ fi
 sleep 3
 
 # Pull discovery messages from probe subscription
-PROBE_PULL=$(curl -s -X POST "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_discovery_probe:pull" \
+PROBE_PULL=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe:pull" \
   -H "Content-Type: application/json" \
   -d '{"maxMessages":30}')
 
