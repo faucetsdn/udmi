@@ -3,8 +3,8 @@
 ROOT=$(realpath $(dirname $0)/..)
 source $ROOT/etc/shell_common.sh
 
-if [[ $# != 3 && $# != 4 ]]; then
-    echo Usage: $0 SITE_DIR PROJECT_ID DEVICE_ID [CONFIG_FILE / TEST_NAME]
+if [[ $# -lt 3 || $# -gt 5 ]]; then
+    echo Usage: $0 SITE_DIR PROJECT_ID DEVICE_ID [CONFIG_FILE / TEST_NAME / query] [OUTPUT_FILE]
     false
 fi
 
@@ -15,6 +15,7 @@ shift 3
 REFLECTOR_CONFIG=/tmp/reflector_config.json
 src_config=""
 config_file=""
+out_file=""
 
 if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
@@ -23,20 +24,39 @@ else
     registry_suffix=null
 fi
 
-if [[ -n ${1:-} ]]; then
-   test_name=$1
-   src_config=${site_dir}/out/devices/${device_id}/tests/${test_name}/config_update.json
-   ls -l $src_config && shift
-fi
-   
-if [[ -n ${1:-} ]]; then
-    config_file=$1
-    src_config=${site_dir}/devices/${device_id}/config/${config_file}
-    ls -l $src_config
+is_query=false
+if [[ ${1:-} == "query" || ${1:-} == "-q" ]]; then
+    is_query=true
     shift
+    if [[ -n ${1:-} ]]; then
+        out_file=$1
+        shift
+    else
+        out_file=${site_dir}/devices/${device_id}/config/queried_config.json
+    fi
 fi
 
-if [[ ! -f $src_config ]]; then
+if [[ $is_query == false && -n ${1:-} ]]; then
+   test_name=$1
+   src_config=${site_dir}/out/devices/${device_id}/tests/${test_name}/config_update.json
+   if [[ -f $src_config ]]; then
+       ls -l $src_config && shift
+   else
+       src_config=""
+   fi
+fi
+   
+if [[ $is_query == false && -n ${1:-} ]]; then
+    config_file=$1
+    src_config=${site_dir}/devices/${device_id}/config/${config_file}
+    if [[ -f $src_config ]]; then
+        ls -l $src_config && shift
+    else
+        src_config=""
+    fi
+fi
+
+if [[ $is_query == false && ! -f $src_config ]]; then
     src_config=${site_dir}/devices/${device_id}/out/generated_config.json
     ls -l ${src_config}
 fi
@@ -45,10 +65,12 @@ cd ${ROOT}
 
 dst_config=/tmp/${device_id}_config.json
 
-now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
-echo Setting config timestamp ${now_date}
-jq < ${src_config} .timestamp=\"${now_date}\" |\
-    jq .system.testing.sequence_name=\"${config_file%.json}\" > ${dst_config}
+if [[ $is_query == false ]]; then
+    now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
+    echo Setting config timestamp ${now_date}
+    jq < ${src_config} .timestamp=\"${now_date}\" |\
+        jq .system.testing.sequence_name=\"${config_file%.json}\" > ${dst_config}
+fi
 
 quoted_namespace=null
 quoted_bridge=null
@@ -78,7 +100,6 @@ else
     quoted_id=null
 fi
 
-echo Resetting device ${device_id} config...
 echo Writing config to $REFLECTOR_CONFIG
 cat <<EOF > $REFLECTOR_CONFIG
 {
@@ -92,9 +113,22 @@ cat <<EOF > $REFLECTOR_CONFIG
 }
 EOF
 
-validator/bin/reflector $REFLECTOR_CONFIG update/config:${dst_config}
+if [[ $is_query == true ]]; then
+    query_file=/tmp/${device_id}_query.json
+    cat <<EOF > $query_file
+{}
+EOF
+    echo Querying device ${device_id} config...
+    mkdir -p $(dirname "$out_file")
+    validator/bin/reflector $REFLECTOR_CONFIG update/query:${query_file} > "$out_file"
+    echo "Queried config written to $out_file:"
+    cat "$out_file"
+else
+    echo Resetting device ${device_id} config...
+    validator/bin/reflector $REFLECTOR_CONFIG update/config:${dst_config}
 
-echo
-cat ${dst_config}
-echo
-echo That config ^^^^ was applied!
+    echo
+    cat ${dst_config}
+    echo
+    echo That config ^^^^ was applied!
+fi
