@@ -114,7 +114,7 @@ nohup $UDMIS_DIR/bin/run $UDMIS_CONFIG >> $LOGFILE 2>&1 &
 PID=$!
 echo $PID > $UDMIS_PID_FILE
 
-WAITING=30
+WAITING=90
 for i in `seq 1 $WAITING`; do
     if [[ -f $POD_READY || ! -d /proc/$PID ]]; then
         break
