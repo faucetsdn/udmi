@@ -22,7 +22,8 @@ POSTGRES_HOST = "127.0.0.1"
 INFLUXDB_TOKEN = os.environ.get("INFLUXDB_TOKEN", "test-influx-token-12345")
 INFLUXDB_ORG = os.environ.get("INFLUXDB_ORG", "bridgehead")
 INFLUXDB_BUCKET = os.environ.get("INFLUXDB_BUCKET", "home")
-INFLUXDB_URL = "http://localhost:8086"
+INFLUX_PORT = os.environ.get("INFLUX_PORT", "8086")
+INFLUXDB_URL = os.environ.get("INFLUXDB_URL", f"http://localhost:{INFLUX_PORT}")
 
 def get_postgres_connection():
   """Returns a connection to the PostgreSQL database."""
