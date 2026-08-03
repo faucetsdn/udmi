@@ -527,7 +527,28 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return properties;
   }
 
+  private synchronized void addRegistryToDatabase(String registryId) {
+    if (registryId == null || registryId.trim().isEmpty()) {
+      return;
+    }
+    DataRef rootRef = database.ref();
+    try (AutoCloseable lock = rootRef.lock()) {
+      String current = rootRef.get(REGISTRIES_KEY);
+      Set<String> registrySet = current == null || current.trim().isEmpty()
+          ? new java.util.HashSet<>()
+          : new java.util.HashSet<>(Arrays.asList(current.split(",")));
+      if (registrySet.add(registryId.trim())) {
+        rootRef.put(REGISTRIES_KEY, String.join(",", registrySet));
+        info("Added registry %s to database registry tracking", registryId);
+      }
+    } catch (Exception e) {
+      warn("Failed updating database registry tracking for %s: %s",
+          registryId, friendlyStackTrace(e));
+    }
+  }
+
   private String touchDeviceEntry(String registryId, String deviceId) {
+    addRegistryToDatabase(registryId);
     String timestamp = isoConvert();
     registryDevicesRef(registryId).put(deviceId, timestamp);
     return timestamp;
@@ -666,6 +687,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public Set<String> getRegistries() {
+    return getRegistriesForRegion(DEFAULT_REGION);
+  }
+
+  @Override
   public Set<String> getRegistriesForRegion(String region) {
     if (region == null) {
       return ImmutableSet.of(DEFAULT_REGION);
@@ -718,8 +744,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     if (authType != null) {
       cloudModel.auth_type = CloudModel.Auth_type.fromValue(authType);
     }
-    cloudModel.resource_type = ofNullable(properties.get(RESOURCE_TYPE_PROPERTY))
-        .map(Resource_type::fromValue).orElse(DIRECT);
+    String boundTo = properties.get(BOUND_TO_KEY);
+    cloudModel.resource_type = boundTo != null ? PROXIED
+        : ofNullable(properties.get(RESOURCE_TYPE_PROPERTY))
+            .map(Resource_type::fromValue).orElse(DIRECT);
     cloudModel.blocked = "true".equals(properties.get(BLOCKED_PROPERTY)) ? true : null;
     cloudModel.updated_time = JsonUtil.getDate(properties.get(CREATED_AT_PROPERTY));
     return cloudModel;
@@ -771,16 +799,38 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private String getTargetRegistryId(String registryId, String deviceId) {
+    if (deviceId != null && !deviceId.isEmpty()
+        && (registryId == null || reflectRegistry.equals(registryId))) {
+      return deviceId;
+    }
+    if (registryId != null && !registryId.isEmpty()) {
+      return registryId;
+    }
+    if (deviceId != null && !deviceId.isEmpty()) {
+      return deviceId;
+    }
+    throw new IllegalArgumentException("Unspecified registry ID for modelRegistry");
+  }
+
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     ModelOperation operation = cloudModel.operation;
+    String targetRegistry = getTargetRegistryId(registryId, deviceId);
     try {
-      // TODO: Make this update the saved metadata for the registry.
+      if (operation == ModelOperation.CREATE || operation == ModelOperation.UPDATE) {
+        addRegistryToDatabase(targetRegistry);
+        if (cloudModel.metadata != null) {
+          DataRef regRef = database.ref().registry(targetRegistry);
+          cloudModel.metadata.forEach(regRef::put);
+        }
+      }
       return getReply(registryId, deviceId, cloudModel, "registry");
     } catch (Exception e) {
-      throw new RuntimeException("While " + operation + "ing registry " + registryId, e);
+      throw new RuntimeException("While " + operation + "ing registry " + targetRegistry, e);
     }
   }
+
 
   private void modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
     CloudModel fetchedModel = fetchDevice(registryId, deviceId);
