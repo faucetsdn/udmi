@@ -175,6 +175,21 @@ class ImplicitIotAccessProviderTest {
   }
 
   @Test
+  void testListDevicesBoundDeviceProjectsProxied() {
+    store.put("r/test-reg/c/active:test-dev", "2026-08-03T10:00:00Z");
+    store.put("r/test-reg/d/test-dev:bound_to", "test-gateway");
+    store.put("r/test-reg/d/test-dev:bind_status", "bound");
+    store.put("r/test-reg/d/test-dev:resource_type", "DIRECT");
+
+    CloudModel listModel = provider.listDevices(TEST_REGISTRY, null);
+
+    org.junit.jupiter.api.Assertions.assertNotNull(listModel.device_ids);
+    CloudModel deviceModel = listModel.device_ids.get(TEST_DEVICE);
+    org.junit.jupiter.api.Assertions.assertNotNull(deviceModel);
+    assertEquals(udmi.schema.CloudModel.Resource_type.PROXIED, deviceModel.resource_type);
+  }
+
+  @Test
   void testBrokerAuthFalseNoInteractions() throws Exception {
     if (provider != null) {
       provider.shutdown();

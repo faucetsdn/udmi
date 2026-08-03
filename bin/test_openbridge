@@ -533,16 +533,40 @@ PROBE_PULL=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/u
   -H "Content-Type: application/json" \
   -d '{"maxMessages":30}')
 
-DEVICE_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+REGISTRY_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+  .receivedMessages[]? | .message | 
+  select(.data | @base64d | fromjson | .registries != null) | 
+  .data | @base64d | fromjson')
+
+DEVICE_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+  .receivedMessages[]? | .message | 
+  select(.data | @base64d | fromjson | .devices != null) | 
+  .data | @base64d | fromjson')
+
+DEVICE_DETAILS_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
   .receivedMessages[]? | .message | 
   select(.attributes.deviceId == "'"$DEVICE_ID"'") | 
   .data | @base64d | fromjson')
 
-if [ -n "$DEVICE_PAYLOAD" ] && [ "$DEVICE_PAYLOAD" != "null" ]; then
+if [ -n "$REGISTRY_DISCOVERY_PAYLOAD" ] && [ "$REGISTRY_DISCOVERY_PAYLOAD" != "null" ]; then
   echo "=================================================================="
-  echo "Published DiscoveryEvents Payload for Device $DEVICE_ID:"
+  echo "Registry Discovery Payload (no deviceID/registryID attributes):"
   echo "=================================================================="
-  echo "$DEVICE_PAYLOAD" | jq .
+  echo "$REGISTRY_DISCOVERY_PAYLOAD" | jq .
+fi
+
+if [ -n "$DEVICE_DISCOVERY_PAYLOAD" ] && [ "$DEVICE_DISCOVERY_PAYLOAD" != "null" ]; then
+  echo "=================================================================="
+  echo "Device Discovery Payload (deviceRegistryId=$REGISTRY_ID):"
+  echo "=================================================================="
+  echo "$DEVICE_DISCOVERY_PAYLOAD" | jq .
+fi
+
+if [ -n "$DEVICE_DETAILS_PAYLOAD" ] && [ "$DEVICE_DETAILS_PAYLOAD" != "null" ]; then
+  echo "=================================================================="
+  echo "Device Details Discovery Payload for $DEVICE_ID:"
+  echo "=================================================================="
+  echo "$DEVICE_DETAILS_PAYLOAD" | jq .
   echo "=================================================================="
 fi
 
