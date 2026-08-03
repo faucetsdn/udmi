@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.util.SchemaVersion;
@@ -275,7 +277,47 @@ public class MessageUpgrader {
   private void upgradeTo_1_5_6() {
   }
 
+  private static final Pattern LEGACY_BACNET_REF = Pattern.compile(
+      "^(.*\\b[A-Z]{2,4}):([0-9]+)(#.*)?$");
+
   private void upgradeTo_1_5_7() {
+    if (METADATA_SCHEMA.equals(schemaName)) {
+      upgradeTo_1_5_7_metadata();
+    }
+  }
+
+  private void upgradeTo_1_5_7_metadata() {
+    ObjectNode pointset = (ObjectNode) message.get("pointset");
+    if (pointset == null || !pointset.has("points")) {
+      return;
+    }
+    ObjectNode points = (ObjectNode) pointset.get("points");
+    Iterator<String> fieldNames = points.fieldNames();
+    while (fieldNames.hasNext()) {
+      String pointName = fieldNames.next();
+      JsonNode pointNode = points.get(pointName);
+      if (pointNode instanceof ObjectNode) {
+        ObjectNode pointObj = (ObjectNode) pointNode;
+        if (pointObj.has("ref")) {
+          String ref = pointObj.get("ref").asText();
+          Matcher matcher = LEGACY_BACNET_REF.matcher(ref);
+          if (matcher.matches()) {
+            String newRef = matcher.group(1) + "/" + matcher.group(2)
+                + (matcher.group(3) != null ? matcher.group(3) : "");
+            pointObj.put("ref", newRef);
+          }
+        }
+        if (pointObj.has("url")) {
+          String url = pointObj.get("url").asText();
+          Matcher matcher = LEGACY_BACNET_REF.matcher(url);
+          if (matcher.matches()) {
+            String newUrl = matcher.group(1) + "/" + matcher.group(2)
+                + (matcher.group(3) != null ? matcher.group(3) : "");
+            pointObj.put("url", newUrl);
+          }
+        }
+      }
+    }
   }
 
   private void upgradeTo_1_5_3_metadata() {

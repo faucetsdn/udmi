@@ -8,7 +8,7 @@ UDMI supports reading BACnet points by specifying them via a `bacnet://` URL sch
 
 ## URI Schema
 
-`bacnet://<device_id>/<object_type>:<object_instance>[#property_identifier]`
+`bacnet://<device_id>/<object_type>/<object_instance>[#property_identifier]`
 
 *   **`device_id`**: The BACnet Device Object Instance Number. It uniquely identifies the BACnet device on the network.
     *   Must be a positive integer in the range `1` to `4194303` (22-bit Device Object Instance range).
@@ -45,10 +45,10 @@ Under the `localnet` configuration, BACnet parameters define the communication s
 
 The metadata values in the examples below map to the following complete BACnet URIs:
 
-*   **Room Temperature Sensor**: `bacnet://291842/AI:2#present_value`
-*   **Fan Run Status**: `bacnet://3/DO:0`
-*   **Discharge Air Temp**: `bacnet://1/AI:2`
-*   **Damper Command**: `bacnet://291842/BO:21`
+*   **Room Temperature Sensor**: `bacnet://291842/AI/2#present_value`
+*   **Fan Run Status**: `bacnet://3/DO/0`
+*   **Discharge Air Temp**: `bacnet://1/AI/2`
+*   **Damper Command**: `bacnet://291842/BO/21`
 
 ### Network Configuration Example
 
@@ -105,11 +105,11 @@ For a proxied BACnet device, the `gateway` block in the `metadata.json` specifie
     "points": {
       "filter_alarm_pressure_status": {
         "units": "No-units",
-        "ref": "BV:11#present_value"
+        "ref": "BV/11#present_value"
       },
       "filter_differential_pressure_sensor": {
         "units": "Degrees-Celsius",
-        "ref": "AV:12#present_value"
+        "ref": "AV/12#present_value"
       }
     }
   }
