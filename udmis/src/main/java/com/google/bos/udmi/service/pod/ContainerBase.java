@@ -64,6 +64,7 @@ public abstract class ContainerBase implements UdmiComponent {
   public static final String FALSE_OPTION = "false";
   protected static String reflectRegistry = REFLECT_BASE;
   private static BasePodConfiguration basePodConfig = new BasePodConfiguration();
+  private static Level podLogLevel = Level.INFO;
   protected final PodConfiguration podConfiguration;
   protected final long periodicSec;
   protected final String containerId;
@@ -101,6 +102,7 @@ public abstract class ContainerBase implements UdmiComponent {
   public ContainerBase(PodConfiguration config) {
     podConfiguration = config;
     basePodConfig = ofNullable(podConfiguration.base).orElseGet(BasePodConfiguration::new);
+    podLogLevel = extractLogLevel(basePodConfig);
     failureRate = getPodFailureRate();
     reflectRegistry = getReflectRegistry();
     info("Configured with reflect registry " + reflectRegistry);
@@ -130,7 +132,24 @@ public abstract class ContainerBase implements UdmiComponent {
   @TestOnly
   static void resetForTest() {
     basePodConfig = new BasePodConfiguration();
+    podLogLevel = Level.INFO;
     reflectRegistry = null;
+  }
+
+  public static void setLogLevel(Level level) {
+    podLogLevel = requireNonNull(level, "log level not defined");
+  }
+
+  private Level extractLogLevel(BasePodConfiguration config) {
+    String levelStr = ofNullable(config.log_level).map(this::variableSubstitution).orElse("");
+    try {
+      if (!levelStr.isEmpty()) {
+        return Level.valueOf(levelStr.toUpperCase());
+      }
+    } catch (Exception e) {
+      warn("Invalid log_level '%s', defaulting to INFO", levelStr);
+    }
+    return Level.INFO;
   }
 
   protected String getEnv(String group) {
@@ -307,6 +326,9 @@ public abstract class ContainerBase implements UdmiComponent {
 
   @Override
   public void output(Level level, String message) {
+    if (level.value() < podLogLevel.value()) {
+      return;
+    }
     PrintStream printStream = level.value() >= Level.WARNING.value() ? System.err : System.out;
     printStream.printf("%s %s %s: %s %s%n", JsonUtil.currentIsoMs(), getExecutionContext(),
         level.name().charAt(0), getSimpleName(), message);
@@ -319,7 +341,7 @@ public abstract class ContainerBase implements UdmiComponent {
   }
 
   public void trace(String message) {
-    // TODO: Make this dynamic and/or structured logging.
+    output(Level.TRACE, message);
   }
 
   public void trace(String format, Object... args) {
