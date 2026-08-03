@@ -2,26 +2,16 @@
 
 set -e
 
-echo "--- Setting up test environment ---"
-
 ROOT_DIR=$(realpath $(dirname $0)/..)
-VENV_DIR="$ROOT_DIR/codegen/test_venv"
-GENCODE_DIR="$ROOT_DIR/gencode/python/"
+GENCODE_DIR="$ROOT_DIR/gencode/python"
 
-echo "Creating virtual environment in '$VENV_DIR'..."
-python3 -m venv "$VENV_DIR"
-source "$VENV_DIR/bin/activate"
+if [[ -f "$ROOT_DIR/venv/bin/activate" ]]; then
+    source "$ROOT_DIR/venv/bin/activate"
+fi
 
-echo "Installing testing dependencies..."
-pip install --upgrade pip
-pip install poetry pytest pydantic
+PYTEST_CMD=$(command -v pytest || echo "$ROOT_DIR/venv/bin/pytest")
 
-echo "Installing gencode project..."
-cd  $GENCODE_DIR
-poetry install
+echo "--- Running generated python class tests ---"
+PYTHONPATH="$GENCODE_DIR:${PYTHONPATH:-}" $PYTEST_CMD -v -rA "$ROOT_DIR"/bin/test_generated_classes.py
 
-echo "--- Running tests ---"
-poetry run pytest -v -rA "$ROOT_DIR"/bin/test_generated_classes.py
-
-deactivate
 echo "--- Test run complete ---"

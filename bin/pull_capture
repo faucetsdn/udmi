@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." &> /dev/null && pwd)"
+
+if [ ! -f "$ROOT_DIR/venv/bin/activate" ]; then
+    echo "Error: Virtual environment not found at $ROOT_DIR/venv" >&2
+    exit 1
+fi
+
+source "$ROOT_DIR/venv/bin/activate"
+
+exec python3 "$ROOT_DIR/bin/pull_capture.py" "$@"

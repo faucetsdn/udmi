@@ -283,6 +283,8 @@ jobs:
         run: bin/test_influx_postrun
       - name: bin/test_postgresql_postrun
         run: bin/test_postgresql_postrun
+      - name: bin/test_capture
+        run: bin/test_capture
       - name: mosquitto debug
         if: ${{ !cancelled() }}
         run: |
