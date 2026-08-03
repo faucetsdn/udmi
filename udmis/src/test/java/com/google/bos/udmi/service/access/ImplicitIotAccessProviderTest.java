@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.access;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -174,6 +175,21 @@ class ImplicitIotAccessProviderTest {
   }
 
   @Test
+  void testListDevicesBoundDeviceProjectsProxied() {
+    store.put("r/test-reg/c/active:test-dev", "2026-08-03T10:00:00Z");
+    store.put("r/test-reg/d/test-dev:bound_to", "test-gateway");
+    store.put("r/test-reg/d/test-dev:bind_status", "bound");
+    store.put("r/test-reg/d/test-dev:resource_type", "DIRECT");
+
+    CloudModel listModel = provider.listDevices(TEST_REGISTRY, null);
+
+    org.junit.jupiter.api.Assertions.assertNotNull(listModel.device_ids);
+    CloudModel deviceModel = listModel.device_ids.get(TEST_DEVICE);
+    org.junit.jupiter.api.Assertions.assertNotNull(deviceModel);
+    assertEquals(udmi.schema.CloudModel.Resource_type.PROXIED, deviceModel.resource_type);
+  }
+
+  @Test
   void testBrokerAuthFalseNoInteractions() throws Exception {
     if (provider != null) {
       provider.shutdown();
@@ -254,8 +270,7 @@ class ImplicitIotAccessProviderTest {
     ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
     try {
       MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
-      org.junit.jupiter.api.Assertions.assertEquals(
-          500L, customBroker.getMinPublishIntervalMs());
+      assertEquals(500L, customBroker.getMinPublishIntervalMs());
     } finally {
       customProvider.shutdown();
     }
@@ -271,14 +286,38 @@ class ImplicitIotAccessProviderTest {
     ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
     try {
       MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
-      org.junit.jupiter.api.Assertions.assertEquals(
-          500L, customBroker.getMinPublishIntervalMs());
-      org.junit.jupiter.api.Assertions.assertEquals(
-          0.5, customBroker.getJitterRatio());
+      assertEquals(500L, customBroker.getMinPublishIntervalMs());
+      assertEquals(0.5, customBroker.getJitterRatio());
     } finally {
       customProvider.shutdown();
     }
   }
+
+  @Test
+  void testModelRegistryAndGetRegistries() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.metadata = Map.of("location", "building-a");
+
+    provider.modelRegistry(TEST_REGISTRY, null, cloudModel);
+
+    Set<String> registries = provider.getRegistries();
+    assertTrue(registries.contains(TEST_REGISTRY));
+    assertEquals("building-a", provider.fetchRegistryMetadata(TEST_REGISTRY, "location"));
+  }
+
+  @Test
+  void testModelDeviceAddsRegistryToGetRegistries() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.auth_type = Auth_type.RS_256;
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    Set<String> registries = provider.getRegistries();
+    assertTrue(registries.contains(TEST_REGISTRY));
+  }
+
 
   class FakeDataRef extends DataRef {
     private final Map<String, String> data;
