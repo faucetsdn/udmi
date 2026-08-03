@@ -1,0 +1,89 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $0)/..
+source $UDMI_ROOT/etc/shell_common.sh
+
+[[ $# -le 1 ]] || usage [target]
+
+target=${1:-disk}
+
+case "$target" in
+    ""|disk)
+        # Continue with local disk saving below
+        ;;
+    db)
+        exec $UDMI_ROOT/bin/pull_capture
+        ;;
+    *)
+        fail unknown pull_save target: "$target"
+        ;;
+esac
+
+while read -r line; do
+    if [[ -z $line ]]; then
+        continue
+    fi
+
+    # Extract envelope fields
+    registryId=$(echo "$line" | jq -r '.envelope.deviceRegistryId // ""' 2>/dev/null || true)
+    deviceId=$(echo "$line" | jq -r '.envelope.deviceId' 2>/dev/null || true)
+    if [[ $deviceId == "" ]]; then
+        deviceId="empty"
+    fi
+    subFolder=$(echo "$line" | jq -r '.envelope.subFolder // "update"' 2>/dev/null || true)
+    subType=$(echo "$line" | jq -r '.envelope.subType // "events"' 2>/dev/null || true)
+    timestamp=$(echo "$line" | jq -r '.envelope.publishTime // .envelope.timestamp // ""' 2>/dev/null || true)
+
+    if [[ -z $timestamp || $timestamp == "null" ]]; then
+        timestamp=$(date -u -Is)
+    fi
+
+    timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
+    usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
+
+    found=false
+    if [[ $usetime == *Z ]]; then
+        usetime_base=${usetime%Z}
+        for suffix_char in Z Y X W V U T S R Q P O N M L K J I H G F E D C B A; do
+            current_usetime="${usetime_base}${suffix_char}"
+            out_base=out/registries/$registryId/devices/$deviceId/${timepath}/${current_usetime}_${subFolder}_${subType}
+            out_file=${out_base}.json
+            if [[ ! -f $out_file ]]; then
+                found=true
+                break
+            fi
+        done
+    else
+        out_base=out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
+        out_file=${out_base}.json
+        if [[ ! -f $out_file ]]; then
+            found=true
+        fi
+    fi
+
+    if [[ $found == false ]]; then
+        echo "Filename conflict for $out_file (all suffixes Z-A already exist), would clobber." >&2
+        exit 1
+    fi
+
+    mkdir -p $(dirname $out_file)
+    echo $(realpath --relative-to $UDMI_ROOT $out_file)
+
+    # Write payload
+    is_string=$(echo "$line" | jq -r '.payload | type == "string"' 2>/dev/null || true)
+    if [[ $is_string == "true" ]]; then
+        raw_val=$(echo "$line" | jq -r '.payload' 2>/dev/null || true)
+        echo "$raw_val" | jq . > $out_file 2>/dev/null || echo "$raw_val" > $out_file
+    else
+        echo "$line" | jq '.payload' > $out_file
+    fi
+
+    # Write attributes (.attr)
+    echo "$line" | jq '.envelope' > ${out_base}.attr
+
+    # Write mqtt topic (.mqtt)
+    topic_val=$(echo "$line" | jq -r '.envelope.topic // empty' 2>/dev/null || true)
+    if [[ -n $topic_val && $topic_val != "null" ]]; then
+        echo "$topic_val" > ${out_base}.mqtt
+    fi
+done
