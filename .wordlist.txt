@@ -243,6 +243,7 @@ Subprocess
 subtype
 subType
 subTypes
+sudo
 swapped
 SWE
 systemd

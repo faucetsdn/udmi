@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""Script to stream JSON files from trace subdirectory to stdout."""
+import sys
+import os
+import json
+import glob
+import re
+
+
+def usage():
+  """Print usage information and exit."""
+  print("usage: bin/pull_files <trace_dir>", file=sys.stderr)
+  sys.exit(1)
+
+
+def main():
+  """Main entry point."""
+  if len(sys.argv) != 2:
+    usage()
+
+  trace_dir = sys.argv[1]
+  devices_path = os.path.join(trace_dir, "devices")
+  if not os.path.exists(devices_path) or not os.path.isdir(devices_path):
+    print(
+        f"Error: Directory 'devices' not found in {trace_dir}",
+        file=sys.stderr
+    )
+    sys.exit(1)
+
+  # Glob for all .json files under devices/
+  pattern = os.path.join(devices_path, "*", "*.json")
+  files = glob.glob(pattern)
+
+  messages = []
+  filename_pattern = re.compile(r"^\d+_([a-z]+)_([a-z]+)\.json$")
+
+  for file_path in files:
+    file_name = os.path.basename(file_path)
+    device_id = os.path.basename(os.path.dirname(file_path))
+
+    # Parse filename to get subType and subFolder
+    match = filename_pattern.match(file_name)
+    if not match:
+      continue
+
+    sub_type = match.group(1)
+    sub_folder = match.group(2)
+
+    try:
+      with open(file_path, "r", encoding="utf-8") as f:
+        content = f.read()
+      # Remove single-line comments (//...)
+      content = re.sub(r"//.*$", "", content, flags=re.MULTILINE)
+      # Remove block comments (/*...*/)
+      content = re.sub(r"/\*.*?\*/", "", content, flags=re.DOTALL)
+      payload = json.loads(content)
+    except (OSError, json.JSONDecodeError) as e:
+      print(
+          f"Warning: Failed to read {file_path}: {e}",
+          file=sys.stderr
+      )
+      continue
+
+    # Get timestamp from payload
+    publish_time = payload.get("timestamp")
+
+    envelope = {
+        "deviceId": device_id,
+        "deviceRegistryId": "playback-registry",
+        "projectId": "playback-project",
+        "subFolder": sub_folder,
+        "subType": sub_type,
+        "publishTime": publish_time,
+        "msgSource": file_name,
+    }
+
+    # Strip null values from envelope to keep it clean
+    envelope = {k: v for k, v in envelope.items() if v is not None}
+
+    messages.append({
+        "publish_time_sort": publish_time or "",
+        "message": {"envelope": envelope, "payload": payload},
+    })
+
+  # Sort messages chronologically by timestamp
+  messages.sort(key=lambda x: x["publish_time_sort"])
+
+  # Print as single-line JSON stream to STDOUT
+  for msg_entry in messages:
+    print(json.dumps(msg_entry["message"]))
+
+
+if __name__ == "__main__":
+  main()

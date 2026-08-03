@@ -6,15 +6,22 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
@@ -97,6 +104,47 @@ public class UufiProcessorTest extends ProcessorTestBase {
     assertEquals(1, captured.size(), "captured message count");
     Map<String, Object> unwrapped = toMap(captured.get(0));
     assertNotNull(unwrapped.get("points"));
+  }
+
+  /**
+   * Test that inbound UUFI-wrapped config messages with subFolder are merged via processConfig.
+   */
+  @Test
+  public void inboundConfigRoutingTest() {
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.CONFIG;
+    innerEnvelope.subFolder = SubFolder.POINTSET;
+    innerEnvelope.deviceId = "dev-1";
+    innerEnvelope.deviceRegistryId = "reg-1";
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    Map<String, Object> innerPayload = Map.of(
+        "version", "1.5.2",
+        "timestamp", "2026-07-28T00:00:00Z",
+        "points", Map.of("temp", 22));
+    uufiWrapper.put("payload", innerPayload);
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    @SuppressWarnings("unchecked")
+    ArgumentCaptor<Function<Entry<Long, String>, String>> configCaptor =
+        ArgumentCaptor.forClass(Function.class);
+
+    verify(provider, times(1)).modifyConfig(any(Envelope.class), configCaptor.capture());
+
+    String updatedConfigJson = configCaptor.getValue().apply(new SimpleEntry<>(0L, "{}"));
+    Map<String, Object> unwrapped = toMap(updatedConfigJson);
+    assertEquals(TEST_VERSION, unwrapped.get("version"));
+    assertNotNull(unwrapped.get("timestamp"));
+    assertNotNull(unwrapped.get("pointset"), "pointset field present in top-level config");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> pointsetMap = (Map<String, Object>) unwrapped.get("pointset");
+    assertNotNull(pointsetMap.get("points"));
   }
 
   /**
@@ -193,6 +241,45 @@ public class UufiProcessorTest extends ProcessorTestBase {
         new Bundle(transportEnvelope, uufiWrapper)));
 
     // Verify that the message omitting required subType/subFolder was rejected (not published)
+    assertEquals(0, capturedEnvelopes.size(), "captured envelopes count");
+  }
+
+  /**
+   * Test that inbound UUFI-wrapped messages with conflicting topic coordinates vs inner envelope
+   * are rejected according to strict envelope header duplication requirements.
+   */
+  @Test
+  public void inboundRoutingCoordinateMismatchTest() {
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.CONFIG;
+    innerEnvelope.subFolder = SubFolder.SYSTEM;
+    innerEnvelope.deviceId = "dev-1";
+    innerEnvelope.deviceRegistryId = "reg-1";
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    uufiWrapper.put("payload", Map.of(
+        "version", "1",
+        "timestamp", "2026-07-17T12:00:00Z"
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceId = "dev-1";
+    transportEnvelope.deviceRegistryId = "reg-1";
+    transportEnvelope.subType = SubType.EVENTS; // Mismatch with inner envelope subType
+    transportEnvelope.subFolder = SubFolder.SYSTEM;
+
+    List<Envelope> capturedEnvelopes = new ArrayList<>();
+    getReverseDispatcher().registerHandler(PointsetEvents.class, (message) -> {
+      Envelope env = getReverseDispatcher().getContinuation(message).getEnvelope();
+      capturedEnvelopes.add(env);
+    });
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    // Verify that the message with mismatched coordinates was rejected (not published)
     assertEquals(0, capturedEnvelopes.size(), "captured envelopes count");
   }
 
