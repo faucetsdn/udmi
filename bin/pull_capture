@@ -6,23 +6,32 @@ should be written to postgresql.
 """
 import sys
 import json
-import subprocess
 import os
 from datetime import datetime
+import psycopg2
+from psycopg2.extras import Json
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 
 # Database config from environment with defaults
 POSTGRES_PORT = os.environ.get("POSTGRES_PORT", "5432")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
 POSTGRES_DB = os.environ.get("POSTGRES_DB", "postgres")
+POSTGRES_HOST = "127.0.0.1"
 
 INFLUXDB_TOKEN = os.environ.get("INFLUXDB_TOKEN", "test-influx-token-12345")
 INFLUXDB_ORG = os.environ.get("INFLUXDB_ORG", "bridgehead")
 INFLUXDB_BUCKET = os.environ.get("INFLUXDB_BUCKET", "home")
+INFLUXDB_URL = "http://localhost:8086"
 
-# Get project root to locate influxctl
-UDMI_ROOT = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-INFLUXCTL = os.path.join(UDMI_ROOT, "udmis", "bin", "influxctl")
-
+def get_postgres_connection():
+  """Returns a connection to the PostgreSQL database."""
+  return psycopg2.connect(
+      host=POSTGRES_HOST,
+      port=POSTGRES_PORT,
+      user=POSTGRES_USER,
+      dbname=POSTGRES_DB
+  )
 
 def init_postgres():
   """Create the postgres table if not exists."""
@@ -39,70 +48,52 @@ def init_postgres():
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
   );
   """
-  cmd = [
-      "psql",
-      "-h", "127.0.0.1",
-      "-p", POSTGRES_PORT,
-      "-U", POSTGRES_USER,
-      "-d", POSTGRES_DB,
-      "-c", create_table_sql
-  ]
-  subprocess.run(
-      cmd,
-      check=True,
-      stdout=subprocess.DEVNULL,
-      stderr=subprocess.DEVNULL
-  )
-
-
-def escape_sql_string(val):
-  """Safely escape strings for raw SQL queries."""
-  if val is None:
-    return "NULL"
-  return "'" + str(val).replace("'", "''") + "'"
-
+  conn = get_postgres_connection()
+  try:
+    with conn.cursor() as cur:
+      cur.execute(create_table_sql)
+    conn.commit()
+  finally:
+    conn.close()
 
 def save_to_postgres(envelope, payload):
-  """Insert a message into postgres."""
-  project_id = escape_sql_string(envelope.get("projectId"))
-  registry_id = escape_sql_string(envelope.get("deviceRegistryId"))
-  device_id = escape_sql_string(envelope.get("deviceId"))
-  sub_folder = escape_sql_string(envelope.get("subFolder"))
-  sub_type = escape_sql_string(envelope.get("subType"))
-  publish_time = escape_sql_string(envelope.get("publishTime"))
-  payload_str = escape_sql_string(json.dumps(payload))
+  """Insert a message into postgres using parameterized queries."""
+  project_id = envelope.get("projectId")
+  registry_id = envelope.get("deviceRegistryId")
+  device_id = envelope.get("deviceId")
+  sub_folder = envelope.get("subFolder")
+  sub_type = envelope.get("subType")
+  publish_time = envelope.get("publishTime")
+  
+  # Ensure payload is written as JSONB
+  payload_json = Json(payload)
 
-  sql = f"""
+  sql = """
   INSERT INTO udmi_messages (
       project_id, registry_id, device_id, sub_folder, sub_type,
       publish_time, payload
   )
   VALUES (
-      {project_id}, {registry_id}, {device_id}, {sub_folder}, {sub_type},
-      {publish_time}, {payload_str}
+      %s, %s, %s, %s, %s,
+      %s, %s
   );
   """
-  cmd = [
-      "psql",
-      "-h", "127.0.0.1",
-      "-p", POSTGRES_PORT,
-      "-U", POSTGRES_USER,
-      "-d", POSTGRES_DB,
-      "-c", sql
-  ]
-  subprocess.run(
-      cmd,
-      check=True,
-      stdout=subprocess.DEVNULL,
-      stderr=subprocess.DEVNULL
-  )
-
+  
+  conn = get_postgres_connection()
+  try:
+    with conn.cursor() as cur:
+      cur.execute(sql, (
+          project_id, registry_id, device_id, sub_folder, sub_type,
+          publish_time, payload_json
+      ))
+    conn.commit()
+  finally:
+    conn.close()
 
 class InfluxWriteError(Exception):
-  """Custom exception raised when influxctl write fails."""
+  """Custom exception raised when influx write fails."""
 
-
-def save_to_influx(envelope, payload):
+def save_to_influx(envelope, payload, write_api):
   """Save pointset event metrics to influxdb."""
   project_id = envelope.get("projectId", "unknown")
   registry_id = envelope.get("deviceRegistryId", "unknown")
@@ -123,83 +114,72 @@ def save_to_influx(envelope, payload):
   if ts_ns is None:
     ts_ns = int(datetime.utcnow().timestamp() * 1e9)
 
-  points = payload.get("points", {})
-  lines = []
-  for point_name, point_def in points.items():
+  points_data = payload.get("points", {})
+  
+  points_to_write = []
+  for point_name, point_def in points_data.items():
     present_value = point_def.get("present_value")
     if present_value is None:
       continue
 
+    p = Point("point_value") \
+        .tag("device_id", device_id) \
+        .tag("registry_id", registry_id) \
+        .tag("project_id", project_id) \
+        .tag("point_name", point_name) \
+        .time(ts_ns)
+
     if isinstance(present_value, bool):
-      val_str = "true" if present_value else "false"
-      field_name = "present_value_bool"
+      p = p.field("present_value_bool", present_value)
     elif isinstance(present_value, (int, float)):
-      val_str = str(present_value)
-      field_name = "present_value_num"
+      p = p.field("present_value_num", float(present_value))
     else:
-      escaped_val = str(present_value).replace('"', '\\"')
-      val_str = f'"{escaped_val}"'
-      field_name = "present_value_str"
+      p = p.field("present_value_str", str(present_value))
 
-    line = (
-        f"point_value,device_id={device_id},registry_id={registry_id},"
-        f"project_id={project_id},point_name={point_name} "
-        f"{field_name}={val_str} {ts_ns}"
-    )
-    lines.append(line)
+    points_to_write.append(p)
 
-  if not lines:
+  if not points_to_write:
     return
 
-  line_protocol_data = "\n".join(lines)
-
-  cmd = [
-      INFLUXCTL,
-      "write",
-      "--token", INFLUXDB_TOKEN,
-      "--org", INFLUXDB_ORG,
-      "--bucket", INFLUXDB_BUCKET
-  ]
-  res = subprocess.run(
-      cmd,
-      input=line_protocol_data,
-      text=True,
-      capture_output=True,
-      check=False
-  )
-  if res.returncode != 0:
-    raise InfluxWriteError(f"influxctl write failed: {res.stderr.strip()}")
-
+  try:
+    write_api.write(bucket=INFLUXDB_BUCKET, org=INFLUXDB_ORG, record=points_to_write)
+  except Exception as e:
+    raise InfluxWriteError(f"influx client write failed: {e}")
 
 def main():
   """Main entry point."""
   try:
     init_postgres()
-  except subprocess.SubprocessError as e:
+  except psycopg2.Error as e:
     print(
         f"Warning: Failed to initialize PostgreSQL table: {e}",
         file=sys.stderr
     )
 
-  for line in sys.stdin:
-    if not line.strip():
-      continue
-    try:
-      msg = json.loads(line)
-      envelope = msg.get("envelope", {})
-      payload = msg.get("payload", {})
+  influx_client = InfluxDBClient(url=INFLUXDB_URL, token=INFLUXDB_TOKEN, org=INFLUXDB_ORG)
+  write_api = influx_client.write_api(write_options=SYNCHRONOUS)
 
-      sub_folder = envelope.get("subFolder")
-      sub_type = envelope.get("subType")
+  try:
+    for line in sys.stdin:
+      if not line.strip():
+        continue
+      try:
+        msg = json.loads(line)
+        envelope = msg.get("envelope", {})
+        payload = msg.get("payload", {})
 
-      if sub_folder == "pointset" and sub_type == "events":
-        save_to_influx(envelope, payload)
-      else:
-        save_to_postgres(envelope, payload)
-    except (json.JSONDecodeError, KeyError, subprocess.SubprocessError,
-            InfluxWriteError) as e:
-      print(f"Error processing message: {e}", file=sys.stderr)
+        sub_folder = envelope.get("subFolder")
+        sub_type = envelope.get("subType")
 
+        if sub_folder == "pointset" and sub_type == "events":
+          save_to_influx(envelope, payload, write_api)
+        else:
+          save_to_postgres(envelope, payload)
+      except (json.JSONDecodeError, KeyError, psycopg2.Error,
+              InfluxWriteError) as e:
+        print(f"Error processing message: {e}", file=sys.stderr)
+  finally:
+    influx_client.close()
 
 if __name__ == "__main__":
   main()
