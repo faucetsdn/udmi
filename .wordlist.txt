@@ -243,6 +243,7 @@ Subprocess
 subtype
 subType
 subTypes
+sudo
 swapped
 SWE
 systemd
@@ -289,6 +290,7 @@ unopinionated
 unparseable
 unprocessable
 unscoped
+unstaged
 Untrusted
 unwriteable
 uplink

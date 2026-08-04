@@ -4,18 +4,21 @@ UDMI_ROOT=$(dirname $0)/..
 
 source $UDMI_ROOT/etc/shell_common.sh
 
-trap 'echo "pull_mqtt (PID $$) exited with status $? at $(date -u -Is)"' EXIT
-trap 'echo "pull_mqtt (PID $$) received SIGTERM at $(date -u -Is)"' SIGTERM
-trap 'echo "pull_mqtt (PID $$) received SIGPIPE at $(date -u -Is)"' SIGPIPE
-trap 'echo "pull_mqtt (PID $$) received SIGINT at $(date -u -Is)"' SIGINT
+trap 'echo "pull_mqtt (PID $$) exited with status $? at $(date -u -Is)" >&2' EXIT
+trap 'echo "pull_mqtt (PID $$) received SIGTERM at $(date -u -Is)" >&2' SIGTERM
+trap 'echo "pull_mqtt (PID $$) received SIGPIPE at $(date -u -Is)" >&2' SIGPIPE
+trap 'echo "pull_mqtt (PID $$) received SIGINT at $(date -u -Is)" >&2' SIGINT
 
 [[ $# == 1 ]] || usage project_spec
 
 project_spec=$1
 shift
 
-mkdir -p out
-msg_file=out/message_captured.json
+# Parse project_id from project_spec
+spec_clean=${project_spec#//mqtt/}
+spec_clean=${spec_clean%%%*}
+projectId=$(echo "$spec_clean" | tr '/' ' ' | awk '{print $1}')
+projectId=${projectId%+*}
 
 registry_id=${project_spec##*%}
 [[ $registry_id != $project_spec ]] || registry_id=+
@@ -24,22 +27,22 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 topic_filter_udmi="/r/${registry_id}/d/+/#"
 topic_filter_uufi="/uufi/#"
-OUT_BASE=out/registries
 
-echo Starting mqtt message capture at $(date -u -Is) on topics $topic_filter_udmi and $topic_filter_uufi, capture to $OUT_BASE
+echo "Starting mqtt message capture at $(date -u -Is) on topics $topic_filter_udmi and $topic_filter_uufi" >&2
 
-SUDO=sudo
-if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-    SUDO=""
-fi
-
-$SUDO mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter_udmi -t $topic_filter_uufi |
+mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter_udmi -t $topic_filter_uufi |
     while read -r mqtt_message; do
-        echo $mqtt_message > $msg_file
-        topic=$(jq -r .topic <<< "$mqtt_message")
-        payload=$(jq -r .payload $msg_file)
-        timestamp=$(jq -r .tst $msg_file)
-        json=$(jq . <<< "$payload" 2> /dev/null) || json=$payload
+        if [[ -z $mqtt_message ]]; then
+            continue
+        fi
+
+        topic=$(jq -r .topic <<< "$mqtt_message" 2>/dev/null || true)
+        payload=$(jq -r .payload <<< "$mqtt_message" 2>/dev/null || true)
+        timestamp=$(jq -r .tst <<< "$mqtt_message" 2>/dev/null || true)
+
+        if [[ -z $topic || $topic == null ]]; then
+            continue
+        fi
 
         readarray -d '/' -t array <<< "${topic}/"
 
@@ -95,18 +98,26 @@ $SUDO mosquitto_sub $SERVER_OPTS -R -F "%j" -t $topic_filter_udmi -t $topic_filt
             deviceId=empty
         fi
 
-        timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
-        usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
-        out_path=$OUT_BASE/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
-        out_dir=$(dirname $out_path)
-        mkdir -p $out_dir
-        echo $(realpath --relative-to $UDMI_ROOT $out_path).json
-        echo $json > $out_path.json
-        echo {} | jq ".deviceRegistryId=\"$registryId\" | \
-             .subFolder=\"$subFolder\" |
-             .subType=\"$subType\" |
-             .deviceId=\"$deviceId\"" > $out_path.attr
-        echo $topic > $out_path.mqtt
+        # Construct single-line JSON with envelope and payload, output to STDOUT
+        jq -n \
+          --arg devId "$deviceId" \
+          --arg regId "$registryId" \
+          --arg subF "$subFolder" \
+          --arg subT "$subType" \
+          --arg ts "$timestamp" \
+          --arg projId "$projectId" \
+          --arg rawPayload "$payload" \
+          '{
+            envelope: {
+              deviceId: $devId,
+              deviceRegistryId: $regId,
+              subFolder: $subF,
+              subType: $subT,
+              publishTime: $ts,
+              projectId: $projId
+            },
+            payload: (try ($rawPayload | fromjson) catch $rawPayload)
+          }' -c
     done
 
-echo Finished mqtt message capture at $(date -u -Is)
+echo "Finished mqtt message capture at $(date -u -Is)" >&2

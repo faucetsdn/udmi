@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel.Resource_type;
 import udmi.util.SchemaVersion;
@@ -165,6 +167,10 @@ public class MessageUpgrader {
       upgraded |= patch == 0 && didMessageChange(this::upgradeTo_1_5_1, patchUpdater(1));
       upgraded |= patch <= 1 && didMessageChange(this::upgradeTo_1_5_2, patchUpdater(2));
       upgraded |= patch <= 2 && didMessageChange(this::upgradeTo_1_5_3, patchUpdater(3));
+      upgraded |= patch <= 3 && didMessageChange(this::upgradeTo_1_5_4, patchUpdater(4));
+      upgraded |= patch <= 4 && didMessageChange(this::upgradeTo_1_5_5, patchUpdater(5));
+      upgraded |= patch <= 5 && didMessageChange(this::upgradeTo_1_5_6, patchUpdater(6));
+      upgraded |= patch <= 6 && didMessageChange(this::upgradeTo_1_5_7, patchUpdater(7));
     }
 
     String currentVersion = SchemaVersion.CURRENT.key();
@@ -260,6 +266,58 @@ public class MessageUpgrader {
 
   private void upgradeTo_1_5_3() {
     ifTrueThen(METADATA_SCHEMA.equals(schemaName), this::upgradeTo_1_5_3_metadata);
+  }
+
+  private void upgradeTo_1_5_4() {
+  }
+
+  private void upgradeTo_1_5_5() {
+  }
+
+  private void upgradeTo_1_5_6() {
+  }
+
+  private static final Pattern LEGACY_BACNET_REF = Pattern.compile(
+      "^(.*\\b[A-Z]{2,4}):([0-9]+)(#.*)?$");
+
+  private void upgradeTo_1_5_7() {
+    if (METADATA_SCHEMA.equals(schemaName)) {
+      upgradeTo_1_5_7_metadata();
+    }
+  }
+
+  private void upgradeTo_1_5_7_metadata() {
+    ObjectNode pointset = (ObjectNode) message.get("pointset");
+    if (pointset == null || !pointset.has("points")) {
+      return;
+    }
+    ObjectNode points = (ObjectNode) pointset.get("points");
+    Iterator<String> fieldNames = points.fieldNames();
+    while (fieldNames.hasNext()) {
+      String pointName = fieldNames.next();
+      JsonNode pointNode = points.get(pointName);
+      if (pointNode instanceof ObjectNode) {
+        ObjectNode pointObj = (ObjectNode) pointNode;
+        if (pointObj.has("ref")) {
+          String ref = pointObj.get("ref").asText();
+          Matcher matcher = LEGACY_BACNET_REF.matcher(ref);
+          if (matcher.matches()) {
+            String newRef = matcher.group(1) + "/" + matcher.group(2)
+                + (matcher.group(3) != null ? matcher.group(3) : "");
+            pointObj.put("ref", newRef);
+          }
+        }
+        if (pointObj.has("url")) {
+          String url = pointObj.get("url").asText();
+          Matcher matcher = LEGACY_BACNET_REF.matcher(url);
+          if (matcher.matches()) {
+            String newUrl = matcher.group(1) + "/" + matcher.group(2)
+                + (matcher.group(3) != null ? matcher.group(3) : "");
+            pointObj.put("url", newUrl);
+          }
+        }
+      }
+    }
   }
 
   private void upgradeTo_1_5_3_metadata() {

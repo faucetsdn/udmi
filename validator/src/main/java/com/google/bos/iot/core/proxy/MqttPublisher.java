@@ -192,7 +192,9 @@ public class MqttPublisher implements MessagePublisher {
         () -> switch (iotProvider) {
           case JWT -> requireNonNull(executionConfiguration.bridge_host, "missing bridge_host");
           case GBOS -> DEFAULT_GBOS_HOSTNAME;
-          case MQTT -> requireNonNull(executionConfiguration.project_id);
+          case MQTT ->
+              ofNullable(executionConfiguration.bridge_host)
+                  .orElse(executionConfiguration.project_id);
           case CLEARBLADE -> DEFAULT_CLEARBLADE_HOSTNAME;
           default -> throw new RuntimeException("Unsupported iot provider " + iotProvider);
         }

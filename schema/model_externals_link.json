@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.3",
+  "$udmi_version": "1.5.7",
   "title": "Link Externals Model",
   "description": "Information about how this device links to a specific external model",
   "type": "object",

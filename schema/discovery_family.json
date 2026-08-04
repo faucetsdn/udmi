@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.2",
+  "$udmi_version": "1.5.7",
   "title": "Family Discovery",
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
@@ -13,7 +13,7 @@
     },
     "ref": {
       "type": "string",
-      "pattern": "^[-_.:0-9A-Z]+$",
+      "pattern": "^[-_.:/0-9A-Z]+$",
       "description": "Point reference in the namespace of the given family"
     }
   }

@@ -1,6 +1,8 @@
 package com.google.bos.udmi.service.access;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -142,6 +144,18 @@ class ImplicitIotAccessProviderTest {
     verify(mockBroker).bindGateway(
         eq("/r/test-reg/d/test-dev"),
         eq("/r/test-reg/d/proxy-device-2"));
+    assertEquals("PROXIED", store.get("r/test-reg/d/proxy-device-2:resource_type"));
+  }
+
+  @Test
+  void testModelProxiedDevice() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.resource_type = udmi.schema.CloudModel.Resource_type.PROXIED;
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    assertEquals("PROXIED", store.get("r/test-reg/d/test-dev:resource_type"));
   }
 
   @Test
@@ -161,6 +175,93 @@ class ImplicitIotAccessProviderTest {
   }
 
   @Test
+  void testListDevicesBoundDeviceProjectsProxied() {
+    store.put("r/test-reg/c/active:test-dev", "2026-08-03T10:00:00Z");
+    store.put("r/test-reg/d/test-dev:bound_to", "test-gateway");
+    store.put("r/test-reg/d/test-dev:bind_status", "bound");
+    store.put("r/test-reg/d/test-dev:resource_type", "DIRECT");
+
+    CloudModel listModel = provider.listDevices(TEST_REGISTRY, null);
+
+    org.junit.jupiter.api.Assertions.assertNotNull(listModel.device_ids);
+    CloudModel deviceModel = listModel.device_ids.get(TEST_DEVICE);
+    org.junit.jupiter.api.Assertions.assertNotNull(deviceModel);
+    assertEquals(udmi.schema.CloudModel.Resource_type.PROXIED, deviceModel.resource_type);
+  }
+
+  @Test
+  void testBrokerAuthFalseNoInteractions() throws Exception {
+    if (provider != null) {
+      provider.shutdown();
+    }
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.options =
+        "enable, use_password=" + TEST_PASSWORD + ", disable_logging=true, broker_auth=false";
+    provider = new ImplicitIotAccessProvider(iotAccess);
+    provider.activate();
+
+    ConnectionBroker authDisabledBroker = mock(ConnectionBroker.class);
+    Field brokerField = ImplicitIotAccessProvider.class.getDeclaredField("broker");
+    brokerField.setAccessible(true);
+    brokerField.set(provider, authDisabledBroker);
+
+    CloudModel createModel = new CloudModel();
+    createModel.operation = ModelOperation.CREATE;
+    Credential credential = new Credential();
+    credential.key_format = Key_format.RS_256;
+    credential.key_data = "fake_key_data";
+    createModel.credentials = List.of(credential);
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, createModel, null);
+
+    store.put("r/test-reg/d/test-dev:num_id", "12345");
+    CloudModel bindModel = new CloudModel();
+    bindModel.operation = ModelOperation.BIND;
+    bindModel.functions_ver = 1;
+    bindModel.gateway = new udmi.schema.GatewayModel();
+    bindModel.gateway.proxy_ids = List.of("proxy-device-2");
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, bindModel, null);
+
+    CloudModel unbindModel = new CloudModel();
+    unbindModel.operation = ModelOperation.UNBIND;
+    unbindModel.functions_ver = 1;
+    unbindModel.gateway = new udmi.schema.GatewayModel();
+    unbindModel.gateway.proxy_ids = List.of("proxy-device-2");
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, unbindModel, null);
+
+    CloudModel blockModel = new CloudModel();
+    blockModel.operation = ModelOperation.BLOCK;
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, blockModel, null);
+
+    CloudModel deleteModel = new CloudModel();
+    deleteModel.operation = ModelOperation.DELETE;
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, deleteModel, null);
+
+    store.put("r/test-reg/d/gateway-1:resource_type", "GATEWAY");
+    store.put("r/test-reg/d/gateway-1:num_id", "9999");
+    store.put("r/test-reg/d/gateway-1/c/bound_devices:bound-dev-1", "bound");
+    store.put("r/test-reg/d/bound-dev-1:bound_to", "gateway-1");
+    store.put("r/test-reg/d/bound-dev-1:bind_status", "bound");
+    store.put("r/test-reg/d/bound-dev-1:num_id", "8888");
+
+    CloudModel deleteGatewayModel = new CloudModel();
+    deleteGatewayModel.operation = ModelOperation.DELETE;
+    provider.modelDevice(TEST_REGISTRY, "gateway-1", deleteGatewayModel, null);
+
+    verifyNoInteractions(authDisabledBroker);
+  }
+
+  @Test
+  void testDeleteDeviceWithoutNumIdInStore() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.DELETE;
+
+    CloudModel reply = provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+    assertEquals(ModelOperation.DELETE, reply.operation);
+    String expectedNumId = ImplicitIotAccessProvider.hashedDeviceId(TEST_REGISTRY, TEST_DEVICE);
+    assertEquals(expectedNumId, reply.num_id);
+  }
+
+  @Test
   void testMosquittoDynsecMinIntervalMsOption() {
     IotAccess iotAccess = new IotAccess();
     iotAccess.options =
@@ -169,8 +270,7 @@ class ImplicitIotAccessProviderTest {
     ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
     try {
       MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
-      org.junit.jupiter.api.Assertions.assertEquals(
-          500L, customBroker.getMinPublishIntervalMs());
+      assertEquals(500L, customBroker.getMinPublishIntervalMs());
     } finally {
       customProvider.shutdown();
     }
@@ -186,14 +286,38 @@ class ImplicitIotAccessProviderTest {
     ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
     try {
       MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
-      org.junit.jupiter.api.Assertions.assertEquals(
-          500L, customBroker.getMinPublishIntervalMs());
-      org.junit.jupiter.api.Assertions.assertEquals(
-          0.5, customBroker.getJitterRatio());
+      assertEquals(500L, customBroker.getMinPublishIntervalMs());
+      assertEquals(0.5, customBroker.getJitterRatio());
     } finally {
       customProvider.shutdown();
     }
   }
+
+  @Test
+  void testModelRegistryAndGetRegistries() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.metadata = Map.of("location", "building-a");
+
+    provider.modelRegistry(TEST_REGISTRY, null, cloudModel);
+
+    Set<String> registries = provider.getRegistries();
+    assertTrue(registries.contains(TEST_REGISTRY));
+    assertEquals("building-a", provider.fetchRegistryMetadata(TEST_REGISTRY, "location"));
+  }
+
+  @Test
+  void testModelDeviceAddsRegistryToGetRegistries() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    cloudModel.auth_type = Auth_type.RS_256;
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
+
+    Set<String> registries = provider.getRegistries();
+    assertTrue(registries.contains(TEST_REGISTRY));
+  }
+
 
   class FakeDataRef extends DataRef {
     private final Map<String, String> data;

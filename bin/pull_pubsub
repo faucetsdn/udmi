@@ -1,7 +1,6 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
-# cd $UDMI_ROOT
 
 source $UDMI_ROOT/etc/shell_common.sh
 
@@ -10,12 +9,8 @@ source $UDMI_ROOT/etc/shell_common.sh
 project_spec=${1:-}
 shift || true
 
-mkdir -p out
-TMP_FILE=out/pull_pubsub.tmp
-
-echo $project_spec | tr / ' ' > $TMP_FILE
-read < $TMP_FILE schema project_id namespace
-echo schema:$schema project_id:$project_id namespace:$namespace
+read schema project_id namespace <<< $(echo $project_spec | tr / ' ')
+echo "schema:$schema project_id:$project_id namespace:$namespace" >&2
 
 suffix=${namespace#*+}
 
@@ -29,38 +24,47 @@ namespace=${namespace%%+*}
 
 [[ -n $suffix ]] || suffix=$USER
 
-echo Using project $project_id namespace $namespace, suffix ${suffix}
+echo "Using project $project_id namespace $namespace, suffix ${suffix}" >&2
 
 [[ ! -n $namespace ]] || namespace=${namespace}~
 subscription=${namespace}udmi_target+${suffix}
-echo Pulling from subscription $subscription
+echo "Pulling from subscription $subscription" >&2
 
 pull_limit=100
 
 while true; do
-    date -u -Is
-    gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack > $TMP_FILE || true
+    date -u -Is >&2
+    pubsub_json=$(gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack 2>/dev/null || true)
 
-    for index in $(seq 0 $((pull_limit-1))); do
-        msg_file=out/message_$index.json
-        raw_file=out/rawdata_$index.b64
-        jq -r .[$index].message $TMP_FILE 2> /dev/null > $msg_file
-        subType=$(jq -r .attributes.subType $msg_file 2> /dev/null)
-        subFolder=$(jq -r .attributes.subFolder $msg_file 2> /dev/null)
-        deviceId=$(jq -r .attributes.deviceId $msg_file 2> /dev/null)
-        registryId=$(jq -r .attributes.deviceRegistryId $msg_file 2> /dev/null)
-        timestamp=$(jq -r .publishTime $msg_file 2> /dev/null)
-        raw_data=$(jq -r .data $msg_file)
-        # There's two different base64 formats, so replace - with + to handle both.
-        echo $raw_data > $raw_file
-        data=$(echo $raw_data | tr _- ++ | base64 --decode)
+    if [[ -z $pubsub_json || $pubsub_json == "[]" || $pubsub_json == null ]]; then
+        sleep 1
+        continue
+    fi
+
+    num_messages=$(echo "$pubsub_json" | jq '. | length' 2>/dev/null || echo 0)
+
+    for index in $(seq 0 $((num_messages-1))); do
+        message_json=$(echo "$pubsub_json" | jq -c ".[$index].message" 2>/dev/null || true)
+        if [[ $message_json == null || -z $message_json ]]; then
+            continue
+        fi
+
+        subType=$(echo "$message_json" | jq -r .attributes.subType 2> /dev/null || true)
+        subFolder=$(echo "$message_json" | jq -r .attributes.subFolder 2> /dev/null || true)
+        deviceId=$(echo "$message_json" | jq -r .attributes.deviceId 2> /dev/null || true)
+        registryId=$(echo "$message_json" | jq -r .attributes.deviceRegistryId 2> /dev/null || true)
+        timestamp=$(echo "$message_json" | jq -r .publishTime 2> /dev/null || true)
+        raw_data=$(echo "$message_json" | jq -r .data 2>/dev/null || true)
 
         if [[ $raw_data == null || -z $raw_data ]]; then
             break
         fi
 
+        # There's two different base64 formats, so replace _- with ++ to handle both.
+        data=$(echo $raw_data | tr _- ++ | base64 --decode 2>/dev/null || true)
+
         if [[ -z $data ]]; then
-            echo Bad/empty message data: $raw_data
+            echo "Bad/empty message data: $raw_data" >&2
             continue
         fi
 
@@ -68,42 +72,31 @@ while true; do
             deviceId=empty
         fi
 
-        if [[ $subType == null ]]; then
+        if [[ $subType == null || $subType == "" ]]; then
             subType=events
         fi
 
-        timepath=$(echo ${timestamp%:*} | tr T: //) # Bucket messages by minute
-        usetime=$(echo $timestamp | tr : x)  # Colon is not allowed on Windows!
+        attributes_json=$(echo "$message_json" | jq -c .attributes 2>/dev/null || echo "{}")
 
-        found=false
-        if [[ $usetime == *Z ]]; then
-            usetime_base=${usetime%Z}
-            for suffix_char in Z Y X W V U T S R Q P O N M L K J I H G F E D C B A; do
-                current_usetime="${usetime_base}${suffix_char}"
-                out_base=out/registries/$registryId/devices/$deviceId/${timepath}/${current_usetime}_${subFolder}_${subType}
-                out_file=${out_base}.json
-                if [[ ! -f $out_file ]]; then
-                    found=true
-                    break
-                fi
-            done
-        else
-            out_base=out/registries/$registryId/devices/$deviceId/${timepath}/${usetime}_${subFolder}_${subType}
-            out_file=${out_base}.json
-            if [[ ! -f $out_file ]]; then
-                found=true
-            fi
-        fi
-
-        if [[ $found == false ]]; then
-            echo "Filename conflict for $out_file (all suffixes Z-A already exist), would clobber."
-            false
-        fi
-
-        echo $out_file
-        mkdir -p $(dirname $out_file)
-        echo $data | jq . > $out_file || echo $data > $out_file
-        out_attr=${out_base}.attr
-        jq .attributes < $msg_file > $out_attr
+        # Output single-line JSON to STDOUT
+        jq -n \
+          --arg devId "$deviceId" \
+          --arg regId "$registryId" \
+          --arg subF "$subFolder" \
+          --arg subT "$subType" \
+          --arg ts "$timestamp" \
+          --arg projId "$project_id" \
+          --arg rawPayload "$data" \
+          '{
+            envelope: {
+              deviceId: $devId,
+              deviceRegistryId: $regId,
+              subFolder: $subF,
+              subType: $subT,
+              publishTime: $ts,
+              projectId: $projId
+            },
+            payload: (try ($rawPayload | fromjson) catch $rawPayload)
+          }' -c
     done
 done

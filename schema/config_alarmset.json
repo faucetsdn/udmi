@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.2",
+  "$udmi_version": "1.5.7",
   "title": "Alarmset Config",
   "description": "[Alarmset Config Documentation](../docs/messages/alarmset.md#config)",
   "type": "object",
