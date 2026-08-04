@@ -40,10 +40,10 @@ echo Launching bg pubber for testing
 pubber_bg GAT-123
 
 echo Enable the gateway to auto-provision
-bin/mapper GAT-123 provision
+bin/mapper $site_path $project_spec GAT-123 provision
 
 echo Kick off a discovery run for the gateway
-bin/mapper GAT-123 discover vendor
+bin/mapper $site_path $project_spec GAT-123 discover vendor
 
 echo Waiting for discovery...
 sleep 20
@@ -74,7 +74,7 @@ extra_device_metadata=$site_path/extras/discovered_vendor-28179023/cloud_metadat
 jq '.refs.new_ref = {"point":"new_point","units":"new_units"}' $extra_device_metadata | sponge $extra_device_metadata
 
 echo "Starting the mapping process for the extra devices"
-bin/mapper GAT-123 map vendor
+bin/mapper $site_path $project_spec GAT-123 map vendor
 
 [[ -f $site_path/devices/UNK-1/metadata.json ]] || fail "Terminating because of extra device which does not exist didn't map correctly."
 
@@ -109,7 +109,7 @@ first_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cl
 echo First discovered generation is $first_generation
 
 echo Kick off a second discovery scan to validate updates
-bin/mapper GAT-123 discover
+bin/mapper $site_path $project_spec GAT-123 discover
 
 echo Waiting 20s for the second discovery to complete...
 sleep 20

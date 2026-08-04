@@ -34,9 +34,14 @@ pull_limit=100
 
 while true; do
     date -u -Is >&2
-    pubsub_json=$(gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack 2>/dev/null || true)
+    pubsub_json=$(gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack 2>&1 || true)
 
-    if [[ -z $pubsub_json || $pubsub_json == "[]" || $pubsub_json == null ]]; then
+    if [[ $pubsub_json == *"NOT_FOUND"* ]]; then
+        echo "Error: Subscription $subscription not found in project $project_id." >&2
+        exit 1
+    fi
+
+    if [[ -z $pubsub_json || $pubsub_json == "[]" || $pubsub_json == null || $pubsub_json == *"ERROR:"* ]]; then
         sleep 1
         continue
     fi

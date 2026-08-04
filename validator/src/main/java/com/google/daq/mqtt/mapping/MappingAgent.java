@@ -109,7 +109,7 @@ public class MappingAgent {
    * projectSpec: e.g. //mqtt/localhost
    */
   public MappingAgent(List<String> argList) {
-    if (argList.size() != 1 && new File(argList.get(0)).isDirectory()) {
+    if (argList.size() == 1 && new File(argList.get(0)).isDirectory()) {
       // Add implicit NO_SITE site spec for local-only site model processing.
       argList.add(NO_SITE);
     }
@@ -120,6 +120,8 @@ public class MappingAgent {
           + "sitePath projectSpec");
     }
     executionConfiguration = siteModel.getExecutionConfiguration();
+    deviceId = removeNextArg(argList, "device id");
+    executionConfiguration.device_id = deviceId;
     initialize();
   }
 
@@ -128,7 +130,12 @@ public class MappingAgent {
    */
   public static void main(String[] args) {
     List<String> argsList = new ArrayList<>(Arrays.asList(args));
-    MappingAgent agent = new MappingAgent(removeNextArg(argsList, "execution profile"));
+    MappingAgent agent;
+    if (argsList.size() > 1 && new File(argsList.get(0)).isDirectory()) {
+      agent = new MappingAgent(argsList);
+    } else {
+      agent = new MappingAgent(removeNextArg(argsList, "execution profile"));
+    }
     try {
       agent.process(argsList);
     } finally {
