@@ -117,7 +117,7 @@ if [[ $is_query == true ]]; then
 EOF2
     echo Querying device ${device_id} config...
     mkdir -p $(dirname "$out_file")
-    validator/bin/reflector $REFLECTOR_CONFIG update/query:${query_file} > "$out_file"
+    validator/bin/reflector $REFLECTOR_CONFIG invalid/config:${query_file} > "$out_file"
     echo "Queried config written to $out_file:"
     cat "$out_file"
 else
