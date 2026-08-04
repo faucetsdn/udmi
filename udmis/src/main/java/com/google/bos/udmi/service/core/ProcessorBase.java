@@ -400,7 +400,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
 
   @Override
   public void processMessage(Envelope envelope, Object message) {
-    debug(format("Process message %s %s", stringifyTerse(envelope), stringifyTerse(message)));
+    debug("Process message " + stringifyTerse(envelope));
+    trace("Message payload " + stringifyTerse(message));
     ((MessageDispatcherImpl) dispatcher).processMessage(envelope, message);
   }
 

@@ -8,6 +8,8 @@ import static com.google.udmi.util.JsonUtil.convertToStrict;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -18,8 +20,11 @@ import static org.mockito.Mockito.when;
 
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.bos.udmi.service.messaging.impl.MessagePipeTestBase;
+import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,6 +39,7 @@ import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.Level;
 import udmi.schema.SetupUdmiState;
 import udmi.schema.UdmiConfig;
 import udmi.schema.UdmiState;
@@ -122,13 +128,15 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     validateUdmiConfig(udmi);
   }
 
+  private ReflectProcessor reflectProcessor;
+
   /**
    * Initialize a reflector instance, using the appropriate reflection registry.
    */
   @BeforeEach
   public void initializeInstance() {
     MessagePipeTestBase.useReflectRegistry = true;
-    initializeTestInstance(ReflectProcessor.class);
+    reflectProcessor = initializeTestInstance(ReflectProcessor.class);
     MessagePipeTestBase.useReflectRegistry = false;
   }
 
@@ -178,5 +186,32 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
     verify(provider, times(1)).modelRegistry(eq(TEST_REGISTRY), any(),
         eq(requestModel));
+  }
+
+  @Test
+  public void updateAwarenessPayloadLogging() {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    PrintStream originalOut = System.out;
+    try {
+      System.setOut(new PrintStream(out));
+      ContainerBase.setLogLevel(Level.DEBUG);
+      Envelope env = new Envelope();
+      env.deviceRegistryId = "test_reg";
+      env.deviceId = "test_dev";
+      UdmiState state = new UdmiState();
+      state.source = "secret_tester_source";
+      reflectProcessor.updateAwareness(env, state);
+      String logOutput = out.toString();
+      assertFalse(logOutput.contains("secret_tester_source"),
+          "UdmiState payload should not be logged at DEBUG level");
+      out.reset();
+      ContainerBase.setLogLevel(Level.TRACE);
+      reflectProcessor.updateAwareness(env, state);
+      logOutput = out.toString();
+      assertTrue(logOutput.contains("secret_tester_source"),
+          "UdmiState payload should be logged at TRACE level");
+    } finally {
+      System.setOut(originalOut);
+    }
   }
 }
