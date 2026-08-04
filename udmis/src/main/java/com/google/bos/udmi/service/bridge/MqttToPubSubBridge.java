@@ -34,10 +34,14 @@ import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.net.ssl.KeyManagerFactory;
@@ -96,11 +100,28 @@ public class MqttToPubSubBridge {
       .maximumSize(10000)
       .build();
 
+  private static final Cache<String, Boolean> ackedMessageIds = CacheBuilder.newBuilder()
+      .expireAfterWrite(15, TimeUnit.MINUTES)
+      .maximumSize(10000)
+      .build();
+
   private final ThreadPoolExecutor executor;
   private volatile boolean tripped = false;
+  private final ConcurrentMap<Integer, Long> unackedMessages = new ConcurrentHashMap<>();
+  private final AtomicInteger dupCount = new AtomicInteger(0);
+  private final Random random = new Random();
+
+  public int getDupCount() {
+    return dupCount.get();
+  }
+
+  public int getUnackedCount() {
+    return unackedMessages.size();
+  }
 
   static void clearCacheForTest() {
     numIdCache.invalidateAll();
+    ackedMessageIds.invalidateAll();
   }
 
   /**
@@ -130,13 +151,13 @@ public class MqttToPubSubBridge {
       while (!tripped) {
         try {
           Thread.sleep(1000);
-          // Check if we've received the maximum number of inflight messages (100)
-          if (executor.getActiveCount() + executor.getQueue().size() >= 100) {
+          // Check if unacked inflight messages exceed threshold (50 out of RECEIVE_MAXIMUM = 100)
+          if (unackedMessages.size() >= 50) {
             if (fullStartTime == 0) {
               fullStartTime = System.currentTimeMillis();
-            } else if (System.currentTimeMillis() - fullStartTime >= 60000) {
+            } else if (System.currentTimeMillis() - fullStartTime >= 300000) {
               tripped = true;
-              logger.error("Queue saturated for 60 seconds! Tripping circuit breaker.");
+              logger.error("Unacked message threshold exceeded for 300 seconds! Tripping circuit breaker.");
               try {
                 mqttClient.disconnect();
               } catch (Exception e) {
@@ -154,6 +175,36 @@ public class MqttToPubSubBridge {
     });
     monitor.setDaemon(true);
     monitor.start();
+  }
+
+  private void startPeriodicReconnect(IMqttClient mqttClient, int baseIntervalSec) {
+    if (baseIntervalSec <= 0) {
+      return;
+    }
+    Thread reconnectThread = new Thread(() -> {
+      while (!tripped) {
+        try {
+          // Jitter: +/- 50% random delay around baseIntervalSec
+          int jitterSec = (int) (baseIntervalSec * 0.5);
+          int delaySec = baseIntervalSec + (jitterSec > 0 ? (random.nextInt(jitterSec * 2 + 1) - jitterSec) : 0);
+          Thread.sleep(Math.max(1, delaySec) * 1000L);
+          synchronized (mqttClient) {
+            if (mqttClient.isConnected() && !tripped) {
+              logger.info("Executing scheduled reconnect (interval: {}s) to rebalance shared subscription...", delaySec);
+              mqttClient.reconnect();
+            }
+          }
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          break;
+        } catch (Exception e) {
+          logger.warn("Error during scheduled reconnect", e);
+        }
+      }
+    });
+    reconnectThread.setDaemon(true);
+    reconnectThread.setName("mqtt-reconnect-timer");
+    reconnectThread.start();
   }
 
   /**
@@ -184,6 +235,8 @@ public class MqttToPubSubBridge {
     String mqttKeepAliveInterval = commandLine.getOptionValue("mqtt_keep_alive_interval", "15");
     int keepAliveInterval = Integer.parseInt(mqttKeepAliveInterval);
     boolean mqttTls = commandLine.hasOption("mqtt_tls");
+    int reconnectIntervalSec = Integer.parseInt(
+        commandLine.getOptionValue("mqtt_reconnect_interval_sec", "900"));
     String mqttCaPath = commandLine.getOptionValue("mqtt_ca_path");
     String mqttUsername = commandLine.getOptionValue("mqtt_username");
     String mqttPassword = commandLine.getOptionValue("mqtt_password");
@@ -244,6 +297,8 @@ public class MqttToPubSubBridge {
 
       // Start the circuit breaker monitor
       bridge.startCircuitBreaker(mqttClient);
+      // Start periodic reconnect with random jitter
+      bridge.startPeriodicReconnect(mqttClient, reconnectIntervalSec);
 
       // Set up MQTT Message Callback
       bridge.setupBridge(mqttClient, publisher, mqttSubscriptionTopic,
@@ -320,6 +375,8 @@ public class MqttToPubSubBridge {
         "Path to client private key for etcd TLS.");
     options.addOption(null, "source_attribute", true, "Value for the source attribute.");
     options.addOption(null, "shared_subscription", true, "Shared subscription name.");
+    options.addOption(null, "mqtt_reconnect_interval_sec", true,
+        "Periodic reconnect interval in seconds (default 900, 0 to disable).");
     options.addOption("h", "help", false, "Print usage info.");
 
     CommandLineParser parser = new DefaultParser();
@@ -445,6 +502,28 @@ public class MqttToPubSubBridge {
           @Override
           public void messageArrived(String topic, MqttMessage message) {
             try {
+              if (message.isDuplicate()) {
+                int currentDups = dupCount.incrementAndGet();
+                logger.info("Received DUP MQTT message (DUP=true, ID {}). Total DUP messages tracked: {}",
+                    message.getId(), currentDups);
+                String dupKey = message.getId() + ":" + topic;
+                if (ackedMessageIds.getIfPresent(dupKey) != null) {
+                  logger.warn("DUP message ID {} on topic {} was already published to Pub/Sub. Re-ACKing without duplicate publish.",
+                      message.getId(), topic);
+                  try {
+                    mqttClient.messageArrivedComplete(message.getId(), message.getQos());
+                  } catch (MqttException e) {
+                    logger.error("Failed to ACK already-processed DUP message", e);
+                  }
+                  return;
+                }
+                if (unackedMessages.containsKey(message.getId())) {
+                  logger.warn("DUP message ID {} is already currently inflight/unacked. Ignoring duplicate processing.",
+                      message.getId());
+                  return;
+                }
+              }
+
               final String receiveTime = java.time.Instant.now().toString();
               executor.submit(() -> {
                 try {
@@ -503,25 +582,9 @@ public class MqttToPubSubBridge {
                   PubsubMessage pubsubMessage =
                       pubsubMessageBuilder.putAllAttributes(attributes).build();
 
-                  // Publish to Pub/Sub and acknowledge asynchronously
-                  ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-                  ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
-                    @Override
-                    public void onSuccess(String msgId) {
-                      logger.debug("Published to Pub/Sub with message ID: {}", msgId);
-                      try {
-                        mqttClient.messageArrivedComplete(message.getId(), message.getQos());
-                      } catch (MqttException e) {
-                        logger.error("Failed to ACK MQTT message, it will be redelivered", e);
-                      }
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                      logger.warn(
-                          "Error publishing to Pub/Sub, dropping ACK so broker can redeliver", t);
-                    }
-                  }, MoreExecutors.directExecutor());
+                  // Track unacked message ID in unackedMessages map and publish with 5x retry + exponential backoff
+                  unackedMessages.put(message.getId(), System.currentTimeMillis());
+                  publishWithRetry(publisher, pubsubMessage, message, topic, mqttClient, 1);
 
                 } catch (RuntimeException e) {
                   logger.warn("Error processing MQTT message", e);
@@ -547,6 +610,46 @@ public class MqttToPubSubBridge {
     logger.debug("Subscribing to MQTT topic: {}", actualSubscriptionTopic);
     mqttClient.subscribe(actualSubscriptionTopic, 1);
     logger.debug("Subscribed. Waiting for messages...");
+  }
+
+  private void publishWithRetry(Publisher publisher, PubsubMessage pubsubMessage,
+      MqttMessage mqttMessage, String topic, IMqttClient mqttClient, int attempt) {
+    ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
+    ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
+      @Override
+      public void onSuccess(String msgId) {
+        logger.debug("Published to Pub/Sub with message ID: {}", msgId);
+        unackedMessages.remove(mqttMessage.getId());
+        String dupKey = mqttMessage.getId() + ":" + topic;
+        ackedMessageIds.put(dupKey, Boolean.TRUE);
+        try {
+          mqttClient.messageArrivedComplete(mqttMessage.getId(), mqttMessage.getQos());
+        } catch (MqttException e) {
+          logger.error("Failed to ACK MQTT message, it will be redelivered", e);
+        }
+      }
+
+      @Override
+      public void onFailure(Throwable t) {
+        if (attempt < 5 && !tripped) {
+          long baseMs = (1L << (attempt - 1)) * 800L;
+          int backoffMs = (int) baseMs + random.nextInt((int) (baseMs * 0.5));
+          logger.warn("Error publishing to Pub/Sub (attempt {}/5), retrying in {}ms...",
+              attempt, backoffMs, t);
+          executor.submit(() -> {
+            try {
+              Thread.sleep(backoffMs);
+              publishWithRetry(publisher, pubsubMessage, mqttMessage, topic, mqttClient, attempt + 1);
+            } catch (InterruptedException ie) {
+              Thread.currentThread().interrupt();
+            }
+          });
+        } else {
+          logger.error("Failed to publish to Pub/Sub after 5 attempts. Message left unacked.", t);
+          // Note: unackedMessages retains the message ID so circuit breaker can trip on prolonged outage
+        }
+      }
+    }, MoreExecutors.directExecutor());
   }
 
   private static SSLSocketFactory getSocketFactory(

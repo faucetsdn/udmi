@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.bridge;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -421,6 +422,104 @@ class MqttToPubSubBridgeTest {
     CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
     String etcdOptions = MqttToPubSubBridge.getEtcdOptions(commandLine);
     assertEquals("ca_file=/path/to/ca.crt", etcdOptions);
+  }
+
+  @Test
+  void testSetupBridgePublishRetry() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/my-registry/d/my-device/events";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    // Mock publisher to fail on first attempt, succeed on second attempt
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFailedFuture(new RuntimeException("Transient failure")))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    // Call setupBridge
+    new MqttToPubSubBridge().setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    // Capture callback
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    // Simulate message arrival
+    callback.messageArrived(testTopic, mqttMessage);
+
+    // Verify publish was called twice due to retry
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(2)).publish(any(PubsubMessage.class));
+  }
+
+  @Test
+  void testDuplicateMessageTrackingAndDeduplication() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/my-registry/d/my-device/events";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+    mqttMessage.setId(1001);
+    mqttMessage.setQos(1);
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+    bridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    // First arrival - normal message
+    callback.messageArrived(testTopic, mqttMessage);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(1)).publish(any(PubsubMessage.class));
+    assertEquals(0, bridge.getDupCount());
+
+    // Second arrival - duplicate message (DUP flag set to true)
+    MqttMessage dupMessage = new MqttMessage(payloadStr.getBytes());
+    dupMessage.setId(1001);
+    dupMessage.setQos(1);
+    dupMessage.setDuplicate(true);
+
+    callback.messageArrived(testTopic, dupMessage);
+    // Should ACK without calling publish again
+    verify(mockPublisher, org.mockito.Mockito.timeout(3000).times(1)).publish(any(PubsubMessage.class));
+    assertEquals(1, bridge.getDupCount());
+    assertEquals(0, bridge.getUnackedCount());
+  }
+
+  @Test
+  void testUnackedMessagesMapTracking() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/my-registry/d/my-device/events";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+    mqttMessage.setId(2002);
+    mqttMessage.setQos(1);
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+    bridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(1)).publish(any(PubsubMessage.class));
+    // Verify unacked count popped to 0 after delivery
+    assertEquals(0, bridge.getUnackedCount());
   }
 }
 
