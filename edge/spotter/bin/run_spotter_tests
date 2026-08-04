@@ -48,21 +48,24 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
     )
     echo "-- Container Lifecycle Integration: PASSED!"
 
-    echo "--- Step 5: Running PCAP Streaming Integration Tests (test_pcap) ---"
+    echo "--- Step 6: Running PCAP Streaming Integration Tests (test_pcap) ---"
     "${SCRIPT_DIR}/test_pcap"
     echo "-- PCAP Streaming Integration: PASSED!"
 
-    echo "--- Step 5b: Running Resource Contention Integration Tests (test_resource_contention) ---"
+    echo "--- Step 7: Running Resource Contention Integration Tests (test_resource_contention) ---"
     "${SCRIPT_DIR}/test_resource_contention"
     echo "-- Resource Contention Integration: PASSED!"
 
-    echo "--- Step 5c: Running Network Resilience Integration Tests (test_fault_injection) ---"
+    echo "--- Step 8: Running Network Resilience Integration Tests (test_fault_injection) ---"
     "${SCRIPT_DIR}/test_fault_injection"
     echo "-- Network Resilience Integration: PASSED!"
 
     if docker network inspect spotter-parity-net >/dev/null 2>&1 || docker network create --subnet=192.168.12.0/24 spotter-parity-net >/dev/null 2>&1; then
-        echo "--- Step 6: Running Dual-Process Co-existence Parity Tests (test_parity) ---"
-        "${SCRIPT_DIR}/test_parity"
+        echo "--- Step 9: Running Dual-Process Co-existence Parity Tests (test_parity) ---"
+        (
+            cd "${WORKSPACE_DIR}"
+            PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" "${SCRIPT_DIR}/test_parity"
+        )
         echo "-- Dual-Process Co-existence Parity: PASSED!"
     else
         echo "WARNING: Skipping test_parity due to inability to initialize spotter-parity-net bridge network."
