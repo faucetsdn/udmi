@@ -1,0 +1,21 @@
+#!/bin/bash -e
+# Spotter Supervisor Process Lifecycle & Rollback Test Suite
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+WORKSPACE_DIR=$(realpath "${SCRIPT_DIR}/../../..")
+source "${WORKSPACE_DIR}/etc/shell_common.sh"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: $0"
+    echo "Validates destructive supervisor signal propagation (SIGTERM/SIGKILL), process crash handlers (101/102), and staged OTA update rollback interception (42)."
+    exit 0
+fi
+
+echo "=== Spotter Supervisor Process Lifecycle Test Suite ==="
+
+(
+    cd "${WORKSPACE_DIR}"
+    PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" -m unittest edge.spotter.tests.test_supervisor -v
+)
+echo "-- SUCCESS: Supervisor signaling, crash loops, and OTA staging rollback verified."
+exit 0

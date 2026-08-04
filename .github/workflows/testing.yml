@@ -637,3 +637,68 @@ jobs:
           name: openbridge-logs
           path: |
             out/
+
+  spotter:
+    name: Spotter Agent Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      UDMI_NO_SUDO: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Setup Base
+        run: |
+          bin/setup_base
+          bin/clone_model
+          bin/start_local sites/udmi_site_model //mqtt/localhost:9001
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e clientlib/python
+          pip install -r edge/spotter/requirements.txt
+      - name: Unit Tests
+        run: |
+          echo "Running unit test suites for Spotter Agent..."
+          edge/spotter/bin/run_spotter_tests unit
+      - name: Resource Contention & Circuit Breaker Tests
+        run: |
+          echo "Running resource stress verification to assert zero file descriptor leaks and evaluate memory/CPU cgroup safety circuit breaker throttling..."
+          edge/spotter/bin/test_resource_contention
+      - name: Network Fault Injection & Resiliency Tests
+        run: |
+          echo "Running simulated socket disconnections and transport interruption tests to verify streaming MQTT reconnect backoff and sequence resumption..."
+          edge/spotter/bin/test_fault_injection
+      - name: Supervisor Lifecycle & Rollback Tests
+        run: |
+          echo "Running process supervisor tests to verify signal propagation (SIGTERM/SIGKILL), fatal crash loop restarts (statuses 101/102), and OTA staging rollback interception (status 42)..."
+          edge/spotter/bin/test_supervisor
+      - name: Build Docker Container
+        run: |
+          echo "Building multi-stage udmi-spotter:latest container image for containerized integration testing..."
+          docker build -t udmi-spotter:latest -f edge/spotter/container/Dockerfile .
+      - name: Container Integration Tests
+        run: |
+          echo "Running container integration tests to validate volume mounting, on-prem configuration file ingestion, and Docker runtime lifecycle isolation..."
+          edge/spotter/bin/test_container
+      - name: PCAP Integration Tests
+        run: |
+          echo "Running end-to-end integration tests for declarative Discovery TRACE packet captures, verifying sequential StreamEvents chunking (event_no) over events/stream..."
+          edge/spotter/bin/test_pcap
+      - name: Run Parity Tests
+        run: |
+          echo "Building legacy discovery node container and simulated BACnet device image..."
+          misc/discoverynode/bin/build_container test-discovery_node
+          bash misc/discoverynode/testing/docker/bacnet_device/build.sh
+          echo "Running co-existence parity integration testing on custom bridge network to assert 100% BACnet discovery telemetry payload parity..."
+          edge/spotter/bin/test_parity
+
+

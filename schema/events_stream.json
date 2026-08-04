@@ -1,0 +1,40 @@
+{
+  "$udmi_version": "1.5.7",
+  "title": "Stream Events",
+  "description": "Sequential data stream chunks for reliable transport over MQTT (e.g. PCAP traces, firmware blobs, reliable alarms, logs playback).",
+  "$section": "Messages",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 UTC timestamp the stream chunk event was generated",
+      "type": "string",
+      "format": "date-time"
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "session_id": {
+      "description": "Unique session identifier for the continuous stream transmission",
+      "type": "string"
+    },
+    "event_no": {
+      "description": "Sequence number for this stream event to support reliable sequential delivery and reassembly",
+      "type": "integer"
+    },
+    "chunk_index": {
+      "description": "0-based index of the transmitted chunk payload within the total session",
+      "type": "integer"
+    },
+    "total_chunks": {
+      "description": "Total number of chunks comprising the complete transmission binary",
+      "type": "integer"
+    },
+    "data": {
+      "description": "Base64-encoded binary chunk payload data",
+      "type": "string"
+    }
+  }
+}
