@@ -15,8 +15,8 @@ Directly streaming diagnostic data or PCAP packet captures from edge nodes to Go
 * **Secret Distribution**: Requiring edge nodes to maintain GCP Service Account keys or OAuth credentials increases secret sprawl and security risk across OT networks.
 * **Credential Rotation**: Key rotation and short-lived token management at the edge in zero-trust or restricted-egress environments introduces operational friction and risks authentication lockouts.
 
-### 2. Primary Transport Strategy: Streaming MQTT Protocol
-To eliminate cloud credential distribution to the edge, Spotter adopts the **Streaming MQTT Protocol** as its primary packet export mechanism:
+### 2. Exclusive Transport Strategy: Streaming MQTT Protocol
+To eliminate cloud credential distribution to the edge, Spotter adopts the **Streaming MQTT Protocol** as its exclusive packet export mechanism:
 * **Payload Chunking**: Massive message payloads are not required. Captures are divided into a continuous stream of smaller, broker-compliant frame events (e.g. 64KB - 128KB base64-encoded chunks).
 * **Protocol Reusability**: The same streaming protocol pattern handles both outbound diagnostic data streams (`events/pcap`) and inbound binary transfers (e.g. delivering OTA blob updates).
 * **Zero Additional Secrets**: Leverages the pre-existing edge-to-broker mTLS hardware key/certificate authentication channel without extra GCS credentials on edge devices.
@@ -184,7 +184,6 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
     * `filter`: BPF filter string (e.g., `udp port 47808` to target BACnet).
     * `max_duration_sec`: Capture duration safety limit.
     * `max_bytes`: Byte limit to prevent storage/network exhaustion.
-    * `upload_url`: Target destination GCS URL.
   * Spawn a thread to execute the packet capture driver (using `tcpdump` or socket sniffer).
   * **Resource Safety:** Run capture processes under low IO/CPU scheduling priorities (`nice` / `ionice`).
 * **Implementation & Verification**:
@@ -195,9 +194,9 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 ### ~~Sub-phase 2.2: Ephemeral PCAP & Streaming MQTT Transport Engine [Completed]~~
 
 #### ~~Task 2.2.1: Streaming MQTT Protocol Driver [Completed]~~
-* **Target Location**: `udmi.core.blob.uploader` & `udmi.core.diagnostics.pcap`
+* **Target Location**: `udmi.core.messaging.streaming` & `udmi.core.diagnostics.pcap`
 * **Behavioral Specification**:
-  * Adopt **Streaming MQTT Protocol** as the primary first-class transport mechanism for packet export, avoiding edge GCS credential distribution and secret rotation hurdles.
+  * Adopt **Streaming MQTT Protocol** as the exclusive transport mechanism for packet export, avoiding edge GCS credential distribution and secret rotation hurdles.
   * **Payload Framing**: Ephemeral packet captures are divided into lightweight broker-compliant frame events (e.g. 64KB - 128KB base64-encoded chunks) and published sequentially over `events/pcap`.
   * **Protocol Metadata**: Each frame contains `session_id`, `chunk_index`, `total_chunks`, and chunk payload data.
   * **RAM Buffering & Zero-Disk Constraint**: Do not write raw packets to local disk; stream chunks dynamically from RAM buffers to the MQTT client socket.
@@ -209,14 +208,12 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 
 ### ~~Sub-phase 2.3: Cloud Ingestion & Edge Secret Decoupling [Completed]~~
 
-#### ~~Task 2.3.1: Edge Credential Decoupling & Optional Direct HTTP Upload [Completed]~~
+#### ~~Task 2.3.1: Edge Credential Decoupling & Cloud Reassembly Bridge [Completed]~~
 * **Behavioral Specification**:
   * **Edge Authentication Decoupling**: Edge nodes rely solely on standard mTLS broker certificates. No GCP Service Account keys or OAuth tokens are required or distributed to the edge.
-  * **Future Mosquitto Migration Compatibility**: Dedicated cloud bridge workers consume streaming MQTT topics directly from Mosquitto and handle GCS reassembly and object storage writes in the cloud.
-  * **Optional Signed URL Fallback**: Direct HTTP GCS uploads (`uploader.py`) remain supported as an optional mode when pre-signed HTTP PUT URLs are explicitly supplied in the diagnostic config, using standard `HTTPS_PROXY` settings.
+  * **Cloud-Side Reassembly**: Dedicated cloud bridge workers consume streaming MQTT topics directly from Mosquitto and handle reassembly and object storage writes entirely in the cloud.
 * **Implementation & Verification**:
-  * [uploader.py](src/uploader.py) - Maintains optional chunked HTTP uploader supporting pre-signed URLs.
-  * [agent.py](src/agent.py) - Defaults to zero-secret Streaming MQTT Protocol for all standard diagnostic jobs.
+  * [agent.py](src/agent.py) - Uses zero-secret Streaming MQTT Protocol exclusively for all diagnostic jobs without writing raw PCAP binaries to local storage.
 
 #### ~~Sub-phase 2.4: Startup & Dependency Management [Completed]~~
 
@@ -262,6 +259,36 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 
 ---
 
+### Sub-phase 2.6: Architectural Alignment with UDMI Discovery TRACE & Streaming Standard
+
+#### ~~Task 2.6.1: UDMI Schema Definition for Discovery Trace & Stream Events [Completed]~~
+* **Target Location**: `schema/common.json`, `schema/config_discovery_family.json`, `schema/events_stream.json`
+* **Behavioral Specification**:
+  * Implement Trevor Pering's architectural specification: treat diagnostic network captures as a `TRACE` level operation within Discovery rather than a file transfer in `blobset`.
+  * Update `schema/common.json` to add `"trace"` to the `depth` enumeration.
+  * In `schema/config_discovery_family.json`, support parameters required for packet trace capture (`interface`, `filter`, `max_bytes`).
+  * Define a generic streaming event schema (`schema/events_stream.json`) to support reliable sequence transfers (`session_id`, `event_no`, `chunk_index`, `total_chunks`, `data`), decoupling event payloads from standard discovery/system channels and enabling multi-purpose streaming (PCAP, firmware updates, alarms, logs).
+  * Run code generation (`bin/gencode_py` and related generators) to compile schemas into binding classes.
+* **Implementation & Verification**:
+  * [common.json](../../schema/common.json) & [config_discovery_family.json](../../schema/config_discovery_family.json) - Updated schema definitions to include `"trace"` in `depth` and added optional `interface`, `filter`, and `max_bytes` parameters.
+  * [events_stream.json](../../schema/events_stream.json) - Created authoritative streaming event schema with sequence numbering (`event_no`, `session_id`, `chunk_index`, `total_chunks`, `data`) and registered it in [events.json](../../schema/events.json).
+  * [events_stream.py](../../gencode/python/udmi/schema/events_stream.py) - Compiled schemas via `bin/gencode`. Verified schema validation and Python data model serialization roundtripping (`bin/test_schema && bin/test_generated_classes_py`, 135 tests passed).
+
+#### Task 2.6.2: Dual-Process Co-existence Hygiene & Discovery Routing
+* **Target Location**: `edge/spotter/src/agent.py`
+* **Behavioral Specification**:
+  * Transition trigger logic in Spotter from monitoring `config.blobset.blobs.pcap_capture` to inspecting `config.discovery.families` for operations with `depth` set to `"trace"` (e.g., `ether` or `bacnet` family traces).
+  * Report capture status and progress back in device state under `state.discovery.families[family].status` and `phase`.
+  * In the dual-process supervisor model, ensure Spotter selectively consumes only `TRACE` level discovery configs while ignoring normal BACnet/IP discovery sweeps, allowing the legacy discovery daemon to handle standard active scanning without contention.
+
+#### Task 2.6.3: Integration & Verification Test Alignment
+* **Target Location**: `edge/spotter/bin/test_pcap` & `edge/spotter/tests/test_agent.py`
+* **Behavioral Specification**:
+  * Update the integration pipeline (`bin/test_pcap`) and unit tests (`tests/test_agent.py`) to trigger captures via the `config.discovery` TRACE schema and assert sequential chunk reception on `events/stream` with explicit `event_no` ordering.
+  * Execute negative verification (reversion testing) per engineering standards to guarantee valid transition proof.
+
+---
+
 
 ## Phase 3: Autonomous OTA Engine & Test Cadre
 
@@ -289,6 +316,13 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
     *   `test_mock_loop`: Verify the core message loop starts without immediate crash.
   * Configure the Supervisor to execute this test suite against the *staged* virtual environment (`/opt/spotter/staging/venv/bin/python -m spotter.tests.self_test`) **before** swapping the active symlink.
   * Ensure the update is rejected and rolled back immediately if the test suite returns a non-zero exit code.
+
+#### Task 3.1.3: Concrete Use Cases for Modular OTA Updates
+* **Operational Value**: Updating modules autonomously without container rebuilds or FIE infrastructure maintenance windows demonstrates critical field agility:
+  1. **Hot-Reloading Discovery Signatures (`discovery_rules`)**: When proprietary BACnet devices are encountered during deployment, operators push updated discovery profiles over MQTT. Spotter reloads signatures dynamically without dropping broker sockets or restarting processes, mapping non-standard telemetry points in real time.
+  2. **On-Demand Diagnostic Driver Delivery (`ota_package`)**: To troubleshoot complex broadcast storms on UDP 47808 without SSH access, engineers deploy a custom packet sniffer module (`pcap_ext.whl`). Spotter runs automated sandbox self-verification, promotes the module atomically, and streams targeted diagnostic chunks over MQTT.
+  3. **Autonomous CVE / Security Dependency Patching**: Upon disclosure of a Python library CVE, security teams distribute remediated `.whl` packages via UDMI. The agent verifies socket and credential integrity via `self_test.py` and promotes the fix within 60 seconds across hundreds of building gateways without host downtime.
+  4. **Zero-Touch Feature Migration**: To cleanly shift discovery execution from the legacy daemon to native Python code, a scanning module update is applied to Spotter Core. Once validated in staging, the supervisor transfers active scanning responsibilities without introducing visibility gaps.
 
 ---
 
@@ -324,8 +358,8 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 * **Behavioral Specification**:
   * Validate system resiliency when edge networks experience instability, proxy outages, or packet drops.
   * **Fault Scenarios**:
-    1. **GCS Upload Proxy Outage**: Interrupt HTTP proxy connections mid-stream during PCAP upload to verify seamless fallback to chunked MQTT telemetry (`events/pcap`).
-    2. **Transient Broker Socket Disconnection**: Force periodic broker socket disconnects during OTA wheel downloads to verify HTTP resumable download retries and backoff.
+    1. **Transient Broker Socket Disconnections During Streaming**: Interrupt broker socket connections mid-stream during PCAP chunk streaming to verify reconnect backoff recovery and sequential resumption over `events/pcap`.
+    2. **Transient Broker Socket Disconnection During OTA**: Force periodic broker socket disconnects during OTA chunked wheel transfers to verify resilient download retries and backoff.
     3. **High Latency / Loss Networks**: Inject packet loss and latency via `tc/netem` on bridge networks to ensure heartbeat threads do not block or cause supervisor timeouts.
 
 #### Task 3.3.3: Production Target Probes & Micro-Audit Suite
@@ -334,7 +368,7 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
   * Establish safe micro-audit probes that can be executed directly on deployed production target instances without disrupting discovery operations or host stability:
     1. **In-Container Sandbox Self-Test (`self_test.py`)**: Runs post-OTA deployment in <10 seconds. Verifies module imports, raw socket access, and credential file sanity before promoting staged virtual environments (`/opt/spotter/staging/venv`).
     2. **Declarative On-Device Resource Audit (`system.diagnostics.resource_audit`)**: Triggered via MQTT config update. Performs a timed non-destructive resource sweep and streams cgroup memory profiles, CPU saturation, file descriptor allocation (`ulimit -n`), and telemetry latencies to cloud telemetry.
-    3. **Transport Fallback Micro-Probe**: Triggers micro packet captures directed to non-existent GCS endpoints to verify fallback paths on live OT networks.
+    3. **Streaming MQTT Micro-Probe**: Triggers micro packet captures (~5 packets) to verify streaming publish health over `events/pcap` on live OT networks without storage impact.
   * **Test Location Target Matrix**:
     | Test Category | Local Integration Pipeline | Deployed Production Target |
     | :--- | :---: | :---: |
@@ -368,15 +402,15 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
       * `spotter_memory_bytes` (Gauge with label `type="rss|cgroup_limit|vms"`): Memory allocation vs allocated cgroup limits.
       * `spotter_open_fds` (Gauge): Open File Descriptors count (`ulimit -n` usage).
       * `spotter_pcap_packets_total` (Counter with label `status="captured|dropped|filtered"`): Raw PCAP packet accounting.
-      * `spotter_pcap_bytes_transferred_total` (Counter with label `transport="gcs|mqtt"`): Streaming upload throughput.
-      * `spotter_pcap_upload_duration_seconds` (Histogram): Upload latency buckets.
+      * `spotter_pcap_bytes_transferred_total` (Counter with label `transport="mqtt"`): Streaming upload throughput over MQTT.
+      * `spotter_pcap_upload_duration_seconds` (Histogram): Streaming upload latency buckets over MQTT.
       * `spotter_ota_events_total` (Counter with label `result="success|rollback|failure"`): Staged OTA package promotions/rollbacks.
       * `spotter_mqtt_connection_status` (Gauge): Broker connectivity health (`1`=connected, `0`=disconnected).
 
 #### Task 3.4.2: Distributed Tracing Context & Structured Logging
-* **Target Location**: `edge/spotter/src/logger.py` & `edge/spotter/src/uploader.py`
+* **Target Location**: `edge/spotter/src/logger.py`
 * **Behavioral Specification**:
-  * **OpenTelemetry W3C Trace Propagation**: Inject W3C `traceparent` (Trace ID / Span ID) headers into PCAP metadata events, HTTP GCS resumable upload headers, and MQTT diagnostic headers. This links edge diagnostic capture events directly with cloud-side reassembly workers, bigquery logs, and cloud trace dashboards.
+  * **OpenTelemetry W3C Trace Propagation**: Inject W3C `traceparent` (Trace ID / Span ID) headers into PCAP metadata events and MQTT diagnostic headers. This links edge diagnostic capture events directly with cloud-side reassembly workers, bigquery logs, and cloud trace dashboards.
   * **Structured JSON Logging**: Format container stdout/stderr as single-line JSON logs (`timestamp`, `severity`, `component`, `trace_id`, `message`) for structured parsing by Cloud Logging, FluentBit, or Vector log collectors.
 
 ---
@@ -390,7 +424,7 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 - [ ] **5. OTA Verification**: Safe OTA update flow verified: successful sandbox self-testing promotes the package, while simulated syntax/dependency errors trigger immediate rollback before promotion.
 - [x] ~~**6. Standard Compliance**: Zero-code plan compliance and 3-stage validation gate completion (Unit, Schema, Local Integration) as per `GEMINI.md`.~~
 - [ ] **7. Resource Contention Immunity**: Simultaneous legacy discovery sweeps and high-throughput diagnostic PCAP sessions verified to operate without OOM kills, FD exhaustion, or delayed MQTT telemetry heartbeats both in local synthetic testbeds (`bin/test_resource_contention`) and on deployed production target nodes.
-- [ ] **8. Network Fault Resiliency**: Automatic fallback to chunked MQTT telemetry and backoff retry logic verified under simulated proxy failures and socket interruptions (`bin/test_fault_injection`).
+- [ ] **8. Network Fault Resiliency**: Automatic reconnect backoff and chunk retry logic verified under simulated socket interruptions during streaming (`bin/test_fault_injection`).
 - [ ] **9. Production Canary Verification**: Safe execution of non-destructive production micro-audit probes (`self_test.py` and `resource_audit`) confirmed on deployed instances.
 - [ ] **10. Observability & Metrics Verification**: End-to-end telemetry metric export (Prometheus `/metrics` and native UDMI `events/metrics`) verified alongside W3C trace context propagation across diagnostic PCAP streaming sessions.
 - [ ] **11. Unit Test & Execution Hygiene**: High unit test coverage for pure logic modules (`pcap.py` subprocess management, `agent.py` chunking, payload validation) runnable via `bin/run_spotter_tests` without environment configuration errors.

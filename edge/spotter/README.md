@@ -41,14 +41,14 @@ graph TD
     AGT -->|"tcpdump Packet Capture"| DEV
 ```
 
-### 2. Ephemeral PCAP & Dual-Transport Pipeline
+### 2. Ephemeral PCAP & Streaming MQTT Pipeline
 
 Spotter processes diagnostic packet capture triggers sent declaratively over the UDMI config channel (`pcap_capture` blob handler):
 
 1. **Capture Worker ([pcap.py](src/pcap.py))**: Spawns `tcpdump` with configurable interface filters, enforcing strict execution bounds (maximum duration and byte quotas).
-2. **Dual Egress Transport**:
-   - **Primary (GCS Resumable Upload)**: Streams packets over HTTP/HTTPS directly to a Cloud Storage signed URL via [uploader.py](src/uploader.py).
-   - **Fallback (MQTT Event Stream)**: If GCS egress is unavailable or fails, chunked base64 payloads are automatically transmitted over the MQTT event topic (`events/pcap`).
+2. **Streaming MQTT Egress Transport**:
+   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as lightweight base64 chunks over the MQTT event topic (`events/pcap`).
+   - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding cloud storage credentials or external outbound HTTP rules at the edge.
 
 ```mermaid
 sequenceDiagram
@@ -56,21 +56,13 @@ sequenceDiagram
     participant Cloud as Cloud / Reflector
     participant Agent as Spotter Agent (agent.py)
     participant PCAP as Capture Worker (pcap.py)
-    participant GCS as GCS Storage Endpoint
     participant MQTT as MQTT Broker (events/pcap)
 
     Cloud->>Agent: UDMI Blob Trigger ("pcap_capture")
     Agent->>PCAP: capture_packets(interface, filter, limits)
-    PCAP->>PCAP: Spawn tcpdump & stream stdout
-    
-    alt GCS Egress Available (HTTP Signed URL)
-        Agent->>GCS: Initiate Resumable Upload (POST)
-        GCS-->>Agent: Session Location URI
-        Agent->>GCS: Stream Binary Packets (PUT Chunked)
-        GCS-->>Agent: 200 OK (Upload Complete)
-    else Restricted Egress or GCS Failure (MQTT Fallback)
-        Agent->>MQTT: Publish Base64 Chunks (events/pcap)
-    end
+    PCAP->>PCAP: Spawn tcpdump & stream stdout to RAM buffer
+    Agent->>MQTT: Publish Sequential Base64 Chunks (events/pcap)
+    MQTT-->>Cloud: Cloud ingestion bridge reassembles diagnostic stream
 ```
 
 ---
@@ -82,7 +74,6 @@ sequenceDiagram
 | **[bin/spotter](../../bin/spotter)** | Unified CLI orchestrator for starting (local/container) and stopping instances |
 | **[src/agent.py](src/agent.py)** | Main Spotter agent entry point, blob registration, and dispatcher |
 | **[src/pcap.py](src/pcap.py)** | Safe `tcpdump` wrapper yielding binary streams with duration and size caps |
-| **[src/uploader.py](src/uploader.py)** | Resumable GCS streaming HTTP client |
 | **[container/supervisor.sh](container/supervisor.sh)** | Dual-process supervisor script managing process signaling and cleanup |
 | **[container/Dockerfile](container/Dockerfile)** | Multi-stage Docker image build specification |
 | **[spotter_config.json](spotter_config.json)** | Sample configuration file for endpoint and BACnet parameters |

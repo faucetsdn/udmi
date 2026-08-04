@@ -23,3 +23,6 @@ class FamilyDiscoveryConfig(DataModel):
     networks: Optional[List[str]] = None
     passive_sec: Optional[int] = None
     depth: Optional[Depth] = None
+    interface: Optional[str] = None
+    filter: Optional[str] = None
+    max_bytes: Optional[int] = None

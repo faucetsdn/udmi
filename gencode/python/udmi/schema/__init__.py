@@ -48,6 +48,7 @@ from .events_mapping_entities import *
 from .events_mapping_entity import *
 from .events_pointset import *
 from .events_pointset_point import *
+from .events_stream import *
 from .events_system import *
 from .events_udmi import *
 from .events_validation import *

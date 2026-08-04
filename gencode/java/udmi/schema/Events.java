@@ -43,13 +43,23 @@ public class Events {
     @JsonProperty("discovery")
     @JsonPropertyDescription("[Discovery result](../docs/specs/discovery.md) with implicit discovery")
     public DiscoveryEvents discovery;
+    /**
+     * Stream Events
+     * <p>
+     * Sequential data stream chunks for reliable transport over MQTT (e.g. PCAP traces, firmware blobs, reliable alarms, logs playback).
+     * 
+     */
+    @JsonProperty("stream")
+    @JsonPropertyDescription("Sequential data stream chunks for reliable transport over MQTT (e.g. PCAP traces, firmware blobs, reliable alarms, logs playback).")
+    public StreamEvents stream;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.pointset == null)? 0 :this.pointset.hashCode()));
-        result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
         result = ((result* 31)+((this.system == null)? 0 :this.system.hashCode()));
+        result = ((result* 31)+((this.stream == null)? 0 :this.stream.hashCode()));
+        result = ((result* 31)+((this.discovery == null)? 0 :this.discovery.hashCode()));
         return result;
     }
 
@@ -62,7 +72,7 @@ public class Events {
             return false;
         }
         Events rhs = ((Events) other);
-        return ((((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset)))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))));
+        return (((((this.pointset == rhs.pointset)||((this.pointset!= null)&&this.pointset.equals(rhs.pointset)))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.stream == rhs.stream)||((this.stream!= null)&&this.stream.equals(rhs.stream))))&&((this.discovery == rhs.discovery)||((this.discovery!= null)&&this.discovery.equals(rhs.discovery))));
     }
 
 }

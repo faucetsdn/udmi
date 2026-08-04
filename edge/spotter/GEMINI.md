@@ -24,7 +24,7 @@ All verification tests are categorised into **Unit Tests** and **Integration Tes
   - [test_pcap](bin/test_pcap): Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming.
   - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on a custom docker network, confirming 100% functional telemetry payload parity.
   - [test_resource_contention](bin/test_resource_contention): Validates dual-process CPU, memory cgroups, file descriptor limits, and telemetry heartbeat latency under concurrent heavy workloads.
-  - [test_fault_injection](bin/test_fault_injection): Validates network fault tolerance, proxy disconnection fallbacks (HTTP -> MQTT base64 chunking), and socket reconnect logic.
+  - [test_fault_injection](bin/test_fault_injection): Validates network fault tolerance, streaming MQTT backoff recovery, and socket reconnect logic.
   - [self_test.py](tests/self_test.py): In-container micro-self-test suite executed by supervisor post-OTA staging to verify imports, credentials, raw socket access, and loop sanity.
 
 To get detailed explanations of what each integration test script validates, run them with the `--help` flag:
@@ -135,7 +135,7 @@ To move towards a regular, methodological release cycle while protecting live OT
 | **`bin/test_supervisor`** | **Yes** | **No** | Destructive process signaling and `sys.exit` crash handlers. |
 | **`bin/test_container`** | **Yes** | **No** | Local container build and volume mount lifecycle checks. |
 | **`bin/test_parity`** | **Yes** | **No** | Uses custom bridge network and mock local Mosquitto instances. |
-| **`bin/test_fault_injection`** | **Yes** | **No** | Induces artificial proxy drops and latency (`tc/netem`). |
+| **`bin/test_fault_injection`** | **Yes** | **No** | Induces artificial network drops and latency (`tc/netem`). |
 | **`bin/test_resource_contention`** | **Yes** | **Canary Only** | Full local stress run; production runs in non-destructive canary mode. |
 | **`tests/self_test.py`** | **Yes** | **Yes** | Non-destructive <10s in-container post-OTA staging validation. |
 | **`system.diagnostics.resource_audit`** | **Yes** | **Yes** | Non-destructive on-device cgroup & telemetry health probe. |
@@ -161,11 +161,11 @@ Spotter supports three distinct metric delivery mechanisms depending on deployme
 | `spotter_memory_bytes` | Gauge | `type="rss\|cgroup_limit"` | Memory consumption vs cgroup memory bounds. |
 | `spotter_open_fds` | Gauge | — | Count of open file descriptors (`ulimit -n`). |
 | `spotter_pcap_packets_total` | Counter | `status="captured\|dropped"` | Count of network packets captured in PCAP driver. |
-| `spotter_pcap_bytes_transferred_total` | Counter | `transport="gcs\|mqtt"` | Diagnostic stream volume uploaded to cloud. |
-| `spotter_pcap_upload_duration_seconds` | Histogram | — | Latency bucket distributions for GCS/MQTT uploads. |
+| `spotter_pcap_bytes_transferred_total` | Counter | `transport="mqtt"` | Diagnostic stream volume uploaded to cloud over MQTT. |
+| `spotter_pcap_upload_duration_seconds` | Histogram | — | Latency bucket distributions for streaming MQTT uploads. |
 | `spotter_ota_events_total` | Counter | `result="success\|rollback"` | Outcome counters for staged OTA packages. |
 | `spotter_mqtt_connection_status` | Gauge | — | Connectivity indicator (`1`=connected, `0`=disconnected). |
 
 ### 7.3 Distributed Tracing & Logging Standards
-- **W3C OpenTelemetry Trace Context**: Spotter injects `traceparent` context headers into MQTT events and GCS upload HTTP headers to correlate edge packet captures with cloud reassembly pipelines.
+- **W3C OpenTelemetry Trace Context**: Spotter injects `traceparent` context headers into MQTT events to correlate edge packet captures with cloud reassembly pipelines.
 - **Single-Line Structured JSON Logs**: stdout/stderr logs are formatted as single-line JSON (`timestamp`, `severity`, `component`, `trace_id`, `message`) for parsing by Cloud Logging or Vector.

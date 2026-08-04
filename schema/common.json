@@ -30,7 +30,8 @@
         "buckets",
         "entries",
         "details",
-        "parts"
+        "parts",
+        "trace"
       ]
     },
     "iot_provider": {
