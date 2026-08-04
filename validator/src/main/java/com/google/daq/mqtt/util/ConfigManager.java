@@ -176,7 +176,7 @@ public class ConfigManager {
       String family = target.family;
       String localAddr = ifNotNullGet(family, this::getLocalnetAddr);
       String gatewayAddr = target.addr;
-      catchIfSchemaViolation(
+      captureSchemaViolation(
               format("%s gateway target", family),
           () -> checkState(localAddr == null || gatewayAddr == null,
               format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
@@ -194,7 +194,7 @@ public class ConfigManager {
     throw new RuntimeException("Unknown protocol family: " + family);
   }
 
-  private void catchIfSchemaViolation(String description, Runnable action) {
+  private void captureSchemaViolation(String description, Runnable action) {
     try {
       action.run();
     } catch (Exception e) {
@@ -210,7 +210,7 @@ public class ConfigManager {
         && metadata.gateway.target != null
         && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
     if (!isVendorRef && addr != null) {
-      catchIfSchemaViolation(
+      captureSchemaViolation(
           format("%s localnet addr", family),
           () -> getFamilyProvider(family).validateAddr(addr));
     }
@@ -224,7 +224,7 @@ public class ConfigManager {
         && metadata.gateway.target != null
         && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
     if (!isVendorRef && addr != null) {
-      catchIfSchemaViolation(
+      captureSchemaViolation(
           format("%s localnet network", family),
           () -> getFamilyProvider(family).validateNetwork(addr));
     }
@@ -293,7 +293,7 @@ public class ConfigManager {
         && metadata.gateway.target != null
         && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
     if (!isVendorRef) {
-      catchIfSchemaViolation(
+      captureSchemaViolation(
           format("%s %s", family, pointRef),
           () -> {
             String fullRef = pointRef.contains("://") ? pointRef
