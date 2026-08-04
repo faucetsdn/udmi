@@ -18,6 +18,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
+import com.google.daq.mqtt.util.providers.FamilyProvider;
 import com.google.udmi.util.ExceptionList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -175,13 +176,31 @@ public class ConfigManager {
       String family = target.family;
       String localAddr = ifNotNullGet(family, this::getLocalnetAddr);
       String gatewayAddr = target.addr;
-      checkState(localAddr == null || gatewayAddr == null,
-          format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
-              family));
+      captureSchemaViolation(
+              format("%s gateway target", family),
+          () -> checkState(localAddr == null || gatewayAddr == null,
+              format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
+                  family)));
       configVar.target.addr = ofNullable(localAddr).orElse(gatewayAddr);
     });
 
     return gatewayConfig;
+  }
+
+  private FamilyProvider getFamilyProvider(String family) {
+    if (NAMED_FAMILIES.containsKey(family)) {
+      return NAMED_FAMILIES.get(family);
+    }
+    throw new RuntimeException("Unknown protocol family: " + family);
+  }
+
+  private void captureSchemaViolation(String description, Runnable action) {
+    try {
+      action.run();
+    } catch (Exception e) {
+      schemaViolationsMap.put(String.format("%s: %s", description, getCurrentContext()),
+          wrapExceptionWithContext(e, false));
+    }
   }
 
   private String getLocalnetAddr(String rawFamily) {
@@ -190,8 +209,10 @@ public class ConfigManager {
     boolean isVendorRef = metadata.gateway != null
         && metadata.gateway.target != null
         && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
-    if (!isVendorRef) {
-      ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateAddr(a));
+    if (!isVendorRef && addr != null) {
+      captureSchemaViolation(
+          format("%s localnet addr", family),
+          () -> getFamilyProvider(family).validateAddr(addr));
     }
     return addr;
   }
@@ -202,8 +223,10 @@ public class ConfigManager {
     boolean isVendorRef = metadata.gateway != null
         && metadata.gateway.target != null
         && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
-    if (!isVendorRef) {
-      ifNotNullThen(addr, a -> NAMED_FAMILIES.get(family).validateNetwork(addr));
+    if (!isVendorRef && addr != null) {
+      captureSchemaViolation(
+          format("%s localnet network", family),
+          () -> getFamilyProvider(family).validateNetwork(addr));
     }
     return addr;
   }
@@ -270,23 +293,18 @@ public class ConfigManager {
         && metadata.gateway.target != null
         && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
     if (!isVendorRef) {
-      try {
-        String fullRef = pointRef.contains("://") ? pointRef
-            : constructUrl(family, localAddr, pointRef);
-        String targetFamily = "vendor";
-        if (fullRef.contains("://")) {
-          targetFamily = fullRef.substring(0, fullRef.indexOf("://"));
-        }
+      captureSchemaViolation(
+          format("%s %s", family, pointRef),
+          () -> {
+            String fullRef = pointRef.contains("://") ? pointRef
+                : constructUrl(family, localAddr, pointRef);
+            String targetFamily = "vendor";
+            if (fullRef.contains("://")) {
+              targetFamily = fullRef.substring(0, fullRef.indexOf("://"));
+            }
 
-        if (NAMED_FAMILIES.containsKey(targetFamily)) {
-          NAMED_FAMILIES.get(targetFamily).validateUrl(fullRef);
-        } else {
-          throw new RuntimeException("Unknown protocol family in URL: " + targetFamily);
-        }
-      } catch (Exception e) {
-        schemaViolationsMap.put(String.format("%s %s: %s", family, pointRef, getCurrentContext()),
-            wrapExceptionWithContext(e, false));
-      }
+            getFamilyProvider(targetFamily).validateUrl(fullRef);
+          });
     }
     return pointRef;
   }
