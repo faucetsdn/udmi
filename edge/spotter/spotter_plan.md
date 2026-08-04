@@ -18,7 +18,7 @@ Directly streaming diagnostic data or PCAP packet captures from edge nodes to Go
 ### 2. Exclusive Transport Strategy: Streaming MQTT Protocol
 To eliminate cloud credential distribution to the edge, Spotter adopts the **Streaming MQTT Protocol** as its exclusive packet export mechanism:
 * **Payload Chunking**: Massive message payloads are not required. Captures are divided into a continuous stream of smaller, broker-compliant frame events (e.g. 64KB - 128KB base64-encoded chunks).
-* **Protocol Reusability**: The same streaming protocol pattern handles both outbound diagnostic data streams (`events/pcap`) and inbound binary transfers (e.g. delivering OTA blob updates).
+* **Protocol Reusability**: The same streaming protocol pattern handles both outbound diagnostic data streams (`events/stream`) and inbound binary transfers (e.g. delivering OTA blob updates).
 * **Zero Additional Secrets**: Leverages the pre-existing edge-to-broker mTLS hardware key/certificate authentication channel without extra GCS credentials on edge devices.
 
 ### 3. Future Mosquitto Migration & Cloud Reassembly Pipeline
@@ -161,28 +161,27 @@ To ensure robustness, resource safety, and signal reliability, the following tes
 
 Phase 2 focuses on delivering the high-impact diagnostic features: remote triggering via standard UDMI blobsets, RAM-safe streaming, and robust transport modes for restricted networks.
 
-### ~~Sub-phase 2.1: Declarative Diagnostic Job Trigger (via UDMI Blobset) [Completed]~~
+### ~~Sub-phase 2.1: Declarative Diagnostic Capture Trigger (via Discovery TRACE) [Completed]~~
 
-#### ~~Task 2.1.1: UDMI Blobset Job Manager (`BlobsetManager`) [Completed]~~
-* **Target Location**: `udmi.core.managers.blobset_manager` (Spotter Agent)
+#### ~~Task 2.1.1: UDMI Discovery Trace Manager (`TraceDiscoveryManager`) [Completed]~~
+* **Target Location**: `udmi.core.managers` & `edge/spotter/src/agent.py`
 * **Behavioral Specification**:
-  * Monitor configuration updates in the standard `blobset.blobs` block.
-  * Listen for changes to a specific diagnostic target (e.g., `pcap_capture`).
-  * Trigger execution when the `generation` timestamp increments and the `phase` is set to `final`.
-  * Retrieve the diagnostic job profile from the provided `url`. Support both HTTPS URLs and inline Base64 data URIs.
-  * Validate the cryptographic `sha256` checksum of the retrieved profile payload.
-  * Report progress in `state.blobset.blobs.pcap_capture` using standard phases (`apply`, `final`) and log messages under the `blobset.blob` namespace.
+  * Monitor configuration updates in `config.discovery.families`.
+  * Listen for scan requests on specific families (e.g., `ether` or `bacnet`) where `depth` is set to `"trace"`.
+  * Trigger execution when the `generation` timestamp increments and the `phase` is active.
+  * Report capture status and progress back in device state under `state.discovery.families[family]` using standard phases (`running`, `stopped`) and status codes (Level `200` for success, Level `500` for errors).
+  * In the dual-process supervisor model, ensure Spotter selectively processes only `TRACE` level discovery configs while ignoring standard BACnet/IP active scanning sweeps handled by the legacy discovery node.
 * **Implementation & Verification**:
-  * [agent.py](src/agent.py) - Registers a custom pcap_capture blob handler, validates checksums, and decodes inline Base64 diagnostic payloads.
-  * [system_manager.py](../../clientlib/python/src/udmi/core/managers/system_manager.py) - Incorporates support for standard `blobset.blobs` configuration schemas, tracks generation versions, and manages asynchronous worker thread lifecycles.
+  * [agent.py](src/agent.py) - Implements `TraceDiscoveryManager(BaseManager)` to handle `config.discovery` trace operations, avoiding contention with active legacy discovery sweeps.
+  * [system_manager.py](../../clientlib/python/src/udmi/core/managers/system_manager.py) - Incorporates support for standard config schema routing, generation tracking, and asynchronous worker thread lifecycles.
 
 #### ~~Task 2.1.2: PCAP Driver Execution [Completed]~~
 * **Target Location**: `udmi.core.diagnostics.pcap`
 * **Behavioral Specification**:
-  * Parse the downloaded JSON diagnostic profile, which contains:
+  * Parse the discovery family parameters, which contain:
     * `interface`: Target network interface.
     * `filter`: BPF filter string (e.g., `udp port 47808` to target BACnet).
-    * `max_duration_sec`: Capture duration safety limit.
+    * `max_duration_sec` / `scan_duration_sec`: Capture duration safety limit.
     * `max_bytes`: Byte limit to prevent storage/network exhaustion.
   * Spawn a thread to execute the packet capture driver (using `tcpdump` or socket sniffer).
   * **Resource Safety:** Run capture processes under low IO/CPU scheduling priorities (`nice` / `ionice`).
@@ -193,16 +192,16 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 
 ### ~~Sub-phase 2.2: Ephemeral PCAP & Streaming MQTT Transport Engine [Completed]~~
 
-#### ~~Task 2.2.1: Streaming MQTT Protocol Driver [Completed]~~
-* **Target Location**: `udmi.core.messaging.streaming` & `udmi.core.diagnostics.pcap`
+#### ~~Task 2.2.1: Streaming MQTT Protocol Driver (`StreamEvents`) [Completed]~~
+* **Target Location**: `udmi.core.messaging.streaming` & `edge/spotter/src/agent.py`
 * **Behavioral Specification**:
   * Adopt **Streaming MQTT Protocol** as the exclusive transport mechanism for packet export, avoiding edge GCS credential distribution and secret rotation hurdles.
-  * **Payload Framing**: Ephemeral packet captures are divided into lightweight broker-compliant frame events (e.g. 64KB - 128KB base64-encoded chunks) and published sequentially over `events/pcap`.
-  * **Protocol Metadata**: Each frame contains `session_id`, `chunk_index`, `total_chunks`, and chunk payload data.
-  * **RAM Buffering & Zero-Disk Constraint**: Do not write raw packets to local disk; stream chunks dynamically from RAM buffers to the MQTT client socket.
+  * **Payload Framing**: Ephemeral packet captures are divided into lightweight broker-compliant streaming frames (`StreamEvents` in base64 chunks) and published sequentially over `events/stream`.
+  * **Protocol Metadata**: Each frame contains `session_id`, `event_no` (reliable sequential index), `chunk_index`, `total_chunks`, and chunk payload data.
+  * **RAM Buffering & Zero-Disk Constraint**: Do not write raw packets to local disk; stream chunks dynamically from RAM buffers directly to the MQTT client socket.
 * **Implementation & Verification**:
-  * [agent.py](src/agent.py) - Implements chunked streaming generator emitting base64-encoded `PcapChunkEvent` objects sequentially over MQTT to `events/pcap`.
-  * [test_pcap](bin/test_pcap) - Verifies streaming MQTT packet export by subscribing to `/r/ZZ-TRI-FECTA/d/SN-1/events/pcap`, reassembling chunks, and validating PCAP headers.
+  * [agent.py](src/agent.py) - Implements chunked streaming generator emitting base64-encoded `StreamEvents` sequentially over MQTT to `events/stream`.
+  * [test_pcap](bin/test_pcap) - Verifies streaming MQTT packet export by subscribing to `/r/ZZ-TRI-FECTA/d/SN-1/events/stream`, reassembling chunks by `event_no`, and validating PCAP magic headers.
 
 ---
 
@@ -246,12 +245,12 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 * **Implementation & Verification**:
   * [test_pcap.py](tests/test_pcap.py) - Implemented pure logical unit tests mocking `subprocess.Popen` and `time.time`. Covered successful multi-chunk packet capture, duration limit expiration, byte volume cutoffs, and forced `SIGKILL` termination when `SIGTERM` times out. Verified execution via test orchestrator.
 
-#### ~~Task 2.5.2: Unit Test Suite Expansion for Agent Blob Handler (`tests/test_agent.py`) [Completed]~~
+#### ~~Task 2.5.2: Unit Test Suite Expansion for Discovery Trace Handler (`tests/test_agent.py`) [Completed]~~
 * **Target Location**: `edge/spotter/tests/test_agent.py`
 * **Behavioral Specification**:
-  * Expand [test_agent.py](tests/test_agent.py) to test `process_pcap_blob()` in isolation.
-  * Validate 128KB chunking calculations, base64 payload encoding, and `PcapChunkEvent` model data mapping.
-  * Test negative paths and edge cases: malformed/missing JSON payload profiles, invalid BPF filter strings, zero-byte packet capture output, and permission denied errors.
+  * Expand [test_agent.py](tests/test_agent.py) to test `TraceDiscoveryManager` in isolation.
+  * Validate 128KB chunking calculations, base64 payload encoding, sequence numbering (`event_no`), and `StreamEvents` model data mapping.
+  * Test negative paths and edge cases: non-trace discovery family configurations, invalid BPF filter strings, zero-byte packet capture output, and runtime exceptions.
 * **Implementation & Verification**:
   * [test_agent.py](tests/test_agent.py) - Updated to test `TraceDiscoveryManager` in isolation (aligned with Sub-phase 2.6 architecture). Validated 128KB chunking calculations, base64 data encoding, sequence numbers (`event_no`), non-trace config rejection, and negative error paths reporting Level 500 failure status upon runtime exceptions.
 
@@ -363,7 +362,7 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 * **Behavioral Specification**:
   * Implement an automated resource contention and load test script (`bin/test_resource_contention`) runnable both locally in synthetic docker integration pipelines and remotely against deployed production target nodes via declarative diagnostic triggers.
   * **Workload Scenarios**:
-    1. **Concurrent Heavy I/O & Network Capture**: Trigger active Nmap scans & BACnet sweeps on the legacy node while simultaneously running high-throughput packet captures (`pcap_capture`) on Spotter.
+    1. **Concurrent Heavy I/O & Network Capture**: Trigger active Nmap scans & BACnet sweeps on the legacy node while simultaneously running high-throughput diagnostic captures (depth: "trace") on Spotter.
     2. **CPU & Thread Starvation Probe**: Induce CPU load spikes on the legacy process while asserting that Spotter MQTT telemetry heartbeats remain punctual without dropped state updates.
     3. **File Descriptor & RAM Cgroup Leak Sweep**: Monitor File Descriptor allocations (`ulimit -n`) and memory cgroup usage during continuous PCAP streaming and discovery scans to verify zero memory bloat or FD leaks.
   * **Dual Execution Modes**:
@@ -379,7 +378,7 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 * **Behavioral Specification**:
   * Validate system resiliency when edge networks experience instability, proxy outages, or packet drops.
   * **Fault Scenarios**:
-    1. **Transient Broker Socket Disconnections During Streaming**: Interrupt broker socket connections mid-stream during PCAP chunk streaming to verify reconnect backoff recovery and sequential resumption over `events/pcap`.
+    1. **Transient Broker Socket Disconnections During Streaming**: Interrupt broker socket connections mid-stream during PCAP chunk streaming to verify reconnect backoff recovery and sequential resumption over `events/stream`.
     2. **Transient Broker Socket Disconnection During OTA**: Force periodic broker socket disconnects during OTA chunked wheel transfers to verify resilient download retries and backoff.
     3. **High Latency / Loss Networks**: Inject packet loss and latency via `tc/netem` on bridge networks to ensure heartbeat threads do not block or cause supervisor timeouts.
 * **Implementation & Verification**:
@@ -391,7 +390,7 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
   * Establish safe micro-audit probes that can be executed directly on deployed production target instances without disrupting discovery operations or host stability:
     1. **In-Container Sandbox Self-Test (`self_test.py`)**: Runs post-OTA deployment in <10 seconds. Verifies module imports, raw socket access, and credential file sanity before promoting staged virtual environments (`/opt/spotter/staging/venv`).
     2. **Declarative On-Device Resource Audit (`system.diagnostics.resource_audit`)**: Triggered via MQTT config update. Performs a timed non-destructive resource sweep and streams cgroup memory profiles, CPU saturation, file descriptor allocation (`ulimit -n`), and telemetry latencies to cloud telemetry.
-    3. **Streaming MQTT Micro-Probe**: Triggers micro packet captures (~5 packets) to verify streaming publish health over `events/pcap` on live OT networks without storage impact.
+    3. **Streaming MQTT Micro-Probe**: Triggers micro packet captures (~5 packets) to verify streaming publish health over `events/stream` on live OT networks without storage impact.
   * **Test Location Target Matrix**:
     | Test Category | Local Integration Pipeline | Deployed Production Target |
     | :--- | :---: | :---: |

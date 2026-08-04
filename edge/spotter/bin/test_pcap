@@ -4,14 +4,14 @@ set -e
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
 WORKSPACE_DIR=$(realpath "$SCRIPT_DIR/../../../")
 
-if [[ "$1" == "--help" || "$1" == "-h" ]]; then
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "Usage: ./test_pcap"
     echo ""
     echo "Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming:"
     echo "1. Starts Mosquitto broker and udmi-spotter container."
-    echo "2. Generates dummy traffic and publishes a pcap_capture blobset config."
-    echo "3. Asserts chunked MQTT streaming transmission and parses PCAP magic headers."
-    echo "4. Verifies success status reports in the container's UDMI state."
+    echo "2. Generates dummy traffic and publishes a Discovery TRACE configuration (depth: 'trace')."
+    echo "3. Asserts sequential StreamEvents chunks over events/stream and parses PCAP magic headers."
+    echo "4. Verifies Level 200 status reports in the container's discovery state."
     echo ""
     echo "Prerequisites:"
     echo "- Requires local Docker daemon running."
