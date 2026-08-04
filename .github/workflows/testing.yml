@@ -667,7 +667,7 @@ jobs:
           pip install -r edge/spotter/requirements.txt
       - name: Unit Tests
         run: |
-          echo "Running pure logical unit test suites for Spotter Agent config mapping, Discovery TRACE routing, OTA staging handlers, and observability metrics..."
+          echo "Running unit test suites for Spotter Agent..."
           edge/spotter/bin/run_spotter_tests unit
       - name: Resource Contention & Circuit Breaker Tests
         run: |
