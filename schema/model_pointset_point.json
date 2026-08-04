@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.2",
+  "$udmi_version": "1.5.7",
   "title": "Point Pointset Model",
   "description": "Information about a specific point name of the device.",
   "type": "object",
@@ -73,7 +73,7 @@
     "url": {
       "description": "Complete resolved URL of this point as determined by the gateway and ref blocks",
       "type": "string",
-      "examples": ["bacnet://1234/AV:1"]
+      "examples": ["bacnet://1234/AV/1"]
     },
     "adjunct": {
       "type": "object",

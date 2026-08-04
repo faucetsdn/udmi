@@ -5,15 +5,16 @@ UDMI_ROOT=$(dirname $0)/..
 
 source $UDMI_ROOT/etc/shell_common.sh
 
-[[ $# == 1 ]] || usage project_spec
+[[ $# == 1 || $# == 2 ]] || usage project_spec [target]
 
 project_spec=$1
-shift
+target=${2:-}
+shift 1
 
 if [[ $project_spec =~ //mqtt/ ]]; then
-    $UDMI_ROOT/bin/pull_mqtt $project_spec
+    $UDMI_ROOT/bin/pull_mqtt $project_spec | $UDMI_ROOT/bin/pull_save $target
 elif [[ $project_spec =~ //pubsub/ ]]; then
-    $UDMI_ROOT/bin/pull_pubsub $project_spec
+    $UDMI_ROOT/bin/pull_pubsub $project_spec | $UDMI_ROOT/bin/pull_save $target
 else
     fail unknown project spec type $project_spec
 fi

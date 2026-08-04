@@ -18,9 +18,9 @@
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
-        "ref": "BV:11#present_value",
+        "ref": "BV/11#present_value",
         "units": "No-units",
-        "url": "bacnet://582312/BV:11#present_value"
+        "url": "bacnet://582312/BV/11#present_value"
       },
       "filter_differential_pressure": {
         "units": "Bars"
@@ -52,5 +52,5 @@
     }
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2"
+  "version": "1.5.7"
 }

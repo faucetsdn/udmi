@@ -1,5 +1,5 @@
 {
-  "version": "1.5.2",
+  "version": "1.5.7",
   "timestamp": "2018-08-26T21:39:29.364Z",
   "system": {
     "name": "Llama Slide #3",
@@ -35,7 +35,7 @@
   },
   "cloud": {
     "auth_type": "ES256",
-    "connection_type": "DIRECT"
+    "resource_type": "DIRECT"
   },
   "pointset": {
     "points": {

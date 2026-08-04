@@ -1,5 +1,5 @@
 {
-  "$udmi_version": "1.5.3",
+  "$udmi_version": "1.5.7",
   "title": "Link Externals Site",
   "description": "Information about how this site links to a specific external model",
   "type": "object",

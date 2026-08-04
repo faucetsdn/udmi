@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$UDMI_ROOT"
+
+echo "=== Running pull test suite ==="
+
+tests/test_pull_save.sh
+tests/test_pull_mqtt.sh
+tests/test_pull_pubsub.sh
+
+echo "=== All pull tests passed successfully! ==="

@@ -19,7 +19,7 @@ Every generated URL consists of three primary logical components:
 | :--- | :--- | :--- | :--- |
 | **`family`** | The protocol/address family. | `gateway.target.family` | `bacnet` or `modbus` |
 | **`addr`** | The physical device address or host on that family. | `gateway.target.addr` | `1234` or `modbus_rtu_1` |
-| **`ref`** | The relative reference identifier of the data point. | `pointset.points.<point_name>.ref` | `AV:1` or `1/101?type=BOOLEAN` |
+| **`ref`** | The relative reference identifier of the data point. | `pointset.points.<point_name>.ref` | `AV/1` or `1/101?type=BOOLEAN` |
 
 ---
 
@@ -50,8 +50,8 @@ During normalization, the `registrar` tool compiles the fully resolved URL for e
   "pointset": {
     "points": {
       "fan_run_status": {
-        "ref": "BI:1",
-        "url": "bacnet://1234/BI:1"
+        "ref": "BI/1",
+        "url": "bacnet://1234/BI/1"
       }
     }
   }
@@ -69,7 +69,7 @@ In this pattern, a shared device/gateway target definition provides the default 
 
 **This is the required pattern when a concrete gateway target family (e.g. `"bacnet"`, `"modbus"`) is specified.**
 
-#### Example JSON Metadata (Combined Style)
+#### Example JSON Metadata
 ```json
 {
   "gateway": {
@@ -81,18 +81,18 @@ In this pattern, a shared device/gateway target definition provides the default 
   "pointset": {
     "points": {
       "fan_run_status": {
-        "ref": "BI:1"
+        "ref": "BI/1"
       },
       "supply_air_temp": {
-        "ref": "AV:2"
+        "ref": "AV/2"
       }
     }
   }
 }
 ```
 **Generated & Validated URLs:**
-* `fan_run_status`: `bacnet://1234/BI:1`
-* `supply_air_temp`: `bacnet://1234/AV:2`
+* `fan_run_status`: `bacnet://1234/BI/1`
+* `supply_air_temp`: `bacnet://1234/AV/2`
 
 ---
 
@@ -114,18 +114,18 @@ Each absolute reference is validated under the concrete protocol family provider
   "pointset": {
     "points": {
       "fan_run_status": {
-        "ref": "bacnet://1234/BI:1"
+        "ref": "bacnet://1234/BI/1"
       },
       "supply_air_temp": {
-        "ref": "bacnet://1234/AV:2"
+        "ref": "bacnet://1234/AV/2"
       }
     }
   }
 }
 ```
 **Generated & Validated URLs:**
-* `fan_run_status`: `bacnet://1234/BI:1` (Validated under `"bacnet"` due to the `bacnet://` prefix)
-* `supply_air_temp`: `bacnet://1234/AV:2` (Validated under `"bacnet"` due to the `bacnet://` prefix)
+* `fan_run_status`: `bacnet://1234/BI/1` (Validated under `"bacnet"` due to the `bacnet://` prefix)
+* `supply_air_temp`: `bacnet://1234/AV/2` (Validated under `"bacnet"` due to the `bacnet://` prefix)
 
 ---
 
@@ -138,8 +138,8 @@ An address family representing BACnet devices and objects.
 * **Combined Example:**
   * **Gateway Target Family**: `bacnet`
   * **Gateway Target Addr**: `1234`
-  * **Point Ref**: `AV:100#present_value`
-  * **Resulting URL**: `bacnet://1234/AV:100#present_value`
+  * **Point Ref**: `AV/100#present_value`
+  * **Resulting URL**: `bacnet://1234/AV/100#present_value`
 
 ---
 
@@ -174,18 +174,18 @@ In the example below, `point_a` resides on BACnet device `1234`, while `point_b`
   "pointset": {
     "points": {
       "point_a": {
-        "ref": "1234/AV:1"
+        "ref": "1234/AV/1"
       },
       "point_b": {
-        "ref": "5678/AV:1"
+        "ref": "5678/AV/1"
       }
     }
   }
 }
 ```
 **Generated & Validated URLs:**
-* `point_a`: `bacnet://1234/AV:1`
-* `point_b`: `bacnet://5678/AV:1`
+* `point_a`: `bacnet://1234/AV/1`
+* `point_b`: `bacnet://5678/AV/1`
 
 ---
 
@@ -203,7 +203,7 @@ In the example below, the device collects data from a BACnet device (`1234`) and
   "pointset": {
     "points": {
       "room_temperature": {
-        "ref": "bacnet://1234/AI:1"
+        "ref": "bacnet://1234/AI/1"
       },
       "fan_power": {
         "ref": "modbus://2/3/40001/1?type=INT16&network=modbus_rtu_1"
@@ -213,5 +213,5 @@ In the example below, the device collects data from a BACnet device (`1234`) and
 }
 ```
 **Generated & Validated URLs:**
-* `room_temperature`: `bacnet://1234/AI:1` (Validated under `"bacnet"` due to the `bacnet://` prefix)
+* `room_temperature`: `bacnet://1234/AI/1` (Validated under `"bacnet"` due to the `bacnet://` prefix)
 * `fan_power`: `modbus://2/3/40001/1?type=INT16&network=modbus_rtu_1` (Validated under `"modbus"` due to the `modbus://` prefix)

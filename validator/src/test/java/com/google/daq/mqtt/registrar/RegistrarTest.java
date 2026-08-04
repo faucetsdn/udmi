@@ -19,6 +19,7 @@ import static com.google.udmi.util.SiteModel.MOCK_CLEAN;
 import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -30,6 +31,7 @@ import com.google.daq.mqtt.util.IotMockProvider.ActionType;
 import com.google.daq.mqtt.util.IotMockProvider.MockAction;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +40,8 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import udmi.schema.CloudModel;
+import udmi.schema.FamilyLocalnetModel;
+import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 
@@ -219,6 +223,31 @@ public class RegistrarTest {
     assertEquals("bind devices", ImmutableSet.of("AHU-22"),
         bindActions.stream().map(action -> action.deviceId).collect(
             Collectors.toSet()));
+  }
+
+  @Test
+  public void scanAddrMismatchHandlingTest() {
+    Registrar registrar = getRegistrar(ImmutableList.of());
+    registrar.execute(() -> {
+      Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
+      LocalDevice device = localDevices.get(DEVICE_ID);
+      Metadata metadata = device.getMetadata();
+      if (metadata.localnet == null) {
+        metadata.localnet = new LocalnetModel();
+      }
+      if (metadata.localnet.families == null) {
+        metadata.localnet.families = new HashMap<>();
+      }
+      FamilyLocalnetModel familyModel = new FamilyLocalnetModel();
+      familyModel.addr = "2C:58:B9:6C:7A:88"; // Uppercase MAC address
+      metadata.localnet.families.put("ether", familyModel);
+    });
+
+    LocalDevice device = registrar.getWorkingDevices().get(DEVICE_ID);
+    assertNotNull("Generated config should exist despite scan_addr validation error",
+        device.getSettings().config);
+    assertTrue("Device should record schema violation for scan_addr mismatch",
+        device.hasCategory(ExceptionCategory.schema));
   }
 
   private Boolean isNotBlocking(MockAction action) {

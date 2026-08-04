@@ -13,7 +13,7 @@
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
-        "ref": "BV:11#present_value",
+        "ref": "BV/11#present_value",
         "units": "No-units"
       },
       "filter_differential_pressure": {
@@ -32,5 +32,5 @@
     "operation": {}
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.3"
+  "version": "1.5.7"
 }

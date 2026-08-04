@@ -27,6 +27,11 @@ export UDMI_NO_SUDO=true
 export HOST_IP="127.0.0.1"
 export MOSQUITTO_LOG_PATH="$(pwd)/var/mosquitto/log/mosquitto.log"
 
+PUBSUB_PORT=${PUBSUB_PORT:-8085}
+PUBSUB_HOST_PORT="$HOST_IP:$PUBSUB_PORT"
+export PUBSUB_EMULATOR_HOST="$PUBSUB_HOST_PORT"
+PUBSUB_BASE_URL="http://$PUBSUB_HOST_PORT"
+
 SITE_MODEL="${1:-sites/udmi_site_model}"
 if [ ! -d "$SITE_MODEL" ]; then
   echo "Error: Site model directory missing at $SITE_MODEL. Please run bin/clone_model first or pass a valid site model path." >&2
@@ -90,8 +95,9 @@ export registry_id="$REGISTRY_ID"
 
 # 2. Check Base Infrastructure Services (Etcd & Mosquitto)
 echo "Checking base infrastructure services..."
-if ! nc -z 127.0.0.1 2379 &>/dev/null; then
-  echo "Error: Etcd is not running on 127.0.0.1:2379. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost' first." >&2
+ETCD_PORT=${ETCD_PORT:-2379}
+if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
+  echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost' first." >&2
   exit 1
 fi
 
@@ -113,7 +119,7 @@ for device_dir in "$SITE_MODEL"/devices/*; do
 done
 
 # 9. Start Pub/Sub Emulator if not running
-if ! nc -z 127.0.0.1 8085 &>/dev/null; then
+if ! nc -z "$HOST_IP" "$PUBSUB_PORT" &>/dev/null; then
   echo "Checking native Pub/Sub Emulator component availability..."
   if ! gcloud --quiet beta emulators pubsub env-init >/dev/null 2>&1; then
     echo "Native pubsub-emulator component missing; attempting automated package or component install..."
@@ -131,14 +137,14 @@ if ! nc -z 127.0.0.1 8085 &>/dev/null; then
 
   if gcloud --quiet beta emulators pubsub env-init >/dev/null 2>&1; then
     echo "Starting native gcloud Pub/Sub emulator host process..."
-    gcloud --quiet beta emulators pubsub start --host-port=127.0.0.1:8085 --project=udmis > out/pubsub_emulator.log 2>&1 < /dev/null &
+    gcloud --quiet beta emulators pubsub start --host-port="$PUBSUB_HOST_PORT" --project=udmis > out/pubsub_emulator.log 2>&1 < /dev/null &
     PUBSUB_PID=$!
   else
     echo "Native Pub/Sub emulator unavailable or administratively disabled; falling back to ephemeral standalone emulator container..."
     PUBSUB_PID=""
     if command -v docker >/dev/null 2>&1; then
       docker rm -f pubsub-emulator >/dev/null 2>&1 || true
-      docker run -d --name pubsub-emulator -p 8085:8085 gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 > out/pubsub_docker.log 2>&1
+      docker run -d --name pubsub-emulator -p "$PUBSUB_PORT:8085" gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 > out/pubsub_docker.log 2>&1
     else
       echo "Error: Neither native gcloud pubsub-emulator nor Docker is available to run the Pub/Sub emulator." >&2
       exit 1
@@ -148,7 +154,7 @@ if ! nc -z 127.0.0.1 8085 &>/dev/null; then
   echo "Waiting for Pub/Sub Emulator to be ready..."
   timeout=30
   while [ $timeout -gt 0 ]; do
-    if curl -s -o /dev/null "http://127.0.0.1:8085/v1/projects/udmis/topics"; then
+    if curl -s -o /dev/null "$PUBSUB_BASE_URL/v1/projects/udmis/topics"; then
       echo "Pub/Sub Emulator is ready."
       break
     fi
@@ -163,60 +169,60 @@ fi
 
 # 10. Create Topics and Subscriptions
 echo "Creating topics in Pub/Sub Emulator..."
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_target" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_state" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_reflect" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_control" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/topics/udmi_reply" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_target" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_state" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_reflect" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_control" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_reply" >/dev/null || true
 
 echo "Creating subscriptions in Pub/Sub Emulator..."
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-udmis" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-udmis" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_target-udmis" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_target-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-provision" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_target-provision" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_target-provision" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_target-provision" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_state-udmis" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_state-udmis" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_state-udmis" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_state-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_state"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reflect-udmis" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reflect-udmis" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reflect-udmis" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reflect-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reflect"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_control-udmis" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_control-udmis" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_control-udmis" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_control-udmis" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_control"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply-bridge" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply-bridge" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reply-bridge" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reply-bridge" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reply"}' >/dev/null || true
 
-curl -s -X DELETE "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" >/dev/null || true
-curl -s -X PUT "http://127.0.0.1:8085/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" \
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" >/dev/null || true
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_reply%2Bdebug" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_reply"}' >/dev/null || true
 
 echo "Verifying topics in Pub/Sub Emulator..."
-curl -f -v "http://127.0.0.1:8085/v1/projects/udmis/topics"
+curl -f -v "$PUBSUB_BASE_URL/v1/projects/udmis/topics"
 echo
 echo "Verifying subscriptions in Pub/Sub Emulator..."
-curl -f -v "http://127.0.0.1:8085/v1/projects/udmis/subscriptions"
+curl -f -v "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions"
 echo
 
 # 11. Start Host UDMIS (Pub/Sub Mode)
 echo "Starting Host UDMIS (Pub/Sub Mode)..."
 export GCP_PROJECT=udmis
 export ETCD_CLUSTER=127.0.0.1
-export PUBSUB_EMULATOR_HOST=127.0.0.1:8085
+export PUBSUB_EMULATOR_HOST="$PUBSUB_HOST_PORT"
 export UDMI_NAMESPACE=""
 
 # Ensure the var directory exists and contains the required deployed_version.json
@@ -328,7 +334,7 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --mqtt_username=rocket \
   --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:2379 \
+  --etcd_target=http://127.0.0.1:$ETCD_PORT \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_events.log 2>&1 &
@@ -347,7 +353,7 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --mqtt_username=rocket \
   --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:2379 \
+  --etcd_target=http://127.0.0.1:$ETCD_PORT \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_state.log 2>&1 &
@@ -366,7 +372,7 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --mqtt_username=rocket \
   --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:2379 \
+  --etcd_target=http://127.0.0.1:$ETCD_PORT \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_reflect.log 2>&1 &
@@ -471,14 +477,116 @@ echo "Verifying etcd state..."
 udmis/bin/etcdctl version
 
 echo "All keys in etcd:"
-udmis/bin/etcdctl get --prefix "" || true
+udmis/bin/etcdctl get --prefix ""
 
 echo "STATE_VAL output: $STATE_VAL"
 
-if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
-  echo "Verification PASSED"
-  TEST_PASSED=true
-else
-  echo "Verification FAILED"
+echo "=================================================================="
+echo "Verifying Registry & Device Discovery (ImplicitIotAccessProvider)"
+echo "=================================================================="
+
+# 1. Verify Registry Discovery in etcd
+echo "Querying etcd key ':registries' for registry discovery..."
+REGISTRIES_VAL=$(udmis/bin/etcdctl get --print-value-only ":registries")
+echo "Discovered Registries in etcd: $REGISTRIES_VAL"
+
+if [[ "$REGISTRIES_VAL" != *"$REGISTRY_ID"* ]]; then
+  echo "Error: Registry $REGISTRY_ID not discovered in etcd ':registries' index!" >&2
   exit 1
 fi
+echo "Registry discovery PASSED for registry: $REGISTRY_ID"
+
+# 2. Verify Device Discovery in etcd
+echo "Querying etcd for devices discovered under registry '$REGISTRY_ID'..."
+DEVICES_VAL=$(udmis/bin/etcdctl get --prefix "/r/$REGISTRY_ID/d/")
+echo "Discovered Devices in etcd under $REGISTRY_ID:"
+echo "$DEVICES_VAL"
+
+if [[ "$DEVICES_VAL" != *"$DEVICE_ID"* ]]; then
+  echo "Error: Device $DEVICE_ID not discovered under registry $REGISTRY_ID in etcd!" >&2
+  exit 1
+fi
+echo "Device discovery PASSED for device: $DEVICE_ID under registry: $REGISTRY_ID"
+
+# 3. Trigger CloudQuery discovery (depth: details) and capture published DiscoveryEvents payloads
+echo "Subscribing probe to capture DiscoveryEvents from Pub/Sub topic 'udmi_target'..."
+curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe" \
+  -H "Content-Type: application/json" \
+  -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null
+
+echo "Triggering CloudQuery discovery (depth: details) via Pub/Sub control topic..."
+QUERY_PAYLOAD=$(echo -n '{"generation":"'$(date --utc +%Y-%m-%dT%H:%M:%SZ)'","depth":"details"}' | base64 -w0)
+
+PUB_RES=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/topics/udmi_control:publish" \
+  -H "Content-Type: application/json" \
+  -d "{\"messages\":[{\"data\":\"$QUERY_PAYLOAD\",\"attributes\":{\"subFolder\":\"cloud\",\"subType\":\"query\"}}]}")
+
+if echo "$PUB_RES" | grep -q '"error"'; then
+  echo "Error: Failed to publish CloudQuery to Pub/Sub emulator: $PUB_RES" >&2
+  exit 1
+fi
+
+sleep 3
+
+# Pull discovery messages from probe subscription
+PROBE_PULL=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe:pull" \
+  -H "Content-Type: application/json" \
+  -d '{"maxMessages":30}')
+
+REGISTRY_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+  .receivedMessages[]? | .message | 
+  select(.data | @base64d | fromjson | .registries != null) | 
+  .data | @base64d | fromjson')
+
+DEVICE_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+  .receivedMessages[]? | .message | 
+  select(.data | @base64d | fromjson | .devices != null) | 
+  .data | @base64d | fromjson')
+
+DEVICE_DETAILS_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+  .receivedMessages[]? | .message | 
+  select(.attributes.deviceId == "'"$DEVICE_ID"'") | 
+  .data | @base64d | fromjson')
+
+if [ -n "$REGISTRY_DISCOVERY_PAYLOAD" ] && [ "$REGISTRY_DISCOVERY_PAYLOAD" != "null" ]; then
+  echo "=================================================================="
+  echo "Registry Discovery Payload (no deviceID/registryID attributes):"
+  echo "=================================================================="
+  echo "$REGISTRY_DISCOVERY_PAYLOAD" | jq .
+fi
+
+if [ -n "$DEVICE_DISCOVERY_PAYLOAD" ] && [ "$DEVICE_DISCOVERY_PAYLOAD" != "null" ]; then
+  echo "=================================================================="
+  echo "Device Discovery Payload (deviceRegistryId=$REGISTRY_ID):"
+  echo "=================================================================="
+  echo "$DEVICE_DISCOVERY_PAYLOAD" | jq .
+fi
+
+if [ -n "$DEVICE_DETAILS_PAYLOAD" ] && [ "$DEVICE_DETAILS_PAYLOAD" != "null" ]; then
+  echo "=================================================================="
+  echo "Device Details Discovery Payload for $DEVICE_ID:"
+  echo "=================================================================="
+  echo "$DEVICE_DETAILS_PAYLOAD" | jq .
+  echo "=================================================================="
+fi
+
+if grep -q "Starting CloudQuery" out/udmis_host.log 2>/dev/null && \
+   grep -q "Project has .* registries" out/udmis_host.log 2>/dev/null && \
+   grep -q "Listed registry $REGISTRY_ID with .* devices" out/udmis_host.log 2>/dev/null && \
+   grep -q "Detailed device $REGISTRY_ID/$DEVICE_ID" out/udmis_host.log 2>/dev/null; then
+  echo "CloudQuery discovery traces from UDMIS:"
+  grep -E "Starting CloudQuery|Project has .* registries|Listed registry|Detailed device" out/udmis_host.log 2>/dev/null | sed 's/^/  /'
+  echo "CloudQuery discovery PASSED in UDMIS logs (Registries, Devices, and Device Details for $DEVICE_ID enumerated)."
+else
+  echo "Error: CloudQuery discovery execution logs not found in out/udmis_host.log!" >&2
+  exit 1
+fi
+
+if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
+  echo "Integration Test PASSED"
+  TEST_PASSED=true
+else
+  echo "Integration Test FAILED"
+  exit 1
+fi
+

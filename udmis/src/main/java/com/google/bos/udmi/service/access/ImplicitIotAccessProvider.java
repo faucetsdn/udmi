@@ -25,6 +25,7 @@ import static udmi.schema.CloudModel.ModelOperation.DELETE;
 import static udmi.schema.CloudModel.ModelOperation.READ;
 import static udmi.schema.CloudModel.Resource_type.DIRECT;
 import static udmi.schema.CloudModel.Resource_type.GATEWAY;
+import static udmi.schema.CloudModel.Resource_type.PROXIED;
 
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.StateUpdate;
@@ -87,6 +88,8 @@ import udmi.schema.IotAccess.IotProvider;
  * still needs to enforce ACLs based on username.</li>
  * <li><code>disable_logging</code>: If set to true, disables tailing the
  * mosquitto log file.</li>
+ * <li><code>broker_auth</code>: If set to false, disables all requests to
+ * MosquittoDynamicSecurityService (defaults to true).</li>
  * <li><code>mosquitto_dynsec_min_interval_ms</code>: Minimum interval (in ms)
  * between publishing dynamic security command batches.</li>
  * <li><code>mosquitto_dynsec_jitter_ratio</code>: Jitter ratio applied to the minimum
@@ -97,6 +100,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private static final String CONFIG_VER_KEY = "config_ver";
   private static final String DISABLE_LOGGING_KEY = "disable_logging";
+  private static final String BROKER_AUTH_KEY = "broker_auth";
   private static final String MOSQUITTO_DYNSEC_MIN_INTERVAL_MS_KEY =
       "mosquitto_dynsec_min_interval_ms";
   private static final String MOSQUITTO_DYNSEC_JITTER_RATIO_KEY =
@@ -131,6 +135,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final int MAX_QUEUE_RETRIES = 5;
   private static final long QUEUE_RETRY_DELAY_MS = 1000;
   private final boolean enabled;
+  private final boolean brokerAuth;
   private final String usePassword;
   private final ConnectionBroker broker;
   private final Future<Void> connLogger;
@@ -154,6 +159,18 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
     usePassword = options.get(USE_PASSWORD_KEY);
+    // The BrokerAuth option defines whether the broker is intended to enforce ACLs,
+    // When false, the device registration process will not register ACL's into Mosquitto
+    // via the Mosquitto Dynamic Security plugin.
+    //
+    // This setting defaults to true, and should only be set to false with care and only
+    // if:
+    // - A different plugin is used for enforcing ACLs at the broker, which could use the
+    //   etcd backing database
+    // - Alternative ACL's are desired, e.g. to allow devices to subscribe to data from
+    //   eachother
+    // - A proxy is providing ACL enforcement
+    brokerAuth = !FALSE_OPTION.equalsIgnoreCase(options.get(BROKER_AUTH_KEY));
 
     if (iotAccess.endpoint != null) {
       endpointConfig = deepCopy(iotAccess.endpoint);
@@ -194,7 +211,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         .orElseGet(() -> options.get(MOSQUITTO_DYNSEC_JITTER_KEY));
     Double jitterRatio = ifNotNullGet(jitterStr, Double::parseDouble);
     broker = new MosquittoBroker(
-        this, endpointConfig, disableLogging, minPublishIntervalMs, jitterRatio);
+        this, endpointConfig, disableLogging, brokerAuth, minPublishIntervalMs, jitterRatio);
 
     connLogger = broker.addEventListener(CLIENT_PREFIX, this::brokerHandler);
   }
@@ -229,13 +246,16 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       if (current % 50 == 0 && progress != null) {
         progress.accept(format("Binding %d/%d devices to %s...", current, total, gatewayId));
       }
-      CompletableFuture<Void> bindFuture = withQueueRetry(() -> broker.bindGateway(
-          clientId(registryId, gatewayId),
-          clientId(registryId, deviceId)));
+      CompletableFuture<Void> bindFuture = brokerAuth
+          ? withQueueRetry(() -> broker.bindGateway(
+              clientId(registryId, gatewayId),
+              clientId(registryId, deviceId)))
+          : CompletableFuture.completedFuture(null);
       CompletableFuture<Void> chainedFuture = bindFuture.whenComplete((result, ex) -> {
         if (ex == null) {
           registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
           registryDeviceRef(registryId, deviceId).put(BIND_STATUS_KEY, "bound");
+          registryDeviceRef(registryId, deviceId).put(RESOURCE_TYPE_PROPERTY, PROXIED.toString());
           gatewayBoundRef(registryId, gatewayId).put(deviceId, "bound");
         } else {
           registryDeviceRef(registryId, deviceId).put(BOUND_TO_KEY, gatewayId);
@@ -262,15 +282,19 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
       registryDeviceRef(registryId, deviceId).delete(BIND_STATUS_KEY);
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
-      futures.add(withQueueRetry(() -> broker.unbindGateway(
-          clientId(registryId, gatewayId),
-          clientId(registryId, deviceId))));
+      if (brokerAuth) {
+        futures.add(withQueueRetry(() -> broker.unbindGateway(
+            clientId(registryId, gatewayId),
+            clientId(registryId, deviceId))));
+      }
     });
     CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
   }
 
   private void blockDevice(String registryId, String deviceId, CloudModel cloudModel) {
-    withQueueRetry(() -> broker.authorize(clientId(registryId, deviceId), null)).join();
+    if (brokerAuth) {
+      withQueueRetry(() -> broker.authorize(clientId(registryId, deviceId), null)).join();
+    }
     registryDeviceRef(registryId, deviceId).put(BLOCKED_PROPERTY, booleanString(true));
   }
 
@@ -325,7 +349,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     properties.entries().keySet().forEach(properties::delete);
     registryDevicesRef(registryId).delete(deviceId);
     CompletableFuture<Void> f1 = null;
-    if (gatewayId == null) {
+    if (gatewayId == null && brokerAuth) {
       info("Revoking broker credentials/authorization for device %s/%s", registryId, deviceId);
       f1 = withQueueRetry(() -> broker.authorize(clientId(registryId, deviceId), null));
     }
@@ -335,8 +359,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       info("Unbinding device %s/%s from gateway %s in database and broker",
           registryId, deviceId, gatewayId);
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
-      f2 = withQueueRetry(() -> broker.unbindGateway(clientId(registryId, gatewayId),
-          clientId(registryId, deviceId)));
+      if (brokerAuth) {
+        f2 = withQueueRetry(() -> broker.unbindGateway(clientId(registryId, gatewayId),
+            clientId(registryId, deviceId)));
+      }
     }
     if (f1 != null) {
       info("Waiting for broker credential revocation to complete for %s/%s...",
@@ -366,10 +392,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         gatewayBoundRef(registryId, gatewayId).delete(deviceId);
 
         // Unbind in the broker
-        info("Queueing unbind of device %s from gateway %s in broker...", deviceId, gatewayId);
-        futures.add(withQueueRetry(() -> broker.unbindGateway(
-            clientId(registryId, gatewayId),
-            clientId(registryId, deviceId))));
+        if (brokerAuth) {
+          info("Queueing unbind of device %s from gateway %s in broker...", deviceId, gatewayId);
+          futures.add(withQueueRetry(() -> broker.unbindGateway(
+              clientId(registryId, gatewayId),
+              clientId(registryId, deviceId))));
+        }
       });
       if (!futures.isEmpty()) {
         info("Waiting for %d unbind operations to complete for gateway %s...",
@@ -384,10 +412,15 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private String resolveDeviceNumId(String registryId, String deviceId, CloudModel cloudModel) {
+    return ofNullable(registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY))
+        .orElseGet(() -> ofNullable(cloudModel.num_id)
+            .orElseGet(() -> hashedDeviceId(registryId, deviceId)));
+  }
+
   private CloudModel getReply(String registryId, String deviceId, CloudModel request,
       String deleteId) {
-    String numId = deleteId != null ? deleteId
-        : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+    String numId = deleteId != null ? deleteId : resolveDeviceNumId(registryId, deviceId, request);
     CloudModel reply = new CloudModel();
     reply.operation = requireNonNull(request.operation, "missing operation");
     reply.num_id = requireNonNull(numId, "missing num_id");
@@ -405,7 +438,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         .collect(Collectors.toSet());
     properties.update(puts, deletes);
 
-    if (map.containsKey(AUTH_PASSWORD_PROPERTY)) {
+    if (map.containsKey(AUTH_PASSWORD_PROPERTY) && brokerAuth) {
       String password = map.get(AUTH_PASSWORD_PROPERTY);
       boolean isDefaultPass = usePassword != null && usePassword.equals(password);
       boolean hasAuthInfo = map.containsKey(AUTH_KEY_PROPERTY)
@@ -494,7 +527,28 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return properties;
   }
 
+  private synchronized void addRegistryToDatabase(String registryId) {
+    if (registryId == null || registryId.trim().isEmpty()) {
+      return;
+    }
+    DataRef rootRef = database.ref();
+    try (AutoCloseable lock = rootRef.lock()) {
+      String current = rootRef.get(REGISTRIES_KEY);
+      Set<String> registrySet = current == null || current.trim().isEmpty()
+          ? new java.util.HashSet<>()
+          : new java.util.HashSet<>(Arrays.asList(current.split(",")));
+      if (registrySet.add(registryId.trim())) {
+        rootRef.put(REGISTRIES_KEY, String.join(",", registrySet));
+        info("Added registry %s to database registry tracking", registryId);
+      }
+    } catch (Exception e) {
+      warn("Failed updating database registry tracking for %s: %s",
+          registryId, friendlyStackTrace(e));
+    }
+  }
+
   private String touchDeviceEntry(String registryId, String deviceId) {
+    addRegistryToDatabase(registryId);
     String timestamp = isoConvert();
     registryDevicesRef(registryId).put(deviceId, timestamp);
     return timestamp;
@@ -633,6 +687,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public Set<String> getRegistries() {
+    return getRegistriesForRegion(DEFAULT_REGION);
+  }
+
+  @Override
   public Set<String> getRegistriesForRegion(String region) {
     if (region == null) {
       return ImmutableSet.of(DEFAULT_REGION);
@@ -685,8 +744,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     if (authType != null) {
       cloudModel.auth_type = CloudModel.Auth_type.fromValue(authType);
     }
-    cloudModel.resource_type = ofNullable(properties.get(RESOURCE_TYPE_PROPERTY))
-        .map(Resource_type::fromValue).orElse(DIRECT);
+    String boundTo = properties.get(BOUND_TO_KEY);
+    cloudModel.resource_type = boundTo != null ? PROXIED
+        : ofNullable(properties.get(RESOURCE_TYPE_PROPERTY))
+            .map(Resource_type::fromValue).orElse(DIRECT);
     cloudModel.blocked = "true".equals(properties.get(BLOCKED_PROPERTY)) ? true : null;
     cloudModel.updated_time = JsonUtil.getDate(properties.get(CREATED_AT_PROPERTY));
     return cloudModel;
@@ -713,11 +774,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       Consumer<String> progress) {
     ModelOperation operation = cloudModel.operation;
     Resource_type type = ofNullable(cloudModel.resource_type).orElse(Resource_type.DIRECT);
-    checkState(type == DIRECT || type == GATEWAY, "unexpected resource type " + type);
+    checkState(type == DIRECT || type == GATEWAY || type == PROXIED,
+        "unexpected resource type " + type);
     info("Processing modelDevice %s for %s/%s (type: %s)", operation, registryId, deviceId, type);
     try {
       String deleteNumId = operation != DELETE ? null
-          : registryDeviceRef(registryId, deviceId).get(NUM_ID_PROPERTY);
+          : resolveDeviceNumId(registryId, deviceId, cloudModel);
       switch (operation) {
         case CREATE -> createDevice(registryId, deviceId, cloudModel);
         case UPDATE -> updateDevice(registryId, deviceId, cloudModel);
@@ -737,16 +799,38 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private String getTargetRegistryId(String registryId, String deviceId) {
+    if (deviceId != null && !deviceId.isEmpty()
+        && (registryId == null || reflectRegistry.equals(registryId))) {
+      return deviceId;
+    }
+    if (registryId != null && !registryId.isEmpty()) {
+      return registryId;
+    }
+    if (deviceId != null && !deviceId.isEmpty()) {
+      return deviceId;
+    }
+    throw new IllegalArgumentException("Unspecified registry ID for modelRegistry");
+  }
+
   @Override
   public CloudModel modelRegistry(String registryId, String deviceId, CloudModel cloudModel) {
     ModelOperation operation = cloudModel.operation;
+    String targetRegistry = getTargetRegistryId(registryId, deviceId);
     try {
-      // TODO: Make this update the saved metadata for the registry.
+      if (operation == ModelOperation.CREATE || operation == ModelOperation.UPDATE) {
+        addRegistryToDatabase(targetRegistry);
+        if (cloudModel.metadata != null) {
+          DataRef regRef = database.ref().registry(targetRegistry);
+          cloudModel.metadata.forEach(regRef::put);
+        }
+      }
       return getReply(registryId, deviceId, cloudModel, "registry");
     } catch (Exception e) {
-      throw new RuntimeException("While " + operation + "ing registry " + registryId, e);
+      throw new RuntimeException("While " + operation + "ing registry " + targetRegistry, e);
     }
   }
+
 
   private void modifyDevice(String registryId, String deviceId, CloudModel cloudModel) {
     CloudModel fetchedModel = fetchDevice(registryId, deviceId);
