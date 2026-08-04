@@ -667,7 +667,13 @@ jobs:
           pip install -r edge/spotter/requirements.txt
       - name: Unit Tests
         run: |
-          python3 -m unittest discover -v -s edge/spotter/tests
+          edge/spotter/bin/run_spotter_tests unit
+      - name: Resource Contention & Circuit Breaker Tests
+        run: |
+          edge/spotter/bin/test_resource_contention
+      - name: Network Fault Injection & Resiliency Tests
+        run: |
+          edge/spotter/bin/test_fault_injection
       - name: Build Docker Container
         run: |
           docker build -t udmi-spotter:latest -f edge/spotter/container/Dockerfile .

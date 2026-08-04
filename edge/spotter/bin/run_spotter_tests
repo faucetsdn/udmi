@@ -6,11 +6,11 @@ WORKSPACE_DIR=$(realpath "${SCRIPT_DIR}/../../..")
 source "${WORKSPACE_DIR}/etc/shell_common.sh"
 
 MODE="unit"
-if [[ "$1" == "--all" || "$1" == "all" ]]; then
+if [[ "${1:-}" == "--all" || "${1:-}" == "all" ]]; then
     MODE="all"
-elif [[ "$1" == "--integration" || "$1" == "integration" ]]; then
+elif [[ "${1:-}" == "--integration" || "${1:-}" == "integration" ]]; then
     MODE="integration"
-elif [[ "$1" == "--help" || "$1" == "-h" ]]; then
+elif [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "Usage: $0 [unit|integration|all]"
     echo "  unit        : Run logical unit test suites (default)"
     echo "  integration : Run Docker container lifecycle, PCAP streaming, and co-existence parity integration tests"
@@ -46,6 +46,14 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
     echo "--- Step 5: Running PCAP Streaming Integration Tests (test_pcap) ---"
     "${SCRIPT_DIR}/test_pcap"
     echo "-- PCAP Streaming Integration: PASSED!"
+
+    echo "--- Step 5b: Running Resource Contention Integration Tests (test_resource_contention) ---"
+    "${SCRIPT_DIR}/test_resource_contention"
+    echo "-- Resource Contention Integration: PASSED!"
+
+    echo "--- Step 5c: Running Network Resilience Integration Tests (test_fault_injection) ---"
+    "${SCRIPT_DIR}/test_fault_injection"
+    echo "-- Network Resilience Integration: PASSED!"
 
     if docker network inspect spotter-parity-net >/dev/null 2>&1 || docker network create --subnet=192.168.12.0/24 spotter-parity-net >/dev/null 2>&1; then
         echo "--- Step 6: Running Dual-Process Co-existence Parity Tests (test_parity) ---"
