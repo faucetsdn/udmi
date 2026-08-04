@@ -274,18 +274,23 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * [events_stream.json](../../schema/events_stream.json) - Created authoritative streaming event schema with sequence numbering (`event_no`, `session_id`, `chunk_index`, `total_chunks`, `data`) and registered it in [events.json](../../schema/events.json).
   * [events_stream.py](../../gencode/python/udmi/schema/events_stream.py) - Compiled schemas via `bin/gencode`. Verified schema validation and Python data model serialization roundtripping (`bin/test_schema && bin/test_generated_classes_py`, 135 tests passed).
 
-#### Task 2.6.2: Dual-Process Co-existence Hygiene & Discovery Routing
+#### ~~Task 2.6.2: Dual-Process Co-existence Hygiene & Discovery Routing [Completed]~~
 * **Target Location**: `edge/spotter/src/agent.py`
 * **Behavioral Specification**:
   * Transition trigger logic in Spotter from monitoring `config.blobset.blobs.pcap_capture` to inspecting `config.discovery.families` for operations with `depth` set to `"trace"` (e.g., `ether` or `bacnet` family traces).
   * Report capture status and progress back in device state under `state.discovery.families[family].status` and `phase`.
   * In the dual-process supervisor model, ensure Spotter selectively consumes only `TRACE` level discovery configs while ignoring normal BACnet/IP discovery sweeps, allowing the legacy discovery daemon to handle standard active scanning without contention.
+* **Implementation & Verification**:
+  * [agent.py](src/agent.py) - Replaced custom blobset handler with `TraceDiscoveryManager(BaseManager)`. Confirmed selective filtering where non-trace family configs are ignored and TRACE family configs trigger memory-buffered packet sniffing. Verified `StreamEvents` payload publishing to `events/stream` and Level 200 state reporting.
+  * [test_agent.py](tests/test_agent.py) - Added unit tests validating non-trace config rejection, TRACE family triggers, and sequential streaming frame format (15 tests passed via `./venv/bin/python3 -m unittest discover -s edge/spotter/tests -v`).
 
-#### Task 2.6.3: Integration & Verification Test Alignment
+#### ~~Task 2.6.3: Integration & Verification Test Alignment [Completed]~~
 * **Target Location**: `edge/spotter/bin/test_pcap` & `edge/spotter/tests/test_agent.py`
 * **Behavioral Specification**:
   * Update the integration pipeline (`bin/test_pcap`) and unit tests (`tests/test_agent.py`) to trigger captures via the `config.discovery` TRACE schema and assert sequential chunk reception on `events/stream` with explicit `event_no` ordering.
   * Execute negative verification (reversion testing) per engineering standards to guarantee valid transition proof.
+* **Implementation & Verification**:
+  * [test_pcap](bin/test_pcap) - Refactored integration suite to publish Discovery TRACE configuration (`depth: "trace"`, `filter: "udp port 47808"` on family `ether`), intercept `events/stream`, order by `event_no`, and validate PCAP magic headers and Level 200 state transition. Rebuilt Docker container and ran integration test (`./edge/spotter/bin/test_pcap`, verified `TEST PASSED` with 776 bytes captured and reassembled).
 
 ---
 

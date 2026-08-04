@@ -6,24 +6,161 @@ import logging
 import os
 import sys
 import time
-from dataclasses import dataclass
-from typing import Any, Dict
+import threading
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
 
+from udmi.constants import UDMI_VERSION
 from udmi.core.factory import create_device, ClientConfig
 from udmi.core.messaging.mqtt_messaging_client import TlsConfig
 from udmi.core.managers import SystemManager
-from udmi.schema import AuthProvider, Basic, EndpointConfiguration, Protocol
-from udmi.schema._base import DataModel
-
-@dataclass
-class PcapChunkEvent(DataModel):
-    session_id: str
-    chunk_index: int
-    total_chunks: int
-    data: str
-
+from udmi.core.managers.base_manager import BaseManager
+from udmi.schema import (
+    AuthProvider, Basic, EndpointConfiguration, Protocol,
+    Config, State, DiscoveryState, FamilyDiscoveryState,
+    StreamEvents, Entry
+)
+from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
+from udmi.schema.common import Depth
 
 LOGGER = logging.getLogger("spotter_agent")
+
+class TraceDiscoveryManager(BaseManager):
+    """Manages TRACE-level diagnostic discovery operations (e.g. PCAP network capturing).
+
+    In Spotter's dual-process co-existence runtime, this manager selectively processes only
+    discovery families configured with depth == Depth.trace, ignoring standard BACnet/IP scans
+    to prevent contention with the legacy discovery daemon.
+    """
+
+    @property
+    def model_field_name(self) -> str:
+        return "discovery"
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._discovery_state = DiscoveryState(families={})
+        self._active_threads: Dict[str, threading.Thread] = {}
+        LOGGER.info("TraceDiscoveryManager initialized.")
+
+    def update_state(self, state: State) -> None:
+        if self._discovery_state.families:
+            state.discovery = self._discovery_state
+
+    def handle_command(self, command_name: str, payload: dict) -> None:
+        pass
+
+    def handle_config(self, config: Config) -> None:
+        if not config.discovery or not config.discovery.families:
+            return
+
+        for family, fam_config in config.discovery.families.items():
+            depth_val = getattr(fam_config, "depth", None)
+            # In dual-process mode, ONLY process TRACE operations
+            if depth_val != Depth.trace and str(depth_val) != "trace" and depth_val != "Depth.trace":
+                LOGGER.debug("Ignoring non-trace discovery family '%s' (handled by legacy discovery node).", family)
+                continue
+
+            current_state = self._discovery_state.families.get(family)
+            if current_state and current_state.generation == fam_config.generation and current_state.phase != DiscoveryPhase.stopped:
+                LOGGER.debug("Already processing TRACE generation '%s' for family '%s'", fam_config.generation, family)
+                continue
+
+            LOGGER.info("Starting TRACE discovery operation for family '%s' (generation: %s)", family, fam_config.generation)
+            self._start_trace_capture(family, fam_config)
+
+    def _start_trace_capture(self, family: str, fam_config: Any) -> None:
+        f_state = FamilyDiscoveryState(
+            generation=fam_config.generation,
+            phase=DiscoveryPhase.active,
+            status=Entry(
+                category="discovery.family",
+                level=200,
+                message=f"Starting trace capture for family '{family}'..."
+            )
+        )
+        self._discovery_state.families[family] = f_state
+        self.trigger_state_update()
+
+        thread = threading.Thread(
+            target=self._run_trace_worker,
+            args=(family, fam_config),
+            name=f"TraceCapture-{family}",
+            daemon=True
+        )
+        self._active_threads[family] = thread
+        thread.start()
+
+    def _run_trace_worker(self, family: str, fam_config: Any) -> None:
+        try:
+            from pcap import capture_packets
+        except ImportError:
+            from edge.spotter.src.pcap import capture_packets
+
+        interface = getattr(fam_config, "interface", None) or "any"
+        filter_str = getattr(fam_config, "filter", None) or ""
+        max_duration_sec = int(getattr(fam_config, "scan_duration_sec", None) or 60)
+        max_bytes = int(getattr(fam_config, "max_bytes", None) or (10 * 1024 * 1024))
+
+        f_state = self._discovery_state.families[family]
+        try:
+            LOGGER.info("Spawning capture worker on interface '%s' (filter: '%s', max_duration: %ds, max_bytes: %d)", interface, filter_str, max_duration_sec, max_bytes)
+            data_generator = capture_packets(
+                interface=interface,
+                filter_str=filter_str,
+                max_duration_sec=max_duration_sec,
+                max_bytes=max_bytes
+            )
+
+            captured_chunks = list(data_generator)
+            full_data = b"".join(captured_chunks)
+
+            LOGGER.info("Capture complete (%d total bytes captured). Publishing StreamEvents over MQTT...", len(full_data))
+            chunk_size = 128 * 1024  # 128KB chunks
+            total_bytes = len(full_data)
+            total_chunks = (total_bytes + chunk_size - 1) // chunk_size if total_bytes > 0 else 1
+            session_id = f"trace-{family}-{int(time.time())}"
+
+            for idx in range(total_chunks):
+                start = idx * chunk_size
+                end = min(start + chunk_size, total_bytes)
+                chunk_data = full_data[start:end]
+
+                b64_data = base64.b64encode(chunk_data).decode()
+
+                chunk_event = StreamEvents(
+                    timestamp=datetime.now(timezone.utc).isoformat(),
+                    version=UDMI_VERSION,
+                    session_id=session_id,
+                    event_no=idx,
+                    chunk_index=idx,
+                    total_chunks=total_chunks,
+                    data=b64_data
+                )
+                self.publish_event(chunk_event, "stream")
+                LOGGER.info("Published TRACE stream chunk %d/%d (event_no: %d, %d bytes)", idx + 1, total_chunks, idx, len(chunk_data))
+
+            f_state.phase = DiscoveryPhase.stopped
+            f_state.active_count = total_chunks
+            f_state.status = Entry(
+                category="discovery.family",
+                level=200,
+                message=f"Trace capture complete. {total_chunks} stream chunks emitted over MQTT."
+            )
+            LOGGER.info("TRACE discovery completed successfully for family '%s'.", family)
+
+        except Exception as e: # pylint: disable=broad-exception-caught
+            LOGGER.error("Trace capture failed for family '%s': %s", family, e, exc_info=True)
+            f_state.phase = DiscoveryPhase.stopped
+            f_state.status = Entry(
+                category="discovery.family",
+                level=500,
+                message=str(e)
+            )
+        finally:
+            if family in self._active_threads:
+                del self._active_threads[family]
+            self.trigger_state_update()
 
 def calculate_local_password(key_file: str) -> str:
     """Calculates password for udmi_local authentication mechanism.
@@ -52,9 +189,6 @@ def build_endpoint_config(config: Dict[str, Any]) -> EndpointConfiguration:
     cert_file = mqtt_config.get("cert_file")
     ca_file = mqtt_config.get("ca_file")
 
-    # In local testing or mTLS on-prem, the topic prefix might look like /r/registry/d/device
-    # But clientlib expects the prefix without the device ID if we use it with create_device
-    # because create_device wires it up.
     if auth_mechanism == "jwt_gcp":
         topic_prefix = f"/devices/"
         client_id = f"projects/{mqtt_config.get('project_id')}/locations/{mqtt_config.get('region')}/registries/{registry_id}/devices/{spotter_device_id}"
@@ -112,7 +246,6 @@ def main():
     log_level_str = str(config.get("log_level", "INFO")).upper()
     log_level = getattr(logging, log_level_str, logging.INFO)
     
-    # Ensure logs directory exists if logging to file
     log_dir = "/var/log/spotter"
     if os.path.exists(log_dir) and os.access(log_dir, os.W_OK):
         log_file = os.path.join(log_dir, "agent.log")
@@ -131,11 +264,7 @@ def main():
     endpoint_config = build_endpoint_config(config)
     LOGGER.info("Endpoint Config: %s", endpoint_config)
 
-    # Initialize device using clientlib
-    # Note: we need key_file for JWT or mTLS.
     key_file = config.get("mqtt", {}).get("key_file")
-    
-    # We populate the client config so that the messaging library enables TLS
     ca_file = config.get("mqtt", {}).get("ca_file")
     cert_file = config.get("mqtt", {}).get("cert_file")
     insecure_tls = config.get("mqtt", {}).get("authentication_mechanism") == "udmi_local"
@@ -147,72 +276,12 @@ def main():
     )
     client_config = ClientConfig(tls_config=tls_config)
     
-    # We create the device. Register only SystemManager to avoid conflicts with legacy discovery.
     device = create_device(
         endpoint_config,
-        managers=[SystemManager()],
+        managers=[SystemManager(), TraceDiscoveryManager()],
         client_config=client_config,
         key_file=key_file
     )
-
-    # Retrieve SystemManager and register our custom pcap_capture blob handler
-    from pcap import capture_packets
-
-    def process_pcap_blob(blob_key: str, file_path: str) -> Any:
-        LOGGER.info("Processing diagnostic pcap trigger from file: %s", file_path)
-        with open(file_path, "r") as f:
-            payload = json.load(f)
-            
-        interface = payload.get("interface", "any")
-        filter_str = payload.get("filter", "")
-        max_duration_sec = int(payload.get("max_duration_sec", 60))
-        max_bytes = int(payload.get("max_bytes", 10 * 1024 * 1024))  # Default 10MB limit
-
-        LOGGER.info("Starting packet sniffer...")
-        data_generator = capture_packets(
-            interface=interface,
-            filter_str=filter_str,
-            max_duration_sec=max_duration_sec,
-            max_bytes=max_bytes
-        )
-
-        captured_chunks = []
-        for chunk in data_generator:
-            captured_chunks.append(chunk)
-
-        LOGGER.info("Publishing PCAP capture chunks over MQTT...")
-        full_data = b"".join(captured_chunks)
-        chunk_size = 128 * 1024  # 128KB chunks
-        total_bytes = len(full_data)
-        total_chunks = (total_bytes + chunk_size - 1) // chunk_size if total_bytes > 0 else 1
-        session_id = f"pcap-{int(time.time())}"
-        
-        for idx in range(total_chunks):
-            start = idx * chunk_size
-            end = min(start + chunk_size, total_bytes)
-            chunk_data = full_data[start:end]
-            
-            b64_data = base64.b64encode(chunk_data).decode()
-            
-            chunk_event = PcapChunkEvent(
-                session_id=session_id,
-                chunk_index=idx,
-                total_chunks=total_chunks,
-                data=b64_data
-            )
-            device.dispatcher.publish_event("events/pcap", chunk_event)
-            LOGGER.info("Published PCAP chunk %d/%d (%d bytes)", idx + 1, total_chunks, len(chunk_data))
-            
-        LOGGER.info("MQTT PCAP transmission completed.")
-        return "SUCCESS"
-
-    system_manager = device.get_manager(SystemManager)
-    if system_manager:
-        system_manager.register_blob_handler(
-            blob_key="pcap_capture",
-            process=process_pcap_blob,
-            expects_file=True
-        )
 
     LOGGER.info("Device created. Running...")
     device.run()

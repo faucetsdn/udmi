@@ -2,10 +2,11 @@ import json
 import os
 import tempfile
 import unittest
-from unittest.mock import patch, mock_open
+from unittest.mock import patch, mock_open, MagicMock
 
-from edge.spotter.src.agent import build_endpoint_config, calculate_local_password
-from udmi.schema import Protocol
+from edge.spotter.src.agent import build_endpoint_config, calculate_local_password, TraceDiscoveryManager
+from udmi.schema import Protocol, Config, DiscoveryConfig, FamilyDiscoveryConfig, Depth, State
+from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
 
 class TestAgentConfig(unittest.TestCase):
     
@@ -140,6 +141,82 @@ class TestAgentConfig(unittest.TestCase):
         endpoint = build_endpoint_config(config)
         self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/SN-1")
         self.assertEqual(endpoint.auth_provider.basic.username, "/r/ZZ-TRI-FECTA/d/SN-1")
+
+
+class TestTraceDiscoveryManager(unittest.TestCase):
+
+    def setUp(self):
+        self.manager = TraceDiscoveryManager()
+        self.mock_device = MagicMock()
+        self.mock_dispatcher = MagicMock()
+        self.mock_device.dispatcher = self.mock_dispatcher
+        self.manager._device = self.mock_device
+        self.manager._dispatcher = self.mock_dispatcher
+
+    def test_ignore_non_trace_discovery_family(self):
+        # Config with standard discovery scan (depth='entries')
+        fam_config = FamilyDiscoveryConfig(generation="2026-07-08T14:35:00Z", depth=Depth.entries)
+        config = Config(discovery=DiscoveryConfig(families={"bacnet": fam_config}))
+        
+        self.manager.handle_config(config)
+        
+        # Should be ignored by Spotter (no threads started, state untouched)
+        self.assertEqual(len(self.manager._active_threads), 0)
+        self.assertEqual(len(self.manager._discovery_state.families), 0)
+
+    @patch("edge.spotter.src.agent.TraceDiscoveryManager._run_trace_worker")
+    def test_trigger_trace_discovery_family(self, mock_worker):
+        # Config with TRACE discovery (depth='trace')
+        fam_config = FamilyDiscoveryConfig(
+            generation="2026-07-08T14:35:00Z",
+            depth=Depth.trace,
+            interface="eth0",
+            filter="udp port 47808",
+            scan_duration_sec=5
+        )
+        config = Config(discovery=DiscoveryConfig(families={"ether": fam_config}))
+        
+        self.manager.handle_config(config)
+        
+        # State should immediately transition to active
+        self.assertIn("ether", self.manager._discovery_state.families)
+        f_state = self.manager._discovery_state.families["ether"]
+        self.assertEqual(f_state.phase, DiscoveryPhase.active)
+        self.assertEqual(f_state.generation, "2026-07-08T14:35:00Z")
+
+    @patch("edge.spotter.src.pcap.capture_packets")
+    def test_run_trace_worker_streaming(self, mock_capture):
+        # Simulate packet capture yielding binary chunks
+        mock_capture.return_value = [b"MOCK_PACKET_HEADER", b"MOCK_PACKET_BODY"]
+        
+        fam_config = FamilyDiscoveryConfig(
+            generation="2026-07-08T14:35:00Z",
+            depth=Depth.trace,
+            interface="any",
+            filter="udp port 47808",
+            scan_duration_sec=2
+        )
+        
+        # Prepare initial state
+        self.manager._discovery_state.families["ether"] = MagicMock()
+        self.manager._run_trace_worker("ether", fam_config)
+        
+        # Verify publish_event was called to emit StreamEvents on channel 'stream' (prefixed as 'events/stream' by BaseManager)
+        self.assertTrue(self.mock_dispatcher.publish_event.called)
+        call_args = self.mock_dispatcher.publish_event.call_args[0]
+        channel = call_args[0]
+        event_model = call_args[1]
+        
+        self.assertEqual(channel, "events/stream")
+        self.assertEqual(event_model.event_no, 0)
+        self.assertEqual(event_model.chunk_index, 0)
+        self.assertEqual(event_model.total_chunks, 1)
+        self.assertIn("trace-ether-", event_model.session_id)
+        
+        # State should terminate in stopped phase with success Level 200
+        f_state = self.manager._discovery_state.families["ether"]
+        self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+        self.assertEqual(f_state.status.level, 200)
 
 if __name__ == "__main__":
     unittest.main()

@@ -159,12 +159,12 @@ cat <<EOF > "$TEST_DIR/spotter_config.json"
 }
 EOF
 
-echo "Setting up MQTT subscriber on port 1883 for state and pcap event messages"
+echo "Setting up MQTT subscriber on port 1883 for state and stream event messages"
 MQTT_OUT="$TEST_DIR/mqtt.out"
 touch "$MQTT_OUT"
 mosquitto_sub -h 127.0.0.1 -p 1883 \
     -t "/r/ZZ-TRI-FECTA/d/SN-1/state" \
-    -t "/r/ZZ-TRI-FECTA/d/SN-1/events/pcap" \
+    -t "/r/ZZ-TRI-FECTA/d/SN-1/events/stream" \
     -F "%t %p" > "$MQTT_OUT" &
 MOSQ_SUB_PID=$!
 
@@ -183,7 +183,7 @@ echo "Waiting for Spotter Agent container to connect and publish state..."
 END_TIME=$((SECONDS + 15))
 DEVICE_ONLINE=0
 while [[ $SECONDS -lt $END_TIME ]]; do
-    if grep -q '"blobset"' "$MQTT_OUT"; then
+    if grep -q '/state' "$MQTT_OUT"; then
         DEVICE_ONLINE=1
         break
     fi
@@ -195,23 +195,22 @@ if [[ $DEVICE_ONLINE -eq 0 ]]; then
     exit 1
 fi
 
-echo "Preparing pcap trigger config"
-PROFILE='{"interface": "any", "filter": "udp port 47808", "max_duration_sec": 4, "max_bytes": 100000}'
-PROFILE_B64=$(echo -n "$PROFILE" | base64 -w 0)
-SHA=$(echo -n "$PROFILE" | sha256sum | awk '{print $1}')
+echo "Preparing discovery TRACE trigger config"
 TIMESTAMP="2026-07-08T14:35:00Z"
 
 cat <<EOF > "$TEST_DIR/config_payload.json"
 {
   "timestamp": "$TIMESTAMP",
-  "version": "1.5.2",
-  "blobset": {
-    "blobs": {
-      "pcap_capture": {
-        "phase": "final",
-        "url": "data:application/json;base64,$PROFILE_B64",
-        "sha256": "$SHA",
-        "generation": "$TIMESTAMP"
+  "version": "1.5.7",
+  "discovery": {
+    "families": {
+      "ether": {
+        "generation": "$TIMESTAMP",
+        "depth": "trace",
+        "interface": "any",
+        "filter": "udp port 47808",
+        "scan_duration_sec": 4,
+        "max_bytes": 100000
       }
     }
   }
@@ -229,33 +228,30 @@ echo "Starting dummy UDP traffic thread"
 ) &
 TRAFFIC_PID=$!
 
-echo "Publishing blobset config to trigger packet capture over MQTT..."
+echo "Publishing discovery TRACE config to trigger packet capture over MQTT..."
 mosquitto_pub -h 127.0.0.1 -p 1883 -t "/r/ZZ-TRI-FECTA/d/SN-1/config" -f "$TEST_DIR/config_payload.json" -q 1
 
-echo "Waiting for state 'final' and pcap transfers"
+echo "Waiting for discovery state 'stopped' and stream transfers"
 END_TIME=$((SECONDS + 25))
-STATE_FINAL=0
+STATE_STOPPED=0
 PCAP_DONE=0
 
 while [[ $SECONDS -lt $END_TIME ]]; do
-    # Check if we got the final state
     if grep -q '/state' "$MQTT_OUT"; then
-        if grep '/state' "$MQTT_OUT" | tail -n 1 | grep -q '"phase": *"final"'; then
-            STATE_FINAL=1
+        if grep '/state' "$MQTT_OUT" | tail -n 1 | grep -q '"phase": *"stopped"'; then
+            STATE_STOPPED=1
         fi
     fi
     
-    # Check if we've received all PCAP chunks
-    if grep -q '/events/pcap' "$MQTT_OUT"; then
-        # Parse total_chunks from first message using jq
-        TOTAL=$(grep '/events/pcap' "$MQTT_OUT" | head -n 1 | sed 's|^[^ ]* ||' | jq -r '.total_chunks')
-        COUNT=$(grep '/events/pcap' "$MQTT_OUT" | wc -l)
+    if grep -q '/events/stream' "$MQTT_OUT"; then
+        TOTAL=$(grep '/events/stream' "$MQTT_OUT" | head -n 1 | sed 's|^[^ ]* ||' | jq -r '.total_chunks')
+        COUNT=$(grep '/events/stream' "$MQTT_OUT" | wc -l)
         if [[ -n "$TOTAL" && "$TOTAL" != "null" && $COUNT -ge $TOTAL ]]; then
             PCAP_DONE=1
         fi
     fi
     
-    if [[ $STATE_FINAL -eq 1 && $PCAP_DONE -eq 1 ]]; then
+    if [[ $STATE_STOPPED -eq 1 && $PCAP_DONE -eq 1 ]]; then
         break
     fi
     sleep 1
@@ -264,25 +260,25 @@ done
 echo "Stopping dummy UDP traffic thread"
 kill "$TRAFFIC_PID" && unset TRAFFIC_PID
 
-if [[ $STATE_FINAL -eq 0 ]]; then
-    echo "ERROR: Test timed out waiting for pcap_capture blob state transition to final"
+if [[ $STATE_STOPPED -eq 0 ]]; then
+    echo "ERROR: Test timed out waiting for discovery TRACE family state transition to stopped"
     exit 1
 fi
 if [[ $PCAP_DONE -eq 0 ]]; then
-    echo "ERROR: Test timed out waiting for PCAP streaming chunks over MQTT"
+    echo "ERROR: Test timed out waiting for PCAP streaming chunks over MQTT events/stream"
     exit 1
 fi
 
 echo "Validating state and payload"
-if grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -e '.blobset.blobs.pcap_capture.status != null' >/dev/null 2>&1; then
-    STATUS_VAL=$(grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -r '.blobset.blobs.pcap_capture.status')
-    echo "ERROR: Blob state reported failure: $STATUS_VAL"
+if grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -e '.discovery.families.ether.status.level != 200' >/dev/null 2>&1; then
+    STATUS_VAL=$(grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -r '.discovery.families.ether.status')
+    echo "ERROR: Discovery family state reported non-200 level: $STATUS_VAL"
     exit 1
 fi
 
-echo "Reassembling pcap payload"
-grep '/events/pcap' "$MQTT_OUT" | sed 's|^[^ ]* ||' > "$TEST_DIR/pcap_events.json"
-jq -r -s 'sort_by(.chunk_index) | .[].data' "$TEST_DIR/pcap_events.json" | base64 -d > "$TEST_DIR/assembled.pcap"
+echo "Reassembling pcap payload via event_no sequencing"
+grep '/events/stream' "$MQTT_OUT" | sed 's|^[^ ]* ||' > "$TEST_DIR/stream_events.json"
+jq -r -s 'sort_by(.event_no) | .[].data' "$TEST_DIR/stream_events.json" | base64 -d > "$TEST_DIR/assembled.pcap"
 
 echo "Validating pcap payload size"
 SIZE=$(stat -c%s "$TEST_DIR/assembled.pcap")
