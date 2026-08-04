@@ -385,7 +385,8 @@ class LocalDevice implements SiteDevice {
 
     if (isGateway() || isDirect()) {
       Set<String> privateKeyFiles = getPrivateKeyFiles();
-          if (!privateKeyFiles.isEmpty() && Sets.intersection(privateKeyFiles, actualFiles).isEmpty()) {
+      if (!privateKeyFiles.isEmpty()
+          && Sets.intersection(privateKeyFiles, actualFiles).isEmpty()) {
         System.err.printf("No private key found for device %s%n", deviceId);
         exceptionMap.put(ExceptionCategory.credentials,
             new ValidationWarning("Missing private key"));
