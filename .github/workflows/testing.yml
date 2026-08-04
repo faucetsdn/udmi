@@ -674,6 +674,9 @@ jobs:
       - name: Network Fault Injection & Resiliency Tests
         run: |
           edge/spotter/bin/test_fault_injection
+      - name: Supervisor Lifecycle & Rollback Tests
+        run: |
+          edge/spotter/bin/test_supervisor
       - name: Build Docker Container
         run: |
           docker build -t udmi-spotter:latest -f edge/spotter/container/Dockerfile .
