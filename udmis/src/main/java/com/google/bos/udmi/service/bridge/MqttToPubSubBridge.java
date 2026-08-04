@@ -100,14 +100,14 @@ public class MqttToPubSubBridge {
       .maximumSize(10000)
       .build();
 
-  private static final Cache<String, Boolean> ackedMessageIds = CacheBuilder.newBuilder()
-      .expireAfterWrite(15, TimeUnit.MINUTES)
-      .maximumSize(10000)
-      .build();
+  public enum UnackedState {
+    IN_PROCESS,
+    ABANDONED
+  }
 
   private final ThreadPoolExecutor executor;
   private volatile boolean tripped = false;
-  private final ConcurrentMap<Integer, Long> unackedMessages = new ConcurrentHashMap<>();
+  private final ConcurrentMap<Integer, UnackedState> unackedMessages = new ConcurrentHashMap<>();
   private final AtomicInteger dupCount = new AtomicInteger(0);
   private final Random random = new Random();
 
@@ -121,7 +121,6 @@ public class MqttToPubSubBridge {
 
   static void clearCacheForTest() {
     numIdCache.invalidateAll();
-    ackedMessageIds.invalidateAll();
   }
 
   /**
@@ -191,7 +190,16 @@ public class MqttToPubSubBridge {
           synchronized (mqttClient) {
             if (mqttClient.isConnected() && !tripped) {
               logger.info("Executing scheduled reconnect (interval: {}s) to rebalance shared subscription...", delaySec);
-              mqttClient.reconnect();
+              try {
+                mqttClient.disconnect();
+              } catch (Exception e) {
+                logger.warn("Error disconnecting for scheduled reconnect", e);
+              }
+              try {
+                mqttClient.reconnect();
+              } catch (Exception e) {
+                logger.warn("Error reconnecting during scheduled reconnect", e);
+              }
             }
           }
         } catch (InterruptedException e) {
@@ -506,23 +514,14 @@ public class MqttToPubSubBridge {
                 int currentDups = dupCount.incrementAndGet();
                 logger.info("Received DUP MQTT message (DUP=true, ID {}). Total DUP messages tracked: {}",
                     message.getId(), currentDups);
-                String dupKey = message.getId() + ":" + topic;
-                if (ackedMessageIds.getIfPresent(dupKey) != null) {
-                  logger.warn("DUP message ID {} on topic {} was already published to Pub/Sub. Re-ACKing without duplicate publish.",
-                      message.getId(), topic);
-                  try {
-                    mqttClient.messageArrivedComplete(message.getId(), message.getQos());
-                  } catch (MqttException e) {
-                    logger.error("Failed to ACK already-processed DUP message", e);
-                  }
-                  return;
-                }
-                if (unackedMessages.containsKey(message.getId())) {
-                  logger.warn("DUP message ID {} is already currently inflight/unacked. Ignoring duplicate processing.",
-                      message.getId());
-                  return;
-                }
               }
+
+              if (unackedMessages.get(message.getId()) == UnackedState.IN_PROCESS) {
+                logger.warn("MQTT message ID {} is already IN_PROCESS. Skipping queue to avoid duplicate processing.",
+                    message.getId());
+                return;
+              }
+              unackedMessages.put(message.getId(), UnackedState.IN_PROCESS);
 
               final String receiveTime = java.time.Instant.now().toString();
               executor.submit(() -> {
@@ -582,8 +581,7 @@ public class MqttToPubSubBridge {
                   PubsubMessage pubsubMessage =
                       pubsubMessageBuilder.putAllAttributes(attributes).build();
 
-                  // Track unacked message ID in unackedMessages map and publish with 5x retry + exponential backoff
-                  unackedMessages.put(message.getId(), System.currentTimeMillis());
+                  // Publish with 5x retry + exponential backoff
                   publishWithRetry(publisher, pubsubMessage, message, topic, mqttClient, 1);
 
                 } catch (RuntimeException e) {
@@ -620,8 +618,6 @@ public class MqttToPubSubBridge {
       public void onSuccess(String msgId) {
         logger.debug("Published to Pub/Sub with message ID: {}", msgId);
         unackedMessages.remove(mqttMessage.getId());
-        String dupKey = mqttMessage.getId() + ":" + topic;
-        ackedMessageIds.put(dupKey, Boolean.TRUE);
         try {
           mqttClient.messageArrivedComplete(mqttMessage.getId(), mqttMessage.getQos());
         } catch (MqttException e) {
@@ -645,8 +641,9 @@ public class MqttToPubSubBridge {
             }
           });
         } else {
-          logger.error("Failed to publish to Pub/Sub after 5 attempts. Message left unacked.", t);
-          // Note: unackedMessages retains the message ID so circuit breaker can trip on prolonged outage
+          logger.error("Failed to publish to Pub/Sub after 5 attempts. Marking message ID {} as ABANDONED (unacked).",
+              mqttMessage.getId(), t);
+          unackedMessages.put(mqttMessage.getId(), UnackedState.ABANDONED);
         }
       }
     }, MoreExecutors.directExecutor());
