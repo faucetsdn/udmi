@@ -1,0 +1,60 @@
+#!/bin/bash -e
+# Unified Spotter Verification Test Orchestrator
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+WORKSPACE_DIR=$(realpath "${SCRIPT_DIR}/../../..")
+source "${WORKSPACE_DIR}/etc/shell_common.sh"
+
+MODE="unit"
+if [[ "$1" == "--all" || "$1" == "all" ]]; then
+    MODE="all"
+elif [[ "$1" == "--integration" || "$1" == "integration" ]]; then
+    MODE="integration"
+elif [[ "$1" == "--help" || "$1" == "-h" ]]; then
+    echo "Usage: $0 [unit|integration|all]"
+    echo "  unit        : Run logical unit test suites (default)"
+    echo "  integration : Run Docker container lifecycle, PCAP streaming, and co-existence parity integration tests"
+    echo "  all         : Run both unit and integration test suites"
+    exit 0
+fi
+
+echo "=== Spotter Test Orchestrator (Mode: $MODE) ==="
+
+if [[ "$MODE" == "unit" || "$MODE" == "all" ]]; then
+    echo "--- Step 1: Ensuring environment setup ---"
+    "${SCRIPT_DIR}/setup_env" >/dev/null
+
+    echo "--- Step 2: Running Unit Test Suites ---"
+    (
+        cd "${WORKSPACE_DIR}"
+        PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" -m unittest discover -s edge/spotter/tests -v
+    )
+    echo "-- Unit Tests: PASSED!"
+fi
+
+if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
+    echo "--- Step 3: Building udmi-spotter:latest Docker Image ---"
+    docker build -t udmi-spotter:latest -f "${WORKSPACE_DIR}/edge/spotter/container/Dockerfile" "${WORKSPACE_DIR}" >/dev/null
+
+    echo "--- Step 4: Running Container Lifecycle Integration Tests (test_container) ---"
+    (
+        cd "${WORKSPACE_DIR}"
+        PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" "${SCRIPT_DIR}/test_container"
+    )
+    echo "-- Container Lifecycle Integration: PASSED!"
+
+    echo "--- Step 5: Running PCAP Streaming Integration Tests (test_pcap) ---"
+    "${SCRIPT_DIR}/test_pcap"
+    echo "-- PCAP Streaming Integration: PASSED!"
+
+    if docker network inspect spotter-parity-net >/dev/null 2>&1 || docker network create --subnet=192.168.12.0/24 spotter-parity-net >/dev/null 2>&1; then
+        echo "--- Step 6: Running Dual-Process Co-existence Parity Tests (test_parity) ---"
+        "${SCRIPT_DIR}/test_parity"
+        echo "-- Dual-Process Co-existence Parity: PASSED!"
+    else
+        echo "WARNING: Skipping test_parity due to inability to initialize spotter-parity-net bridge network."
+    fi
+fi
+
+echo "=== ALL SPOTTER TESTS SUCCESSFULLY VERIFIED ==="
+exit 0

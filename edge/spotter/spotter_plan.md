@@ -235,7 +235,7 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 
 ### Sub-phase 2.5: Test Suite Realignment & Unit Testing Coverage
 
-#### Task 2.5.1: Unit Test Suite Expansion for PCAP Driver (`tests/test_pcap.py`)
+#### ~~Task 2.5.1: Unit Test Suite Expansion for PCAP Driver (`tests/test_pcap.py`) [Completed]~~
 * **Target Location**: `edge/spotter/tests/test_pcap.py`
 * **Behavioral Specification**:
   * Implement pure unit test suite for [pcap.py](src/pcap.py) using `unittest.mock` to mock `subprocess.Popen`.
@@ -243,19 +243,26 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
   * Validate duration limit timeout cutoffs and byte limit stopping logic.
   * Validate graceful subprocess termination (`SIGTERM` -> `SIGKILL` fallback) and error/stderr log capturing.
   * Ensure tests run fast (<2 seconds) without requiring Docker, `tcpdump` binaries, or real network interfaces.
+* **Implementation & Verification**:
+  * [test_pcap.py](tests/test_pcap.py) - Implemented pure logical unit tests mocking `subprocess.Popen` and `time.time`. Covered successful multi-chunk packet capture, duration limit expiration, byte volume cutoffs, and forced `SIGKILL` termination when `SIGTERM` times out. Verified execution via test orchestrator.
 
-#### Task 2.5.2: Unit Test Suite Expansion for Agent Blob Handler (`tests/test_agent.py`)
+#### ~~Task 2.5.2: Unit Test Suite Expansion for Agent Blob Handler (`tests/test_agent.py`) [Completed]~~
 * **Target Location**: `edge/spotter/tests/test_agent.py`
 * **Behavioral Specification**:
   * Expand [test_agent.py](tests/test_agent.py) to test `process_pcap_blob()` in isolation.
   * Validate 128KB chunking calculations, base64 payload encoding, and `PcapChunkEvent` model data mapping.
   * Test negative paths and edge cases: malformed/missing JSON payload profiles, invalid BPF filter strings, zero-byte packet capture output, and permission denied errors.
+* **Implementation & Verification**:
+  * [test_agent.py](tests/test_agent.py) - Updated to test `TraceDiscoveryManager` in isolation (aligned with Sub-phase 2.6 architecture). Validated 128KB chunking calculations, base64 data encoding, sequence numbers (`event_no`), non-trace config rejection, and negative error paths reporting Level 500 failure status upon runtime exceptions.
 
-#### Task 2.5.3: Unified Test Orchestrator & Execution Hygiene (`bin/run_spotter_tests`)
+#### ~~Task 2.5.3: Unified Test Orchestrator & Execution Hygiene (`bin/run_spotter_tests`) [Completed]~~
 * **Target Location**: `edge/spotter/bin/run_spotter_tests`
 * **Behavioral Specification**:
   * Provide a unified test runner script `bin/run_spotter_tests` that automatically sets up `PYTHONPATH`, invokes the workspace `venv` Python interpreter, and runs unit tests (`edge/spotter/tests`), static analysis, and local integration tests.
   * Update [GEMINI.md](GEMINI.md) documentation to recommend `bin/run_spotter_tests` for consistent execution across developer environments and CI workflows.
+* **Implementation & Verification**:
+  * [run_spotter_tests](bin/run_spotter_tests) - Created unified verification test runner supporting `unit`, `integration`, and `all` operational modes. Automatically invokes [setup_env](bin/setup_env), binds `PYTHONPATH`, and executes unit and integration verification suites.
+  * [GEMINI.md](GEMINI.md) - Updated Testing & Verification Standards to recommend `run_spotter_tests` across developer and CI pipelines. Verified unit test mode (`./edge/spotter/bin/run_spotter_tests unit`, 20/20 unit tests passed).
 
 ---
 

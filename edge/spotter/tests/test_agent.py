@@ -218,5 +218,27 @@ class TestTraceDiscoveryManager(unittest.TestCase):
         self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
         self.assertEqual(f_state.status.level, 200)
 
+    @patch("edge.spotter.src.pcap.capture_packets")
+    def test_run_trace_worker_failure(self, mock_capture):
+        # Simulate packet capture raising an exception
+        mock_capture.side_effect = RuntimeError("Network interface down")
+        
+        fam_config = FamilyDiscoveryConfig(
+            generation="2026-07-08T14:35:00Z",
+            depth=Depth.trace,
+            interface="eth0",
+            filter="udp port 47808",
+            scan_duration_sec=2
+        )
+        
+        self.manager._discovery_state.families["ether"] = MagicMock()
+        self.manager._run_trace_worker("ether", fam_config)
+        
+        # State should terminate in stopped phase with error Level 500
+        f_state = self.manager._discovery_state.families["ether"]
+        self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+        self.assertEqual(f_state.status.level, 500)
+        self.assertIn("Network interface down", f_state.status.message)
+
 if __name__ == "__main__":
     unittest.main()

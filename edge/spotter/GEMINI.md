@@ -6,14 +6,24 @@ This document establishes the testing and verification standards for the **Spott
 
 ## 1. Test Suite Overview
 
-All verification tests are categorised into **Unit Tests** and **Integration Tests**.
+All verification tests are categorised into **Unit Tests** and **Integration Tests**. For consistent execution across local developer environments and CI gating pipelines, use the unified test orchestrator [run_spotter_tests](bin/run_spotter_tests):
+```bash
+# Run unit tests
+./edge/spotter/bin/run_spotter_tests unit
+
+# Run integration suites
+./edge/spotter/bin/run_spotter_tests integration
+
+# Run all verification tests
+./edge/spotter/bin/run_spotter_tests all
+```
 
 ### 1.1 Automated Unit Tests
-- **Target**: Pure logical verification of internal modules (e.g., config mapping, credential parsing, password derivation) without dependencies on external running processes or Docker.
+- **Target**: Pure logical verification of internal modules (e.g., config mapping, credential parsing, password derivation, PCAP drivers, discovery trace logic) without dependencies on external running processes or Docker.
 - **Location**: [tests/](tests)
 - **Command**:
   ```bash
-  python3 -m unittest discover -s edge/spotter/tests
+  ./edge/spotter/bin/run_spotter_tests unit
   ```
 
 ### 1.2 Automated Integration Tests
