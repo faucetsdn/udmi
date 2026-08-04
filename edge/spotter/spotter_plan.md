@@ -430,8 +430,8 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 ## Definition of Done (DoD) Criteria
 
 - [x] ~~**1. Dual-Process Parity**: Parity verified against bare-metal `discovery_node` using the `test_parity` suite.~~
-- [x] ~~**2. Declarative Triggering**: PCAP capture trigger and parameter mapping verified via `blobset.blobs.pcap_capture` config block.~~
-- [x] ~~**3. RAM-Safe Streaming MQTT Transport**: Ephemeral packet capture verified to stream sequentially over `events/pcap` using small frame chunks without local disk storage or edge GCS service account credentials.~~
+- [x] ~~**2. Declarative Triggering**: Diagnostic packet capture triggering and parameter mapping verified via `config.discovery.families` (`depth: "trace"`) block.~~
+- [x] ~~**3. RAM-Safe Streaming MQTT Transport**: Ephemeral packet capture verified to stream sequentially over `events/stream` using reliable sequence numbering (`event_no`) without local disk storage or edge cloud storage credentials.~~
 - [x] ~~**4. Edge Secret Decoupling & Cloud Reassembly**: Zero cloud service account secrets required on edge devices; verified cloud-side ingestion bridge compatibility with Mosquitto architecture.~~
 - [ ] **5. OTA Verification**: Safe OTA update flow verified: successful sandbox self-testing promotes the package, while simulated syntax/dependency errors trigger immediate rollback before promotion.
 - [x] ~~**6. Standard Compliance**: Zero-code plan compliance and 3-stage validation gate completion (Unit, Schema, Local Integration) as per `GEMINI.md`.~~
@@ -439,6 +439,6 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 - [ ] **8. Network Fault Resiliency**: Automatic reconnect backoff and chunk retry logic verified under simulated socket interruptions during streaming (`bin/test_fault_injection`).
 - [ ] **9. Production Canary Verification**: Safe execution of non-destructive production micro-audit probes (`self_test.py` and `resource_audit`) confirmed on deployed instances.
 - [ ] **10. Observability & Metrics Verification**: End-to-end telemetry metric export (Prometheus `/metrics` and native UDMI `events/metrics`) verified alongside W3C trace context propagation across diagnostic PCAP streaming sessions.
-- [ ] **11. Unit Test & Execution Hygiene**: High unit test coverage for pure logic modules (`pcap.py` subprocess management, `agent.py` chunking, payload validation) runnable via `bin/run_spotter_tests` without environment configuration errors.
+- [x] ~~**11. Unit Test & Execution Hygiene**: High unit test coverage for pure logic modules (`pcap.py` subprocess management, `agent.py` chunking, payload validation) runnable via `bin/run_spotter_tests` without environment configuration errors.~~
 
 
