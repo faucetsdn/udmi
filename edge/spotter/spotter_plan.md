@@ -10,20 +10,15 @@ To maximize development velocity and deliver high-impact diagnostic features, th
 
 ## Technical Notes & Architectural Considerations
 
-### 1. Direct Edge-to-GCS Streaming Authentication Hurdles
-Directly streaming diagnostic data or PCAP packet captures from edge nodes to Google Cloud Storage (GCS) bucket endpoints introduces significant service account configuration and authentication hurdles:
-* **Secret Distribution**: Requiring edge nodes to maintain GCP Service Account keys or OAuth credentials increases secret sprawl and security risk across OT networks.
-* **Credential Rotation**: Key rotation and short-lived token management at the edge in zero-trust or restricted-egress environments introduces operational friction and risks authentication lockouts.
+### 1. Exclusive Transport Strategy: Streaming MQTT Protocol
+To ensure secure and reliable diagnostic and OTA data transfer across zero-trust OT building networks, Spotter adopts the **Streaming MQTT Protocol** as its exclusive transport mechanism:
+* **Payload Chunking**: Massive message payloads are not required. Captures and updates are divided into a continuous stream of lightweight, broker-compliant frame events (e.g. 64KB - 128KB base64-encoded chunks).
+* **Protocol Reusability**: The same streaming protocol pattern (`StreamEvents` on `events/stream`) handles both outbound diagnostic data streams and inbound binary transfers (such as delivering modular OTA wheel updates).
+* **Zero External Secrets**: Leverages the pre-existing edge-to-broker mTLS hardware key/certificate authentication channel without requiring any additional cloud or external network credentials on edge devices.
 
-### 2. Exclusive Transport Strategy: Streaming MQTT Protocol
-To eliminate cloud credential distribution to the edge, Spotter adopts the **Streaming MQTT Protocol** as its exclusive packet export mechanism:
-* **Payload Chunking**: Massive message payloads are not required. Captures are divided into a continuous stream of smaller, broker-compliant frame events (e.g. 64KB - 128KB base64-encoded chunks).
-* **Protocol Reusability**: The same streaming protocol pattern handles both outbound diagnostic data streams (`events/stream`) and inbound binary transfers (e.g. delivering OTA blob updates).
-* **Zero Additional Secrets**: Leverages the pre-existing edge-to-broker mTLS hardware key/certificate authentication channel without extra GCS credentials on edge devices.
-
-### 3. Future Mosquitto Migration & Cloud Reassembly Pipeline
-* **Long-Term Mosquitto Architecture**: Future iterations of the Mosquitto cloud bridge architecture will natively support higher throughput message streams and dedicated cloud ingestion bridges.
-* **Cloud Storage Offload**: Dedicated cloud bridge workers consume streaming MQTT topics directly from the broker and write reassembled files to GCS buckets or object storage in the cloud, fully insulating edge nodes from cloud storage authentication mechanics.
+### 2. RAM-Safe Buffering & Cloud Reassembly Pipeline
+* **Zero-Disk Constraint**: Diagnostic packet captures (`depth: "trace"`) are streamed dynamically from volatile RAM buffers directly to the MQTT client socket without ever writing raw binaries to local flash disk storage.
+* **Cloud Reassembly**: Dedicated cloud bridge workers consume streaming MQTT topics directly from the broker and reassemble sequential chunks using reliable sequence indices (`event_no`).
 
 ---
 
@@ -195,7 +190,7 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 #### ~~Task 2.2.1: Streaming MQTT Protocol Driver (`StreamEvents`) [Completed]~~
 * **Target Location**: `udmi.core.messaging.streaming` & `edge/spotter/src/agent.py`
 * **Behavioral Specification**:
-  * Adopt **Streaming MQTT Protocol** as the exclusive transport mechanism for packet export, avoiding edge GCS credential distribution and secret rotation hurdles.
+  * Adopt **Streaming MQTT Protocol** (`events/stream`) as the exclusive transport mechanism for packet export, ensuring reliable data delivery over standard broker mTLS sockets.
   * **Payload Framing**: Ephemeral packet captures are divided into lightweight broker-compliant streaming frames (`StreamEvents` in base64 chunks) and published sequentially over `events/stream`.
   * **Protocol Metadata**: Each frame contains `session_id`, `event_no` (reliable sequential index), `chunk_index`, `total_chunks`, and chunk payload data.
   * **RAM Buffering & Zero-Disk Constraint**: Do not write raw packets to local disk; stream chunks dynamically from RAM buffers directly to the MQTT client socket.
@@ -205,14 +200,14 @@ Phase 2 focuses on delivering the high-impact diagnostic features: remote trigge
 
 ---
 
-### ~~Sub-phase 2.3: Cloud Ingestion & Edge Secret Decoupling [Completed]~~
+### ~~Sub-phase 2.3: Cloud Ingestion & Sequential Stream Reassembly Bridge [Completed]~~
 
-#### ~~Task 2.3.1: Edge Credential Decoupling & Cloud Reassembly Bridge [Completed]~~
+#### ~~Task 2.3.1: Sequential Stream Reassembly Bridge [Completed]~~
 * **Behavioral Specification**:
-  * **Edge Authentication Decoupling**: Edge nodes rely solely on standard mTLS broker certificates. No GCP Service Account keys or OAuth tokens are required or distributed to the edge.
-  * **Cloud-Side Reassembly**: Dedicated cloud bridge workers consume streaming MQTT topics directly from Mosquitto and handle reassembly and object storage writes entirely in the cloud.
+  * **Zero External Credentials**: Edge nodes rely solely on standard mTLS broker certificates without requiring external cloud authentication tokens or outbound HTTP firewall exceptions.
+  * **Cloud-Side Reassembly**: Dedicated cloud bridge workers consume sequential streaming MQTT topics directly from the broker and handle packet stream reassembly cleanly in the cloud using `event_no`.
 * **Implementation & Verification**:
-  * [agent.py](src/agent.py) - Uses zero-secret Streaming MQTT Protocol exclusively for all diagnostic jobs without writing raw PCAP binaries to local storage.
+  * [agent.py](src/agent.py) - Uses zero-secret Streaming MQTT Protocol exclusively for all diagnostic captures without writing raw PCAP binaries to local storage.
 
 #### ~~Sub-phase 2.4: Startup & Dependency Management [Completed]~~
 
@@ -447,8 +442,8 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 
 - [x] ~~**1. Dual-Process Parity**: Parity verified against bare-metal `discovery_node` using the `test_parity` suite.~~
 - [x] ~~**2. Declarative Triggering**: Diagnostic packet capture triggering and parameter mapping verified via `config.discovery.families` (`depth: "trace"`) block.~~
-- [x] ~~**3. RAM-Safe Streaming MQTT Transport**: Ephemeral packet capture verified to stream sequentially over `events/stream` using reliable sequence numbering (`event_no`) without local disk storage or edge cloud storage credentials.~~
-- [x] ~~**4. Edge Secret Decoupling & Cloud Reassembly**: Zero cloud service account secrets required on edge devices; verified cloud-side ingestion bridge compatibility with Mosquitto architecture.~~
+- [x] ~~**3. RAM-Safe Streaming MQTT Transport**: Ephemeral packet capture verified to stream sequentially over `events/stream` using reliable sequence numbering (`event_no`) directly from volatile memory without local disk storage.~~
+- [x] ~~**4. Cloud Stream Reassembly Bridge**: Verified cloud-side ingestion bridge compatibility with Mosquitto architecture for sequential chunk reassembly without requiring any external edge credentials.~~
 - [x] ~~**5. OTA Verification**: Safe OTA update flow verified: successful sandbox self-testing promotes the package, while simulated syntax/dependency errors trigger immediate rollback before promotion.~~
 - [x] ~~**6. Standard Compliance**: Zero-code plan compliance and 3-stage validation gate completion (Unit, Schema, Local Integration) as per `GEMINI.md`.~~
 - [x] ~~**7. Resource Contention Immunity**: Simultaneous legacy discovery sweeps and high-throughput diagnostic PCAP sessions verified to operate without OOM kills, FD exhaustion, or delayed MQTT telemetry heartbeats both in local synthetic testbeds (`bin/test_resource_contention`) and on deployed production target nodes.~~

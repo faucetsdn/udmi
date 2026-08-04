@@ -48,7 +48,7 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 1. **Capture Worker ([pcap.py](src/pcap.py))**: Spawns `tcpdump` with configurable interface filters, enforcing strict execution bounds (maximum duration and byte quotas).
 2. **Streaming MQTT Egress Transport**:
    - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`StreamEvents`) over the universal streaming MQTT event topic (`events/stream`).
-   - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding cloud storage credentials or external outbound HTTP rules at the edge.
+   - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding external network credentials or outbound HTTP rules at the edge.
 
 ```mermaid
 sequenceDiagram
