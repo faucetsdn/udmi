@@ -201,7 +201,7 @@ public class MappingAgent {
   private FamilyDiscoveryConfig getFamilyDiscoveryConfig(String family) {
     FamilyDiscoveryConfig familyDiscoveryConfig = new FamilyDiscoveryConfig();
     familyDiscoveryConfig.generation = generationDate;
-    familyDiscoveryConfig.depth = Depth.DETAILS;
+    familyDiscoveryConfig.depth = Depth.REFS;
     return familyDiscoveryConfig;
   }
 
