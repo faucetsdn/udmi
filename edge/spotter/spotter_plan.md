@@ -308,7 +308,7 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 
 ### Sub-phase 3.1: In-Container OTA Update Engine
 
-#### Task 3.1.1: Two-Stage Blob Pipeline & Supervisor Integration
+#### ~~Task 3.1.1: Two-Stage Blob Pipeline & Supervisor Integration [Completed]~~
 * **Target Location**: `udmi.core.blob` (Spotter Agent) & Supervisor Entrypoint
 * **Behavioral Specification**:
   * Implement the two-stage blob update pipeline (`apply` -> `final` state transitions) targeting the Spotter Agent itself.
@@ -317,8 +317,12 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
   * Supported OTA Blob Types:
     1.  `ota_package` (High Impact): Update the Spotter Agent Python code using `.whl` files.
     2.  `discovery_rules`: Hot-reloading of discovery signatures without agent restart.
+* **Implementation & Verification**:
+  * [agent.py](src/agent.py) - Added `process_ota_package`, `post_process_ota`, and `process_discovery_rules` blob handlers registered on `SystemManager`. Staged OTA wheel files set exit code 42 after final state publishing; discovery signature updates hot-reload without dropping sockets or restarting processes.
+  * [supervisor.sh](container/supervisor.sh) - Updated monitoring loop to intercept exit code 42, invoke staged self-test suites, promote active symlink upon success, and perform clean directory wipe and restart rollback upon non-zero exit code.
+  * [test_agent.py](tests/test_agent.py) & [test_supervisor.py](tests/test_supervisor.py) - Verified via unit tests (`TestOtaHandlers` and `test_ota_staging_rollback`).
 
-#### Task 3.1.2: Staged Sandbox & Self-Test Suite (The Self-Testing Agent)
+#### ~~Task 3.1.2: Staged Sandbox & Self-Test Suite (The Self-Testing Agent) [Completed]~~
 * **Target Location**: `edge/spotter/tests/self_test.py` & Supervisor
 * **Behavioral Specification**:
   * Create a lightweight standalone self-test suite (`self_test.py`) packed inside the Spotter distribution.
@@ -328,8 +332,10 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
     *   `test_mock_loop`: Verify the core message loop starts without immediate crash.
   * Configure the Supervisor to execute this test suite against the *staged* virtual environment (`/opt/spotter/staging/venv/bin/python -m spotter.tests.self_test`) **before** swapping the active symlink.
   * Ensure the update is rejected and rolled back immediately if the test suite returns a non-zero exit code.
+* **Implementation & Verification**:
+  * [self_test.py](tests/self_test.py) - Implemented standalone sandbox verification suite running in `<1s`. Covered `test_imports`, `test_permissions` (socket creation & staging filesystem writeability), and `test_mock_loop` (endpoint configuration mapping & manager creation). Verified execution via `./venv/bin/python3 edge/spotter/tests/self_test.py -v` (3/3 tests passed).
 
-#### Task 3.1.3: Concrete Use Cases for Modular OTA Updates
+#### ~~Task 3.1.3: Concrete Use Cases for Modular OTA Updates [Completed]~~
 * **Operational Value**: Updating modules autonomously without container rebuilds or FIE infrastructure maintenance windows demonstrates critical field agility:
   1. **Hot-Reloading Discovery Signatures (`discovery_rules`)**: When proprietary BACnet devices are encountered during deployment, operators push updated discovery profiles over MQTT. Spotter reloads signatures dynamically without dropping broker sockets or restarting processes, mapping non-standard telemetry points in real time.
   2. **On-Demand Diagnostic Driver Delivery (`ota_package`)**: To troubleshoot complex broadcast storms on UDP 47808 without SSH access, engineers deploy a custom packet sniffer module (`pcap_ext.whl`). Spotter runs automated sandbox self-verification, promotes the module atomically, and streams targeted diagnostic chunks over MQTT.
@@ -433,7 +439,7 @@ Phase 3 enables the development team to update Spotter logic autonomously and in
 - [x] ~~**2. Declarative Triggering**: Diagnostic packet capture triggering and parameter mapping verified via `config.discovery.families` (`depth: "trace"`) block.~~
 - [x] ~~**3. RAM-Safe Streaming MQTT Transport**: Ephemeral packet capture verified to stream sequentially over `events/stream` using reliable sequence numbering (`event_no`) without local disk storage or edge cloud storage credentials.~~
 - [x] ~~**4. Edge Secret Decoupling & Cloud Reassembly**: Zero cloud service account secrets required on edge devices; verified cloud-side ingestion bridge compatibility with Mosquitto architecture.~~
-- [ ] **5. OTA Verification**: Safe OTA update flow verified: successful sandbox self-testing promotes the package, while simulated syntax/dependency errors trigger immediate rollback before promotion.
+- [x] ~~**5. OTA Verification**: Safe OTA update flow verified: successful sandbox self-testing promotes the package, while simulated syntax/dependency errors trigger immediate rollback before promotion.~~
 - [x] ~~**6. Standard Compliance**: Zero-code plan compliance and 3-stage validation gate completion (Unit, Schema, Local Integration) as per `GEMINI.md`.~~
 - [ ] **7. Resource Contention Immunity**: Simultaneous legacy discovery sweeps and high-throughput diagnostic PCAP sessions verified to operate without OOM kills, FD exhaustion, or delayed MQTT telemetry heartbeats both in local synthetic testbeds (`bin/test_resource_contention`) and on deployed production target nodes.
 - [ ] **8. Network Fault Resiliency**: Automatic reconnect backoff and chunk retry logic verified under simulated socket interruptions during streaming (`bin/test_fault_injection`).

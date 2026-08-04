@@ -99,5 +99,23 @@ print(f"MOCK EXIT: {name} (PID: {{os.getpid()}})", flush=True)
         self.assertEqual(exit_code, 102, f"Expected exit code 102, got {exit_code}\nSTDOUT:\n{output}\nSTDERR:\n{errors}")
         self.assertIn("Supervisor: Fatal crash detected on Spotter agent. Restarting container.", output)
 
+    def test_ota_staging_rollback(self):
+        spotter_behavior = f"""
+flag_file = "{os.path.join(self.test_dir.name, 'restarted')}"
+if not os.path.exists(flag_file):
+    with open(flag_file, 'w') as f:
+        f.write('1')
+    sys.exit(42)
+else:
+    sys.exit(2)
+"""
+        exit_code, output, errors = self.run_supervisor_test(
+            "time.sleep(60)", spotter_behavior, "wait"
+        )
+        self.assertEqual(exit_code, 102, f"Expected exit code 102, got {exit_code}\nSTDOUT:\n{output}\nSTDERR:\n{errors}")
+        self.assertIn("Supervisor: OTA staging exit code (42) detected from Spotter agent.", output)
+        self.assertIn("Rejecting update and initiating ROLLBACK...", output)
+        self.assertIn("OTA rollback complete. Restarting Spotter Core Agent on previous known-good state...", output)
+
 if __name__ == "__main__":
     unittest.main()

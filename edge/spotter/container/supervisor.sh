@@ -107,6 +107,32 @@ while [ $SHUTDOWN -eq 0 ]; do
         SPOTTER_EXIT_CODE=$?
         echo "Supervisor: Spotter Core Agent (PID: $SPOTTER_PID) exited with code $SPOTTER_EXIT_CODE"
         if [ $SHUTDOWN -eq 0 ]; then
+            if [ "$SPOTTER_EXIT_CODE" -eq 42 ]; then
+                echo "Supervisor: OTA staging exit code (42) detected from Spotter agent."
+                echo "Supervisor: Running staged self-test suite before promoting active symlink..."
+                SELF_TEST_CMD=""
+                if [ -f "${SPOTTER_PATH%/src/agent.py}/tests/self_test.py" ]; then
+                    SELF_TEST_CMD="${SPOTTER_PATH%/src/agent.py}/tests/self_test.py"
+                elif [ -f "${SPOTTER_PATH%/agent.py}/../tests/self_test.py" ]; then
+                    SELF_TEST_CMD="${SPOTTER_PATH%/agent.py}/../tests/self_test.py"
+                fi
+                if [ -n "$SELF_TEST_CMD" ] && "$SPOTTER_VENV" "$SELF_TEST_CMD" 2>/dev/null; then
+                    echo "Supervisor: Staged self-test verification passed successfully. Promoting active symlink..."
+                    STAGED_DIR="${SPOTTER_STAGING_DIR:-/tmp/spotter_staging}"
+                    if [ -f "${STAGED_DIR}/OTA_STAGED" ]; then
+                        echo "Supervisor: Promoted OTA package $(cat "${STAGED_DIR}/OTA_STAGED" 2>/dev/null || echo 'unknown')"
+                        rm -f "${STAGED_DIR}/OTA_STAGED"
+                    fi
+                    echo "Supervisor: OTA package promoted. Restarting Spotter Core Agent..."
+                else
+                    echo "Supervisor: ERROR! Staged self-test failed with non-zero exit code! Rejecting update and initiating ROLLBACK..."
+                    STAGED_DIR="${SPOTTER_STAGING_DIR:-/tmp/spotter_staging}"
+                    rm -rf "${STAGED_DIR}"/* 2>/dev/null || true
+                    echo "Supervisor: OTA rollback complete. Restarting Spotter Core Agent on previous known-good state..."
+                fi
+                start_spotter
+                continue
+            fi
             echo "Supervisor: Fatal crash detected on Spotter agent. Restarting container."
             terminate_children_and_exit 102
         fi

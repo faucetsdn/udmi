@@ -283,8 +283,46 @@ def main():
         key_file=key_file
     )
 
+    sys_mgr = device.get_manager(SystemManager)
+    if sys_mgr:
+        sys_mgr.register_blob_handler("ota_package", process_ota_package, post_process_ota, expects_file=True)
+        sys_mgr.register_blob_handler("discovery_rules", process_discovery_rules, expects_file=True)
+        LOGGER.info("Registered OTA package and discovery rules blob handlers.")
+
     LOGGER.info("Device created. Running...")
     device.run()
+
+def process_ota_package(key: str, filepath: str) -> str:
+    """Stages an OTA package blob (.whl or bundle) for supervisor self-testing and promotion."""
+    if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
+        raise ValueError(f"Invalid or empty OTA package file for blob '{key}'")
+    staging_dir = os.environ.get("SPOTTER_STAGING_DIR", "/tmp/spotter_staging")
+    os.makedirs(staging_dir, exist_ok=True)
+    staged_file = os.path.join(staging_dir, os.path.basename(filepath))
+    with open(filepath, "rb") as src, open(staged_file, "wb") as dst:
+        dst.write(src.read())
+    marker_file = os.path.join(staging_dir, "OTA_STAGED")
+    with open(marker_file, "w") as f:
+        f.write(staged_file)
+    LOGGER.info("OTA package blob '%s' staged at '%s'. Requesting supervisor restart cycle...", key, staged_file)
+    return "staged"
+
+def post_process_ota(key: str, output: Any) -> None:
+    """Triggers an agent restart with code 42 after final state has been published."""
+    LOGGER.warning("OTA package staged (%s). Triggering exit code 42 in 1s for supervisor sandbox verification...", key)
+    def delayed_exit():
+        time.sleep(1.0)
+        os._exit(42)
+    threading.Thread(target=delayed_exit, name="OTARestart", daemon=True).start()
+
+def process_discovery_rules(key: str, filepath: str) -> str:
+    """Dynamically hot-reloads discovery signature rules without dropping broker connections."""
+    if not os.path.exists(filepath):
+        raise ValueError(f"Missing discovery rules file for blob '{key}'")
+    with open(filepath, "r", encoding="utf-8") as f:
+        rules = json.load(f)
+    LOGGER.info("Hot-reloaded discovery rules from blob '%s': %s", key, rules)
+    return "reloaded"
 
 if __name__ == "__main__":
     main()
