@@ -416,7 +416,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
 
       log.info("[Batch {}] Publishing batch containing {} commands ({} bytes) to {}",
           batchId, batch.size(), payload.length, CONTROL_TOPIC);
-      log.debug("[Batch {}] Publishing batch payload to {}: {}",
+      log.trace("[Batch {}] Publishing batch payload to {}: {}",
           batchId, CONTROL_TOPIC, new String(payload, StandardCharsets.UTF_8));
       mqttClient.publish(CONTROL_TOPIC, message);
       this.batchPublishTime = System.currentTimeMillis();
@@ -532,7 +532,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
       List<CommandRequest> batch, byte[] responsePayload, String batchId) {
     try {
       String responseString = new String(responsePayload, StandardCharsets.UTF_8);
-      log.debug("Received dynamic security broker response: {}", responseString);
+      log.trace("Received dynamic security broker response: {}", responseString);
       Map<String, Object> responseMap = objectMapper.readValue(responsePayload, Map.class);
       List<Map<String, Object>> responsesList =
           (List<Map<String, Object>>) responseMap.get("responses");
