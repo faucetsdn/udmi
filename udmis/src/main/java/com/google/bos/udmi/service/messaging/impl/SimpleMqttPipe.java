@@ -260,7 +260,8 @@ public class SimpleMqttPipe extends MessageBase {
       MqttMessage message = makeMqttMessage(bundle);
       String payload = new String(message.getPayload());
       captureMessage(topic, payload, false);
-      debug("MQTT publish from %s to %s: %s", clientId, topic, payload);
+      debug("MQTT publish from %s to %s", clientId, topic);
+      trace("MQTT publish payload: %s", payload);
       mqttClient.publish(topic, message);
 
 
@@ -475,7 +476,8 @@ public class SimpleMqttPipe extends MessageBase {
       String payload = new String(message.getPayload());
       captureMessage(topic, payload, true);
       try {
-        debug("MQTT message arrived on %s: %s", topic, payload);
+        debug("MQTT message arrived on %s", topic);
+        trace("MQTT arrived payload: %s", payload);
         Map<String, String> envelopeMap = parseEnvelopeTopic(topic);
         envelopeMap.put(PUBLISH_TIME_KEY, isoConvert());
 
