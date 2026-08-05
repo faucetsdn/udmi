@@ -84,15 +84,14 @@ while true; do
         attributes_json=$(echo "$message_json" | jq -c .attributes 2>/dev/null || echo "{}")
 
         # Output single-line JSON to STDOUT
-        jq -n \
+        printf "%s" "$data" | jq -Rs \
           --arg devId "$deviceId" \
           --arg regId "$registryId" \
           --arg subF "$subFolder" \
           --arg subT "$subType" \
           --arg ts "$timestamp" \
           --arg projId "$project_id" \
-          --arg rawPayload "$data" \
-          '{
+          '. as $rawPayload | {
             envelope: {
               deviceId: $devId,
               deviceRegistryId: $regId,

@@ -49,11 +49,8 @@ while read -r line; do
     fi
 
     found=false
-    for i in $(seq 0 99); do
-        suffix=""
-        if [[ $i -gt 0 ]]; then
-            suffix="$(printf "~%02d" $i)"
-        fi
+    for i in $(seq 0 999); do
+        suffix="$(printf "~%03d" $i)"
         
         z_suffix=""
         if [[ $has_z == true ]]; then
@@ -71,7 +68,7 @@ while read -r line; do
     done
 
     if [[ $found == false ]]; then
-        echo "Filename conflict for $out_file (all suffixes ~00-~99 already exist), would clobber." >&2
+        echo "Filename conflict for $out_file (all suffixes ~000-~999 already exist), would clobber." >&2
         exit 1
     fi
 
