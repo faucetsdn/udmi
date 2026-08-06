@@ -887,6 +887,58 @@ class MqttToPubSubBridgeTest {
     org.junit.jupiter.api.Assertions.assertTrue(
         cleanStartAliasCommandLine.hasOption("clean_start"));
   }
+
+  @Test
+  void testGracefulShutdown() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.isConnected()).thenReturn(true);
+    Publisher mockPublisher = mock(Publisher.class);
+    when(mockPublisher.awaitTermination(any(Long.class), any(java.util.concurrent.TimeUnit.class)))
+        .thenReturn(true);
+    EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+
+    MqttToPubSubBridge.gracefulShutdown(
+        bridge, mockMqttClient, mockPublisher, mockEtcdProvider);
+
+    verify(mockMqttClient).disconnect();
+    verify(mockPublisher).shutdown();
+    verify(mockPublisher).awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS);
+    verify(mockEtcdProvider).shutdown();
+  }
+
+  @Test
+  void testBridgeShutdownWithTimeout() {
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+    bridge.shutdown(2, java.util.concurrent.TimeUnit.SECONDS);
+  }
+
+  @Test
+  void testQueueWorkersExitImmediatelyWhenStopping() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+    mqttMessage.setId(6002);
+    mqttMessage.setQos(1);
+
+    String testTopic = "/r/my-registry/d/my-device/events";
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+    bridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+    bridge.setStopping(true);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    // Verify publisher is never called because bridge is stopping
+    Thread.sleep(1000);
+    verify(mockPublisher, org.mockito.Mockito.never()).publish(any(PubsubMessage.class));
+  }
 }
 
 

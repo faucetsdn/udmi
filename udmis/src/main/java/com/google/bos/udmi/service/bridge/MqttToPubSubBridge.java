@@ -43,6 +43,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.net.ssl.KeyManagerFactory;
@@ -114,6 +115,7 @@ public class MqttToPubSubBridge {
   private final ThreadPoolExecutor executor;
   private final ScheduledExecutorService retryScheduler;
   private volatile boolean tripped = false;
+  private volatile boolean stopping = false;
   private final ConcurrentHashMap<String, MessageState> unackedMessages = new ConcurrentHashMap<>();
 
   public int getUnackedCount() {
@@ -174,6 +176,14 @@ public class MqttToPubSubBridge {
 
   void setTrippedForTest(boolean tripped) {
     this.tripped = tripped;
+  }
+
+  public boolean isStopping() {
+    return stopping;
+  }
+
+  public void setStopping(boolean stopping) {
+    this.stopping = stopping;
   }
 
   private void startCircuitBreaker(IMqttClient mqttClient) {
@@ -327,6 +337,8 @@ public class MqttToPubSubBridge {
     IMqttClient mqttClient = null;
     EtcdDataProvider etcdProvider = null;
     MqttToPubSubBridge bridge = null;
+    AtomicBoolean isShuttingDown = new AtomicBoolean(false);
+    Thread shutdownHook = null;
 
     try {
       etcdProvider = createEtcdProvider(etcdTarget, etcdOptions);
@@ -361,6 +373,20 @@ public class MqttToPubSubBridge {
 
       bridge = new MqttToPubSubBridge();
 
+      final MqttToPubSubBridge finalBridge = bridge;
+      final IMqttClient finalMqttClient = mqttClient;
+      final Publisher finalPublisher = publisher;
+      final EtcdDataProvider finalEtcdProvider = etcdProvider;
+
+      Runnable shutdownTask = () -> {
+        if (isShuttingDown.compareAndSet(false, true)) {
+          gracefulShutdown(finalBridge, finalMqttClient, finalPublisher, finalEtcdProvider);
+        }
+      };
+
+      shutdownHook = new Thread(shutdownTask, "mqtt-bridge-shutdown-hook");
+      Runtime.getRuntime().addShutdownHook(shutdownHook);
+
       // Start the circuit breaker monitor
       bridge.startCircuitBreaker(mqttClient, circuitBreakerThreshold, circuitBreakerTimeoutMs);
       // Start periodic reconnect with random jitter
@@ -390,36 +416,14 @@ public class MqttToPubSubBridge {
       logger.error("An unexpected error occurred", e);
       System.exit(1);
     } finally {
-      // Shutdown
-      if (bridge != null) {
-        try {
-          bridge.shutdown();
-        } catch (Exception e) {
-          logger.warn("Error shutting down bridge executors", e);
-        }
+      if (isShuttingDown.compareAndSet(false, true)) {
+        gracefulShutdown(bridge, mqttClient, publisher, etcdProvider);
       }
-      if (etcdProvider != null) {
+      if (shutdownHook != null) {
         try {
-          etcdProvider.shutdown();
-          logger.debug("EtcdDataProvider shut down.");
-        } catch (Exception e) {
-          logger.warn("Error shutting down EtcdDataProvider", e);
-        }
-      }
-      if (mqttClient != null && mqttClient.isConnected()) {
-        try {
-          mqttClient.disconnect();
-          logger.debug("MQTT client disconnected.");
-        } catch (MqttException e) {
-          logger.warn("Error disconnecting MQTT client", e);
-        }
-      }
-      if (publisher != null) {
-        try {
-          publisher.shutdown();
-          logger.debug("Pub/Sub Publisher shut down.");
-        } catch (Exception e) {
-          logger.warn("Error shutting down Pub/Sub publisher", e);
+          Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        } catch (IllegalStateException ignored) {
+          // VM is already shutting down
         }
       }
       if (bridge != null && bridge.isTripped()) {
@@ -592,8 +596,8 @@ public class MqttToPubSubBridge {
 
           @Override
           public void messageArrived(String topic, MqttMessage message) {
-            if (tripped) {
-              // ABORT REQUEST RECEIVED, ABANDON REQUESTS
+            if (tripped || stopping) {
+              // ABORT OR SHUTDOWN IN PROGRESS, IGNORE NEW MESSAGE ARRIVALS
               return;
             }
             String messageKey = null;
@@ -950,8 +954,83 @@ public class MqttToPubSubBridge {
     }
   }
 
+  static void gracefulShutdown(MqttToPubSubBridge bridge, IMqttClient mqttClient,
+      Publisher publisher, EtcdDataProvider etcdProvider) {
+    logger.info("Initiating graceful shutdown of MqttToPubSubBridge...");
+    // 1. Signal bridge to ignore newly arriving MQTT messages
+    if (bridge != null) {
+      bridge.setStopping(true);
+    }
+
+    // 2. Shut down bridge executors and drain in-flight message processing
+    // Keep MQTT client connected while draining so PUBACKs can be returned to broker
+    if (bridge != null) {
+      try {
+        bridge.shutdown();
+        logger.debug("Bridge executors drained and shut down.");
+      } catch (Exception e) {
+        logger.warn("Error draining bridge executors", e);
+      }
+    }
+
+    // 3. Shut down Pub/Sub publisher and await pending publish futures
+    if (publisher != null) {
+      try {
+        publisher.shutdown();
+        if (!publisher.awaitTermination(10, TimeUnit.SECONDS)) {
+          logger.warn("Pub/Sub publisher did not terminate within 10 seconds");
+        }
+        logger.debug("Pub/Sub Publisher shut down.");
+      } catch (Exception e) {
+        logger.warn("Error shutting down Pub/Sub publisher", e);
+      }
+    }
+
+    // 4. Disconnect MQTT client after in-flight message ACKs have completed
+    if (mqttClient != null && mqttClient.isConnected()) {
+      try {
+        mqttClient.disconnect();
+        logger.debug("MQTT client disconnected.");
+      } catch (Exception e) {
+        logger.warn("Error disconnecting MQTT client during shutdown", e);
+      }
+    }
+
+    // 5. Shut down Etcd data provider
+    if (etcdProvider != null) {
+      try {
+        etcdProvider.shutdown();
+        logger.debug("EtcdDataProvider shut down.");
+      } catch (Exception e) {
+        logger.warn("Error shutting down EtcdDataProvider", e);
+      }
+    }
+    logger.info("Graceful shutdown of MqttToPubSubBridge completed.");
+  }
+
   public void shutdown() {
+    shutdown(10, TimeUnit.SECONDS);
+  }
+
+  public void shutdown(long timeout, TimeUnit unit) {
     executor.shutdown();
     retryScheduler.shutdown();
+    try {
+      long halfTimeout = Math.max(1, timeout / 2);
+      if (!executor.awaitTermination(halfTimeout, unit)) {
+        logger.warn("Executor did not terminate within {} {}, forcing shutdown",
+            halfTimeout, unit);
+        executor.shutdownNow();
+      }
+      if (!retryScheduler.awaitTermination(halfTimeout, unit)) {
+        logger.warn("Retry scheduler did not terminate within {} {}, forcing shutdown",
+            halfTimeout, unit);
+        retryScheduler.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      executor.shutdownNow();
+      retryScheduler.shutdownNow();
+      Thread.currentThread().interrupt();
+    }
   }
 }
