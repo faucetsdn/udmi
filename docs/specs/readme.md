@@ -26,6 +26,7 @@
 
 ## System Modeling
 - [Metadata](metadata.md)
+- [Externals](externals.md)
 - [Site Model](site_model.md)
 - [Topology](topology.md)
 - [Onboarding](onboarding.md)
