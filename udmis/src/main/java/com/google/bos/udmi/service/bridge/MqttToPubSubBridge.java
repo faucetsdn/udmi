@@ -107,6 +107,35 @@ public class MqttToPubSubBridge {
     ABANDONED
   }
 
+  /**
+   * Represents a recorded message entry tracking its state and insertion timestamp.
+   */
+  public static class MessageRecord {
+    private final long timestamp;
+    private volatile MessageState state;
+
+    public MessageRecord(MessageState state) {
+      this(state, System.currentTimeMillis());
+    }
+
+    public MessageRecord(MessageState state, long timestamp) {
+      this.state = state;
+      this.timestamp = timestamp;
+    }
+
+    public long getTimestamp() {
+      return timestamp;
+    }
+
+    public MessageState getState() {
+      return state;
+    }
+
+    public void setState(MessageState state) {
+      this.state = state;
+    }
+  }
+
   private static final Cache<String, String> numIdCache = CacheBuilder.newBuilder()
       .expireAfterWrite(1, TimeUnit.MINUTES)
       .maximumSize(10000)
@@ -116,7 +145,8 @@ public class MqttToPubSubBridge {
   private final ScheduledExecutorService retryScheduler;
   private volatile boolean tripped = false;
   private volatile boolean stopping = false;
-  private final ConcurrentHashMap<String, MessageState> unackedMessages = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, MessageRecord> unackedMessages =
+      new ConcurrentHashMap<>();
 
   public int getUnackedCount() {
     return unackedMessages.size();
@@ -124,16 +154,25 @@ public class MqttToPubSubBridge {
 
   public int getInProcessCount() {
     return (int) unackedMessages.values().stream()
-        .filter(s -> s == MessageState.IN_PROCESS).count();
+        .filter(r -> r.getState() == MessageState.IN_PROCESS).count();
   }
 
   public int getAbandonedCount() {
     return (int) unackedMessages.values().stream()
-        .filter(s -> s == MessageState.ABANDONED).count();
+        .filter(r -> r.getState() == MessageState.ABANDONED).count();
   }
 
   public MessageState getMessageState(String messageKey) {
+    MessageRecord record = unackedMessages.get(messageKey);
+    return record != null ? record.getState() : null;
+  }
+
+  public MessageRecord getMessageRecord(String messageKey) {
     return unackedMessages.get(messageKey);
+  }
+
+  void putMessageRecordForTest(String messageKey, MessageRecord record) {
+    unackedMessages.put(messageKey, record);
   }
 
   static String getMessageHash(String topic, MqttMessage message) {
@@ -190,31 +229,38 @@ public class MqttToPubSubBridge {
     startCircuitBreaker(mqttClient, DEFAULT_UNACKED_THRESHOLD, DEFAULT_CIRCUIT_BREAKER_TIMEOUT_MS);
   }
 
-  void startCircuitBreaker(IMqttClient mqttClient, int threshold, long timeoutMs) {
+  void startCircuitBreaker(IMqttClient mqttClient, int abandonedThreshold, long timeoutMs) {
     Thread monitor = new Thread(() -> {
-      long fullStartTime = 0;
-      while (!tripped) {
+      while (!tripped && !stopping) {
         try {
           Thread.sleep(1000);
-          // Check if total unacked messages (IN_PROCESS + ABANDONED) exceed threshold
-          if (unackedMessages.size() >= threshold) {
-            if (fullStartTime == 0) {
-              fullStartTime = System.currentTimeMillis();
-            } else if (System.currentTimeMillis() - fullStartTime >= timeoutMs) {
-              tripped = true;
+          long now = System.currentTimeMillis();
+
+          // 1. Check if any message is stuck in-flight longer than timeoutMs
+          boolean hasStuckMessage = unackedMessages.values().stream()
+              .anyMatch(record -> (now - record.getTimestamp()) >= timeoutMs);
+
+          // 2. Check if abandoned messages have exhausted capacity (>= abandonedThreshold)
+          boolean abandonedExceeded = getAbandonedCount() >= abandonedThreshold;
+
+          if (hasStuckMessage || abandonedExceeded) {
+            tripped = true;
+            if (hasStuckMessage) {
               logger.error(
-                  "Unacked message threshold ({} messages) exceeded for {}ms! "
-                      + "Tripping circuit breaker.",
-                  threshold, timeoutMs);
-              try {
-                mqttClient.disconnectForcibly();
-              } catch (Exception e) {
-                logger.error("Error disconnecting during circuit breaker trip", e);
-              }
-              exit(1);
+                  "Message stuck in unacked queue for >= {}ms! Tripping circuit breaker.",
+                  timeoutMs);
             }
-          } else {
-            fullStartTime = 0; // reset
+            if (abandonedExceeded) {
+              logger.error(
+                  "Abandoned message threshold ({} messages) reached! Tripping circuit breaker.",
+                  abandonedThreshold);
+            }
+            try {
+              mqttClient.disconnectForcibly();
+            } catch (Exception e) {
+              logger.error("Error disconnecting during circuit breaker trip", e);
+            }
+            exit(1);
           }
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
@@ -465,9 +511,9 @@ public class MqttToPubSubBridge {
     options.addOption(null, "clean_start", false,
         "Enable clean start for MQTT connection (alias for mqtt_clean_start).");
     options.addOption(null, "circuit_breaker_unacked_threshold", true,
-        "Unacked message count threshold for circuit breaker (default 100).");
+        "Abandoned message count threshold for circuit breaker (default 100).");
     options.addOption(null, "circuit_breaker_timeout_sec", true,
-        "Timeout in seconds for circuit breaker threshold (default 300).");
+        "Max in-flight message age in seconds before circuit breaker trips (default 300).");
     options.addOption("h", "help", false, "Print usage info.");
 
     CommandLineParser parser = new DefaultParser();
@@ -608,15 +654,16 @@ public class MqttToPubSubBridge {
               final java.util.concurrent.atomic.AtomicBoolean shouldProcess =
                   new java.util.concurrent.atomic.AtomicBoolean(false);
 
-              unackedMessages.compute(finalMessageKey, (key, existingState) -> {
-                if (existingState == MessageState.IN_PROCESS) {
+              unackedMessages.compute(finalMessageKey, (key, existingRecord) -> {
+                if (existingRecord != null
+                    && existingRecord.getState() == MessageState.IN_PROCESS) {
                   // Message is currently in-flight, skip queue
-                  return MessageState.IN_PROCESS;
+                  return existingRecord;
                 }
-                // New message (existingState == null) OR previously ABANDONED
+                // New message (existingRecord == null) OR previously ABANDONED
                 // Transition to IN_PROCESS and process
                 shouldProcess.set(true);
-                return MessageState.IN_PROCESS;
+                return new MessageRecord(MessageState.IN_PROCESS);
               });
 
               if (!shouldProcess.get()) {
@@ -790,7 +837,13 @@ public class MqttToPubSubBridge {
           "Failed to publish to Pub/Sub after 5 attempts."
               + " Leaving message ID {} unacked (marked as ABANDONED).",
           mqttMessage.getId(), t);
-      unackedMessages.put(messageKey, MessageState.ABANDONED);
+      unackedMessages.compute(messageKey, (key, existingRecord) -> {
+        if (existingRecord != null) {
+          existingRecord.setState(MessageState.ABANDONED);
+          return existingRecord;
+        }
+        return new MessageRecord(MessageState.ABANDONED);
+      });
     }
   }
 

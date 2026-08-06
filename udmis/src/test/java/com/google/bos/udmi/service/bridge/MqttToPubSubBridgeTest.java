@@ -790,7 +790,7 @@ class MqttToPubSubBridgeTest {
   }
 
   @Test
-  void testCircuitBreakerTripsWhenThresholdExceeded() throws Exception {
+  void testCircuitBreakerTripsWhenMessageStuck() throws Exception {
     IMqttClient mockMqttClient = mock(IMqttClient.class);
     when(mockMqttClient.getClientId()).thenReturn("test-client");
     Publisher mockPublisher = mock(Publisher.class);
@@ -814,24 +814,15 @@ class MqttToPubSubBridgeTest {
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
     MqttCallback callback = callbackCaptor.getValue();
 
-    // Start circuit breaker with threshold of 2 messages and 1500ms timeout
-    bridge.startCircuitBreaker(mockMqttClient, 2, 1500L);
+    // Start circuit breaker with high abandoned threshold (100) and 1500ms stuck timeout
+    bridge.startCircuitBreaker(mockMqttClient, 100, 1500L);
 
-    // Send message 1
+    // Send message 1 (which never completes, staying IN_PROCESS)
     MqttMessage msg1 = new MqttMessage("Payload 1".getBytes());
     msg1.setId(101);
     callback.messageArrived(testTopic, msg1);
 
-    // Below threshold (1 < 2)
-    Thread.sleep(2000);
-    org.junit.jupiter.api.Assertions.assertFalse(bridge.isTripped());
-
-    // Send message 2 (reaches threshold 2 >= 2)
-    MqttMessage msg2 = new MqttMessage("Payload 2".getBytes());
-    msg2.setId(102);
-    callback.messageArrived(testTopic, msg2);
-
-    // Wait for timeout (1500ms + polling buffer)
+    // Wait for stuck timeout (1500ms + polling buffer)
     long deadline = System.currentTimeMillis() + 8000;
     while (!bridge.isTripped() && System.currentTimeMillis() < deadline) {
       Thread.sleep(100);
@@ -839,6 +830,74 @@ class MqttToPubSubBridgeTest {
     org.junit.jupiter.api.Assertions.assertTrue(bridge.isTripped());
     org.junit.jupiter.api.Assertions.assertTrue(exited[0]);
     verify(mockMqttClient).disconnectForcibly();
+  }
+
+  @Test
+  void testCircuitBreakerTripsWhenAbandonedThresholdReached() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+
+    final boolean[] exited = new boolean[]{false};
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge() {
+      @Override
+      protected void exit(int status) {
+        exited[0] = true;
+      }
+    };
+
+    // Start circuit breaker with abandoned threshold = 2 and long timeout (60000ms)
+    bridge.startCircuitBreaker(mockMqttClient, 2, 60000L);
+
+    // Add 1 abandoned message (below threshold)
+    bridge.putMessageRecordForTest("msg1",
+        new MqttToPubSubBridge.MessageRecord(MqttToPubSubBridge.MessageState.ABANDONED));
+    Thread.sleep(1500);
+    org.junit.jupiter.api.Assertions.assertFalse(bridge.isTripped());
+
+    // Add 2nd abandoned message (reaches threshold 2 >= 2)
+    bridge.putMessageRecordForTest("msg2",
+        new MqttToPubSubBridge.MessageRecord(MqttToPubSubBridge.MessageState.ABANDONED));
+
+    long deadline = System.currentTimeMillis() + 8000;
+    while (!bridge.isTripped() && System.currentTimeMillis() < deadline) {
+      Thread.sleep(100);
+    }
+    org.junit.jupiter.api.Assertions.assertTrue(bridge.isTripped());
+    org.junit.jupiter.api.Assertions.assertTrue(exited[0]);
+    verify(mockMqttClient).disconnectForcibly();
+  }
+
+  @Test
+  void testCircuitBreakerDoesNotTripUnderHighThroughputSaturation() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+
+    final boolean[] exited = new boolean[]{false};
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge() {
+      @Override
+      protected void exit(int status) {
+        exited[0] = true;
+      }
+    };
+
+    // 1500ms timeout
+    bridge.startCircuitBreaker(mockMqttClient, 100, 1500L);
+
+    // Continuously add and remove messages so count is high but no message exceeds 1500ms
+    long testEnd = System.currentTimeMillis() + 3000;
+    int id = 0;
+    while (System.currentTimeMillis() < testEnd) {
+      String key = "key-" + (++id);
+      bridge.putMessageRecordForTest(key,
+          new MqttToPubSubBridge.MessageRecord(MqttToPubSubBridge.MessageState.IN_PROCESS));
+      Thread.sleep(50);
+      bridge.getMessageState(key);
+      // simulate completion
+      bridge.putMessageRecordForTest(key, null);
+    }
+
+    org.junit.jupiter.api.Assertions.assertFalse(bridge.isTripped());
+    org.junit.jupiter.api.Assertions.assertFalse(exited[0]);
   }
 
   @Test
