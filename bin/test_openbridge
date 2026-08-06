@@ -97,12 +97,13 @@ export registry_id="$REGISTRY_ID"
 echo "Checking base infrastructure services..."
 ETCD_PORT=${ETCD_PORT:-2379}
 if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
-  echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost' first." >&2
+  echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
 
-if ! nc -z 127.0.0.1 8883 &>/dev/null; then
-  echo "Error: Mosquitto is not running on 127.0.0.1:8883. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost' first." >&2
+MQTT_PORT=${MQTT_PORT:-8883}
+if ! nc -z 127.0.0.1 "$MQTT_PORT" &>/dev/null; then
+  echo "Error: Mosquitto is not running on 127.0.0.1:$MQTT_PORT. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
 
@@ -248,8 +249,12 @@ jq --arg auth_user "$AUTH_USER" \
    --arg auth_pass "$AUTH_PASS" \
    --arg serv_user "$SERV_USER" \
    --arg serv_pass "$SERV_PASS" \
-   '.flows.reflect.send_id = "udmi_reply" |
+   --argjson mqtt_port "${MQTT_PORT:-8883}" \
+   --arg etcd_port "${ETCD_PORT:-2379}" \
+   '.base.log_level = "DEBUG" |
+    .flows.reflect.send_id = "udmi_reply" |
     .flows.distributor.enabled = "false" |
+    .iot_data.database.project_id = "http://${ETCD_CLUSTER}:\($etcd_port)" |
     .iot_access.implicit = {
       "provider": "implicit",
       "options": "enabled=${ETCD_CLUSTER}",
@@ -257,7 +262,7 @@ jq --arg auth_user "$AUTH_USER" \
         "protocol": "mqtt",
         "transport": "ssl",
         "hostname": "localhost",
-        "port": 8883,
+        "port": $mqtt_port,
         "ca_file": "'$(pwd)'/var/mosquitto/certs/ca.crt",
         "cert_file": "'$(pwd)'/var/mosquitto/certs/rsa_private.crt",
         "key_file": "'$(pwd)'/var/mosquitto/certs/rsa_private.pem",
@@ -281,7 +286,7 @@ jq --arg auth_user "$AUTH_USER" \
         "protocol": "mqtt",
         "transport": "ssl",
         "hostname": "localhost",
-        "port": 8883,
+        "port": $mqtt_port,
         "send_id": "reply",
         "ca_file": "'$(pwd)'/var/mosquitto/certs/ca.crt",
         "cert_file": "'$(pwd)'/var/mosquitto/certs/rsa_private.crt",
@@ -323,7 +328,7 @@ fi
 echo "Starting Bridges..."
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:8883 \
+  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
   --mqtt_subscription_topic="/r/+/d/+/events/#" \
   --gcp_project_id=udmis \
   --pubsub_topic_id=udmi_target \
@@ -342,7 +347,7 @@ BRIDGE_EVENTS_PID=$!
 
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:8883 \
+  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
   --mqtt_subscription_topic="/r/+/d/+/state" \
   --gcp_project_id=udmis \
   --pubsub_topic_id=udmi_state \
@@ -361,7 +366,7 @@ BRIDGE_STATE_PID=$!
 
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:8883 \
+  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
   --mqtt_subscription_topic="/r/UDMI-REFLECT/d/+/reflect" \
   --gcp_project_id=udmis \
   --pubsub_topic_id=udmi_reflect \
@@ -426,7 +431,7 @@ wait_for_device_config() {
   rm -f "$sub_err_log"
   
   if timeout "$timeout_sec" mosquitto_sub \
-    -h 127.0.0.1 -p 8883 \
+    -h 127.0.0.1 -p $MQTT_PORT \
     -t "$topic" \
     -i "$username" \
     -u "$username" -P "$password" \

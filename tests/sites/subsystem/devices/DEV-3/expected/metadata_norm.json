@@ -10,7 +10,7 @@
   "localnet": {
     "families": {
       "modbus": {
-        "addr": "1"
+        "unitid": "1"
       }
     }
   },
@@ -18,7 +18,7 @@
     "points": {
       "temp": {
         "ref": "40001",
-        "url": "modbus://1/40001"
+        "url": "modbus://null/1/40001"
       }
     }
   },
@@ -33,5 +33,6 @@
     }
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.2"
+  "upgraded_from": "1.5.2",
+  "version": "1.5.7"
 }
