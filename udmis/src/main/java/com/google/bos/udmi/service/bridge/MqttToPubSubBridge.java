@@ -94,6 +94,11 @@ public class MqttToPubSubBridge {
   private static final Pattern TOPIC_PATTERN = Pattern.compile("/r/([^/]+)/d/([^/]+)/?(.*)");
   private static final Logger logger = LoggerFactory.getLogger(MqttToPubSubBridge.class);
 
+  // Maximum capacity for the in-memory executor task queue.
+  // This acts as a defensive 10x safety buffer above MQTT v5 Receive Maximum (100).
+  // Under normal MQTT v5 operation, the broker throttles delivery to at most 100 in-flight
+  // unacknowledged messages, so this 1000-element queue is a defensive precaution for bursts,
+  // QoS 0 traffic, or MQTT v3.1.1 fallback.
   private static final int MAX_QUEUE_SIZE = 1000;
   private static final int NUM_THREADS = 24;
   public static final int DEFAULT_UNACKED_THRESHOLD = 100;
@@ -172,7 +177,11 @@ public class MqttToPubSubBridge {
   }
 
   void putMessageRecordForTest(String messageKey, MessageRecord record) {
-    unackedMessages.put(messageKey, record);
+    if (record == null) {
+      unackedMessages.remove(messageKey);
+    } else {
+      unackedMessages.put(messageKey, record);
+    }
   }
 
   static String getMessageHash(String topic, MqttMessage message) {
@@ -199,7 +208,22 @@ public class MqttToPubSubBridge {
         0L, TimeUnit.MILLISECONDS,
         new ArrayBlockingQueue<>(MAX_QUEUE_SIZE),
         new ThreadFactoryBuilder().setNameFormat("mqtt-bridge-%d").setDaemon(true).build(),
-        new ThreadPoolExecutor.AbortPolicy());
+        (runnable, exec) -> {
+          if (exec.isShutdown()) {
+            throw new RejectedExecutionException("Executor is shut down");
+          }
+          try {
+            // Block up to 2 seconds to absorb transient bursts and apply TCP backpressure
+            boolean added = exec.getQueue().offer(runnable, 2, TimeUnit.SECONDS);
+            if (!added) {
+              throw new RejectedExecutionException("Executor queue full after 2s wait");
+            }
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RejectedExecutionException(
+                "Interrupted while waiting for executor queue capacity", e);
+          }
+        });
     this.retryScheduler = Executors.newScheduledThreadPool(4,
         new ThreadFactoryBuilder().setNameFormat("mqtt-bridge-retry-%d").setDaemon(true).build());
   }
@@ -238,6 +262,7 @@ public class MqttToPubSubBridge {
 
           // 1. Check if any message is stuck in-flight longer than timeoutMs
           boolean hasStuckMessage = unackedMessages.values().stream()
+              .filter(record -> record != null && record.getState() == MessageState.IN_PROCESS)
               .anyMatch(record -> (now - record.getTimestamp()) >= timeoutMs);
 
           // 2. Check if abandoned messages have exhausted capacity (>= abandonedThreshold)
@@ -265,6 +290,8 @@ public class MqttToPubSubBridge {
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
           break;
+        } catch (Exception e) {
+          logger.error("Error in circuit breaker monitor", e);
         }
       }
     });
@@ -646,6 +673,11 @@ public class MqttToPubSubBridge {
               // ABORT OR SHUTDOWN IN PROGRESS, IGNORE NEW MESSAGE ARRIVALS
               return;
             }
+            logger.debug(
+                "MQTT message received: ID={}, topic={}, queueSize={}, inProcess={},"
+                    + " abandoned={}, unackedTotal={}",
+                message.getId(), topic, executor.getQueue().size(), getInProcessCount(),
+                getAbandonedCount(), getUnackedCount());
             String messageKey = null;
             try {
               messageKey = getMessageHash(topic, message);
@@ -675,6 +707,11 @@ public class MqttToPubSubBridge {
               }
 
               final String receiveTime = java.time.Instant.now().toString();
+              logger.debug(
+                  "Queueing MQTT message ID {} (queueSize={}, inProcess={},"
+                      + " abandoned={}, unackedTotal={})",
+                  message.getId(), executor.getQueue().size(), getInProcessCount(),
+                  getAbandonedCount(), getUnackedCount());
               executor.submit(() -> {
                 if (tripped) {
                   // ABORT REQUEST RECEIVED, ABANDON REQUESTS
@@ -754,14 +791,12 @@ public class MqttToPubSubBridge {
                 unackedMessages.remove(messageKey);
               }
               if (e instanceof RejectedExecutionException) {
-                logger.error("Execution rejected, queue full! Dropping MQTT connection.", e);
-                try {
-                  mqttClient.disconnectForcibly();
-                } catch (MqttException me) {
-                  logger.error("Error while forcing disconnect", me);
-                }
+                logger.warn(
+                    "Unable to queue MQTT message ID {} (queue saturated, shedding message"
+                        + " without dropping connection)",
+                    message.getId(), e);
               } else {
-                logger.error("Error submitting message to executor", e);
+                logger.error("Error submitting message ID {} to executor", message.getId(), e);
               }
             }
           }
@@ -1061,10 +1096,19 @@ public class MqttToPubSubBridge {
     logger.info("Graceful shutdown of MqttToPubSubBridge completed.");
   }
 
+  /**
+   * Shuts down the bridge executors with a default timeout of 10 seconds.
+   */
   public void shutdown() {
     shutdown(10, TimeUnit.SECONDS);
   }
 
+  /**
+   * Shuts down the bridge executors awaiting termination up to the specified timeout.
+   *
+   * @param timeout the maximum time to wait
+   * @param unit the time unit of the timeout argument
+   */
   public void shutdown(long timeout, TimeUnit unit) {
     executor.shutdown();
     retryScheduler.shutdown();

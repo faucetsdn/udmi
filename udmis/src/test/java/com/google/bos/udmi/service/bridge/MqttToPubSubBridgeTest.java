@@ -824,7 +824,7 @@ class MqttToPubSubBridgeTest {
 
     // Wait for stuck timeout (1500ms + polling buffer)
     long deadline = System.currentTimeMillis() + 8000;
-    while (!bridge.isTripped() && System.currentTimeMillis() < deadline) {
+    while ((!bridge.isTripped() || !exited[0]) && System.currentTimeMillis() < deadline) {
       Thread.sleep(100);
     }
     org.junit.jupiter.api.Assertions.assertTrue(bridge.isTripped());
@@ -859,7 +859,7 @@ class MqttToPubSubBridgeTest {
         new MqttToPubSubBridge.MessageRecord(MqttToPubSubBridge.MessageState.ABANDONED));
 
     long deadline = System.currentTimeMillis() + 8000;
-    while (!bridge.isTripped() && System.currentTimeMillis() < deadline) {
+    while ((!bridge.isTripped() || !exited[0]) && System.currentTimeMillis() < deadline) {
       Thread.sleep(100);
     }
     org.junit.jupiter.api.Assertions.assertTrue(bridge.isTripped());
