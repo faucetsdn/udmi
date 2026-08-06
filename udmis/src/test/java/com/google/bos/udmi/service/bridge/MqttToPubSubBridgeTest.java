@@ -10,6 +10,7 @@ import com.google.api.core.ApiFutures;
 import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.EtcdDataProvider;
 import com.google.cloud.pubsub.v1.Publisher;
+import com.google.common.hash.Hashing;
 import com.google.pubsub.v1.PubsubMessage;
 import java.util.Map;
 import org.apache.commons.cli.CommandLine;
@@ -494,7 +495,6 @@ class MqttToPubSubBridgeTest {
     // Publish should NOT be called a second time
     verify(mockPublisher, org.mockito.Mockito.timeout(2000).times(1))
         .publish(any(PubsubMessage.class));
-    assertEquals(1, bridge.getDupCount());
     assertEquals(1, bridge.getUnackedCount());
   }
 
@@ -525,17 +525,17 @@ class MqttToPubSubBridgeTest {
     // 5 attempts expected (exponential backoff up to ~15s)
     verify(mockPublisher, org.mockito.Mockito.timeout(20000).times(5))
         .publish(any(PubsubMessage.class));
-    assertEquals(1, bridge.getUnackedCount());
+    Thread.sleep(500);
+    assertEquals(0, bridge.getUnackedCount());
 
     // Now publisher recovers
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFuture("msg-success"));
 
-    // Redelivery arrival of ABANDONED message - should NOT be skipped
+    // Redelivery arrival of failed message - should be retried
     MqttMessage redeliveredMessage = new MqttMessage(payloadStr.getBytes());
     redeliveredMessage.setId(3003);
     redeliveredMessage.setQos(1);
-    redeliveredMessage.setDuplicate(true);
 
     callback.messageArrived(testTopic, redeliveredMessage);
     // Total publish calls should now be 6 (5 initial + 1 redelivery)
@@ -622,27 +622,24 @@ class MqttToPubSubBridgeTest {
     verify(mockMqttClient).setCallback(callbackCaptor.capture());
     MqttCallback callback = callbackCaptor.getValue();
 
-    // First arrival - message is queued and stays IN_PROCESS
+    // First arrival - message is queued and stays in process
     callback.messageArrived(testTopic, mqttMessage);
     verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(1))
         .publish(any(PubsubMessage.class));
     assertEquals(1, bridge.getUnackedCount());
 
-    // Second arrival with same ID but isDuplicate=false
-    // (simulating ID wrap-around for a new message)
-    MqttMessage wrappedIdMessage = new MqttMessage(payloadStr.getBytes());
+    // Second arrival with same ID but different payload (ID wrap-around for a new message)
+    MqttMessage wrappedIdMessage = new MqttMessage("New payload after wrap".getBytes());
     wrappedIdMessage.setId(1001);
     wrappedIdMessage.setQos(1);
-    wrappedIdMessage.setDuplicate(false);
 
     callback.messageArrived(testTopic, wrappedIdMessage);
-    // In current buggy code, this is skipped. With fix, publish is called a second time.
     verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(2))
         .publish(any(PubsubMessage.class));
   }
 
   @Test
-  void testSuccessfulTrafficClearsAbandonedMessages() throws Exception {
+  void testFailedTrafficAllowsSubsequentMessages() throws Exception {
     IMqttClient mockMqttClient = mock(IMqttClient.class);
     when(mockMqttClient.getClientId()).thenReturn("test-client");
     String payloadStr = "Hello World";
@@ -655,7 +652,7 @@ class MqttToPubSubBridgeTest {
     mqttMessage2.setQos(1);
 
     Publisher mockPublisher = mock(Publisher.class);
-    // First message fails all 5 attempts -> becomes ABANDONED
+    // First message fails all 5 attempts
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFailedFuture(new RuntimeException("PubSub Outage")))
         .thenReturn(ApiFutures.immediateFailedFuture(new RuntimeException("PubSub Outage")))
@@ -676,14 +673,108 @@ class MqttToPubSubBridgeTest {
     callback.messageArrived(testTopic, mqttMessage1);
     verify(mockPublisher, org.mockito.Mockito.timeout(20000).times(5))
         .publish(any(PubsubMessage.class));
-    assertEquals(1, bridge.getUnackedCount());
+    Thread.sleep(500);
+    assertEquals(0, bridge.getUnackedCount());
 
     // Now second message arrives and succeeds
     callback.messageArrived(testTopic, mqttMessage2);
     verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(6))
         .publish(any(PubsubMessage.class));
 
-    // ABANDONED message 4001 should be cleared upon successful new traffic
+    assertEquals(0, bridge.getUnackedCount());
+  }
+
+  @Test
+  void testQueueWorkersExitImmediatelyWhenTripped() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+    mqttMessage.setId(6001);
+    mqttMessage.setQos(1);
+
+    String testTopic = "/r/my-registry/d/my-device/events";
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+    bridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+    bridge.setTrippedForTest(true);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    // Verify publisher is never called because bridge is tripped
+    Thread.sleep(1000);
+    verify(mockPublisher, org.mockito.Mockito.never()).publish(any(PubsubMessage.class));
+  }
+
+  @Test
+  void testMessageHashFormat() {
+    String payloadStr = "Test payload for hash";
+    MqttMessage message = new MqttMessage(payloadStr.getBytes());
+    message.setId(777);
+
+    String expectedPayloadHash = Hashing.murmur3_128().hashBytes(payloadStr.getBytes()).toString();
+    String expectedHash = "777:" + expectedPayloadHash;
+
+    assertEquals(expectedHash, MqttToPubSubBridge.getMessageHash(message));
+  }
+
+  @Test
+  void testSameIdDifferentPayloadBothProcessed() throws Exception {
+    final IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    final Publisher mockPublisher = mock(Publisher.class);
+
+    final MqttMessage msg1 = new MqttMessage("Payload One".getBytes());
+    msg1.setId(5050);
+    msg1.setQos(1);
+
+    final MqttMessage msg2 = new MqttMessage("Payload Two".getBytes());
+    msg2.setId(5050);
+    msg2.setQos(1);
+
+    com.google.api.core.SettableApiFuture<String> pendingFuture1 =
+        com.google.api.core.SettableApiFuture.create();
+    com.google.api.core.SettableApiFuture<String> pendingFuture2 =
+        com.google.api.core.SettableApiFuture.create();
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(pendingFuture1)
+        .thenReturn(pendingFuture2);
+
+    String testTopic = "/r/my-registry/d/my-device/events";
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+    bridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    // First message arrives
+    callback.messageArrived(testTopic, msg1);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(1))
+        .publish(any(PubsubMessage.class));
+    assertEquals(1, bridge.getUnackedCount());
+
+    // Second message arrives with same ID but different payload
+    callback.messageArrived(testTopic, msg2);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(2))
+        .publish(any(PubsubMessage.class));
+    assertEquals(2, bridge.getUnackedCount());
+
+    // Complete msg1
+    pendingFuture1.set("msg-1");
+    // Wait for callback
+    Thread.sleep(500);
+    assertEquals(1, bridge.getUnackedCount());
+
+    // Complete msg2
+    pendingFuture2.set("msg-2");
+    Thread.sleep(500);
     assertEquals(0, bridge.getUnackedCount());
   }
 }
