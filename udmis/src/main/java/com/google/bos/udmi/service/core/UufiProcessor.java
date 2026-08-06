@@ -13,6 +13,7 @@ import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import udmi.schema.CloudModel;
 import udmi.schema.EndpointConfiguration;
@@ -138,20 +139,23 @@ public class UufiProcessor extends ProcessorBase {
           innerEnvelope.deviceRegistryId, innerEnvelope.deviceId);
       throw new IllegalArgumentException(msg);
     }
+    boolean registryMismatch = envelope.deviceRegistryId != null
+        && !Objects.equals(envelope.deviceRegistryId, innerEnvelope.deviceRegistryId);
+    boolean deviceMismatch = envelope.deviceId != null
+        && !Objects.equals(envelope.deviceId, innerEnvelope.deviceId);
+    if ((envelope.subType != null && innerEnvelope.subType != envelope.subType)
+        || (envelope.subFolder != null && innerEnvelope.subFolder != envelope.subFolder)
+        || registryMismatch || deviceMismatch) {
+      String msg = String.format("Mismatch between topic coordinates (%s/%s/%s/%s) "
+          + "and inner envelope fields (%s/%s/%s/%s)",
+          envelope.deviceRegistryId, envelope.deviceId,
+          envelope.subType, envelope.subFolder,
+          innerEnvelope.deviceRegistryId, innerEnvelope.deviceId,
+          innerEnvelope.subType, innerEnvelope.subFolder);
+      throw new IllegalArgumentException(msg);
+    }
     innerEnvelope.payload = null;
     innerEnvelope.gatewayId = null; // Remove the uufi marker for internal bus
-    if (innerEnvelope.deviceRegistryId == null) {
-      innerEnvelope.deviceRegistryId = envelope.deviceRegistryId;
-    }
-    if (innerEnvelope.deviceId == null) {
-      innerEnvelope.deviceId = envelope.deviceId;
-    }
-    if (innerEnvelope.subType == null) {
-      innerEnvelope.subType = envelope.subType;
-    }
-    if (innerEnvelope.subFolder == null) {
-      innerEnvelope.subFolder = envelope.subFolder;
-    }
 
     debug("Forwarding UUFI message %s/%s from %s to internal bus",
         innerEnvelope.subType, innerEnvelope.subFolder, envelope.source);
@@ -160,9 +164,14 @@ public class UufiProcessor extends ProcessorBase {
         ? toObject(decodeBase64((String) payloadRaw))
         : payloadRaw;
 
-    // Standard UDMI devices expect config on the base topic, not folder-specific sub-topics.
+    // Standard UDMI devices expect a complete config merged with previous state.
     if (innerEnvelope.subType == SubType.CONFIG) {
-      innerEnvelope.subFolder = null;
+      String configUpdate = processConfigChange(innerEnvelope, innerPayload, null);
+      if (configUpdate != null) {
+        innerEnvelope.subFolder = null;
+        publish(innerEnvelope, com.google.udmi.util.JsonUtil.toMap(configUpdate));
+      }
+      return;
     }
 
     publish(innerEnvelope, innerPayload);

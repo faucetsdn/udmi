@@ -271,6 +271,9 @@ class LocalDevice implements SiteDevice {
     }
 
     String deviceAddr = ofNullable(localAddr).orElse(gatewayAddr);
+    String localUnitId = catchToNull(() -> metadata.localnet.families.get(family).unitid);
+    String gatewayUnitId = catchToNull(() -> metadata.gateway.target.unitid);
+    String unitId = ofNullable(localUnitId).orElse(gatewayUnitId);
     List<Exception> validationErrors = new ArrayList<>();
 
     boolean isVendorRef = metadata.gateway != null
@@ -291,7 +294,7 @@ class LocalDevice implements SiteDevice {
       if (pointRef.contains("://")) {
         fullUrl = pointRef;
       } else {
-        fullUrl = FamilyProvider.constructUrl(family, deviceAddr, pointRef);
+        fullUrl = FamilyProvider.constructUrl(family, deviceAddr, unitId, pointRef);
       }
 
       pointModel.url = fullUrl;

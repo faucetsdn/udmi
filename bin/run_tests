@@ -45,10 +45,8 @@ function test_wrap {
 
 case "$1" in
   install_dependencies)
-    sudo true # Proactively update before test_wrap is called.
     test_wrap bin/setup_base
     test_wrap bin/clone_model
-    sudo ln -fs $PWD/bin/udmi /usr/local/bin/
     ;;
   code_tests)
     test_wrap bin/gencode check
@@ -58,6 +56,7 @@ case "$1" in
     test_wrap bin/test_pylint
     test_wrap services/bin/build check
     test_wrap bin/test_generated_classes_py
+    test_wrap bin/test_pull
     ;;
   schema_tests)
     test_wrap bin/test_schema

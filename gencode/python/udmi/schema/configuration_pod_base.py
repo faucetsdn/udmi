@@ -17,3 +17,4 @@ class BasePodConfiguration(DataModel):
 
     udmi_prefix: Optional[str] = None
     failure_rate: Optional[float] = None
+    log_level: Optional[str] = None

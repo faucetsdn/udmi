@@ -4,7 +4,9 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.JsonUtil.fromStringStrict;
 import static com.google.udmi.util.JsonUtil.loadFileRequired;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -16,7 +18,10 @@ import static org.mockito.Mockito.verify;
 import com.google.bos.udmi.service.messaging.StateUpdate;
 import com.google.bos.udmi.service.messaging.impl.MessageBase;
 import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
+import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.CleanDateFormat;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Date;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,6 +33,7 @@ import org.mockito.ArgumentCaptor;
 import udmi.schema.Config;
 import udmi.schema.Envelope;
 import udmi.schema.GatewayState;
+import udmi.schema.Level;
 import udmi.schema.Operation;
 import udmi.schema.State;
 import udmi.schema.StateSystemOperation;
@@ -198,5 +204,28 @@ public class StateProcessorTest extends ProcessorTestBase {
     assertEquals(0, captured.size(), "unexpected received message count");
     assertEquals(1, getExceptionCount(), "exception count");
     assertEquals(0, getDefaultCount(), "default handler count");
+  }
+
+  @Test
+  public void processMessagePayloadLogging() {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    PrintStream originalOut = System.out;
+    try {
+      System.setOut(new PrintStream(out));
+      StateProcessor processor = initializeTestInstance(StateProcessor.class);
+      ContainerBase.setLogLevel(Level.DEBUG);
+      processor.processMessage(getTestStateEnvelope(), toMap(getTestStateMessage(false, true)));
+      String logOutput = out.toString();
+      assertFalse(logOutput.contains("\"operation\":{"),
+          "Message payload should not be logged at DEBUG level");
+      out.reset();
+      ContainerBase.setLogLevel(Level.TRACE);
+      processor.processMessage(getTestStateEnvelope(), toMap(getTestStateMessage(false, true)));
+      logOutput = out.toString();
+      assertTrue(logOutput.contains("\"operation\":{"),
+          "Message payload should be logged at TRACE level");
+    } finally {
+      System.setOut(originalOut);
+    }
   }
 }

@@ -192,10 +192,10 @@ Inner JSON `payload` object MUST include:
 | **MQTT** | JSON Wrapper | Payload `payload` key |
 
 #### MQTT Constraints
-- **Envelope Consistency:** Senders MUST populate all defined envelope fields (`subType`, `subFolder`, and when applicable `deviceRegistryId`, `deviceId`) across all transport mechanisms. The contents of the envelope MUST NOT depend on the transport, ensuring a consistent envelope structure (e.g., across MQTT and PubSub). Receivers MUST require that incoming envelope fields are populated appropriately.
+- **Envelope Consistency & Header Duplication Rule:** Senders MUST populate and duplicate all defined envelope header fields (`subType`, `subFolder`, and when applicable `deviceRegistryId`, `deviceId`) within the JSON envelope payload object across all transport mechanisms. The envelope structure MUST be identical across both MQTT and PubSub transports. For MQTT transport, omitting any of these mandatory envelope header fields from the JSON payload object, or providing envelope fields that conflict with the topic path coordinates, MUST be treated as a validation error, and the message MUST be rejected and ignored.
 - **Mandatory Envelope Fields:**
-  - **Outgoing Messages:** Outgoing messages from compliant systems and verifiers MUST populate all standard envelope fields (`projectId`, `transactionId`, `publishTime`, `source`, `principal`, and `payload`).
-  - **Incoming Messages:** Incoming messages received from external or upstream services/utilities MUST be parsed gracefully with robust fallback handling (e.g., defaulting a missing `"projectId"` to `"vibrant"` or the active project/prefix, and treating a missing `"principal"` as absent or falling back to `"source"`).
+  - **Outgoing Messages:** Outgoing messages from compliant systems and verifiers MUST populate all standard envelope fields (`subType`, `subFolder`, `deviceRegistryId`, `deviceId`, `projectId`, `transactionId`, `publishTime`, `source`, `principal`, and `payload`).
+  - **Incoming Messages:** All incoming messages MUST contain all mandatory envelope fields inside the JSON payload object (`subType`, `subFolder`, `deviceRegistryId`, `deviceId`, `projectId`, `transactionId`, `publishTime`, `source`). If any required envelope fields are omitted from the JSON payload wrapper, or if they fail to match the topic path attributes, the receiver MUST reject and ignore the message.
 - **Nesting:** UDMI message data MUST be nested within the `payload` key.
 
 ### 4.1. Envelope Metadata and Configuration Attributes
@@ -285,7 +285,7 @@ To report a device's actual or currently running software subsystem version, imp
 - **Metadata Fallbacks:** For mandatory string fields like `make` and `model`, if the value is unknown or uninitialized, implementations SHOULD use `"unknown"` as a standard fallback value.
 
 ### 8.4. MQTT Specific Rules
-- **Envelope Consistency Rule:** Implementations MUST NOT omit envelope fields when transporting via MQTT; all defined envelope attributes MUST be consistently populated across all transport layers.
+- **Envelope Header Duplication Rule:** Implementations MUST duplicate all envelope header attributes (`subType`, `subFolder`, `deviceRegistryId`, `deviceId`) inside the JSON payload object wrapper. The JSON envelope structure MUST be identical across MQTT and PubSub transports. If an incoming MQTT message omits these envelope fields from the JSON payload or if they mismatch the topic path parameters, it MUST be rejected as an error.
 - **Leading Slash:** For MQTT transport, all UUFI topics MUST start with a leading slash `/`. Implementations MUST NOT accept or publish to topics lacking the leading slash.
 
 ## 9. Test Setup for External Clients
@@ -480,6 +480,8 @@ This appendix references the formal JSON schemas and provides message examples f
 **Payload:**
 ```json
 {
+  "subType": "state",
+  "subFolder": "udmi",
   "projectId": "vibrant",
   "transactionId": "UUFI:sess123:001",
   "publishTime": "2026-04-29T10:00:00Z",
@@ -504,6 +506,8 @@ This appendix references the formal JSON schemas and provides message examples f
 **Payload:**
 ```json
 {
+  "subType": "config",
+  "subFolder": "udmi",
   "projectId": "vibrant",
   "transactionId": "UUFI:sess123:001",
   "publishTime": "2026-04-29T10:00:05Z",
@@ -557,6 +561,10 @@ This appendix references the formal JSON schemas and provides message examples f
 **Payload:**
 ```json
 {
+  "subType": "config",
+  "subFolder": "pointset",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1",
   "transactionId": "UUFI:sess123:002",
   "principal": "client-id",
   "payload": {
@@ -609,6 +617,10 @@ This appendix references the formal JSON schemas and provides message examples f
 **Payload:**
 ```json
 {
+  "subType": "config",
+  "subFolder": "blobset",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1",
   "transactionId": "UUFI:sess123:003",
   "principal": "client-id",
   "payload": {
@@ -661,6 +673,10 @@ This appendix references the formal JSON schemas and provides message examples f
 **Payload:**
 ```json
 {
+  "subType": "model",
+  "subFolder": "system",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1",
   "projectId": "vibrant",
   "transactionId": "UUFI:sess123:004",
   "publishTime": "2026-04-29T10:15:00Z",
