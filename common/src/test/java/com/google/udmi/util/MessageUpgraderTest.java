@@ -43,6 +43,24 @@ public class MessageUpgraderTest {
   }
 
   @Test
+  public void modbusUpgradeTest() {
+    ObjectNode message = MessageUpgrader.NODE_FACTORY.objectNode();
+    message.put("version", "1.5.6");
+    ObjectNode localnet = message.putObject("localnet");
+    ObjectNode families = localnet.putObject("families");
+    ObjectNode modbus = families.putObject("modbus");
+    modbus.put("addr", "1");
+    modbus.put("parent_id", "DDC-1");
+
+    MessageUpgrader upgrader = new MessageUpgrader("metadata", message);
+    JsonNode upgraded = (JsonNode) upgrader.upgrade();
+
+    JsonNode modbusUpgraded = upgraded.get("localnet").get("families").get("modbus");
+    assertEquals("1", modbusUpgraded.get("unitid").asText());
+    assertEquals(false, modbusUpgraded.has("addr"));
+  }
+
+  @Test
   public void metadataBacnetRefUpgrade() {
     ObjectNode message = MessageUpgrader.NODE_FACTORY.objectNode();
     message.put("version", "1.5.6");

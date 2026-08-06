@@ -289,6 +289,10 @@ public class ConfigManager {
     checkState(localAddr == null || gatewayAddr == null,
         format("both gateway.target.addr and localnet.families.%s.addr should not be defined",
             family));
+    String deviceAddr = ofNullable(localAddr).orElse(gatewayAddr);
+    String localUnitId = catchToNull(() -> metadata.localnet.families.get(family).unitid);
+    String gatewayUnitId = catchToNull(() -> metadata.gateway.target.unitid);
+    String unitId = ofNullable(localUnitId).orElse(gatewayUnitId);
     boolean isVendorRef = metadata.gateway != null
         && metadata.gateway.target != null
         && Boolean.TRUE.equals(metadata.gateway.target.vendor_ref);
@@ -297,7 +301,7 @@ public class ConfigManager {
           format("%s %s", family, pointRef),
           () -> {
             String fullRef = pointRef.contains("://") ? pointRef
-                : constructUrl(family, localAddr, pointRef);
+                : constructUrl(family, deviceAddr, unitId, pointRef);
             String targetFamily = "vendor";
             if (fullRef.contains("://")) {
               targetFamily = fullRef.substring(0, fullRef.indexOf("://"));
