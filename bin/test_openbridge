@@ -248,7 +248,8 @@ jq --arg auth_user "$AUTH_USER" \
    --arg auth_pass "$AUTH_PASS" \
    --arg serv_user "$SERV_USER" \
    --arg serv_pass "$SERV_PASS" \
-   '.flows.reflect.send_id = "udmi_reply" |
+   '.base.log_level = "DEBUG" |
+    .flows.reflect.send_id = "udmi_reply" |
     .flows.distributor.enabled = "false" |
     .iot_access.implicit = {
       "provider": "implicit",
