@@ -678,45 +678,37 @@ public class MqttToPubSubBridge {
                     + " abandoned={}, unackedTotal={}",
                 message.getId(), topic, executor.getQueue().size(), getInProcessCount(),
                 getAbandonedCount(), getUnackedCount());
-            String messageKey = null;
+            final String receiveTime = java.time.Instant.now().toString();
             try {
-              messageKey = getMessageHash(topic, message);
-              final String finalMessageKey = messageKey;
-
-              final java.util.concurrent.atomic.AtomicBoolean shouldProcess =
-                  new java.util.concurrent.atomic.AtomicBoolean(false);
-
-              unackedMessages.compute(finalMessageKey, (key, existingRecord) -> {
-                if (existingRecord != null
-                    && existingRecord.getState() == MessageState.IN_PROCESS) {
-                  // Message is currently in-flight, skip queue
-                  return existingRecord;
-                }
-                // New message (existingRecord == null) OR previously ABANDONED
-                // Transition to IN_PROCESS and process
-                shouldProcess.set(true);
-                return new MessageRecord(MessageState.IN_PROCESS);
-              });
-
-              if (!shouldProcess.get()) {
-                logger.warn(
-                    "MQTT message ID {} (key: {}) is already in process."
-                            + " Skipping queue to avoid duplicate processing.",
-                    message.getId(), finalMessageKey);
-                return;
-              }
-
-              final String receiveTime = java.time.Instant.now().toString();
-              logger.debug(
-                  "Queueing MQTT message ID {} (queueSize={}, inProcess={},"
-                      + " abandoned={}, unackedTotal={})",
-                  message.getId(), executor.getQueue().size(), getInProcessCount(),
-                  getAbandonedCount(), getUnackedCount());
               executor.submit(() -> {
-                if (tripped) {
+                if (tripped || stopping) {
                   // ABORT REQUEST RECEIVED, ABANDON REQUESTS
                   return;
                 }
+                String messageKey = getMessageHash(topic, message);
+                final java.util.concurrent.atomic.AtomicBoolean shouldProcess =
+                    new java.util.concurrent.atomic.AtomicBoolean(false);
+
+                unackedMessages.compute(messageKey, (key, existingRecord) -> {
+                  if (existingRecord != null
+                      && existingRecord.getState() == MessageState.IN_PROCESS) {
+                    // Message is currently in-flight, skip duplicate processing
+                    return existingRecord;
+                  }
+                  // New message (existingRecord == null) OR previously ABANDONED
+                  // Transition to IN_PROCESS and process
+                  shouldProcess.set(true);
+                  return new MessageRecord(MessageState.IN_PROCESS);
+                });
+
+                if (!shouldProcess.get()) {
+                  logger.warn(
+                      "MQTT message ID {} (key: {}) is already in process."
+                              + " Skipping duplicate execution.",
+                      message.getId(), messageKey);
+                  return;
+                }
+
                 boolean publishInitiated = false;
                 try {
                   byte[] payload = message.getPayload();
@@ -775,25 +767,26 @@ public class MqttToPubSubBridge {
                       pubsubMessageBuilder.putAllAttributes(attributes).build();
 
                   // Publish with 5x retry + exponential backoff
-                  publishWithRetry(publisher, pubsubMessage, message, finalMessageKey,
+                  publishWithRetry(publisher, pubsubMessage, message, messageKey,
                       topic, mqttClient, 1);
                   publishInitiated = true;
                 } catch (Exception e) {
                   logger.warn("Error processing MQTT message", e);
                 } finally {
                   if (!publishInitiated) {
-                    unackedMessages.remove(finalMessageKey);
+                    unackedMessages.remove(messageKey);
                   }
                 }
               });
             } catch (Exception e) {
-              if (messageKey != null) {
-                unackedMessages.remove(messageKey);
-              }
+              String messageKey = getMessageHash(topic, message);
+              // In QoS 1, if executor rejected, message remains unacknowledged in session.
+              // Mark as ABANDONED so the circuit breaker tracks session capacity exhaustion.
+              unackedMessages.put(messageKey, new MessageRecord(MessageState.ABANDONED));
               if (e instanceof RejectedExecutionException) {
                 logger.warn(
-                    "Unable to queue MQTT message ID {} (queue saturated, shedding message"
-                        + " without dropping connection)",
+                    "Unable to queue MQTT message ID {} (queue saturated, marked as ABANDONED"
+                        + " in session)",
                     message.getId(), e);
               } else {
                 logger.error("Error submitting message ID {} to executor", message.getId(), e);

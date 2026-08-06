@@ -998,6 +998,37 @@ class MqttToPubSubBridgeTest {
     Thread.sleep(1000);
     verify(mockPublisher, org.mockito.Mockito.never()).publish(any(PubsubMessage.class));
   }
+
+  @Test
+  void testRejectedExecutionMarksMessageAbandoned() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+    mqttMessage.setId(7007);
+    mqttMessage.setQos(1);
+
+    String testTopic = "/r/my-registry/d/my-device/events";
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+    bridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    // Shut down executor to trigger RejectedExecutionException upon messageArrived
+    bridge.shutdown(100, java.util.concurrent.TimeUnit.MILLISECONDS);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    // Verify message is recorded as ABANDONED in session
+    assertEquals(1, bridge.getUnackedCount());
+    assertEquals(1, bridge.getAbandonedCount());
+    String expectedKey = MqttToPubSubBridge.getMessageHash(testTopic, mqttMessage);
+    assertEquals(MqttToPubSubBridge.MessageState.ABANDONED, bridge.getMessageState(expectedKey));
+  }
 }
 
 
