@@ -526,13 +526,18 @@ class MqttToPubSubBridgeTest {
     verify(mockPublisher, org.mockito.Mockito.timeout(20000).times(5))
         .publish(any(PubsubMessage.class));
     Thread.sleep(500);
-    assertEquals(0, bridge.getUnackedCount());
+    // After 5 failed attempts, message is marked as ABANDONED and stays unacked
+    assertEquals(1, bridge.getUnackedCount());
+    assertEquals(1, bridge.getAbandonedCount());
+    assertEquals(0, bridge.getInProcessCount());
+    assertEquals(MqttToPubSubBridge.MessageState.ABANDONED,
+        bridge.getMessageState(MqttToPubSubBridge.getMessageHash(testTopic, mqttMessage)));
 
     // Now publisher recovers
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFuture("msg-success"));
 
-    // Redelivery arrival of failed message - should be retried
+    // Redelivery arrival of failed message - should be requeued and retried
     MqttMessage redeliveredMessage = new MqttMessage(payloadStr.getBytes());
     redeliveredMessage.setId(3003);
     redeliveredMessage.setQos(1);
@@ -543,6 +548,7 @@ class MqttToPubSubBridgeTest {
         .publish(any(PubsubMessage.class));
     // After success, unacked count should be 0
     assertEquals(0, bridge.getUnackedCount());
+    assertEquals(0, bridge.getAbandonedCount());
   }
 
   @Test
@@ -674,14 +680,18 @@ class MqttToPubSubBridgeTest {
     verify(mockPublisher, org.mockito.Mockito.timeout(20000).times(5))
         .publish(any(PubsubMessage.class));
     Thread.sleep(500);
-    assertEquals(0, bridge.getUnackedCount());
+    // Message 1 is marked as ABANDONED (still counted in unackedMessages)
+    assertEquals(1, bridge.getUnackedCount());
+    assertEquals(1, bridge.getAbandonedCount());
 
     // Now second message arrives and succeeds
     callback.messageArrived(testTopic, mqttMessage2);
     verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(6))
         .publish(any(PubsubMessage.class));
 
-    assertEquals(0, bridge.getUnackedCount());
+    // Message 2 succeeded and removed, Message 1 remains abandoned
+    assertEquals(1, bridge.getUnackedCount());
+    assertEquals(1, bridge.getAbandonedCount());
   }
 
   @Test
@@ -721,6 +731,7 @@ class MqttToPubSubBridgeTest {
     String expectedHash = "777:" + expectedPayloadHash;
 
     assertEquals(expectedHash, MqttToPubSubBridge.getMessageHash(message));
+    assertEquals("/topic:" + expectedHash, MqttToPubSubBridge.getMessageHash("/topic", message));
   }
 
   @Test
@@ -776,6 +787,54 @@ class MqttToPubSubBridgeTest {
     pendingFuture2.set("msg-2");
     Thread.sleep(500);
     assertEquals(0, bridge.getUnackedCount());
+  }
+
+  @Test
+  void testCircuitBreakerTripsWhenThresholdExceeded() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    Publisher mockPublisher = mock(Publisher.class);
+    com.google.api.core.SettableApiFuture<String> pendingFuture =
+        com.google.api.core.SettableApiFuture.create();
+    when(mockPublisher.publish(any(PubsubMessage.class))).thenReturn(pendingFuture);
+
+    final boolean[] exited = new boolean[]{false};
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge() {
+      @Override
+      protected void exit(int status) {
+        exited[0] = true;
+      }
+    };
+
+    String testTopic = "/r/my-registry/d/my-device/events";
+    bridge.setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    // Start circuit breaker with threshold of 2 messages and 1500ms timeout
+    bridge.startCircuitBreaker(mockMqttClient, 2, 1500L);
+
+    // Send message 1
+    MqttMessage msg1 = new MqttMessage("Payload 1".getBytes());
+    msg1.setId(101);
+    callback.messageArrived(testTopic, msg1);
+
+    // Below threshold (1 < 2)
+    Thread.sleep(2000);
+    org.junit.jupiter.api.Assertions.assertFalse(bridge.isTripped());
+
+    // Send message 2 (reaches threshold 2 >= 2)
+    MqttMessage msg2 = new MqttMessage("Payload 2".getBytes());
+    msg2.setId(102);
+    callback.messageArrived(testTopic, msg2);
+
+    // Wait for timeout (1500ms + buffer)
+    Thread.sleep(2500);
+    org.junit.jupiter.api.Assertions.assertTrue(bridge.isTripped());
+    org.junit.jupiter.api.Assertions.assertTrue(exited[0]);
+    verify(mockMqttClient).disconnect();
   }
 }
 
