@@ -1029,6 +1029,20 @@ class MqttToPubSubBridgeTest {
     String expectedKey = MqttToPubSubBridge.getMessageHash(testTopic, mqttMessage);
     assertEquals(MqttToPubSubBridge.MessageState.ABANDONED, bridge.getMessageState(expectedKey));
   }
+
+  @Test
+  void testStartPeriodicReconnect() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.isConnected()).thenReturn(true);
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+
+    // Call startPeriodicReconnect with 1 second interval
+    bridge.startPeriodicReconnect(mockMqttClient, 1);
+
+    // Verify disconnect(1000L) and reconnect() are called
+    verify(mockMqttClient, org.mockito.Mockito.timeout(5000)).disconnect(1000L);
+    verify(mockMqttClient, org.mockito.Mockito.timeout(5000)).reconnect();
+  }
 }
 
 

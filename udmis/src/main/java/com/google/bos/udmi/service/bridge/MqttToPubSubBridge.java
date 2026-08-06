@@ -304,7 +304,7 @@ public class MqttToPubSubBridge {
     System.exit(status);
   }
 
-  private void startPeriodicReconnect(IMqttClient mqttClient, int baseIntervalSec) {
+  void startPeriodicReconnect(IMqttClient mqttClient, int baseIntervalSec) {
     if (baseIntervalSec <= 0) {
       return;
     }
@@ -322,7 +322,7 @@ public class MqttToPubSubBridge {
                 "Executing scheduled reconnect (interval: {}s) to rebalance shared subscription...",
                 delaySec);
             try {
-              mqttClient.disconnect();
+              mqttClient.disconnect(1000L);
             } catch (Exception e) {
               logger.warn("Error disconnecting for scheduled reconnect", e);
             }
