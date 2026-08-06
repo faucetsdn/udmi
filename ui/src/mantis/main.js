@@ -1,5 +1,7 @@
 import { JSONViewer } from '../shared/components/json-viewer.js';
 import { LogViewer } from '../shared/components/log-viewer.js';
+import { stateStore } from '../shared/state-store.js';
+import { NotificationManager } from '../shared/components/notification-toast.js';
 
 // --- HELPER: DYNAMIC ENDPOINT FETCH ---
 async function fetchDirectoryList(targetPath) {
@@ -44,7 +46,7 @@ function getParentPath(path) {
 
 
 // --- MANTIS DECOUPLED CONTROLLER ---
-class MantisController {
+export class MantisController {
   constructor() {
     // Parent state (Synced via postMessage)
     this.siteModel = '';
@@ -71,7 +73,7 @@ class MantisController {
 
   initElements() {
     // Local Selection Controls
-    this.deviceSelect = document.getElementById('device-select');
+    this.deviceSelect = document.getElementById('mantis-device-select');
     this.scenarioSelect = document.getElementById('scenario-select');
     
     // Tab Headers & Pages
@@ -93,6 +95,7 @@ class MantisController {
     this.triageTerminalContainer = document.getElementById('triage-terminal-container');
     this.rcaReportBody = document.getElementById('rca-report-body');
     this.btnCopyReport = document.getElementById('btn-copy-report');
+    this.btnEmailReport = document.getElementById('btn-email-report');
     
     // Layout Container & Resizer
     this.diagnosticsLayout = document.querySelector('.diagnostics-layout');
@@ -159,7 +162,11 @@ class MantisController {
   }
 
   initEvents() {
-    // --- 1. POSTMESSAGE LISTENER (State Sync from Shell & Testbed) ---
+    // --- 1. STATE STORE & POSTMESSAGE LISTENERS ---
+    stateStore.on('change:siteModel', (val) => {
+      this.handleGlobalStateChange(val);
+    });
+
     window.addEventListener('message', (event) => {
       if (event.data) {
         if (event.data.type === 'udmi_state_change') {
@@ -185,6 +192,9 @@ class MantisController {
     }
     if (this.btnCopyReport) {
       this.btnCopyReport.addEventListener('click', () => this.copyReportToClipboard());
+    }
+    if (this.btnEmailReport) {
+      this.btnEmailReport.addEventListener('click', () => this.emailReport());
     }
 
     // Tab buttons triggers (defensive check)
@@ -826,9 +836,13 @@ class MantisController {
     this.scenarioSelect.value = testId;
     await this.handleScenarioChange(testId);
     
-    // Switch to diagnostics tab (waiting for user to click "Run AI Triage")
+    // Switch to diagnostics tab and execute if auto-triggered
     this.switchLocalTab('diagnostics');
     this.isTriageLoading = false;
+
+    if (data.autoRun) {
+      setTimeout(() => this.startAITriage(), 350);
+    }
   }
 
   // --- MANTIS AI TRIAGE EXECUTION LOOP ---
@@ -1052,13 +1066,17 @@ class MantisController {
           this.diagnosticsLayout.classList.remove('running');
           this.diagnosticsLayout.classList.add('complete');
 
-          // Show Desktop Notification
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-            new Notification("Mantis AI Triage Complete", {
-              body: `Root Cause Analysis for '${this.scenarioSelect.value}' on device '${this.device}' is ready!`,
-              tag: 'mantis-triage'
-            });
-          }
+          // Show Desktop Notification and floating visual Toast
+          NotificationManager.notify({
+            title: "🧠 Mantis AI Triage Complete",
+            body: `Root Cause Analysis for '${this.scenarioSelect.value}' on device '${this.device}' is ready!`,
+            type: "success",
+            actionText: "View RCA Report",
+            onAction: () => {
+              const drawer = document.getElementById('mantis-drawer');
+              if (drawer) drawer.classList.add('open');
+            }
+          });
 
           // Load the rich Markdown report!
           await this.loadTriageReport();
@@ -1071,12 +1089,11 @@ class MantisController {
           this.diagnosticsLayout.classList.remove('running', 'complete');
 
           // Show Failure Desktop Notification
-          if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-            new Notification("Mantis AI Triage Failed", {
-              body: `Diagnostics for '${this.scenarioSelect.value}' on device '${this.device}' failed (Exit Code: ${data.exit_code}).`,
-              tag: 'mantis-triage'
-            });
-          }
+          NotificationManager.notify({
+            title: "❌ Mantis AI Triage Failed",
+            body: `Diagnostics for '${this.scenarioSelect.value}' on device '${this.device}' failed (Exit Code: ${data.exit_code}).`,
+            type: "error"
+          });
 
           this.rcaReportBody.innerHTML = `
             <div class="rca-placeholder-message" style="color:var(--color-error)">
@@ -1113,6 +1130,11 @@ class MantisController {
       this.rcaReportBody.innerHTML = this.parseMarkdownToHTML(markdown);
       this.btnCopyReport.disabled = false;
       this.btnCopyReport.setAttribute('data-raw-markdown', markdown);
+      if (this.btnEmailReport) {
+        this.btnEmailReport.disabled = false;
+        this.btnEmailReport.setAttribute('data-raw-markdown', markdown);
+      }
+      this.checkAndDispatchEmailRcaAlert(markdown);
     } catch (err) {
       this.rcaReportBody.innerHTML = `
         <div class="rca-placeholder-message" style="color:var(--color-error)">
@@ -1466,9 +1488,75 @@ class MantisController {
         }, 1500);
       });
   }
+
+  async emailReport() {
+    const markdown = this.btnCopyReport?.getAttribute('data-raw-markdown') || this.btnEmailReport?.getAttribute('data-raw-markdown');
+    if (!markdown) return;
+
+    let recip = localStorage.getItem('udmi_email_recipient');
+    if (!recip) {
+      recip = prompt("Enter email recipient for this RCA report:", "heykhyati@google.com");
+      if (!recip) return;
+    }
+
+    NotificationManager.showToast({ title: "📧 Sending RCA Report...", message: `Dispatching diagnostic findings to ${recip}...`, type: "info" });
+    try {
+      const res = await fetch('/api/notifications/send_email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient: recip,
+          subject: `[UDMI Mantis AI] Root Cause Analysis Report: ${this.scenarioSelect.value} (${this.device})`,
+          body: `Mantis AI Diagnostic run completed for device [${this.device}], test case [${this.scenarioSelect.value}].`,
+          rca_markdown: markdown,
+          smtp_server: localStorage.getItem('udmi_email_smtp') || ''
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to dispatch email");
+
+      NotificationManager.notify({
+        title: "📧 RCA Report Dispatched",
+        body: `Delivered to ${recip} (${data.delivery_method}). ${data.delivery_method.includes('OUTBOX') ? `Saved in ${data.outbox_file}` : ''}`,
+        type: "success",
+        duration: 8000
+      });
+    } catch (e) {
+      NotificationManager.notify({ title: "❌ Email Failed", body: e.message, type: "error" });
+    }
+  }
+
+  async checkAndDispatchEmailRcaAlert(markdown) {
+    const recip = localStorage.getItem('udmi_email_recipient');
+    if (!recip) return;
+    if (localStorage.getItem('udmi_email_trig_rca') === 'false') return;
+
+    try {
+      await fetch('/api/notifications/send_email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipient: recip,
+          subject: `[UDMI Mantis AI] Auto-Triage RCA Report: ${this.scenarioSelect.value} (${this.device})`,
+          body: `Automated Mantis AI Diagnostic analysis triggered upon test failure for device [${this.device}].`,
+          rca_markdown: markdown,
+          smtp_server: localStorage.getItem('udmi_email_smtp') || ''
+        })
+      });
+      console.log(`[Email Alert] Automatically sent RCA report for ${this.scenarioSelect.value} to ${recip}`);
+    } catch (e) {
+      console.warn("[Email Alert] Failed to auto-send RCA report:", e);
+    }
+  }
+
+  triggerTriage(data) {
+    this.handleLoadDiagnose(data);
+  }
+
+  loadDiagnose(data) {
+    this.handleLoadDiagnose(data);
+  }
 }
 
-// Initialize on load
-window.addEventListener('DOMContentLoaded', () => {
-  new MantisController();
-});
+// SPA orchestration managed by ShellOrchestrator in main.js

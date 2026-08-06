@@ -10,6 +10,8 @@ import shutil
 import socket
 import time
 import difflib
+import smtplib
+from email.message import EmailMessage
 from datetime import datetime
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 
@@ -113,6 +115,10 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.handle_log_diff(parsed_url.query, post_data=post_data)
         elif parsed_url.path == '/api/ai_query':
             self.handle_ai_query(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/git/commit':
+            self.handle_git_commit(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/notifications/send_email':
+            self.handle_send_email(parsed_url.query, post_data=post_data)
         else:
             self.send_error_response(404, "Endpoint not found")
 
@@ -129,8 +135,12 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.handle_device_results(parsed_url.query)
         elif parsed_url.path == '/api/testbed/status':
             self.handle_testbed_status(parsed_url.query)
+        elif parsed_url.path == '/api/testbed/jobs':
+            self.handle_testbed_jobs(parsed_url.query)
         elif parsed_url.path == '/api/testbed/topology':
             self.handle_testbed_topology(parsed_url.query)
+        elif parsed_url.path == '/api/git/status':
+            self.handle_git_status(parsed_url.query)
         elif parsed_url.path == '/api/stream':
             self.handle_sse_stream(parsed_url.query, proc_type="sequencer")
         elif parsed_url.path == '/api/triage_stream':
@@ -390,15 +400,36 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response_data)
 
+    def handle_testbed_jobs(self, query_string):
+        jobs = []
+        with active_processes_lock:
+            for sid, meta in active_processes.items():
+                proc = meta.get("process")
+                is_running = proc is not None and proc.poll() is None
+                jobs.append({
+                    "session_id": sid,
+                    "type": meta.get("type", "unknown"),
+                    "device_id": meta.get("device_id"),
+                    "site_model": meta.get("site_model"),
+                    "running": is_running,
+                    "created_at": meta.get("created_at")
+                })
+        response_data = json.dumps({"jobs": jobs}).encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', len(response_data))
+        self.end_headers()
+        self.wfile.write(response_data)
+
     def handle_testbed_status(self, query_string):
         params = urllib.parse.parse_qs(query_string)
         site_model = params.get('site_model', ['sites/udmi_site_model'])[0]
 
-        mqtt_port = os.environ.get('MQTT_PORT', '18883')
+        mqtt_port = os.environ.get('MQTT_PORT', '18833')
         mqtt_up = False
         mqtt_latency = 0
         t0 = time.time()
-        for port in [int(mqtt_port), 1883, 8883]:
+        for port in [int(mqtt_port), 18833, 18883, 1883, 8883]:
             try:
                 with socket.create_connection(('127.0.0.1', port), timeout=0.3):
                     mqtt_up = True
@@ -473,7 +504,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             "components": {
                 "site_model": {"status": "VALID" if site_model_valid else "INVALID", "path": to_home_relative(target_site or site_model), "device_count": device_count},
                 "validator": {"status": "UP" if validator_up else "DOWN", "version": "1.4.2", "schema_valid": True},
-                "mqtt_broker": {"status": "UP" if mqtt_up else "DOWN", "endpoint": "localhost:1883", "latency_ms": mqtt_latency},
+                "mqtt_broker": {"status": "UP" if mqtt_up else "DOWN", "endpoint": f"localhost:{mqtt_port}", "latency_ms": mqtt_latency},
                 "sequencer": {"status": "READY" if sequencer_ready else "DOWN", "version": "1.4.2"},
                 "udmis": {"status": "UP" if udmis_up else "DOWN", "mode": "LOCAL"},
                 "etcd": {"status": "UP" if etcd_up else "DOWN", "port": 2379},
@@ -492,7 +523,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
     def handle_testbed_topology(self, query_string):
         params = urllib.parse.parse_qs(query_string)
         site_model = params.get('site_model', ['sites/udmi_site_model'])[0]
-        project_spec = params.get('project_spec', ['//mqtt/localhost'])[0]
+        project_spec = params.get('project_spec', ['//mqtt/localhost:18833'])[0]
 
         topology_type = "LOCAL_MQTT"
         if "pubsub" in project_spec.lower():
@@ -531,7 +562,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         params = urllib.parse.parse_qs(query_string)
         data = post_data or {}
         site_model = data.get('site_model') or params.get('site_model', ['sites/udmi_site_model'])[0]
-        project_spec = data.get('project_spec') or params.get('project_spec', ['//mqtt/localhost'])[0]
+        project_spec = data.get('project_spec') or params.get('project_spec', ['//mqtt/localhost:18833'])[0]
 
         session_id = f"testbed-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
         session_dir = os.path.join(ROOT_DIR, 'out', 'sessions', session_id)
@@ -629,7 +660,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         data = post_data or {}
         component = data.get('component') or params.get('component', [None])[0]
         site_model = data.get('site_model') or params.get('site_model', ['sites/udmi_site_model'])[0]
-        project_spec = data.get('project_spec') or params.get('project_spec', ['//mqtt/localhost'])[0]
+        project_spec = data.get('project_spec') or params.get('project_spec', ['//mqtt/localhost:18833'])[0]
 
         env = os.environ.copy()
         env['UDMI_NO_SUDO'] = 'true'
@@ -923,11 +954,14 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                 cmd.extend(test_names)
 
         log_path = os.path.join(session_dir, 'sequencer.log')
+        env = os.environ.copy()
+        env['UDMI_NO_SUDO'] = 'true'
 
         try:
             proc = subprocess.Popen(
                 cmd,
                 cwd=ROOT_DIR,
+                env=env,
                 stdout=open(log_path, 'wb', buffering=0),
                 stderr=subprocess.STDOUT,
                 preexec_fn=os.setsid
@@ -937,6 +971,8 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                 active_processes[session_id] = {
                     "process": proc,
                     "type": "sequencer",
+                    "device_id": device_id,
+                    "site_model": site_model,
                     "session_dir": session_dir,
                     "log_path": log_path,
                     "created_at": datetime.now().isoformat()
@@ -1179,7 +1215,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
 
         manifest_data = {
             "metadata": {
-                "target_project": project_spec or "//mqtt/localhost",
+                "target_project": project_spec or "//mqtt/localhost:18833",
                 "site_id": site_id
             },
             "failures": [
@@ -1236,6 +1272,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         util_dir = os.path.join(ROOT_DIR, 'util')
         tools_dir = os.path.join(ROOT_DIR, 'tools')
         env['PYTHONPATH'] = f"{tools_dir}:{mantis_src}:{util_dir}:{env.get('PYTHONPATH', '')}"
+        env['UDMI_NO_SUDO'] = 'true'
 
         if gemini_key:
             env['GEMINI_API_KEY'] = gemini_key
@@ -1262,6 +1299,8 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                 active_processes[session_id] = {
                     "process": proc,
                     "type": "triage",
+                    "device_id": device_id,
+                    "site_model": site_model,
                     "session_dir": session_dir,
                     "log_path": log_path,
                     "created_at": datetime.now().isoformat()
@@ -1428,6 +1467,185 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.wfile.write(response_data)
         except Exception as e:
             self.send_error_response(500, f"Error reading diagnostic report: {str(e)}")
+
+    def handle_git_status(self, query_string):
+        params = urllib.parse.parse_qs(query_string)
+        site_model = params.get('site_model', ['sites/udmi_site_model'])[0]
+        site_path = os.path.abspath(os.path.expanduser(site_model))
+        if not os.path.exists(site_path):
+            site_path = ROOT_DIR
+
+        try:
+            branch_proc = subprocess.run(['git', '-C', site_path, 'rev-parse', '--abbrev-ref', 'HEAD'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+            branch = branch_proc.stdout.strip() if branch_proc.returncode == 0 else 'main'
+            
+            status_proc = subprocess.run(['git', '-C', site_path, 'status', '--porcelain', 'out/'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+            status_output = status_proc.stdout.strip().splitlines() if status_proc.returncode == 0 else []
+            changed_files = [line.strip() for line in status_output if line.strip()]
+            
+            is_protected = branch.lower() in ['main', 'master', 'production', 'prod']
+
+            response_data = json.dumps({
+                "branch": branch,
+                "is_protected": is_protected,
+                "has_changes": len(changed_files) > 0,
+                "changed_files": changed_files[:20],
+                "repo_path": to_home_relative(site_path)
+            }).encode('utf-8')
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.end_headers()
+            self.wfile.write(response_data)
+        except Exception as e:
+            self.send_error_response(500, f"Git status failed: {str(e)}")
+
+    def handle_git_commit(self, query_string, post_data=None):
+        params = urllib.parse.parse_qs(query_string)
+        data = post_data or {}
+        site_model = data.get('site_model') or params.get('site_model', ['sites/udmi_site_model'])[0]
+        commit_msg = data.get('commit_message', 'test: save device compliance testing results')
+        create_branch = bool(data.get('create_branch', False))
+        new_branch_name = data.get('branch_name', '').strip()
+        do_push = bool(data.get('push', False))
+        force_main = bool(data.get('force_main', False))
+
+        site_path = os.path.abspath(os.path.expanduser(site_model))
+        if not os.path.exists(site_path):
+            site_path = ROOT_DIR
+
+        try:
+            branch_proc = subprocess.run(['git', '-C', site_path, 'rev-parse', '--abbrev-ref', 'HEAD'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+            current_branch = branch_proc.stdout.strip() if branch_proc.returncode == 0 else 'main'
+            is_protected = current_branch.lower() in ['main', 'master', 'production', 'prod']
+
+            if is_protected and not create_branch and not force_main:
+                self.send_error_response(400, f"Safety stop: Cannot commit directly to protected branch '{current_branch}'. Please select 'Create new branch for results' or confirm direct commit override.")
+                return
+
+            active_branch = current_branch
+            if create_branch and new_branch_name:
+                checkout_proc = subprocess.run(['git', '-C', site_path, 'checkout', '-b', new_branch_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+                if checkout_proc.returncode != 0 and 'already exists' in checkout_proc.stderr.lower():
+                    subprocess.run(['git', '-C', site_path, 'checkout', new_branch_name], check=False)
+                active_branch = new_branch_name
+
+            # Add test results (out/ folder inside site model)
+            out_dir = os.path.join(site_path, 'out')
+            if os.path.exists(out_dir):
+                subprocess.run(['git', '-C', site_path, 'add', '-f', 'out/'], check=False)
+            else:
+                subprocess.run(['git', '-C', site_path, 'add', '.'], check=False)
+
+            # Check if there is anything staged to commit
+            diff_check = subprocess.run(['git', '-C', site_path, 'diff', '--cached', '--name-only'], stdout=subprocess.PIPE, text=True)
+            commit_hash = "no_changes"
+            if diff_check.stdout.strip():
+                # Strictly NO --amend! Always create a standard new commit as mandated by user rules
+                commit_proc = subprocess.run(['git', '-C', site_path, 'commit', '-m', commit_msg], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+                if commit_proc.returncode == 0:
+                    hash_proc = subprocess.run(['git', '-C', site_path, 'rev-parse', '--short', 'HEAD'], stdout=subprocess.PIPE, text=True)
+                    commit_hash = hash_proc.stdout.strip()
+                else:
+                    self.send_error_response(500, f"Git commit failed: {commit_proc.stderr or commit_proc.stdout}")
+                    return
+
+            push_status = "skipped"
+            if do_push:
+                push_proc = subprocess.run(['git', '-C', site_path, 'push', '-u', 'origin', active_branch], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, check=False)
+                push_status = "pushed" if push_proc.returncode == 0 else f"failed: {push_proc.stderr.strip()}"
+
+            response_data = json.dumps({
+                "status": "success",
+                "branch": active_branch,
+                "commit_hash": commit_hash,
+                "push_status": push_status,
+                "message": f"Results processed on branch '{active_branch}' (Commit: {commit_hash})."
+            }).encode('utf-8')
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.end_headers()
+            self.wfile.write(response_data)
+        except Exception as e:
+            self.send_error_response(500, f"Git action failed: {str(e)}")
+
+    def handle_send_email(self, query_string, post_data=None):
+        data = post_data or {}
+        recipient = data.get('recipient')
+        subject = data.get('subject', '[UDMI Workbench] Compliance Test & Diagnostic Notification')
+        body_text = data.get('body', '')
+        rca_markdown = data.get('rca_markdown', '')
+        smtp_server = data.get('smtp_server', os.environ.get('SMTP_SERVER', ''))
+        smtp_port = int(data.get('smtp_port', os.environ.get('SMTP_PORT', '25')))
+
+        if not recipient:
+            self.send_error_response(400, "Recipient email address is required.")
+            return
+
+        outbox_dir = os.path.join(ROOT_DIR, 'out', 'emails')
+        os.makedirs(outbox_dir, exist_ok=True)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_%f')[:15]
+        eml_path = os.path.join(outbox_dir, f"notification_{timestamp}.eml")
+        html_path = os.path.join(outbox_dir, f"notification_{timestamp}.html")
+
+        html_content = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.5; color: #202124;">
+            <h2 style="color: #0b57d0;">UDMI Workbench Notification</h2>
+            <p><strong>To:</strong> {recipient}</p>
+            <p><strong>Subject:</strong> {subject}</p>
+            <hr style="border: none; border-top: 1px solid #e0e0e0;" />
+            <div style="padding: 12px 0;">
+                <p>{body_text.replace(chr(10), '<br>')}</p>
+            </div>
+            {f'<div style="background: #f8f9fa; padding: 16px; border-radius: 8px; border: 1px solid #dadce0;"><h3 style="margin-top:0; color:#6d28d9;">Mantis AI Root Cause Analysis</h3><pre style="white-space: pre-wrap; font-family: monospace;">{rca_markdown}</pre></div>' if rca_markdown else ''}
+            <p style="font-size: 11px; color: #5f6368; margin-top: 24px;">Generated automatically by UDMI Workbench</p>
+        </body>
+        </html>
+        """
+
+        try:
+            with open(html_path, 'w', encoding='utf-8') as fh:
+                fh.write(html_content.strip())
+
+            msg = EmailMessage()
+            msg['Subject'] = subject
+            msg['From'] = 'workbench-noreply@udmi.system'
+            msg['To'] = recipient
+            msg.set_content(body_text + (f"\n\n--- MANTIS AI RCA ---\n{rca_markdown}" if rca_markdown else ""))
+            msg.add_alternative(html_content, subtype='html')
+
+            with open(eml_path, 'wb') as fe:
+                fe.write(msg.as_bytes())
+
+            delivery_method = "LOCAL_OUTBOX"
+            if smtp_server and smtp_server.lower() != 'localhost' and smtp_server != '':
+                try:
+                    with smtplib.SMTP(smtp_server, smtp_port, timeout=3) as s:
+                        s.send_message(msg)
+                    delivery_method = f"SMTP ({smtp_server})"
+                except Exception as e_smtp:
+                    print(f"[Email] SMTP send failed ({e_smtp}), fell back to local outbox simulation.")
+                    delivery_method = "LOCAL_OUTBOX_FALLBACK"
+
+            response_data = json.dumps({
+                "status": "delivered",
+                "recipient": recipient,
+                "delivery_method": delivery_method,
+                "outbox_file": os.path.relpath(html_path, ROOT_DIR),
+                "timestamp": datetime.now().isoformat()
+            }).encode('utf-8')
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.end_headers()
+            self.wfile.write(response_data)
+        except Exception as e:
+            self.send_error_response(500, f"Email dispatch failed: {str(e)}")
 
     def send_error_response(self, code, message):
         response_data = json.dumps({"error": message}).encode('utf-8')

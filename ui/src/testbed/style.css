@@ -28,7 +28,8 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 16px;
+  padding: 0 20px;
+  min-height: 56px;
   background: var(--bg-surface, #ffffff);
   border-radius: var(--radius-lg, 12px);
   border: 1px solid var(--border-color, #e0e0e0);
@@ -38,7 +39,8 @@ html, body {
 .action-bar-left {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  min-height: 56px;
 }
 
 .icon-blue {
@@ -104,19 +106,19 @@ html, body {
 }
 
 .palette-list {
-  padding: 12px;
+  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   overflow-y: auto;
 }
 
 .palette-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 8px;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
   border: 1px solid var(--border-color, #e0e0e0);
   background-color: var(--bg-surface-container-low, #f0f4f9);
   cursor: grab;

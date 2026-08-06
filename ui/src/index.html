@@ -7,19 +7,22 @@
   <title>UDMI Workbench</title>
   <link rel="icon" type="image/png" href="/assets/workbench_logo.png">
 
-  <!-- Fonts & Material Icons (Google Testrun Aligned) -->
+  <!-- Fonts & Material Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap"
     rel="stylesheet">
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
     rel="stylesheet" />
 
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="shared/theme.css?v=1.4">
-  <link rel="stylesheet" href="style.css?v=1.4">
+  <link rel="stylesheet" href="shared/theme.css?v=2.1">
+  <link rel="stylesheet" href="style.css?v=2.1">
+  <link rel="stylesheet" href="testbed/style.css?v=2.1">
+  <link rel="stylesheet" href="sequencer/style.css?v=2.1">
+  <link rel="stylesheet" href="mantis/style.css?v=2.1">
 </head>
 
 <body>
@@ -50,7 +53,7 @@
       <!-- Centered Site Model Path Input -->
       <div class="toolbar-center">
         <div class="input-with-button">
-          <input type="text" id="site-input" class="form-input site-input-state-unselected" style="width: 360px;"
+          <input type="text" id="site-input" class="form-input site-input-state-unselected" style="width: 380px;"
             placeholder="Site Model Path..." aria-label="Site Model Path" />
           <button id="btn-browse-site" class="btn btn-outlined btn-icon-sm" aria-label="Browse site model folder">
             <span class="material-symbols-outlined">folder_open</span>
@@ -63,17 +66,12 @@
       </div>
     </header>
 
-    <!-- Sub-Header Horizontal Material Design Tab Bar -->
-    <nav id="app-nav-tabs" class="app-tab-bar" aria-label="Main Navigation">
+    <!-- Sub-Header Horizontal Material Design Tab Bar (Collapsed in single-screen model) -->
+    <nav id="app-nav-tabs" class="app-tab-bar" aria-label="Main Navigation" style="display: none;">
       <button class="m3-tab active" data-tab="testbed" data-feature="testbed" aria-selected="true" role="tab">
         <span class="material-symbols-outlined icon">hub</span>
         <span>Testbed</span>
       </button>
-      <button class="m3-tab" data-tab="sequencer" data-feature="sequencer" aria-selected="false" role="tab">
-        <span class="material-symbols-outlined icon">analytics</span>
-        <span>Sequencer</span>
-      </button>
-      <!-- Animated Active Tab Underline Indicator -->
       <div class="m3-tab-indicator"></div>
     </nav>
 
@@ -84,20 +82,328 @@
     </div>
 
     <!-- App Body -->
-    <main class="app-main">
+    <main class="app-main" style="padding: 0;">
 
-      <!-- Workspace Panel Content (Micro-Frontend Iframe Containers) -->
+      <!-- Workspace Panel Content (Unified Master Testbed View) -->
       <section class="app-content" style="width: 100%; height: 100%; overflow: hidden; padding: 0; position: relative;">
-        <!-- Testbed Iframe -->
-        <iframe id="iframe-testbed" class="app-iframe active" src="testbed/index.html" data-feature="testbed"></iframe>
-        <!-- Sequencer Iframe -->
-        <iframe id="iframe-sequencer" class="app-iframe" src="sequencer/index.html" data-feature="sequencer"></iframe>
+        
+        <!-- =========================================================
+             CONSOLIDATED MASTER SCREEN: TESTBED & DIAGNOSTICS
+             ========================================================= -->
+        <div id="view-testbed" class="app-view active" data-feature="testbed" style="display: flex; flex-direction: column;">
+          <div class="tool-layout">
+
+            <!-- Top Action Bar -->
+            <div class="testbed-action-bar">
+              <div class="action-bar-left">
+                <nav id="testbed-nav-tabs" class="md-tab-bar" role="tablist" aria-label="Testbed Views">
+                  <button id="btn-view-canvas" class="md-tab-item active" role="tab" aria-selected="true" title="Test Setup">
+                    <span class="material-symbols-outlined">account_tree</span>
+                    <span>Test Setup</span>
+                  </button>
+                  <button id="btn-view-matrix" class="md-tab-item" role="tab" aria-selected="false" title="Test Results">
+                    <span class="material-symbols-outlined">table_chart</span>
+                    <span>Test Results</span>
+                  </button>
+                  <button id="btn-view-logs" class="md-tab-item" role="tab" aria-selected="false" title="Logs Viewer">
+                    <span class="material-symbols-outlined">terminal</span>
+                    <span>Logs Viewer</span>
+                  </button>
+                  <div id="testbed-tab-indicator" class="md-tab-indicator"></div>
+                </nav>
+                <span id="topology-completeness-badge" class="badge badge-success" style="margin-left: 16px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+                  <span>COMPLETE SETUP (:18833)</span>
+                </span>
+              </div>
+
+              <div class="action-bar-right">
+                <button id="btn-git-save-results" class="btn btn-outlined" title="Save device testing results to git (Commit & Push)">
+                  <span class="material-symbols-outlined icon-blue">cloud_upload</span>
+                  <span>Commit & Push</span>
+                </button>
+                <button id="btn-notification-settings" class="btn btn-outlined" title="Configure email alert delivery and notification triggers">
+                  <span class="material-symbols-outlined" style="color: #e65100;">mail_lock</span>
+                  <span>Email Alerts</span>
+                </button>
+                <button id="btn-start-pipeline" class="btn btn-success"
+                  title="Start locally running background pipeline components on unprivileged port 18833">
+                  <span class="material-symbols-outlined">play_arrow</span>
+                </button>
+                <button id="btn-stop-pipeline" class="btn btn-danger-outlined"
+                  title="Stop all locally running background pipeline components">
+                  <span class="material-symbols-outlined">stop</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Workspace A: Interactive Topology Graph Canvas & Inspector -->
+            <main id="testbed-canvas-workspace" class="testbed-workspace">
+
+              <!-- 1. Left Controls & Palette Sidebar -->
+              <aside class="palette-sidebar" style="overflow-y: auto; display: flex; flex-direction: column; width: 250px; flex-shrink: 0; box-sizing: border-box; background: #ffffff;">
+                
+                <!-- Panel 1: Choose your Setup -->
+                <div class="sidebar-panel border-bottom" style="display: flex; flex-direction: column;">
+                  <div class="sidebar-header" style="padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-outlined" style="color: #0b57d0; font-size: 16px;">hub</span>
+                    <h3 style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #5f6368;">Choose your Setup</h3>
+                  </div>
+                  <div style="padding: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                    <button id="btn-default-setup" class="btn btn-outlined setup-choice-btn active" title="Configure Local setup (:18833)" style="padding: 6px; flex-direction: row; gap: 4px; border-radius: 6px; justify-content: center; min-height: 32px;">
+                      <span class="material-symbols-outlined" style="font-size: 16px;">auto_fix_high</span>
+                      <span style="font-size: 12px; font-weight: 600;">Local</span>
+                    </button>
+                    <button id="btn-cloud-setup" class="btn btn-outlined setup-choice-btn" title="Configure Cloud setup" style="padding: 6px; flex-direction: row; gap: 4px; border-radius: 6px; justify-content: center; min-height: 32px;">
+                      <span class="material-symbols-outlined" style="font-size: 16px;">cloud_sync</span>
+                      <span style="font-size: 12px; font-weight: 600;">Cloud</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Panel 2: Choose Components -->
+                <div class="sidebar-panel border-bottom" style="display: flex; flex-direction: column;">
+                  <div class="sidebar-header" style="padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-outlined" style="color: #0d652d; font-size: 16px;">widgets</span>
+                    <h3 style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #5f6368;">Choose Components</h3>
+                  </div>
+                  <div style="padding: 8px; display: flex; flex-direction: column; gap: 6px;">
+                    <div class="palette-item" draggable="true" data-node-type="pubber" title="Click or drag to configure & spawn Pubber Emulator" style="padding: 6px 8px; gap: 8px; border-radius: 6px;">
+                      <span class="material-symbols-outlined palette-icon" style="color: #0d652d; font-size: 18px;">smart_toy</span>
+                      <div class="palette-text">
+                        <span class="palette-title" style="font-size: 12px;">Pubber Emulator</span>
+                        <span class="palette-sub" style="font-size: 10px;">Simulated UDMI device</span>
+                      </div>
+                    </div>
+
+                    <div class="palette-item disabled" draggable="false" data-node-type="spotter" style="padding: 6px 8px; gap: 8px; border-radius: 6px;">
+                      <span class="material-symbols-outlined palette-icon" style="font-size: 18px;">radar</span>
+                      <div class="palette-text">
+                        <span class="palette-title" style="font-size: 12px;">Spotter Emulator</span>
+                        <span class="palette-sub" style="font-size: 10px;">Coming Soon</span>
+                      </div>
+                    </div>
+
+                    <div class="palette-item disabled" draggable="false" data-node-type="ancillary" style="padding: 6px 8px; gap: 8px; border-radius: 6px;">
+                      <span class="material-symbols-outlined palette-icon" style="font-size: 18px;">extension</span>
+                      <div class="palette-text">
+                        <span class="palette-title" style="font-size: 12px;">Ancillary Test Node</span>
+                        <span class="palette-sub" style="font-size: 10px;">Coming Soon</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Panel 3: Actual Device Multi-Select -->
+                <div class="sidebar-panel" style="display: flex; flex-direction: column;">
+                  <div class="sidebar-header" style="padding: 8px 12px; background: #f8f9fa; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-outlined" style="color: #b06000; font-size: 16px;">router</span>
+                    <h3 style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #5f6368;">Actual Devices</h3>
+                  </div>
+                  <div style="padding: 8px; display: flex; flex-direction: column; gap: 4px;">
+                    <label for="select-actual-devices" style="font-size: 11px; color: var(--text-secondary); line-height: 1.2;">
+                      Select physical hardware targets (multi-select allowed):
+                    </label>
+                    <select id="select-actual-devices" multiple class="form-input w-full" style="height: 110px; font-size: 11px; padding: 4px; border-radius: 6px; width: 100%; border: 1px solid #d0d5dd; background: #fff; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);">
+                      <option disabled>Loading devices...</option>
+                    </select>
+                    <span style="font-size: 10px; color: #70757a; line-height: 1.2;">
+                      💡 Selected devices spawn automatically on graph. Double-click any node to edit inputs.
+                    </span>
+                  </div>
+                </div>
+
+              </aside>
+
+              <!-- 2. Interactive Topology Graph Canvas -->
+              <section id="canvas-container" class="canvas-container">
+                <div id="graph-canvas" class="graph-canvas">
+                  <svg id="canvas-svg" width="100%" height="100%"></svg>
+                  <div id="nodes-layer" class="nodes-layer"></div>
+                </div>
+              </section>
+
+              <!-- 3. Node Inspector & Config Panel -->
+              <aside id="inspector-panel" class="inspector-panel">
+                <div class="inspector-header border-bottom">
+                  <div class="inspector-title-row">
+                    <span id="inspector-icon" class="material-symbols-outlined icon">tune</span>
+                    <h3 id="inspector-title">Node Inspector</h3>
+                  </div>
+                  <button id="btn-close-inspector" class="btn-icon-xs"><span
+                      class="material-symbols-outlined">close</span></button>
+                </div>
+
+                <div id="inspector-body" class="inspector-body">
+                  <div class="inspector-empty">
+                    <span class="material-symbols-outlined">touch_app</span>
+                    <p>Select one or more nodes (Shift-click) on the canvas to configure parameters and tests.</p>
+                  </div>
+                </div>
+              </aside>
+
+            </main>
+
+            <!-- Workspace B: Multi-Device Compliance Status Matrix Overlay -->
+            <section id="testbed-matrix-workspace" class="matrix-workspace">
+              <div class="matrix-kpi-row">
+                <div class="matrix-kpi-card">
+                  <div>
+                    <div class="kpi-title">Configured Devices</div>
+                    <div id="matrix-kpi-total" class="kpi-value">0</div>
+                  </div>
+                  <div class="kpi-icon blue"><span class="material-symbols-outlined">devices</span></div>
+                </div>
+                <div class="matrix-kpi-card">
+                  <div>
+                    <div class="kpi-title">Overall Compliance</div>
+                    <div id="matrix-kpi-score" class="kpi-value">0%</div>
+                  </div>
+                  <div class="kpi-icon green"><span class="material-symbols-outlined">verified</span></div>
+                </div>
+                <div class="matrix-kpi-card">
+                  <div>
+                    <div class="kpi-title">Tests Passed</div>
+                    <div id="matrix-kpi-passed" class="kpi-value">0</div>
+                  </div>
+                  <div class="kpi-icon green"><span class="material-symbols-outlined">check_circle</span></div>
+                </div>
+                <div class="matrix-kpi-card">
+                  <div>
+                    <div class="kpi-title">Tests Failed</div>
+                    <div id="matrix-kpi-failed" class="kpi-value">0</div>
+                  </div>
+                  <div class="kpi-icon red"><span class="material-symbols-outlined">warning</span></div>
+                </div>
+              </div>
+
+              <div class="matrix-table-container">
+                <div class="matrix-table-header">
+                  <div class="matrix-table-title">
+                    <span class="material-symbols-outlined icon-blue">rule_folder</span>
+                    <span>Multi-Device Compliance Status Matrix</span>
+                  </div>
+                  <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="btn-matrix-run-all" class="btn btn-primary">
+                      <span class="material-symbols-outlined">play_arrow</span>
+                      <span>Run Compliance Suite on All Devices</span>
+                    </button>
+                    <button id="btn-matrix-stop-all" class="btn btn-danger-outlined" style="display: none;">
+                      <span class="material-symbols-outlined">stop</span>
+                      <span>Stop Running Tests</span>
+                    </button>
+                  </div>
+                </div>
+                <table class="matrix-table">
+                  <thead>
+                    <tr>
+                      <th>Device Target</th>
+                      <th>Overall Status</th>
+                      <th>System & Base</th>
+                      <th>Pointset & Telemetry</th>
+                      <th>Gateway & Network</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="matrix-table-body">
+                    <!-- Dynamically populated -->
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Workspace C: Live Console Stream & Differential Log Analysis -->
+            <section id="testbed-logs-workspace" class="matrix-workspace" style="padding: 16px;">
+              <div class="sequencer-workspace" style="height: 100%; display: flex; flex-direction: column; gap: 16px;">
+                <div class="card log-terminal-card" style="display: flex; flex-direction: column; flex: 1; min-height: 400px;">
+                  <div class="tab-header-bar border-bottom">
+                    <div class="segmented-tab-group">
+                      <button id="tab-log-live" class="segmented-tab active" data-tab="live">
+                        <span class="material-symbols-outlined">terminal</span>
+                        <span>Live Console Stream</span>
+                      </button>
+                      <button id="tab-log-diff" class="segmented-tab" data-tab="diff">
+                        <span class="material-symbols-outlined">difference</span>
+                        <span>Differential Log Analysis</span>
+                      </button>
+                    </div>
+                    <div style="margin-left: auto; display: flex; align-items: center; gap: 10px; padding-right: 12px;">
+                      <span id="suite-status" class="badge badge-neutral">Idle</span>
+                      <button id="btn-logs-stop" class="btn btn-danger-outlined btn-sm" style="display: none;">
+                        <span class="material-symbols-outlined" style="font-size: 16px;">stop</span>
+                        <span>Abort Test</span>
+                      </button>
+                    </div>
+                    <div id="diff-controls" class="diff-header-controls" style="display: none;">
+                      <select id="diff-baseline-select" class="form-select" style="width: 180px; font-size: 11px;">
+                        <option value="">-- Baseline Session --</option>
+                      </select>
+                      <button id="btn-compare-diff" class="btn btn-outlined btn-sm">
+                        <span class="material-symbols-outlined" style="font-size:16px;">compare</span>
+                        <span>Compare Diff</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Tab Page A: Live Console Stream -->
+                  <div id="container-log-live" class="log-tab-container active" style="flex: 1; height: 100%;">
+                    <div id="sequencer-logs" style="height: 100%;"></div>
+                  </div>
+
+                  <!-- Tab Page B: Differential Log Analysis Viewer -->
+                  <div id="container-log-diff" class="log-tab-container" style="flex: 1; overflow: auto; padding: 12px; display: none;">
+                    <div id="diff-viewer-body" class="diff-viewer-body">
+                      <div class="diff-placeholder">
+                        Select a test case and baseline run, then click "Compare Diff" to perform differential log analysis against successful past executions.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Progress Stats Footer -->
+                <div class="card progress-stats-card" style="flex-shrink: 0;">
+                  <div class="stats-header">
+                    <div style="display: flex; align-items: center;">
+                      <span class="card-header-icon-box icon-box-emerald"><span class="material-symbols-outlined" style="font-size:18px;">donut_large</span></span>
+                      <h3 style="margin: 0;">Active Execution Progress</h3>
+                    </div>
+                  </div>
+                  <div class="stats-grid">
+                    <div class="progress-bar-container">
+                      <div id="suite-progress-fill" class="progress-bar-fill" style="width: 0%;"></div>
+                    </div>
+                    <div class="stats-metrics">
+                      <div class="metric-item">
+                        <span class="metric-label">Tests Passed</span>
+                        <span id="metric-passed" class="metric-value text-success">0</span>
+                      </div>
+                      <div class="metric-item">
+                        <span class="metric-label">Tests Skipped</span>
+                        <span id="metric-skipped" class="metric-value text-muted">0</span>
+                      </div>
+                      <div class="metric-item">
+                        <span class="metric-label">Tests Failed</span>
+                        <span id="metric-failed" class="metric-value text-error">0</span>
+                      </div>
+                      <div class="metric-item">
+                        <span class="metric-label">Elapsed Time</span>
+                        <span id="metric-time" class="metric-value">00:00</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+          </div>
+        </div>
+
       </section>
     </main>
 
-    <!-- Mantis AI Sidebar Drawer (Global AI Assistant Side Panel with Edge Pull Tab) -->
+    <!-- Mantis AI Sidebar Drawer -->
     <aside id="mantis-drawer" class="mantis-drawer" aria-label="Mantis AI Assistant">
-      <!-- Right Edge Pull Tab Handle -->
       <button id="mantis-pull-tab" class="mantis-pull-tab" title="Toggle Mantis AI Assistant" aria-label="Toggle Mantis AI Assistant">
         <span class="material-symbols-outlined icon">auto_awesome</span>
         <span class="label">Mantis AI</span>
@@ -111,13 +417,174 @@
         <button id="btn-close-mantis-drawer" class="btn-close" aria-label="Close Mantis AI Drawer">&times;</button>
       </div>
       <div class="mantis-drawer-body">
-        <iframe id="iframe-mantis" class="mantis-drawer-iframe" src="mantis/index.html" data-feature="mantis"></iframe>
+        
+        <!-- MANTIS DEBUGGER SPA CONTAINER -->
+        <div id="view-mantis" class="mantis-drawer-view" data-feature="mantis">
+          <div class="tool-layout">
+            <header class="local-toolbar" style="display: flex; align-items: center; justify-content: space-between;">
+              <div class="toolbar-left" style="display: flex; align-items: center; gap: 20px;">
+                <div class="control-group">
+                  <label for="mantis-device-select" class="control-label">Device</label>
+                  <select id="mantis-device-select" class="form-select" style="width: 160px;" aria-label="Select Device" disabled>
+                    <option value="">-- Enter site path --</option>
+                  </select>
+                </div>
+                <div class="control-group">
+                  <label for="scenario-select" class="control-label">Debug Scenario</label>
+                  <div class="scenario-select-container">
+                    <select id="scenario-select" class="form-select" style="width: 240px;" aria-label="Select Scenario" disabled>
+                      <option value="">-- Waiting for selection --</option>
+                    </select>
+                    <span id="mantis-test-status-badge" class="badge scenario-status-badge" style="display: none; line-height: unset;"></span>
+                    <span id="mantis-test-target-badge" class="badge scenario-status-badge badge-info" style="display: none; line-height: unset;"></span>
+                    <span id="mantis-test-time-badge" class="badge scenario-status-badge badge-neutral" style="display: none; line-height: unset;"></span>
+                  </div>
+                </div>
+              </div>
+            </header>
+
+            <main class="tool-main">
+              <div class="diagnostics-layout">
+                <div class="diagnostics-sidebar">
+                  <div id="playbook-card" class="card playbook-card" style="margin-bottom: 20px;">
+                    <div id="playbook-card-header" class="card-header"
+                      style="cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center;">
+                      <div style="display: flex; align-items: center;">
+                        <span class="card-header-icon-box icon-box-purple"><span class="material-symbols-outlined" style="font-size:18px;">tune</span></span>
+                        <h3 style="margin:0;">Diagnostic Settings</h3>
+                      </div>
+                      <button type="button" id="btn-toggle-playbook-card" class="btn-icon-sm btn-outlined" aria-label="Toggle settings"
+                        title="Toggle diagnostic settings"
+                        style="width: 28px; height: 28px; min-width: 28px; border: none; background: transparent; display: flex; align-items: center; justify-content: center;">
+                        <span id="icon-toggle-playbook-card" class="material-symbols-outlined"
+                          style="font-size: 20px; transition: transform 0.25s ease;">expand_more</span>
+                      </button>
+                    </div>
+                    <div id="playbook-card-body" class="card-body"
+                      style="padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
+                      <div class="control-group">
+                        <label for="playbook-select" class="control-label">Diagnostic Playbook</label>
+                        <select id="playbook-select" class="form-select w-full" style="width: 100%;">
+                          <option value="oem">Device Compliance Auditor (Standard)</option>
+                          <option value="swe">Codebase Debugger (Advanced)</option>
+                        </select>
+                      </div>
+
+                      <div class="control-group">
+                        <label for="mantis-success-run" class="control-label">Reference Successful Run <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(Optional Baseline)</span></label>
+                        <div class="input-with-button">
+                          <input type="text" id="mantis-success-run" class="form-input w-full" style="width: 100%;" placeholder="e.g. out_prev or path/to/successful/sequence.log" />
+                          <button type="button" id="btn-browse-success-run" class="btn btn-outlined btn-icon-sm" aria-label="Browse successful run folder">
+                            <span class="material-symbols-outlined">folder_open</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div class="control-group" style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
+                        <label for="mantis-provider-select" class="control-label">AI Auth Provider</label>
+                        <select id="mantis-provider-select" class="form-select w-full" style="width: 100%;">
+                          <option value="gemini">Gemini API Key</option>
+                          <option value="vertex">Google Vertex AI (ADC)</option>
+                        </select>
+                      </div>
+
+                      <div id="group-gemini-key" class="control-group">
+                        <label for="mantis-api-key" class="control-label">Gemini API Key</label>
+                        <input type="password" id="mantis-api-key" class="form-input w-full" style="width: 100%;" placeholder="AIzaSy... (or from shell env)" />
+                      </div>
+
+                      <div id="group-vertex-config" class="control-group" style="display: none; flex-direction: column; gap: 8px;">
+                        <div>
+                          <label for="mantis-gcp-project" class="control-label">GCP Project ID</label>
+                          <input type="text" id="mantis-gcp-project" class="form-input w-full" style="width: 100%;" placeholder="e.g. my-gcp-project" />
+                        </div>
+                        <div>
+                          <label for="mantis-gcp-location" class="control-label">GCP Location</label>
+                          <input type="text" id="mantis-gcp-location" class="form-input w-full" style="width: 100%;" value="global" placeholder="global" />
+                        </div>
+                      </div>
+
+                      <div class="control-group" style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
+                        <label class="control-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
+                          <input type="checkbox" id="mantis-fetch-udmis-logs" style="cursor: pointer; width: 16px; height: 16px;" />
+                          <span>Fetch UDMIS logs for cloud targets</span>
+                        </label>
+                      </div>
+                      
+                      <div id="group-cloud-logging-config" class="control-group" style="display: none; flex-direction: column; gap: 8px;">
+                        <div>
+                          <label for="mantis-cloud-project" class="control-label">Cloud Logging GCP Project ID</label>
+                          <input type="text" id="mantis-cloud-project" class="form-input w-full" style="width: 100%;"
+                            placeholder="e.g. my-gcp-project" />
+                        </div>
+                      </div>
+
+                      <button id="btn-run-triage" class="btn btn-primary w-full" style="margin-top: 8px; width: 100%;" disabled>
+                        <span class="material-symbols-outlined">psychology</span>
+                        <span>Run AI Triage</span>
+                      </button>
+                      <button id="btn-stop-triage" class="btn btn-outlined w-full text-error" style="display: none; width: 100%;">
+                        <span class="material-symbols-outlined">stop</span>
+                        <span>Stop Triage</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="card terminal-card" style="flex: 1; display: flex; flex-direction: column; min-height: 350px;">
+                    <div class="card-header border-bottom">
+                      <div style="display: flex; align-items: center;">
+                        <span class="card-header-icon-box icon-box-amber"><span class="material-symbols-outlined" style="font-size:18px;">terminal</span></span>
+                        <h3 style="margin:0;">AI Agent Thoughts</h3>
+                      </div>
+                      <span id="triage-status-badge" class="badge badge-idle">Idle</span>
+                    </div>
+                    <div id="triage-terminal-container" style="flex: 1; min-height: 0;"></div>
+                  </div>
+                </div>
+
+                <div id="diagnostics-resizer" class="pane-resizer" title="Drag to resize RCA panel"></div>
+
+                <div class="card rca-report-card" style="display: flex; flex-direction: column;">
+                  <div class="card-header border-bottom">
+                    <div style="display: flex; align-items: center;">
+                      <span class="card-header-icon-box icon-box-gradient"><span class="material-symbols-outlined" style="font-size:18px;">auto_awesome</span></span>
+                      <h3 style="margin: 0;">AI Root Cause Analysis (RCA)</h3>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                      <button id="btn-email-report" class="btn btn-outlined btn-icon" title="Email RCA report" disabled>
+                        <span class="material-symbols-outlined" style="color: #6d28d9;">mail</span>
+                      </button>
+                      <button id="btn-copy-report" class="btn btn-outlined btn-icon" title="Copy report markdown" disabled>
+                        <span class="material-symbols-outlined">content_copy</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div id="rca-report-body" class="rca-body" style="flex: 1; overflow-y: auto;">
+                    <div class="rca-placeholder-message">
+                      Select a device and scenario, then click "Run AI Triage" to generate diagnostics.
+                    </div>
+                  </div>
+                  <div class="ai-chat-bar border-top">
+                    <input type="text" id="ai-chat-input" class="form-input flex-1" placeholder="Ask Mantis AI follow-up questions about this test failure..." aria-label="AI Follow-up Query" />
+                    <button id="btn-submit-ai-chat" class="btn btn-primary">
+                      <span class="material-symbols-outlined">send</span>
+                      <span>Ask AI</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </main>
+          </div>
+        </div>
+
       </div>
     </aside>
 
   </div>
 
-  <!-- Inline Folder Browser Modal (Managed by parent and shared globally) -->
+  <!-- Shared Global Modals -->
+
+  <!-- 1. Inline Folder Browser Modal -->
   <div id="folder-browser-modal" class="modal-overlay">
     <div class="modal-card glass-panel">
       <div class="modal-header">
@@ -135,7 +602,6 @@
           <input type="text" id="browser-current-path" class="form-input flex-1" aria-label="Current path" />
         </div>
         <div class="browser-list" aria-label="Directory list">
-          <!-- Populated dynamically with subdirectories -->
         </div>
       </div>
       <div class="modal-footer">
@@ -145,7 +611,243 @@
     </div>
   </div>
 
-  <!-- JavaScript Shell Module -->
+  <!-- 2. Test Artifact File Viewer Modal -->
+  <div id="file-viewer-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <span class="material-symbols-outlined modal-icon">description</span>
+          <h3 id="modal-test-name">Test Execution Artifacts</h3>
+        </div>
+        <div class="modal-tabs">
+          <button id="modal-tab-md" class="modal-tab active">sequence.md</button>
+          <button id="modal-tab-log" class="modal-tab">sequence.log</button>
+        </div>
+        <button id="modal-close-btn" class="btn-outlined btn-icon" title="Close" aria-label="Close dialog" style="width: 32px; height: 32px; min-width: 32px; padding: 0;">
+          <span class="material-symbols-outlined" style="font-size: 18px;">close</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <pre id="modal-file-content" class="file-content-viewer">Loading file content...</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Inline Folder Browser Modal for Mantis Baseline Run -->
+  <div id="mantis-folder-browser-modal" class="modal-overlay">
+    <div class="modal-card glass-panel">
+      <div class="modal-header">
+        <h3>Browse Reference Run Directory</h3>
+        <button type="button" id="btn-close-mantis-browser" class="btn-close" aria-label="Close folder browser">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="browser-path-bar" style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
+          <button type="button" id="btn-mantis-browser-up" class="btn btn-outlined btn-icon-sm" aria-label="Go to parent directory">
+            <span class="material-symbols-outlined">arrow_upward</span>
+          </button>
+          <input type="text" id="mantis-browser-current-path" class="form-input" style="flex: 1;" aria-label="Current path" />
+        </div>
+        <div id="mantis-browser-list" class="browser-list" aria-label="Directory list" style="height: 240px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px;">
+        </div>
+      </div>
+      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
+        <button type="button" id="btn-mantis-browser-cancel" class="btn btn-outlined">Cancel</button>
+        <button type="button" id="btn-mantis-browser-select" class="btn btn-primary">Select Directory</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. Git Commit & Push Modal -->
+  <div id="git-save-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card glass-panel" style="width: 540px; max-width: 90vw;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined icon-blue" style="font-size: 24px;">cloud_upload</span>
+          <div>
+            <h3 style="margin: 0;">Save Device Test Results to Git</h3>
+            <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-secondary);">Commit and push test sequence output directly without shell commands.</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-git-modal" class="btn-close" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;">
+        <div id="git-status-box" style="padding: 12px; border-radius: 8px; background: #f8f9fa; border: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <span style="font-size: 11px; color: #5f6368; display: block;">Active Repository Branch</span>
+            <strong id="git-active-branch" style="font-size: 14px; color: #202124; font-family: monospace;">checking...</strong>
+          </div>
+          <span id="git-branch-badge" class="badge badge-info">Checking status...</span>
+        </div>
+        
+        <!-- Protected Branch Safety Alert -->
+        <div id="git-protected-alert" style="display: none; padding: 12px 14px; border-radius: 8px; background: #fef7e0; border-left: 4px solid #f29900; color: #b06000; font-size: 12px; line-height: 1.4;">
+          <strong>⚠️ Protected Branch Safety Prompt:</strong> You are currently on the master/main branch. To prevent unintentional regressions on protected production branches, we strongly recommend saving your test results to a dedicated results branch.
+        </div>
+
+        <div class="control-group">
+          <label class="control-label" style="font-weight: 700; margin-bottom: 6px;">Branch Strategy</label>
+          <div style="display: flex; flex-direction: column; gap: 8px; padding: 10px; border: 1px solid #e0e0e0; border-radius: 6px;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #202124; cursor: pointer;">
+              <input type="radio" name="git_branch_mode" value="new_branch" checked />
+              <span>Create new branch for results <strong style="color: #137333;">(Recommended)</strong></span>
+            </label>
+            <div id="git-new-branch-box" style="padding-left: 24px; margin-top: 4px;">
+              <input type="text" id="git-branch-input" class="form-input w-full" style="width: 100%; font-family: monospace;" placeholder="e.g. test-results-20260804" />
+            </div>
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #202124; cursor: pointer; border-top: 1px dashed #e0e0e0; padding-top: 8px;">
+              <input type="radio" name="git_branch_mode" value="direct_commit" />
+              <span>Commit directly to current active branch</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="git-commit-msg-input" class="control-label" style="font-weight: 700;">Commit Message</label>
+          <input type="text" id="git-commit-msg-input" class="form-input w-full" style="width: 100%;" value="test: save device compliance testing results" />
+        </div>
+
+        <div class="control-group" style="margin-top: 2px;">
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #202124; cursor: pointer; user-select: none;">
+            <input type="checkbox" id="git-push-checkbox" style="width: 16px; height: 16px;" checked />
+            <span>Push changes to remote repository immediately after commit</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 12px 20px; display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" id="btn-cancel-git-modal" class="btn btn-outlined">Cancel</button>
+        <button type="button" id="btn-submit-git-save" class="btn btn-primary">
+          <span class="material-symbols-outlined" style="font-size: 16px;">check_circle</span>
+          <span>Commit and Push</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. Email & Notification Alert Settings Modal -->
+  <div id="email-settings-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card glass-panel" style="width: 500px; max-width: 90vw;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined" style="color: #e65100; font-size: 24px;">mail_lock</span>
+          <div>
+            <h3 style="margin: 0;">Notification & Email Alert Delivery</h3>
+            <p style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-secondary);">Receive unattended test completion summaries & AI Triage RCA reports via email.</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-email-modal" class="btn-close" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;">
+        <div class="control-group">
+          <label for="email-recipient-input" class="control-label" style="font-weight: 700;">Recipient Email Address</label>
+          <input type="email" id="email-recipient-input" class="form-input w-full" style="width: 100%;" placeholder="e.g. heykhyati@google.com or team-distro@domain.com" />
+          <span style="font-size: 11px; color: #5f6368; margin-top: 4px; display: block;">Leave blank to disable automatic email delivery.</span>
+        </div>
+
+        <div class="control-group" style="padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; display: flex; flex-direction: column; gap: 8px; background: #ffffff;">
+          <div style="font-weight: 700; font-size: 12px; color: #202124; margin-bottom: 2px;">Automatic Dispatch Triggers</div>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+            <input type="checkbox" id="email-trigger-completion" checked style="width: 16px; height: 16px;" />
+            <span>Send email upon test suite completion (Pass & Fail summaries)</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+            <input type="checkbox" id="email-trigger-failure-only" style="width: 16px; height: 16px;" />
+            <span>Only send email if compliance test failures are detected</span>
+          </label>
+          <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer;">
+            <input type="checkbox" id="email-trigger-rca" checked style="width: 16px; height: 16px;" />
+            <span>Automatically attach Mantis AI Root Cause Analysis reports</span>
+          </label>
+        </div>
+
+        <div class="control-group" style="border-top: 1px solid #e0e0e0; padding-top: 12px;">
+          <label for="email-smtp-input" class="control-label" style="font-weight: 700;">SMTP Broker Server <span style="font-weight: normal; font-size: 11px; color: #5f6368;">(Optional)</span></label>
+          <input type="text" id="email-smtp-input" class="form-input w-full" style="width: 100%;" placeholder="e.g. smtp.gmail.com or leave empty for Local Outbox Simulation" />
+          <span style="font-size: 11px; color: #5f6368; margin-top: 4px; display: block;">When unconfigured, emails are simulated cleanly in <code>out/emails/notification_*.eml</code> & HTML for offline review.</span>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <button type="button" id="btn-test-send-email" class="btn btn-outlined" style="color: #0b57d0; border-color: #0b57d0;">
+          <span class="material-symbols-outlined" style="font-size: 16px;">send</span>
+          <span>Send Test Email</span>
+        </button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" id="btn-cancel-email-modal" class="btn btn-outlined">Close</button>
+          <button type="button" id="btn-save-email-settings" class="btn btn-primary">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. Setup Configuration Pop-up Modal -->
+  <div id="setup-config-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card glass-panel" style="width: 460px; max-width: 90vw;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="setup-modal-icon" class="material-symbols-outlined icon-blue" style="font-size: 24px;">hub</span>
+          <div>
+            <h3 id="setup-modal-title" style="margin: 0;">Configure Setup Parameters</h3>
+            <p id="setup-modal-sub" style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-secondary);">Specify runtime environment options.</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-setup-modal" class="btn-close" aria-label="Close modal">&times;</button>
+      </div>
+      <div class="modal-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;">
+        <input type="hidden" id="setup-target-mode" value="LOCAL" />
+        
+        <div class="control-group">
+          <label for="setup-sitemodel-input" class="control-label" style="font-weight: 700; display: block; margin-bottom: 4px;">Site Model Directory Path</label>
+          <input type="text" id="setup-sitemodel-input" class="form-input w-full" style="width: 100%; font-family: monospace;" placeholder="sites/udmi_site_model" />
+        </div>
+
+        <div id="setup-local-fields" style="display: flex; flex-direction: column; gap: 14px;">
+          <div class="control-group">
+            <label for="setup-local-port" class="control-label" style="font-weight: 700; display: block; margin-bottom: 4px;">MQTT Broker Port (Isolated Mode)</label>
+            <input type="text" id="setup-local-port" class="form-input w-full" style="width: 100%; font-family: monospace;" value="18833" />
+            <span style="font-size: 11px; color: #137333; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+              <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
+              Explicit port :18833 enables unprivileged execution (no sudo required).
+            </span>
+          </div>
+        </div>
+
+        <div id="setup-cloud-fields" style="display: none; flex-direction: column; gap: 14px;">
+          <div class="control-group">
+            <label for="setup-cloud-project" class="control-label" style="font-weight: 700; display: block; margin-bottom: 4px;">Cloud Project Specification / Topic Target</label>
+            <input type="text" id="setup-cloud-project" class="form-input w-full" style="width: 100%; font-family: monospace;" placeholder="//pubsub/bos-platform-dev" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="padding: 12px 20px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-cancel-setup-modal" class="btn btn-outlined">Cancel</button>
+        <button type="button" id="btn-apply-setup" class="btn btn-primary">Apply Setup</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. Component / Node Configuration Pop-up Modal -->
+  <div id="node-config-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card glass-panel" style="width: 420px; max-width: 90vw;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="node-modal-icon" class="material-symbols-outlined" style="color: #0d652d; font-size: 24px;">tune</span>
+          <div>
+            <h3 id="node-modal-title" style="margin: 0;">Configure Component Inputs</h3>
+            <p id="node-modal-sub" style="margin: 2px 0 0 0; font-size: 11px; color: var(--text-secondary);">Supply required input parameters for this node.</p>
+          </div>
+        </div>
+        <button type="button" id="btn-close-node-modal" class="btn-close" aria-label="Close modal">&times;</button>
+      </div>
+      <div id="node-config-form-body" class="modal-body" style="padding: 16px 20px; display: flex; flex-direction: column; gap: 14px;">
+        <!-- Dynamic fields populated by JavaScript -->
+      </div>
+      <div class="modal-footer" style="padding: 12px 20px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" id="btn-cancel-node-modal" class="btn btn-outlined">Cancel</button>
+        <button type="button" id="btn-save-node-config" class="btn btn-primary">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript SPA Orchestrator -->
   <script type="module" src="main.js"></script>
 </body>
 

@@ -1,4 +1,5 @@
 import { LogViewer } from '../shared/components/log-viewer.js';
+import { stateStore } from '../shared/state-store.js';
 
 // --- HELPERS: DYNAMIC ENDPOINT FETCH ---
 async function fetchDirectoryList(targetPath) {
@@ -17,7 +18,7 @@ function combinePaths(base, sub) {
   return base + '/' + sub;
 }
 
-class SequencerController {
+export class SequencerController {
   constructor() {
     // Parent State (Synced via postMessage)
     this.siteModel = '';
@@ -43,17 +44,17 @@ class SequencerController {
 
   initElements() {
     // Buttons
-    this.btnRun = document.getElementById('btn-run');
-    this.btnStop = document.getElementById('btn-stop');
+    this.btnRun = document.getElementById('seq-btn-run');
+    this.btnStop = document.getElementById('seq-btn-stop');
     this.btnSelectAll = document.getElementById('btn-select-all');
     this.btnDeselectAll = document.getElementById('btn-deselect-all');
     this.btnSelectPassed = document.getElementById('btn-select-passed');
     this.btnSelectSkipped = document.getElementById('btn-select-skipped');
     this.btnSelectFailed = document.getElementById('btn-select-failed');
-    this.btnSettings = document.getElementById('btn-settings');
+    this.btnSettings = document.getElementById('seq-btn-settings');
     
     // Inputs & Project Spec Builder
-    this.deviceSelect = document.getElementById('device-select');
+    this.deviceSelect = document.getElementById('seq-device-select');
     this.specProviderSelect = document.getElementById('spec-provider-select');
     this.specProjectInput = document.getElementById('spec-project-input');
     this.specNamespaceInput = document.getElementById('spec-namespace-input');
@@ -108,7 +109,11 @@ class SequencerController {
   }
 
   initEvents() {
-    // --- 1. POSTMESSAGE LISTENER (State Sync from Shell) ---
+    // --- 1. STATE STORE & POSTMESSAGE LISTENERS ---
+    stateStore.on('change:siteModel', (siteModel) => {
+      this.handleGlobalStateChange(siteModel);
+    });
+
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'udmi_state_change') {
         this.handleGlobalStateChange(event.data.siteModel);
@@ -169,13 +174,6 @@ class SequencerController {
           !this.btnSettings.contains(e.target)) {
         this.settingsPopover.classList.remove('active');
       }
-    });
-
-    // Local inputs caching
-    this.projectInput.addEventListener('input', (e) => {
-      const val = e.target.value.trim();
-      if (val) localStorage.setItem('udmi_target_project', val);
-      this.validateInputs();
     });
 
     // Checklist operations
@@ -274,7 +272,7 @@ class SequencerController {
 
   getFormattedProjectSpec() {
     const provider = (this.specProviderSelect ? this.specProviderSelect.value : 'mqtt') || 'mqtt';
-    const project = (this.specProjectInput ? this.specProjectInput.value.trim() : 'localhost') || 'localhost';
+    const project = (this.specProjectInput ? this.specProjectInput.value.trim() : 'localhost:18833') || 'localhost:18833';
     let ns = (this.specNamespaceInput ? this.specNamespaceInput.value.trim() : '');
     let user = (this.specUserInput ? this.specUserInput.value.trim() : '');
 
@@ -654,13 +652,15 @@ class SequencerController {
       if (diagnoseBtn) {
         diagnoseBtn.addEventListener('click', (e) => {
           e.stopPropagation();
-          window.parent.postMessage({
+          const payload = {
             type: 'trigger_diagnose',
             testId: tc.id,
-            deviceId: this.deviceSelect.value,
+            deviceId: this.deviceSelect ? this.deviceSelect.value : '',
             siteModel: this.siteModel,
-            projectSpec: this.projectInput.value
-          }, '*');
+            projectSpec: this.getFormattedProjectSpec()
+          };
+          stateStore.emit('trigger_diagnose', payload);
+          window.parent.postMessage(payload, '*');
         });
       }
 
@@ -966,7 +966,4 @@ class SequencerController {
   }
 }
 
-// Initialize on load
-window.addEventListener('DOMContentLoaded', () => {
-  new SequencerController();
-});
+// SPA orchestration managed by ShellOrchestrator in main.js

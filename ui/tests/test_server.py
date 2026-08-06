@@ -166,7 +166,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("udmis", data["components"])
 
     def test_testbed_topology(self):
-        url = "http://127.0.0.1:8089/api/testbed/topology?site_model=sites/udmi_site_model&project_spec=//mqtt/localhost"
+        url = "http://127.0.0.1:8089/api/testbed/topology?site_model=sites/udmi_site_model&project_spec=//mqtt/localhost:18833"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -179,7 +179,7 @@ class TestUIServer(unittest.TestCase):
         url = "http://127.0.0.1:8089/api/testbed/start"
         payload = json.dumps({
             "site_model": "sites/udmi_site_model",
-            "project_spec": "//mqtt/localhost"
+            "project_spec": "//mqtt/localhost:18833"
         }).encode('utf-8')
         headers = {"Content-Type": "application/json"}
         req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
@@ -225,6 +225,85 @@ class TestUIServer(unittest.TestCase):
             data = json.loads(response.read().decode('utf-8'))
             self.assertIn("query_id", data)
             self.assertIn("answer_markdown", data)
+
+    def test_testbed_jobs(self):
+        url = "http://127.0.0.1:8089/api/testbed/jobs"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("jobs", data)
+            self.assertIsInstance(data["jobs"], list)
+
+    def test_git_status(self):
+        url = "http://127.0.0.1:8089/api/git/status?site_model=sites/udmi_site_model"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("branch", data)
+            self.assertIn("is_protected", data)
+
+    def test_git_commit_safety_stop(self):
+        import os, subprocess, shutil
+        test_repo = os.path.join(ui_server.ROOT_DIR, 'out', 'test_git_repo_master')
+        shutil.rmtree(test_repo, ignore_errors=True)
+        os.makedirs(test_repo, exist_ok=True)
+        try:
+            subprocess.run(['git', '-C', test_repo, 'init', '--initial-branch=main'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            # Create a file so we can test status and committing
+            with open(os.path.join(test_repo, 'test_file.txt'), 'w') as f:
+                f.write('initial content')
+            
+            # Test safety stop: committing directly to 'main' without create_branch or force_main should return HTTP 400
+            url = "http://127.0.0.1:8089/api/git/commit"
+            payload = json.dumps({
+                "site_model": test_repo,
+                "commit_message": "test: check safety stop",
+                "create_branch": False,
+                "force_main": False
+            }).encode('utf-8')
+            headers = {"Content-Type": "application/json"}
+            req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+            try:
+                with urllib.request.urlopen(req) as response:
+                    self.fail("Expected HTTP 400 error when committing directly to main without override")
+            except urllib.error.HTTPError as e:
+                self.assertEqual(e.code, 400)
+                error_body = json.loads(e.read().decode('utf-8'))
+                self.assertIn("Safety stop", error_body.get("error", ""))
+
+            # Now test creating a new results branch (should succeed without error)
+            payload_override = json.dumps({
+                "site_model": test_repo,
+                "commit_message": "test: save results on new branch",
+                "create_branch": True,
+                "branch_name": "test-results-branch"
+            }).encode('utf-8')
+            req_override = urllib.request.Request(url, data=payload_override, headers=headers, method="POST")
+            with urllib.request.urlopen(req_override) as res_override:
+                self.assertEqual(res_override.status, 200)
+                data = json.loads(res_override.read().decode('utf-8'))
+                self.assertEqual(data.get("status"), "success")
+                self.assertEqual(data.get("branch"), "test-results-branch")
+        finally:
+            shutil.rmtree(test_repo, ignore_errors=True)
+
+    def test_send_email(self):
+        url = "http://127.0.0.1:8089/api/notifications/send_email"
+        payload = json.dumps({
+            "recipient": "test_engineer@udmi.system",
+            "subject": "UDMI CI Test Alert",
+            "body": "Test execution summary for AHU-1.",
+            "rca_markdown": "### RCA Report\nMisconfigured telemetry interval."
+        }).encode('utf-8')
+        headers = {"Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertEqual(data.get("status"), "delivered")
+            self.assertIn("outbox_file", data)
 
     def test_prune_old_sessions(self):
         import os
