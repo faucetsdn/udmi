@@ -792,6 +792,7 @@ class MqttToPubSubBridgeTest {
   @Test
   void testCircuitBreakerTripsWhenThresholdExceeded() throws Exception {
     IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
     Publisher mockPublisher = mock(Publisher.class);
     com.google.api.core.SettableApiFuture<String> pendingFuture =
         com.google.api.core.SettableApiFuture.create();
@@ -830,11 +831,61 @@ class MqttToPubSubBridgeTest {
     msg2.setId(102);
     callback.messageArrived(testTopic, msg2);
 
-    // Wait for timeout (1500ms + buffer)
-    Thread.sleep(2500);
+    // Wait for timeout (1500ms + polling buffer)
+    long deadline = System.currentTimeMillis() + 8000;
+    while (!bridge.isTripped() && System.currentTimeMillis() < deadline) {
+      Thread.sleep(100);
+    }
     org.junit.jupiter.api.Assertions.assertTrue(bridge.isTripped());
     org.junit.jupiter.api.Assertions.assertTrue(exited[0]);
-    verify(mockMqttClient).disconnect();
+    verify(mockMqttClient).disconnectForcibly();
+  }
+
+  @Test
+  void testParseArgsCircuitBreakerOptions() throws Exception {
+    String[] args = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client",
+        "--circuit_breaker_unacked_threshold=50",
+        "--circuit_breaker_timeout_sec=120"
+    };
+    CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
+    assertEquals("50", commandLine.getOptionValue("circuit_breaker_unacked_threshold"));
+    assertEquals("120", commandLine.getOptionValue("circuit_breaker_timeout_sec"));
+  }
+
+  @Test
+  void testParseArgsCleanStartOptions() throws Exception {
+    String[] defaultArgs = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client"
+    };
+    CommandLine defaultCommandLine = MqttToPubSubBridge.parseArgs(defaultArgs);
+    org.junit.jupiter.api.Assertions.assertFalse(
+        defaultCommandLine.hasOption("mqtt_clean_start")
+            || defaultCommandLine.hasOption("clean_start"));
+
+    String[] cleanStartArgs = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client",
+        "--mqtt_clean_start"
+    };
+    CommandLine cleanStartCommandLine = MqttToPubSubBridge.parseArgs(cleanStartArgs);
+    org.junit.jupiter.api.Assertions.assertTrue(
+        cleanStartCommandLine.hasOption("mqtt_clean_start"));
+
+    String[] cleanStartAliasArgs = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client",
+        "--clean_start"
+    };
+    CommandLine cleanStartAliasCommandLine = MqttToPubSubBridge.parseArgs(cleanStartAliasArgs);
+    org.junit.jupiter.api.Assertions.assertTrue(
+        cleanStartAliasCommandLine.hasOption("clean_start"));
   }
 }
 
