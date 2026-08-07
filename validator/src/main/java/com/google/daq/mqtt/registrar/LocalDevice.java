@@ -41,7 +41,6 @@ import com.github.fge.jsonschema.main.JsonSchema;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.google.daq.mqtt.util.CloudDeviceSettings;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigManager;
@@ -156,10 +155,14 @@ class LocalDevice implements SiteDevice {
           ES_CERT_TYPE, ES_CERT_PEM);
   private static final Set<String> OPTIONAL_FILES =
       ImmutableSet.of(
+          RSA_PRIVATE_PEM,
+          RSA_PRIVATE_PKCS8,
           RSA_PRIVATE_CRT,
           RSA_PRIVATE_CSR,
           RSA2_PUBLIC_PEM,
           RSA3_PUBLIC_PEM,
+          ES_PRIVATE_PEM,
+          ES_PRIVATE_PKCS8,
           EC_PRIVATE_CRT,
           EC_PRIVATE_CSR,
           ES2_PUBLIC_PEM,
@@ -383,6 +386,16 @@ class LocalDevice implements SiteDevice {
       }
     }
 
+    if (isGateway() || isDirect()) {
+      Set<String> privateKeyFiles = getPrivateKeyFiles();
+      if (!privateKeyFiles.isEmpty()
+          && Sets.intersection(privateKeyFiles, actualFiles).isEmpty()) {
+        System.err.printf("No private key found for device %s%n", deviceId);
+        exceptionMap.put(ExceptionCategory.credentials,
+            new ValidationWarning("Missing private key"));
+      }
+    }
+
     exceptionMap.throwIfNotEmpty();
   }
 
@@ -516,12 +529,10 @@ class LocalDevice implements SiteDevice {
     Set<String> certFile = getCertFiles();
     String keyFile = getPublicKeyFile();
     Set<String> publicKeyFiles = keyFile != null ? Set.of(keyFile) : Set.of();
-    Set<String> privateKeyFiles = getPrivateKeyFiles();
-    SetView<String> combined = Sets.union(publicKeyFiles, privateKeyFiles);
     boolean addCertFile =
         authType != null && (authType.equals(ES_CERT_TYPE) || authType.equals(
             RSA_CERT_TYPE));
-    return addCertFile ? Sets.union(combined, certFile) : combined;
+    return addCertFile ? Sets.union(publicKeyFiles, certFile) : publicKeyFiles;
   }
 
   private Set<String> getPrivateKeyFiles() {
