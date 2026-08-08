@@ -333,7 +333,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
     ifNotNullThen(updatePayload, p -> updatePayload.remove(VERSION_KEY));
 
-    if (attributes.subFolder != null && attributes.subFolder != UPDATE && attributes.subFolder != INVALID) {
+    if (attributes.subFolder != null && attributes.subFolder != UPDATE
+        && attributes.subFolder != INVALID) {
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 

@@ -180,10 +180,11 @@ def main():
         else:
           save_to_postgres(envelope, payload)
           target_db = "postgres"
-          
+
         registry_id = envelope.get("deviceRegistryId", "unknown")
         device_id = envelope.get("deviceId", "unknown")
-        print(f"db:{target_db}/{registry_id}/{device_id}/{sub_folder}/{sub_type}")
+        print(f"db:{target_db}/{registry_id}/{device_id}"
+              f"/{sub_folder}/{sub_type}")
       except (json.JSONDecodeError, KeyError, psycopg2.Error,
               InfluxWriteError) as e:
         print(f"Error processing message: {e}", file=sys.stderr)
