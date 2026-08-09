@@ -86,6 +86,8 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.Config;
@@ -99,6 +101,8 @@ import udmi.schema.PointPointsetModel;
 
 
 class LocalDevice implements SiteDevice {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(LocalDevice.class);
 
   private static final String RSA_PUBLIC_PEM = "rsa_public.pem";
   private static final String RSA2_PUBLIC_PEM = "rsa2_public.pem";
@@ -182,6 +186,16 @@ class LocalDevice implements SiteDevice {
           ES_PUBLIC_PEM,
           ES2_PUBLIC_PEM,
           ES3_PUBLIC_PEM);
+  private static final Set<String> ALL_PRIVATE_KEY_FILES =
+      ImmutableSet.of(
+          RSA_PRIVATE_PEM,
+          RSA_PRIVATE_PKCS8,
+          RSA_PRIVATE_CRT,
+          RSA_PRIVATE_CSR,
+          ES_PRIVATE_PEM,
+          ES_PRIVATE_PKCS8,
+          EC_PRIVATE_CRT,
+          EC_PRIVATE_CSR);
   private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(RSA_CERT_PEM, ES_CERT_PEM);
   private static final int MAX_JSON_LENGTH = 32767;
   private final String deviceId;
@@ -390,12 +404,14 @@ class LocalDevice implements SiteDevice {
       Set<String> privateKeyFiles = getPrivateKeyFiles();
       if (!privateKeyFiles.isEmpty()
           && Sets.intersection(privateKeyFiles, actualFiles).isEmpty()) {
-        System.err.printf("No private key found for device %s%n", deviceId);
-        exceptionMap.put(ExceptionCategory.credentials,
-            new ValidationWarning("Missing private key"));
+        LOGGER.info("No private key found for device {}", deviceId);
       }
     }
 
+    Set<String> presentPrivateKeys = Sets.intersection(ALL_PRIVATE_KEY_FILES, actualFiles);
+    if (!presentPrivateKeys.isEmpty()) {
+      LOGGER.warn("Private key file(s) {} found for device {}", presentPrivateKeys, deviceId);
+    }
     exceptionMap.throwIfNotEmpty();
   }
 
