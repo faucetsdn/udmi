@@ -19,6 +19,14 @@ PORT = 8080
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 HOME_DIR = os.path.abspath(os.path.expanduser('~'))
 
+# Ensure Mantis and tools are importable
+mantis_src = os.path.join(ROOT_DIR, "util", "mantis", "src")
+tools_dir = os.path.join(ROOT_DIR, "tools")
+if mantis_src not in sys.path:
+    sys.path.insert(0, mantis_src)
+if tools_dir not in sys.path:
+    sys.path.insert(0, tools_dir)
+
 
 def to_home_relative(path_str):
     if not path_str:
@@ -32,6 +40,9 @@ def to_home_relative(path_str):
 
 active_processes_lock = threading.Lock()
 active_processes = {}
+
+active_mantis_sessions_lock = threading.Lock()
+active_mantis_sessions = {}
 
 
 def get_latest_session_process(proc_type: str):
@@ -115,7 +126,16 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             self.handle_log_diff(parsed_url.query, post_data=post_data)
         elif parsed_url.path == '/api/ai_query':
             self.handle_ai_query(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/mantis/chat/stream':
+            self.handle_mantis_chat_stream(parsed_url.query, post_data=post_data, bearer_key=bearer_key)
+        elif parsed_url.path == '/api/mantis/chat/stop':
+            self.handle_mantis_chat_stop(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/mantis/chat/clear':
+            self.handle_mantis_chat_clear(parsed_url.query, post_data=post_data)
+        elif parsed_url.path == '/api/graphviz/render':
+            self.handle_graphviz_render(parsed_url.query, post_data=post_data)
         elif parsed_url.path == '/api/git/commit':
+
             self.handle_git_commit(parsed_url.query, post_data=post_data)
         elif parsed_url.path == '/api/notifications/send_email':
             self.handle_send_email(parsed_url.query, post_data=post_data)
@@ -127,7 +147,10 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
 
         if parsed_url.path == '/api/list':
             self.handle_api_list(parsed_url.query)
+        elif parsed_url.path == '/api/mantis/chat/context':
+            self.handle_mantis_chat_context(parsed_url.query)
         elif parsed_url.path == '/api/read_file':
+
             self.handle_api_read_file(parsed_url.query)
         elif parsed_url.path == '/api/devices':
             self.handle_api_devices(parsed_url.query)
@@ -821,20 +844,48 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
     def handle_ai_query(self, query_string, post_data=None):
         params = urllib.parse.parse_qs(query_string)
         data = post_data or {}
-        query = data.get('query') or params.get('query', [''])[0]
-        context = data.get('context') or {}
+        query = data.get('prompt') or data.get('query') or params.get('query', [''])[0]
+        site_model = data.get('site_model') or (data.get('context') or {}).get('site_model', 'sites/udmi_site_model')
+        device_id = data.get('device_id') or (data.get('context') or {}).get('active_device', '')
+        test_id = data.get('test_id') or (data.get('context') or {}).get('active_test', '')
 
         query_id = f"q-{uuid.uuid4().hex[:6]}"
-        answer_markdown = (
-            f"### Analysis Summary\n"
-            f"Evaluated query: *\"{query}\"*\n\n"
-            f"**Active Workspace**: `{context.get('site_model', 'sites/udmi_site_model')}`\n"
-            f"**Target Device**: `{context.get('active_device', 'N/A')}`\n\n"
-            f"No structural anomalies or validation failures detected for this query."
-        )
+        answer_markdown = ""
+
+        # Attempt to run via live MantisChatSession if credentials are configured
+        has_credentials = bool(os.getenv("GEMINI_API_KEY") or os.getenv("MANTIS_USE_VERTEXAI"))
+        if has_credentials and query:
+            try:
+                import asyncio
+                mantis_dir = os.path.join(ROOT_DIR, "util", "mantis")
+                if mantis_dir not in sys.path:
+                    sys.path.insert(0, mantis_dir)
+                from mantis.agent.chat import MantisChatSession
+
+                chat_session = MantisChatSession(
+                    udmi_root=ROOT_DIR,
+                    site_model=site_model,
+                    device_id=device_id or None,
+                    test_id=test_id or None
+                )
+                answer_markdown = asyncio.run(chat_session.send_message(query))
+            except Exception as e:
+                answer_markdown = f"*(Mantis AI Query Error: {e})*\n\n"
+
+
+        if not answer_markdown:
+            answer_markdown += (
+                f"### Analysis Summary\n"
+                f"Evaluated query: *\"{query}\"*\n\n"
+                f"**Active Workspace**: `{site_model}`\n"
+                f"**Target Device**: `{device_id or 'N/A'}`\n"
+                f"**Target Test**: `{test_id or 'N/A'}`\n\n"
+                f"No structural anomalies or validation failures detected for this query."
+            )
 
         response_data = json.dumps({
             "query_id": query_id,
+            "response": answer_markdown,
             "answer_markdown": answer_markdown
         }).encode('utf-8')
 
@@ -845,7 +896,221 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(response_data)
 
+    def handle_mantis_chat_stream(self, query_string=None, post_data=None, bearer_key=None):
+        data = post_data or {}
+        session_id = data.get('session_id') or f"chat-{uuid.uuid4().hex[:8]}"
+        user_message = data.get('message') or data.get('prompt') or ""
+        site_model = data.get('site_model')
+        device_id = data.get('device_id')
+        test_id = data.get('test_id')
+        provider = data.get('provider')
+        api_key = data.get('api_key') or bearer_key or os.getenv("GEMINI_API_KEY")
+        gcp_project = data.get('gcp_project') or os.getenv("GCLOUD_PROJECT") or os.getenv("GOOGLE_CLOUD_PROJECT") or "mantis-predator"
+        gcp_location = data.get('gcp_location') or os.getenv("GCP_LOCATION", "global")
+        
+        if api_key:
+            os.environ["GEMINI_API_KEY"] = api_key
+            use_vertex = (str(provider).lower() == 'vertex')
+        else:
+            use_vertex = True
+            os.environ["MANTIS_USE_VERTEXAI"] = "true"
+
+
+        self.send_response(200)
+        self.send_header('Content-Type', 'text/event-stream')
+        self.send_header('Cache-Control', 'no-cache')
+        self.send_header('Connection', 'close')
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+
+
+        def send_sse(event_type, payload):
+            try:
+                msg = f"event: {event_type}\ndata: {json.dumps(payload)}\n\n"
+                self.wfile.write(msg.encode('utf-8'))
+                self.wfile.flush()
+                return True
+            except (BrokenPipeError, ConnectionResetError, OSError):
+                return False
+            except Exception:
+                return False
+
+        send_sse('session_init', {
+            'session_id': session_id,
+            'site_model': site_model,
+            'device_id': device_id,
+            'test_id': test_id
+        })
+
+        if not user_message:
+            send_sse('error', {'error': 'Empty prompt message'})
+            send_sse('done', {'session_id': session_id})
+            return
+
+        with active_mantis_sessions_lock:
+            chat_session = active_mantis_sessions.get(session_id)
+            if not chat_session:
+                try:
+                    from mantis.agent.chat import MantisChatSession
+                    chat_session = MantisChatSession(
+                        udmi_root=ROOT_DIR,
+                        site_model=site_model,
+                        device_id=device_id or None,
+                        test_id=test_id or None,
+                        use_vertex=use_vertex,
+                        gcp_project=gcp_project,
+                        gcp_location=gcp_location
+                    )
+                    active_mantis_sessions[session_id] = chat_session
+                except Exception as e:
+                    send_sse('error', {'error': f"Failed to initialize Mantis session: {e}"})
+                    send_sse('done', {'session_id': session_id})
+                    return
+
+        import asyncio
+
+        async def run_streaming():
+            try:
+                msg_trimmed = user_message.strip()
+                if msg_trimmed.startswith(("/fact-check", "/factcheck", "/critique", "/review")):
+                    focus = msg_trimmed.split(maxsplit=1)[1].strip() if " " in msg_trimmed else ""
+                    prev_report = data.get('previous_report', '')
+                    critique_text = await chat_session.run_critique(focus, previous_report=prev_report)
+                    send_sse('token', {'text': critique_text})
+                    send_sse('done', {'full_text': critique_text, 'session_id': session_id})
+                else:
+                    async for event in chat_session.send_message_stream(user_message):
+                        if getattr(chat_session, 'is_cancelled', False):
+                            break
+                        ev_type = event.get('type', 'message')
+                        ok = send_sse(ev_type, event)
+                        if not ok:
+                            chat_session.cancel()
+                            break
+
+            except Exception as stream_err:
+                send_sse('error', {'error': f"Diagnostic streaming error: {stream_err}"})
+                send_sse('done', {'session_id': session_id})
+
+        try:
+            asyncio.run(run_streaming())
+        except Exception as e:
+            send_sse('error', {'error': str(e)})
+            send_sse('done', {'session_id': session_id})
+
+    def handle_mantis_chat_stop(self, query_string=None, post_data=None):
+        data = post_data or {}
+        session_id = data.get('session_id')
+        if session_id:
+            with active_mantis_sessions_lock:
+                if session_id in active_mantis_sessions:
+                    active_mantis_sessions[session_id].cancel()
+        
+        response_data = json.dumps({"status": "ok", "message": "Mantis generation stopped"}).encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
+
+    def handle_mantis_chat_clear(self, query_string=None, post_data=None):
+
+        data = post_data or {}
+        session_id = data.get('session_id')
+        if session_id:
+            with active_mantis_sessions_lock:
+                if session_id in active_mantis_sessions:
+                    active_mantis_sessions[session_id].history.clear()
+        
+        response_data = json.dumps({"status": "ok", "message": "Chat history cleared"}).encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
+
+    def handle_mantis_chat_context(self, query_string=None):
+        params = urllib.parse.parse_qs(query_string) if query_string else {}
+        session_id = params.get('session_id', [None])[0]
+        ctx = {}
+        if session_id:
+            with active_mantis_sessions_lock:
+                sess = active_mantis_sessions.get(session_id)
+                if sess:
+                    ctx = {
+                        "site_model": sess.active_site_model,
+                        "device_id": sess.active_device,
+                        "test_id": sess.active_test,
+                        "history_turns": len(sess.history)
+                    }
+        response_data = json.dumps({"status": "ok", "context": ctx}).encode('utf-8')
+        self.send_response(200)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_data)))
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.end_headers()
+        self.wfile.write(response_data)
+
+    def handle_graphviz_render(self, query_string=None, post_data=None):
+        data = post_data or {}
+        dot_code = data.get('dot', '').strip()
+
+        if not dot_code:
+            self.send_error_response(400, "Missing 'dot' graph definition in request body.")
+            return
+
+        dot_path = "/usr/bin/dot" if os.path.exists("/usr/bin/dot") else shutil.which("dot")
+        if not dot_path:
+            self.send_error_response(501, "Graphviz binary 'dot' is not installed on the system.")
+            return
+
+        try:
+            proc = subprocess.run(
+                [dot_path, "-Tsvg"],
+                input=dot_code,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=5,
+                check=False
+            )
+
+            if proc.returncode != 0:
+                err_msg = proc.stderr.strip() or "Failed to render DOT graph"
+                response_data = json.dumps({
+                    "status": "error",
+                    "error": err_msg
+                }).encode('utf-8')
+                self.send_response(422)
+            else:
+                svg_output = proc.stdout.strip()
+                if svg_output.startswith("<?xml"):
+                    svg_output = svg_output.split("?>", 1)[-1].strip()
+                if "<!DOCTYPE" in svg_output:
+                    svg_output = svg_output.split(">", 1)[-1].strip()
+
+                response_data = json.dumps({
+                    "status": "success",
+                    "svg": svg_output
+                }).encode('utf-8')
+                self.send_response(200)
+
+            self.send_header('Content-Type', 'application/json; charset=utf-8')
+            self.send_header('Content-Length', str(len(response_data)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(response_data)
+
+        except subprocess.TimeoutExpired:
+            self.send_error_response(504, "Graphviz rendering timed out (exceeded 5s limit).")
+        except Exception as e:
+            self.send_error_response(500, f"Graphviz rendering failed: {str(e)}")
+
     def handle_sse_stream(self, query_string, proc_type="sequencer"):
+
+
         params = urllib.parse.parse_qs(query_string)
         session_id = params.get('session_id', [None])[0]
         
@@ -1261,18 +1526,19 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             print(f"Warning: failed to write triage_manifest.json: {e}")
 
         manifest_relative_path = os.path.relpath(manifest_path, ROOT_DIR)
-        cmd = [python_bin, "-u", "-m", "mantis.src.app.main", "-m", manifest_relative_path, "-d", device_id, "-t", test_id]
+        cmd = [python_bin, "-u", "-m", "mantis.cli", "-m", manifest_relative_path, "-d", device_id, "-t", test_id]
 
         if playbook == "swe":
             playbook_path = os.path.join(ROOT_DIR, 'util', 'mantis', 'config', 'playbook_swe.yaml')
             cmd.extend(["--playbook", playbook_path])
 
         env = os.environ.copy()
-        mantis_src = os.path.join(ROOT_DIR, 'util', 'mantis', 'src')
+        mantis_dir = os.path.join(ROOT_DIR, 'util', 'mantis')
         util_dir = os.path.join(ROOT_DIR, 'util')
         tools_dir = os.path.join(ROOT_DIR, 'tools')
-        env['PYTHONPATH'] = f"{tools_dir}:{mantis_src}:{util_dir}:{env.get('PYTHONPATH', '')}"
+        env['PYTHONPATH'] = f"{mantis_dir}:{tools_dir}:{util_dir}:{env.get('PYTHONPATH', '')}"
         env['UDMI_NO_SUDO'] = 'true'
+
 
         if gemini_key:
             env['GEMINI_API_KEY'] = gemini_key

@@ -32,17 +32,48 @@ Alternatively, point to extracted directories:
 tools/mantis/bin/triage -i out/mantis/run_1/ out/mantis/run_2/
 ```
 
+## Interactive Chat Mode (`bin/chat` or `bin/triage -c`)
+
+Mantis includes an interactive **Chat Mode** allowing developers and integrators to have multi-turn conversations with the diagnostic agent, ask follow-up questions, drill into specific log intervals, and request code fixes dynamically:
+
+```bash
+# Launch interactive chat mode with a test bundle
+tools/mantis/bin/triage -i out/mantis/run_1/ --chat
+
+# Or launch directly using the chat wrapper
+util/mantis/bin/chat -i out/mantis/run_1/
+
+# Execute a one-shot query from the terminal
+tools/mantis/bin/triage -i out/mantis/run_1/ -q "Why did AHU-1 fail pointset_publish?"
+```
+
+### Chat Slash Commands
+
+Inside the chat REPL, the following slash commands are available:
+* `/help`: Display available chat commands.
+* `/load <path>`: Load a new test bundle directory or `triage_manifest.json`.
+* `/device <device_id>`: Set or switch active target device (e.g. `AHU-1`).
+* `/test <test_name>`: Set or switch active test case (e.g. `system_min_loglevel`).
+* `/tools`: List all registered diagnostic tools.
+* `/context`: View active session context and targets.
+* `/clear`: Clear conversation history.
+* `/export [file]`: Export the diagnostic chat session transcript to markdown.
+* `/exit`: Exit interactive chat session.
+
 ## CLI Reference (`bin/triage`)
 
 | Argument | Description | Example |
 |---|---|---|
 | `-i`, `--test-runs` | **(Required)** Test bundle paths or extracted directories (space-separated). | `-i path/run1.zip path/run2.zip` |
+| `-c`, `--chat` | Launch Mantis in interactive Chat Mode REPL. | `-c` |
+| `-q`, `--query` | Execute a single natural language query against Mantis and exit. | `-q "Explain failure"` |
 | `-p`, `--project-path`| Path to the UDMI project root. Use when testing against a different branch or PR directory. | `-p ~/Projects/udmi/pr-branch` |
 | `-d`, `--device` | Filter triage by specific device ID. | `-d AHU-1` |
 | `-t`, `--test` | Filter triage by specific test case name. | `-t system_min_loglevel` |
 | `--all` | Force triage of all identified failed tests. | `--all` |
 | `--swe` | Use the SWE software debugging playbook instead of the default OEM integrator playbook. | `--swe` |
 | `-h`, `--help` | Show usage instructions. | `-h` |
+
 
 # Utilities
 

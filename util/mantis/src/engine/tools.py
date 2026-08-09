@@ -24,22 +24,22 @@ class ToolBelt:
         self.workspace_root = os.path.abspath(workspace_root)
         self.search_dirs = search_dirs or ["."]
         self.exclude_dirs = exclude_dirs or []
-        self.exclude_files = exclude_files or ["*.log", "*.md", "*.json"]
+        self.exclude_files = exclude_files or []
         self.include_files = include_files or []
         self.search_provider = search_provider or LocalCodeSearchProvider()
         self._directory_cache = {}
         self._build_directory_cache()
 
     def _build_directory_cache(self):
-        """Recursively builds a lightweight cache of directories and their immediate contents, ignoring build artifacts."""
+        """Recursively builds a lightweight cache of directories and their immediate contents, ignoring heavy system build directories."""
         default_excludes = {
-            "out", "build", "node_modules", ".git", "venv", "bin", "__pycache__", ".idea"
+            "node_modules", ".git", "venv", "__pycache__", ".idea"
         }
         excluded_dirs = default_excludes.union(self.exclude_dirs)
         for root, dirs, files in os.walk(self.workspace_root):
             dirs[:] = [
                 d for d in dirs 
-                if d not in excluded_dirs and not d.startswith("udmi-support_") and not d.startswith("out_")
+                if d not in excluded_dirs and not d.startswith("udmi-support_")
             ]
 
             rel_path = os.path.relpath(root, self.workspace_root)
@@ -55,6 +55,7 @@ class ToolBelt:
             normalized_key = rel_path.replace(os.path.sep, "/")
             self._directory_cache[normalized_key] = cached_items
 
+
     def get_tools_map(self) -> Dict[str, Any]:
         """Returns a dictionary mapping tool name to its bound method."""
         return {
@@ -65,8 +66,32 @@ class ToolBelt:
             "grep_file": self.grep_file,
             "expand_log_window": self.expand_log_window,
             "read_method_definition": self.read_method_definition,
-            "lookup_symbol": self.lookup_symbol
+            "lookup_symbol": self.lookup_symbol,
+            "pull_cloud_logs": self.pull_cloud_logs
         }
+
+    def pull_cloud_logs(
+        self,
+        test_id: str,
+        site_name: Optional[str] = None,
+        device_id: Optional[str] = None,
+        project: Optional[str] = None,
+        service: str = "udmis",
+        padding_sec: int = 60
+    ) -> str:
+        """Tool: Queries GCP Cloud Logging for container logs (e.g. udmis, validator) for a specific test execution window."""
+        self._log_tool_call(f"Pulling GCP Cloud Logs for test='{test_id}', service='{service}' (project: {project or 'Auto-detect'})...")
+        from mantis.tools.cloud_logs import pull_cloud_logs_for_test
+        return pull_cloud_logs_for_test(
+            udmi_root=self.workspace_root,
+            test_id=test_id,
+            site_name=site_name,
+            device_id=device_id,
+            project=project,
+            service=service,
+            padding_sec=padding_sec
+        )
+
 
     def _log_tool_call(self, msg: str):
         print(color_text("[Inspect Tool]:", BLUE, bold=True) + "\n" +
@@ -153,20 +178,25 @@ class ToolBelt:
         if end_line < start_line:
             return "Error: end_line must be greater than or equal to start_line."
 
-        max_lines = 2000
-        if (end_line - start_line + 1) > max_lines:
-            end_line = start_line + max_lines - 1
-            self._log_tool_call(f"Warning: Truncating read request to max limit of {max_lines} lines.")
+        # Cap reading range to max 120 lines to preserve context tokens
+        max_allowed_lines = 120
+        truncated_notice = ""
+        if (end_line - start_line + 1) > max_allowed_lines:
+            end_line = start_line + max_allowed_lines - 1
+            truncated_notice = f"\n\n... [Truncated to {max_allowed_lines} lines (lines {start_line}-{end_line}) to prevent token bloat. Request subsequent line ranges if needed]"
 
         try:
             lines = []
-            with open(full_path, 'r', encoding='utf-8', errors='replace') as f:
+            with open(full_path, "r", encoding="utf-8", errors="replace") as f:
                 for idx, line in enumerate(f, start=1):
                     if start_line <= idx <= end_line:
                         lines.append(f"{idx}: {line.rstrip()}")
                     elif idx > end_line:
                         break
-            return "\n".join(lines)
+            content = "\n".join(lines)
+            if len(content) > 7000:
+                content = content[:7000] + "\n... [Truncated remaining characters]"
+            return content + truncated_notice
         except Exception as e:
             return f"Error reading file '{filepath}': {e}"
 
@@ -174,7 +204,7 @@ class ToolBelt:
         self,
         filepath: str = None,
         start_line: int = 1,
-        end_line: int = 200,
+        end_line: int = 100,
         files_to_read: List[Dict[str, Any]] = None
     ) -> str:
         """
@@ -188,12 +218,12 @@ class ToolBelt:
             for idx, item in enumerate(files_to_read, start=1):
                 f_path = item.get("filepath")
                 s_line = int(item.get("start_line", 1))
-                e_line = int(item.get("end_line", 200))
+                e_line = int(item.get("end_line", 100))
 
                 content = self._read_single_file_helper(f_path, s_line, e_line)
                 outputs.append(
                     f"--- File {idx}: '{f_path}' (Lines {s_line}-{e_line}) ---\n{content}\n")
-            return "\n".join(outputs)[:80000]
+            return "\n".join(outputs)[:20000]
 
         if filepath:
             self._log_tool_call(f"read_file_lines called for '{filepath}' (lines {start_line}-{end_line})")
@@ -234,11 +264,15 @@ class ToolBelt:
 
             out = subprocess.check_output(cmd_args, cwd=full_repo_path, env=env,
                                           text=True, stderr=subprocess.STDOUT)
-            return out.strip()[:30000]
+            trimmed = out.strip()
+            if len(trimmed) > 6000:
+                return trimmed[:6000] + f"\n\n... [Truncated {len(trimmed) - 6000} remaining characters. Tip: Specify exact file paths like 'devices/{repo_path}/' or use '-n' to narrow your git query]"
+            return trimmed
         except subprocess.CalledProcessError as e:
             return f"Git Command Failed (code {e.returncode}):\n{e.output}"
         except Exception as e:
             return f"Error executing git command: {e}"
+
 
     def grep_file(self, pattern: str, filepath: str) -> str:
         """
@@ -267,7 +301,13 @@ class ToolBelt:
             if not out.strip():
                 return f"No matches found for pattern: '{pattern}' in '{filepath}'."
 
-            return out.strip()[:40000]
+            lines = out.strip().splitlines()
+            if len(lines) > 25:
+                capped = "\n".join(lines[:25])
+                return f"{capped}\n\n... [Showing top 25 of {len(lines)} matches. Narrow your search pattern or specify exact line ranges]"
+            
+            res = "\n".join(lines)
+            return res[:5000]
         except subprocess.CalledProcessError:
             return f"No matches found for pattern: '{pattern}' in '{filepath}'."
         except Exception as e:
@@ -446,3 +486,87 @@ class ToolBelt:
             return f"Could not find any class, method, or function declaration for symbol: '{symbol_name}'."
 
         return res
+
+    def compare_test_sequences(
+        self,
+        test_id: str,
+        device_id: str,
+        run_b_commit: Optional[str] = None,
+        run_b_dir: Optional[str] = None,
+        site_name: Optional[str] = None
+    ) -> str:
+        """
+        Performs behavioral differential log analysis between two test executions.
+        Maps the sequence of events between a reference passing run and the current failing run
+        to pinpoint the exact qualitative state machine divergence in protocol exchanges,
+        transaction acknowledgments, and state transitions.
+
+        Args:
+            test_id: Name of the test sequence (e.g. 'pointset_publish').
+            device_id: Target device identifier (e.g. 'EM-11').
+            run_b_commit: Optional Git commit SHA containing the passing baseline run (e.g. '7c9c02ca').
+            run_b_dir: Optional directory containing reference baseline run artifacts.
+            site_name: Optional site model path (e.g. 'sites/UK-LON-GLAB').
+        """
+        from mantis.tools.differential import compare_test_sequences as compare_impl
+        self._log_tool_call(f"compare_test_sequences called for test='{test_id}', device='{device_id}', commit='{run_b_commit}'")
+        return compare_impl(
+            udmi_root=self.workspace_root,
+            test_id=test_id,
+            device_id=device_id,
+            run_b_commit=run_b_commit,
+            run_b_dir=run_b_dir,
+            site_name=site_name
+        )
+
+    def get_historical_site_state(
+        self,
+        site_name: str,
+        timestamp: str,
+        device_id: Optional[str] = None
+    ) -> str:
+        """
+        Reconstructs the site model configuration (cloud_iot_config.json) and device metadata.json
+        as they existed in Git history at or before the given ISO timestamp of the test execution.
+
+        Args:
+            site_name: Path or name of the site model (e.g. 'sites/UK-LON-GLAB').
+            timestamp: The ISO timestamp of the test execution (e.g. '2024-12-05T12:45:08Z').
+            device_id: Optional device ID to reconstruct metadata for (e.g. 'EM-11').
+        """
+        from mantis.tools.differential import get_historical_site_state as hist_impl
+        self._log_tool_call(f"get_historical_site_state called for site='{site_name}', timestamp='{timestamp}', device='{device_id}'")
+        return hist_impl(
+            udmi_root=self.workspace_root,
+            site_name=site_name,
+            timestamp=timestamp,
+            device_id=device_id
+        )
+
+    def get_test_execution_summary(
+        self,
+        test_id: str,
+        device_id: str,
+        site_name: Optional[str] = None
+    ) -> str:
+        """
+        Instantly extracts a high-density, precise execution summary of a specific test run.
+        Provides start/end line numbers, timestamps, transaction IDs dispatched,
+        state/event messages received, schema validation errors, and the final test RESULT in 1 step.
+
+        Args:
+            test_id: Name of the test sequence (e.g. 'pointset_publish').
+            device_id: Target device identifier (e.g. 'EM-11').
+            site_name: Optional site model path (e.g. 'sites/UK-LON-GLAB').
+        """
+        from mantis.tools.artifacts import get_test_execution_summary as summary_impl
+        self._log_tool_call(f"get_test_execution_summary called for test='{test_id}', device='{device_id}'")
+        return summary_impl(
+            udmi_root=self.workspace_root,
+            test_id=test_id,
+            device_id=device_id,
+            site_name=site_name
+        )
+
+
+

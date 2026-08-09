@@ -9,4 +9,5 @@ else
   PYTHON_BIN="python3"
 fi
 
-PYTHONPATH=.:util/mantis/src $PYTHON_BIN -m pytest util/mantis/tests "$@"
+PYTHONPATH=.:util/mantis $PYTHON_BIN -m pytest util/mantis/tests "$@"
+

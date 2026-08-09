@@ -133,7 +133,7 @@ class Playbook:
                     print(f"Warning: Extension '{tool_name}' has no command configured.")
                     continue
                 
-                from engine.harness.plugin import SubprocessPluginRunner
+                from mantis.engine.harness.plugin import SubprocessPluginRunner
                 
                 def make_wrapper(name: str, args: List[str]) -> Callable:
                     runner = SubprocessPluginRunner(args)

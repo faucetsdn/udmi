@@ -414,168 +414,160 @@
           <span class="material-symbols-outlined icon">auto_awesome</span>
           <span>Mantis AI Assistant</span>
         </div>
-        <button id="btn-close-mantis-drawer" class="btn-close" aria-label="Close Mantis AI Drawer">&times;</button>
+        <div class="mantis-drawer-actions">
+          <button type="button" id="btn-mantis-clear" class="mantis-drawer-btn"
+            title="Clear conversation memory and start fresh session" aria-label="Clear session">
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
+          <button type="button" id="btn-mantis-copy" class="mantis-drawer-btn"
+            title="Copy conversation transcript as Markdown" aria-label="Copy transcript as Markdown">
+            <span class="material-symbols-outlined">content_copy</span>
+          </button>
+          <button type="button" id="btn-mantis-export" class="mantis-drawer-btn"
+            title="Export conversation transcript to Markdown file" aria-label="Export transcript">
+            <span class="material-symbols-outlined">download</span>
+          </button>
+
+          <button type="button" id="btn-mantis-settings" class="mantis-drawer-btn"
+            title="Diagnostic Settings & Auth Configuration" aria-label="Settings">
+            <span class="material-symbols-outlined">settings</span>
+          </button>
+          <button type="button" id="btn-mantis-fullscreen" class="mantis-drawer-btn"
+            title="Full screen" aria-label="Full screen">
+            <span class="material-symbols-outlined">fullscreen</span>
+          </button>
+          <button type="button" id="btn-close-mantis-drawer" class="btn-close" aria-label="Close Mantis AI Drawer" title="Close Drawer">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+
       </div>
       <div class="mantis-drawer-body">
         
-        <!-- MANTIS DEBUGGER SPA CONTAINER -->
-        <div id="view-mantis" class="mantis-drawer-view" data-feature="mantis">
-          <div class="tool-layout">
-            <header class="local-toolbar" style="display: flex; align-items: center; justify-content: space-between;">
-              <div class="toolbar-left" style="display: flex; align-items: center; gap: 20px;">
-                <div class="control-group">
-                  <label for="mantis-device-select" class="control-label">Device</label>
-                  <select id="mantis-device-select" class="form-select" style="width: 160px;" aria-label="Select Device" disabled>
-                    <option value="">-- Enter site path --</option>
-                  </select>
+        <!-- MANTIS AUTONOMOUS DIAGNOSTIC CHAT CONTAINER -->
+        <div id="view-mantis" class="mantis-drawer-view" data-feature="mantis"
+          style="height: 100%; display: flex; flex-direction: column;">
+          <div class="mantis-chat-layout welcome-layout">
+        
+        
+            <!-- Conversational Stream -->
+            <main id="mantis-chat-stream" class="mantis-chat-stream" style="position: relative;">
+              <!-- Clearing Session Inactive Overlay -->
+              <div id="mantis-clearing-overlay" class="mantis-clearing-overlay" style="display: none;">
+                <div class="mantis-clearing-content">
+                  <div class="mantis-thinking-loader" style="padding: 0; min-height: unset;">
+                    <div class="mantis-fade-dots"></div>
+                  </div>
+                  <span class="mantis-clearing-text">Starting a new session...</span>
+                  </div>
+                  </div>
+
+              <!-- Welcome State Card -->
+              <div id="mantis-empty-state" class="mantis-welcome-card">
+                <div class="mantis-welcome-icon">
+                  <span class="material-symbols-outlined" style="font-size: 32px;">psychology</span>
                 </div>
-                <div class="control-group">
-                  <label for="scenario-select" class="control-label">Debug Scenario</label>
-                  <div class="scenario-select-container">
-                    <select id="scenario-select" class="form-select" style="width: 240px;" aria-label="Select Scenario" disabled>
-                      <option value="">-- Waiting for selection --</option>
-                    </select>
-                    <span id="mantis-test-status-badge" class="badge scenario-status-badge" style="display: none; line-height: unset;"></span>
-                    <span id="mantis-test-target-badge" class="badge scenario-status-badge badge-info" style="display: none; line-height: unset;"></span>
-                    <span id="mantis-test-time-badge" class="badge scenario-status-badge badge-neutral" style="display: none; line-height: unset;"></span>
-                  </div>
+                <div class="mantis-welcome-title">Mantis Autonomous Diagnostics</div>
+                <div class="mantis-welcome-desc">
+                  Your assistant for everything UDMI — architecture, schemas, testing, and diagnostics.
                 </div>
-              </div>
-            </header>
-
-            <main class="tool-main">
-              <div class="diagnostics-layout">
-                <div class="diagnostics-sidebar">
-                  <div id="playbook-card" class="card playbook-card" style="margin-bottom: 20px;">
-                    <div id="playbook-card-header" class="card-header"
-                      style="cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center;">
-                      <div style="display: flex; align-items: center;">
-                        <span class="card-header-icon-box icon-box-purple"><span class="material-symbols-outlined" style="font-size:18px;">tune</span></span>
-                        <h3 style="margin:0;">Diagnostic Settings</h3>
-                      </div>
-                      <button type="button" id="btn-toggle-playbook-card" class="btn-icon-sm btn-outlined" aria-label="Toggle settings"
-                        title="Toggle diagnostic settings"
-                        style="width: 28px; height: 28px; min-width: 28px; border: none; background: transparent; display: flex; align-items: center; justify-content: center;">
-                        <span id="icon-toggle-playbook-card" class="material-symbols-outlined"
-                          style="font-size: 20px; transition: transform 0.25s ease;">expand_more</span>
-                      </button>
-                    </div>
-                    <div id="playbook-card-body" class="card-body"
-                      style="padding: 16px 20px; display: flex; flex-direction: column; gap: 12px;">
-                      <div class="control-group">
-                        <label for="playbook-select" class="control-label">Diagnostic Playbook</label>
-                        <select id="playbook-select" class="form-select w-full" style="width: 100%;">
-                          <option value="oem">Device Compliance Auditor (Standard)</option>
-                          <option value="swe">Codebase Debugger (Advanced)</option>
-                        </select>
-                      </div>
-
-                      <div class="control-group">
-                        <label for="mantis-success-run" class="control-label">Reference Successful Run <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">(Optional Baseline)</span></label>
-                        <div class="input-with-button">
-                          <input type="text" id="mantis-success-run" class="form-input w-full" style="width: 100%;" placeholder="e.g. out_prev or path/to/successful/sequence.log" />
-                          <button type="button" id="btn-browse-success-run" class="btn btn-outlined btn-icon-sm" aria-label="Browse successful run folder">
-                            <span class="material-symbols-outlined">folder_open</span>
-                          </button>
-                        </div>
-                      </div>
-
-                      <div class="control-group" style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
-                        <label for="mantis-provider-select" class="control-label">AI Auth Provider</label>
-                        <select id="mantis-provider-select" class="form-select w-full" style="width: 100%;">
-                          <option value="gemini">Gemini API Key</option>
-                          <option value="vertex">Google Vertex AI (ADC)</option>
-                        </select>
-                      </div>
-
-                      <div id="group-gemini-key" class="control-group">
-                        <label for="mantis-api-key" class="control-label">Gemini API Key</label>
-                        <input type="password" id="mantis-api-key" class="form-input w-full" style="width: 100%;" placeholder="AIzaSy... (or from shell env)" />
-                      </div>
-
-                      <div id="group-vertex-config" class="control-group" style="display: none; flex-direction: column; gap: 8px;">
-                        <div>
-                          <label for="mantis-gcp-project" class="control-label">GCP Project ID</label>
-                          <input type="text" id="mantis-gcp-project" class="form-input w-full" style="width: 100%;" placeholder="e.g. my-gcp-project" />
-                        </div>
-                        <div>
-                          <label for="mantis-gcp-location" class="control-label">GCP Location</label>
-                          <input type="text" id="mantis-gcp-location" class="form-input w-full" style="width: 100%;" value="global" placeholder="global" />
-                        </div>
-                      </div>
-
-                      <div class="control-group" style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: 4px;">
-                        <label class="control-label" style="display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;">
-                          <input type="checkbox" id="mantis-fetch-udmis-logs" style="cursor: pointer; width: 16px; height: 16px;" />
-                          <span>Fetch UDMIS logs for cloud targets</span>
-                        </label>
-                      </div>
-                      
-                      <div id="group-cloud-logging-config" class="control-group" style="display: none; flex-direction: column; gap: 8px;">
-                        <div>
-                          <label for="mantis-cloud-project" class="control-label">Cloud Logging GCP Project ID</label>
-                          <input type="text" id="mantis-cloud-project" class="form-input w-full" style="width: 100%;"
-                            placeholder="e.g. my-gcp-project" />
-                        </div>
-                      </div>
-
-                      <button id="btn-run-triage" class="btn btn-primary w-full" style="margin-top: 8px; width: 100%;" disabled>
-                        <span class="material-symbols-outlined">psychology</span>
-                        <span>Run AI Triage</span>
-                      </button>
-                      <button id="btn-stop-triage" class="btn btn-outlined w-full text-error" style="display: none; width: 100%;">
-                        <span class="material-symbols-outlined">stop</span>
-                        <span>Stop Triage</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="card terminal-card" style="flex: 1; display: flex; flex-direction: column; min-height: 350px;">
-                    <div class="card-header border-bottom">
-                      <div style="display: flex; align-items: center;">
-                        <span class="card-header-icon-box icon-box-amber"><span class="material-symbols-outlined" style="font-size:18px;">terminal</span></span>
-                        <h3 style="margin:0;">AI Agent Thoughts</h3>
-                      </div>
-                      <span id="triage-status-badge" class="badge badge-idle">Idle</span>
-                    </div>
-                    <div id="triage-terminal-container" style="flex: 1; min-height: 0;"></div>
-                  </div>
+                <div class="mantis-welcome-shortcuts">
+                  <span class="mantis-shortcut-item"><kbd class="mantis-kbd">Enter</kbd> to send</span>
+                  <span class="mantis-shortcut-sep">&bull;</span>
+                  <span class="mantis-shortcut-item"><kbd class="mantis-kbd">Shift</kbd> + <kbd class="mantis-kbd">Enter</kbd> for
+                    newline</span>
+                </div>
                 </div>
 
-                <div id="diagnostics-resizer" class="pane-resizer" title="Drag to resize RCA panel"></div>
+              <!-- Dynamic Messages Container -->
+              <div id="mantis-messages-container" style="display: flex; flex-direction: column; gap: 16px; width: 100%;"></div>
+              </main>
 
-                <div class="card rca-report-card" style="display: flex; flex-direction: column;">
-                  <div class="card-header border-bottom">
-                    <div style="display: flex; align-items: center;">
-                      <span class="card-header-icon-box icon-box-gradient"><span class="material-symbols-outlined" style="font-size:18px;">auto_awesome</span></span>
-                      <h3 style="margin: 0;">AI Root Cause Analysis (RCA)</h3>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <button id="btn-email-report" class="btn btn-outlined btn-icon" title="Email RCA report" disabled>
-                        <span class="material-symbols-outlined" style="color: #6d28d9;">mail</span>
-                      </button>
-                      <button id="btn-copy-report" class="btn btn-outlined btn-icon" title="Copy report markdown" disabled>
-                        <span class="material-symbols-outlined">content_copy</span>
-                      </button>
-                    </div>
-                  </div>
-                  <div id="rca-report-body" class="rca-body" style="flex: 1; overflow-y: auto;">
-                    <div class="rca-placeholder-message">
-                      Select a device and scenario, then click "Run AI Triage" to generate diagnostics.
-                    </div>
-                  </div>
-                  <div class="ai-chat-bar border-top">
-                    <input type="text" id="ai-chat-input" class="form-input flex-1" placeholder="Ask Mantis AI follow-up questions about this test failure..." aria-label="AI Follow-up Query" />
-                    <button id="btn-submit-ai-chat" class="btn btn-primary">
-                      <span class="material-symbols-outlined">send</span>
-                      <span>Ask AI</span>
+            <!-- Bottom Floating Composer -->
+            <footer class="mantis-composer-container">
+              <div class="mantis-composer-wrapper">
+                <div class="mantis-slash-hints">
+                  <span style="font-size: 11px; color: var(--text-muted);">Quick Commands:</span>
+                  <span class="mantis-hint-chip" data-cmd="/diagnose"
+                    title="Diagnose test failure for active target or specify test">/diagnose</span>
+                  <span class="mantis-hint-chip" data-cmd="/diff"
+                    title="Run differential analysis between 2 sets of logs or against baseline">/diff</span>
+                  <span class="mantis-hint-chip" data-cmd="/fact-check"
+                    title="Adversarially fact-check and verify previous conclusions (Double-click to run immediately)">/fact-check</span>
+                  <span class="mantis-hint-chip" data-cmd="/current-context"
+                    title="Display active site model, device target, and session context (Double-click to run immediately)">/current-context</span>
+                </div>
+
+
+
+
+
+                <div class="mantis-input-box">
+                  <textarea id="mantis-chat-input" class="mantis-textarea" rows="1" placeholder="Ask Mantis anything..."></textarea>
+                  <button type="button" id="btn-mantis-send" class="mantis-send-btn" title="Send message">
+
+                    <span class="material-symbols-outlined">send</span>
                     </button>
+                  <button type="button" id="btn-mantis-stop" class="mantis-send-btn stop" title="Stop generating" style="display: none;">
+                    <span class="material-symbols-outlined">stop</span>
+                  </button>
                   </div>
-                </div>
-              </div>
-            </main>
+                  </div>
+            </footer>
+
+            <!-- Settings Modal Popover -->
+            <div id="mantis-settings-modal" class="mantis-modal-overlay">
+              <div class="mantis-modal-card">
+                <div class="mantis-modal-header">
+                  <div class="mantis-modal-title">
+                    <span class="material-symbols-outlined" style="color: var(--mantis-primary);">tune</span>
+                    <span>Diagnostic Settings</span>
+                  </div>
+                  <button type="button" id="btn-close-mantis-settings" class="btn-close" aria-label="Close settings">&times;</button>
+                  </div>
+<div class="mantis-modal-body">
+  <div class="control-group">
+    <label for="setting-provider-select" class="control-label">AI Auth Provider</label>
+    <select id="setting-provider-select" class="form-select w-full" style="width: 100%;">
+      <option value="vertex">Google Vertex AI (ADC / Corp)</option>
+      <option value="gemini">Gemini API Key</option>
+    </select>
+  </div>
+
+                  <div id="setting-group-api-key" class="control-group" style="display: none;">
+                    <label for="setting-api-key" class="control-label">Gemini API Key</label>
+                    <input type="password" id="setting-api-key" class="form-input w-full" style="width: 100%;"
+                      placeholder="AIzaSy... (or from shell environment)" />
+                  </div>
+
+                  <div id="setting-group-vertex" class="control-group" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div>
+                      <label for="setting-gcp-project" class="control-label">GCP Project ID</label>
+                      <input type="text" id="setting-gcp-project" class="form-input w-full" style="width: 100%;" value="mantis-predator"
+                        placeholder="e.g. mantis-predator" />
+                    </div>
+                    <div>
+                      <label for="setting-gcp-location" class="control-label">GCP Location</label>
+                      <input type="text" id="setting-gcp-location" class="form-input w-full" style="width: 100%;" value="global"
+                        placeholder="global" />
+                    </div>
+                  </div>
+<div class="control-group">
+  <label for="setting-baseline-run" class="control-label">Reference Baseline Run (Commit SHA or Path)</label>
+  <input type="text" id="setting-baseline-run" class="form-input w-full" style="width: 100%;"
+    placeholder="e.g. 7c9c02ca (abbreviated or full SHA) or out_prev" />
+</div>
+</div>
+<div class="mantis-modal-footer">
+  <button type="button" id="btn-save-mantis-settings" class="btn btn-primary">Save Settings</button>
+</div>
+</div>
+</div>
+
           </div>
         </div>
+
 
       </div>
     </aside>
@@ -585,7 +577,7 @@
   <!-- Shared Global Modals -->
 
   <!-- 1. Inline Folder Browser Modal -->
-  <div id="folder-browser-modal" class="modal-overlay">
+  <div id="folder-browser-modal" class="modal-overlay" style="display: none;">
     <div class="modal-card glass-panel">
       <div class="modal-header">
         <div>
@@ -633,29 +625,6 @@
     </div>
   </div>
 
-  <!-- 3. Inline Folder Browser Modal for Mantis Baseline Run -->
-  <div id="mantis-folder-browser-modal" class="modal-overlay">
-    <div class="modal-card glass-panel">
-      <div class="modal-header">
-        <h3>Browse Reference Run Directory</h3>
-        <button type="button" id="btn-close-mantis-browser" class="btn-close" aria-label="Close folder browser">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="browser-path-bar" style="display: flex; gap: 8px; align-items: center; margin-bottom: 12px;">
-          <button type="button" id="btn-mantis-browser-up" class="btn btn-outlined btn-icon-sm" aria-label="Go to parent directory">
-            <span class="material-symbols-outlined">arrow_upward</span>
-          </button>
-          <input type="text" id="mantis-browser-current-path" class="form-input" style="flex: 1;" aria-label="Current path" />
-        </div>
-        <div id="mantis-browser-list" class="browser-list" aria-label="Directory list" style="height: 240px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px;">
-        </div>
-      </div>
-      <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px;">
-        <button type="button" id="btn-mantis-browser-cancel" class="btn btn-outlined">Cancel</button>
-        <button type="button" id="btn-mantis-browser-select" class="btn btn-primary">Select Directory</button>
-      </div>
-    </div>
-  </div>
 
   <!-- 4. Git Commit & Push Modal -->
   <div id="git-save-modal" class="modal-overlay" style="display: none;">

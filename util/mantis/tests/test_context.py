@@ -3,7 +3,7 @@ import re
 import tempfile
 import unittest
 from datetime import datetime, timezone, timedelta
-from engine.context import (
+from mantis.engine.context import (
     parse_timestamp,
     slice_log_by_timebounds,
     LogCondensationRule,

@@ -323,7 +323,37 @@ class TestUIServer(unittest.TestCase):
         for e in remaining_dummies:
             shutil.rmtree(os.path.join(sessions_dir, e), ignore_errors=True)
 
+    def test_graphviz_render_success(self):
+        url = "http://127.0.0.1:8089/api/graphviz/render"
+        payload = json.dumps({
+            "dot": "digraph TestTopology { A -> B [label=\"proxy\"]; }"
+        }).encode('utf-8')
+        headers = {"Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertEqual(data.get("status"), "success")
+            self.assertIn("<svg", data.get("svg", ""))
+            self.assertIn("TestTopology", data.get("svg", ""))
+
+    def test_graphviz_render_invalid(self):
+        url = "http://127.0.0.1:8089/api/graphviz/render"
+        payload = json.dumps({
+            "dot": "invalid syntax not a graph"
+        }).encode('utf-8')
+        headers = {"Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req) as response:
+                self.assertEqual(response.status, 422)
+        except urllib.error.HTTPError as e:
+            self.assertEqual(e.code, 422)
+            data = json.loads(e.read().decode('utf-8'))
+            self.assertEqual(data.get("status"), "error")
+
 if __name__ == '__main__':
     unittest.main()
+
 
 

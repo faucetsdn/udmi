@@ -4,7 +4,7 @@ import sys
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
-from engine.context import parse_timestamp
+from mantis.engine.context import parse_timestamp
 
 class BaseLogParser(ABC):
     """Abstract base class for custom log parser plugins."""

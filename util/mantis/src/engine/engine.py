@@ -52,7 +52,16 @@ def _clean_error_message(e: Exception) -> str:
     return first_line
 
 
+def _make_standalone_tool(func):
+    import functools
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+    return wrapper
+
+
 class AsyncTriageEngine:
+
     """
     A high-performance, asynchronous GenAI orchestration engine for log triage.
     Handles rate limits (429), automatic tool execution, loop guardrails,
@@ -89,7 +98,7 @@ class AsyncTriageEngine:
     ) -> Any:
         """Invokes GenAI client generate_content with global rate-limiting, concurrency controls, and transient retry loops."""
         if self.rate_limiter:
-            from engine.harness.rate_limiter import RateLimitTimeoutError
+            from mantis.engine.harness.rate_limiter import RateLimitTimeoutError
             # Default rate limit timeout budget: 45.0s
             acquired = await self.rate_limiter.acquire(timeout_seconds=45.0)
             if not acquired:
@@ -213,7 +222,7 @@ class AsyncTriageEngine:
         """
         Executes the asynchronous agent loop with pacing, rate limits, and tool dispatches.
         """
-        tools_list = list(tools_map.values())
+        tools_list = [_make_standalone_tool(fn) for fn in tools_map.values()]
         config = types.GenerateContentConfig(
             tools=tools_list,
             temperature=0.1,
@@ -352,4 +361,177 @@ class AsyncTriageEngine:
             )
 
         return _get_response_text(response)
+
+    async def execute_loop_stream(
+        self,
+        system_instruction: str,
+        history: List[Any],
+        tools_map: Dict[str, Callable],
+        required_headers: List[str] = None,
+        model_name: str = None,
+        executed_tool_signatures: set = None
+    ):
+        """
+        Executes the asynchronous agent loop and yields real-time streaming events
+        (thoughts, tool calls, tool results, and response text tokens) for UI streaming.
+        """
+        tools_list = [_make_standalone_tool(fn) for fn in tools_map.values()]
+        config = types.GenerateContentConfig(
+            tools=tools_list,
+            temperature=0.1,
+            system_instruction=system_instruction,
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                disable=True)
+        )
+
+        loop_count = 0
+        if executed_tool_signatures is None:
+            executed_tool_signatures = set()
+        response = None
+
+        while loop_count < self.max_loops:
+            if required_headers and loop_count == self.max_loops - 2:
+                yield {
+                    "type": "thought",
+                    "text": "[Guardrail] Approaching loop limit. Concluding diagnostic analysis..."
+                }
+                history.append(
+                    types.Content(role="user", parts=[types.Part.from_text(
+                        text=f"SYSTEM WARNING: Loop limit reached. Immediately output your final analysis using headers: {', '.join(required_headers)}."
+                    )])
+                )
+
+            model_content = None
+            active_model = model_name or self.model_name
+            response = await self._call_generate_content_with_retry(
+                model=active_model,
+                contents=history,
+                config=config
+            )
+
+            if response and response.candidates and response.candidates[0].content:
+                cand_content = response.candidates[0].content
+                model_content = cand_content
+                model_content.role = "model"
+                history.append(model_content)
+
+
+            function_calls = response.function_calls if response else None
+            has_thought = any(part.text and part.text.strip() for part in
+                              model_content.parts) if (model_content and model_content.parts) else False
+
+            if function_calls:
+                for part in model_content.parts:
+                    if part.text and part.text.strip():
+                        yield {
+                            "type": "thought",
+                            "text": part.text.strip()
+                        }
+            elif not has_thought and function_calls:
+                history.append(
+                    types.Content(role="user", parts=[types.Part.from_text(
+                        text="System Warning: Missing Hypothesis. Before EVERY tool call, you MUST output a brief text explanation/scratchpad."
+                    )])
+                )
+                loop_count += 1
+                continue
+
+
+            if not function_calls:
+                text_content = _get_response_text(response)
+                if required_headers and not any(
+                    hdr in text_content for hdr in required_headers):
+                    history.append(
+                        types.Content(role="user", parts=[types.Part.from_text(
+                            text=f"System Reminder: Incomplete response. You must output using headers: {', '.join(required_headers)}."
+                        )])
+                    )
+                    loop_count += 1
+                    continue
+                else:
+                    yield {
+                        "type": "token",
+                        "text": text_content
+                    }
+                    yield {
+                        "type": "done",
+                        "full_text": text_content
+                    }
+                    return
+
+            # Execute function calls concurrently
+            async def execute_single_tool(fc):
+                sig = f"{fc.name}:{json.dumps(fc.args, sort_keys=True)}"
+                try:
+                    if sig in executed_tool_signatures:
+                        return fc.name, fc.args, f"Tool Error: Duplicate Request '{fc.name}'. Refine your query."
+                    elif fc.name in tools_map:
+                        executed_tool_signatures.add(sig)
+                        tool_func = tools_map[fc.name]
+                        if inspect.iscoroutinefunction(tool_func):
+                            res = await tool_func(**fc.args)
+                        else:
+                            res = await asyncio.to_thread(tool_func, **fc.args)
+                        return fc.name, fc.args, res
+                    else:
+                        return fc.name, fc.args, f"Error: Unknown tool '{fc.name}'"
+                except Exception as e:
+                    return fc.name, fc.args, f"Error executing tool {fc.name}: {e}"
+
+            for fc in function_calls:
+                yield {
+                    "type": "tool_start",
+                    "name": fc.name,
+                    "args": dict(fc.args) if fc.args else {}
+                }
+
+            tool_parts = []
+            tool_tasks = [execute_single_tool(fc) for fc in function_calls]
+            results = await asyncio.gather(*tool_tasks)
+
+            for name, args, result in results:
+                condensed_result = await self._condense_tool_result(name, result)
+                yield {
+                    "type": "tool_end",
+                    "name": name,
+                    "args": args,
+                    "characters": len(result),
+                    "summary": (condensed_result[:300] + "...") if len(condensed_result) > 300 else condensed_result
+                }
+                tool_parts.append(
+                    types.Part.from_function_response(name=name, response={
+                        "result": condensed_result}))
+
+            history.append(types.Content(role="user", parts=tool_parts))
+            loop_count += 1
+
+            if self.enable_history_compaction and loop_count > 0 and loop_count % 5 == 0:
+                await self._compact_history_if_bloated(history)
+
+        # Force conclusion if loop limit reached
+        final_config = types.GenerateContentConfig(
+            temperature=0.2,
+            system_instruction=system_instruction + "\n\nIMPORTANT: You must now output your final complete diagnostic report using the required headers. Do not attempt to call any more tools."
+        )
+        history.append(
+            types.Content(role="user", parts=[types.Part.from_text(
+                text=f"SYSTEM REQUEST: Loop limit reached. Please synthesize all the information gathered above and output your final, complete diagnostic report."
+            )])
+        )
+        active_model = model_name or self.model_name
+        response = await self._call_generate_content_with_retry(
+            model=active_model,
+            contents=history,
+            config=final_config
+        )
+        final_text = _get_response_text(response)
+        yield {
+            "type": "token",
+            "text": final_text
+        }
+        yield {
+            "type": "done",
+            "full_text": final_text
+        }
+
 

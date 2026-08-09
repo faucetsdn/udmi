@@ -564,9 +564,27 @@
   transform: translateX(0);
 }
 
+.mantis-drawer.fullscreen {
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  z-index: 2000;
+  border-left: none;
+  box-shadow: none;
+}
+
+.mantis-drawer.fullscreen .mantis-pull-tab {
+  display: none;
+}
+
+
 .mantis-drawer-header {
-  height: 48px;
-  padding: 0 16px;
+  height: 52px;
+    padding: 0 4px 0 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -583,6 +601,90 @@
   color: #6d28d9;
 }
 
+.mantis-drawer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+}
+
+/* Material Design 3 Standard Icon Button with State Layer */
+.mantis-drawer-btn,
+.mantis-drawer-header .btn-close {
+  /* 1. Interactive Target: Exactly 48x48 pixels invisible clickable area */
+  position: relative;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #6d28d9;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+/* 2 & 3. State Layer (Halo): Exactly 40x40px circular element centered behind icon, matching icon color */
+.mantis-drawer-btn::before,
+.mantis-drawer-header .btn-close::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: currentColor;
+  /* 4. Default State: 0% opacity */
+  opacity: 0;
+  /* 7. Layering: Directly behind the icon */
+  z-index: 0;
+  transition: opacity 0.15s cubic-bezier(0.2, 0, 0, 1);
+  pointer-events: none;
+}
+
+/* 5. Hover State: Exactly 8% opacity */
+.mantis-drawer-btn:hover::before,
+.mantis-drawer-header .btn-close:hover::before {
+  opacity: 0.08;
+}
+
+/* 6. Focus & Pressed States: Exactly 10% opacity */
+.mantis-drawer-btn:focus::before,
+.mantis-drawer-btn:focus-visible::before,
+.mantis-drawer-btn:active::before,
+.mantis-drawer-header .btn-close:focus::before,
+.mantis-drawer-header .btn-close:focus-visible::before,
+.mantis-drawer-header .btn-close:active::before {
+  opacity: 0.10;
+}
+
+/* 7. Layering & Icon content */
+.mantis-drawer-btn .material-symbols-outlined,
+.mantis-drawer-header .btn-close {
+  position: relative;
+  z-index: 1;
+  font-size: 20px;
+  color: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mantis-drawer-btn.clearing {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: wait;
+}
 .mantis-drawer-body {
   flex: 1;
   overflow: hidden;

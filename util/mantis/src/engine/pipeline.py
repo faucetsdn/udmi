@@ -108,13 +108,9 @@ class TriagePipeline:
             self.custom_skills = []
         self.custom_skills.append({"name": name, "content": content})
 
-    async def initialize_skills(self) -> str:
-        """Registers and compiles skills from configured directories and programmatic injections."""
-        registry = SkillRegistry()
-        skills_batch = []
-
-        # Resolve skills_dirs from constructor and Playbook configuration
-        all_skills_dirs = list(self.skills_dirs or [])
+    def _resolve_skills_dirs(self) -> List[Path]:
+        """Resolves all skills directories from constructor, playbook, and default workspace locations."""
+        all_skills_dirs: List[Path] = list(self.skills_dirs or [])
         if self.playbook:
             playbook_dirs = self.playbook.pipeline_config.get("skills", [])
             playbook_parent = self.playbook.filepath.parent if (self.playbook and self.playbook.filepath) else None
@@ -124,9 +120,27 @@ class TriagePipeline:
                     p = (playbook_parent / p).resolve()
                 all_skills_dirs.append(p)
 
+        # Fallback to default workspace skills location if none found
+        if not all_skills_dirs:
+            candidates = [
+                Path(__file__).parents[4] / "docs" / "tools" / "mantis" / "skills",
+                Path.cwd() / "docs" / "tools" / "mantis" / "skills",
+            ]
+            for c in candidates:
+                if c.exists():
+                    all_skills_dirs.append(c.resolve())
+                    break
+
+
+        return [d for d in all_skills_dirs if d.exists()]
+
+    async def initialize_skills(self) -> str:
+        """Registers and compiles skills from configured directories and programmatic injections."""
+        registry = SkillRegistry()
+        skills_batch = []
+
+        all_skills_dirs = self._resolve_skills_dirs()
         for sdir in all_skills_dirs:
-            if not sdir.exists():
-                continue
             try:
                 provider = LocalFileSystemSkillProvider(sdir)
                 for skill_folder in sorted(os.listdir(sdir)):
@@ -135,6 +149,7 @@ class TriagePipeline:
                         skills_batch.append((skill_folder, provider))
             except Exception as e:
                 print(f"Warning: Failed to scan skills directory {sdir}: {e}", file=sys.stderr)
+
 
         self.skills_catalog = ""
         if skills_batch:
@@ -158,15 +173,7 @@ class TriagePipeline:
 
     def get_skills_context_string(self) -> str:
         """Loads raw text of SKILL.md files for context matching."""
-        all_skills_dirs = list(self.skills_dirs or [])
-        if self.playbook:
-            playbook_dirs = self.playbook.pipeline_config.get("skills", [])
-            playbook_parent = self.playbook.filepath.parent if (self.playbook and self.playbook.filepath) else None
-            for pdir in playbook_dirs:
-                p = Path(pdir)
-                if not p.is_absolute() and playbook_parent:
-                    p = (playbook_parent / p).resolve()
-                all_skills_dirs.append(p)
+        all_skills_dirs = self._resolve_skills_dirs()
 
         skills_content = []
         if all_skills_dirs or self.custom_skills:
@@ -176,8 +183,7 @@ class TriagePipeline:
                 "Use the following guidelines and procedural instructions to shape your analysis strategy. You must follow them strictly:")
 
         for sdir in all_skills_dirs:
-            if not sdir.exists():
-                continue
+
             for skill_folder in sorted(os.listdir(sdir)):
                 skill_path = sdir / skill_folder / "SKILL.md"
                 if skill_path.is_file():
@@ -320,7 +326,7 @@ class TriagePipeline:
                 executed_tool_signatures=self.executed_tool_signatures
             )
         except Exception as e:
-            from engine.harness.rate_limiter import RateLimitTimeoutError
+            from mantis.engine.harness.rate_limiter import RateLimitTimeoutError
             if isinstance(e, RateLimitTimeoutError):
                 raise
             import traceback
@@ -444,7 +450,7 @@ class TriagePipeline:
             print("\n" + color_text("[Mantis Harness Warning]: Playbook is configured without a 'critique' stage. Skipping peer-review passes may lead to increased diagnostic hallucinations.", YELLOW, bold=True) + "\n")
 
         max_revisions = self.playbook.pipeline_config.get("max_revisions", 1) if self.playbook else 1
-        from engine.harness.rate_limiter import RateLimitTimeoutError
+        from mantis.engine.harness.rate_limiter import RateLimitTimeoutError
 
         try:
             for stage_name, stage_cfg in self.playbook.stages.items():
@@ -558,7 +564,7 @@ class TriagePipeline:
                 elif "INSUFFICIENT DATA TO TRACE ROOT CAUSE" in final_report:
                     status = "FAILED"
                 
-                from engine.models import extract_structured_report
+                from mantis.engine.models import extract_structured_report
                 print(f"[{target_id}] Extracting structured JSON triage report...")
                 structured_report = await extract_structured_report(
                     client=self.client,

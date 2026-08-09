@@ -134,6 +134,7 @@ class ShellOrchestrator {
     
     this.btnToggleMantis = document.getElementById('mantis-pull-tab') || document.getElementById('btn-toggle-mantis');
     this.mantisDrawer = document.getElementById('mantis-drawer');
+    this.btnMantisFullscreen = document.getElementById('btn-mantis-fullscreen');
     this.btnCloseMantisDrawer = document.getElementById('btn-close-mantis-drawer');
 
     this.browserModal = document.getElementById('folder-browser-modal');
@@ -152,11 +153,43 @@ class ShellOrchestrator {
       });
     }
 
+    if (this.btnMantisFullscreen && this.mantisDrawer) {
+      this.btnMantisFullscreen.addEventListener('click', () => {
+        const isFullscreen = this.mantisDrawer.classList.toggle('fullscreen');
+        const icon = this.btnMantisFullscreen.querySelector('.material-symbols-outlined');
+        if (icon) {
+          icon.textContent = isFullscreen ? 'fullscreen_exit' : 'fullscreen';
+        }
+        this.btnMantisFullscreen.title = isFullscreen ? 'Exit full screen' : 'Full screen';
+        this.btnMantisFullscreen.setAttribute('aria-label', isFullscreen ? 'Exit full screen' : 'Full screen');
+      });
+    }
+
     if (this.btnCloseMantisDrawer && this.mantisDrawer) {
       this.btnCloseMantisDrawer.addEventListener('click', () => {
         this.mantisDrawer.classList.remove('open');
+        this.mantisDrawer.classList.remove('fullscreen');
+        if (this.btnMantisFullscreen) {
+          const icon = this.btnMantisFullscreen.querySelector('.material-symbols-outlined');
+          if (icon) icon.textContent = 'fullscreen';
+          this.btnMantisFullscreen.title = 'Full screen';
+          this.btnMantisFullscreen.setAttribute('aria-label', 'Full screen');
+        }
       });
     }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.mantisDrawer && this.mantisDrawer.classList.contains('fullscreen')) {
+        this.mantisDrawer.classList.remove('fullscreen');
+        if (this.btnMantisFullscreen) {
+          const icon = this.btnMantisFullscreen.querySelector('.material-symbols-outlined');
+          if (icon) icon.textContent = 'fullscreen';
+          this.btnMantisFullscreen.title = 'Full screen';
+          this.btnMantisFullscreen.setAttribute('aria-label', 'Full screen');
+        }
+      }
+    });
+
 
     stateStore.on('open_mantis_triage', (data) => {
       if (this.mantisDrawer) {

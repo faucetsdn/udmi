@@ -1,1562 +1,1000 @@
-import { JSONViewer } from '../shared/components/json-viewer.js';
-import { LogViewer } from '../shared/components/log-viewer.js';
 import { stateStore } from '../shared/state-store.js';
 import { NotificationManager } from '../shared/components/notification-toast.js';
 
-// --- HELPER: DYNAMIC ENDPOINT FETCH ---
-async function fetchDirectoryList(targetPath) {
-  const url = `/api/list?path=${encodeURIComponent(targetPath)}`;
-  const response = await fetch(url);
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || `Server error: ${response.status}`);
-  }
-  return data;
-}
-
-async function readFileContent(filePath) {
-  const url = `/api/read_file?path=${encodeURIComponent(filePath)}`;
-  const response = await fetch(url);
-  const data = await response.text();
-  if (!response.ok) {
-    const errorJson = JSON.parse(data);
-    throw new Error(errorJson.error || `Server error: ${response.status}`);
-  }
-  return data;
-}
-
-function combinePaths(base, sub) {
-  if (!base || base === '.') return sub;
-  if (base.endsWith('/')) return base + sub;
-  return base + '/' + sub;
-}
-
-function getParentPath(path) {
-  if (!path || path === '.' || path === '/' || path === '' || path === '~') return '~';
-  const parts = path.split('/').filter(p => p);
-  if (parts.length <= 1) {
-    return path.startsWith('~') ? '~' : (path.startsWith('/') ? '/' : '.');
-  }
-  parts.pop();
-  if (parts[0] === '~') {
-    return parts.join('/');
-  }
-  return (path.startsWith('/') ? '/' : '') + parts.join('/');
-}
-
-
-// --- MANTIS DECOUPLED CONTROLLER ---
+/**
+ * Mantis AI Autonomous Diagnostics Chat Controller
+ * Manages streaming multi-turn conversational triage, tool call visualization,
+ * context synchronization, and slash-command workflows.
+ */
 export class MantisController {
   constructor() {
-    // Parent state (Synced via postMessage)
     this.siteModel = '';
     this.device = '';
-    this.projectSpec = ''; // Piped dynamically from Sequencer
+    this.testId = '';
+    this.sessionId = 'mantis-' + Math.random().toString(36).substring(2, 10);
+    this.isStreaming = false;
+    this.abortController = null;
+    this.messages = [];
 
-    // Local state
-    this.activeTab = 'diagnostics'; // AI Diagnostics Agent view
-    this.activeTraceNodes = [];
-    this.currentSelectedNodePayload = null;
-    
-    // Triage Subprocess State
-    this.isTriageRunning = false;
-    this.isTriageLoading = false;
-    this.triageLogOffset = 0;
-    this.triagePollInterval = null;
-    this.isPollingTriage = false;
-    this.hasHandledCompletion = false;
+    // Settings (persisted in localStorage, default to Vertex ADC for Corp)
+    this.provider = localStorage.getItem('mantis_provider') || 'vertex';
+    this.apiKey = localStorage.getItem('mantis_api_key') || '';
+    this.gcpProject = localStorage.getItem('mantis_gcp_project') || 'mantis-predator';
+    this.gcpLocation = localStorage.getItem('mantis_gcp_location') || 'global';
+    this.baselineRun = localStorage.getItem('mantis_baseline_run') || '';
+    this.graphvizCache = new Map();
 
     this.initElements();
-    this.initComponents();
+
     this.initEvents();
+    this.initFromStorage();
   }
 
   initElements() {
-    // Local Selection Controls
-    this.deviceSelect = document.getElementById('mantis-device-select');
-    this.scenarioSelect = document.getElementById('scenario-select');
-    
-    // Tab Headers & Pages
-    this.tabBtnTrace = document.getElementById('tab-btn-trace');
-    this.tabBtnDiagnostics = document.getElementById('tab-btn-diagnostics');
-    this.tabPageTrace = document.getElementById('tab-page-trace');
-    this.tabPageDiagnostics = document.getElementById('tab-page-diagnostics');
-    
-    // Trace Tab Elements
-    this.mantisTreeContainer = document.querySelector('.mantis-tree-container');
-    this.mqttTopicLabel = document.getElementById('mqtt-topic');
-    this.btnCopyPayload = document.getElementById('btn-copy-payload');
-    
-    // Diagnostics Tab Elements
-    this.playbookSelect = document.getElementById('playbook-select');
-    this.btnRunTriage = document.getElementById('btn-run-triage');
-    this.btnStopTriage = document.getElementById('btn-stop-triage');
-    this.triageStatusBadge = document.getElementById('triage-status-badge');
-    this.triageTerminalContainer = document.getElementById('triage-terminal-container');
-    this.rcaReportBody = document.getElementById('rca-report-body');
-    this.btnCopyReport = document.getElementById('btn-copy-report');
-    this.btnEmailReport = document.getElementById('btn-email-report');
-    
-    // Layout Container & Resizer
-    this.diagnosticsLayout = document.querySelector('.diagnostics-layout');
-    this.diagnosticsSidebar = document.querySelector('.diagnostics-sidebar');
-    this.diagnosticsResizer = document.getElementById('diagnostics-resizer');
+    this.statusBadge = document.getElementById('mantis-test-status-badge');
 
-    // AI Credentials & Baseline Run Controls
-    this.providerSelect = document.getElementById('mantis-provider-select');
-    this.apiKeyInput = document.getElementById('mantis-api-key');
-    this.gcpProjectInput = document.getElementById('mantis-gcp-project');
-    this.gcpLocationInput = document.getElementById('mantis-gcp-location');
-    this.groupGeminiKey = document.getElementById('group-gemini-key');
-    this.groupVertexConfig = document.getElementById('group-vertex-config');
-    this.successRunInput = document.getElementById('mantis-success-run');
-    this.fetchUdmisLogsCheckbox = document.getElementById('mantis-fetch-udmis-logs');
-    this.cloudProjectInput = document.getElementById('mantis-cloud-project');
-    this.groupCloudLoggingConfig = document.getElementById('group-cloud-logging-config');
+    this.chatStream = document.getElementById('mantis-chat-stream');
+    this.emptyState = document.getElementById('mantis-empty-state');
+    this.messagesContainer = document.getElementById('mantis-messages-container');
 
-    // Collapsible Diagnostic Settings Card Elements
-    this.playbookCard = document.getElementById('playbook-card');
-    this.playbookCardHeader = document.getElementById('playbook-card-header');
-    this.btnTogglePlaybookCard = document.getElementById('btn-toggle-playbook-card');
-    this.iconTogglePlaybookCard = document.getElementById('icon-toggle-playbook-card');
+    this.chatInput = document.getElementById('mantis-chat-input');
+    this.btnSend = document.getElementById('btn-mantis-send');
+    this.btnStop = document.getElementById('btn-mantis-stop');
 
-    // Mantis Folder Browser Modal Elements
-    this.btnBrowseSuccessRun = document.getElementById('btn-browse-success-run');
-    this.mantisBrowserModal = document.getElementById('mantis-folder-browser-modal');
-    this.btnCloseMantisBrowser = document.getElementById('btn-close-mantis-browser');
-    this.btnMantisBrowserUp = document.getElementById('btn-mantis-browser-up');
-    this.mantisBrowserCurrentPath = document.getElementById('mantis-browser-current-path');
-    this.mantisBrowserList = document.getElementById('mantis-browser-list');
-    this.btnMantisBrowserCancel = document.getElementById('btn-mantis-browser-cancel');
-    this.btnMantisBrowserSelect = document.getElementById('btn-mantis-browser-select');
-    this.mantisBrowserPath = '~';
-    this.selectedMantisBrowserFolder = null;
+    this.btnSettings = document.getElementById('btn-mantis-settings');
+    this.settingsModal = document.getElementById('mantis-settings-modal');
+    this.btnCloseSettings = document.getElementById('btn-close-mantis-settings');
+    this.btnSaveSettings = document.getElementById('btn-save-mantis-settings');
 
-    // Compliance Test Verdict Elements
-    this.testStatusBadge = document.getElementById('mantis-test-status-badge');
-    this.testTargetBadge = document.getElementById('mantis-test-target-badge');
-    this.testTimeBadge = document.getElementById('mantis-test-time-badge');
-    this.deviceResults = {};
+    this.btnFactCheck = document.getElementById('btn-mantis-factcheck') || document.getElementById('btn-mantis-critique');
+    this.btnClear = document.getElementById('btn-mantis-clear');
+    this.btnCopy = document.getElementById('btn-mantis-copy');
+    this.btnExport = document.getElementById('btn-mantis-export');
+    this.clearingOverlay = document.getElementById('mantis-clearing-overlay');
+    this.chatLayout = document.querySelector('.mantis-chat-layout');
 
-    // Interactive AI Assistant Chat Controls
-    this.aiChatInput = document.getElementById('ai-chat-input');
-    this.btnSubmitAiChat = document.getElementById('btn-submit-ai-chat');
+
+
+    // Settings Form Elements
+    this.providerSelect = document.getElementById('setting-provider-select');
+    this.inputApiKey = document.getElementById('setting-api-key');
+    this.groupApiKey = document.getElementById('setting-group-api-key');
+    this.inputGcpProject = document.getElementById('setting-gcp-project');
+    this.inputGcpLocation = document.getElementById('setting-gcp-location');
+    this.groupVertex = document.getElementById('setting-group-vertex');
+    this.inputBaselineRun = document.getElementById('setting-baseline-run');
   }
 
-  initComponents() {
-    // Initialize JSONViewer (if trace tab element exists)
-    const jsonViewerEl = document.getElementById('mqtt-json-viewer');
-    if (jsonViewerEl) {
-      this.jsonViewer = new JSONViewer(jsonViewerEl);
-      this.jsonViewer.render({ message: "Waiting for Site Model selection from parent shell..." });
+  setWelcomeLayout(isWelcome) {
+    if (this.chatLayout) {
+      if (isWelcome) {
+        this.chatLayout.classList.add('welcome-layout');
+      } else {
+        this.chatLayout.classList.remove('welcome-layout');
+      }
     }
-
-    // Initialize LogViewer (Diagnostics tab)
-    this.triageLogViewer = new LogViewer(this.triageTerminalContainer);
-
-    // Load cached auth settings
-    this.loadCachedAuthSettings();
-
-    // Initialize interactive pane resizer
-    this.initResizer();
   }
+
 
   initEvents() {
-    // --- 1. STATE STORE & POSTMESSAGE LISTENERS ---
-    stateStore.on('change:siteModel', (val) => {
-      this.handleGlobalStateChange(val);
-    });
+    // Send Message Trigger
+    if (this.btnSend) {
+      this.btnSend.addEventListener('click', () => this.handleSendMessage());
+    }
 
-    window.addEventListener('message', (event) => {
-      if (event.data) {
-        if (event.data.type === 'udmi_state_change') {
-          this.handleGlobalStateChange(event.data.siteModel);
-        } else if (event.data.type === 'load_diagnose' || event.data.type === 'trigger_triage') {
-          this.handleLoadDiagnose(event.data);
+    if (this.btnStop) {
+      this.btnStop.addEventListener('click', () => this.handleStopStreaming());
+    }
+
+    if (this.chatInput) {
+      this.chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          this.handleSendMessage();
         }
-      }
-    });
+      });
 
-    // Local Device / Scenario Dropdowns
-    this.deviceSelect.addEventListener('change', (e) => {
-      this.handleDeviceChange(e.target.value);
-    });
-
-    this.scenarioSelect.addEventListener('change', (e) => {
-      this.handleScenarioChange(e.target.value);
-    });
-
-    // Copy to clipboard triggers
-    if (this.btnCopyPayload) {
-      this.btnCopyPayload.addEventListener('click', () => this.copyPayloadToClipboard());
-    }
-    if (this.btnCopyReport) {
-      this.btnCopyReport.addEventListener('click', () => this.copyReportToClipboard());
-    }
-    if (this.btnEmailReport) {
-      this.btnEmailReport.addEventListener('click', () => this.emailReport());
-    }
-
-    // Tab buttons triggers (defensive check)
-    if (this.tabBtnTrace) {
-      this.tabBtnTrace.addEventListener('click', () => this.switchLocalTab('trace'));
-    }
-    if (this.tabBtnDiagnostics) {
-      this.tabBtnDiagnostics.addEventListener('click', () => this.switchLocalTab('diagnostics'));
-    }
-
-    // Triage run controls
-    this.btnRunTriage.addEventListener('click', () => this.startAITriage());
-    this.btnStopTriage.addEventListener('click', () => this.stopAITriage());
-
-    // AI Chat submission triggers
-    if (this.btnSubmitAiChat) {
-      this.btnSubmitAiChat.addEventListener('click', () => this.submitAiChatQuery());
-    }
-    if (this.aiChatInput) {
-      this.aiChatInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          this.submitAiChatQuery();
-        }
+      // Auto-resize input
+      this.chatInput.addEventListener('input', () => {
+        this.chatInput.style.height = 'auto';
+        this.chatInput.style.height = Math.min(this.chatInput.scrollHeight, 160) + 'px';
       });
     }
 
-    // AI Auth controls events
-    this.providerSelect.addEventListener('change', () => this.toggleProviderControls());
-    this.apiKeyInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_api_key', e.target.value.trim()));
-    this.gcpProjectInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_gcp_project', e.target.value.trim()));
-    this.gcpLocationInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_gcp_location', e.target.value.trim()));
-    if (this.fetchUdmisLogsCheckbox) {
-      this.fetchUdmisLogsCheckbox.addEventListener('change', (e) => {
-        localStorage.setItem('udmi_mantis_fetch_udmis', e.target.checked);
-        this.toggleCloudLoggingControls();
+    // Quick Prompt Chips
+    document.querySelectorAll('.mantis-prompt-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const prompt = chip.getAttribute('data-prompt');
+        if (prompt && this.chatInput) {
+          this.chatInput.value = prompt;
+          this.handleSendMessage();
+        }
       });
-    }
-    if (this.cloudProjectInput) {
-      this.cloudProjectInput.addEventListener('input', (e) => localStorage.setItem('udmi_mantis_cloud_project', e.target.value.trim()));
-    }
+    });
 
-    // Diagnostic Settings Card Collapse Listener
-    if (this.playbookCardHeader) {
-      this.playbookCardHeader.addEventListener('click', () => this.togglePlaybookCard());
-    }
+    // Slash command hint chips
+    document.querySelectorAll('.mantis-hint-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const cmd = chip.getAttribute('data-cmd');
+        if (cmd && this.chatInput) {
+          this.chatInput.value = cmd + ' ';
+          this.chatInput.focus();
+        }
+      });
 
-    // Prevent accidental tab closure during active AI triage
-    window.addEventListener('beforeunload', (e) => {
-      if (this.isTriageRunning) {
+      chip.addEventListener('dblclick', (e) => {
         e.preventDefault();
-        e.returnValue = 'AI Triage is currently running. Are you sure you want to leave?';
-        return e.returnValue;
-      }
-    });
-
-    // --- 3. MANTIS FOLDER BROWSER LISTENERS ---
-    if (this.btnBrowseSuccessRun) {
-      this.btnBrowseSuccessRun.addEventListener('click', () => this.openMantisFolderBrowser());
-    }
-    if (this.btnCloseMantisBrowser) {
-      this.btnCloseMantisBrowser.addEventListener('click', () => this.closeMantisFolderBrowser());
-    }
-    if (this.btnMantisBrowserCancel) {
-      this.btnMantisBrowserCancel.addEventListener('click', () => this.closeMantisFolderBrowser());
-    }
-    if (this.btnMantisBrowserUp) {
-      this.btnMantisBrowserUp.addEventListener('click', () => this.navigateMantisBrowserUp());
-    }
-    if (this.btnMantisBrowserSelect) {
-      this.btnMantisBrowserSelect.addEventListener('click', () => this.selectMantisBrowserDirectory());
-    }
-    if (this.mantisBrowserCurrentPath) {
-      this.mantisBrowserCurrentPath.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          this.loadMantisBrowserPath(e.target.value.trim());
+        const cmd = chip.getAttribute('data-cmd');
+        if (cmd && (cmd === '/fact-check' || cmd === '/current-context' || cmd === '/context')) {
+          if (this.chatInput) {
+            this.chatInput.value = cmd;
+          }
+          this.handleSendMessage();
         }
       });
+    });
+
+
+    // Header Quick Actions
+    if (this.btnFactCheck) {
+      this.btnFactCheck.addEventListener('click', () => {
+        this.chatInput.value = '/fact-check Review the diagnostic conclusions and test isolation assumptions.';
+        this.handleSendMessage();
+      });
     }
+
+
+    if (this.btnClear) {
+      this.btnClear.addEventListener('click', () => this.handleClearSession());
+    }
+
+    if (this.btnCopy) {
+      this.btnCopy.addEventListener('click', () => this.handleCopyTranscript());
+    }
+
+    if (this.btnExport) {
+      this.btnExport.addEventListener('click', () => this.handleExportTranscript());
+    }
+
+
+    // Settings Modal
+    if (this.btnSettings && this.settingsModal) {
+      this.btnSettings.addEventListener('click', () => this.openSettingsModal());
+    }
+    if (this.btnCloseSettings && this.settingsModal) {
+      this.btnCloseSettings.addEventListener('click', () => this.closeSettingsModal());
+    }
+    if (this.btnSaveSettings) {
+      this.btnSaveSettings.addEventListener('click', () => this.saveSettings());
+    }
+    if (this.providerSelect) {
+      this.providerSelect.addEventListener('change', () => this.toggleProviderFields());
+    }
+
+    // Target Selection Sync
+    if (this.deviceSelect) {
+      this.deviceSelect.addEventListener('change', (e) => {
+        this.device = e.target.value;
+        this.populateScenarios();
+      });
+    }
+
+    if (this.scenarioSelect) {
+      this.scenarioSelect.addEventListener('change', (e) => {
+        this.testId = e.target.value;
+      });
+    }
+
+    // State store integration
+    stateStore.on('site_model_changed', (sitePath) => {
+      this.siteModel = sitePath;
+      this.populateDevices();
+    });
+
+    stateStore.on('device_selected', (dev) => {
+      this.device = dev;
+      if (this.deviceSelect) this.deviceSelect.value = dev;
+      this.populateScenarios();
+    });
   }
 
-  async submitAiChatQuery() {
-    if (!this.aiChatInput) return;
-    const promptText = this.aiChatInput.value.trim();
-    if (!promptText) return;
+  initFromStorage() {
+    if (this.providerSelect) this.providerSelect.value = this.provider;
+    if (this.inputApiKey) this.inputApiKey.value = this.apiKey;
+    if (this.inputGcpProject) this.inputGcpProject.value = this.gcpProject;
+    if (this.inputGcpLocation) this.inputGcpLocation.value = this.gcpLocation;
+    if (this.inputBaselineRun) this.inputBaselineRun.value = this.baselineRun;
+    this.toggleProviderFields();
+  }
 
-    this.aiChatInput.value = '';
-    this.btnSubmitAiChat.disabled = true;
+  toggleProviderFields() {
+    const isVertex = (this.providerSelect?.value === 'vertex');
+    if (this.groupApiKey) this.groupApiKey.style.display = isVertex ? 'none' : 'flex';
+    if (this.groupVertex) this.groupVertex.style.display = isVertex ? 'flex' : 'none';
+  }
 
-    // Append prompt to RCA report body
-    const promptDiv = document.createElement('div');
-    promptDiv.className = 'ai-user-query';
-    promptDiv.style.cssText = 'background: rgba(137, 180, 250, 0.1); border-left: 3px solid #89b4fa; padding: 10px 14px; margin: 12px 0; border-radius: 6px; font-weight: 500;';
-    promptDiv.textContent = `User Question: ${promptText}`;
-    this.rcaReportBody.appendChild(promptDiv);
+  openSettingsModal() {
+    if (this.settingsModal) this.settingsModal.classList.add('open');
+  }
 
-    const loadingDiv = document.createElement('div');
-    loadingDiv.className = 'ai-loading-response';
-    loadingDiv.style.cssText = 'color: #9399b2; font-style: italic; margin: 8px 0;';
-    loadingDiv.textContent = 'Mantis AI is pondering your question...';
-    this.rcaReportBody.appendChild(loadingDiv);
-    this.rcaReportBody.scrollTop = this.rcaReportBody.scrollHeight;
+  closeSettingsModal() {
+    if (this.settingsModal) this.settingsModal.classList.remove('open');
+  }
 
+  saveSettings() {
+    this.provider = this.providerSelect?.value || 'gemini';
+    this.apiKey = this.inputApiKey?.value || '';
+    this.gcpProject = this.inputGcpProject?.value || '';
+    this.gcpLocation = this.inputGcpLocation?.value || 'global';
+    this.baselineRun = this.inputBaselineRun?.value || '';
+
+    localStorage.setItem('mantis_provider', this.provider);
+    localStorage.setItem('mantis_api_key', this.apiKey);
+    localStorage.setItem('mantis_gcp_project', this.gcpProject);
+    localStorage.setItem('mantis_gcp_location', this.gcpLocation);
+    localStorage.setItem('mantis_baseline_run', this.baselineRun);
+
+    this.closeSettingsModal();
+    NotificationManager.show('Settings saved successfully', 'success');
+  }
+
+  async populateDevices() {
+    if (!this.siteModel || !this.deviceSelect) return;
     try {
-      const res = await fetch('/api/ai_query', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: promptText,
-          site_model: this.siteModel,
-          device_id: this.device,
-          test_id: this.scenarioSelect ? this.scenarioSelect.value : ''
-        })
-      });
-
-      if (!res.ok) {
-        throw new Error(`AI query failed: ${res.status}`);
-      }
-
+      const res = await fetch(`/api/devices?site_path=${encodeURIComponent(this.siteModel)}`);
       const data = await res.json();
-      loadingDiv.remove();
-
-      const responseDiv = document.createElement('div');
-      responseDiv.className = 'ai-response-markdown';
-      responseDiv.style.cssText = 'background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--border-color);';
-      responseDiv.innerHTML = this.parseMarkdownToHTML(data.response || 'No answer generated.');
-      this.rcaReportBody.appendChild(responseDiv);
-      this.rcaReportBody.scrollTop = this.rcaReportBody.scrollHeight;
-    } catch (err) {
-      loadingDiv.textContent = `Error getting response: ${err.message}`;
-      loadingDiv.style.color = '#f38ba8';
-    } finally {
-      this.btnSubmitAiChat.disabled = false;
-    }
-  }
-
-  // --- RESIZER & TAB MACHINERY ---
-  initResizer() {
-    if (!this.diagnosticsResizer || !this.diagnosticsSidebar || !this.diagnosticsLayout) return;
-
-    const savedWidth = localStorage.getItem('udmi_mantis_sidebar_width');
-    if (savedWidth) {
-      this.diagnosticsSidebar.style.flexBasis = (savedWidth.endsWith('%') || savedWidth.endsWith('px')) ? savedWidth : `${savedWidth}px`;
-    } else {
-      this.diagnosticsSidebar.style.flexBasis = '40%';
-    }
-
-    let isResizing = false;
-
-    const onPointerDown = (e) => {
-      isResizing = true;
-      this.diagnosticsResizer.classList.add('resizing');
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-      this.diagnosticsSidebar.style.transition = 'none';
-    };
-
-    const onPointerMove = (e) => {
-      if (!isResizing) return;
-      const layoutRect = this.diagnosticsLayout.getBoundingClientRect();
-      let newWidth = e.clientX - layoutRect.left;
-      
-      const minWidth = 250;
-      const maxWidth = layoutRect.width - 300;
-      if (newWidth < minWidth) newWidth = minWidth;
-      if (newWidth > maxWidth) newWidth = maxWidth;
-
-      this.diagnosticsSidebar.style.flexBasis = `${newWidth}px`;
-    };
-
-    const onPointerUp = () => {
-      if (isResizing) {
-        isResizing = false;
-        this.diagnosticsResizer.classList.remove('resizing');
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        this.diagnosticsSidebar.style.transition = 'flex-basis 0.3s ease';
-        const currentWidth = parseFloat(this.diagnosticsSidebar.style.flexBasis);
-        if (currentWidth) {
-          localStorage.setItem('udmi_mantis_sidebar_width', currentWidth);
-        }
-      }
-    };
-
-    this.diagnosticsResizer.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
-  }
-
-  loadCachedAuthSettings() {
-    const provider = localStorage.getItem('udmi_mantis_provider') || 'gemini';
-    this.providerSelect.value = provider;
-    this.apiKeyInput.value = localStorage.getItem('udmi_mantis_api_key') || '';
-    this.gcpProjectInput.value = localStorage.getItem('udmi_mantis_gcp_project') || '';
-    this.gcpLocationInput.value = localStorage.getItem('udmi_mantis_gcp_location') || 'global';
-    if (this.successRunInput) {
-      this.successRunInput.value = localStorage.getItem('udmi_mantis_success_run') || '';
-    }
-    if (this.fetchUdmisLogsCheckbox) {
-      this.fetchUdmisLogsCheckbox.checked = localStorage.getItem('udmi_mantis_fetch_udmis') === 'true';
-    }
-    if (this.cloudProjectInput) {
-      this.cloudProjectInput.value = localStorage.getItem('udmi_mantis_cloud_project') || '';
-    }
-    this.toggleProviderControls();
-  }
-
-  toggleProviderControls() {
-    const provider = this.providerSelect.value;
-    localStorage.setItem('udmi_mantis_provider', provider);
-    if (provider === 'vertex') {
-      this.groupGeminiKey.style.display = 'none';
-      this.groupVertexConfig.style.display = 'flex';
-    } else {
-      this.groupGeminiKey.style.display = 'flex';
-      this.groupVertexConfig.style.display = 'none';
-    }
-    this.toggleCloudLoggingControls();
-  }
-
-  toggleCloudLoggingControls() {
-    const isChecked = this.fetchUdmisLogsCheckbox ? this.fetchUdmisLogsCheckbox.checked : false;
-    if (this.groupCloudLoggingConfig) {
-      if (isChecked) {
-        this.groupCloudLoggingConfig.style.display = 'flex';
-      } else {
-        this.groupCloudLoggingConfig.style.display = 'none';
-      }
-    }
-  }
-
-  togglePlaybookCard(forceCollapse) {
-    if (!this.playbookCard) return;
-    const shouldCollapse = forceCollapse !== undefined ? forceCollapse : !this.playbookCard.classList.contains('collapsed');
-    if (shouldCollapse) {
-      this.playbookCard.classList.add('collapsed');
-      if (this.iconTogglePlaybookCard) this.iconTogglePlaybookCard.style.transform = 'rotate(-90deg)';
-    } else {
-      this.playbookCard.classList.remove('collapsed');
-      if (this.iconTogglePlaybookCard) this.iconTogglePlaybookCard.style.transform = 'rotate(0deg)';
-    }
-  }
-
-  // --- FOLDER BROWSER MODAL CONTROLLER FOR BASELINE RUN ---
-  openMantisFolderBrowser() {
-    const currentVal = this.successRunInput ? this.successRunInput.value.trim() : '';
-    this.mantisBrowserPath = currentVal || '~';
-    this.selectedMantisBrowserFolder = null;
-    if (this.mantisBrowserModal) {
-      this.mantisBrowserModal.classList.add('active');
-    }
-    this.loadMantisBrowserPath(this.mantisBrowserPath);
-  }
-
-  closeMantisFolderBrowser() {
-    if (this.mantisBrowserModal) {
-      this.mantisBrowserModal.classList.remove('active');
-    }
-  }
-
-  async loadMantisBrowserPath(path) {
-    this.selectedMantisBrowserFolder = null;
-    if (this.mantisBrowserList) {
-      this.mantisBrowserList.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted);">Reading directory...</div>';
-    }
-    
-    try {
-      const data = await fetchDirectoryList(path);
-      this.mantisBrowserPath = data.path;
-      if (this.mantisBrowserCurrentPath) {
-        this.mantisBrowserCurrentPath.value = data.path;
-      }
-      this.renderMantisBrowserList(data.folders);
-    } catch (err) {
-      if (path !== '~') {
-        console.warn(`Failed to load '${path}', falling back to '~':`, err);
-        return this.loadMantisBrowserPath('~');
-      }
-      if (this.mantisBrowserList) {
-        this.mantisBrowserList.innerHTML = `<div style="padding:16px; text-align:center; color:var(--color-error);">Error: ${err.message}</div>`;
-      }
-    }
-  }
-
-  renderMantisBrowserList(folders) {
-    if (!this.mantisBrowserList) return;
-    this.mantisBrowserList.innerHTML = '';
-    
-    if (folders.length === 0) {
-      this.mantisBrowserList.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted);">No subdirectories found</div>';
-      return;
-    }
-
-    folders.forEach(folder => {
-      const itemEl = document.createElement('div');
-      itemEl.className = 'browser-item';
-      itemEl.innerHTML = `
-        <span class="material-symbols-outlined">folder</span>
-        <span>${folder}</span>
-      `;
-      
-      itemEl.addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.mantisBrowserList.querySelectorAll('.browser-item').forEach(el => el.classList.remove('selected'));
-        itemEl.classList.add('selected');
-        this.selectedMantisBrowserFolder = folder;
-      });
-
-      itemEl.addEventListener('dblclick', (e) => {
-        e.stopPropagation();
-        const nextPath = combinePaths(this.mantisBrowserPath, folder);
-        this.loadMantisBrowserPath(nextPath);
-      });
-
-      this.mantisBrowserList.appendChild(itemEl);
-    });
-  }
-
-  navigateMantisBrowserUp() {
-    const parent = getParentPath(this.mantisBrowserPath);
-    if (parent !== null && parent !== '') {
-      this.loadMantisBrowserPath(parent);
-    }
-  }
-
-  selectMantisBrowserDirectory() {
-    let finalPath = this.mantisBrowserPath;
-    if (this.selectedMantisBrowserFolder) {
-      finalPath = combinePaths(this.mantisBrowserPath, this.selectedMantisBrowserFolder);
-    }
-    if (this.successRunInput) {
-      this.successRunInput.value = finalPath;
-      localStorage.setItem('udmi_mantis_success_run', finalPath);
-    }
-    this.closeMantisFolderBrowser();
-  }
-
-  switchLocalTab(tabId) {
-    this.activeTab = tabId;
-    
-    // Toggle button active states (primary vs outlined)
-    this.tabBtnTrace.classList.toggle('btn-primary', tabId === 'trace');
-    this.tabBtnTrace.classList.toggle('btn-outlined', tabId !== 'trace');
-    
-    this.tabBtnDiagnostics.classList.toggle('btn-primary', tabId === 'diagnostics');
-    this.tabBtnDiagnostics.classList.toggle('btn-outlined', tabId !== 'diagnostics');
-    
-    // Toggle page visibility
-    this.tabPageTrace.classList.toggle('active', tabId === 'trace');
-    this.tabPageDiagnostics.classList.toggle('active', tabId === 'diagnostics');
-  }
-
-  handleLoadDiagnose(data) {
-    if (data.siteModel) this.siteModel = data.siteModel;
-    if (data.projectSpec) this.projectSpec = data.projectSpec;
-    if (data.deviceId) {
-      this.device = data.deviceId;
-      if (this.deviceSelect) {
-        let opt = Array.from(this.deviceSelect.options).find(o => o.value === data.deviceId);
-        if (!opt) {
-          opt = document.createElement('option');
-          opt.value = data.deviceId;
-          opt.textContent = data.deviceId;
-          this.deviceSelect.appendChild(opt);
-        }
-        this.deviceSelect.value = data.deviceId;
-        this.deviceSelect.disabled = false;
-      }
-    }
-    if (data.testId && this.scenarioSelect) {
-      let opt = Array.from(this.scenarioSelect.options).find(o => o.value === data.testId);
-      if (!opt) {
-        opt = document.createElement('option');
-        opt.value = data.testId;
-        opt.textContent = data.testId;
-        this.scenarioSelect.appendChild(opt);
-      }
-      this.scenarioSelect.value = data.testId;
-      this.scenarioSelect.disabled = false;
-    }
-    this.switchLocalTab('diagnostics');
-    this.runAITriage();
-  }
-
-  // --- STATE SYNC & SCENARIO DISCOVERY ---
-  async handleGlobalStateChange(siteModel) {
-    this.siteModel = siteModel;
-    
-    this.deviceSelect.innerHTML = '<option value="">-- Select Device --</option>';
-    this.deviceSelect.disabled = true;
-    this.device = '';
-    
-    this.scenarioSelect.innerHTML = '<option value="">-- Waiting for device --</option>';
-    this.scenarioSelect.disabled = true;
-    
-    this.resetMantisWorkspace();
-
-    if (!siteModel) {
-      this.jsonViewer.render({ message: "Waiting for Site Model selection from parent shell..." });
-      return;
-    }
-
-    this.jsonViewer.render({ message: "Select a device to view trace history." });
-    this.deviceSelect.innerHTML = '<option value="">Scanning devices...</option>';
-
-    const devicesPath = combinePaths(siteModel, 'devices');
-    try {
-      const data = await fetchDirectoryList(devicesPath);
-      const devices = data.folders;
-      this.deviceSelect.innerHTML = '<option value="">-- Select Device --</option>';
-
-      if (devices.length > 0) {
-        devices.forEach(dev => {
+      if (data.devices) {
+        this.deviceSelect.innerHTML = '<option value="">-- Select Device --</option>';
+        data.devices.forEach(d => {
           const opt = document.createElement('option');
-          opt.value = dev;
-          opt.textContent = dev;
+          opt.value = d;
+          opt.textContent = d;
           this.deviceSelect.appendChild(opt);
         });
-        
         this.deviceSelect.disabled = false;
-        
-        // Restore last selected device
-        const cachedDev = localStorage.getItem('udmi_last_selected_device_mantis');
-        if (cachedDev && devices.includes(cachedDev)) {
-          this.deviceSelect.value = cachedDev;
-          this.handleDeviceChange(cachedDev);
-        }
-      } else {
-        this.deviceSelect.innerHTML = '<option value="">-- No devices found under path --</option>';
+        if (this.device) this.deviceSelect.value = this.device;
       }
-    } catch (err) {
-      this.deviceSelect.innerHTML = '<option value="">-- Invalid site path or no devices --</option>';
-      console.error('Error scanning devices inside mantis:', err);
+    } catch (e) {
+      console.warn('Failed to populate devices:', e);
     }
   }
 
-  async handleDeviceChange(device) {
-    this.device = device;
-    
-    this.scenarioSelect.innerHTML = '<option value="">-- Select Scenario --</option>';
-    this.scenarioSelect.disabled = true;
-    this.resetMantisWorkspace();
-
-    if (!device) {
-      localStorage.removeItem('udmi_last_selected_device_mantis');
-      this.jsonViewer.render({ message: "Select a device to view trace history." });
-      return;
-    }
-
-    localStorage.setItem('udmi_last_selected_device_mantis', device);
-    this.jsonViewer.render({ message: "Select a debug scenario from the toolbar." });
-    this.scenarioSelect.innerHTML = '<option value="">Scanning scenarios...</option>';
-
-    // Fetch device compliance test results for status badges
+  async populateScenarios() {
+    if (!this.siteModel || !this.device || !this.scenarioSelect) return;
     try {
-      const res = await fetch(`/api/device_results?site_model=${encodeURIComponent(this.siteModel)}&device=${encodeURIComponent(device)}`);
-      if (res.ok) {
-        const resData = await res.json();
-        this.deviceResults = resData.results || {};
-      }
-    } catch (err) {
-      console.error('Error fetching device results in mantis:', err);
-    }
-
-    const testsPath = combinePaths(this.siteModel, `out/devices/${device}/tests`);
-    try {
-      const data = await fetchDirectoryList(testsPath);
-      const scenarios = data.folders;
+      const res = await fetch(`/api/device_results?site_path=${encodeURIComponent(this.siteModel)}&device_id=${encodeURIComponent(this.device)}`);
+      const data = await res.json();
       this.scenarioSelect.innerHTML = '<option value="">-- Select Scenario --</option>';
-
-      if (scenarios.length > 0) {
-        scenarios.forEach(sc => {
+      if (data.results) {
+        Object.keys(data.results).forEach(t => {
           const opt = document.createElement('option');
-          opt.value = sc;
-          const statusInfo = this.deviceResults[sc];
-          const st = statusInfo ? (statusInfo.status || '').toLowerCase() : '';
-          let symbol = '';
-          if (st === 'pass') symbol = ' ✔';
-          else if (st === 'fail' || st === 'error') symbol = ' ✘';
-          else if (st === 'skip') symbol = ' ⊘';
-          opt.textContent = this.formatScenarioTitle(sc) + symbol;
+          opt.value = t;
+          const status = data.results[t].status || '';
+          opt.textContent = `${t} (${status})`;
           this.scenarioSelect.appendChild(opt);
         });
         this.scenarioSelect.disabled = false;
-      } else {
-        this.scenarioSelect.innerHTML = '<option value="">-- No test runs found --</option>';
+        if (this.testId) this.scenarioSelect.value = this.testId;
       }
-    } catch (err) {
-      this.scenarioSelect.innerHTML = '<option value="">-- No test runs found --</option>';
-      console.error('Error scanning device scenarios inside mantis:', err);
-    }
-  }
-
-  // --- CHROMATOGRAPHIC SEQUENCE TRACE LOADERS ---
-  async handleScenarioChange(scenarioId) {
-    this.resetMantisWorkspace();
-    this.updateScenarioVerdict(scenarioId);
-    if (!scenarioId) return;
-
-    const statusInfo = this.deviceResults && this.deviceResults[scenarioId];
-    if (statusInfo && (statusInfo.project_spec || statusInfo.target_project)) {
-      const pSpec = statusInfo.project_spec || statusInfo.target_project;
-      this.projectSpec = pSpec;
-      if (this.cloudProjectInput && pSpec && pSpec !== 'localhost') {
-        this.cloudProjectInput.value = pSpec;
-      }
-    }
-
-    this.mantisTreeContainer.innerHTML = '<div style="text-align:center; padding-top:40px; color:var(--text-muted)">Loading transition sequence...</div>';
-
-    const scenarioPath = combinePaths(this.siteModel, `out/devices/${this.device}/tests/${scenarioId}`);
-
-    try {
-      const dirData = await fetchDirectoryList(scenarioPath);
-      const files = dirData.files;
-      const attrFiles = files.filter(f => f.endsWith('.attr'));
-
-      if (attrFiles.length === 0) {
-        this.mantisTreeContainer.innerHTML = '<div style="text-align:center; padding-top:40px; color:var(--color-error)">No message logs found for this scenario.</div>';
-        return;
-      }
-
-      // Load all .attr metadata blocks in parallel
-      const loadPromises = attrFiles.map(async (attrFile) => {
-        const fullAttrPath = combinePaths(scenarioPath, attrFile);
-        try {
-          const attrContent = await readFileContent(fullAttrPath);
-          const meta = JSON.parse(attrContent);
-          const jsonFile = attrFile.replace('.attr', '.json');
-          const fullJsonPath = combinePaths(scenarioPath, jsonFile);
-
-          return {
-            id: attrFile.replace('.attr', ''),
-            title: `${meta.subType}.${meta.subFolder}`,
-            time: meta.publishTime,
-            timestamp: new Date(meta.publishTime),
-            subFolder: meta.subFolder,
-            subType: meta.subType,
-            transactionId: meta.transactionId,
-            jsonPath: fullJsonPath,
-            meta: meta
-          };
-        } catch (e) {
-          console.error(`Error reading metadata file: ${attrFile}`, e);
-          return null;
-        }
-      });
-
-      const loadedNodes = (await Promise.all(loadPromises)).filter(node => node !== null);
-
-      if (loadedNodes.length === 0) {
-        this.mantisTreeContainer.innerHTML = '<div style="text-align:center; padding-top:40px; color:var(--color-error)">Failed to parse message metadata.</div>';
-        return;
-      }
-
-      // Sort messages chronologically by timestamp
-      loadedNodes.sort((a, b) => a.timestamp - b.timestamp);
-      this.activeTraceNodes = loadedNodes;
-
-      // Render nodes
-      this.renderTraceTimeline();
-    } catch (err) {
-      this.mantisTreeContainer.innerHTML = `<div style="text-align:center; padding-top:40px; color:var(--color-error)">Error loading scenario: ${err.message}</div>`;
-      console.error(err);
-    }
-  }
-
-  renderTraceTimeline() {
-    this.mantisTreeContainer.innerHTML = '';
-
-    this.activeTraceNodes.forEach((node, idx) => {
-      const nodeEl = document.createElement('div');
-      nodeEl.className = 'state-node-item';
-      nodeEl.id = node.id;
-      
-      const statusType = node.subType === 'config' ? 'pending' : 'success';
-      const timeStr = node.time ? new Date(node.time).toLocaleTimeString() : '';
-
-      nodeEl.innerHTML = `
-        <div class="node-indicator ${statusType}">
-          <span class="material-symbols-outlined">${this.getMantisIconName(node.subType)}</span>
-        </div>
-        <div class="node-content">
-          <div class="node-header">
-            <span class="node-title">${node.title}</span>
-            <span class="node-timestamp">${timeStr}</span>
-          </div>
-          <span class="node-desc">Transaction ID: ${node.transactionId || 'N/A'}</span>
-        </div>
-      `;
-
-      nodeEl.addEventListener('click', () => this.selectTraceNode(nodeEl, node));
-      this.mantisTreeContainer.appendChild(nodeEl);
-    });
-  }
-
-  async selectTraceNode(element, node) {
-    this.mantisTreeContainer.querySelectorAll('.state-node-item').forEach(el => {
-      el.classList.remove('active');
-    });
-    element.classList.add('active');
-
-    this.mqttTopicLabel.textContent = `devices/${this.device}/${node.subFolder}`;
-
-    this.jsonViewer.render({ message: "Reading JSON payload..." });
-    this.btnCopyPayload.disabled = true;
-
-    try {
-      const jsonContent = await readFileContent(node.jsonPath);
-      const payload = JSON.parse(jsonContent);
-      
-      this.jsonViewer.render(payload);
-      this.currentSelectedNodePayload = JSON.stringify(payload, null, 2);
-      this.btnCopyPayload.disabled = false;
-    } catch (err) {
-      this.jsonViewer.render({ error: `Failed to load payload: ${err.message}` });
-      console.error(err);
-    }
-  }
-
-  // --- CROSS-IFRAME AUTO-TRIAGE REDIRECTION (PostMessage) ---
-  async handleLoadDiagnose(data) {
-    if (this.isTriageRunning || this.isTriageLoading) {
-      console.log('Mantis Screen: Triage run or load already in progress. Ignoring duplicate trigger.');
-      return;
-    }
-    this.isTriageLoading = true;
-
-    const { testId, deviceId, siteModel, projectSpec } = data;
-    console.log(`Mantis Screen: Received load_diagnose payload for test ${testId} on device ${deviceId}`);
-    
-    this.siteModel = siteModel;
-    this.projectSpec = projectSpec || ''; // Pipe target project specification
-    
-    // Set device select and trigger downstream loading
-    this.deviceSelect.value = deviceId;
-    await this.handleDeviceChange(deviceId);
-    
-    // Set scenario select and load sequence flow
-    this.scenarioSelect.value = testId;
-    await this.handleScenarioChange(testId);
-    
-    // Switch to diagnostics tab and execute if auto-triggered
-    this.switchLocalTab('diagnostics');
-    this.isTriageLoading = false;
-
-    if (data.autoRun) {
-      setTimeout(() => this.startAITriage(), 350);
-    }
-  }
-
-  // --- MANTIS AI TRIAGE EXECUTION LOOP ---
-  async startAITriage() {
-    if (this.isTriageRunning) return;
-    this.isTriageLoading = false; // Transition from loading to running state
-
-    const deviceId = this.device;
-    const testId = this.scenarioSelect.value;
-
-    if (!deviceId || !testId) {
-      alert('Please select a Device and Scenario before running diagnostics.');
-      return;
-    }
-
-    // Request Desktop Notification permission if default
-    if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-
-    this.isTriageRunning = true;
-    this.triageLogOffset = 0;
-
-    // Auto-collapse Diagnostic Settings card so AI Agent Thoughts takes over vertical space
-    this.togglePlaybookCard(true);
-
-    // Trigger panel sliding: expand console to 60% wide
-    this.diagnosticsLayout.classList.remove('complete');
-    this.diagnosticsLayout.classList.add('running');
-
-    // Adjust button controls
-    this.btnRunTriage.disabled = true;
-    this.btnStopTriage.style.display = 'inline-flex';
-    this.deviceSelect.disabled = true;
-    this.scenarioSelect.disabled = true;
-    this.playbookSelect.disabled = true;
-    
-    // Update badge state
-    this.triageStatusBadge.textContent = 'Running';
-    this.triageStatusBadge.className = 'badge badge-running';
-
-    // Clear views
-    this.triageLogViewer.setAutoScroll(true);
-    this.triageLogViewer.clear();
-    this.triageLogViewer.append(`Starting Mantis AI Triage Agent------\nDevice: ${deviceId}\nTest ID: ${testId}\nPlaybook: ${this.playbookSelect.value.toUpperCase()}\n------------------------------------------------\n`, 'info');
-    
-    this.rcaReportBody.innerHTML = `
-      <div class="rca-placeholder-message" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px;">
-        <div class="loader" style="margin-bottom: 12px;"></div>
-        <span style="font-weight: 500; color: var(--text-primary); font-size: 15px; max-width: 500px; line-height: 1.5;">
-          Mantis AI is digesting compliance logs, scanning codebase references, and compiling the Root Cause Analysis...
-        </span>
-        <div style="font-size: 13px; color: var(--text-secondary); max-width: 460px; line-height: 1.5; background-color: var(--bg-surface-container); padding: 10px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); display: flex; align-items: center; gap: 8px;">
-          <span class="material-symbols-outlined" style="color: var(--color-primary); font-size: 20px;">notifications_active</span>
-          <span>You will receive a notification when the RCA report is ready. Please do not close this tab.</span>
-        </div>
-      </div>
-    `;
-    this.btnCopyReport.disabled = true;
-
-    // Trigger API
-    const playbook = this.playbookSelect.value;
-    const projectSpec = this.projectSpec || '//mqtt/localhost';
-    const provider = this.providerSelect.value;
-    const apiKey = this.apiKeyInput.value.trim();
-    const gcpProject = this.gcpProjectInput.value.trim();
-    const gcpLocation = this.gcpLocationInput.value.trim() || 'global';
-    const successRun = this.successRunInput ? this.successRunInput.value.trim() : '';
-    const fetchUdmis = this.fetchUdmisLogsCheckbox ? this.fetchUdmisLogsCheckbox.checked : false;
-    const cloudProject = (this.cloudProjectInput ? this.cloudProjectInput.value.trim() : '') || gcpProject;
-
-    if (this.successRunInput) {
-      localStorage.setItem('udmi_mantis_success_run', successRun);
-    }
-
-    let runUrl = `/api/run_triage?device_id=${encodeURIComponent(deviceId)}&test_id=${encodeURIComponent(testId)}&playbook=${playbook}&site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(projectSpec)}`;
-    if (successRun) {
-      runUrl += `&success_run=${encodeURIComponent(successRun)}`;
-    }
-    if (fetchUdmis) {
-      runUrl += `&fetch_udmis=true`;
-      if (cloudProject) {
-        runUrl += `&cloud_project=${encodeURIComponent(cloudProject)}`;
-      }
-    }
-    if (provider === 'vertex') {
-      runUrl += `&use_vertex=true&gcp_project=${encodeURIComponent(gcpProject)}&gcp_location=${encodeURIComponent(gcpLocation)}`;
-    } else if (apiKey) {
-      runUrl += `&gemini_api_key=${encodeURIComponent(apiKey)}`;
-    }
-    
-    try {
-      const res = await fetch(runUrl);
-      const startData = await res.json();
-      if (!res.ok) {
-        throw new Error(startData.error || `HTTP ${res.status}`);
-      }
-
-      if (startData.session_id) {
-        this.currentSessionId = startData.session_id;
-      }
-
-      if (startData.status === "Skipped") {
-        this.triageStatusBadge.textContent = 'Passed';
-        this.triageStatusBadge.className = 'badge badge-success';
-        this.triageLogViewer.append(`\n✨ Triage Bypassed: ${startData.message}\n`, 'info');
-        
-        this.rcaReportBody.innerHTML = `
-          <div class="rca-placeholder-message">
-            <span class="material-symbols-outlined" style="font-size:54px; color:var(--color-tertiary); margin-bottom:12px;">check_circle</span>
-            <span style="font-weight: 600; font-size: 16px; color: var(--text-primary);">Test Case Passed Successfully!</span>
-            <span style="font-size: 13.5px; color: var(--text-secondary); margin-top: 8px; max-width: 440px; text-align: center; line-height: 1.5;">
-              Mantis AI Triage is skipped because compliance test case <strong>'${testId}'</strong> on device <strong>'${deviceId}'</strong> is in a healthy, passing state. No root-cause analysis is needed.
-            </span>
-          </div>
-        `;
-        
-        this.stopAITriage(false);
-        return;
-      }
-
-      this.hasHandledCompletion = false;
-      this.isPollingTriage = false;
-
-      // Start Polling
-      this.triagePollInterval = setInterval(() => this.pollTriageStatus(), 500);
-    } catch (err) {
-      this.triageLogViewer.append(`\n❌ Error starting triage: ${err.message}\n`, 'error');
-      this.stopAITriage(true); // Terminate with error
-    }
-  }
-
-  async stopAITriage(hasError = false) {
-    // Clear poll loop
-    if (this.triagePollInterval) {
-      clearInterval(this.triagePollInterval);
-      this.triagePollInterval = null;
-    }
-
-    if (this.isTriageRunning && !hasError) {
-      // Direct request to stop subprocess
-      try {
-        await fetch('/api/stop_triage');
-      } catch {}
-      this.triageLogViewer.append('\n🛑 Triage process terminated by user.\n', 'error');
-    }
-
-    this.isTriageRunning = false;
-    this.isTriageLoading = false;
-
-    // Reset panel sliding to default
-    this.diagnosticsLayout.classList.remove('running', 'complete');
-
-    // Restore buttons and controls
-    this.btnRunTriage.disabled = false;
-    this.btnStopTriage.style.display = 'none';
-    this.deviceSelect.disabled = false;
-    this.scenarioSelect.disabled = false;
-    this.playbookSelect.disabled = false;
-
-    if (hasError) {
-      this.triageStatusBadge.textContent = 'Error';
-      this.triageStatusBadge.className = 'badge badge-error';
-      this.rcaReportBody.innerHTML = `
-        <div class="rca-placeholder-message" style="color:var(--color-error)">
-          <span class="material-symbols-outlined" style="font-size:48px;">error</span>
-          <span>Diagnostics aborted due to execution failure. Review the console logs on the left.</span>
-        </div>
-      `;
-    } else if (this.triageStatusBadge.textContent === 'Running') {
-      this.triageStatusBadge.textContent = 'Aborted';
-      this.triageStatusBadge.className = 'badge badge-error';
-      this.rcaReportBody.innerHTML = `
-        <div class="rca-placeholder-message">
-          <span class="material-symbols-outlined" style="font-size:48px;">cancel</span>
-          <span>AI Triage run was manually aborted.</span>
-        </div>
-      `;
-    }
-  }
-
-  async pollTriageStatus() {
-    if (this.isPollingTriage) return;
-    this.isPollingTriage = true;
-    const url = `/api/triage_status?offset=${this.triageLogOffset}`;
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.error || `HTTP ${response.status}`);
-      }
-
-      // Stream stdout/stderr character-by-character
-      if (data.log) {
-        this.triageLogViewer.append(data.log);
-      }
-      this.triageLogOffset = data.offset;
-
-      // Handle process exit
-      if (data.running === false && data.exit_code !== null) {
-        if (this.hasHandledCompletion) return;
-        this.hasHandledCompletion = true;
-
-        clearInterval(this.triagePollInterval);
-        this.triagePollInterval = null;
-        this.isTriageRunning = false;
-
-        this.btnRunTriage.disabled = false;
-        this.btnStopTriage.style.display = 'none';
-        this.deviceSelect.disabled = false;
-        this.scenarioSelect.disabled = false;
-        this.playbookSelect.disabled = false;
-
-        if (data.exit_code === 0) {
-          this.triageStatusBadge.textContent = 'Complete';
-          this.triageStatusBadge.className = 'badge badge-success';
-          this.triageLogViewer.append('\n✨ Triage complete! Root Cause Analysis generated successfully.\n', 'info');
-          
-          // Trigger panel sliding: shrink console to 280px sidebar, expand RCA report!
-          this.diagnosticsLayout.classList.remove('running');
-          this.diagnosticsLayout.classList.add('complete');
-
-          // Show Desktop Notification and floating visual Toast
-          NotificationManager.notify({
-            title: "🧠 Mantis AI Triage Complete",
-            body: `Root Cause Analysis for '${this.scenarioSelect.value}' on device '${this.device}' is ready!`,
-            type: "success",
-            actionText: "View RCA Report",
-            onAction: () => {
-              const drawer = document.getElementById('mantis-drawer');
-              if (drawer) drawer.classList.add('open');
-            }
-          });
-
-          // Load the rich Markdown report!
-          await this.loadTriageReport();
-        } else {
-          this.triageStatusBadge.textContent = `Failed (${data.exit_code})`;
-          this.triageStatusBadge.className = 'badge badge-error';
-          this.triageLogViewer.append(`\n❌ AI Diagnostics failed with exit code ${data.exit_code}.\n`, 'error');
-          
-          // Reset panel sliding to default on failure
-          this.diagnosticsLayout.classList.remove('running', 'complete');
-
-          // Show Failure Desktop Notification
-          NotificationManager.notify({
-            title: "❌ Mantis AI Triage Failed",
-            body: `Diagnostics for '${this.scenarioSelect.value}' on device '${this.device}' failed (Exit Code: ${data.exit_code}).`,
-            type: "error"
-          });
-
-          this.rcaReportBody.innerHTML = `
-            <div class="rca-placeholder-message" style="color:var(--color-error)">
-              <span class="material-symbols-outlined" style="font-size:48px;">error</span>
-              <span>Diagnostics completed with errors (Exit Code: ${data.exit_code}). Review console logs on the left.</span>
-            </div>
-          `;
-        }
-      }
-    } catch (err) {
-      this.triageLogViewer.append(`\n⚠️ Poll connection error: ${err.message}\n`, 'error');
-      this.stopAITriage(true);
-    } finally {
-      this.isPollingTriage = false;
-    }
-  }
-
-  async loadTriageReport(sessionId) {
-    const projectSpec = this.projectSpec || '//mqtt/localhost';
-    const sid = sessionId || this.currentSessionId;
-    let url = `/api/triage_report?site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(projectSpec)}&device_id=${encodeURIComponent(this.device)}&test_id=${encodeURIComponent(this.scenarioSelect.value)}`;
-    if (sid) {
-      url += `&session_id=${encodeURIComponent(sid)}`;
-    }
-    
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`Report not found (Status ${response.status})`);
-      }
-      const markdown = await response.text();
-      
-      // Render report beautifully
-      this.rcaReportBody.innerHTML = this.parseMarkdownToHTML(markdown);
-      this.btnCopyReport.disabled = false;
-      this.btnCopyReport.setAttribute('data-raw-markdown', markdown);
-      if (this.btnEmailReport) {
-        this.btnEmailReport.disabled = false;
-        this.btnEmailReport.setAttribute('data-raw-markdown', markdown);
-      }
-      this.checkAndDispatchEmailRcaAlert(markdown);
-    } catch (err) {
-      this.rcaReportBody.innerHTML = `
-        <div class="rca-placeholder-message" style="color:var(--color-error)">
-          <span class="material-symbols-outlined" style="font-size:48px;">error</span>
-          <span>Failed to load diagnostic report: ${err.message}</span>
-        </div>
-      `;
-    }
-  }
-
-  // --- PREMIUM HYBRID BLOCK-BASED MARKDOWN RENDERER ---
-  parseMarkdownToHTML(md) {
-    if (!md) return '';
-    
-    let text = md.trim();
-    // Strip top-level fenced code block wrapper if LLM returned entire report enclosed in ```markdown ... ```
-    if (text.startsWith('```')) {
-      text = text.replace(/^```[a-zA-Z]*\r?\n/, '').replace(/\r?\n```$/, '').trim();
-    }
-
-    // 1. Escape HTML tags to protect the dashboard
-    let escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    
-    // 2. Pre-process block elements: Fenced code blocks
-    // Temporarily replace fenced code blocks with placeholders to protect them from inline parsing
-    const codeBlocks = [];
-    escaped = escaped.replace(/```([\s\S]*?)```/g, (match, code) => {
-      let cleanedCode = code.trim();
-      const firstLineEnd = cleanedCode.indexOf('\n');
-      if (firstLineEnd !== -1) {
-        const firstLine = cleanedCode.substring(0, firstLineEnd).trim();
-        if (/^[a-zA-Z0-9_-]+$/.test(firstLine)) {
-          cleanedCode = cleanedCode.substring(firstLineEnd + 1).trim();
-        }
-      }
-      const placeholder = `__CODE_BLOCK_PLACEHOLDER_${codeBlocks.length}__`;
-      codeBlocks.push(`<pre class="markdown-code-block"><code>${cleanedCode}</code></pre>`);
-      return placeholder;
-    });
-
-    // 3. Split into lines to parse line-level structures (lists, blockquotes, headings, tables)
-    const lines = escaped.split('\n');
-    const processedLines = [];
-    
-    let inList = false;
-    let listType = null; // 'ul' or 'ol'
-    let inTable = false;
-    
-    const closeListIfNeeded = () => {
-      if (inList) {
-        processedLines.push(`</${listType}>`);
-        inList = false;
-        listType = null;
-      }
-    };
-
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
-      
-      // Match Table Rows: starts and ends with |
-      const isTableRow = line.trim().startsWith('|') && line.trim().endsWith('|');
-      if (isTableRow) {
-        if (!inTable) {
-          // Peek at next line to see if it is a markdown separator (e.g. | :--- | :--- |)
-          const nextLine = lines[i + 1] || '';
-          const isSeparator = nextLine.trim().startsWith('|') && nextLine.includes('---');
-          if (isSeparator) {
-            closeListIfNeeded();
-            inTable = true;
-            processedLines.push('<table class="markdown-table"><thead>');
-            
-            // Extract columns, filtering out the first and last empty elements
-            const cols = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
-            processedLines.push('<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>');
-            processedLines.push('</thead><tbody>');
-            
-            i++; // Skip the separator line
-            continue;
-          }
-        } else {
-          // Render table body row
-          const cols = line.split('|').map(c => c.trim()).filter((c, idx, arr) => idx > 0 && idx < arr.length - 1);
-          processedLines.push('<tr>' + cols.map(c => `<td>${c}</td>`).join('') + '</tr>');
-          continue;
-        }
-      } else {
-        if (inTable) {
-          processedLines.push('</tbody></table>');
-          inTable = false;
-        }
-      }
-
-      // Match Headings: # Header, ## Header, etc.
-      const headingMatch = line.match(/^(#{1,6})\s+(.*?)$/);
-      if (headingMatch) {
-        closeListIfNeeded();
-        const level = headingMatch[1].length;
-        processedLines.push(`<h${level}>${headingMatch[2]}</h${level}>`);
-        continue;
-      }
-      
-      // Match GitHub Alerts: &gt; [!NOTE] text
-      const alertMatch = line.match(/^&gt;\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]\s*(.*?)$/i);
-      if (alertMatch) {
-        closeListIfNeeded();
-        const type = alertMatch[1].toLowerCase();
-        const content = alertMatch[2];
-        const icon = this.getAlertIcon(type);
-        processedLines.push(`<div class="markdown-alert alert-${type}"><span class="material-symbols-outlined alert-icon">${icon}</span><div class="alert-content">${content}</div></div>`);
-        continue;
-      }
-      
-      // Match Standard Blockquotes: &gt; text
-      const quoteMatch = line.match(/^&gt;\s*(.*?)$/);
-      if (quoteMatch) {
-        closeListIfNeeded();
-        processedLines.push(`<blockquote>${quoteMatch[1]}</blockquote>`);
-        continue;
-      }
-      
-      // Match Unordered Lists: - item or * item
-      const ulMatch = line.match(/^\s*[-*]\s+(.*?)$/);
-      if (ulMatch) {
-        if (!inList || listType !== 'ul') {
-          closeListIfNeeded();
-          processedLines.push('<ul>');
-          inList = true;
-          listType = 'ul';
-        }
-        processedLines.push(`<li>${ulMatch[1]}</li>`);
-        continue;
-      }
-      
-      // Match Ordered Lists: 1. item
-      const olMatch = line.match(/^\s*(\d+)\.\s+(.*?)$/);
-      if (olMatch) {
-        if (!inList || listType !== 'ol') {
-          closeListIfNeeded();
-          processedLines.push('<ol>');
-          inList = true;
-          listType = 'ol';
-        }
-        processedLines.push(`<li>${olMatch[2]}</li>`);
-        continue;
-      }
-      
-      // Empty line
-      if (line.trim() === '') {
-        closeListIfNeeded();
-        processedLines.push(''); // keeps empty line for paragraph splitting
-        continue;
-      }
-      
-      // Regular text line (inside list or paragraph)
-      processedLines.push(line);
-    }
-    
-    // Close any open lists or tables at end of string
-    closeListIfNeeded();
-    if (inTable) {
-      processedLines.push('</tbody></table>');
-      inTable = false;
-    }
-
-    // Join processed lines back
-    let processedText = processedLines.join('\n');
-
-    // 4. Parse inline elements (Bold, Inline Code)
-    // Bold: **text**
-    processedText = processedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Inline code: `code`
-    processedText = processedText.replace(/`(.*?)`/g, '<code class="markdown-inline-code">$1</code>');
-
-    // 5. Build Paragraphs: split by double newlines, wrap non-HTML blocks in <p>
-    const blocks = processedText.split(/\n\n+/);
-    const finalBlocks = blocks.map(block => {
-      const trimmed = block.trim();
-      if (!trimmed) return '';
-      
-      // If it starts with an HTML block tag, do not wrap in <p>
-      if (trimmed.startsWith('<h') || 
-          trimmed.startsWith('<ul') || 
-          trimmed.startsWith('<ol') || 
-          trimmed.startsWith('<blockquote') || 
-          trimmed.startsWith('<table') || 
-          trimmed.startsWith('<div class="markdown-alert') ||
-          trimmed.startsWith('__CODE_BLOCK_PLACEHOLDER_')) {
-        return trimmed;
-      }
-      
-      // Wrap plain text blocks in <p>
-      // Replace single newlines within the paragraph with a space for standard Markdown flow
-      const cleanParagraph = trimmed.replace(/\n/g, ' ');
-      return `<p>${cleanParagraph}</p>`;
-    });
-    
-    let finalHtml = finalBlocks.filter(b => b).join('\n');
-
-    // 6. Restore Code Blocks
-    codeBlocks.forEach((codeBlock, idx) => {
-      finalHtml = finalHtml.replace(`__CODE_BLOCK_PLACEHOLDER_${idx}__`, codeBlock);
-    });
-
-    return finalHtml;
-  }
-
-  getAlertIcon(type) {
-    switch (type) {
-      case 'note': return 'info';
-      case 'tip': return 'lightbulb';
-      case 'important': return 'priority_high';
-      case 'warning': return 'warning';
-      case 'caution': return 'report';
-      default: return 'info';
-    }
-  }
-
-  // --- HELPERS ---
-  resetMantisWorkspace() {
-    if (!this.mantisTreeContainer) return;
-    this.mantisTreeContainer.innerHTML = '<div style="text-align:center; padding-top:40px; color:var(--text-muted)">Select a debug scenario from the toolbar.</div>';
-    this.mqttTopicLabel.textContent = 'Select a state node to inspect MQTT payload';
-    this.jsonViewer.render({ message: "No node selected." });
-    this.btnCopyPayload.disabled = true;
-    this.currentSelectedNodePayload = null;
-    this.activeTraceNodes = [];
-    
-    // Reset diagnostics tab pages if not running
-    if (!this.isTriageRunning) {
-      // Reset panel sliding to default
-      if (this.diagnosticsLayout) {
-        this.diagnosticsLayout.classList.remove('running', 'complete');
-      }
-      this.rcaReportBody.innerHTML = `
-        <div class="rca-placeholder-message">
-          Select a device and scenario, then click "Run AI Triage" to generate diagnostics.
-        </div>
-      `;
-      this.btnCopyReport.disabled = true;
-      this.btnCopyReport.removeAttribute('data-raw-markdown');
-      this.triageLogViewer.clear();
-      this.triageStatusBadge.textContent = 'Idle';
-      this.triageStatusBadge.className = 'badge badge-idle';
-    }
-
-    if (this.testStatusBadge) this.testStatusBadge.style.display = 'none';
-    if (this.groupTestVerdict) this.groupTestVerdict.style.display = 'none';
-  }
-
-  updateScenarioVerdict(scenarioId) {
-    if (!scenarioId || !this.deviceResults || !this.deviceResults[scenarioId]) {
-      if (this.testStatusBadge) this.testStatusBadge.style.display = 'none';
-      if (this.testTargetBadge) this.testTargetBadge.style.display = 'none';
-      if (this.testTimeBadge) this.testTimeBadge.style.display = 'none';
-      this.btnRunTriage.disabled = !scenarioId;
-      this.btnRunTriage.title = '';
-      return;
-    }
-
-    const info = this.deviceResults[scenarioId];
-    const status = info.status || 'idle';
-    const ts = info.timestamp || '';
-    const targetProject = info.project_spec || info.target_project || '';
-
-    if (this.testStatusBadge) this.testStatusBadge.style.display = 'inline-flex';
-    if (this.testTargetBadge) {
-      if (targetProject) {
-        this.testTargetBadge.style.display = 'inline-flex';
-        this.testTargetBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">lan</span><span>${targetProject}</span>`;
-      } else {
-        this.testTargetBadge.style.display = 'none';
-      }
-    }
-    if (this.testTimeBadge) {
-      if (ts) {
-        this.testTimeBadge.style.display = 'inline-flex';
-        this.testTimeBadge.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">schedule</span><span>${ts}</span>`;
-      } else {
-        this.testTimeBadge.style.display = 'none';
-      }
-    }
-
-    if (status === 'pass') {
-      if (this.testStatusBadge) {
-        this.testStatusBadge.className = 'badge scenario-status-badge badge-success';
-        this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">check_circle</span><span>Passed</span>';
-      }
-      this.btnRunTriage.disabled = true;
-      this.btnRunTriage.title = 'AI Triage is disabled because compliance test case passed successfully.';
-    } else if (status === 'skip') {
-      if (this.testStatusBadge) {
-        this.testStatusBadge.className = 'badge scenario-status-badge badge-warning';
-        this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">remove_circle</span><span>Skipped</span>';
-      }
-      this.btnRunTriage.disabled = true;
-      this.btnRunTriage.title = 'AI Triage is disabled for skipped test cases.';
-    } else if (status === 'fail') {
-      if (this.testStatusBadge) {
-        this.testStatusBadge.className = 'badge scenario-status-badge badge-error';
-        this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">cancel</span><span>Failed</span>';
-      }
-      this.btnRunTriage.disabled = false;
-      this.btnRunTriage.title = 'Run AI Triage';
-    } else {
-      if (this.testStatusBadge) {
-        this.testStatusBadge.className = 'badge scenario-status-badge badge-idle';
-        this.testStatusBadge.innerHTML = '<span class="material-symbols-outlined" style="font-size:14px;">help_outline</span><span>Idle</span>';
-      }
-      this.btnRunTriage.disabled = false;
-      this.btnRunTriage.title = 'Run AI Triage';
-    }
-  }
-
-  getMantisIconName(subType) {
-    switch (subType) {
-      case 'config': return 'settings';
-      case 'state': return 'swap_horiz';
-      case 'events': return 'notification_important';
-      default: return 'help';
-    }
-  }
-
-  formatScenarioTitle(folder) {
-    return folder
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  }
-
-  copyPayloadToClipboard() {
-    if (!this.currentSelectedNodePayload) return;
-    navigator.clipboard.writeText(this.currentSelectedNodePayload)
-      .then(() => {
-        const oldIcon = this.btnCopyPayload.innerHTML;
-        this.btnCopyPayload.innerHTML = '<span class="material-symbols-outlined" style="color:var(--color-tertiary)">check</span>';
-        setTimeout(() => {
-          this.btnCopyPayload.innerHTML = oldIcon;
-        }, 1500);
-      });
-  }
-
-  copyReportToClipboard() {
-    const markdown = this.btnCopyReport.getAttribute('data-raw-markdown');
-    if (!markdown) return;
-    navigator.clipboard.writeText(markdown)
-      .then(() => {
-        const oldIcon = this.btnCopyReport.innerHTML;
-        this.btnCopyReport.innerHTML = '<span class="material-symbols-outlined" style="color:var(--color-tertiary)">check</span>';
-        setTimeout(() => {
-          this.btnCopyReport.innerHTML = oldIcon;
-        }, 1500);
-      });
-  }
-
-  async emailReport() {
-    const markdown = this.btnCopyReport?.getAttribute('data-raw-markdown') || this.btnEmailReport?.getAttribute('data-raw-markdown');
-    if (!markdown) return;
-
-    let recip = localStorage.getItem('udmi_email_recipient');
-    if (!recip) {
-      recip = prompt("Enter email recipient for this RCA report:", "heykhyati@google.com");
-      if (!recip) return;
-    }
-
-    NotificationManager.showToast({ title: "📧 Sending RCA Report...", message: `Dispatching diagnostic findings to ${recip}...`, type: "info" });
-    try {
-      const res = await fetch('/api/notifications/send_email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recipient: recip,
-          subject: `[UDMI Mantis AI] Root Cause Analysis Report: ${this.scenarioSelect.value} (${this.device})`,
-          body: `Mantis AI Diagnostic run completed for device [${this.device}], test case [${this.scenarioSelect.value}].`,
-          rca_markdown: markdown,
-          smtp_server: localStorage.getItem('udmi_email_smtp') || ''
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to dispatch email");
-
-      NotificationManager.notify({
-        title: "📧 RCA Report Dispatched",
-        body: `Delivered to ${recip} (${data.delivery_method}). ${data.delivery_method.includes('OUTBOX') ? `Saved in ${data.outbox_file}` : ''}`,
-        type: "success",
-        duration: 8000
-      });
     } catch (e) {
-      NotificationManager.notify({ title: "❌ Email Failed", body: e.message, type: "error" });
-    }
-  }
-
-  async checkAndDispatchEmailRcaAlert(markdown) {
-    const recip = localStorage.getItem('udmi_email_recipient');
-    if (!recip) return;
-    if (localStorage.getItem('udmi_email_trig_rca') === 'false') return;
-
-    try {
-      await fetch('/api/notifications/send_email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          recipient: recip,
-          subject: `[UDMI Mantis AI] Auto-Triage RCA Report: ${this.scenarioSelect.value} (${this.device})`,
-          body: `Automated Mantis AI Diagnostic analysis triggered upon test failure for device [${this.device}].`,
-          rca_markdown: markdown,
-          smtp_server: localStorage.getItem('udmi_email_smtp') || ''
-        })
-      });
-      console.log(`[Email Alert] Automatically sent RCA report for ${this.scenarioSelect.value} to ${recip}`);
-    } catch (e) {
-      console.warn("[Email Alert] Failed to auto-send RCA report:", e);
+      console.warn('Failed to populate scenarios:', e);
     }
   }
 
   triggerTriage(data) {
-    this.handleLoadDiagnose(data);
+    if (data.site_model) this.siteModel = data.site_model;
+    if (data.device_id) this.device = data.device_id;
+    if (data.test_id) this.testId = data.test_id;
+
+    if (this.deviceSelect) this.deviceSelect.value = this.device;
+    if (this.scenarioSelect) this.scenarioSelect.value = this.testId;
+
+    const query = `Diagnose why test ${this.testId} failed for ${this.device} in ${this.siteModel}${this.baselineRun ? ' against baseline ' + this.baselineRun : ''}`;
+    if (this.chatInput) this.chatInput.value = query;
+    this.handleSendMessage();
   }
 
   loadDiagnose(data) {
-    this.handleLoadDiagnose(data);
+    this.triggerTriage(data);
   }
+
+  async handleSendMessage() {
+    const rawText = this.chatInput ? this.chatInput.value.trim() : '';
+    if (!rawText || this.isStreaming) return;
+
+    this.chatInput.value = '';
+    this.chatInput.style.height = 'auto';
+
+    if (rawText === '/clear') {
+      await this.handleClearSession();
+      return;
+    }
+
+    if (rawText === '/copy') {
+      await this.handleCopyTranscript();
+      return;
+    }
+
+    if (rawText === '/export') {
+      this.handleExportTranscript();
+      return;
+    }
+
+
+    if (rawText === '/current-context' || rawText === '/context') {
+      this.setWelcomeLayout(false);
+      if (this.emptyState) this.emptyState.style.display = 'none';
+      this.appendUserMessage(rawText);
+      const aiBubble = this.createAIMessageBubble();
+
+      if (aiBubble.loader) {
+        aiBubble.loader.remove();
+        aiBubble.loader = null;
+      }
+      aiBubble.textContainer.innerHTML = `
+        <div style="font-family: var(--font-mono, monospace); font-size: 12px; background: rgba(0,0,0,0.03); padding: 12px; border-radius: 8px; line-height: 1.6;">
+          <strong>Active Session Context:</strong><br>
+          • <strong>Site Model:</strong> ${this.escapeHtml(this.siteModel || 'Auto-detected / Not set')}<br>
+          • <strong>Target Device:</strong> ${this.escapeHtml(this.device || 'Auto-detected / Not set')}<br>
+          • <strong>Target Test:</strong> ${this.escapeHtml(this.testId || 'Auto-detected / Not set')}<br>
+          • <strong>Baseline Run:</strong> ${this.escapeHtml(this.baselineRun || 'None configured')}<br>
+          • <strong>Auth Provider:</strong> ${this.escapeHtml(this.provider)} (${this.escapeHtml(this.gcpProject)} / ${this.escapeHtml(this.gcpLocation)})<br>
+          • <strong>Session ID:</strong> <code>${this.escapeHtml(this.sessionId)}</code>
+        </div>
+      `;
+      this.scrollToBottom();
+      return;
+    }
+
+    let messageToSend = rawText;
+    if (rawText.startsWith('/diagnose')) {
+      const arg = rawText.replace(/^\/diagnose\s*/, '').trim();
+      if (arg) {
+        messageToSend = `Diagnose the test failure '${arg}' in ${this.siteModel || 'the active site'}. Retrieve test execution logs and determine the root cause.`;
+      } else if (this.testId) {
+        messageToSend = `Diagnose why test '${this.testId}' failed for device '${this.device || 'target device'}' in ${this.siteModel || 'the active site'}. Retrieve test execution logs and determine the root cause.`;
+      } else {
+        messageToSend = `Diagnose the active test failure in ${this.siteModel || 'the active site'}. Retrieve test execution logs and determine the root cause.`;
+      }
+    } else if (rawText.startsWith('/diff')) {
+
+      const arg = rawText.replace(/^\/diff\s*/, '').trim();
+      const baseline = arg || this.baselineRun || 'the reference successful baseline run';
+      messageToSend = `Perform a differential analysis comparing this test failure against reference baseline ${baseline}`;
+    } else if (rawText.startsWith('/fact-check') || rawText.startsWith('/critique') || rawText.startsWith('/review')) {
+      const arg = rawText.replace(/^\/(?:fact-check|critique|review)\s*/, '').trim();
+      messageToSend = `/fact-check ${arg}`.trim();
+    }
+
+
+    // Switch from centered welcome layout to bottom composer layout
+    this.setWelcomeLayout(false);
+    if (this.emptyState) this.emptyState.style.display = 'none';
+
+    // Extract last non-empty AI diagnostic response for resilient fact-checking across restarts
+    let lastAiText = '';
+    const existingAiBubbles = Array.from(document.querySelectorAll('.mantis-msg:not(.user) .mantis-msg-bubble'))
+      .map(b => b.innerText.trim())
+      .filter(t => t.length > 0);
+    if (existingAiBubbles.length > 0) {
+      lastAiText = existingAiBubbles[existingAiBubbles.length - 1];
+    }
+
+    // Append User Message
+    this.appendUserMessage(rawText);
+
+    // Create AI Message Container
+    const aiBubble = this.createAIMessageBubble();
+
+    this.setStreamingState(true);
+    this.abortController = new AbortController();
+
+    try {
+      const payload = {
+        session_id: this.sessionId,
+        message: messageToSend,
+        previous_report: lastAiText,
+        site_model: this.siteModel,
+        device_id: this.device,
+        test_id: this.testId,
+        provider: this.provider,
+        api_key: this.apiKey,
+        gcp_project: this.gcpProject,
+        gcp_location: this.gcpLocation,
+        baseline_run: this.baselineRun
+      };
+
+
+      const response = await fetch('/api/mantis/chat/stream', {
+
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: this.abortController.signal
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server returned status ${response.status}`);
+      }
+
+      await this.consumeSSEStream(response.body, aiBubble);
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        aiBubble.textContainer.innerHTML += `<div class="text-error" style="color: #ef4444; margin-top: 8px;"><strong>Error:</strong> ${this.escapeHtml(e.message)}</div>`;
+      } else {
+        if (aiBubble.loader) {
+          aiBubble.loader.remove();
+          aiBubble.loader = null;
+        }
+        const currentText = aiBubble.textContainer.innerText.trim();
+        if (!currentText) {
+          aiBubble.textContainer.innerHTML = '<div style="color: #6b7280; font-style: italic; font-size: 13px; padding: 4px 0;">Generation stopped by user.</div>';
+        } else if (!aiBubble.textContainer.querySelector('.mantis-stopped-tag')) {
+          aiBubble.textContainer.innerHTML += '<div class="mantis-stopped-tag" style="color: #6b7280; font-style: italic; font-size: 12px; margin-top: 8px;">[Generation stopped by user]</div>';
+        }
+      }
+    } finally {
+      if (aiBubble.loader) {
+        aiBubble.loader.remove();
+        aiBubble.loader = null;
+      }
+      this.setStreamingState(false);
+      this.scrollToBottom();
+    }
+  }
+
+
+  async consumeSSEStream(readableStream, aiBubble) {
+    const reader = readableStream.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let buffer = '';
+    let accumulatedMarkdown = '';
+    let isStreamDone = false;
+
+    try {
+      while (!isStreamDone) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop(); // keep incomplete line in buffer
+
+        let currentEvent = 'message';
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (trimmed.startsWith('event:')) {
+            currentEvent = trimmed.substring(6).trim();
+          } else if (trimmed.startsWith('data:')) {
+            const rawData = trimmed.substring(5).trim();
+            if (!rawData) continue;
+
+            try {
+              const data = JSON.parse(rawData);
+              this.handleStreamEvent(currentEvent, data, aiBubble, (chunk) => {
+                accumulatedMarkdown += chunk;
+                aiBubble.textContainer.innerHTML = this.renderMarkdown(accumulatedMarkdown);
+                this.renderGraphvizDiagrams(aiBubble.textContainer);
+                this.scrollToBottom();
+              });
+
+              if (currentEvent === 'done' || data.type === 'done' || currentEvent === 'error' || data.type === 'error') {
+                this.renderGraphvizDiagrams(aiBubble.textContainer);
+                isStreamDone = true;
+                break;
+              }
+            } catch (jsonErr) {
+              console.warn('Failed to parse SSE JSON:', jsonErr, rawData);
+            }
+          }
+        }
+      }
+    } finally {
+      this.renderGraphvizDiagrams(aiBubble.textContainer);
+      try {
+        await reader.cancel();
+      } catch (_) {}
+    }
+  }
+
+
+  handleStreamEvent(eventType, data, aiBubble, onToken) {
+    const type = data.type || eventType;
+
+    if (type === 'token') {
+      if (aiBubble.loader) {
+        aiBubble.loader.remove();
+        aiBubble.loader = null;
+      }
+      onToken(data.text || '');
+    } else if (type === 'done') {
+      if (aiBubble.loader) {
+        aiBubble.loader.remove();
+        aiBubble.loader = null;
+      }
+      if (data.full_text && !aiBubble.textContainer.innerHTML) {
+        onToken(data.full_text);
+      }
+      this.renderGraphvizDiagrams(aiBubble.textContainer);
+
+    } else if (type === 'error') {
+      if (aiBubble.loader) {
+        aiBubble.loader.remove();
+        aiBubble.loader = null;
+      }
+      aiBubble.textContainer.innerHTML += `<div style="color: #ef4444; margin-top: 8px;"><strong>Error:</strong> ${this.escapeHtml(data.error || 'Unknown error')}</div>`;
+    } else if (type === 'context_update') {
+      if (data.site_model) this.siteModel = data.site_model;
+      if (data.device_id) this.device = data.device_id;
+      if (data.test_id) this.testId = data.test_id;
+      if (data.device_id && this.deviceSelect) this.deviceSelect.value = data.device_id;
+      if (data.test_id && this.scenarioSelect) this.scenarioSelect.value = data.test_id;
+    } else if (type === 'thought') {
+      const thoughtDiv = document.createElement('div');
+      thoughtDiv.className = 'mantis-thought-block';
+      thoughtDiv.innerHTML = `
+        <span class="material-symbols-outlined" style="font-size: 16px; color: var(--mantis-primary); margin-top: 1px; flex-shrink: 0;">psychology</span>
+        <div><em>${this.escapeHtml(data.text || '')}</em></div>
+      `;
+      aiBubble.toolsContainer.appendChild(thoughtDiv);
+      this.scrollToBottom();
+    } else if (type === 'tool_start') {
+      const pill = document.createElement('div');
+      pill.className = 'mantis-tool-pill';
+      pill.id = `tool-${data.name}-${Date.now()}`;
+      pill.innerHTML = `
+        <div class="mantis-tool-header">
+          <div class="mantis-tool-title">
+            <span class="material-symbols-outlined mantis-tool-status-icon running">sync</span>
+            <span>Running <strong>${this.escapeHtml(data.name)}</strong>...</span>
+          </div>
+          <span class="material-symbols-outlined" style="font-size:16px;">expand_more</span>
+        </div>
+        <div class="mantis-tool-body" style="display: none;">Arguments: ${this.escapeHtml(JSON.stringify(data.args || {}, null, 2))}</div>
+      `;
+      pill.querySelector('.mantis-tool-header').addEventListener('click', () => {
+        const body = pill.querySelector('.mantis-tool-body');
+        body.style.display = (body.style.display === 'none') ? 'block' : 'none';
+      });
+      aiBubble.toolsContainer.appendChild(pill);
+      this.scrollToBottom();
+    } else if (type === 'tool_end') {
+      const runningIcons = aiBubble.toolsContainer.querySelectorAll('.mantis-tool-status-icon.running');
+      if (runningIcons.length > 0) {
+        const lastIcon = runningIcons[runningIcons.length - 1];
+        lastIcon.classList.remove('running');
+        lastIcon.textContent = 'check_circle';
+        const headerTitle = lastIcon.parentElement.querySelector('span:last-child');
+        if (headerTitle) {
+          headerTitle.innerHTML = `Executed <strong>${this.escapeHtml(data.name)}</strong> (${data.characters || 0} chars)`;
+        }
+        const pill = lastIcon.closest('.mantis-tool-pill');
+        if (pill) {
+          const body = pill.querySelector('.mantis-tool-body');
+          if (body) {
+            body.textContent = data.summary || data.result || 'Execution complete';
+          }
+        }
+      }
+    }
+  }
+
+
+  handleStopStreaming() {
+    if (this.isStreaming) {
+      if (this.abortController) {
+        this.abortController.abort();
+      }
+
+      // Signal backend to abort LLM tools & execution loop
+      fetch('/api/mantis/chat/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: this.sessionId })
+      }).catch(() => {});
+
+      // Immediately purge any active thinking spinners from the DOM
+      const activeLoaders = document.querySelectorAll('.mantis-thinking-loader');
+      activeLoaders.forEach(loader => loader.remove());
+
+      // If the latest AI response bubble is empty or mid-stream, display a stopped notice
+      const aiBubbles = document.querySelectorAll('.mantis-msg:not(.user) .mantis-msg-bubble');
+      if (aiBubbles.length > 0) {
+        const lastBubble = aiBubbles[aiBubbles.length - 1];
+        const textContainer = lastBubble.querySelector('.mantis-msg-text');
+        if (textContainer) {
+          const currentText = textContainer.innerText.trim();
+          if (!currentText) {
+            textContainer.innerHTML = '<div style="color: #6b7280; font-style: italic; font-size: 13px; padding: 4px 0;">Generation stopped by user.</div>';
+          } else if (!textContainer.querySelector('.mantis-stopped-tag')) {
+            textContainer.innerHTML += '<div class="mantis-stopped-tag" style="color: #6b7280; font-style: italic; font-size: 12px; margin-top: 8px;">[Generation stopped by user]</div>';
+          }
+        }
+      }
+
+      this.setStreamingState(false);
+      NotificationManager.show('Mantis generation stopped', 'neutral');
+    }
+  }
+
+
+  async handleClearSession() {
+    if (this.clearingOverlay) {
+      this.clearingOverlay.style.display = 'flex';
+      // Trigger CSS transition
+      this.clearingOverlay.offsetHeight;
+      this.clearingOverlay.classList.add('active');
+    }
+    if (this.chatStream) this.chatStream.classList.add('mantis-clearing');
+    if (this.btnClear) {
+      this.btnClear.disabled = true;
+      this.btnClear.classList.add('clearing');
+    }
+    if (this.chatInput) this.chatInput.disabled = true;
+
+    try {
+      const clearPromise = fetch('/api/mantis/chat/clear', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ session_id: this.sessionId })
+      });
+      // Maintain transition for 450ms for clear visual confirmation
+      const delayPromise = new Promise(res => setTimeout(res, 450));
+      await Promise.all([clearPromise, delayPromise]);
+
+      this.sessionId = 'mantis-' + Math.random().toString(36).substring(2, 10);
+      if (this.messagesContainer) this.messagesContainer.innerHTML = '';
+      if (this.emptyState) this.emptyState.style.display = 'flex';
+      this.setWelcomeLayout(true);
+      NotificationManager.show('Fresh diagnostic session started', 'success');
+
+    } catch (e) {
+      console.warn('Failed to clear session:', e);
+    } finally {
+      if (this.clearingOverlay) {
+        this.clearingOverlay.classList.remove('active');
+        setTimeout(() => {
+          this.clearingOverlay.style.display = 'none';
+        }, 200);
+      }
+      if (this.chatStream) this.chatStream.classList.remove('mantis-clearing');
+      if (this.btnClear) {
+        this.btnClear.disabled = false;
+        this.btnClear.classList.remove('clearing');
+      }
+      if (this.chatInput) {
+        this.chatInput.disabled = false;
+        this.chatInput.focus();
+      }
+    }
+  }
+
+
+
+  buildMarkdownTranscript() {
+    const textNodes = [];
+    document.querySelectorAll('.mantis-msg').forEach(msg => {
+      const isUser = msg.classList.contains('user');
+      const bubble = msg.querySelector('.mantis-msg-bubble');
+      if (bubble) {
+        textNodes.push(`### ${isUser ? '👤 User' : '🦗 Mantis'}\n\n${bubble.innerText}\n`);
+      }
+    });
+
+    if (textNodes.length === 0) {
+      return null;
+    }
+
+    const siteStr = this.siteModel || 'Auto-detected / Not set';
+    const devStr = this.device || 'Auto-detected / Not set';
+    const testStr = this.testId || 'Auto-detected / Not set';
+
+    return `# Mantis AI Diagnostic Transcript\n- Date: ${new Date().toISOString()}\n- Site: ${siteStr}\n- Device: ${devStr}\n- Test: ${testStr}\n\n---\n\n` + textNodes.join('\n---\n\n');
+  }
+
+  async handleCopyTranscript() {
+    const transcript = this.buildMarkdownTranscript();
+    if (!transcript) {
+      NotificationManager.show('No conversation history to copy', 'neutral');
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(transcript);
+      NotificationManager.show('Transcript copied to clipboard as Markdown', 'success');
+    } catch (err) {
+      const textarea = document.createElement('textarea');
+      textarea.value = transcript;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      NotificationManager.show('Transcript copied to clipboard as Markdown', 'success');
+    }
+  }
+
+  handleExportTranscript() {
+    const transcript = this.buildMarkdownTranscript();
+    if (!transcript) {
+      NotificationManager.show('No conversation history to export', 'neutral');
+      return;
+    }
+
+    const blob = new Blob([transcript], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `mantis_transcript_${new Date().toISOString().replace(/[:.]/g, '-')}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    NotificationManager.show('Transcript exported to Markdown', 'success');
+  }
+
+
+
+  appendUserMessage(text) {
+    if (!this.messagesContainer) return;
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'mantis-msg user';
+    msgDiv.innerHTML = `
+      <div class="mantis-msg-content">
+        <div class="mantis-msg-bubble">${this.escapeHtml(text)}</div>
+      </div>
+      <div class="mantis-msg-avatar">
+        <span class="material-symbols-outlined" style="font-size: 18px;">person</span>
+      </div>
+    `;
+    this.messagesContainer.appendChild(msgDiv);
+    this.scrollToBottom();
+  }
+
+  createAIMessageBubble() {
+    if (!this.messagesContainer) return null;
+    const msgDiv = document.createElement('div');
+    msgDiv.className = 'mantis-msg ai';
+    msgDiv.innerHTML = `
+      <div class="mantis-msg-avatar">
+        <span class="material-symbols-outlined" style="font-size: 18px;">auto_awesome</span>
+      </div>
+      <div class="mantis-msg-content" style="flex: 1;">
+        <div class="mantis-msg-tools"></div>
+        <div class="mantis-msg-bubble">
+          <div class="mantis-thinking-loader">
+            <div class="mantis-fade-dots"></div>
+          </div>
+          <div class="mantis-msg-text"></div>
+        </div>
+
+        <div class="mantis-msg-actions">
+          <button class="btn-msg-action btn-copy-msg" title="Copy response">
+            <span class="material-symbols-outlined">content_copy</span>
+            <span>Copy</span>
+          </button>
+        </div>
+      </div>
+    `;
+    this.messagesContainer.appendChild(msgDiv);
+
+    const textContainer = msgDiv.querySelector('.mantis-msg-text');
+    const toolsContainer = msgDiv.querySelector('.mantis-msg-tools');
+    const bubbleContainer = msgDiv.querySelector('.mantis-msg-bubble');
+    const loader = bubbleContainer.querySelector('.mantis-thinking-loader');
+    const btnCopy = msgDiv.querySelector('.btn-copy-msg');
+
+
+    if (btnCopy) {
+      btnCopy.addEventListener('click', () => {
+        navigator.clipboard.writeText(textContainer.innerText);
+        NotificationManager.show('Copied to clipboard', 'success');
+      });
+    }
+
+    this.scrollToBottom();
+    return { element: msgDiv, textContainer, toolsContainer, loader };
+  }
+
+  setStreamingState(streaming) {
+    this.isStreaming = streaming;
+    if (this.btnSend) this.btnSend.style.display = streaming ? 'none' : 'flex';
+    if (this.btnStop) this.btnStop.style.display = streaming ? 'flex' : 'none';
+  }
+
+  scrollToBottom() {
+    if (this.chatStream) {
+      this.chatStream.scrollTop = this.chatStream.scrollHeight;
+    }
+  }
+
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  renderMarkdown(markdown) {
+    if (!markdown) return '';
+    
+    // 1. Extract and stash fenced code blocks (including Graphviz DOT diagrams)
+    const codeBlocks = [];
+    let text = markdown.replace(/```([a-zA-Z0-9_\-+]*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const idx = codeBlocks.length;
+      const cleanLang = (lang || '').trim().toLowerCase();
+      
+      if (cleanLang === 'dot' || cleanLang === 'graphviz') {
+        const diagramId = 'mantis-gv-' + Math.random().toString(36).substring(2, 9);
+        const encodedDot = encodeURIComponent(code.trim());
+        codeBlocks.push(`
+          <div class="mantis-graphviz-card" id="${diagramId}" data-dot="${encodedDot}">
+            <div class="mantis-gv-header">
+              <div class="mantis-gv-title">
+                <span class="material-symbols-outlined">account_tree</span>
+                <span>System Topology / Architecture Diagram</span>
+              </div>
+              <div class="mantis-gv-actions">
+                <button type="button" class="btn-gv-toggle" title="Toggle Diagram / Source DOT">
+                  <span class="material-symbols-outlined">code</span>
+                  <span class="btn-text">View DOT</span>
+                </button>
+                <button type="button" class="btn-gv-copy" title="Copy DOT source">
+                  <span class="material-symbols-outlined">content_copy</span>
+                </button>
+                <button type="button" class="btn-gv-download" title="Download SVG">
+                  <span class="material-symbols-outlined">download</span>
+                </button>
+              </div>
+            </div>
+            <div class="mantis-gv-content">
+              <div class="mantis-gv-preview">
+                <div class="mantis-gv-loading">
+                  <span class="spinner-dots"></span>
+                  <span>Rendering Graphviz Diagram...</span>
+                </div>
+              </div>
+              <pre class="mantis-gv-source" style="display: none;"><code class="language-dot">${this.escapeHtml(code.trim())}</code></pre>
+            </div>
+          </div>
+        `);
+      } else {
+        codeBlocks.push(`<pre><code class="language-${lang}">${this.escapeHtml(code.trim())}</code></pre>`);
+      }
+      return `__CODE_BLOCK_${idx}__`;
+    });
+
+    // 2. Inline code
+    text = text.replace(/`([^`]+)`/g, (match, code) => `<code>${this.escapeHtml(code)}</code>`);
+
+    // 3. Headers
+    text = text.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
+    text = text.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+    text = text.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+    text = text.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+    // 4. Bold & Italics
+    text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    text = text.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+    // 5. Blockquotes
+    text = text.replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+    // 6. Ordered / Numbered Lists (e.g. 1. Item, 2. Item)
+    text = text.replace(/^(\s*\d+\.\s+.*(?:\n\s*\d+\.\s+.*)*)/gm, (match) => {
+      const items = match.split('\n').map(line => {
+        const itemText = line.replace(/^\s*\d+\.\s+/, '').trim();
+        return itemText ? `<li>${itemText}</li>` : '';
+      }).filter(Boolean).join('');
+      return `<ol>${items}</ol>`;
+    });
+
+    // 7. Unordered Bullet Lists (e.g. * Item, - Item)
+    text = text.replace(/^(\s*[\-\*]\s+.*(?:\n\s*[\-\*]\s+.*)*)/gm, (match) => {
+      const items = match.split('\n').map(line => {
+        const itemText = line.replace(/^\s*[\-\*]\s+/, '').trim();
+        return itemText ? `<li>${itemText}</li>` : '';
+      }).filter(Boolean).join('');
+      return `<ul>${items}</ul>`;
+    });
+
+    // 8. Restore Code Blocks
+    text = text.replace(/__CODE_BLOCK_(\d+)__/g, (match, idx) => codeBlocks[parseInt(idx, 10)] || '');
+
+    // 9. Paragraph & Line breaks outside HTML blocks
+    text = text.replace(/\n\n+/g, '<br/><br/>');
+    text = text.replace(/([^\>])\n/g, '$1<br/>');
+
+    return text;
+  }
+
+  async renderGraphvizDiagrams(container) {
+    if (!container) return;
+    const cards = container.querySelectorAll('.mantis-graphviz-card:not([data-rendered="true"])');
+    for (const card of cards) {
+      const encodedDot = card.getAttribute('data-dot');
+      if (!encodedDot) continue;
+
+      const dotSource = decodeURIComponent(encodedDot);
+      const preview = card.querySelector('.mantis-gv-preview');
+      const source = card.querySelector('.mantis-gv-source');
+      const btnToggle = card.querySelector('.btn-gv-toggle');
+      const btnCopy = card.querySelector('.btn-gv-copy');
+      const btnDownload = card.querySelector('.btn-gv-download');
+
+      card.setAttribute('data-rendered', 'true');
+
+      // Bind toolbar actions
+      if (btnToggle) {
+        btnToggle.addEventListener('click', () => {
+          const isSourceVisible = source.style.display !== 'none';
+          if (isSourceVisible) {
+            source.style.display = 'none';
+            preview.style.display = 'flex';
+            btnToggle.innerHTML = '<span class="material-symbols-outlined">code</span><span class="btn-text">View DOT</span>';
+          } else {
+            preview.style.display = 'none';
+            source.style.display = 'block';
+            btnToggle.innerHTML = '<span class="material-symbols-outlined">schema</span><span class="btn-text">View Diagram</span>';
+          }
+        });
+      }
+
+      if (btnCopy) {
+        btnCopy.addEventListener('click', () => {
+          navigator.clipboard.writeText(dotSource);
+          NotificationManager.show('DOT graph definition copied to clipboard', 'success');
+        });
+      }
+
+      // Check cache first
+      if (this.graphvizCache.has(dotSource)) {
+        preview.innerHTML = this.graphvizCache.get(dotSource);
+        this._bindDownloadBtn(btnDownload, dotSource);
+        continue;
+      }
+
+      // Asynchronously fetch rendered SVG from backend
+      try {
+        const res = await fetch('/api/graphviz/render', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dot: dotSource })
+        });
+        const data = await res.json();
+        if (data.status === 'success' && data.svg) {
+          this.graphvizCache.set(dotSource, data.svg);
+          preview.innerHTML = data.svg;
+          this._bindDownloadBtn(btnDownload, dotSource);
+        } else {
+          preview.innerHTML = `<div class="mantis-gv-error">Graphviz Error: ${this.escapeHtml(data.error || 'Syntax error')}</div>`;
+        }
+      } catch (err) {
+        preview.innerHTML = `<div class="mantis-gv-error">Failed to render diagram: ${this.escapeHtml(err.message)}</div>`;
+      }
+    }
+  }
+
+  _bindDownloadBtn(btnDownload, dotSource) {
+    if (!btnDownload) return;
+    btnDownload.onclick = () => {
+      const svgContent = this.graphvizCache.get(dotSource);
+      if (!svgContent) return;
+      const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `udmi-topology-${Date.now()}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      NotificationManager.show('SVG diagram downloaded', 'success');
+    };
+  }
+
 }
 
-// SPA orchestration managed by ShellOrchestrator in main.js
+

@@ -1,0 +1,27 @@
+#!/bin/bash -e
+#
+# Mantis: AI-Powered Autonomous Diagnostics and Triage for UDMI
+#
+# Usage:
+#   bin/mantis                                           # Interactive Chat Mode
+#   bin/mantis chat [options]                            # Explicit Chat Mode
+#   bin/mantis sites/<site> [device] [test]              # Quick targeted diagnostics
+#   bin/mantis diagnose [options]                        # Explicit diagnosis
+#   bin/mantis "why did test X fail?"                    # One-shot query
+#   bin/mantis eval -i <test_runs>                       # Stability metric evaluation
+#   bin/mantis triage -i <bundle.zip...>                 # Full batch stability + triage
+#   bin/mantis collect [options]                         # Test loop collection
+#
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd "$ROOT_DIR"
+
+# Activate virtual environment if present
+if [ -d "venv" ]; then
+    source venv/bin/activate
+fi
+
+export PYTHONPATH="$ROOT_DIR/util/mantis/src:$ROOT_DIR/tools:$PYTHONPATH"
+
+# Execute unified Python CLI module
+exec python3 -m mantis.cli "$@"

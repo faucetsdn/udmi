@@ -286,11 +286,17 @@
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(3px);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
+
+.modal-overlay.active,
+.modal-overlay.open {
+  display: flex;
+}
+
 
 .modal-card {
   width: 85vw;

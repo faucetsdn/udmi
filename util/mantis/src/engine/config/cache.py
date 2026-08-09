@@ -77,7 +77,7 @@ class SemanticCache:
         truncated_text = text[:10000]
 
         if self.rate_limiter:
-            from engine.harness.rate_limiter import RateLimitTimeoutError
+            from mantis.engine.harness.rate_limiter import RateLimitTimeoutError
             acquired = await self.rate_limiter.acquire(timeout_seconds=45.0)
             if not acquired:
                 raise RateLimitTimeoutError("Timeout budget exceeded waiting for Gemini embedding rate-limiter tokens.")
@@ -116,7 +116,7 @@ class SemanticCache:
         if not self.entries:
             return None, 0.0
 
-        from engine.util.template import normalize_log_text
+        from mantis.engine.util.template import normalize_log_text
         normalized_query = normalize_log_text(query_text)
         query_vector = await self.get_embedding(normalized_query)
 
@@ -166,7 +166,7 @@ class SemanticCache:
         Adds a new triage result to the cache under a specific namespace index.
         Generates its embedding and stores it.
         """
-        from engine.util.template import normalize_log_text
+        from mantis.engine.util.template import normalize_log_text
         normalized_failure = normalize_log_text(failure_text)
         embedding = await self.get_embedding(normalized_failure)
 
