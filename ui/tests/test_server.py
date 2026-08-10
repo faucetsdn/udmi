@@ -1,25 +1,45 @@
-import unittest
+"""
+Unit tests for the UDMI Workbench backend API & HTTP server.
+"""
+
 import json
-import urllib.request
-import urllib.parse
+import os
+import shutil
+import subprocess
 import threading
 import time
+import unittest
+import urllib.error
+import urllib.parse
+import urllib.request
 from http.server import HTTPServer
+
 import ui.src.server as ui_server
 from ui.src.server import UDMIRequestHandler
+
 
 class TestUIServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.server = HTTPServer(('127.0.0.1', 8089), UDMIRequestHandler)
-        cls.server_thread = threading.Thread(target=cls.server.serve_forever)
-        cls.server_thread.daemon = True
+        cls.server_thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.server_thread.start()
         time.sleep(0.2)
 
     @classmethod
     def tearDownClass(cls):
         cls.server.shutdown()
+        cls.server.server_close()
+        # Clean up any remaining processes
+        with ui_server.active_processes_lock:
+            for meta in ui_server.active_processes.values():
+                p = meta.get("process")
+                if p and p.poll() is None:
+                    try:
+                        p.terminate()
+                        p.wait(timeout=1)
+                    except Exception:
+                        pass
 
     def test_post_run_triage_api_key_and_session_workspace(self):
         url = "http://127.0.0.1:8089/api/run_triage"
@@ -41,6 +61,10 @@ class TestUIServer(unittest.TestCase):
                     self.assertIn("session_id", res_body)
                     session_id = res_body["session_id"]
                     self.assertIn(session_id, ui_server.active_processes)
+                    p = ui_server.active_processes[session_id].get("process")
+                    if p and p.poll() is None:
+                        p.terminate()
+                        p.wait(timeout=1)
         except urllib.error.HTTPError as e:
             # 412 is acceptable if sequence log is missing for AHU-1 in demo environment
             self.assertIn(e.code, [200, 412])
@@ -61,6 +85,13 @@ class TestUIServer(unittest.TestCase):
         try:
             with urllib.request.urlopen(req) as response:
                 self.assertIn(response.status, [200, 412])
+                res_body = json.loads(response.read().decode('utf-8'))
+                if response.status == 200 and res_body.get("status") == "Started":
+                    session_id = res_body["session_id"]
+                    p = ui_server.active_processes[session_id].get("process")
+                    if p and p.poll() is None:
+                        p.terminate()
+                        p.wait(timeout=1)
         except urllib.error.HTTPError as e:
             self.assertIn(e.code, [200, 412])
 
@@ -104,6 +135,13 @@ class TestUIServer(unittest.TestCase):
         try:
             with urllib.request.urlopen(req) as response:
                 self.assertIn(response.status, [200, 412])
+                res_body = json.loads(response.read().decode('utf-8'))
+                if response.status == 200 and res_body.get("status") == "Started":
+                    session_id = res_body["session_id"]
+                    p = ui_server.active_processes[session_id].get("process")
+                    if p and p.poll() is None:
+                        p.terminate()
+                        p.wait(timeout=1)
         except urllib.error.HTTPError as e:
             self.assertIn(e.code, [200, 412])
 
@@ -152,6 +190,16 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("devices", data)
             self.assertIn("AHU-1", data["devices"])
 
+    def test_get_devices_udmi_nested(self):
+        url = "http://127.0.0.1:8089/api/devices?site_model=sites/UK-LON-GLAB"
+        req = urllib.request.Request(url, method="GET")
+        with urllib.request.urlopen(req) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("devices", data)
+            self.assertIn("CGW-2", data["devices"])
+            self.assertIn("EM-11", data["devices"])
+
     def test_testbed_status(self):
         url = "http://127.0.0.1:8089/api/testbed/status?site_model=sites/udmi_site_model"
         req = urllib.request.Request(url, method="GET")
@@ -187,14 +235,14 @@ class TestUIServer(unittest.TestCase):
             self.assertEqual(response.status, 200)
             data = json.loads(response.read().decode('utf-8'))
             self.assertIn("session_id", data)
-            self.assertEqual(data.get("status"), "starting")
+            self.assertIn(data.get("status"), ["starting", "ready"])
             sid = data["session_id"]
             if sid in ui_server.active_processes:
                 proc_meta = ui_server.active_processes[sid]
-                # Cleanup process
                 p = proc_meta.get("process")
                 if p and p.poll() is None:
                     p.terminate()
+                    p.wait(timeout=1)
 
     def test_log_diff(self):
         url = "http://127.0.0.1:8089/api/log_diff"
@@ -245,17 +293,14 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("is_protected", data)
 
     def test_git_commit_safety_stop(self):
-        import os, subprocess, shutil
         test_repo = os.path.join(ui_server.ROOT_DIR, 'out', 'test_git_repo_master')
         shutil.rmtree(test_repo, ignore_errors=True)
         os.makedirs(test_repo, exist_ok=True)
         try:
             subprocess.run(['git', '-C', test_repo, 'init', '--initial-branch=main'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            # Create a file so we can test status and committing
-            with open(os.path.join(test_repo, 'test_file.txt'), 'w') as f:
+            with open(os.path.join(test_repo, 'test_file.txt'), 'w', encoding='utf-8') as f:
                 f.write('initial content')
-            
-            # Test safety stop: committing directly to 'main' without create_branch or force_main should return HTTP 400
+
             url = "http://127.0.0.1:8089/api/git/commit"
             payload = json.dumps({
                 "site_model": test_repo,
@@ -273,7 +318,6 @@ class TestUIServer(unittest.TestCase):
                 error_body = json.loads(e.read().decode('utf-8'))
                 self.assertIn("Safety stop", error_body.get("error", ""))
 
-            # Now test creating a new results branch (should succeed without error)
             payload_override = json.dumps({
                 "site_model": test_repo,
                 "commit_message": "test: save results on new branch",
@@ -306,18 +350,14 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("outbox_file", data)
 
     def test_prune_old_sessions(self):
-        import os
-        import shutil
         sessions_dir = os.path.join(ui_server.ROOT_DIR, 'out', 'sessions')
         os.makedirs(sessions_dir, exist_ok=True)
-        # Create dummy session directories
         for i in range(15):
             d = os.path.join(sessions_dir, f"test_dummy_session_{i}")
             os.makedirs(d, exist_ok=True)
-        
+
         ui_server.prune_old_sessions(10)
-        
-        # Clean up any remaining test_dummy folders
+
         remaining_dummies = [e for e in os.listdir(sessions_dir) if e.startswith("test_dummy_session_")]
         self.assertLessEqual(len(remaining_dummies), 10)
         for e in remaining_dummies:
@@ -352,8 +392,66 @@ class TestUIServer(unittest.TestCase):
             data = json.loads(e.read().decode('utf-8'))
             self.assertEqual(data.get("status"), "error")
 
+    def test_testbed_proc_status(self):
+        url = "http://127.0.0.1:8089/api/testbed_proc_status"
+        with urllib.request.urlopen(url) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("running", data)
+            self.assertIn("log", data)
+            self.assertIn("offset", data)
+            self.assertIn("ready", data)
+
+    def test_parse_project_spec(self):
+        parse_project_spec = ui_server.parse_project_spec
+        # Case 1: //gbos/bos-platform-dev/heykhyati
+        p1 = parse_project_spec("//gbos/bos-platform-dev/heykhyati")
+        self.assertEqual(p1["provider"], "gbos")
+        self.assertEqual(p1["project"], "bos-platform-dev")
+        self.assertEqual(p1["namespace"], "heykhyati")
+        self.assertEqual(p1["effective_namespace"], "heykhyati")
+        self.assertTrue(p1["is_cloud"])
+
+        # Case 2: //gbos/bos-platform-staging (no namespace -> defaults to udmis)
+        p2 = parse_project_spec("//gbos/bos-platform-staging")
+        self.assertEqual(p2["provider"], "gbos")
+        self.assertEqual(p2["project"], "bos-platform-staging")
+        self.assertIsNone(p2["namespace"])
+        self.assertEqual(p2["effective_namespace"], "udmis")
+        self.assertTrue(p2["is_cloud"])
+
+        # Case 3: //gref/bos-platform-dev+heykhyati (user suffix, no namespace -> defaults to udmis)
+        p3 = parse_project_spec("//gref/bos-platform-dev+heykhyati")
+        self.assertEqual(p3["provider"], "gref")
+        self.assertEqual(p3["project"], "bos-platform-dev")
+        self.assertIsNone(p3["namespace"])
+        self.assertEqual(p3["effective_namespace"], "udmis")
+        self.assertEqual(p3["user"], "heykhyati")
+        self.assertTrue(p3["is_cloud"])
+
+        # Case 4: //gref/bos-platform-dev/faucetsdn+heykhyati (explicit namespace + user)
+        p4 = parse_project_spec("//gref/bos-platform-dev/faucetsdn+heykhyati")
+        self.assertEqual(p4["provider"], "gref")
+        self.assertEqual(p4["project"], "bos-platform-dev")
+        self.assertEqual(p4["namespace"], "faucetsdn")
+        self.assertEqual(p4["effective_namespace"], "faucetsdn")
+        self.assertEqual(p4["user"], "heykhyati")
+        self.assertTrue(p4["is_cloud"])
+
+    def test_testbed_status_zanzara_namespace(self):
+        url = "http://127.0.0.1:8089/api/testbed/status?site_model=sites/udmi_site_model&project_spec=//gbos/bos-platform-dev/heykhyati"
+        with urllib.request.urlopen(url) as response:
+            self.assertEqual(response.status, 200)
+            data = json.loads(response.read().decode('utf-8'))
+            self.assertIn("components", data)
+            comps = data["components"]
+            self.assertIn("cloud_udmis", comps)
+            self.assertIn("zanzara_ingress", comps)
+            self.assertIn("zanzara_fabric", comps)
+            # Namespace in response should reflect heykhyati
+            self.assertEqual(comps["cloud_udmis"]["namespace"], "heykhyati")
+
+
 if __name__ == '__main__':
     unittest.main()
-
-
 

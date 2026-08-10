@@ -5,7 +5,7 @@
 export class StateStore {
   constructor() {
     this.state = {
-      siteModel: 'sites/udmi_site_model',
+      siteModel: '',
       // Explicit port 18833 triggers automatic isolated mode in shell_common.sh without sudo
       projectSpec: '//mqtt/localhost:18833',
       devices: [],

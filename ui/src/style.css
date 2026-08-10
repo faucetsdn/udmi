@@ -12,7 +12,7 @@
   background-color: var(--bg-surface-container-lowest);
 }
 
-/* 2. Top App Toolbar (Brand & Centered Input) */
+/* 2. Top App Toolbar (Brand & Right Actions) */
 .app-toolbar {
   display: flex;
   align-items: center;
@@ -25,26 +25,30 @@
   z-index: 10;
   flex-shrink: 0;
   position: relative;
+  gap: 16px;
 }
 
 .toolbar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
-  min-width: 180px;
-}
-
-.toolbar-center {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-shrink: 0;
 }
 
 .toolbar-actions {
-  min-width: 160px;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: var(--border-color);
+  margin: 0 2px;
+  flex-shrink: 0;
 }
 
 .brand-logo-img {
@@ -244,8 +248,9 @@
   justify-content: center;
 }
 
-.modal-overlay.active {
-  display: flex;
+.modal-overlay.active,
+.modal-overlay.open {
+  display: flex !important;
 }
 
 .modal-card {
@@ -523,18 +528,38 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 10px 24px;
+  padding: 8px 24px;
   background-color: #fff3e0;
   border-bottom: 1px solid #ffe0b2;
   color: #e65100;
   font-size: 13px;
   font-weight: 500;
   animation: bannerSlideDown 0.3s ease-out;
+  user-select: none;
+}
+
+.onboarding-banner.banner-info {
+  background-color: #e8f0fe;
+  border-bottom: 1px solid #d2e3fc;
+  color: #1967d2;
+}
+
+.onboarding-banner.banner-info .icon {
+  color: #1967d2;
+}
+
+.onboarding-banner.banner-warning {
+  background-color: #fff3e0;
+  border-bottom: 1px solid #ffe0b2;
+  color: #e65100;
+}
+
+.onboarding-banner.banner-warning .icon {
+  color: #f57c00;
 }
 
 .onboarding-banner .icon {
   font-size: 20px;
-  color: #f57c00;
 }
 
 @keyframes bannerSlideDown {

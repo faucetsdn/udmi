@@ -30,10 +30,6 @@
       <div class="action-bar-left">
         <span class="material-symbols-outlined icon-blue">schema</span>
         <h2 class="title">Testbed Setup</h2>
-        <span id="topology-completeness-badge" class="badge badge-success" style="margin-left: 12px;">
-          <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
-          <span>COMPLETE SETUP</span>
-        </span>
       </div>
 
       <div class="action-bar-right">
@@ -43,13 +39,9 @@
           <span>Local Setup</span>
         </button>
         <button id="btn-cloud-setup" class="btn btn-outlined"
-          title="Configure Cloud Setup topology (Pubber -> ClearBlade Broker -> Cloud UDMIS)">
+          title="Configure Zanzara Cloud Setup topology (Device -> Zanzara Ingress -> Message Fabric -> Cloud UDMIS -> etcd)">
           <span class="material-symbols-outlined">cloud_sync</span>
-          <span>Cloud Setup</span>
-        </button>
-        <button id="btn-start-pipeline" class="btn btn-success"
-          title="Start locally running background pipeline components">
-          <span class="material-symbols-outlined">play_arrow</span>
+          <span>Zanzara Cloud Setup</span>
         </button>
         <button id="btn-stop-pipeline" class="btn btn-danger-outlined"
           title="Stop all locally running background pipeline components">
@@ -62,45 +54,49 @@
     <main class="testbed-workspace">
 
       <!-- 1. Node Palette Sidebar -->
-      <aside class="palette-sidebar">
-        <div class="sidebar-header border-bottom">
-          <span class="material-symbols-outlined">devices</span>
-          <h3>Choose Devices</h3>
+      <aside class="palette-sidebar" style="overflow-y: hidden; display: flex; flex-direction: column; width: 290px;">
+        <div class="sidebar-header border-bottom" style="display: flex; align-items: center; justify-content: space-between;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span class="material-symbols-outlined" style="color: #0b57d0; font-size: 16px;">devices</span>
+            <h3 style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #5f6368;">Site Devices
+            </h3>
+          </div>
+          <span id="site-devices-count-badge" class="badge"
+            style="background: #e8f0fe; color: #1a73e8; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 10px;">0</span>
+          </div>
+<!-- Search & Filter Bar -->
+<div style="padding: 8px 8px 4px 8px; flex-shrink: 0; display: flex; flex-direction: column; gap: 6px;">
+  <div class="device-search-wrapper" style="position: relative; display: flex; align-items: center;">
+    <span class="material-symbols-outlined"
+      style="position: absolute; left: 8px; font-size: 15px; color: #80868b; pointer-events: none;">search</span>
+    <input type="text" id="input-device-search" placeholder="Filter devices..." class="form-input"
+      style="width: 100%; padding: 4px 8px 4px 28px; font-size: 11px; height: 28px; border-radius: 6px; box-sizing: border-box;" />
+    <button id="btn-device-search-clear"
+      style="display: none; position: absolute; right: 6px; background: none; border: none; cursor: pointer; color: #80868b; font-size: 14px; padding: 0; line-height: 1;">&times;</button>
+          </div>
+
+          <!-- Bulk Actions Toolbar -->
+          <div class="device-bulk-toolbar"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 4px; padding-bottom: 2px;">
+            <div style="display: flex; gap: 4px;">
+              <button id="btn-devices-select-all" class="btn btn-outlined"
+                style="padding: 2px 8px; font-size: 10px; height: 22px; border-radius: 4px;"
+                title="Select all devices onto canvas">All</button>
+              <button id="btn-devices-clear-all" class="btn btn-outlined"
+                style="padding: 2px 8px; font-size: 10px; height: 22px; border-radius: 4px;"
+                title="Remove all devices from canvas">None</button>
+            </div>
+            <span id="site-devices-selected-summary" style="font-size: 10px; color: #5f6368; font-weight: 500;">0 selected</span>
+          </div>
         </div>
-        <div class="palette-list">
 
-          <div class="palette-item" draggable="true" data-node-type="pubber">
-            <span class="material-symbols-outlined palette-icon">smart_toy</span>
-            <div class="palette-text">
-              <span class="palette-title">Device Emulator (Pubber)</span>
-              <span class="palette-sub">Simulated UDMI device</span>
-            </div>
+        <!-- Dynamic Device List Container (Pills) -->
+        <div id="site-devices-list" class="site-devices-list site-devices-pills-container"
+          style="flex: 1; overflow-y: auto; padding: 6px 8px 8px 8px;">
+          <div style="font-size: 11px; color: #70757a; text-align: center; padding: 20px 8px; width: 100%;">
+            <span class="spinner-sm" style="margin-bottom: 6px;"></span>
+            <div>Loading devices from site model...</div>
           </div>
-
-          <div class="palette-item disabled" draggable="false" data-node-type="spotter">
-            <span class="material-symbols-outlined palette-icon">radar</span>
-            <div class="palette-text">
-              <span class="palette-title">Device Emulator (Spotter)</span>
-              <span class="palette-sub">Coming Soon</span>
-            </div>
-          </div>
-
-          <div class="palette-item" draggable="true" data-node-type="actual_device">
-            <span class="material-symbols-outlined palette-icon">router</span>
-            <div class="palette-text">
-              <span class="palette-title">Actual Device</span>
-              <span class="palette-sub">Physical hardware target</span>
-            </div>
-          </div>
-
-          <div class="palette-item disabled" draggable="false" data-node-type="ancillary">
-            <span class="material-symbols-outlined palette-icon">extension</span>
-            <div class="palette-text">
-              <span class="palette-title">Ancillary Test Node</span>
-              <span class="palette-sub">Coming Soon</span>
-            </div>
-          </div>
-
         </div>
       </aside>
 

@@ -311,96 +311,118 @@ Local UDMIS executes the reflective engine using a local pod configuration (`var
 
 ---
 
-## 5. ClearBlade IoT Broker (Cloud IoT Bridge)
+## 5. Zanzara Ingress (MQTT Auth Proxy)
 
-### A. Run Configuration
-ClearBlade IoT Core serves as the cloud MQTT broker bridge replacing legacy GCP IoT Core. Configuration parameters are stored in `sites/{site_model}/cloud_iot_config.json`:
-
-```json
-{
-  "cloud_region": "us-central1",
-  "site_name": "US-BUILDING-10",
-  "registry_id": "udmi-registry",
-  "project_id": "gcp-udmi-project-123"
-}
-```
+### A. Run Configuration & Topology Role
+In `bos-platform-dev`, `staging`, and `prod`, the **Zanzara Ingress** (`auth` / `auth-canary` deployment) runs the `mqttproxy` container fronted by an internal/external Load Balancer and Private Service Connect (PSC).
+It terminates device TLS connections on port `8883`/`1883`, authenticates credentials against the **`etcd`** backend, and proxies authenticated traffic upstream to the internal `mosquitto` broker.
 
 **Inspector Inputs**:
-- `project_id`: Target GCP/ClearBlade Project ID (`gcp-udmi-project-123`).
-- `registry_id`: Target Registry ID (`udmi-registry`).
-- `region`: Cloud hosting region (`us-central1`).
+- `endpoint`: Ingress hostname (`bos-platform-dev.corp.goog`).
+- `port`: Ingress port (`8883`).
+- `namespace`: Kubernetes namespace (`udmis`).
+- `project_id`: Target GCP Project ID (`bos-platform-dev`).
 
 ---
 
-### B. Run Commands
+### B. Run & Diagnostic Commands
 
-- **High-Level Shell Wrapper**:
+- **Check Deployment Status**:
   ```bash
-  UDMI_NO_SUDO=true bin/registrar sites/udmi_site_model //clearblade/gcp-udmi-project-123
+  kubectl get deployment auth -n udmis
   ```
 
-- **MQTTS Bridge Connection Endpoint**:
-  ```text
-  ssl://us-central1-mqtt.clearblade.com:8883
+- **mTLS Ingress Port Reachability Probe**:
+  ```bash
+  nc -zv bos-platform-dev.corp.goog 8883
   ```
 
 ---
 
 ### C. Health Checks & Diagnostic Signals
 
-1. **ClearBlade API Reachability Probe**:
-   - Check MQTTS port `:8883` connection to ClearBlade Cloud endpoint:
-     ```bash
-     nc -zv -w 3 us-central1-mqtt.clearblade.com 8883
-     ```
+1. **TCP / TLS Handshake Probe**:
+   - Verify network path and port reachability on port 8883.
 
-2. **Message Flow Verification (`bin/pull_mqtt`)**:
-   - Verify telemetry stream passing through ClearBlade registry topics:
+2. **Auth Proxy Log Monitoring**:
+   - Stream logs to check device authentication events:
      ```bash
-     UDMI_NO_SUDO=true bin/pull_mqtt //clearblade/gcp-udmi-project-123%udmi-registry
+     kubectl logs -f -l app=auth -n udmis
      ```
-
-3. **Status Indicators**:
-   - **🟢 UP**: Port `8883` reachable on `clearblade.com`, authentication token valid, and state/telemetry streaming over `/r/{registry_id}/d/+/#`.
-   - **🟡 INITIALIZING**: Authenticating with ClearBlade Cloud IoT registry API.
-   - **🔴 DOWN**: Connection timeout on port `8883` or `401 Unauthorized` credentials error.
+   - **🟢 UP**: TLS handshake successful, device authentication against `etcd` valid, proxy stream active.
+   - **🔴 DOWN / AUTH_FAIL**: Port unreachable or authentication rejected (`401 Unauthorized` / certificate mismatch).
 
 ---
 
-## 6. Cloud UDMIS (Pub/Sub Reflective Core)
+## 6. Zanzara Message Fabric (Mosquitto & Pub/Sub Bridges)
 
-### A. Run Configuration (`cloud_pod.json`)
-Cloud UDMIS runs in Google Cloud Platform or Kubernetes, consuming telemetry from **GCP Cloud Pub/Sub** topics and managing global site model state using `PubSubPipe`:
+### A. Run Configuration
+The Zanzara Message Fabric consists of the core `mosquitto` broker and dedicated **Bridge StatefulSets** (`bridge-events`, `bridge-state`, `bridge-reflect`) that forward MQTT messages into Google Cloud Pub/Sub topics (`udmi_target`, `udmi_state`, `udmi_reflect`).
+
+**Inspector Inputs**:
+- `pubsub_project`: GCP Project hosting Pub/Sub topics (`bos-platform-dev`).
+- `namespace`: Kubernetes namespace (`udmis`).
+- `topics`: Comma-separated target Pub/Sub topics (`udmi_target, udmi_state, udmi_reflect`).
+
+---
+
+### B. Run & Diagnostic Commands
+
+- **Check Bridge StatefulSets**:
+  ```bash
+  kubectl get statefulsets -l app=bridge -n udmis
+  ```
+
+- **Verify Pub/Sub Topics**:
+  ```bash
+  gcloud pubsub topics list --project=bos-platform-dev
+  ```
+
+---
+
+### C. Health Checks & Diagnostic Signals
+
+1. **Bridge Statefulness**:
+   - All bridge pods in `Running` state with 0 crash restarts.
+
+2. **Status Indicators**:
+   - **🟢 UP**: Bridge StatefulSets active, subscribing to Mosquitto and publishing to Cloud Pub/Sub without lag.
+   - **🔴 DOWN**: Bridge pods terminating, shared subscription failure, or Pub/Sub quota exhaustion.
+
+---
+
+## 7. Cloud UDMIS (Pub/Sub Reflective Core)
+
+### A. Run Configuration (`cloud_pod.json` / `prod_pod.json`)
+Cloud UDMIS runs in Kubernetes as `udmis-pods`, consuming telemetry from **GCP Cloud Pub/Sub** subscriptions (`udmi_target-udmis`, etc.) and executing reflective processors (`StateProcessor`, `TargetProcessor`, `ReflectProcessor`).
 
 ```json
 {
   "include": "udmis/etc/prod_pod.json",
-  "iot_data": {
-    "pubsub": {
-      "project_id": "gcp-udmi-project-123",
-      "topic_id": "udmi_target",
-      "subscription_id": "udmi_sub"
-    }
+  "flow_defaults": {
+    "protocol": "pubsub",
+    "hostname": "bos-platform-dev"
   }
 }
 ```
 
 **Inspector Inputs**:
-- `topic`: GCP Pub/Sub topic path (`projects/gcp-project-123/topics/udmi_target`).
-- `subscription`: GCP Pub/Sub subscription ID (`udmi_sub`).
+- `topic`: GCP Pub/Sub topic path (`projects/bos-platform-dev/topics/udmi_target`).
+- `subscription`: GCP Pub/Sub subscription ID (`udmi_target-udmis`).
+- `namespace`: Kubernetes namespace (`udmis`).
 
 ---
 
 ### B. Run Commands
 
-- **Container / Cloud Run Execution**:
+- **Check Pod Status in Cluster**:
   ```bash
-  java -jar udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar udmis/etc/prod_pod.json
+  kubectl get pods -l app=udmis -n udmis
   ```
 
 - **GCP Pub/Sub Subscription Pull Probe**:
   ```bash
-  gcloud pubsub subscriptions pull udmi_sub --auto-ack --limit=1
+  gcloud pubsub subscriptions pull udmi_target-udmis --auto-ack --limit=1
   ```
 
 ---
@@ -410,13 +432,13 @@ Cloud UDMIS runs in Google Cloud Platform or Kubernetes, consuming telemetry fro
 1. **Pub/Sub Subscription Health Probe**:
    - Query GCP Pub/Sub metrics to confirm subscription message flow:
      ```bash
-     gcloud pubsub subscriptions describe udmi_sub --format="json(name,pushConfig)"
+     gcloud pubsub subscriptions describe udmi_target-udmis --format="json(name,pushConfig)"
      ```
 
 2. **Log Signature Monitoring**:
    - **🟢 Healthy Up Signatures**:
      - `"PubSubPipe initialized for topic projects/..."`
-     - `"Subscribed to GCP Pub/Sub subscription udmi_sub"`
+     - `"Subscribed to GCP Pub/Sub subscription udmi_target-udmis"`
      - `"ReflectProcessor processing state update"`
    - **🔴 Failure / Down Signatures**:
      - `"GoogleAuthException: Could not load default credentials"`

@@ -53,24 +53,28 @@ This document details the test scenarios required to validate that the UDMI Test
 
 ### TS-1.2: Standard Cloud Pipeline
 - **Goal**: Verify loading of the cloud production pipeline.
-- **Action**: Click the **"Load Cloud Setup"** button in the top action bar.
+- **Action**: Click the **"Cloud Setup"** button in the top action bar.
 - **Node Execution Configurations & Probes**:
   1. **Pubber (Device Emulator)**:
-     - **Run Config**: `out/pubber_config.json` (endpoint: `ssl://us-central1-mqtt.clearblade.com:8883`)
-     - **Run Command**: `UDMI_NO_SUDO=true bin/pubber sites/udmi_site_model //clearblade/gcp-project-123 AHU-1 SN-10492`
-     - **Health Probe**: `bin/pull_mqtt //clearblade/gcp-project-123`
-  2. **ClearBlade IoT Broker**:
-     - **Run Config**: `sites/udmi_site_model/cloud_iot_config.json`
-     - **Run Command**: `UDMI_NO_SUDO=true bin/registrar sites/udmi_site_model //clearblade/gcp-project-123`
-     - **Health Probe**: `nc -zv -w 3 us-central1-mqtt.clearblade.com 8883`
-  3. **Cloud UDMIS (Pub/Sub Core)**:
+     - **Run Config**: `out/pubber_config.json` (endpoint: `bos-platform-dev.corp.goog:8883`)
+     - **Run Command**: `UDMI_NO_SUDO=true bin/pubber sites/udmi_site_model //pubsub/bos-platform-dev AHU-1 SN-10492`
+     - **Health Probe**: `bin/pull_mqtt //pubsub/bos-platform-dev`
+  2. **Zanzara Ingress (Auth Proxy)**:
+     - **Run Config**: `k8s/dev/auth/ (namespace: udmis)`
+     - **Run Command**: `kubectl get deployment auth -n udmis`
+     - **Health Probe**: `nc -zv bos-platform-dev.corp.goog 8883`
+  3. **Zanzara Message Fabric (Mosquitto & Bridges)**:
+     - **Run Config**: `k8s/dev/bridge/`
+     - **Run Command**: `kubectl get statefulset -l app=bridge -n udmis`
+     - **Health Probe**: `gcloud pubsub topics list --project=bos-platform-dev`
+  4. **Cloud UDMIS (Pub/Sub Core)**:
      - **Run Config**: `udmis/etc/prod_pod.json` (GCP Pub/Sub provider)
-     - **Run Command**: `java -jar udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar udmis/etc/prod_pod.json`
-     - **Health Probe**: `gcloud pubsub subscriptions pull udmi_sub --auto-ack --limit=1`
+     - **Run Command**: `kubectl get deployment udmis -n udmis`
+     - **Health Probe**: `gcloud pubsub subscriptions pull udmi_target-udmis --auto-ack --limit=1`
 - **Expected Outcome**:
-  - Canvas renders 3 nodes: `Device Emulator (Pubber)`, `ClearBlade IoT Broker`, and `Cloud UDMIS (Pub/Sub)`.
-  - Directed SVG arrows route: `Pubber` $\rightarrow$ `ClearBlade IoT Broker` $\rightarrow$ `Cloud UDMIS`.
-  - Completeness Chip displays green 🟢 **`COMPLETE SETUP`**.
+  - Canvas renders 5 nodes: `Device Emulator (Pubber)`, `Zanzara Ingress (Auth Proxy)`, `Zanzara Message Fabric`, `Cloud UDMIS (Pub/Sub)`, and `etcd State Store`.
+  - Directed SVG arrows route: `Pubber` $\rightarrow$ `Zanzara Ingress` $\rightarrow$ `Zanzara Fabric` $\rightarrow$ `Cloud UDMIS` $\rightarrow$ `etcd`.
+  - Completeness Chip displays green 🟢 **`COMPLETE SETUP (CLOUD)`**.
 
 ### TS-1.3: Physical Hardware Pipeline
 - **Goal**: Verify topology for physical building controllers or BACnet/IP gateways.
@@ -95,21 +99,21 @@ This document details the test scenarios required to validate that the UDMI Test
 - **Node Execution Configurations & Probes**:
   1. **Local Mosquitto Broker**: `UDMI_NO_SUDO=true MQTT_PORT=18883 bin/start_mosquitto`
   2. **MQTT-to-PubSub Bridge**: `java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar com.google.bos.udmi.service.bridge.MqttToPubSubBridge --mqtt_broker_url=tcp://localhost:18883 --pubsub_topic_id=udmi_target`
-  3. **Cloud UDMIS**: `gcloud pubsub subscriptions pull udmi_sub`
+  3. **Cloud UDMIS**: `gcloud pubsub subscriptions pull udmi_target-udmis`
 - **Expected Outcome**:
   - Edges route `Pubber` $\rightarrow$ `Local Mosquitto` $\rightarrow$ `Cloud UDMIS`.
   - Inspector for `Local Mosquitto` shows local port (`18883`), while `Cloud UDMIS` shows GCP Pub/Sub topic.
   - Completeness Chip displays green 🟢 **`COMPLETE SETUP`**.
 
-### TS-2.2: Cloud Broker with Local Core
+### TS-2.2: Cloud Ingress with Local Core
 - **Goal**: Validate cloud-connected physical hardware managed by a local test engine.
-- **Action**: Instantiate `Actual Device` + `ClearBlade IoT Broker` + `Local UDMIS`.
+- **Action**: Instantiate `Actual Device` + `Zanzara Ingress` + `Local UDMIS`.
 - **Node Execution Configurations & Probes**:
-  1. **ClearBlade Broker**: `nc -zv us-central1-mqtt.clearblade.com 8883`
-  2. **Local UDMIS**: `UDMI_NO_SUDO=true bin/start_udmis` (with `ClearBladeIotAccessProvider`)
+  1. **Zanzara Ingress**: `nc -zv bos-platform-dev.corp.goog 8883`
+  2. **Local UDMIS**: `UDMI_NO_SUDO=true bin/start_udmis`
 - **Expected Outcome**:
-  - Edges route `Actual Device` $\rightarrow$ `ClearBlade IoT Broker` $\rightarrow$ `Local UDMIS`.
-  - Inspector for `ClearBlade IoT Broker` shows project and registry IDs.
+  - Edges route `Actual Device` $\rightarrow$ `Zanzara Ingress` $\rightarrow$ `Local UDMIS`.
+  - Inspector for `Zanzara Ingress` shows endpoint and namespace.
   - Completeness Chip displays green 🟢 **`COMPLETE SETUP`**.
 
 ---

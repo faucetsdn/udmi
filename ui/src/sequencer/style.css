@@ -294,7 +294,7 @@
 
 .modal-overlay.active,
 .modal-overlay.open {
-  display: flex;
+  display: flex !important;
 }
 
 

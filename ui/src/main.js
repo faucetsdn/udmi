@@ -1,10 +1,10 @@
 // ==========================================================================
 // UDMI WORKBENCH - MAIN SPA SHELL & ORCHESTRATOR
 // ==========================================================================
-import { stateStore } from './shared/state-store.js';
-import { TestbedGraphController } from './testbed/main.js';
-import { MantisController } from './mantis/main.js';
-import { NotificationManager } from './shared/components/notification-toast.js';
+import { stateStore } from './shared/state-store.js?v=3.0';
+import { TestbedGraphController } from './testbed/main.js?v=3.0';
+import { MantisController } from './mantis/main.js?v=3.0';
+import { NotificationManager } from './shared/components/notification-toast.js?v=3.0';
 
 // --- HELPER: DYNAMIC ENDPOINT FETCH ---
 async function fetchDirectoryList(targetPath) {
@@ -179,17 +179,21 @@ class ShellOrchestrator {
     }
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && this.mantisDrawer && this.mantisDrawer.classList.contains('fullscreen')) {
-        this.mantisDrawer.classList.remove('fullscreen');
-        if (this.btnMantisFullscreen) {
-          const icon = this.btnMantisFullscreen.querySelector('.material-symbols-outlined');
-          if (icon) icon.textContent = 'fullscreen';
-          this.btnMantisFullscreen.title = 'Full screen';
-          this.btnMantisFullscreen.setAttribute('aria-label', 'Full screen');
+      if (e.key === 'Escape') {
+        if (this.browserModal && (this.browserModal.classList.contains('active') || this.browserModal.style.display === 'flex')) {
+          this.closeFolderBrowser();
+        }
+        if (this.mantisDrawer && this.mantisDrawer.classList.contains('fullscreen')) {
+          this.mantisDrawer.classList.remove('fullscreen');
+          if (this.btnMantisFullscreen) {
+            const icon = this.btnMantisFullscreen.querySelector('.material-symbols-outlined');
+            if (icon) icon.textContent = 'fullscreen';
+            this.btnMantisFullscreen.title = 'Full screen';
+            this.btnMantisFullscreen.setAttribute('aria-label', 'Full screen');
+          }
         }
       }
     });
-
 
     stateStore.on('open_mantis_triage', (data) => {
       if (this.mantisDrawer) {
@@ -209,11 +213,31 @@ class ShellOrchestrator {
       }
     });
 
+    stateStore.on('open_folder_browser', () => {
+      this.openFolderBrowser();
+    });
+
+    stateStore.on('change:siteModel', () => {
+      this.updateBanner();
+    });
+
+    stateStore.on('change:activeDeviceNodesCount', (count) => {
+      this.activeDeviceNodesCount = count;
+      this.updateBanner();
+    });
+
+    stateStore.on('canvas_devices_changed', (data) => {
+      this.activeDeviceNodesCount = data ? data.count : 0;
+      this.updateBanner();
+    });
+
     window.addEventListener('message', (event) => {
       if (event.data && event.data.type === 'open_mantis_triage') {
         stateStore.emit('open_mantis_triage', event.data);
       } else if (event.data && event.data.type === 'trigger_diagnose') {
         stateStore.emit('trigger_diagnose', event.data);
+      } else if (event.data && event.data.type === 'open_folder_browser') {
+        this.openFolderBrowser();
       } else if (event.data && event.data.type === 'udmi_state_change') {
         if (event.data.siteModel) {
           stateStore.set('siteModel', event.data.siteModel);
@@ -224,7 +248,23 @@ class ShellOrchestrator {
       }
     });
 
-    if (this.btnBrowseSite) this.btnBrowseSite.addEventListener('click', () => this.openFolderBrowser());
+    if (this.btnBrowseSite) {
+      this.btnBrowseSite.addEventListener('click', (e) => {
+        e.preventDefault();
+        this.openFolderBrowser();
+      });
+    }
+
+    if (this.onboardingBanner) {
+      this.onboardingBanner.addEventListener('click', () => {
+        if (this.bannerState === 'no_site_model') {
+          this.openFolderBrowser();
+        } else if (this.bannerState === 'no_devices') {
+          const deviceSearchInput = document.getElementById('input-device-search');
+          if (deviceSearchInput) deviceSearchInput.focus();
+        }
+      });
+    }
 
     if (this.siteInput) {
       this.siteInput.addEventListener('input', (e) => {
@@ -238,6 +278,14 @@ class ShellOrchestrator {
         if (e.key === 'Enter') {
           clearTimeout(this.debounceTimeout);
           this.handleSiteModelPathChange(e.target.value.trim());
+        }
+      });
+    }
+
+    if (this.browserModal) {
+      this.browserModal.addEventListener('click', (e) => {
+        if (e.target === this.browserModal) {
+          this.closeFolderBrowser();
         }
       });
     }
@@ -260,27 +308,30 @@ class ShellOrchestrator {
   }
 
   async loadCachedSiteModelPath() {
-    const cached = localStorage.getItem('udmi_site_model_path');
-    let isValid = false;
+    let cached = null;
+    try {
+      cached = localStorage.getItem('udmi_site_model_path');
+    } catch (e) {}
 
     if (cached) {
       this.siteInput.value = cached;
-      isValid = await this.handleSiteModelPathChange(cached);
+      await this.handleSiteModelPathChange(cached);
     } else {
-      this.siteInput.value = 'sites/udmi_site_model';
-      isValid = await this.handleSiteModelPathChange('sites/udmi_site_model');
-    }
-
-    if (!isValid) {
-      setTimeout(() => {
-        this.openFolderBrowser();
-      }, 350);
+      this.siteInput.value = '';
+      this.updateSiteModelStatus('unselected');
+      stateStore.set('siteModel', '');
+      stateStore.set('devices', []);
     }
   }
 
   async handleSiteModelPathChange(sitePath) {
     if (!sitePath) {
+      stateStore.set('siteModel', '');
+      stateStore.set('devices', []);
       this.updateSiteModelStatus('unselected');
+      try {
+        localStorage.removeItem('udmi_site_model_path');
+      } catch (e) {}
       return false;
     }
 
@@ -291,19 +342,30 @@ class ShellOrchestrator {
       const res = await fetch(`/api/devices?site_model=${encodeURIComponent(sitePath)}`);
       if (res.ok) {
         const data = await res.json();
-        this.updateSiteModelStatus('valid');
         isValid = true;
         stateStore.set('siteModel', sitePath);
         stateStore.set('devices', data.devices || []);
+        stateStore.set('deviceMetadata', data.device_metadata || {});
+        this.updateSiteModelStatus('valid');
       } else {
+        stateStore.set('siteModel', '');
+        stateStore.set('devices', []);
         this.updateSiteModelStatus('invalid');
       }
     } catch (e) {
+      stateStore.set('siteModel', '');
+      stateStore.set('devices', []);
       this.updateSiteModelStatus('invalid');
     }
 
     if (isValid) {
-      localStorage.setItem('udmi_site_model_path', sitePath);
+      try {
+        localStorage.setItem('udmi_site_model_path', sitePath);
+      } catch (e) {}
+    } else {
+      try {
+        localStorage.removeItem('udmi_site_model_path');
+      } catch (e) {}
     }
     return isValid;
   }
@@ -320,26 +382,68 @@ class ShellOrchestrator {
 
     if (status === 'valid') {
       this.siteInput.classList.add('site-input-state-valid');
-      if (this.onboardingBanner) this.onboardingBanner.style.display = 'none';
     } else if (status === 'invalid') {
       this.siteInput.classList.add('site-input-state-invalid');
-      if (this.onboardingBanner) this.onboardingBanner.style.display = 'flex';
     } else {
       this.siteInput.classList.add(status === 'processing' ? 'site-input-state-processing' : 'site-input-state-unselected');
-      if (this.onboardingBanner) this.onboardingBanner.style.display = 'flex';
+    }
+
+    this.updateBanner();
+  }
+
+  updateBanner() {
+    if (!this.onboardingBanner) return;
+
+    const iconEl = this.onboardingBanner.querySelector('.icon');
+    const textEl = this.onboardingBanner.querySelector('.text');
+
+    const siteModel = stateStore.get('siteModel') || (this.siteInput ? this.siteInput.value.trim() : '');
+    const isSiteValid = this.siteInput && this.siteInput.classList.contains('site-input-state-valid');
+    const deviceCount = this.activeDeviceNodesCount !== undefined
+      ? this.activeDeviceNodesCount
+      : (stateStore.get('activeDeviceNodesCount') !== undefined
+        ? stateStore.get('activeDeviceNodesCount')
+        : (this.testbedController && this.testbedController.deviceNodes ? this.testbedController.deviceNodes.length : 0));
+
+    this.onboardingBanner.classList.remove('banner-info', 'banner-warning');
+
+    if (!siteModel || !isSiteValid) {
+      this.bannerState = 'no_site_model';
+      this.onboardingBanner.classList.add('banner-info');
+      if (iconEl) iconEl.textContent = 'info';
+      if (textEl) textEl.textContent = 'Welcome to UDMI Workbench! Please select or enter a valid Site Model Path above to begin.';
+      this.onboardingBanner.style.display = 'flex';
+      this.onboardingBanner.style.cursor = 'pointer';
+      this.onboardingBanner.title = 'Click to browse and select a Site Model directory';
+    } else if (deviceCount === 0) {
+      this.bannerState = 'no_devices';
+      this.onboardingBanner.classList.add('banner-warning');
+      if (iconEl) iconEl.textContent = 'devices';
+      if (textEl) textEl.textContent = "Select one or more devices from the 'Site Devices' list on the left to include them in the test topology.";
+      this.onboardingBanner.style.display = 'flex';
+      this.onboardingBanner.style.cursor = 'pointer';
+      this.onboardingBanner.title = 'Click to focus Site Devices list';
+    } else {
+      this.bannerState = 'ready';
+      this.onboardingBanner.style.display = 'none';
+      this.onboardingBanner.title = '';
     }
   }
 
   openFolderBrowser() {
-    const currentVal = this.siteInput.value.trim();
-    this.browserPath = currentVal || '~';
+    const currentVal = (this.siteInput ? this.siteInput.value.trim() : '') || stateStore.get('siteModel') || '';
+    this.browserPath = currentVal || 'sites';
     this.selectedBrowserFolder = null;
-    if (this.browserModal) this.browserModal.classList.add('active');
+    if (this.browserModal) {
+      this.browserModal.classList.add('active');
+    }
     this.loadBrowserPath(this.browserPath);
   }
 
   closeFolderBrowser() {
-    if (this.browserModal) this.browserModal.classList.remove('active');
+    if (this.browserModal) {
+      this.browserModal.classList.remove('active');
+    }
   }
 
   async loadBrowserPath(path) {

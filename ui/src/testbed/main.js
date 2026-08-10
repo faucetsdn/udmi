@@ -1,9 +1,9 @@
 // ==========================================================================
 // TESTBED INTERACTIVE TOPOLOGY, COMPLIANCE MATRIX & LIVE LOG ANALYZER
 // ==========================================================================
-import { stateStore } from '../shared/state-store.js';
-import { LogViewer } from '../shared/components/log-viewer.js';
-import { NotificationManager } from '../shared/components/notification-toast.js';
+import { stateStore } from '../shared/state-store.js?v=3.0';
+import { LogViewer } from '../shared/components/log-viewer.js?v=3.0';
+import { NotificationManager } from '../shared/components/notification-toast.js?v=3.0';
 
 const SEQUENCER_TEST_CATALOG = [
   {
@@ -36,11 +36,11 @@ const SEQUENCER_TEST_CATALOG = [
 
 export class TestbedGraphController {
   constructor() {
-    this.siteModel = stateStore.get('siteModel') || 'sites/udmi_site_model';
+    this.siteModel = stateStore.get('siteModel') || '';
     // Explicit unprivileged port 18833 automatically triggers isolated mode in shell_common.sh without sudo
     this.projectSpec = stateStore.get('projectSpec') || '//mqtt/localhost:18833';
 
-    this.setupMode = 'LOCAL'; // 'LOCAL' or 'CLOUD'
+    this.setupMode = null; // 'LOCAL' or 'CLOUD' once chosen by user
     this.activeViewMode = 'canvas'; // 'canvas', 'matrix', or 'logs'
     this.deviceNodes = [];
     this.infraNodes = [];
@@ -53,12 +53,22 @@ export class TestbedGraphController {
     // Subprocess execution state
     this.activePolls = new Map(); // sessionId -> interval
     this.logOffsets = new Map(); // sessionId -> offset
+    this.setupLogsInterval = null;
+    this.latestSetupSessionId = null;
+
+    // Site Model Devices & Execution Modes State
+    this.discoveredDevices = [];
+    this.deviceMetadata = {}; // deviceId -> { version: string }
+    this.deviceConfigs = new Map(); // deviceId -> { enabled: boolean, mode: 'pubber' | 'actual_device' | 'ancillary' }
+    this.deviceSearchQuery = '';
 
     this.initElements();
     this.initComponents();
     this.initEvents();
     this.initStoreListeners();
-    this.loadDefaultSetup();
+    this.updateSetupButtons();
+    this.renderGraph();
+    this.loadSiteModelDevices();
     setTimeout(() => this.updateTabIndicator(), 50);
     setTimeout(() => this.checkAndRecoverBackgroundJobs(), 1000);
   }
@@ -70,8 +80,20 @@ export class TestbedGraphController {
   initElements() {
     this.btnDefaultSetup = document.getElementById('btn-default-setup');
     this.btnCloudSetup = document.getElementById('btn-cloud-setup');
-    this.btnStartPipeline = document.getElementById('btn-start-pipeline');
     this.btnStopPipeline = document.getElementById('btn-stop-pipeline');
+    this.btnViewSetupLogs = document.getElementById('btn-view-setup-logs');
+
+    // Cloud Setup Modal
+    this.cloudSetupModal = document.getElementById('cloud-setup-modal');
+    this.cloudProjectSpecInput = document.getElementById('cloud-project-spec-input');
+    if (this.cloudProjectSpecInput) {
+      const cachedCloudSpec = localStorage.getItem('udmi_cloud_project_spec');
+      if (cachedCloudSpec) {
+        this.cloudProjectSpecInput.value = cachedCloudSpec;
+      }
+    }
+    this.btnCloseCloudModal = document.getElementById('btn-close-cloud-modal');
+    this.btnSubmitCloudSetup = document.getElementById('btn-submit-cloud-setup');
 
     // View toggles & workspaces
     this.btnViewCanvas = document.getElementById('btn-view-canvas');
@@ -93,6 +115,7 @@ export class TestbedGraphController {
     this.inspectorIcon = document.getElementById('inspector-icon');
     this.inspectorBody = document.getElementById('inspector-body');
     this.btnCloseInspector = document.getElementById('btn-close-inspector');
+    this.isInspectorOpen = false;
 
     // Matrix Dashboard Elements
     this.matrixKpiTotal = document.getElementById('matrix-kpi-total');
@@ -131,19 +154,7 @@ export class TestbedGraphController {
     this.btnSaveEmailSettings = document.getElementById('btn-save-email-settings');
     this.btnTestSendEmail = document.getElementById('btn-test-send-email');
 
-    // Setup & Node Configuration Modals and Actual Devices Dropdown
-    this.setupModal = document.getElementById('setup-config-modal');
-    this.btnCloseSetup = document.getElementById('btn-close-setup-modal');
-    this.btnCancelSetup = document.getElementById('btn-cancel-setup-modal');
-    this.btnApplySetup = document.getElementById('btn-apply-setup');
-    this.setupTargetMode = document.getElementById('setup-target-mode');
-    this.setupSiteModelInput = document.getElementById('setup-sitemodel-input');
-    this.setupLocalPort = document.getElementById('setup-local-port');
-    this.setupCloudProject = document.getElementById('setup-cloud-project');
-    this.setupLocalFields = document.getElementById('setup-local-fields');
-    this.setupCloudFields = document.getElementById('setup-cloud-fields');
-    this.setupModalTitle = document.getElementById('setup-modal-title');
-
+    // Node Configuration Modal
     this.nodeModal = document.getElementById('node-config-modal');
     this.btnCloseNode = document.getElementById('btn-close-node-modal');
     this.btnCancelNode = document.getElementById('btn-cancel-node-modal');
@@ -151,7 +162,15 @@ export class TestbedGraphController {
     this.nodeConfigFormBody = document.getElementById('node-config-form-body');
     this.nodeModalTitle = document.getElementById('node-modal-title');
     this.nodeModalSub = document.getElementById('node-modal-sub');
-    this.selectActualDevices = document.getElementById('select-actual-devices');
+
+    // Site Model Devices Left Sidebar Elements
+    this.siteDevicesCountBadge = document.getElementById('site-devices-count-badge');
+    this.siteDevicesSelectedSummary = document.getElementById('site-devices-selected-summary');
+    this.inputDeviceSearch = document.getElementById('input-device-search');
+    this.btnDeviceSearchClear = document.getElementById('btn-device-search-clear');
+    this.btnDevicesSelectAll = document.getElementById('btn-devices-select-all');
+    this.btnDevicesClearAll = document.getElementById('btn-devices-clear-all');
+    this.siteDevicesList = document.getElementById('site-devices-list');
   }
 
   initComponents() {
@@ -162,19 +181,113 @@ export class TestbedGraphController {
     }
   }
 
+  parseProjectSpec(spec) {
+    if (!spec) {
+      return { provider: 'mqtt', project: 'localhost', namespace: null, effectiveNamespace: 'udmis', user: null, isCloud: false };
+    }
+    let s = spec.trim();
+    let provider = 'pubsub';
+    if (s.startsWith('//')) {
+      s = s.slice(2);
+      if (s.includes('/')) {
+        const parts = s.split('/', 2);
+        provider = parts[0];
+        s = s.slice(parts[0].length + 1);
+      } else {
+        provider = s;
+        s = '';
+      }
+    }
+    let user = null;
+    if (s.includes('+')) {
+      const parts = s.split('+', 2);
+      s = parts[0];
+      user = parts[1];
+    }
+    let namespace = null;
+    let project = s;
+    if (s.includes('/')) {
+      const parts = s.split('/', 2);
+      project = parts[0];
+      namespace = parts[1];
+    }
+    const effectiveNamespace = namespace || 'udmis';
+    const isCloud = provider === 'gbos' || provider === 'gref' || provider === 'pubsub' || provider === 'clearblade' || (project && project.includes('bos-platform'));
+
+    return {
+      provider,
+      project: project || 'bos-platform-dev',
+      namespace,
+      effectiveNamespace,
+      user,
+      isCloud
+    };
+  }
+
+  syncProjectSpecToNodes(val) {
+    this.projectSpec = val;
+    const parsed = this.parseProjectSpec(val);
+    if (parsed.isCloud) {
+      this.setupMode = 'CLOUD';
+      const targetNs = parsed.effectiveNamespace;
+      const envProject = parsed.project;
+      const userSuffix = parsed.user ? `+${parsed.user}` : '';
+
+      const ingressNode = this.infraNodes.find(n => n.type === 'zanzara_ingress');
+      if (ingressNode) {
+        ingressNode.inputs.project_id = envProject;
+        ingressNode.inputs.endpoint = `${envProject}.corp.goog`;
+        ingressNode.inputs.namespace = targetNs;
+      }
+
+      const fabricNode = this.infraNodes.find(n => n.type === 'zanzara_fabric');
+      if (fabricNode) {
+        fabricNode.inputs.pubsub_project = envProject;
+        fabricNode.inputs.namespace = targetNs;
+      }
+
+      const cloudUdmisNode = this.infraNodes.find(n => n.type === 'cloud_udmis');
+      if (cloudUdmisNode) {
+        cloudUdmisNode.inputs.topic = `projects/${envProject}/topics/${targetNs !== 'udmis' ? `${targetNs}~` : ''}udmi_target`;
+        cloudUdmisNode.inputs.subscription = `${targetNs !== 'udmis' ? `${targetNs}~` : ''}udmi_target-udmis${userSuffix}`;
+        cloudUdmisNode.inputs.namespace = targetNs;
+        if (parsed.user) cloudUdmisNode.inputs.user = parsed.user;
+      }
+
+      const etcdNode = this.infraNodes.find(n => n.type === 'etcd');
+      if (etcdNode) {
+        etcdNode.inputs.host = `${envProject}-etcd`;
+        etcdNode.inputs.namespace = targetNs;
+      }
+
+      this.updateSetupButtons();
+      this.renderGraph();
+      if (this.selectedNodeId) this.renderInspector();
+    }
+  }
+
   initStoreListeners() {
     stateStore.on('change:siteModel', (val) => {
       this.siteModel = val;
+      this.loadSiteModelDevices();
       this.runAllHealthChecks();
     });
 
     stateStore.on('change:projectSpec', (val) => {
-      this.projectSpec = val;
+      this.syncProjectSpecToNodes(val);
       this.runAllHealthChecks();
     });
 
     stateStore.on('change:devices', (devices) => {
-      this.onDiscoveredDevices(devices);
+      const meta = stateStore.get('deviceMetadata') || {};
+      this.onDiscoveredDevices(devices, meta);
+    });
+
+    stateStore.on('change:deviceMetadata', (meta) => {
+      if (meta) {
+        this.deviceMetadata = meta;
+        this.renderGraph();
+      }
     });
   }
 
@@ -213,52 +326,235 @@ export class TestbedGraphController {
     }
   }
 
-  onDiscoveredDevices(devices) {
-    if (!this.selectActualDevices) return;
-    this.selectActualDevices.innerHTML = '';
-    if (!devices || devices.length === 0) {
-      this.selectActualDevices.innerHTML = '<option disabled>No device folders found in site model</option>';
+  async loadSiteModelDevices() {
+    if (!this.siteModel) {
+      this.discoveredDevices = [];
+      this.deviceNodes = [];
+      if (this.siteDevicesCountBadge) {
+        this.siteDevicesCountBadge.textContent = '0';
+      }
+      if (this.siteDevicesList) {
+        this.siteDevicesList.innerHTML = `
+          <div style="font-size: 11px; color: #70757a; text-align: center; padding: 24px 8px; line-height: 1.5;">
+            <div style="font-weight: 600; color: #3c4043; margin-bottom: 4px;">No Site Model Selected</div>
+            <div>Select a UDMI site model directory to view and configure devices.</div>
+            <button id="btn-empty-browse-site" class="btn btn-outlined btn-sm" style="margin-top: 8px; font-size: 11px; padding: 3px 10px;">📁 Select Site Model</button>
+          </div>
+        `;
+        const btnEmpty = document.getElementById('btn-empty-browse-site');
+        if (btnEmpty) {
+          btnEmpty.addEventListener('click', () => {
+            stateStore.emit('open_folder_browser');
+            window.postMessage({ type: 'open_folder_browser' }, '*');
+          });
+        }
+      }
+      this.renderGraph();
       return;
     }
-    devices.forEach(devId => {
-      const opt = document.createElement('option');
-      opt.value = devId;
-      opt.textContent = devId;
-      if (this.deviceNodes.some(n => n.type === 'actual_device' && (n.id === devId || n.inputs.device_id === devId))) {
-        opt.selected = true;
-      }
-      this.selectActualDevices.appendChild(opt);
-    });
-  }
 
-  async loadActualDevicesDropdown() {
-    if (!this.selectActualDevices) return;
+    if (this.siteDevicesList) {
+      this.siteDevicesList.innerHTML = `
+        <div style="font-size: 11px; color: #70757a; text-align: center; padding: 20px 8px;">
+          <span class="spinner-sm" style="margin-bottom: 6px;"></span>
+          <div>Loading devices from site model...</div>
+        </div>
+      `;
+    }
     try {
       const res = await fetch(`/api/devices?site_model=${encodeURIComponent(this.siteModel)}`);
       if (res.ok) {
         const data = await res.json();
-        this.onDiscoveredDevices(data.devices || []);
+        this.deviceMetadata = data.device_metadata || {};
+        this.onDiscoveredDevices(data.devices || [], this.deviceMetadata);
+      } else {
+        if (this.siteDevicesList) {
+          this.siteDevicesList.innerHTML = `
+            <div style="font-size: 11px; color: #c5221f; text-align: center; padding: 16px 8px;">
+              ⚠️ Could not load devices from "${this.siteModel}"
+            </div>
+          `;
+        }
       }
     } catch (e) {
-      console.warn("Failed to load actual devices list:", e);
+      console.warn("Failed to load site model devices:", e);
+      if (this.siteDevicesList) {
+        this.siteDevicesList.innerHTML = `
+          <div style="font-size: 11px; color: #c5221f; text-align: center; padding: 16px 8px;">
+            ⚠️ Network error loading devices
+          </div>
+        `;
+      }
     }
   }
 
-  initEvents() {
-    if (this.btnDefaultSetup) this.btnDefaultSetup.addEventListener('click', () => this.openSetupModal('LOCAL'));
-    if (this.btnCloudSetup) this.btnCloudSetup.addEventListener('click', () => this.openSetupModal('CLOUD'));
-    if (this.btnStartPipeline) this.btnStartPipeline.addEventListener('click', () => this.startPipeline());
-    if (this.btnStopPipeline) this.btnStopPipeline.addEventListener('click', () => this.stopPipeline());
-    if (this.btnCloseInspector) this.btnCloseInspector.addEventListener('click', () => this.selectNode(null, false));
+  onDiscoveredDevices(devices, metadata = {}) {
+    this.discoveredDevices = Array.isArray(devices) ? devices : [];
+    if (metadata && Object.keys(metadata).length > 0) {
+      this.deviceMetadata = metadata;
+    }
+    if (this.siteDevicesCountBadge) {
+      this.siteDevicesCountBadge.textContent = this.discoveredDevices.length;
+    }
 
-    // Setup & Node Config Modals & Actual Devices Dropdown
-    if (this.btnCloseSetup) this.btnCloseSetup.addEventListener('click', () => this.closeSetupModal());
-    if (this.btnCancelSetup) this.btnCancelSetup.addEventListener('click', () => this.closeSetupModal());
-    if (this.btnApplySetup) this.btnApplySetup.addEventListener('click', () => this.applySetupFromModal());
+    // Keep existing configurations, initialize new ones
+    this.discoveredDevices.forEach(devId => {
+      if (!this.deviceConfigs.has(devId)) {
+        const existingNode = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+        if (existingNode) {
+          this.deviceConfigs.set(devId, { enabled: true, mode: existingNode.type });
+        } else {
+          this.deviceConfigs.set(devId, { enabled: false, mode: 'actual_device' });
+        }
+      }
+    });
+
+    // Synchronize existing device nodes with discovered devices
+    this.deviceNodes.forEach(node => {
+      const devId = node.inputs.device_id;
+      if (devId && this.deviceConfigs.has(devId)) {
+        const cfg = this.deviceConfigs.get(devId);
+        cfg.enabled = true;
+      }
+    });
+
+    this.renderSiteDevicesList();
+    this.renderGraph();
+  }
+
+  renderSiteDevicesList() {
+    if (!this.siteDevicesList) return;
+
+    const totalCount = this.discoveredDevices.length;
+    const activeCanvasDevCount = this.deviceNodes.length;
+
+    if (this.siteDevicesCountBadge) {
+      this.siteDevicesCountBadge.textContent = totalCount;
+    }
+    if (this.siteDevicesSelectedSummary) {
+      this.siteDevicesSelectedSummary.textContent = `${activeCanvasDevCount} selected`;
+    }
+
+    if (!this.siteModel) {
+      this.loadSiteModelDevices();
+      return;
+    }
+
+    if (!this.discoveredDevices || this.discoveredDevices.length === 0) {
+      this.siteDevicesList.innerHTML = `
+        <div style="font-size: 11px; color: #70757a; text-align: center; padding: 24px 8px; width: 100%;">
+          No devices found in "${this.siteModel}".
+        </div>
+      `;
+      return;
+    }
+
+    const query = (this.deviceSearchQuery || '').toLowerCase();
+    const filteredDevices = this.discoveredDevices.filter(devId => devId.toLowerCase().includes(query));
+
+    if (filteredDevices.length === 0) {
+      this.siteDevicesList.innerHTML = `
+        <div style="font-size: 11px; color: #70757a; text-align: center; padding: 24px 8px; width: 100%;">
+          No devices matching "<strong>${this.deviceSearchQuery}</strong>"
+        </div>
+      `;
+      return;
+    }
+
+    let html = '';
+    filteredDevices.forEach(devId => {
+      const node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+      const isOnCanvas = Boolean(node);
+      const isPubber = node ? node.type === 'pubber' : false;
+
+      html += `
+        <button class="device-pill ${isOnCanvas ? 'selected' : ''} ${isPubber ? 'is-pubber' : ''}" 
+                data-device-id="${devId}" 
+                draggable="true" 
+                title="${isOnCanvas ? `Click to remove ${devId} from canvas (${isPubber ? 'Pubber emulator' : 'Physical device'})` : `Click to add ${devId} to canvas`}">
+          <span class="material-symbols-outlined pill-icon">${isOnCanvas ? 'check_circle' : 'add'}</span>
+          <span class="pill-name">${devId}</span>
+          ${isOnCanvas ? `<span class="pill-mode-icon material-symbols-outlined" title="${isPubber ? 'Pubber emulator' : 'Physical device'}">${isPubber ? 'robot_2' : 'home_iot_device'}</span>` : ''}
+        </button>
+      `;
+    });
+
+    this.siteDevicesList.innerHTML = html;
+
+    // Attach click and drag listeners to pills
+    this.siteDevicesList.querySelectorAll('.device-pill').forEach(pill => {
+      const devId = pill.getAttribute('data-device-id');
+
+      pill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+        if (node) {
+          this.removeDeviceFromCanvas(devId);
+        } else {
+          this.addDeviceToCanvas(devId, 'actual_device');
+        }
+        this.renderSiteDevicesList();
+        this.renderGraph();
+        this.renderInspector();
+        if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
+      });
+
+      pill.addEventListener('dragstart', (e) => {
+        e.dataTransfer.setData('application/json', JSON.stringify({ type: 'site_device', deviceId: devId }));
+      });
+    });
+  }
+
+  initEvents() {
+    if (this.btnDefaultSetup) this.btnDefaultSetup.addEventListener('click', () => this.loadDefaultSetup(false, true));
+    if (this.btnCloudSetup) this.btnCloudSetup.addEventListener('click', () => this.promptCloudSetup());
+    if (this.btnStopPipeline) this.btnStopPipeline.addEventListener('click', () => this.stopPipeline());
+    if (this.btnViewSetupLogs) this.btnViewSetupLogs.addEventListener('click', () => this.openSetupLogsModal(this.latestSetupSessionId, this.setupMode || 'LOCAL', this.projectSpec, this.isSetupReused));
+    if (this.btnCloseInspector) this.btnCloseInspector.addEventListener('click', () => this.minimizeInspector());
+
+    // Cloud Setup Modal
+    if (this.btnCloseCloudModal) this.btnCloseCloudModal.addEventListener('click', () => this.closeCloudSetupModal());
+    if (this.btnSubmitCloudSetup) this.btnSubmitCloudSetup.addEventListener('click', () => this.submitCloudSetup());
+    if (this.cloudProjectSpecInput) {
+      this.cloudProjectSpecInput.addEventListener('input', () => {
+        const val = this.cloudProjectSpecInput.value.trim();
+        if (val) {
+          localStorage.setItem('udmi_cloud_project_spec', val);
+        }
+      });
+      this.cloudProjectSpecInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') this.submitCloudSetup();
+        if (e.key === 'Escape') this.closeCloudSetupModal();
+      });
+    }
+
+    // Node Config Modal
     if (this.btnCloseNode) this.btnCloseNode.addEventListener('click', () => this.closeNodeModal());
     if (this.btnCancelNode) this.btnCancelNode.addEventListener('click', () => this.closeNodeModal());
     if (this.btnSaveNode) this.btnSaveNode.addEventListener('click', () => this.saveNodeFromModal());
-    if (this.selectActualDevices) this.selectActualDevices.addEventListener('change', () => this.handleActualDevicesDropdownChange());
+
+    // Search & Bulk Toolbar Event Handlers
+    if (this.inputDeviceSearch) {
+      this.inputDeviceSearch.addEventListener('input', (e) => {
+        this.deviceSearchQuery = e.target.value.toLowerCase().trim();
+        this.renderSiteDevicesList();
+        if (this.btnDeviceSearchClear) {
+          this.btnDeviceSearchClear.style.display = this.deviceSearchQuery ? 'block' : 'none';
+        }
+      });
+    }
+
+    if (this.btnDeviceSearchClear) {
+      this.btnDeviceSearchClear.addEventListener('click', () => {
+        if (this.inputDeviceSearch) this.inputDeviceSearch.value = '';
+        this.deviceSearchQuery = '';
+        this.renderSiteDevicesList();
+        this.btnDeviceSearchClear.style.display = 'none';
+      });
+    }
+
+    if (this.btnDevicesSelectAll) this.btnDevicesSelectAll.addEventListener('click', () => this.selectAllDevices());
+    if (this.btnDevicesClearAll) this.btnDevicesClearAll.addEventListener('click', () => this.clearAllDevices());
 
     // Git Save & Email Settings Modals
     if (this.btnGitSave) this.btnGitSave.addEventListener('click', () => this.openGitSaveModal());
@@ -286,23 +582,7 @@ export class TestbedGraphController {
     if (this.tabLogDiff) this.tabLogDiff.addEventListener('click', () => this.switchLogTab('diff'));
     if (this.btnCompareDiff) this.btnCompareDiff.addEventListener('click', () => this.runLogDiff());
 
-    // Drag & Drop & Palette Item Click Configuration
-    const paletteItems = document.querySelectorAll('.palette-item');
-    paletteItems.forEach(item => {
-      if (!item.classList.contains('disabled')) {
-        item.addEventListener('click', () => {
-          const nodeType = item.getAttribute('data-node-type');
-          this.openNodeModal({ type: nodeType, isNew: true });
-        });
-        if (item.getAttribute('draggable') === 'true') {
-          item.addEventListener('dragstart', (e) => {
-            const nodeType = item.getAttribute('data-node-type');
-            e.dataTransfer.setData('text/plain', nodeType);
-          });
-        }
-      }
-    });
-
+    // Drag & Drop to Canvas
     if (this.canvasContainer) {
       this.canvasContainer.addEventListener('dragover', (e) => {
         e.preventDefault();
@@ -311,12 +591,29 @@ export class TestbedGraphController {
 
       this.canvasContainer.addEventListener('drop', (e) => {
         e.preventDefault();
-        const nodeType = e.dataTransfer.getData('text/plain');
-        if (nodeType === 'pubber') {
-          const rect = this.canvasContainer.getBoundingClientRect();
-          const x = Math.max(20, e.clientX - rect.left - 90);
-          const y = Math.max(20, e.clientY - rect.top - 40);
-          this.openNodeModal({ type: nodeType, x, y, isNew: true });
+        const rawData = e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+        if (!rawData) return;
+        try {
+          const data = JSON.parse(rawData);
+          if (data.type === 'site_device' && data.deviceId) {
+            const rect = this.canvasContainer.getBoundingClientRect();
+            const x = Math.max(20, e.clientX - rect.left - 90);
+            const y = Math.max(20, e.clientY - rect.top - 40);
+            const cfg = this.deviceConfigs.get(data.deviceId) || { mode: 'actual_device' };
+            this.addDeviceToCanvas(data.deviceId, cfg.mode || 'actual_device', x, y);
+            this.renderSiteDevicesList();
+            this.renderGraph();
+            this.renderInspector();
+            if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
+          }
+        } catch (err) {
+          // Fallback if plain text string
+          if (rawData === 'pubber' || rawData === 'actual_device') {
+            const rect = this.canvasContainer.getBoundingClientRect();
+            const x = Math.max(20, e.clientX - rect.left - 90);
+            const y = Math.max(20, e.clientY - rect.top - 40);
+            this.openNodeModal({ type: rawData, x, y, isNew: true });
+          }
         }
       });
     }
@@ -345,6 +642,90 @@ export class TestbedGraphController {
     }, 8000);
 
     window.addEventListener('resize', () => this.updateTabIndicator());
+    this.initInspectorDraggable();
+  }
+
+  openInspector() {
+    this.isInspectorOpen = true;
+    if (this.inspectorPanel) {
+      this.inspectorPanel.classList.remove('minimized');
+      this.inspectorPanel.classList.add('open');
+    }
+    this.renderInspector();
+  }
+
+  minimizeInspector() {
+    this.isInspectorOpen = false;
+    if (this.inspectorPanel) {
+      this.inspectorPanel.classList.add('minimized');
+      this.inspectorPanel.classList.remove('open');
+    }
+  }
+
+  toggleInspector() {
+    if (this.isInspectorOpen) {
+      this.minimizeInspector();
+    } else {
+      this.openInspector();
+    }
+  }
+
+  initInspectorDraggable() {
+    const panel = this.inspectorPanel;
+    const header = panel ? panel.querySelector('.inspector-header') : null;
+    if (!panel || !header) return;
+
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+    let initialLeft = 0;
+    let initialTop = 0;
+
+    header.addEventListener('mousedown', (e) => {
+      // Don't drag if clicking close button, minimize button, or any other button inside header
+      if (e.target.closest('#btn-close-inspector') || e.target.closest('#btn-minimize-inspector') || e.target.closest('button')) return;
+
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+
+      const rect = panel.getBoundingClientRect();
+      const parentRect = (panel.offsetParent || panel.parentElement || document.body).getBoundingClientRect();
+
+      initialLeft = rect.left - parentRect.left;
+      initialTop = rect.top - parentRect.top;
+
+      panel.style.left = `${initialLeft}px`;
+      panel.style.top = `${initialTop}px`;
+      panel.style.right = 'auto';
+      panel.style.bottom = 'auto';
+
+      const onMouseMove = (moveEvent) => {
+        if (!isDragging) return;
+        const dx = moveEvent.clientX - startX;
+        const dy = moveEvent.clientY - startY;
+
+        const currentParentRect = (panel.offsetParent || panel.parentElement || document.body).getBoundingClientRect();
+        const maxLeft = currentParentRect.width - panel.offsetWidth - 8;
+        const maxTop = currentParentRect.height - panel.offsetHeight - 8;
+
+        const newLeft = Math.max(8, Math.min(maxLeft, initialLeft + dx));
+        const newTop = Math.max(8, Math.min(maxTop, initialTop + dy));
+
+        panel.style.left = `${newLeft}px`;
+        panel.style.top = `${newTop}px`;
+      };
+
+      const onMouseUp = () => {
+        isDragging = false;
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
+      };
+
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+      e.preventDefault();
+    });
   }
 
   updateTabIndicator() {
@@ -374,7 +755,7 @@ export class TestbedGraphController {
       this.btnViewLogs.setAttribute('aria-selected', mode === 'logs' ? 'true' : 'false');
     }
 
-    if (this.canvasWorkspace) this.canvasWorkspace.style.display = mode === 'canvas' ? 'flex' : 'none';
+    if (this.canvasWorkspace) this.canvasWorkspace.style.display = mode === 'canvas' ? 'grid' : 'none';
     if (this.matrixWorkspace) this.matrixWorkspace.style.display = mode === 'matrix' ? 'flex' : 'none';
     if (this.logsWorkspace) this.logsWorkspace.style.display = mode === 'logs' ? 'flex' : 'none';
 
@@ -398,15 +779,25 @@ export class TestbedGraphController {
 
   // --- NODE TYPE SPECIFICATIONS ---
   getNodeSpec(type) {
+    const parsed = this.parseProjectSpec(this.projectSpec);
+    const envProject = parsed.project || 'bos-platform-dev';
+    const envNamespace = parsed.effectiveNamespace || 'udmis';
+    const isCloud = parsed.isCloud;
+
     const specs = {
       pubber: {
         type: 'pubber',
         label: 'Device Emulator (Pubber)',
-        icon: 'smart_toy',
+        icon: 'robot_2',
         inputs: { device_id: 'AHU-1', serial_no: 'SN-10492', interval_sec: '10' },
-        subText: (n) => `Dev: ${n.inputs.device_id || 'AHU-1'}`,
+        subText: (n) => {
+          const devId = n.inputs.device_id || n.label;
+          const meta = this.deviceMetadata && this.deviceMetadata[devId];
+          const ver = meta?.version || n.inputs.version;
+          return ver ? `v${ver.replace(/^v/, '')}` : 'UDMI Ready';
+        },
         runConfig: (n) => `out/pubber_config.json (site: ${this.siteModel}, dev: ${n.inputs.device_id || 'AHU-1'})`,
-        runCommand: (n) => `UDMI_NO_SUDO=true bin/pubber ${this.siteModel} //mqtt/localhost:18833 ${n.inputs.device_id || 'AHU-1'} ${n.inputs.serial_no || 'SN-10492'}`,
+        runCommand: (n) => `UDMI_NO_SUDO=true bin/pubber ${this.siteModel} ${this.projectSpec || '//mqtt/localhost:18833'} ${n.inputs.device_id || 'AHU-1'} ${n.inputs.serial_no || 'SN-10492'}`,
         healthProbe: (n) => `Message Probe: bin/pull_mqtt for /r/+/d/${n.inputs.device_id || 'AHU-1'}/state`
       },
       spotter: {
@@ -423,11 +814,16 @@ export class TestbedGraphController {
       actual_device: {
         type: 'actual_device',
         label: 'Actual Device',
-        icon: 'router',
+        icon: 'home_iot_device',
         inputs: { device_id: 'AHU-22', address: '192.168.1.105', protocol: 'BACnet/IP' },
-        subText: (n) => `${n.inputs.device_id || 'AHU-22'} (${n.inputs.protocol || 'BACnet'})`,
+        subText: (n) => {
+          const devId = n.inputs.device_id || n.label;
+          const meta = this.deviceMetadata && this.deviceMetadata[devId];
+          const ver = meta?.version || n.inputs.version;
+          return ver ? `v${ver.replace(/^v/, '')}` : 'UDMI Ready';
+        },
         runConfig: (n) => `${this.siteModel}/devices/${n.inputs.device_id || 'AHU-22'}/metadata.json`,
-        runCommand: (n) => `UDMI_NO_SUDO=true bin/registrar ${this.siteModel} //mqtt/localhost:18833 ${n.inputs.device_id || 'AHU-22'}`,
+        runCommand: (n) => `UDMI_NO_SUDO=true bin/registrar ${this.siteModel} ${this.projectSpec || '//mqtt/localhost:18833'} ${n.inputs.device_id || 'AHU-22'}`,
         healthProbe: (n) => `Message Heartbeat: bin/pull_mqtt for /r/+/d/${n.inputs.device_id || 'AHU-22'}/state`
       },
       mqtt_broker: {
@@ -450,34 +846,44 @@ export class TestbedGraphController {
         runCommand: () => `UDMI_NO_SUDO=true bin/start_udmis`,
         healthProbe: () => `Readiness Sentinel: test -f var/pod_ready.txt & out/udmis.log`
       },
-      clearblade_broker: {
-        type: 'clearblade_broker',
-        label: 'ClearBlade IoT Broker',
-        icon: 'cloud_sync',
-        inputs: { project_id: 'bos-platform-dev', registry_id: 'udmi-registry', region: 'us-central1' },
-        subText: (n) => `Project: ${n.inputs.project_id || 'gcp-proj'}`,
-        runConfig: (n) => `${this.siteModel}/cloud_iot_config.json (registry: ${n.inputs.registry_id || 'registry'})`,
-        runCommand: (n) => `UDMI_NO_SUDO=true bin/registrar ${this.siteModel} //clearblade/${n.inputs.project_id || 'project'}`,
-        healthProbe: () => `MQTTS Port Probe: nc -zv us-central1-mqtt.clearblade.com 8883`
+      zanzara_ingress: {
+        type: 'zanzara_ingress',
+        label: 'Zanzara Ingress',
+        icon: 'vpn_lock',
+        inputs: { endpoint: `${envProject}.corp.goog`, port: '8883', namespace: envNamespace, project_id: envProject },
+        subText: () => 'Auth Proxy',
+        runConfig: (n) => `k8s/auth/ (namespace: ${n.inputs.namespace || envNamespace})`,
+        runCommand: (n) => `kubectl get deployment auth -n ${n.inputs.namespace || envNamespace}`,
+        healthProbe: (n) => `mTLS Ingress Probe: nc -zv ${n.inputs.endpoint || `${envProject}.corp.goog`} ${n.inputs.port || '8883'}`
+      },
+      zanzara_fabric: {
+        type: 'zanzara_fabric',
+        label: 'Message Fabric',
+        icon: 'hub',
+        inputs: { pubsub_project: envProject, namespace: envNamespace, topics: 'udmi_target, udmi_state, udmi_reflect' },
+        subText: () => 'Mosquitto+Bridges+Pub/Sub',
+        runConfig: (n) => `k8s/bridge/ (namespace: ${n.inputs.namespace || envNamespace})`,
+        runCommand: (n) => `kubectl get statefulset -l app=bridge -n ${n.inputs.namespace || envNamespace}`,
+        healthProbe: (n) => `Pub/Sub Topics: gcloud pubsub topics list --project=${n.inputs.pubsub_project || envProject}`
       },
       cloud_udmis: {
         type: 'cloud_udmis',
-        label: 'Cloud UDMIS (Pub/Sub)',
+        label: 'Cloud UDMIS',
         icon: 'cloud_done',
-        inputs: { topic: 'projects/bos-platform-dev/topics/udmi_target', subscription: 'udmi_sub' },
-        subText: (n) => `Sub: ${n.inputs.subscription || 'udmi_sub'}`,
-        runConfig: () => `udmis/etc/prod_pod.json (GCP Pub/Sub Provider)`,
-        runCommand: () => `java -jar udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar udmis/etc/prod_pod.json`,
-        healthProbe: (n) => `GCP Pub/Sub Pull: gcloud pubsub subscriptions pull ${n.inputs.subscription || 'udmi_sub'}`
+        inputs: { topic: `projects/${envProject}/topics/udmi_target`, subscription: 'udmi_target-udmis', namespace: envNamespace },
+        subText: () => 'Schema & State Engine',
+        runConfig: (n) => `udmis/etc/prod_pod.json (namespace: ${n.inputs.namespace || envNamespace})`,
+        runCommand: (n) => `kubectl get deployment udmis-pods -n ${n.inputs.namespace || envNamespace}`,
+        healthProbe: (n) => `GCP Pub/Sub Pull: gcloud pubsub subscriptions pull ${n.inputs.subscription || 'udmi_target-udmis'} --limit=1`
       },
       etcd: {
         type: 'etcd',
-        label: 'etcd KV Store',
+        label: 'etcd State Store',
         icon: 'database',
         inputs: { port: '2379', host: '127.0.0.1' },
-        subText: (n) => `Port: ${n.inputs.port || '2379'} (KV Store)`,
-        runConfig: () => 'var/etcd/',
-        runCommand: () => 'bin/start_etcd',
+        subText: () => 'Device Registry & State',
+        runConfig: (n) => isCloud || (n.inputs.host && n.inputs.host.includes('bos-platform')) ? `k8s/udmis/etcd (Service: etcd.udmis.svc.cluster.local:2379)` : 'var/etcd/',
+        runCommand: (n) => isCloud || (n.inputs.host && n.inputs.host.includes('bos-platform')) ? `https://${envProject}.corp.goog/` : 'bin/start_etcd',
         healthProbe: () => 'pgrep -f etcd'
       },
       influx: {
@@ -515,81 +921,249 @@ export class TestbedGraphController {
     return specs[type] || specs.pubber;
   }
 
-  loadDefaultSetup() {
+  loadDefaultSetup(silent = false, autoStart = false) {
+    if (!this.siteModel) {
+      NotificationManager.showToast({
+        title: "📁 Site Model Required",
+        message: "Please select a Site Model Path before starting Local Setup.",
+        type: "warning"
+      });
+      stateStore.emit('open_folder_browser');
+      window.postMessage({ type: 'open_folder_browser' }, '*');
+      return;
+    }
+
     this.setupMode = 'LOCAL';
     this.projectSpec = '//mqtt/localhost:18833'; // Unprivileged isolated mode
     stateStore.set('projectSpec', this.projectSpec);
     this.updateSetupButtons();
 
-    if (this.deviceNodes.length === 0) {
-      const pNode = this.createNodeObject('pubber', 60, 160);
-      this.deviceNodes.push(pNode);
-      this.fetchDeviceResultsFromDisk(pNode);
-    }
-
+    // Replace infrastructure nodes with Local wave topology (Device at y:60, Broker at y:190, UDMIS at y:60, etcd at y:190)
     this.infraNodes = [
-      this.createNodeObject('mqtt_broker', 300, 160),
-      this.createNodeObject('udmis', 540, 160),
-      this.createNodeObject('etcd', 780, 60),
-      this.createNodeObject('influx', 780, 160),
-      this.createNodeObject('postgresql', 780, 260)
+      this.createNodeObject('mqtt_broker', 250, 190),
+      this.createNodeObject('udmis', 460, 60),
+      this.createNodeObject('etcd', 670, 190)
     ];
 
-    this.selectNode(this.deviceNodes[0].id, false);
+    // Layout existing device nodes if any were explicitly added
+    this.deviceNodes.forEach((node, idx) => {
+      node.x = 40;
+      node.y = 60 + idx * 105;
+    });
+
     this.renderGraph();
     this.runAllHealthChecks();
-    this.loadActualDevicesDropdown();
+    this.renderSiteDevicesList();
+    if (!silent) {
+      NotificationManager.showToast({ title: "Local Setup Active", message: "Setting up local environment (//mqtt/localhost:18833).", type: "info" });
+    }
+    if (autoStart) {
+      this.startPipeline();
+    }
   }
 
-  loadCloudSetup() {
+  promptCloudSetup() {
+    if (!this.siteModel) {
+      NotificationManager.showToast({
+        title: "📁 Site Model Required",
+        message: "Please select a Site Model Path before starting Cloud Setup.",
+        type: "warning"
+      });
+      stateStore.emit('open_folder_browser');
+      window.postMessage({ type: 'open_folder_browser' }, '*');
+      return;
+    }
+
+    if (this.cloudProjectSpecInput) {
+      const cached = localStorage.getItem('udmi_cloud_project_spec');
+      const cur = cached || (this.projectSpec && !this.projectSpec.includes('localhost') ? this.projectSpec : '//gref/bos-platform-dev/heykhyati');
+      this.cloudProjectSpecInput.value = cur;
+    }
+
+    if (this.cloudSetupModal) {
+      this.cloudSetupModal.classList.add('active');
+      setTimeout(() => {
+        if (this.cloudProjectSpecInput) {
+          this.cloudProjectSpecInput.focus();
+          this.cloudProjectSpecInput.select();
+        }
+      }, 50);
+    }
+  }
+
+  closeCloudSetupModal() {
+    if (this.cloudSetupModal) {
+      this.cloudSetupModal.classList.remove('active');
+    }
+  }
+
+  submitCloudSetup() {
+    const spec = this.cloudProjectSpecInput ? this.cloudProjectSpecInput.value.trim() : '';
+    if (!spec) {
+      NotificationManager.showToast({
+        title: "Project Spec Required",
+        message: "Please enter a valid Project Spec (e.g. //gref/bos-platform-dev).",
+        type: "warning"
+      });
+      return;
+    }
+    localStorage.setItem('udmi_cloud_project_spec', spec);
+    this.closeCloudSetupModal();
+    this.loadCloudSetup(false, true, spec);
+  }
+
+  loadCloudSetup(silent = false, autoStart = false, customProjectSpec = null) {
+    if (!this.siteModel) {
+      NotificationManager.showToast({
+        title: "📁 Site Model Required",
+        message: "Please select a Site Model Path before starting Cloud Setup.",
+        type: "warning"
+      });
+      stateStore.emit('open_folder_browser');
+      window.postMessage({ type: 'open_folder_browser' }, '*');
+      return;
+    }
+
     this.setupMode = 'CLOUD';
-    this.projectSpec = '//pubsub/bos-platform-dev';
+    this.latestSetupSessionId = null;
+    const cached = localStorage.getItem('udmi_cloud_project_spec');
+    if (customProjectSpec) {
+      this.projectSpec = customProjectSpec;
+      localStorage.setItem('udmi_cloud_project_spec', customProjectSpec);
+    } else if (cached) {
+      this.projectSpec = cached;
+    } else if (!this.projectSpec || this.projectSpec.includes('localhost')) {
+      this.projectSpec = '//gref/bos-platform-dev/heykhyati';
+    }
     stateStore.set('projectSpec', this.projectSpec);
     this.updateSetupButtons();
 
-    if (this.deviceNodes.length === 0) {
-      const pNode = this.createNodeObject('pubber', 60, 160);
-      this.deviceNodes.push(pNode);
-      this.fetchDeviceResultsFromDisk(pNode);
+    // Extract target project / namespace from projectSpec
+    const parsed = this.parseProjectSpec(this.projectSpec);
+    const envProject = parsed.project;
+    const targetNs = parsed.effectiveNamespace;
+    const userSuffix = parsed.user ? `+${parsed.user}` : '';
+
+    // Replace infrastructure nodes with Zanzara Cloud wave topology (Device: y:60, Ingress: y:190, Fabric: y:60, UDMIS: y:190, etcd: y:60)
+    const ingressNode = this.createNodeObject('zanzara_ingress', 210, 190);
+    ingressNode.inputs.project_id = envProject;
+    ingressNode.inputs.endpoint = `${envProject}.corp.goog`;
+    ingressNode.inputs.namespace = targetNs;
+
+    const fabricNode = this.createNodeObject('zanzara_fabric', 390, 60);
+    fabricNode.inputs.pubsub_project = envProject;
+    fabricNode.inputs.namespace = targetNs;
+
+    const cloudUdmisNode = this.createNodeObject('cloud_udmis', 570, 190);
+    cloudUdmisNode.inputs.topic = `projects/${envProject}/topics/${targetNs !== 'udmis' ? `${targetNs}~` : ''}udmi_target`;
+    cloudUdmisNode.inputs.subscription = `${targetNs !== 'udmis' ? `${targetNs}~` : ''}udmi_target-udmis${userSuffix}`;
+    cloudUdmisNode.inputs.namespace = targetNs;
+    if (parsed.user) {
+      cloudUdmisNode.inputs.user = parsed.user;
     }
 
+    const etcdNode = this.createNodeObject('etcd', 750, 60);
+    etcdNode.inputs.host = `${envProject}-etcd`;
+    etcdNode.inputs.namespace = targetNs;
+
     this.infraNodes = [
-      this.createNodeObject('clearblade_broker', 340, 160),
-      this.createNodeObject('cloud_udmis', 600, 160)
+      ingressNode,
+      fabricNode,
+      cloudUdmisNode,
+      etcdNode
     ];
 
-    this.selectNode(this.deviceNodes[0].id, false);
+    // Layout existing device nodes if any were explicitly added
+    this.deviceNodes.forEach((node, idx) => {
+      node.x = 30;
+      node.y = 60 + idx * 105;
+    });
+
     this.renderGraph();
     this.runAllHealthChecks();
-    this.loadActualDevicesDropdown();
+    this.renderSiteDevicesList();
+    if (!silent) {
+      NotificationManager.showToast({ title: "Zanzara Setup Active", message: `Configured Zanzara cloud environment (${this.projectSpec}).`, type: "info" });
+    }
   }
 
   updateSetupButtons() {
-    if (this.btnDefaultSetup) this.btnDefaultSetup.classList.toggle('active', this.setupMode === 'LOCAL');
-    if (this.btnCloudSetup) this.btnCloudSetup.classList.toggle('active', this.setupMode === 'CLOUD');
+    if (this.btnDefaultSetup) {
+      this.btnDefaultSetup.classList.toggle('active', this.setupMode === 'LOCAL');
+      this.btnDefaultSetup.disabled = this.setupMode === 'LOCAL';
+    }
+    if (this.btnCloudSetup) {
+      this.btnCloudSetup.classList.toggle('active', this.setupMode === 'CLOUD');
+      this.btnCloudSetup.disabled = this.setupMode === 'CLOUD';
+    }
+    if (this.btnViewSetupLogs) {
+      this.btnViewSetupLogs.style.display = (this.setupMode === 'LOCAL' && this.latestSetupSessionId) ? 'inline-flex' : 'none';
+    }
   }
 
   async startPipeline() {
+    if (this.setupMode !== 'LOCAL') {
+      this.runAllHealthChecks();
+      return;
+    }
+
     this.nodes.forEach(n => { if (n.type !== 'actual_device') n.status = 'INITIALIZING'; });
     this.renderGraph();
     try {
-      if (this.setupMode === 'LOCAL') {
-        await fetch('/api/testbed/start', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ site_model: this.siteModel, project_spec: this.projectSpec })
-        });
+      const res = await fetch('/api/testbed/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site_model: this.siteModel, project_spec: this.projectSpec })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.project_spec) {
+          this.projectSpec = data.project_spec;
+          stateStore.set('projectSpec', data.project_spec);
+        }
+        if (data.port) {
+          const mqttNode = this.infraNodes.find(n => n.type === 'mqtt_broker');
+          if (mqttNode) {
+            mqttNode.inputs.port = String(data.port);
+          }
+        }
+        if (data.already_running) {
+          this.nodes.forEach(n => { if (n.type !== 'actual_device') n.status = 'UP'; });
+          this.renderGraph();
+          this.runAllHealthChecks();
+          NotificationManager.showToast({
+            title: "Local Setup Active",
+            message: `Active local environment found (${this.projectSpec}).`,
+            type: "info"
+          });
+          if (data.session_id) {
+            this.latestSetupSessionId = data.session_id;
+          }
+          this.isSetupReused = true;
+        } else if (data.session_id) {
+          this.isSetupReused = false;
+          this.latestSetupSessionId = data.session_id;
+          this.openSetupLogsModal(data.session_id, 'LOCAL', data.project_spec || this.projectSpec);
+        }
+        this.updateSetupButtons();
       } else {
-        await fetch('/api/testbed/start_component', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ component: 'pubber', site_model: this.siteModel, project_spec: this.projectSpec })
+        const errData = await res.json().catch(() => ({}));
+        NotificationManager.showToast({
+          title: "Startup Failed",
+          message: errData.error || "Could not launch local environment.",
+          type: "error"
         });
       }
     } catch (e) {
       console.error("Failed to start pipeline:", e);
+      NotificationManager.showToast({
+        title: "Startup Error",
+        message: "Failed to communicate with backend testbed service.",
+        type: "error"
+      });
     }
     setTimeout(() => this.runAllHealthChecks(), 2500);
+    setTimeout(() => this.runAllHealthChecks(), 6000);
   }
 
   async stopPipeline() {
@@ -600,21 +1174,29 @@ export class TestbedGraphController {
     } catch (e) {
       console.error("Failed to stop pipeline:", e);
     }
+    this.setupMode = null;
+    this.latestSetupSessionId = null;
+    this.updateSetupButtons();
     setTimeout(() => this.runAllHealthChecks(), 1500);
   }
 
-  createNodeObject(type, x, y) {
+  createNodeObject(type, x, y, deviceId = null) {
     const spec = this.getNodeSpec(type);
-    const isDevice = type === 'pubber' || type === 'actual_device' || type === 'spotter';
+    const isDevice = type === 'pubber' || type === 'actual_device' || type === 'spotter' || type === 'ancillary';
+    const devId = deviceId || null;
+    const inputs = { ...spec.inputs };
+    if (devId) {
+      inputs.device_id = devId;
+    }
     return {
-      id: 'node_' + Math.random().toString(36).substr(2, 7),
+      id: devId ? `device_${devId}` : ('node_' + Math.random().toString(36).substr(2, 7)),
       type: spec.type,
-      label: spec.label,
+      label: devId || spec.label,
       icon: spec.icon,
       status: type === 'actual_device' ? '' : 'UP',
       x,
       y,
-      inputs: { ...spec.inputs },
+      inputs,
       selectedTests: isDevice ? new Set(['system.base.telemetry', 'system.base.state', 'pointset.telemetry.events']) : new Set(),
       testResults: null,
       isTestingRunning: false,
@@ -636,22 +1218,44 @@ export class TestbedGraphController {
     const isDevice = this.deviceNodes.some(n => n.id === id);
     if (!isDevice) return;
     
+    const node = this.deviceNodes.find(n => n.id === id);
+    if (node && node.inputs && node.inputs.device_id) {
+      const devId = node.inputs.device_id;
+      if (this.deviceConfigs.has(devId)) {
+        this.deviceConfigs.get(devId).enabled = false;
+      }
+    }
+
     this.deviceNodes = this.deviceNodes.filter(n => n.id !== id);
     this.selectedNodeIds.delete(id);
     if (this.selectedNodeId === id) {
       const remaining = Array.from(this.selectedNodeIds);
-      this.selectedNodeId = remaining.length > 0 ? remaining[0] : null;
+      this.selectedNodeId = remaining.length > 0 ? remaining[0] : (this.deviceNodes[0]?.id || null);
     }
+    this.renderSiteDevicesList();
     this.renderGraph();
     this.renderInspector();
   }
 
-  selectNode(id, isMulti = false) {
+  updateCanvasSelectionClasses() {
+    if (!this.nodesLayer) return;
+    const cards = this.nodesLayer.querySelectorAll('.canvas-node');
+    cards.forEach(card => {
+      const nodeId = card.dataset.nodeId;
+      const isSelected = nodeId && (nodeId === this.selectedNodeId || this.selectedNodeIds.has(nodeId));
+      const isMulti = this.selectedNodeIds.size > 1 && this.selectedNodeIds.has(nodeId);
+      card.classList.toggle('selected', Boolean(isSelected));
+      card.classList.toggle('multi-selected', Boolean(isMulti));
+    });
+  }
+
+  selectNode(id, isMulti = false, openInspectorPanel = false) {
     if (!id) {
       this.selectedNodeId = null;
       this.selectedNodeIds.clear();
-      this.renderGraph();
+      this.updateCanvasSelectionClasses();
       this.renderInspector();
+      this.renderSiteDevicesList();
       return;
     }
 
@@ -676,32 +1280,60 @@ export class TestbedGraphController {
       stateStore.set('activeDevice', primaryNode.inputs.device_id);
     }
 
-    this.renderGraph();
+    if (openInspectorPanel) {
+      this.openInspector();
+    }
+
+    this.updateCanvasSelectionClasses();
     this.renderInspector();
+    this.renderSiteDevicesList();
   }
 
   getNodeLayer(type) {
     if (type === 'pubber' || type === 'actual_device' || type === 'spotter') return 1;
-    if (type === 'mqtt_broker' || type === 'clearblade_broker') return 2;
-    if (type === 'udmis' || type === 'cloud_udmis') return 3;
-    return 4;
+    if (type === 'mqtt_broker' || type === 'zanzara_ingress' || type === 'clearblade_broker') return 2;
+    if (type === 'zanzara_fabric') return 3;
+    if (type === 'udmis' || type === 'cloud_udmis') return 4;
+    return 5;
   }
 
   getLogicalEdges() {
     const edges = [];
     const devices = this.nodes.filter(n => this.getNodeLayer(n.type) === 1);
-    const brokers = this.nodes.filter(n => this.getNodeLayer(n.type) === 2);
-    const cores = this.nodes.filter(n => this.getNodeLayer(n.type) === 3);
+    const ingressNodes = this.nodes.filter(n => this.getNodeLayer(n.type) === 2);
+    const fabricNodes = this.nodes.filter(n => this.getNodeLayer(n.type) === 3);
+    const cores = this.nodes.filter(n => this.getNodeLayer(n.type) === 4);
+    const dbNodes = this.nodes.filter(n => this.getNodeLayer(n.type) === 5 && n.type !== 'ancillary');
 
+    // Devices -> Ingress / Brokers
     devices.forEach(dev => {
-      brokers.forEach(brk => { edges.push({ source: dev, target: brk, label: 'Telemetry / State' }); });
+      ingressNodes.forEach(ing => {
+        edges.push({ source: dev, target: ing, label: 'Telemetry / State' });
+      });
     });
 
-    brokers.forEach(brk => {
-      cores.forEach(core => { edges.push({ source: brk, target: core, label: 'Reflective Sync' }); });
-    });
+    if (fabricNodes.length > 0) {
+      // Ingress -> Fabric -> Cores (Zanzara Cloud mode)
+      ingressNodes.forEach(ing => {
+        fabricNodes.forEach(fab => {
+          edges.push({ source: ing, target: fab, label: 'MQTT Proxy' });
+        });
+      });
+      fabricNodes.forEach(fab => {
+        cores.forEach(core => {
+          edges.push({ source: fab, target: core, label: 'Pub/Sub Bridge' });
+        });
+      });
+    } else {
+      // Ingress/Broker -> Cores directly (Local mode)
+      ingressNodes.forEach(ing => {
+        cores.forEach(core => {
+          edges.push({ source: ing, target: core, label: 'Reflective Sync' });
+        });
+      });
+    }
 
-    const dbNodes = this.nodes.filter(n => this.getNodeLayer(n.type) === 4 && n.type !== 'ancillary');
+    // Cores -> Databases
     cores.forEach(core => {
       dbNodes.forEach(db => {
         const label = db.type === 'etcd' ? 'KV State' : (db.type === 'influx' ? 'Metrics' : 'Relational');
@@ -709,8 +1341,12 @@ export class TestbedGraphController {
       });
     });
 
-    if (brokers.length === 0) {
-      devices.forEach(dev => { cores.forEach(core => { edges.push({ source: dev, target: core, label: 'Direct Sync' }); }); });
+    if (ingressNodes.length === 0 && fabricNodes.length === 0) {
+      devices.forEach(dev => {
+        cores.forEach(core => {
+          edges.push({ source: dev, target: core, label: 'Direct Sync' });
+        });
+      });
     }
 
     return edges;
@@ -718,24 +1354,35 @@ export class TestbedGraphController {
 
   checkTopologyCompleteness() {
     const badge = document.getElementById('topology-completeness-badge');
-    if (!badge) return;
-    if (this.deviceNodes.length > 0) {
-      badge.className = 'badge badge-success';
-      badge.style.backgroundColor = '#c8e6c9';
-      badge.style.color = '#1b5e20';
-      badge.innerHTML = `
-        <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
-        <span>COMPLETE SETUP (${this.setupMode} :18833)</span>
-      `;
-    } else {
-      badge.className = 'badge badge-warning';
-      badge.style.backgroundColor = '#fff3e0';
-      badge.style.color = '#e65100';
-      badge.innerHTML = `
-        <span class="material-symbols-outlined" style="font-size:14px;">warning</span>
-        <span>INCOMPLETE: Drag a device onto the canvas</span>
-      `;
+    if (badge) {
+      if (!this.setupMode) {
+        badge.className = 'badge badge-warning';
+        badge.style.backgroundColor = '#f1f3f4';
+        badge.style.color = '#5f6368';
+        badge.innerHTML = `
+          <span class="material-symbols-outlined" style="font-size:14px;">info</span>
+          <span>Select Setup: Local or Cloud</span>
+        `;
+      } else if (this.deviceNodes.length > 0) {
+        badge.className = 'badge badge-success';
+        badge.style.backgroundColor = '#c8e6c9';
+        badge.style.color = '#1b5e20';
+        badge.innerHTML = `
+          <span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>
+          <span>COMPLETE SETUP (${this.setupMode})</span>
+        `;
+      } else {
+        badge.className = 'badge badge-warning';
+        badge.style.backgroundColor = '#fff3e0';
+        badge.style.color = '#e65100';
+        badge.innerHTML = `
+          <span class="material-symbols-outlined" style="font-size:14px;">warning</span>
+          <span>INCOMPLETE: Drag a device onto the canvas</span>
+        `;
+      }
     }
+    stateStore.set('activeDeviceNodesCount', this.deviceNodes.length);
+    stateStore.emit('canvas_devices_changed', { count: this.deviceNodes.length });
   }
 
   renderGraph() {
@@ -753,16 +1400,24 @@ export class TestbedGraphController {
     logicalEdges.forEach(edge => {
       const src = edge.source;
       const tgt = edge.target;
-      const x1 = src.x + 90;
-      const y1 = src.y + 40;
-      const x2 = tgt.x + 90;
-      const y2 = tgt.y + 40;
+      const x1 = src.x + 97.5;
+      const y1 = src.y + 41;
+      const x2 = tgt.x + 97.5;
+      const y2 = tgt.y + 41;
+      const midX = (x1 + x2) / 2;
+      const midY = (y1 + y2) / 2;
+      const textLen = (edge.label || '').length;
+      const pillWidth = Math.max(72, textLen * 6.5 + 16);
 
       svgHtml += `
         <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" 
-              stroke="#0b57d0" stroke-width="2.5" stroke-dasharray="6,4" marker-end="url(#arrow)" />
-        <text x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 8}" 
-              fill="#5f6368" font-size="10" font-weight="600" text-anchor="middle">${edge.label}</text>
+              stroke="#0b57d0" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrow)" />
+        <g transform="translate(${midX}, ${midY})">
+          <rect x="-${pillWidth / 2}" y="-10" width="${pillWidth}" height="20" rx="10" 
+                fill="#ffffff" stroke="#c2e7ff" stroke-width="1.5" filter="drop-shadow(0 1px 2px rgba(0,0,0,0.06))" />
+          <text x="0" y="0" dominant-baseline="central" text-anchor="middle" 
+                fill="#0b57d0" font-size="10" font-weight="600" font-family="system-ui, -apple-system, sans-serif">${edge.label}</text>
+        </g>
       `;
     });
 
@@ -775,6 +1430,8 @@ export class TestbedGraphController {
       const spec = this.getNodeSpec(node.type);
       const isSelected = node.id === this.selectedNodeId;
       const isMultiSelected = this.selectedNodeIds.size > 1 && this.selectedNodeIds.has(node.id);
+      const isDeviceNode = node.type === 'actual_device' || node.type === 'pubber' || this.deviceNodes.some(n => n.id === node.id);
+      const devId = node.inputs.device_id || node.label;
 
       let badgeClass = 'badge-up';
       let badgeContent = node.status;
@@ -786,10 +1443,10 @@ export class TestbedGraphController {
         const fails = Object.values(node.testResults).filter(r => r.status === 'FAIL' || r.status === 'FAILED').length;
         if (fails > 0) {
           badgeClass = 'badge-down';
-          badgeContent = `⚠️ ${fails} FAIL`;
+          badgeContent = `${fails} FAIL`;
         } else {
           badgeClass = 'badge-up';
-          badgeContent = `✅ PASS`;
+          badgeContent = `PASS`;
         }
       } else if (node.status === 'DOWN') {
         badgeClass = 'badge-down';
@@ -800,34 +1457,118 @@ export class TestbedGraphController {
         badgeClass = 'badge-disabled';
       }
 
-      const showBadge = node.type !== 'actual_device' || node.isTestingRunning || node.testResults;
+      const showBadge = (node.type !== 'actual_device' || node.isTestingRunning || node.testResults) && Boolean(node.status) && node.status !== 'UNAVAILABLE' && node.status !== 'UNKNOWN';
 
       const card = document.createElement('div');
-      card.className = `canvas-node ${isSelected ? 'selected' : ''} ${isMultiSelected ? 'multi-selected' : ''}`;
+      const modeNodeClass = isDeviceNode ? (node.type === 'pubber' ? 'is-pubber-node' : 'is-actual-node') : '';
+      card.className = `canvas-node ${isDeviceNode ? 'is-device ' + modeNodeClass : ''} ${isSelected ? 'selected' : ''} ${isMultiSelected ? 'multi-selected' : ''}`;
+      card.dataset.nodeId = node.id;
       card.style.left = `${node.x}px`;
       card.style.top = `${node.y}px`;
 
-      card.innerHTML = `
-        <div class="canvas-node-header">
-          <span class="material-symbols-outlined canvas-node-icon">${node.icon}</span>
-          <span class="canvas-node-title">${node.label}</span>
-        </div>
-        ${showBadge ? `<span class="node-status-badge ${badgeClass}">${badgeContent}</span>` : ''}
-        <span class="canvas-node-sub">${spec.subText(node)}</span>
-      `;
+      let etcdUrl = null;
+      if (node.type === 'etcd') {
+        etcdUrl = 'http://localhost:8085';
+        if (this.setupMode === 'CLOUD' || (this.projectSpec && !this.projectSpec.includes('localhost'))) {
+          const parsed = this.parseProjectSpec(this.projectSpec);
+          const proj = parsed.project || 'bos-platform-dev';
+          etcdUrl = `https://${proj}.corp.goog/`;
+        }
+      }
+
+      let headerActionsHtml = '';
+      if (isDeviceNode) {
+        headerActionsHtml = `
+          <button class="btn-node-remove" data-device-id="${devId}" title="Remove device from topology" aria-label="Remove device">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        `;
+      } else if (etcdUrl) {
+        headerActionsHtml = `
+          <a href="${etcdUrl}" target="_blank" rel="noopener noreferrer" class="btn-node-link" title="Open ETCD Explorer" aria-label="Open ETCD Explorer">
+            <span class="material-symbols-outlined" style="font-size: 13px;">open_in_new</span>
+          </a>
+        `;
+      }
+
+      if (isDeviceNode) {
+        const isActual = node.type === 'actual_device';
+        const isPub = node.type === 'pubber';
+        card.innerHTML = `
+          <div class="canvas-node-header">
+            <span class="material-symbols-outlined canvas-node-icon">${node.icon}</span>
+            <span class="canvas-node-title" title="${node.label}">${node.label}</span>
+            ${headerActionsHtml}
+          </div>
+          <div class="canvas-node-footer">
+            <div class="canvas-node-footer-left">
+              ${showBadge ? `<span class="node-status-badge ${badgeClass}">${badgeContent}</span>` : ''}
+              <span class="canvas-node-sub" title="${spec.subText(node)}">${spec.subText(node)}</span>
+            </div>
+            <button class="node-m3-switch ${isPub ? 'is-pubber' : 'is-physical'}" 
+                    data-device-id="${devId}" 
+                    data-current-mode="${node.type}"
+                    role="switch" 
+                    aria-checked="${isPub ? 'true' : 'false'}" 
+                    title="${isPub ? 'Pubber Emulator Mode (Click to switch to Physical Device)' : 'Physical Device Mode (Click to switch to Pubber Emulator)'}"
+                    aria-label="${isPub ? 'Switch to Physical Device' : 'Switch to Pubber Emulator'}">
+              <div class="m3-switch-track">
+                <div class="m3-switch-thumb">
+                  <span class="material-symbols-outlined">${isPub ? 'robot_2' : 'home_iot_device'}</span>
+                </div>
+              </div>
+            </button>
+          </div>
+        `;
+      } else {
+        card.innerHTML = `
+          <div class="canvas-node-header">
+            <span class="material-symbols-outlined canvas-node-icon">${node.icon}</span>
+            <span class="canvas-node-title" title="${node.label}">${node.label}</span>
+            ${headerActionsHtml}
+          </div>
+          ${showBadge ? `<span class="node-status-badge ${badgeClass}">${badgeContent}</span>` : ''}
+          <span class="canvas-node-sub" title="${spec.subText(node)}">${spec.subText(node)}</span>
+        `;
+      }
+
+      // Event listeners for remove and switch toggle
+      const btnRemove = card.querySelector('.btn-node-remove');
+      if (btnRemove) {
+        btnRemove.addEventListener('click', (e) => {
+          e.stopPropagation();
+          this.removeDeviceFromCanvas(devId);
+          this.renderSiteDevicesList();
+          this.renderGraph();
+          this.renderInspector();
+          if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
+        });
+      }
+
+      const btnSwitch = card.querySelector('.node-m3-switch');
+      if (btnSwitch) {
+        btnSwitch.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const curMode = btnSwitch.getAttribute('data-current-mode');
+          const targetMode = curMode === 'pubber' ? 'actual_device' : 'pubber';
+          this.changeDeviceMode(devId, targetMode);
+        });
+      }
 
       card.addEventListener('mousedown', (e) => {
+        if (e.target.closest('.btn-node-link') || e.target.closest('.btn-node-remove') || e.target.closest('.node-m3-switch')) return;
         e.stopPropagation();
         const rect = card.getBoundingClientRect();
         this.dragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
         this.draggedNodeId = node.id;
         const isMulti = e.shiftKey || e.ctrlKey || e.metaKey;
-        this.selectNode(node.id, isMulti);
+        this.selectNode(node.id, isMulti, false);
       });
 
       card.addEventListener('dblclick', (e) => {
+        if (e.target.closest('.btn-node-link') || e.target.closest('.btn-node-remove') || e.target.closest('.node-m3-switch')) return;
         e.stopPropagation();
-        this.openNodeModal(node);
+        this.selectNode(node.id, false, true);
       });
 
       this.nodesLayer.appendChild(card);
@@ -859,15 +1600,15 @@ export class TestbedGraphController {
       const anyRunning = selectedDevices.some(d => d.isTestingRunning);
 
       let batchHtml = `
-        <div class="inspector-form" style="padding: 12px 0;">
-          <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">Selected Devices:</div>
-          <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;">
+        <div class="inspector-form" style="padding: 4px 0;">
+          <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 6px;">Selected Devices:</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px;">
       `;
 
       selectedDevices.forEach(d => {
         batchHtml += `
           <div class="batch-chip">
-            <span class="material-symbols-outlined" style="font-size: 14px;">${d.icon}</span>
+            <span class="material-symbols-outlined" style="font-size: 13px;">${d.icon}</span>
             <span>${d.inputs.device_id || d.label}</span>
             <span class="btn-remove-chip" data-node-id="${d.id}" title="Remove from batch">&times;</span>
           </div>
@@ -877,23 +1618,23 @@ export class TestbedGraphController {
       batchHtml += `
           </div>
         </div>
-        <div style="margin-top: 8px; padding: 12px; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;">
-          <strong style="font-size:12px; color:#202124; display:flex; align-items:center; gap:4px; margin-bottom: 8px;">
-            <span class="material-symbols-outlined" style="font-size:16px; color:#0b57d0;">checklist</span>
+        <div style="margin-top: 6px; padding: 10px; background: #ffffff; border: 1px solid #e0e0e0; border-radius: 8px;">
+          <strong style="font-size:11px; color:#202124; display:flex; align-items:center; gap:4px; margin-bottom: 6px;">
+            <span class="material-symbols-outlined" style="font-size:15px; color:#0b57d0;">checklist</span>
             Batch Sequencer Test Suite
           </strong>
-          <div style="display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap;">
-            <button id="btn-batch-smoke" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;">⚡ Smoke Test</button>
-            <button id="btn-batch-all" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;">Select All</button>
-            <button id="btn-batch-none" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;">Clear</button>
+          <div style="display:flex; gap:4px; margin-bottom:8px; flex-wrap:wrap;">
+            <button id="btn-batch-smoke" class="btn btn-outlined" style="padding:2px 6px; font-size:10px; height:22px;">⚡ Smoke Test</button>
+            <button id="btn-batch-all" class="btn btn-outlined" style="padding:2px 6px; font-size:10px; height:22px;">Select All</button>
+            <button id="btn-batch-none" class="btn btn-outlined" style="padding:2px 6px; font-size:10px; height:22px;">Clear</button>
           </div>
           ${!anyRunning ? `
-          <button id="btn-run-batch-tests" class="btn btn-primary" style="width: 100%; margin-top: 10px; justify-content: center;">
+          <button id="btn-run-batch-tests" class="btn btn-primary" style="width: 100%; margin-top: 8px; justify-content: center;">
             <span class="material-symbols-outlined">play_arrow</span>
             <span>Run Tests on ${selectedDevices.length} Selected Devices</span>
           </button>
           ` : `
-          <button id="btn-stop-batch-tests" class="btn btn-danger-outlined" style="width: 100%; margin-top: 10px; justify-content: center; font-weight: 600;">
+          <button id="btn-stop-batch-tests" class="btn btn-danger-outlined" style="width: 100%; margin-top: 8px; justify-content: center; font-weight: 600;">
             <span class="material-symbols-outlined">stop</span>
             <span>Stop Running Tests (${selectedDevices.length} Devices)</span>
           </button>
@@ -938,52 +1679,48 @@ export class TestbedGraphController {
     const node = this.nodes.find(n => n.id === this.selectedNodeId);
     if (!node) return;
 
+    const spec = this.getNodeSpec(node.type);
+    const isDeviceNode = this.deviceNodes.some(n => n.id === node.id);
+    const isActualDevice = node.type === 'actual_device';
+    const isCloudComponent = node.type === 'zanzara_ingress' || node.type === 'zanzara_fabric' || node.type === 'cloud_udmis' || (this.setupMode === 'CLOUD' && node.type === 'etcd');
+
     if (this.inspectorTitle) this.inspectorTitle.textContent = node.label;
     if (this.inspectorIcon) this.inspectorIcon.textContent = node.icon;
 
     let formHtml = `
-      <div class="inspector-form" style="padding: 12px 0;">
-        <div style="background: #f8f9fa; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 12px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
-            <span style="font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase;">Node Inputs</span>
-            <button id="btn-inspector-edit-inputs" class="btn btn-outlined" style="padding: 2px 8px; font-size: 11px; height: 24px;">
-              <span class="material-symbols-outlined" style="font-size:14px;">tune</span>
-              <span>Edit Inputs</span>
-            </button>
+      <div class="inspector-form" style="padding: 4px 0;">
+        ${node.healthDetails && node.status && node.status !== 'UNAVAILABLE' ? `
+        <div style="margin-bottom: 8px; padding: 6px 8px; border-radius: 6px; font-size: 11px; display: flex; align-items: flex-start; gap: 6px; background: ${node.status === 'UP' ? '#e6f4ea' : '#fce8e6'}; color: ${node.status === 'UP' ? '#137333' : '#c5221f'}; border: 1px solid ${node.status === 'UP' ? '#ceead6' : '#fad2cf'};">
+          <span class="material-symbols-outlined" style="font-size: 15px; margin-top: -1px;">${node.status === 'UP' ? 'check_circle' : 'error'}</span>
+          <span style="line-height: 1.3; font-weight: 500;">${node.healthDetails}</span>
+        </div>
+        ` : ''}
+        <div style="background: #f8f9fa; padding: 8px 10px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+            <span style="font-size:10px; font-weight:700; color:#5f6368; text-transform:uppercase;">Node Config</span>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <button id="btn-inspector-edit-inputs" class="btn btn-icon-xs btn-outlined" title="Edit Node Inputs / Parameters" aria-label="Edit Inputs" style="width:24px; height:24px; padding:0; justify-content:center;">
+                <span class="material-symbols-outlined" style="font-size:14px;">tune</span>
+              </button>
+              ${!isActualDevice ? `
+              <button id="btn-node-health" class="btn btn-icon-xs btn-outlined" title="Run Node Health Check" aria-label="Health Check" style="width:24px; height:24px; padding:0; justify-content:center;">
+                <span class="material-symbols-outlined" style="font-size:14px;">health_and_safety</span>
+              </button>
+              <button id="btn-toggle-node" class="btn btn-icon-xs btn-outlined ${isCloudComponent ? 'disabled' : ''}" ${isCloudComponent ? 'disabled' : ''} title="${isCloudComponent ? 'Remote Cloud Service (Managed remotely)' : (node.status === 'UP' ? 'Stop Node' : 'Start Node')}" aria-label="${node.status === 'UP' ? 'Stop Node' : 'Start Node'}" style="width:24px; height:24px; padding:0; justify-content:center; ${isCloudComponent ? 'opacity: 0.4; cursor: not-allowed;' : ''}">
+                <span class="material-symbols-outlined" style="font-size:14px;">${node.status === 'UP' ? 'power_settings_new' : 'play_arrow'}</span>
+              </button>
+              ` : ''}
+              ${isDeviceNode ? `
+              <button id="btn-delete-node" class="btn btn-icon-xs btn-danger-outlined" title="Delete Device Node from Canvas" aria-label="Delete Node" style="width:24px; height:24px; padding:0; justify-content:center;">
+                <span class="material-symbols-outlined" style="font-size:14px;">delete</span>
+              </button>
+              ` : ''}
+            </div>
           </div>
-          <div style="font-size: 12px; color: #202124; line-height: 1.5;">
+          <div style="font-size: 11px; color: #202124; line-height: 1.4;">
             ${Object.entries(node.inputs).map(([k, v]) => `<div><span style="color:#5f6368;">${k.replace(/_/g, ' ')}:</span> <strong style="font-family:monospace;">${v}</strong></div>`).join('')}
           </div>
         </div>
-    `;
-
-    const spec = this.getNodeSpec(node.type);
-    const isDeviceNode = this.deviceNodes.some(n => n.id === node.id);
-    const isActualDevice = node.type === 'actual_device';
-
-    formHtml += `
-      </div>
-      <div class="inspector-actions" style="margin-top: 16px;">
-        ${!isActualDevice ? `
-        <button id="btn-node-health" class="btn btn-outlined">
-          <span class="material-symbols-outlined">health_and_safety</span>
-          <span>Run Node Health Check</span>
-        </button>
-        <button id="btn-toggle-node" class="btn btn-outlined">
-          <span class="material-symbols-outlined">${node.status === 'UP' ? 'power_settings_new' : 'play_arrow'}</span>
-          <span>${node.status === 'UP' ? 'Stop Node' : 'Start Node'}</span>
-        </button>
-        ` : ''}
-        ${isDeviceNode ? `
-          <button id="btn-delete-node" class="btn btn-danger-outlined">
-            <span class="material-symbols-outlined">delete</span>
-            <span>Delete Device Node</span>
-          </button>
-        ` : `
-          <div style="font-size: 11px; color: #5f6368; font-style: italic; text-align: center; padding: 4px;">
-            🔒 Managed Pipeline Node (${this.setupMode} Setup :18833)
-          </div>
-        `}
       </div>
     `;
 
@@ -1184,7 +1921,7 @@ export class TestbedGraphController {
     if (btnHealth) btnHealth.addEventListener('click', () => this.runHealthCheckForNode(node));
 
     const btnToggle = document.getElementById('btn-toggle-node');
-    if (btnToggle) {
+    if (btnToggle && !isCloudComponent) {
       btnToggle.addEventListener('click', async () => {
         const action = node.status === 'UP' ? 'stop' : 'start';
         node.status = 'INITIALIZING';
@@ -1347,7 +2084,7 @@ export class TestbedGraphController {
     }
 
     if (this.logViewer) {
-      this.logViewer.append(`\n🛑 Abort signal dispatched by user. Stopping session ${node.lastSessionId}...`, 'warn');
+      this.logViewer.append(`\nAbort signal dispatched by user. Stopping session ${node.lastSessionId}...`, 'warn');
     }
 
     try {
@@ -1657,14 +2394,37 @@ export class TestbedGraphController {
     let newStatus = prevStatus;
 
     try {
-      if (node.type === 'pubber' || node.type === 'udmis' || node.type === 'mqtt_broker' || node.type === 'etcd' || node.type === 'influx' || node.type === 'postgresql') {
-        const res = await fetch(`/api/testbed/status?site_model=${encodeURIComponent(this.siteModel)}`);
+      if (node.type === 'pubber' || node.type === 'udmis' || node.type === 'mqtt_broker' || node.type === 'etcd' || node.type === 'influx' || node.type === 'postgresql' || node.type === 'zanzara_ingress' || node.type === 'zanzara_fabric' || node.type === 'cloud_udmis') {
+        const res = await fetch(`/api/testbed/status?site_model=${encodeURIComponent(this.siteModel)}&project_spec=${encodeURIComponent(this.projectSpec)}`);
         if (res.ok) {
           const data = await res.json();
           const components = data.components || {};
           if (node.type === 'mqtt_broker') newStatus = components.mqtt_broker && components.mqtt_broker.status === 'UP' ? 'UP' : 'DOWN';
           else if (node.type === 'udmis') newStatus = components.udmis && components.udmis.status === 'UP' ? 'UP' : 'DOWN';
-          else if (node.type === 'etcd') newStatus = components.etcd && components.etcd.status === 'UP' ? 'UP' : 'DOWN';
+          else if (node.type === 'zanzara_ingress') {
+            const comp = components.zanzara_ingress;
+            newStatus = comp?.status === 'UP' ? 'UP' : (comp?.status === 'DOWN' ? 'DOWN' : null);
+            node.healthDetails = comp?.status !== 'UNAVAILABLE' ? (comp?.details || '') : '';
+          }
+          else if (node.type === 'zanzara_fabric') {
+            const comp = components.zanzara_fabric;
+            newStatus = comp?.status === 'UP' ? 'UP' : (comp?.status === 'DOWN' ? 'DOWN' : null);
+            node.healthDetails = comp?.status !== 'UNAVAILABLE' ? (comp?.details || '') : '';
+          }
+          else if (node.type === 'cloud_udmis') {
+            const comp = components.cloud_udmis;
+            newStatus = comp?.status === 'UP' ? 'UP' : (comp?.status === 'DOWN' ? 'DOWN' : null);
+            node.healthDetails = comp?.status !== 'UNAVAILABLE' ? (comp?.details || '') : '';
+          }
+          else if (node.type === 'etcd') {
+            const comp = components.etcd;
+            if (this.setupMode === 'CLOUD') {
+              newStatus = comp?.status === 'UP' ? 'UP' : (comp?.status === 'DOWN' ? 'DOWN' : null);
+              node.healthDetails = comp?.status !== 'UNAVAILABLE' ? (comp?.details || '') : '';
+            } else {
+              newStatus = comp && comp.status === 'UP' ? 'UP' : 'DOWN';
+            }
+          }
           else if (node.type === 'influx') newStatus = components.influx && components.influx.status === 'UP' ? 'UP' : 'DOWN';
           else if (node.type === 'postgresql') newStatus = components.postgresql && components.postgresql.status === 'UP' ? 'UP' : 'DOWN';
           else newStatus = 'UP';
@@ -1899,53 +2659,7 @@ export class TestbedGraphController {
     }
   }
 
-  // --- SETUP AND NODE CONFIGURATION POPUP MODALS & DROPDOWN ---
-  openSetupModal(mode) {
-    if (!this.setupModal) return;
-    this.setupModal.style.display = 'flex';
-    this.setupModal.classList.add('active');
-    if (this.setupTargetMode) this.setupTargetMode.value = mode;
-    if (this.setupSiteModelInput) this.setupSiteModelInput.value = this.siteModel || 'sites/udmi_site_model';
-    if (this.setupModalTitle) this.setupModalTitle.textContent = `Configure ${mode === 'LOCAL' ? 'Local' : 'Cloud'} Setup`;
-    if (this.setupLocalFields) this.setupLocalFields.style.display = mode === 'LOCAL' ? 'flex' : 'none';
-    if (this.setupCloudFields) this.setupCloudFields.style.display = mode === 'CLOUD' ? 'flex' : 'none';
-    if (mode === 'LOCAL' && this.setupLocalPort) {
-      const match = this.projectSpec.match(/:(\d+)/);
-      this.setupLocalPort.value = match ? match[1] : '18833';
-    } else if (mode === 'CLOUD' && this.setupCloudProject) {
-      this.setupCloudProject.value = this.projectSpec.includes('//') ? this.projectSpec : '//pubsub/bos-platform-dev';
-    }
-  }
-
-  closeSetupModal() {
-    if (this.setupModal) {
-      this.setupModal.style.display = 'none';
-      this.setupModal.classList.remove('active');
-    }
-  }
-
-  applySetupFromModal() {
-    const mode = this.setupTargetMode ? this.setupTargetMode.value : 'LOCAL';
-    const newSiteModel = this.setupSiteModelInput ? this.setupSiteModelInput.value.trim() : 'sites/udmi_site_model';
-    if (newSiteModel) {
-      this.siteModel = newSiteModel;
-      stateStore.set('siteModel', newSiteModel);
-    }
-
-    if (mode === 'LOCAL') {
-      const port = this.setupLocalPort ? (this.setupLocalPort.value.trim() || '18833') : '18833';
-      this.projectSpec = `//mqtt/localhost:${port}`;
-      stateStore.set('projectSpec', this.projectSpec);
-      this.loadDefaultSetup();
-    } else {
-      const target = this.setupCloudProject ? (this.setupCloudProject.value.trim() || '//pubsub/bos-platform-dev') : '//pubsub/bos-platform-dev';
-      this.projectSpec = target;
-      stateStore.set('projectSpec', this.projectSpec);
-      this.loadCloudSetup();
-    }
-    this.closeSetupModal();
-    NotificationManager.showToast({ title: `🌐 ${mode} Setup Applied`, message: `Configured for ${this.projectSpec}`, type: 'success' });
-  }
+  // --- NODE CONFIGURATION POPUP MODAL ---
 
   openNodeModal(target) {
     if (!this.nodeModal || !this.nodeConfigFormBody) return;
@@ -2015,33 +2729,319 @@ export class TestbedGraphController {
     if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
   }
 
-  handleActualDevicesDropdownChange() {
-    if (!this.selectActualDevices) return;
-    const selectedDevIds = Array.from(this.selectActualDevices.selectedOptions).map(opt => opt.value);
-
-    // Add newly selected devices to graph
-    selectedDevIds.forEach((devId, idx) => {
-      if (!this.deviceNodes.some(n => n.type === 'actual_device' && (n.id === devId || n.inputs.device_id === devId))) {
-        const x = 60;
-        const y = 260 + (this.deviceNodes.length * 95);
-        const node = this.createNodeObject('actual_device', x, y);
-        node.id = devId;
-        node.inputs.device_id = devId;
+  addDeviceToCanvas(devId, mode = 'actual_device', x = null, y = null) {
+    if (!devId) return null;
+    let node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+    if (node) {
+      if (mode && node.type !== mode && mode !== 'ancillary' && mode !== 'spotter') {
+        const spec = this.getNodeSpec(mode);
+        node.type = spec.type;
         node.label = devId;
-        this.deviceNodes.push(node);
-        this.fetchDeviceResultsFromDisk(node);
+        node.icon = spec.icon;
+        node.status = mode === 'actual_device' ? '' : 'UP';
+        node.inputs = { ...spec.inputs, device_id: devId };
       }
-    });
+      return node;
+    }
 
-    // Remove unselected actual_devices from graph
-    this.deviceNodes = this.deviceNodes.filter(n => {
-      if (n.type === 'actual_device') {
-        return selectedDevIds.includes(n.id) || selectedDevIds.includes(n.inputs.device_id);
-      }
-      return true;
-    });
+    if (x === null || y === null) {
+      const idx = this.deviceNodes.length;
+      const col = Math.floor(idx / 5);
+      const row = idx % 5;
+      x = 60 + col * 200;
+      y = 160 + row * 105;
+    }
 
+    node = this.createNodeObject(mode, x, y, devId);
+    this.deviceNodes.push(node);
+    this.deviceConfigs.set(devId, { enabled: true, mode: mode });
+    this.fetchDeviceResultsFromDisk(node);
+    this.selectNode(node.id, false);
+    return node;
+  }
+
+  removeDeviceFromCanvas(devId) {
+    if (!devId) return;
+    const node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+    if (!node) return;
+
+    this.deviceNodes = this.deviceNodes.filter(n => n.id !== node.id);
+    this.selectedNodeIds.delete(node.id);
+    if (this.selectedNodeId === node.id) {
+      const remaining = Array.from(this.selectedNodeIds);
+      this.selectedNodeId = remaining.length > 0 ? remaining[0] : (this.deviceNodes[0]?.id || null);
+    }
+    this.deviceConfigs.set(devId, { enabled: false, mode: node.type });
+  }
+
+  toggleDeviceOnCanvas(devId, isChecked) {
+    if (isChecked) {
+      const cfg = this.deviceConfigs.get(devId) || { mode: 'actual_device' };
+      this.addDeviceToCanvas(devId, cfg.mode || 'actual_device');
+    } else {
+      this.removeDeviceFromCanvas(devId);
+    }
+    this.renderSiteDevicesList();
     this.renderGraph();
+    this.renderInspector();
     if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
+  }
+
+  changeDeviceMode(devId, newMode) {
+    if (newMode === 'ancillary' || newMode === 'spotter') return; // Disabled for now
+    const config = this.deviceConfigs.get(devId) || { enabled: false, mode: 'actual_device' };
+    config.mode = newMode;
+    this.deviceConfigs.set(devId, config);
+
+    const node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+    if (node) {
+      const spec = this.getNodeSpec(newMode);
+      node.type = spec.type;
+      node.label = devId;
+      node.icon = spec.icon;
+      node.status = newMode === 'actual_device' ? '' : 'UP';
+      node.inputs = { ...spec.inputs, device_id: devId };
+    } else {
+      // Auto add device to canvas in selected mode
+      this.addDeviceToCanvas(devId, newMode);
+    }
+
+    this.renderSiteDevicesList();
+    this.renderGraph();
+    this.renderInspector();
+    if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
+  }
+
+  selectDeviceFromList(devId) {
+    let node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+    if (!node) {
+      const cfg = this.deviceConfigs.get(devId) || { mode: 'actual_device' };
+      node = this.addDeviceToCanvas(devId, cfg.mode || 'actual_device');
+    }
+    if (node) {
+      this.selectNode(node.id, false);
+    }
+    this.renderSiteDevicesList();
+  }
+
+  selectAllDevices() {
+    const query = (this.deviceSearchQuery || '').toLowerCase();
+    const targets = this.discoveredDevices.filter(devId => devId.toLowerCase().includes(query));
+    targets.forEach(devId => {
+      const cfg = this.deviceConfigs.get(devId) || { mode: 'actual_device' };
+      this.addDeviceToCanvas(devId, cfg.mode || 'actual_device');
+    });
+    this.renderSiteDevicesList();
+    this.renderGraph();
+    this.renderInspector();
+    if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
+  }
+
+  clearAllDevices() {
+    const query = (this.deviceSearchQuery || '').toLowerCase();
+    const targets = this.discoveredDevices.filter(devId => devId.toLowerCase().includes(query));
+    targets.forEach(devId => {
+      this.removeDeviceFromCanvas(devId);
+    });
+    this.renderSiteDevicesList();
+    this.renderGraph();
+    this.renderInspector();
+    if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
+  }
+
+  setBulkDeviceMode(newMode) {
+    if (newMode === 'ancillary' || newMode === 'spotter') return; // Disabled for now
+    this.deviceNodes.forEach(node => {
+      const devId = node.inputs.device_id;
+      const spec = this.getNodeSpec(newMode);
+      node.type = spec.type;
+      node.icon = spec.icon;
+      node.status = newMode === 'actual_device' ? '' : 'UP';
+      node.inputs = { ...spec.inputs, device_id: devId };
+      if (devId) {
+        this.deviceConfigs.set(devId, { enabled: true, mode: newMode });
+      }
+    });
+    this.renderSiteDevicesList();
+    this.renderGraph();
+    this.renderInspector();
+    if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
+  }
+
+  openSetupLogsModal(sessionId = null, mode = 'LOCAL', projectSpec = '', isReused = false) {
+    const modal = document.getElementById('setup-logs-modal');
+    if (!modal || mode !== 'LOCAL') return;
+
+    const targetSessionId = sessionId || this.latestSetupSessionId;
+    if (targetSessionId) {
+      this.latestSetupSessionId = targetSessionId;
+    }
+
+    const titleEl = document.getElementById('setup-logs-modal-title');
+    const cmdEl = document.getElementById('setup-logs-cmd');
+    const badgeEl = document.getElementById('setup-logs-status-badge');
+    const contentEl = document.getElementById('setup-logs-content');
+    const btnClose = document.getElementById('btn-close-setup-logs-modal');
+    const btnCopy = document.getElementById('btn-copy-setup-logs');
+    const btnClear = document.getElementById('btn-clear-setup-logs');
+
+    const portMatch = (projectSpec || this.projectSpec || '').match(/:(\d+)/);
+    const mqttPort = portMatch ? portMatch[1] : '18833';
+
+    if (titleEl) titleEl.textContent = 'Local Setup Status';
+    if (cmdEl) cmdEl.textContent = `bin/start_local ${this.siteModel} ${projectSpec || this.projectSpec}`;
+
+    if (isReused) {
+      if (badgeEl) {
+        badgeEl.className = 'badge badge-success';
+        badgeEl.style.background = '#c8e6c9';
+        badgeEl.style.color = '#1b5e20';
+        badgeEl.innerHTML = `READY`;
+      }
+      if (contentEl) {
+        contentEl.textContent = `Active ${mode} Setup Found\n` +
+          `==================================================\n` +
+          `Status: READY\n` +
+          `Target Spec: ${projectSpec || this.projectSpec}\n\n` +
+          `Active Services:\n` +
+          `• Mosquitto MQTT Broker: UP (Port ${mqttPort})\n` +
+          `• etcd Key-Value Store: UP (Port ${parseInt(mqttPort) + 1})\n` +
+          `• InfluxDB Time-Series: UP (Port ${parseInt(mqttPort) + 2})\n` +
+          `• PostgreSQL Database: UP (Port ${parseInt(mqttPort) + 3})\n` +
+          `• UDMIS Service: UP (Pod Ready)\n\n` +
+          `Local pipeline is operational and ready.\n`;
+      }
+    } else {
+      if (badgeEl) {
+        badgeEl.className = 'badge badge-info';
+        badgeEl.style.background = '#e8f0fe';
+        badgeEl.style.color = '#0b57d0';
+        badgeEl.innerHTML = `<span class="spinner-sm"></span> Initializing...`;
+      }
+      if (!contentEl.textContent || sessionId) {
+        contentEl.textContent = `Launching ${mode} setup pipeline...\n`;
+      }
+    }
+
+    modal.classList.add('active');
+
+    // Close any previous setup polling interval
+    if (this.setupLogsInterval) {
+      clearInterval(this.setupLogsInterval);
+      this.setupLogsInterval = null;
+    }
+
+    let offset = 0;
+    let isFinished = isReused;
+
+    const cleanup = () => {
+      if (this.setupLogsInterval) {
+        clearInterval(this.setupLogsInterval);
+        this.setupLogsInterval = null;
+      }
+      modal.classList.remove('active');
+      this.runAllHealthChecks();
+    };
+
+    if (btnClose) btnClose.onclick = cleanup;
+    modal.onclick = (e) => {
+      if (e.target === modal) cleanup();
+    };
+
+    if (btnCopy) {
+      btnCopy.onclick = () => {
+        if (contentEl && navigator.clipboard) {
+          navigator.clipboard.writeText(contentEl.textContent).then(() => {
+            NotificationManager.showToast({ title: "Copied", message: "Logs copied to clipboard", type: "info" });
+          });
+        }
+      };
+    }
+
+    if (btnClear) {
+      btnClear.onclick = () => {
+        if (contentEl) contentEl.textContent = '';
+      };
+    }
+
+    if (isReused) return;
+
+    const pollLogs = async () => {
+      if (isFinished) return;
+      try {
+        const queryUrl = targetSessionId
+          ? `/api/testbed_proc_status?session_id=${encodeURIComponent(targetSessionId)}&offset=${offset}`
+          : `/api/testbed_proc_status?offset=${offset}`;
+        const res = await fetch(queryUrl);
+        if (!res.ok) return;
+        const data = await res.json();
+
+        if (data.session_id && !this.latestSetupSessionId) {
+          this.latestSetupSessionId = data.session_id;
+        }
+
+        if (data.log && data.log.trim() !== '') {
+          if (contentEl) {
+            contentEl.textContent += data.log;
+            contentEl.scrollTop = contentEl.scrollHeight;
+          }
+        }
+        offset = data.offset || offset;
+
+        if (data.ready) {
+          if (badgeEl) {
+            badgeEl.className = 'badge badge-success';
+            badgeEl.style.background = '#c8e6c9';
+            badgeEl.style.color = '#1b5e20';
+            badgeEl.innerHTML = `READY`;
+          }
+          this.runAllHealthChecks();
+        }
+
+        if (!data.running) {
+          isFinished = true;
+          if (this.setupLogsInterval) {
+            clearInterval(this.setupLogsInterval);
+            this.setupLogsInterval = null;
+          }
+          if (data.exit_code === 0 || data.ready) {
+            if (badgeEl) {
+              badgeEl.className = 'badge badge-success';
+              badgeEl.style.background = '#c8e6c9';
+              badgeEl.style.color = '#1b5e20';
+              badgeEl.innerHTML = `READY`;
+            }
+            if (contentEl && (contentEl.textContent.trim() === `Launching ${mode} setup pipeline...` || !contentEl.textContent.trim())) {
+              contentEl.textContent = `⚡ Active ${mode} Setup Ready\n` +
+                `==================================================\n` +
+                `Status: READY\n` +
+                `Site Model: ${this.siteModel}\n` +
+                `Target Spec: ${projectSpec || this.projectSpec}\n\n` +
+                `Active Services:\n` +
+                `• Mosquitto MQTT Broker: UP (Port ${mqttPort})\n` +
+                `• etcd Key-Value Store: UP (Port ${parseInt(mqttPort) + 1})\n` +
+                `• InfluxDB Time-Series: UP (Port ${parseInt(mqttPort) + 2})\n` +
+                `• PostgreSQL Database: UP (Port ${parseInt(mqttPort) + 3})\n` +
+                `• UDMIS Service: UP (Pod Ready)\n\n` +
+                `Local pipeline is operational and ready.\n`;
+            }
+          } else {
+            if (badgeEl) {
+              badgeEl.className = 'badge badge-danger';
+              badgeEl.style.background = '#fce8e6';
+              badgeEl.style.color = '#c5221f';
+              badgeEl.innerHTML = `FAILED (Exit: ${data.exit_code})`;
+            }
+          }
+          this.runAllHealthChecks();
+        }
+      } catch (e) {
+        console.warn("Failed to poll setup logs:", e);
+      }
+    };
+
+    // Poll immediately and then every 500ms
+    pollLogs();
+    this.setupLogsInterval = setInterval(pollLogs, 500);
   }
 }
