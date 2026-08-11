@@ -87,6 +87,7 @@ def main():
                 
     modeled_devices = []
     
+    original_models = {}
     for device_id, payload in models:
         if isinstance(payload, str):
             try:
@@ -94,6 +95,8 @@ def main():
             except:
                 continue
                 
+        original_models[device_id] = payload
+        
         localnet = payload.get('localnet', {})
         families = localnet.get('families', {})
         bacnet_addr = families.get('bacnet', {}).get('addr') if 'bacnet' in families else None
@@ -150,37 +153,112 @@ def main():
                 elif other['device_id'] and primary['device_id'] != other['device_id']:
                     primary['device_id'] = f"{primary['device_id']}+{other['device_id']}"
                     
-    # 3. Format output
+    # 3. Generate Model Diff Messages
     outputs = []
     unknown_counter = 1
     
     for ent in entities:
         dev_id = ent['device_id']
-        if not dev_id:
+        
+        # Pick a single address if multiple exist
+        b_addr = sorted(ent['bacnet'])[0] if ent['bacnet'] else None
+        i_addr = sorted(ent['ipv4'])[0] if ent['ipv4'] else None
+        
+        if dev_id:
+            # Existing device: calculate diff
+            orig = original_models.get(dev_id, {})
+            orig_localnet = orig.get('localnet', {}).get('families', {})
+            
+            orig_b = orig_localnet.get('bacnet', {}).get('addr') if 'bacnet' in orig_localnet else None
+            orig_i = orig_localnet.get('ipv4', {}).get('addr') if 'ipv4' in orig_localnet else None
+            
+            diff_families = {}
+            if b_addr and b_addr != orig_b:
+                diff_families['bacnet'] = {'addr': b_addr}
+            if i_addr and i_addr != orig_i:
+                diff_families['ipv4'] = {'addr': i_addr}
+                
+            if diff_families:
+                diff = {'localnet': {'families': diff_families}}
+                outputs.append({'deviceId': dev_id, 'model': diff})
+        else:
+            # New device: create minimal model
             dev_id = f"unknown-{unknown_counter}"
             unknown_counter += 1
             
-        bacnet_str = ','.join(sorted(ent['bacnet'])) if ent['bacnet'] else ""
-        ipv4_str = ','.join(sorted(ent['ipv4'])) if ent['ipv4'] else ""
-        
-        outputs.append((dev_id, bacnet_str, ipv4_str))
+            new_families = {}
+            if b_addr: new_families['bacnet'] = {'addr': b_addr}
+            if i_addr: new_families['ipv4'] = {'addr': i_addr}
             
-    outputs.sort(key=lambda x: x[0])
+            diff = {
+                'version': '1.5.2',
+                'localnet': {'families': new_families}
+            }
+            outputs.append({'deviceId': dev_id, 'model': diff})
+            
+    conn_spec = sys.argv[2] if len(sys.argv) > 2 else None
     
-    outputs.sort(key=lambda x: x[0])
-    
-    if outputs:
-        col1_len = max(max(len(x[0]) for x in outputs), len("deviceId"))
-        col2_len = max(max(len(x[1]) for x in outputs), len("bacnet"))
-        col3_len = max(max(len(x[2]) for x in outputs), len("ipv4"))
-    else:
-        col1_len, col2_len, col3_len = len("deviceId"), len("bacnet"), len("ipv4")
+    if conn_spec:
+        from urllib.parse import urlparse
+        import subprocess
         
-    print(f"| {'deviceId':<{col1_len}} | {'bacnet':<{col2_len}} | {'ipv4':<{col3_len}} |")
-    print(f"| {'-' * col1_len} | {'-' * col2_len} | {'-' * col3_len} |")
-    
-    for out in outputs:
-        print(f"| {out[0]:<{col1_len}} | {out[1]:<{col2_len}} | {out[2]:<{col3_len}} |")
+        spec = conn_spec
+        provider_ssl = False
+
+        if not spec.startswith("//"):
+            parsed = urlparse(spec)
+            if parsed.scheme in ("mqtt", "mqtts", "ssl"):
+                host_port = parsed.netloc.split("@")[-1]
+                prefix = parsed.path.strip("/")
+                if not prefix and parsed.username and not parsed.password:
+                    prefix = parsed.username
+                spec = f"//mqtt/{host_port}/{prefix}" if prefix else f"//mqtt/{host_port}"
+
+        if spec.startswith("//"):
+            spec_body = spec[2:]
+            if "/" in spec_body:
+                provider, endpoint = spec_body.split("/", 1)
+                provider_ssl = provider in ("ssl", "mqtts", "tcps", "wss")
+                spec = f"mqtt://{endpoint}"
+
+        url = urlparse(spec)
+        host = url.hostname or "localhost"
+        is_ssl = provider_ssl or url.scheme in ("ssl", "mqtts", "tcps", "wss")
+        port = url.port or (8883 if is_ssl else 1883)
+
+        prefix = url.path.strip("/") if url.path and url.path != "/" else ""
+
+        for out in outputs:
+            dev_id = out["deviceId"]
+            topic = f"/uufi/r/{registry_id}/d/{dev_id}/c/model"
+            if prefix:
+                topic = f"/{prefix}{topic}"
+                
+            payload_str = json.dumps(out["model"])
+            
+            cmd = [
+                "mosquitto_pub",
+                "-h", host,
+                "-p", str(port),
+                "-t", topic,
+                "-m", payload_str
+            ]
+            
+            if registry_id:
+                cmd.extend(["-i", f"/uufi/{registry_id}/client"])
+                
+            if url.username:
+                cmd.extend(["-u", url.username])
+                if url.password:
+                    cmd.extend(["-P", url.password])
+                    
+            if is_ssl:
+                cmd.extend(["--insecure"])
+                
+            subprocess.run(cmd, check=True)
+    else:
+        for out in outputs:
+            print(json.dumps(out))
 
 if __name__ == "__main__":
     main()
