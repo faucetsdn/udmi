@@ -117,8 +117,14 @@ if [[ $is_query == true ]]; then
 EOF2
     echo Querying device ${device_id} config...
     mkdir -p $(dirname "$out_file")
-    validator/bin/reflector $REFLECTOR_CONFIG invalid/config:${query_file} > "$out_file"
-    echo "Queried config written to $out_file:"
+    raw_query=/tmp/${device_id}_raw_query.txt
+    validator/bin/reflector $REFLECTOR_CONFIG invalid/config:${query_file} > $raw_query
+    
+    echo Removing invalid config block from device ${device_id}...
+    sed -n '/^{/,$p' < $raw_query | jq 'del(.invalid)' > "$out_file"
+    validator/bin/reflector $REFLECTOR_CONFIG update/config:"$out_file" > /dev/null
+
+    echo "Queried clean config written to $out_file:"
     cat "$out_file"
 else
     echo Resetting device ${device_id} config...
