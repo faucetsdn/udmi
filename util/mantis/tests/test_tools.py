@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 import subprocess
-from engine.tools import ToolBelt
+from mantis.engine.tools import ToolBelt
 
 
 class TestToolBeltDirectory(unittest.TestCase):

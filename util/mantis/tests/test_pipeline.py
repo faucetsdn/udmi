@@ -4,8 +4,8 @@ import os
 import tempfile
 import shutil
 
-from engine.pipeline import TriagePipeline, run_triage_session_async
-from engine.harness.rate_limiter import RateLimitTimeoutError
+from mantis.engine.pipeline import TriagePipeline, run_triage_session_async
+from mantis.engine.harness.rate_limiter import RateLimitTimeoutError
 
 
 class TestTriagePipelineExceptionHandling(unittest.IsolatedAsyncioTestCase):
@@ -55,7 +55,7 @@ class TestTriagePipelineExceptionHandling(unittest.IsolatedAsyncioTestCase):
             RateLimitTimeoutError("Rate limit hit")
         ])
 
-        with patch("engine.models.extract_structured_report", AsyncMock(side_effect=Exception("Structured extraction skipped on rate limit test"))):
+        with patch("mantis.engine.models.extract_structured_report", AsyncMock(side_effect=Exception("Structured extraction skipped on rate limit test"))):
             report = await pipeline.run_dynamic_pipeline_async(
                 target_id="test_target",
                 prompt_payload="Start prompt",

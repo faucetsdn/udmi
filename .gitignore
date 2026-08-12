@@ -88,11 +88,13 @@ tests/dbo/basic/test_site_model/
 # Bridgehead local environment file
 bridgehead/.env
 
-# Mantis output and bundle directories
-/tools/mantis/.idea/
-/tools/mantis/out/
-/tools/mantis/test_bundles/
-/tools/mantis/src/mantis.egg-info
+# Mantis output, bundle, and egg-info directories
+/util/mantis/.idea/
+/util/mantis/out/
+/util/mantis/test_bundles/
+/util/mantis/mantis.egg-info
+*.egg-info/
+
 
 # UDMI Workbench generated files
 /ui/version.txt
