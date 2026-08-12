@@ -1,0 +1,1 @@
+DEFAULT_GEMINI_PRO_MODEL="gemini-3.1-pro-preview"

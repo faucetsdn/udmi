@@ -1,0 +1,448 @@
+/* ==========================================================================
+   UDMI WORKBENCH - MAIN APP SHELL STYLES
+   ========================================================================== */
+
+/* 1. App Shell Grid Layout */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: var(--bg-surface-container-lowest);
+}
+
+/* 2. Top Toolbar Styles */
+.app-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--toolbar-height);
+    padding: 8px 24px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 10;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.toolbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-text-group {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.brand-logo-img {
+  height: 24px;
+  width: auto;
+}
+
+.brand-title {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 19px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.brand-subtitle {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.toolbar-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.control-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+
+
+/* 3. Navigation Sidebar Styles (Material 3 Navigation Rail) */
+.app-main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.app-sidebar {
+  --sidebar-width: 72px;
+  width: var(--sidebar-width);
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 0;
+  flex-shrink: 0;
+}
+
+.sidebar-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 8px;
+  align-items: center;
+}
+
+.sidebar-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 64px;
+  width: 56px;
+  padding: 8px 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.sidebar-tab:hover {
+  background-color: var(--bg-surface-container-high);
+  color: var(--text-primary);
+}
+
+.sidebar-tab.active {
+  background-color: #e8f0fe;
+  color: var(--color-primary);
+}
+
+.sidebar-tab .material-symbols-outlined {
+  font-size: 22px;
+}
+
+/* 4. Workspace Panels Layout & Embedded Iframes */
+.app-content {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.app-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  display: none;
+  background-color: transparent;
+}
+
+.app-iframe.active {
+  display: block;
+}
+
+/* 5. Shared Modals & Folder Browsers */
+.input-with-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-icon-sm {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  min-width: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+}
+
+.btn-icon-sm .material-symbols-outlined {
+  font-size: 18px;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay.active {
+  display: flex;
+}
+
+.modal-card {
+  width: 540px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  animation: modalFadeIn 0.25s cubic-bezier(0.1, 0.9, 0.2, 1);
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.btn-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.browser-path-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.browser-list {
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface-container-lowest);
+  border-radius: var(--radius-md);
+  height: 280px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 6px 0;
+}
+
+.browser-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+  user-select: none;
+  transition: background-color var(--transition-fast);
+}
+
+.browser-item:hover {
+  background-color: var(--bg-surface-container-low);
+}
+
+.browser-item.selected {
+  background-color: #e8f0fe;
+  color: var(--color-primary);
+}
+
+.browser-item .material-symbols-outlined {
+  color: var(--text-muted);
+  font-size: 20px;
+}
+
+.browser-item.selected .material-symbols-outlined {
+  color: var(--color-primary);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  background-color: var(--bg-surface-container-low);
+}
+
+/* 6. Application Loading Overlay (Frosted Glass) */
+.app-loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(248, 250, 253, 0.65);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.app-loader-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.loader-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 36px 52px;
+  background-color: rgb(255, 255, 255);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.loader-logo {
+  height: 44px;
+  width: auto;
+}
+
+.loader-track {
+  width: 220px;
+  height: 4.8px;
+  background: var(--bg-surface-container-high);
+  border-radius: 4px;
+  position: relative;
+  overflow: visible;
+  margin: 10px 0;
+}
+
+.loader {
+  width: 0;
+  height: 4.8px;
+  display: inline-block;
+  position: relative;
+  background: var(--color-primary);
+  border-radius: 4px;
+  box-shadow: 0 0 10px rgba(11, 87, 208, 0.5);
+  box-sizing: border-box;
+  animation: animFw 8s linear infinite;
+}
+
+.loader::after,
+.loader::before {
+  content: '';
+  width: 10px;
+  height: 1px;
+  background: var(--color-primary);
+  position: absolute;
+  top: 9px;
+  right: -2px;
+  opacity: 0;
+  transform: rotate(-45deg) translateX(0px);
+  box-sizing: border-box;
+  animation: coli1 0.5s linear infinite;
+}
+
+.loader::before {
+  top: -4px;
+  transform: rotate(45deg);
+  animation: coli2 0.5s linear infinite;
+}
+
+.loader-text {
+  font-family: 'Google Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3c4043;
+  letter-spacing: 0.2px;
+}
+
+@keyframes animFw {
+  0% {
+    width: 0;
+  }
+
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes coli1 {
+  0% {
+    transform: rotate(-45deg) translateX(0px);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: rotate(-45deg) translateX(-45px);
+    opacity: 0;
+  }
+}
+
+@keyframes coli2 {
+  0% {
+    transform: rotate(45deg) translateX(0px);
+    opacity: 1;
+  }
+
+  100% {
+    transform: rotate(45deg) translateX(-45px);
+    opacity: 0.7;
+  }
+}

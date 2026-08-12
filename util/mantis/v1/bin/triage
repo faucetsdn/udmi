@@ -1,0 +1,206 @@
+#!/bin/bash -e
+#
+# Unified Project Mantis Triage Utility
+# Automatically unpacks, evaluates stability, and triages failures for manually downloaded bundles.
+#
+
+# Resolve directories
+MANTIS_BIN=$(dirname $0)
+MANTIS_DIR=$(realpath $MANTIS_BIN/..)
+UDMI_ROOT=$(realpath $MANTIS_DIR/../..)
+
+cd $UDMI_ROOT
+
+# Initialize defaults
+TEST_CASE=""
+DEVICE_ID=""
+BUNDLES=()
+DIAGNOSE_ALL=false
+PROJECT_PATH=""
+PLAYBOOK=""
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -t|--test)
+            TEST_CASE="$2"
+            shift 2
+            ;;
+        -d|--device)
+            DEVICE_ID="$2"
+            shift 2
+            ;;
+        -p|--project-path)
+            PROJECT_PATH="$2"
+            shift 2
+            ;;
+        --playbook)
+            PLAYBOOK="$2"
+            shift 2
+            ;;
+        --all)
+            DIAGNOSE_ALL=true
+            shift
+            ;;
+        --swe)
+            PLAYBOOK="config/playbook_swe.yaml"
+            shift
+            ;;
+        -i|--test-runs)
+            shift
+            while [[ $# -gt 0 && ! "$1" =~ ^- ]]; do
+                BUNDLES+=("$1")
+                shift
+            done
+            ;;
+        -h|--help)
+            echo "Usage: bin/triage -i <bundle1> [bundle2 ...] [-t|--test <test_case_name>] [-d|--device <device_id>] [--all]"
+            echo
+            echo "Unified Project Mantis Triage Utility"
+            echo "Automatically unpacks, evaluates stability, and triages failures."
+            echo
+            echo "Options:"
+            echo "  -h, --help            Show this help message and exit"
+            echo "  -t, --test            Filter triage by specific test case name"
+            echo "  -d, --device          Filter triage by specific device ID"
+            echo "  -p, --project-path    Path to the UDMI project root for AI diagnostics codebase crawling"
+            echo "  --playbook            Path to the custom Playbook YAML configuration"
+            echo "  --swe                 Use the SWE software debugging playbook instead of the default OEM playbook"
+            echo "  --all                 Force triage for all identified tests"
+            echo "  -i, --test-runs       Required. Path to test bundle zip/tgz or extracted directory."
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown flag $1" >&2
+            exit 1
+            ;;
+        *)
+            echo "Error: Unknown positional argument '$1'. Test bundles must be supplied via -i or --test-runs" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# Check required positional argument
+if [[ ${#BUNDLES[@]} -eq 0 ]]; then
+    echo "Error: No bundle paths or directories supplied." >&2
+    echo "Usage: bin/triage -i <bundle1> [bundle2 ...] [-t|--test <test_case_name>] [-d|--device <device_id>] [--all]" >&2
+    exit 1
+fi
+
+for bundle in "${BUNDLES[@]}"; do
+    if [[ ! -e $bundle ]]; then
+        echo "Error: Input path '$bundle' does not exist." >&2
+        exit 1
+    fi
+done
+
+# Activate virtualenv
+if [[ -f venv/bin/activate ]]; then
+    source venv/bin/activate
+    export PYTHONPATH="$UDMI_ROOT/tools:$MANTIS_DIR/src:$PYTHONPATH"
+else
+    echo "Error: Project virtual environment not found at '$UDMI_ROOT/venv'." >&2
+    echo "Please run 'bin/setup_base' first to initialize dependencies." >&2
+    exit 1
+fi
+
+# Determine input target directory from the first bundle
+FIRST_BUNDLE="${BUNDLES[0]}"
+if [[ -d $FIRST_BUNDLE ]]; then
+    TARGET_DIR=$(realpath "$FIRST_BUNDLE")
+    echo "Using directory: $TARGET_DIR"
+else
+    filename=$(basename "$FIRST_BUNDLE")
+    clean_name="${filename%.*}"
+    clean_name="${clean_name%.tar}" # strip double extensions like .tar.gz
+    
+    TARGET_DIR="$UDMI_ROOT/out/mantis/${clean_name}"
+fi
+
+if ! ls "$TARGET_DIR"/run_* 1> /dev/null 2>&1; then
+    echo "Preparing bundles into workspace: $TARGET_DIR"
+    if [[ -d $FIRST_BUNDLE && ${#BUNDLES[@]} -eq 1 ]]; then
+        # If they passed a directory, expand its contents so each archive becomes a separate run
+        archives=()
+        for ext in "zip" "tgz" "tar.gz"; do
+            if ls "$TARGET_DIR"/*.$ext 1> /dev/null 2>&1; then
+                archives+=("$TARGET_DIR"/*.$ext)
+            fi
+        done
+        if [[ ${#archives[@]} -gt 0 ]]; then
+            $MANTIS_DIR/bin/prepare_bundles -o "$TARGET_DIR" "${archives[@]}"
+        else
+            echo "Error: No .zip or .tgz archives found in directory $TARGET_DIR" >&2
+            exit 1
+        fi
+    else
+        $MANTIS_DIR/bin/prepare_bundles -o "$TARGET_DIR" "${BUNDLES[@]}"
+    fi
+else
+    echo "Using cached workspace directory with prepared runs: $TARGET_DIR"
+fi
+
+# Guarantee execution permissions on components
+chmod +x $MANTIS_DIR/bin/evaluate_stability 2>/dev/null || true
+chmod +x $MANTIS_DIR/bin/diagnose 2>/dev/null || true
+
+# 4. Run Stability Metric Evaluation
+echo
+echo "============================================================="
+echo "STEP 1: Evaluating Stability & Metric Compilation..."
+echo "============================================================="
+python3 -m mantis.src.util.eval_sequencer_stability.main --test-runs "$TARGET_DIR"
+
+# Print failures and prompt if needed
+if [[ -f "$TARGET_DIR/triage_manifest.json" ]]; then
+    echo
+    echo "Identified flaky/failed tests:"
+    cat "$TARGET_DIR/triage_manifest.json" | jq -r 'if .failures then .failures | map(.test_name) | unique[] | " - \(.)" else empty end'
+    if [[ "$DIAGNOSE_ALL" == false && -z "$TEST_CASE" ]]; then
+        echo
+        read -p "Which tests would you like to diagnose? ('all' or specific test name): " user_choice
+        if [[ "$user_choice" == "all" || "$user_choice" == "All" || "$user_choice" == "ALL" ]]; then
+            DIAGNOSE_ALL=true
+        elif [[ -n "$user_choice" ]]; then
+            TEST_CASE="$user_choice"
+        fi
+    fi
+fi
+
+# 5. Run AI Diagnostic Failure Triage
+echo
+echo "============================================================="
+echo "STEP 2: Running AI Diagnostic Failure Triage..."
+echo "============================================================="
+if [[ -f "$TARGET_DIR/triage_manifest.json" ]]; then
+    echo "Manifest hand-off detected: loading failed/flaky tests from $TARGET_DIR/triage_manifest.json"
+    diagnose_args=("-m" "$TARGET_DIR/triage_manifest.json")
+else
+    echo "No manifest found. Falling back to scanning directory: $TARGET_DIR"
+    diagnose_args=("-i" "$TARGET_DIR")
+fi
+
+if [[ -n $TEST_CASE ]]; then
+    diagnose_args+=("-t" "$TEST_CASE")
+fi
+if [[ -n $DEVICE_ID ]]; then
+    diagnose_args+=("-d" "$DEVICE_ID")
+fi
+if [[ -n $PROJECT_PATH ]]; then
+    diagnose_args+=("-p" "$PROJECT_PATH")
+fi
+if [[ -n $PLAYBOOK ]]; then
+    diagnose_args+=("--playbook" "$PLAYBOOK")
+fi
+
+python3 -m mantis.src.app.main "${diagnose_args[@]}"
+
+echo
+echo "============================================================="
+echo "Mantis Unified Triage completed successfully!"
+echo "============================================================="
+echo "Check '$TARGET_DIR' for compiled stability flakiness reports."
+echo "Check '$TARGET_DIR/diagnose/' for AI diagnostic defect analysis reports."
+echo "============================================================="
+echo
