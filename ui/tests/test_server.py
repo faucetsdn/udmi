@@ -23,10 +23,15 @@ except ImportError:
     from ui.src.server import UDMIRequestHandler
 
 
+class ReusableHTTPServer(HTTPServer):
+    allow_reuse_address = True
+
+
 class TestUIServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = HTTPServer(('127.0.0.1', 8089), UDMIRequestHandler)
+        cls.server = ReusableHTTPServer(('127.0.0.1', 0), UDMIRequestHandler)
+        cls.port = cls.server.server_address[1]
         cls.server_thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.server_thread.start()
         time.sleep(0.2)
@@ -47,7 +52,7 @@ class TestUIServer(unittest.TestCase):
                         pass
 
     def test_post_run_triage_api_key_and_session_workspace(self):
-        url = "http://127.0.0.1:8089/api/run_triage"
+        url = f"http://127.0.0.1:{self.port}/api/run_triage"
         data = json.dumps({
             "device_id": "AHU-1",
             "test_id": "pointset_publish",
@@ -75,7 +80,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn(e.code, [200, 412])
 
     def test_post_authorization_header_extraction(self):
-        url = "http://127.0.0.1:8089/api/run_triage"
+        url = f"http://127.0.0.1:{self.port}/api/run_triage"
         data = json.dumps({
             "device_id": "AHU-1",
             "test_id": "pointset_publish"
@@ -101,21 +106,21 @@ class TestUIServer(unittest.TestCase):
             self.assertIn(e.code, [200, 412])
 
     def test_path_traversal_prevention_read_file(self):
-        url = "http://127.0.0.1:8089/api/read_file?path=/etc/passwd"
+        url = f"http://127.0.0.1:{self.port}/api/read_file?path=/etc/passwd"
         req = urllib.request.Request(url, method="GET")
         with self.assertRaises(urllib.error.HTTPError) as ctx:
             urllib.request.urlopen(req)
         self.assertEqual(ctx.exception.code, 403)
 
     def test_path_traversal_prevention_list(self):
-        url = "http://127.0.0.1:8089/api/list?path=/etc"
+        url = f"http://127.0.0.1:{self.port}/api/list?path=/etc"
         req = urllib.request.Request(url, method="GET")
         with self.assertRaises(urllib.error.HTTPError) as ctx:
             urllib.request.urlopen(req)
         self.assertEqual(ctx.exception.code, 403)
 
     def test_home_relative_list(self):
-        url = "http://127.0.0.1:8089/api/list?path=~"
+        url = f"http://127.0.0.1:{self.port}/api/list?path=~"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -123,7 +128,7 @@ class TestUIServer(unittest.TestCase):
             self.assertEqual(data.get("path"), "~")
 
     def test_fetch_udmis_logs_parameter_acceptance(self):
-        url = "http://127.0.0.1:8089/api/run_triage"
+        url = f"http://127.0.0.1:{self.port}/api/run_triage"
         data = json.dumps({
             "device_id": "AHU-1",
             "test_id": "pointset_publish",
@@ -151,7 +156,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn(e.code, [200, 412])
 
     def test_device_results_returns_project_spec(self):
-        url = "http://127.0.0.1:8089/api/device_results?site_model=sites/udmi_site_model&device=AHU-1"
+        url = f"http://127.0.0.1:{self.port}/api/device_results?site_model=sites/udmi_site_model&device=AHU-1"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -164,7 +169,7 @@ class TestUIServer(unittest.TestCase):
                 self.assertIsNotNone(res["project_spec"])
 
     def test_list_spec_fields(self):
-        url = "http://127.0.0.1:8089/api/list?path=sites"
+        url = f"http://127.0.0.1:{self.port}/api/list?path=sites"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -176,7 +181,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("folders", data)
 
     def test_read_file_json(self):
-        url = "http://127.0.0.1:8089/api/read_file?path=sites/udmi_site_model/cloud_iot_config.json"
+        url = f"http://127.0.0.1:{self.port}/api/read_file?path=sites/udmi_site_model/cloud_iot_config.json"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -186,7 +191,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("project_id", data["content"])
 
     def test_get_devices(self):
-        url = "http://127.0.0.1:8089/api/devices?site_model=sites/udmi_site_model"
+        url = f"http://127.0.0.1:{self.port}/api/devices?site_model=sites/udmi_site_model"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -201,7 +206,7 @@ class TestUIServer(unittest.TestCase):
             os.makedirs(dev_dir, exist_ok=True)
             with open(os.path.join(dev_dir, "metadata.json"), "w") as f:
                 json.dump({"version": "1.0", "serial_no": "12345"}, f)
-            url = f"http://127.0.0.1:8089/api/devices?site_model={os.path.join(tmp_dir, 'nested_site')}"
+            url = f"http://127.0.0.1:{self.port}/api/devices?site_model={os.path.join(tmp_dir, 'nested_site')}"
             req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req) as response:
                 self.assertEqual(response.status, 200)
@@ -210,7 +215,7 @@ class TestUIServer(unittest.TestCase):
                 self.assertIn("DEV-1", data["devices"])
 
     def test_testbed_status(self):
-        url = "http://127.0.0.1:8089/api/testbed/status?site_model=sites/udmi_site_model"
+        url = f"http://127.0.0.1:{self.port}/api/testbed/status?site_model=sites/udmi_site_model"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -223,7 +228,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("udmis", data["components"])
 
     def test_testbed_topology(self):
-        url = "http://127.0.0.1:8089/api/testbed/topology?site_model=sites/udmi_site_model&project_spec=//mqtt/localhost:18833"
+        url = f"http://127.0.0.1:{self.port}/api/testbed/topology?site_model=sites/udmi_site_model&project_spec=//mqtt/localhost:18833"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -233,7 +238,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("edges", data)
 
     def test_testbed_start(self):
-        url = "http://127.0.0.1:8089/api/testbed/start"
+        url = f"http://127.0.0.1:{self.port}/api/testbed/start"
         payload = json.dumps({
             "site_model": "sites/udmi_site_model",
             "project_spec": "//mqtt/localhost:18833"
@@ -254,7 +259,7 @@ class TestUIServer(unittest.TestCase):
                     p.wait(timeout=1)
 
     def test_log_diff(self):
-        url = "http://127.0.0.1:8089/api/log_diff"
+        url = f"http://127.0.0.1:{self.port}/api/log_diff"
         payload = json.dumps({
             "site_model": "sites/udmi_site_model",
             "device_id": "AHU-1",
@@ -270,7 +275,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("diff_lines", data)
 
     def test_ai_query(self):
-        url = "http://127.0.0.1:8089/api/ai_query"
+        url = f"http://127.0.0.1:{self.port}/api/ai_query"
         payload = json.dumps({
             "query": "Why did AHU-1 fail validation?",
             "context": {"site_model": "sites/udmi_site_model", "active_device": "AHU-1"}
@@ -284,7 +289,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("answer_markdown", data)
 
     def test_testbed_jobs(self):
-        url = "http://127.0.0.1:8089/api/testbed/jobs"
+        url = f"http://127.0.0.1:{self.port}/api/testbed/jobs"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -293,7 +298,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIsInstance(data["jobs"], list)
 
     def test_git_status(self):
-        url = "http://127.0.0.1:8089/api/git/status?site_model=sites/udmi_site_model"
+        url = f"http://127.0.0.1:{self.port}/api/git/status?site_model=sites/udmi_site_model"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -307,10 +312,12 @@ class TestUIServer(unittest.TestCase):
         os.makedirs(test_repo, exist_ok=True)
         try:
             subprocess.run(['git', '-C', test_repo, 'init', '--initial-branch=main'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(['git', '-C', test_repo, 'config', 'user.email', 'test@example.com'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            subprocess.run(['git', '-C', test_repo, 'config', 'user.name', 'Test User'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             with open(os.path.join(test_repo, 'test_file.txt'), 'w', encoding='utf-8') as f:
                 f.write('initial content')
 
-            url = "http://127.0.0.1:8089/api/git/commit"
+            url = f"http://127.0.0.1:{self.port}/api/git/commit"
             payload = json.dumps({
                 "site_model": test_repo,
                 "commit_message": "test: check safety stop",
@@ -343,7 +350,7 @@ class TestUIServer(unittest.TestCase):
             shutil.rmtree(test_repo, ignore_errors=True)
 
     def test_send_email(self):
-        url = "http://127.0.0.1:8089/api/notifications/send_email"
+        url = f"http://127.0.0.1:{self.port}/api/notifications/send_email"
         payload = json.dumps({
             "recipient": "test_engineer@udmi.system",
             "subject": "UDMI CI Test Alert",
@@ -373,7 +380,7 @@ class TestUIServer(unittest.TestCase):
             shutil.rmtree(os.path.join(sessions_dir, e), ignore_errors=True)
 
     def test_graphviz_render_success(self):
-        url = "http://127.0.0.1:8089/api/graphviz/render"
+        url = f"http://127.0.0.1:{self.port}/api/graphviz/render"
         payload = json.dumps({
             "dot": "digraph TestTopology { A -> B [label=\"proxy\"]; }"
         }).encode('utf-8')
@@ -387,7 +394,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("TestTopology", data.get("svg", ""))
 
     def test_graphviz_render_invalid(self):
-        url = "http://127.0.0.1:8089/api/graphviz/render"
+        url = f"http://127.0.0.1:{self.port}/api/graphviz/render"
         payload = json.dumps({
             "dot": "invalid syntax not a graph"
         }).encode('utf-8')
@@ -402,7 +409,7 @@ class TestUIServer(unittest.TestCase):
             self.assertEqual(data.get("status"), "error")
 
     def test_testbed_proc_status(self):
-        url = "http://127.0.0.1:8089/api/testbed_proc_status"
+        url = f"http://127.0.0.1:{self.port}/api/testbed_proc_status"
         with urllib.request.urlopen(url) as response:
             self.assertEqual(response.status, 200)
             data = json.loads(response.read().decode('utf-8'))
@@ -448,7 +455,7 @@ class TestUIServer(unittest.TestCase):
         self.assertTrue(p4["is_cloud"])
 
     def test_testbed_status_zanzara_namespace(self):
-        url = "http://127.0.0.1:8089/api/testbed/status?site_model=sites/udmi_site_model&project_spec=//gbos/bos-platform-dev/heykhyati"
+        url = f"http://127.0.0.1:{self.port}/api/testbed/status?site_model=sites/udmi_site_model&project_spec=//gbos/bos-platform-dev/heykhyati"
         with urllib.request.urlopen(url) as response:
             self.assertEqual(response.status, 200)
             data = json.loads(response.read().decode('utf-8'))
@@ -463,4 +470,5 @@ class TestUIServer(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
 

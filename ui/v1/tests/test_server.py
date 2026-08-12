@@ -1,3 +1,5 @@
+import os
+import shutil
 import unittest
 import json
 import urllib.request
@@ -8,21 +10,27 @@ from http.server import HTTPServer
 import ui.v1.server as ui_server
 from ui.v1.server import UDMIRequestHandler
 
+
+class ReusableHTTPServer(HTTPServer):
+    allow_reuse_address = True
+
+
 class TestUIServer(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = HTTPServer(('127.0.0.1', 8089), UDMIRequestHandler)
-        cls.server_thread = threading.Thread(target=cls.server.serve_forever)
-        cls.server_thread.daemon = True
+        cls.server = ReusableHTTPServer(('127.0.0.1', 0), UDMIRequestHandler)
+        cls.port = cls.server.server_address[1]
+        cls.server_thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.server_thread.start()
         time.sleep(0.2)
 
     @classmethod
     def tearDownClass(cls):
         cls.server.shutdown()
+        cls.server.server_close()
 
     def test_post_run_triage_api_key_and_session_workspace(self):
-        url = "http://127.0.0.1:8089/api/run_triage"
+        url = f"http://127.0.0.1:{self.port}/api/run_triage"
         data = json.dumps({
             "device_id": "AHU-1",
             "test_id": "pointset_publish",
@@ -46,7 +54,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn(e.code, [200, 412])
 
     def test_post_authorization_header_extraction(self):
-        url = "http://127.0.0.1:8089/api/run_triage"
+        url = f"http://127.0.0.1:{self.port}/api/run_triage"
         data = json.dumps({
             "device_id": "AHU-1",
             "test_id": "pointset_publish"
@@ -65,21 +73,21 @@ class TestUIServer(unittest.TestCase):
             self.assertIn(e.code, [200, 412])
 
     def test_path_traversal_prevention_read_file(self):
-        url = "http://127.0.0.1:8089/api/read_file?path=/etc/passwd"
+        url = f"http://127.0.0.1:{self.port}/api/read_file?path=/etc/passwd"
         req = urllib.request.Request(url, method="GET")
         with self.assertRaises(urllib.error.HTTPError) as ctx:
             urllib.request.urlopen(req)
         self.assertEqual(ctx.exception.code, 403)
 
     def test_path_traversal_prevention_list(self):
-        url = "http://127.0.0.1:8089/api/list?path=/etc"
+        url = f"http://127.0.0.1:{self.port}/api/list?path=/etc"
         req = urllib.request.Request(url, method="GET")
         with self.assertRaises(urllib.error.HTTPError) as ctx:
             urllib.request.urlopen(req)
         self.assertEqual(ctx.exception.code, 403)
 
     def test_home_relative_list(self):
-        url = "http://127.0.0.1:8089/api/list?path=~"
+        url = f"http://127.0.0.1:{self.port}/api/list?path=~"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -87,7 +95,7 @@ class TestUIServer(unittest.TestCase):
             self.assertEqual(data.get("path"), "~")
 
     def test_fetch_udmis_logs_parameter_acceptance(self):
-        url = "http://127.0.0.1:8089/api/run_triage"
+        url = f"http://127.0.0.1:{self.port}/api/run_triage"
         data = json.dumps({
             "device_id": "AHU-1",
             "test_id": "pointset_publish",
@@ -108,7 +116,7 @@ class TestUIServer(unittest.TestCase):
             self.assertIn(e.code, [200, 412])
 
     def test_device_results_returns_project_spec(self):
-        url = "http://127.0.0.1:8089/api/device_results?site_model=sites/udmi_site_model&device=AHU-1"
+        url = f"http://127.0.0.1:{self.port}/api/device_results?site_model=sites/udmi_site_model&device=AHU-1"
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req) as response:
             self.assertEqual(response.status, 200)
@@ -124,8 +132,6 @@ class TestUIServer(unittest.TestCase):
                 self.assertEqual(results["blob_update_success"]["project_spec"], "bos-platform-dev")
 
     def test_prune_old_sessions(self):
-        import os
-        import shutil
         sessions_dir = os.path.join(ui_server.ROOT_DIR, 'out', 'sessions')
         os.makedirs(sessions_dir, exist_ok=True)
         # Create dummy session directories
