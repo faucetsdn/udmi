@@ -1,6 +1,7 @@
 acked
 addr
 AHU
+AHUs
 alarmset
 Alarmset
 anagement
@@ -28,6 +29,7 @@ BOS
 breakpoint
 buildingsiot
 camelCase
+cancelled
 centric
 Checkboxes
 CLA
@@ -109,8 +111,10 @@ https
 IAM
 idempotency
 idToken
+incrementing
 influxd
 integrations
+integrators
 invoker
 io
 iot
@@ -146,11 +150,13 @@ microservices
 middleware
 Mod10k
 modbus
+monorepos
 Mosquitto
 MQTT
 MQTTS
 msb
 mTLS
+multithreaded
 mydomain
 namespace
 namespaces
@@ -177,6 +183,7 @@ oversized
 pagent
 parameterization
 parsers
+Pathing
 pointname
 pointset
 pointsets
@@ -204,9 +211,11 @@ QUDT
 Readme
 reconciler
 Reconciler
+REPL
 repo
 Responder
 responders
+rightarrow
 RPC
 RSA
 rtu
@@ -234,6 +243,7 @@ subblocks
 subcommand
 subcomponent
 subcomponents
+subdirectories
 subdirectory
 subflows
 subfolder
@@ -253,6 +263,7 @@ Tagabase
 tcp
 Teardown
 teardowns
+Tekton
 terraform
 terraformed
 testability

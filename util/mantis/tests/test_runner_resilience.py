@@ -1,7 +1,7 @@
 import unittest
 import os
 import tempfile
-from app.runner import generate_unified_log_diff, mask_dynamic_fields, UDMITriageRunner
+from mantis.workflows.diagnose import generate_unified_log_diff, mask_dynamic_fields, UDMITriageRunner
 
 class TestRunnerResilience(unittest.TestCase):
 

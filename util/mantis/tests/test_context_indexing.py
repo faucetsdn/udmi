@@ -2,7 +2,7 @@ import unittest
 import os
 import tempfile
 from datetime import datetime, timedelta, timezone
-from engine.context import (
+from mantis.engine.context import (
     RE_TIMESTAMP_PREFIX,
     RE_MERGE_TIMESTAMP,
     SparseLogIndex,
