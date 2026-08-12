@@ -42,14 +42,14 @@ class TestMantisUnifiedCLI(unittest.IsolatedAsyncioTestCase):
 
     def test_cli_positional_targets(self):
         cli = UDMITriageCLI()
-        args = cli.parse(["sites/UK-LON-GLAB", "EM-11", "pointset_publish"])
-        self.assertEqual(args.targets, ["sites/UK-LON-GLAB", "EM-11", "pointset_publish"])
+        args = cli.parse(["sites/udmi_site_model", "AHU-1", "pointset_publish"])
+        self.assertEqual(args.targets, ["sites/udmi_site_model", "AHU-1", "pointset_publish"])
 
     def test_cli_subcommands(self):
         cli = UDMITriageCLI()
-        args_chat = cli.parse(["chat", "--site", "sites/UK-LON-GLAB"])
+        args_chat = cli.parse(["chat", "--site", "sites/udmi_site_model"])
         self.assertEqual(args_chat.targets[0], "chat")
-        self.assertEqual(args_chat.site_model, "sites/UK-LON-GLAB")
+        self.assertEqual(args_chat.site_model, "sites/udmi_site_model")
 
         args_eval = cli.parse(["eval", "-i", "out/runs/"])
         self.assertEqual(args_eval.targets[0], "eval")
@@ -64,15 +64,15 @@ class TestMantisUnifiedCLI(unittest.IsolatedAsyncioTestCase):
     def test_cli_flags(self):
         cli = UDMITriageCLI()
         args = cli.parse([
-            "-s", "sites/UK-LON-GLAB",
-            "-d", "EM-11",
+            "-s", "sites/udmi_site_model",
+            "-d", "AHU-1",
             "-t", "pointset_publish",
             "-q", "Explain the failure",
             "--vertex", "my-gcp-project/us-central1",
             "--force"
         ])
-        self.assertEqual(args.site_model, "sites/UK-LON-GLAB")
-        self.assertEqual(args.device, ["EM-11"])
+        self.assertEqual(args.site_model, "sites/udmi_site_model")
+        self.assertEqual(args.device, ["AHU-1"])
         self.assertEqual(args.test, ["pointset_publish"])
         self.assertEqual(args.query, "Explain the failure")
         self.assertEqual(args.vertex, "my-gcp-project/us-central1")
@@ -87,7 +87,7 @@ class TestMantisUnifiedCLI(unittest.IsolatedAsyncioTestCase):
     @patch("mantis.engine.harness.credentials.EnvCredentialsProvider.get_client", MagicMock(return_value=MagicMock()))
     @patch("mantis.agent.chat.MantisChatSession.run_interactive_repl", new_callable=AsyncMock)
     async def test_async_main_subcommand_chat(self, mock_repl):
-        await async_main(["chat", "sites/UK-LON-GLAB", "EM-11"])
+        await async_main(["chat", "sites/udmi_site_model", "AHU-1"])
         mock_repl.assert_awaited_once()
 
     @patch("mantis.engine.harness.credentials.EnvCredentialsProvider.get_client", MagicMock(return_value=MagicMock()))
@@ -99,10 +99,10 @@ class TestMantisUnifiedCLI(unittest.IsolatedAsyncioTestCase):
 
     @patch("mantis.workflows.diagnose.UDMITriageRunner.run_triage", new_callable=AsyncMock)
     async def test_async_main_positional_target_diagnose(self, mock_run_triage):
-        await async_main(["diagnose", "sites/UK-LON-GLAB", "EM-11", "pointset_publish"])
+        await async_main(["diagnose", "sites/udmi_site_model", "AHU-1", "pointset_publish"])
         mock_run_triage.assert_awaited_once()
         args_passed = mock_run_triage.call_args[0][0]
-        self.assertEqual(args_passed.device, ["EM-11"])
+        self.assertEqual(args_passed.device, ["AHU-1"])
         self.assertEqual(args_passed.test, ["pointset_publish"])
 
     @patch("mantis.workflows.stability.main.main")

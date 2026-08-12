@@ -183,16 +183,16 @@ class TestMantisChat(unittest.TestCase):
         session = MantisChatSession(
             udmi_root=self.temp_dir.name,
             client=self.mock_client,
-            site_model="sites/UK-LON-GLAB",
-            device_id="EM-11"
+            site_model="sites/udmi_site_model",
+            device_id="AHU-1"
         )
         res = session.get_historical_site_state(timestamp="2026-07-24T09:24:02Z")
         self.assertIn("Historical State", res)
         mock_hist_impl.assert_called_once_with(
             udmi_root=self.temp_dir.name,
-            site_name="sites/UK-LON-GLAB",
+            site_name="sites/udmi_site_model",
             timestamp="2026-07-24T09:24:02Z",
-            device_id="EM-11"
+            device_id="AHU-1"
         )
 
 

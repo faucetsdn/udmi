@@ -503,10 +503,10 @@ class ToolBelt:
 
         Args:
             test_id: Name of the test sequence (e.g. 'pointset_publish').
-            device_id: Target device identifier (e.g. 'EM-11').
+            device_id: Target device identifier (e.g. 'AHU-1').
             run_b_commit: Optional Git commit SHA containing the passing baseline run (e.g. '7c9c02ca').
             run_b_dir: Optional directory containing reference baseline run artifacts.
-            site_name: Optional site model path (e.g. 'sites/UK-LON-GLAB').
+            site_name: Optional site model path (e.g. 'sites/udmi_site_model').
         """
         from mantis.tools.differential import compare_test_sequences as compare_impl
         self._log_tool_call(f"compare_test_sequences called for test='{test_id}', device='{device_id}', commit='{run_b_commit}'")
@@ -530,9 +530,9 @@ class ToolBelt:
         as they existed in Git history at or before the given ISO timestamp of the test execution.
 
         Args:
-            site_name: Path or name of the site model (e.g. 'sites/UK-LON-GLAB').
+            site_name: Path or name of the site model (e.g. 'sites/udmi_site_model').
             timestamp: The ISO timestamp of the test execution (e.g. '2024-12-05T12:45:08Z').
-            device_id: Optional device ID to reconstruct metadata for (e.g. 'EM-11').
+            device_id: Optional device ID to reconstruct metadata for (e.g. 'AHU-1').
         """
         from mantis.tools.differential import get_historical_site_state as hist_impl
         self._log_tool_call(f"get_historical_site_state called for site='{site_name}', timestamp='{timestamp}', device='{device_id}'")
@@ -556,8 +556,8 @@ class ToolBelt:
 
         Args:
             test_id: Name of the test sequence (e.g. 'pointset_publish').
-            device_id: Target device identifier (e.g. 'EM-11').
-            site_name: Optional site model path (e.g. 'sites/UK-LON-GLAB').
+            device_id: Target device identifier (e.g. 'AHU-1').
+            site_name: Optional site model path (e.g. 'sites/udmi_site_model').
         """
         from mantis.tools.artifacts import get_test_execution_summary as summary_impl
         self._log_tool_call(f"get_test_execution_summary called for test='{test_id}', device='{device_id}'")

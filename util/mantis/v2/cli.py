@@ -50,16 +50,16 @@ class UDMITriageCLI:
 Examples:
   # 1. Interactive Chat Mode (Default)
   bin/mantis
-  bin/mantis chat --site sites/UK-LON-GLAB
+  bin/mantis chat --site sites/udmi_site_model
   bin/mantis --vertex my-gcp-project/us-central1
 
   # 2. Targeted Diagnostics
-  bin/mantis sites/UK-LON-GLAB EM-11 pointset_publish
-  bin/mantis diagnose --site sites/UK-LON-GLAB --device EM-11 --test pointset_publish
+  bin/mantis sites/udmi_site_model AHU-1 pointset_publish
+  bin/mantis diagnose --site sites/udmi_site_model --device AHU-1 --test pointset_publish
 
   # 3. One-Shot Natural Language Query
   bin/mantis "How does UDMI pointset validation handle missing units?"
-  bin/mantis -q "Why did EM-11 fail pointset_publish?"
+  bin/mantis -q "Why did AHU-1 fail pointset_publish?"
 
   # 4. Multi-Run Stability & Bundle Triage
   bin/mantis eval -i out/mantis/run_1/ out/mantis/run_2/
@@ -81,7 +81,7 @@ Examples:
         )
         self.parser.add_argument(
             "--site", "-s", "--site-model", dest="site_model",
-            help="Target site model directory or name (e.g. sites/UK-LON-GLAB)"
+            help="Target site model directory or name (e.g. sites/udmi_site_model)"
         )
         self.parser.add_argument(
             "--test-runs", "-i", dest="test_runs",

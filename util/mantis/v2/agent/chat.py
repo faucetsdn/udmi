@@ -643,7 +643,7 @@ Mantis Quick Commands:
   /diagnose [test]     - Diagnose test failure for active target or specified test
   /diff [baseline]     - Run differential analysis between 2 sets of logs or against baseline
   /fact-check [notes]  - Perform an automated adversarial fact-check & verification pass (alias: /critique)
-  /site <site>         - Set or switch active site model (e.g. sites/UK-LON-GLAB)
+  /site <site>         - Set or switch active site model (e.g. sites/udmi_site_model)
   /device <id>         - Set or switch active target device ID (e.g. AHU-1)
   /test <name>         - Set or switch active test case name (e.g. system_min_loglevel)
   /load <path>         - Load a test run bundle directory or triage_manifest.json

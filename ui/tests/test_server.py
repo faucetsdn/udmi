@@ -6,6 +6,7 @@ import json
 import os
 import shutil
 import subprocess
+import tempfile
 import threading
 import time
 import unittest
@@ -195,14 +196,18 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("AHU-1", data["devices"])
 
     def test_get_devices_udmi_nested(self):
-        url = "http://127.0.0.1:8089/api/devices?site_model=sites/UK-LON-GLAB"
-        req = urllib.request.Request(url, method="GET")
-        with urllib.request.urlopen(req) as response:
-            self.assertEqual(response.status, 200)
-            data = json.loads(response.read().decode('utf-8'))
-            self.assertIn("devices", data)
-            self.assertIn("CGW-2", data["devices"])
-            self.assertIn("EM-11", data["devices"])
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            dev_dir = os.path.join(tmp_dir, "nested_site", "udmi", "devices", "DEV-1")
+            os.makedirs(dev_dir, exist_ok=True)
+            with open(os.path.join(dev_dir, "metadata.json"), "w") as f:
+                json.dump({"version": "1.0", "serial_no": "12345"}, f)
+            url = f"http://127.0.0.1:8089/api/devices?site_model={os.path.join(tmp_dir, 'nested_site')}"
+            req = urllib.request.Request(url, method="GET")
+            with urllib.request.urlopen(req) as response:
+                self.assertEqual(response.status, 200)
+                data = json.loads(response.read().decode('utf-8'))
+                self.assertIn("devices", data)
+                self.assertIn("DEV-1", data["devices"])
 
     def test_testbed_status(self):
         url = "http://127.0.0.1:8089/api/testbed/status?site_model=sites/udmi_site_model"

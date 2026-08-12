@@ -48,12 +48,12 @@ class TestArtifactsDiscovery(unittest.TestCase):
     def test_locate_real_workspace_artifacts_if_present(self):
         # Test on active repo root
         real_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-        uk_lon_glab = os.path.join(real_root, "sites", "UK-LON-GLAB", "udmi", "out", "devices", "EM-11", "tests", "pointset_publish")
-        if os.path.exists(uk_lon_glab):
+        site_path = os.path.join(real_root, "sites", "udmi_site_model", "out", "devices", "AHU-1", "tests", "pointset_publish")
+        if os.path.exists(site_path):
             res = locate_test_artifacts(
                 udmi_root=real_root,
-                site="UK-LON-GLAB",
-                device="EM-11",
+                site="udmi_site_model",
+                device="AHU-1",
                 test="pointset_publish"
             )
             art = res.get("artifacts", {})

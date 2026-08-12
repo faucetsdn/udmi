@@ -11,8 +11,17 @@
 The **`bin/workbench`** launcher manages the Python backend API server and opens Workbench in your browser:
 
 ```bash
-# Launch Workbench
+# Launch Workbench v2 (Modern, Default)
 bin/workbench
+
+# Or explicitly launch Modern v2:
+bin/workbench --v2
+
+# Launch Classic Workbench v1:
+bin/workbench --v1
+
+# Specify custom port (default: 8080)
+bin/workbench --port=8080
 
 # Stop running Workbench server
 bin/workbench stop

@@ -26,14 +26,14 @@ Mantis provides a single, unified entry point located at `$UDMI_ROOT/bin/mantis`
 ```bash
 # 1. Launch Interactive Chat Session (Default)
 bin/mantis
-bin/mantis chat --site sites/UK-LON-GLAB
+bin/mantis chat --site sites/udmi_site_model
 
 # 2. Run Targeted Diagnostics for a Specific Failure
-bin/mantis sites/UK-LON-GLAB EM-11 pointset_publish
-bin/mantis diagnose --site sites/UK-LON-GLAB --device EM-11 --test pointset_publish
+bin/mantis sites/udmi_site_model AHU-1 pointset_publish
+bin/mantis diagnose --site sites/udmi_site_model --device AHU-1 --test pointset_publish
 
 # 3. One-Shot Natural Language Query
-bin/mantis "Why did EM-11 fail pointset_publish?"
+bin/mantis "Why did AHU-1 fail pointset_publish?"
 bin/mantis -q "How does UDMI pointset validation handle missing units?"
 
 # 4. Multi-Run Stability Evaluation
@@ -82,8 +82,8 @@ Inside the Mantis chat REPL (`bin/mantis`):
 | :--- | :--- |
 | `/help` | Show interactive help and tool manual |
 | `/critique [notes]` | Run an automated adversarial critique & verification pass on the last diagnosis |
-| `/site <site>` | Switch active site model (e.g. `/site sites/UK-LON-GLAB`) |
-| `/device <id>` | Switch active device under test (e.g. `/device EM-11`) |
+| `/site <site>` | Switch active site model (e.g. `/site sites/udmi_site_model`) |
+| `/device <id>` | Switch active device under test (e.g. `/device AHU-1`) |
 | `/test <name>` | Switch active test case (e.g. `/test pointset_publish`) |
 | `/load <path>` | Load a `triage_manifest.json` |
 | `/context` | Display current active session state and discovered artifacts |
@@ -98,9 +98,11 @@ Inside the Mantis chat REPL (`bin/mantis`):
 
 ```
 util/mantis/
-├── src/                     # All Python source code
-│   ├── __init__.py          # Package root
-│   ├── cli.py               # Unified CLI router & dispatcher
+├── v1/                      # Preserved Classic Mantis v1 (Master baseline)
+│   ├── bin/                 # Classic CLI executables (triage, collect, etc.)
+│   ├── src/                 # Classic source code
+│   └── tests/               # Classic test suite
+├── v2/                      # Modern Mantis v2 Implementation
 │   ├── agent/               # Chat session, prompts, entity extractor
 │   │   ├── chat.py          # Interactive REPL & multi-turn agent
 │   │   ├── extractor.py     # Natural language entity extraction
@@ -117,16 +119,19 @@ util/mantis/
 │   │   ├── collector.py     # Test loop collector
 │   │   ├── reporter.py      # Consolidated reports & clustering
 │   │   └── stability/       # Multi-run stability analyzer
-│   └── engine/              # LLM engine & infrastructure
-│       ├── engine.py        # Async LLM loop & tool-calling
-│       ├── pipeline.py      # Dynamic stage pipeline & skills
-│       ├── tools.py         # ToolBelt & code inspection
-│       ├── models.py        # Pydantic structured output models
-│       ├── context.py       # Log indexing & compaction
-│       ├── logging.py       # Colored logger & Tee stream
-│       └── harness/         # Credentials, rate limiter, search
-├── tests/                   # Comprehensive pytest test suite
-│   ├── test_*.py
+│   ├── engine/              # LLM engine & infrastructure
+│   │   ├── engine.py        # Async LLM loop & tool-calling
+│   │   ├── pipeline.py      # Dynamic stage pipeline & skills
+│   │   ├── tools.py         # ToolBelt & code inspection
+│   │   ├── models.py        # Pydantic structured output models
+│   │   ├── context.py       # Log indexing & compaction
+│   │   ├── logging.py       # Colored logger & Tee stream
+│   │   └── harness/         # Credentials, rate limiter, search
+│   ├── skills/              # Mantis domain skills (log-analysis, etc.)
+│   ├── spec/                # Architecture specifications & guides
+│   ├── config/              # Playbooks (playbook_oem.yaml, playbook_swe.yaml)
+│   └── cli.py               # Unified CLI router & dispatcher
+├── tests/                   # Comprehensive pytest test suite (v2)
 ├── setup.py                 # Setuptools package configuration
 └── README.md
 ```
@@ -138,8 +143,12 @@ util/mantis/
 Execute the Mantis test suite directly or via the UDMI project test runner:
 
 ```bash
-# Run Mantis test suite
+# Run all Mantis test suites (both v1 and v2)
 bin/test_mantis
+
+# Or run specific versions:
+bin/test_mantis --v2
+bin/test_mantis --v1
 
 # Run project-wide utility tests
 bin/run_tests util_tests
