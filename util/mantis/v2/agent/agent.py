@@ -274,8 +274,12 @@ async def run_triage_analysis_async(
     if playbook:
         playbook_path = Path(playbook) if os.path.isabs(playbook) else (Path.cwd() / playbook)
     else:
-        # Default to docs/tools/mantis/config/playbook_oem.yaml or default playbook
-        default_candidate = Path(udmi_root) / "docs" / "tools" / "mantis" / "config" / "playbook_oem.yaml"
+        # Default to util/mantis/v2/config/playbook_oem.yaml or v1/default playbook
+        default_candidate = Path(udmi_root) / "util" / "mantis" / "v2" / "config" / "playbook_oem.yaml"
+        if not default_candidate.exists():
+            default_candidate = Path(udmi_root) / "util" / "mantis" / "v1" / "config" / "playbook_oem.yaml"
+        if not default_candidate.exists():
+            default_candidate = Path(udmi_root) / "util" / "mantis" / "v2" / "engine" / "config" / "default_playbook.yaml"
         if default_candidate.exists():
             playbook_path = default_candidate
 

@@ -123,8 +123,11 @@ class TriagePipeline:
         # Fallback to default workspace skills location if none found
         if not all_skills_dirs:
             candidates = [
-                Path(__file__).parents[4] / "docs" / "tools" / "mantis" / "skills",
-                Path.cwd() / "docs" / "tools" / "mantis" / "skills",
+                Path(__file__).parents[1] / "skills",
+                Path(__file__).parents[2] / "v2" / "skills",
+                Path(__file__).parents[2] / "v1" / "skills",
+                Path.cwd() / "util" / "mantis" / "v2" / "skills",
+                Path.cwd() / "util" / "mantis" / "v1" / "skills",
             ]
             for c in candidates:
                 if c.exists():
