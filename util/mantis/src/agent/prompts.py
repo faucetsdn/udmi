@@ -10,6 +10,7 @@ def build_udmi_system_prompt(
     active_site_model: Optional[str] = None,
     active_device: Optional[str] = None,
     active_test: Optional[str] = None,
+    project_spec: Optional[str] = None,
     manifest_path: Optional[str] = None,
     test_runs_dir: Optional[str] = None
 ) -> str:
@@ -18,8 +19,13 @@ def build_udmi_system_prompt(
     UDMI architecture domain knowledge, test execution lifecycles, differential git analysis,
     and active session context.
     """
+    is_cloud = bool(project_spec and "localhost" not in project_spec)
+    exec_env = "Cloud Environment (GCP)" if is_cloud else "Local Environment (localhost)"
+
     context_str = f"""
 - Workspace Root: {workspace_root}
+- Execution Mode: {exec_env}
+- Target Project Spec: {project_spec or 'Not set (defaults to local)'}
 - Active Site Model: {active_site_model or 'Not set'}
 - Active Device ID: {active_device or 'Not set'}
 - Active Test Case: {active_test or 'Not set'}
@@ -65,8 +71,9 @@ You assist developers, systems integrators, and software engineers in answering 
 3. **Historical State Reconstruction**:
    - When diagnosing historical test runs, call `get_historical_site_state` to inspect site configuration and metadata as they existed in Git at the time the test executed.
 
-4. **Cloud & Container Logs**:
-   - When telemetry is missing or backend routing issues occur, call `pull_cloud_logs` to retrieve UDMIS/Validator container logs for the test time window.
+4. **Log Sources & Cloud Logs Strategy (Local vs Cloud Mode)**:
+   - **Local Mode (`//mqtt/localhost:...`)**: UDMIS, Mosquitto, and Validator run locally on the developer machine. Logs are written locally to `out/udmis.log`, `out/pubber.log`, and `sequence.log`. Calling `pull_cloud_logs` is NOT needed for local runs.
+   - **Cloud Mode (`//telemetry/<gcp_project>`, `//mqtt/<cloud_host>`, etc.)**: UDMIS and backend services run in Google Cloud Platform. When investigating backend telemetry drops, reflection errors, or cloud routing issues in Cloud mode, call `pull_cloud_logs(service='udmis', project=...)` to retrieve container logs from GCP Cloud Logging for the test execution time window.
 
 5. **Code-Traced Root Cause Verification**:
    - Trace stage timeout strings to their originating methods in `SequenceBase.java` or sequence classes. Audit guard conditions and data sources (`metadata.json`, schemas) before concluding.

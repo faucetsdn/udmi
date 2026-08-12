@@ -19,7 +19,9 @@ import sys
 import threading
 import time
 from datetime import datetime
+import urllib.error
 import urllib.parse
+import urllib.request
 import uuid
 
 PORT = 8080
@@ -95,6 +97,60 @@ def prune_old_sessions(max_sessions=10):
                 shutil.rmtree(full_path, ignore_errors=True)
     except Exception as e:
         print(f"Warning: Failed to prune old sessions: {e}")
+
+
+def start_etcd_explorer_service(etcd_port=18834, explorer_port=8085):
+    """Ensure EtcdExplorerServer is running in background on explorer_port connected to etcd_port."""
+    try:
+        with socket.create_connection(('127.0.0.1', explorer_port), timeout=0.3):
+            return True
+    except Exception:
+        pass
+
+    etcd_running = False
+    for p in [etcd_port, 2379, 18834]:
+        try:
+            with socket.create_connection(('127.0.0.1', p), timeout=0.3):
+                etcd_port = p
+                etcd_running = True
+                break
+        except Exception:
+            pass
+
+    if not etcd_running:
+        return False
+
+    try:
+        subprocess.run(['pkill', '-f', 'EtcdExplorerServer'], capture_output=True)
+    except Exception:
+        pass
+
+    log_path = os.path.join(ROOT_DIR, 'out', 'etcd_explorer.log')
+    pid_path = os.path.join(ROOT_DIR, 'var', 'etcd_explorer.pid')
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+    os.makedirs(os.path.dirname(pid_path), exist_ok=True)
+
+    cmd = [
+        "udmis/bin/etcd_explorer",
+        f"--port={explorer_port}",
+        f"--etcd_target=http://127.0.0.1:{etcd_port}"
+    ]
+
+    try:
+        with open(log_path, 'ab', buffering=0) as log_file:
+            proc = subprocess.Popen(
+                cmd,
+                cwd=ROOT_DIR,
+                stdout=log_file,
+                stderr=subprocess.STDOUT,
+                preexec_fn=os.setsid
+            )
+            with open(pid_path, 'w', encoding='utf-8') as pf:
+                pf.write(str(proc.pid))
+            return True
+    except Exception as e:
+        print(f"Error starting etcd explorer: {e}", file=sys.stderr)
+        return False
 
 
 # K8s resource cache with 5-second TTL
@@ -214,26 +270,68 @@ def evaluate_k8s_zanzara_status(project_spec):
     target_items = target_items or []
     udmis_items = udmis_items or []
 
-    # 1. Cloud UDMIS: Look in target namespace ns
+    # 1. etcd State Store (check first as other components depend on it)
+    etcd_item = next((i for i in target_items if 'etcd' in i.get('metadata', {}).get('name', '')), None)
+    etcd_ns = ns
+    if not etcd_item:
+        etcd_item = next((i for i in udmis_items if 'etcd' in i.get('metadata', {}).get('name', '')), None)
+        if etcd_item:
+            etcd_ns = "udmis"
+
+    ready_etcd = etcd_item.get('status', {}).get('readyReplicas', 0) if etcd_item else 0
+    replicas_etcd = etcd_item.get('spec', {}).get('replicas', 3) if etcd_item else 3
+    if etcd_item and ready_etcd > 0:
+        etcd_status = {
+            "status": "UP",
+            "namespace": etcd_ns,
+            "port": 2379,
+            "ready_replicas": ready_etcd,
+            "total_replicas": replicas_etcd,
+            "details": f"etcd cluster {ready_etcd}/{replicas_etcd} replicas ready in namespace '{etcd_ns}'"
+        }
+    else:
+        etcd_status = {
+            "status": "DOWN",
+            "namespace": etcd_ns,
+            "port": 2379,
+            "ready_replicas": ready_etcd,
+            "total_replicas": replicas_etcd,
+            "details": f"etcd StatefulSet has {ready_etcd}/{replicas_etcd} ready replicas in namespace '{etcd_ns}'"
+        }
+
+    # 2. Cloud UDMIS
     udmis_dep = next((i for i in target_items if i.get('kind') == 'Deployment' and i.get('metadata', {}).get('name') in ('udmis-pods', 'udmis')), None)
+    udmis_ns = ns
+    if not udmis_dep:
+        udmis_dep = next((i for i in udmis_items if i.get('kind') == 'Deployment' and i.get('metadata', {}).get('name') in ('udmis-pods', 'udmis')), None)
+        if udmis_dep:
+            udmis_ns = "udmis"
+
     if udmis_dep:
-        ready = udmis_dep.get('status', {}).get('readyReplicas', 0)
-        replicas = udmis_dep.get('spec', {}).get('replicas', 1)
+        ready_udmis = udmis_dep.get('status', {}).get('readyReplicas', 0)
+        replicas_udmis = udmis_dep.get('spec', {}).get('replicas', 1)
         cloud_udmis = {
-            "status": "UP" if ready > 0 else "DOWN",
-            "namespace": ns,
-            "ready_replicas": ready,
-            "total_replicas": replicas,
-            "details": f"{ready}/{replicas} replicas ready in namespace '{ns}'"
+            "status": "UP" if ready_udmis > 0 else "DOWN",
+            "namespace": udmis_ns,
+            "ready_replicas": ready_udmis,
+            "total_replicas": replicas_udmis,
+            "details": f"{ready_udmis}/{replicas_udmis} pods ready in namespace '{udmis_ns}'"
         }
     else:
         cloud_udmis = {
             "status": "DOWN",
             "namespace": ns,
-            "details": f"Deployment 'udmis-pods' not found in namespace '{ns}'"
+            "ready_replicas": 0,
+            "total_replicas": 0,
+            "details": f"Deployment 'udmis-pods' not found in namespace '{ns}' or 'udmis'"
         }
 
-    # 2. Zanzara Ingress (auth proxy): Check target namespace, fallback to udmis (shared)
+    # 3. Mosquitto Broker check (shared for ingress and fabric)
+    mosquitto_item = next((i for i in (target_items + udmis_items) if i.get('kind') == 'StatefulSet' and 'mosquitto' in i.get('metadata', {}).get('name', '')), None)
+    ready_mosquitto = mosquitto_item.get('status', {}).get('readyReplicas', 0) if mosquitto_item else 0
+    mosquitto_up = ready_mosquitto > 0
+
+    # 4. Zanzara Ingress (auth proxy)
     auth_deps = [i for i in target_items if i.get('kind') == 'Deployment' and i.get('metadata', {}).get('name', '').startswith('auth')]
     auth_ns = ns
     if not auth_deps and ns != 'udmis':
@@ -242,77 +340,66 @@ def evaluate_k8s_zanzara_status(project_spec):
             auth_ns = "udmis"
 
     total_ready_auth = sum(d.get('status', {}).get('readyReplicas', 0) for d in auth_deps)
-    if auth_deps:
-        active_auth_names = [d.get('metadata', {}).get('name') for d in auth_deps if d.get('status', {}).get('readyReplicas', 0) > 0]
-        if total_ready_auth > 0:
-            zanzara_ingress = {
-                "status": "UP",
-                "namespace": auth_ns,
-                "endpoint": f"{project_id}.corp.goog:8883",
-                "details": f"Auth proxy ({', '.join(active_auth_names)}) running in namespace `{auth_ns}`"
-            }
-        else:
-            names = [d.get('metadata', {}).get('name') for d in auth_deps]
-            zanzara_ingress = {
-                "status": "DOWN",
-                "namespace": auth_ns,
-                "endpoint": f"{project_id}.corp.goog:8883",
-                "details": f"Auth proxy ({', '.join(names)}) has 0 ready replicas in namespace `{auth_ns}`"
-            }
+    active_auth_names = [d.get('metadata', {}).get('name') for d in auth_deps if d.get('status', {}).get('readyReplicas', 0) > 0]
+
+    if total_ready_auth > 0 and ready_etcd > 0 and mosquitto_up:
+        zanzara_ingress = {
+            "status": "UP",
+            "namespace": auth_ns,
+            "endpoint": f"{project_id}.corp.goog:8883",
+            "details": f"Auth proxy ({', '.join(active_auth_names)}) running in namespace '{auth_ns}'"
+        }
+    elif total_ready_auth > 0:
+        backend_issues = []
+        if ready_etcd == 0: backend_issues.append("etcd DOWN")
+        if not mosquitto_up: backend_issues.append("mosquitto DOWN")
+        zanzara_ingress = {
+            "status": "DOWN",
+            "namespace": auth_ns,
+            "endpoint": f"{project_id}.corp.goog:8883",
+            "details": f"Auth proxy running ({total_ready_auth} ready), but backend {', '.join(backend_issues)}"
+        }
     else:
         zanzara_ingress = {
             "status": "DOWN",
-            "namespace": ns,
+            "namespace": auth_ns,
             "endpoint": f"{project_id}.corp.goog:8883",
-            "details": f"Auth proxy not found in namespace `{ns}` or `udmis`"
+            "details": f"Auth proxy has 0 ready replicas in namespace '{auth_ns}'"
         }
 
-    # 3. Zanzara Message Fabric (bridge statefulsets)
+    # 5. Zanzara Message Fabric (bridge statefulsets + mosquitto)
     bridge_items = [i for i in target_items if i.get('kind') == 'StatefulSet' and 'bridge' in i.get('metadata', {}).get('name', '')]
     fabric_ns = ns
     if not bridge_items:
         bridge_items = [i for i in udmis_items if i.get('kind') == 'StatefulSet' and 'bridge' in i.get('metadata', {}).get('name', '')]
         if bridge_items:
             fabric_ns = "udmis"
-    
-    if bridge_items:
+
+    total_bridges = len(bridge_items)
+    ready_bridges = sum(1 for b in bridge_items if b.get('status', {}).get('readyReplicas', 0) > 0)
+
+    if total_bridges > 0 and ready_bridges > 0 and mosquitto_up:
         zanzara_fabric = {
             "status": "UP",
             "namespace": fabric_ns,
             "pipeline": "Mosquitto+Bridges+Pub/Sub",
-            "bridge_count": len(bridge_items),
-            "details": f"{len(bridge_items)} bridge StatefulSets running in namespace '{fabric_ns}'"
+            "bridge_count": total_bridges,
+            "ready_bridges": ready_bridges,
+            "details": f"{ready_bridges}/{total_bridges} bridges ready, mosquitto UP in namespace '{fabric_ns}'"
         }
     else:
+        fabric_issues = []
+        if ready_bridges < total_bridges:
+            fabric_issues.append(f"{ready_bridges}/{total_bridges} bridges ready")
+        if not mosquitto_up:
+            fabric_issues.append("mosquitto DOWN")
         zanzara_fabric = {
             "status": "DOWN",
-            "namespace": ns,
+            "namespace": fabric_ns,
             "pipeline": "Mosquitto+Bridges+Pub/Sub",
-            "details": f"Bridge StatefulSets not found in namespace '{ns}' or 'udmis'"
-        }
-
-    # 4. etcd State Store
-    etcd_item = next((i for i in target_items if 'etcd' in i.get('metadata', {}).get('name', '')), None)
-    etcd_ns = ns
-    if not etcd_item:
-        etcd_item = next((i for i in udmis_items if 'etcd' in i.get('metadata', {}).get('name', '')), None)
-        if etcd_item:
-            etcd_ns = "udmis"
-    
-    if etcd_item:
-        ready_etcd = etcd_item.get('status', {}).get('readyReplicas', 0)
-        etcd_status = {
-            "status": "UP" if ready_etcd > 0 else "DOWN",
-            "namespace": etcd_ns,
-            "port": 2379,
-            "details": f"etcd cluster running in namespace '{etcd_ns}'"
-        }
-    else:
-        etcd_status = {
-            "status": "DOWN",
-            "namespace": ns,
-            "port": 2379,
-            "details": f"etcd StatefulSet not found in namespace '{ns}' or 'udmis'"
+            "bridge_count": total_bridges,
+            "ready_bridges": ready_bridges,
+            "details": f"Fabric degraded ({', '.join(fabric_issues)}) in namespace '{fabric_ns}'"
         }
 
     return {
@@ -371,6 +458,8 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             '/api/testbed/stop': lambda: self.handle_testbed_stop(parsed_url.query, post_data=post_data),
             '/api/testbed/start_component': lambda: self.handle_testbed_start_component(parsed_url.query, post_data=post_data),
             '/api/testbed/stop_component': lambda: self.handle_testbed_stop_component(parsed_url.query, post_data=post_data),
+            '/api/testbed/start_pubber': lambda: self.handle_testbed_start_pubber(parsed_url.query, post_data=post_data),
+            '/api/testbed/stop_pubber': lambda: self.handle_testbed_stop_pubber(parsed_url.query, post_data=post_data),
             '/api/run_triage': lambda: self.handle_run_triage(parsed_url.query, post_data=post_data, bearer_key=bearer_key),
             '/api/stop_triage': lambda: self.handle_stop_triage(parsed_url.query, post_data=post_data),
             '/api/run_sequencer': lambda: self.handle_run_sequencer(parsed_url.query, post_data=post_data),
@@ -415,13 +504,78 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             '/api/stop_triage': lambda: self.handle_stop_triage(parsed_url.query),
             '/api/triage_status': lambda: self.handle_triage_status(parsed_url.query),
             '/api/triage_report': lambda: self.handle_triage_report(parsed_url.query),
+            '/api/sequences/catalog': lambda: self.handle_api_sequencer_catalog(parsed_url.query),
+            '/api/sequencer/catalog': lambda: self.handle_api_sequencer_catalog(parsed_url.query),
         }
+
+        if parsed_url.path.startswith('/etcd_explorer') or parsed_url.path.startswith('/api/registries'):
+            self.handle_etcd_explorer_proxy(parsed_url.path, parsed_url.query)
+            return
 
         handler = routes.get(parsed_url.path)
         if handler:
             handler()
         else:
             super().do_GET()
+
+    def do_OPTIONS(self):
+        """Handle CORS preflight requests across all endpoints."""
+        self.send_response(204)
+        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, HEAD')
+        self.send_header('Access-Control-Allow-Headers', '*')
+        self.send_header('Access-Control-Max-Age', '86400')
+        self.end_headers()
+
+    def do_HEAD(self):
+        """Handle HEAD requests, delegating explorer/registries to proxy or default handler."""
+        parsed_url = urllib.parse.urlparse(self.path)
+        if parsed_url.path.startswith('/etcd_explorer') or parsed_url.path.startswith('/api/registries'):
+            self.handle_etcd_explorer_proxy(parsed_url.path, parsed_url.query, is_head=True)
+        else:
+            super().do_HEAD()
+
+    def handle_etcd_explorer_proxy(self, req_path, query_string, is_head=False):
+        """Proxy requests for ETCD explorer static assets and API to local EtcdExplorerServer on port 8085."""
+        start_etcd_explorer_service()
+
+        target_path = req_path
+        if target_path.startswith('/etcd_explorer'):
+            target_path = target_path[len('/etcd_explorer'):]
+            if not target_path:
+                target_path = '/'
+
+        target_url = f"http://127.0.0.1:8085{target_path}"
+        if query_string:
+            target_url += f"?{query_string}"
+
+        try:
+            req = urllib.request.Request(target_url, headers={'User-Agent': 'UDMI-Workbench-Proxy'})
+            with urllib.request.urlopen(req, timeout=5) as response:
+                content = response.read()
+                content_type = response.headers.get('Content-Type', 'text/html; charset=utf-8')
+                self.send_response(response.status)
+                self.send_header('Content-Type', content_type)
+                self.send_header('Content-Length', str(len(content)))
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.send_header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', '*')
+                self.end_headers()
+                if not is_head:
+                    self.wfile.write(content)
+        except urllib.error.HTTPError as e:
+            err_content = e.read()
+            self.send_response(e.code)
+            self.send_header('Content-Type', e.headers.get('Content-Type', 'text/plain'))
+            self.send_header('Content-Length', str(len(err_content)))
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.send_header('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+            self.send_header('Access-Control-Allow-Headers', '*')
+            self.end_headers()
+            if not is_head:
+                self.wfile.write(err_content)
+        except Exception as e:
+            self.send_error_response(502, f"ETCD Explorer not reachable on port 8085: {str(e)}")
 
     def _resolve_and_verify_path(self, path_param):
         if not path_param:
@@ -510,7 +664,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
 
     def handle_api_devices(self, query_string):
         params = urllib.parse.parse_qs(query_string)
-        site_model = params.get('site_model', [None])[0]
+        site_model = params.get('site_model', [None])[0] or params.get('site_path', [None])[0]
 
         if not site_model:
             self.send_error_response(400, "Missing 'site_model' parameter")
@@ -544,7 +698,8 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                             with open(meta_path, 'r', encoding='utf-8') as mf:
                                 meta_json = json.load(mf)
                                 device_metadata[d] = {
-                                    "version": meta_json.get("version")
+                                    "version": meta_json.get("version"),
+                                    "serial_no": meta_json.get("serial_no") or meta_json.get("device_serial")
                                 }
                         except Exception:
                             pass
@@ -561,8 +716,8 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
 
     def handle_device_results(self, query_string):
         params = urllib.parse.parse_qs(query_string)
-        site_model = params.get('site_model', [None])[0]
-        device = params.get('device', [None])[0]
+        site_model = params.get('site_model', [None])[0] or params.get('site_path', [None])[0]
+        device = params.get('device', [None])[0] or params.get('device_id', [None])[0]
 
         if not site_model or not device:
             self.send_error_response(400, "Missing 'site_model' or 'device' parameter")
@@ -646,6 +801,97 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             "device": device,
             "results": results
         })
+
+    def handle_api_sequencer_catalog(self, query_string):
+        spec_path = os.path.join(ROOT_DIR, 'docs', 'specs', 'sequences', 'generated.md')
+        if not os.path.exists(spec_path):
+            self.send_error_response(404, "docs/specs/sequences/generated.md not found")
+            return
+
+        try:
+            with open(spec_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+            index_desc_map = {}
+            index_pattern = re.compile(r"^\*\s+\[([a-zA-Z0-9_-]+)\]\(#[^)]+\)(?::\s*(.*))?$", re.MULTILINE)
+            for m in index_pattern.finditer(content):
+                t_id = m.group(1).strip()
+                desc = (m.group(2) or "").strip()
+                desc = re.sub(r"\s*Test skipped:.*$", "", desc).strip()
+                index_desc_map[t_id] = desc
+
+            section_pattern = re.compile(r"^##\s+([a-zA-Z0-9_-]+)\s*(?:\(([^)]+)\))?", re.MULTILINE)
+            matches = list(section_pattern.finditer(content))
+
+            categories_map = {
+                "System & Base": {"icon": "dns", "tests": []},
+                "Pointset & Telemetry": {"icon": "analytics", "tests": []},
+                "Discovery & Scanning": {"icon": "search", "tests": []},
+                "Blobset & Firmware": {"icon": "memory", "tests": []},
+                "Endpoint & Connection": {"icon": "cloud_sync", "tests": []},
+                "Gateway & Proxy": {"icon": "router", "tests": []},
+                "Localnet & Addressing": {"icon": "hub", "tests": []},
+            }
+
+            for i, match in enumerate(matches):
+                test_id = match.group(1).strip()
+                stage = (match.group(2) or "STABLE").strip().upper()
+                start = match.end()
+                end = matches[i+1].start() if i + 1 < len(matches) else len(content)
+                section_body = content[start:end].strip()
+
+                paragraphs = [p.strip() for p in section_body.split("\n\n") if p.strip()]
+                desc = index_desc_map.get(test_id, "")
+                steps = []
+                for p in paragraphs:
+                    if p.startswith("1. ") or p.startswith("* ") or p.startswith("- "):
+                        steps.extend([line.strip() for line in p.split("\n") if line.strip()])
+                    elif not desc and not p.startswith("Test skipped:") and not p.startswith("Test passed."):
+                        desc = p
+
+                if test_id.startswith("system_") or test_id in ["broken_config", "extra_config", "device_config_acked", "config_logging", "valid_serial_no", "state_make_model", "state_software"]:
+                    cat_name = "System & Base"
+                elif test_id.startswith("pointset_"):
+                    cat_name = "Pointset & Telemetry"
+                elif test_id.startswith("blob_"):
+                    cat_name = "Blobset & Firmware"
+                elif test_id.startswith("endpoint_"):
+                    cat_name = "Endpoint & Connection"
+                elif test_id.startswith("enumerate_") or test_id.startswith("scan_") or test_id.startswith("discovery_"):
+                    cat_name = "Discovery & Scanning"
+                elif test_id.startswith("gateway_") or test_id.startswith("bad_"):
+                    cat_name = "Gateway & Proxy"
+                elif test_id.startswith("family_") or test_id.startswith("localnet_"):
+                    cat_name = "Localnet & Addressing"
+                else:
+                    prefix = test_id.split('_')[0].capitalize()
+                    cat_name = f"{prefix} Sequences"
+                    if cat_name not in categories_map:
+                        categories_map[cat_name] = {"icon": "checklist", "tests": []}
+
+                categories_map[cat_name]["tests"].append({
+                    "id": test_id,
+                    "name": test_id,
+                    "stage": stage,
+                    "desc": desc or f"Sequence test {test_id}",
+                    "steps": steps
+                })
+
+            catalog = []
+            for cat_name, val in categories_map.items():
+                if val["tests"]:
+                    catalog.append({
+                        "category": cat_name,
+                        "icon": val["icon"],
+                        "tests": val["tests"]
+                    })
+
+            self.send_json_response({
+                "catalog": catalog,
+                "total_tests": sum(len(c["tests"]) for c in catalog)
+            })
+        except Exception as e:
+            self.send_error_response(500, f"Error parsing sequence catalog: {str(e)}")
 
     def handle_testbed_jobs(self, query_string):
         jobs = []
@@ -737,10 +983,27 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         except Exception:
             pass
 
+        etcd_explorer_up = False
+        try:
+            res = subprocess.run(['pgrep', '-f', 'EtcdExplorerServer'], capture_output=True, text=True)
+            if res.returncode == 0 and res.stdout.strip():
+                etcd_explorer_up = True
+        except Exception:
+            pass
+
         # Check if project_spec indicates Cloud / Zanzara mode
         project_spec = params.get('project_spec', [''])[0]
         parsed_spec = parse_project_spec(project_spec)
         is_cloud = parsed_spec["is_cloud"]
+
+        target_etcd_port = 18834 if mqtt_port != 8883 else 2379
+        if not is_cloud and etcd_up:
+            start_etcd_explorer_service(target_etcd_port, 8085)
+            try:
+                with socket.create_connection(('127.0.0.1', 8085), timeout=0.3):
+                    etcd_explorer_up = True
+            except Exception:
+                pass
 
         if is_cloud:
             zanzara_health = evaluate_k8s_zanzara_status(project_spec)
@@ -755,13 +1018,42 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             zanzara_ingress_info = {"status": "DOWN", "endpoint": "localhost:8883"}
             zanzara_fabric_info = {"status": "DOWN", "pipeline": "N/A"}
             cloud_udmis_info = {"status": "DOWN", "mode": "LOCAL"}
-            etcd_info = {"status": "UP" if etcd_up else "DOWN", "port": 2379}
+            etcd_info = {
+                "status": "UP" if etcd_up else "DOWN",
+                "port": target_etcd_port if etcd_up else 2379,
+                "explorer_port": 8085,
+                "explorer_status": "UP" if etcd_explorer_up else "DOWN"
+            }
             overall = "HEALTHY" if (mqtt_up or udmis_up or site_model_valid) else "DEGRADED"
+
+        running_pubbers = []
+        with active_processes_lock:
+            for sid, meta in active_processes.items():
+                if meta.get('type') == 'pubber':
+                    p = meta.get('process')
+                    if p and p.poll() is None:
+                        dev = meta.get('device_id')
+                        if dev:
+                            running_pubbers.append(dev)
+
+        try:
+            res = subprocess.run(['pgrep', '-a', '-f', 'pubber-1.0-SNAPSHOT-all.jar'], capture_output=True, text=True)
+            if res.returncode == 0 and res.stdout:
+                for line in res.stdout.strip().split('\n'):
+                    parts = line.split()
+                    for idx, part in enumerate(parts):
+                        if 'com.google.daq.mqtt.sequencer.pubber.Pubber' in part or part.endswith('Pubber'):
+                            if idx + 3 < len(parts):
+                                running_pubbers.append(parts[idx + 3])
+        except Exception:
+            pass
+        running_pubbers = list(set(filter(None, running_pubbers)))
 
         self.send_json_response({
             "overall_status": overall,
             "timestamp": int(time.time() * 1000),
             "project_spec_parsed": parsed_spec,
+            "active_pubbers": running_pubbers,
             "components": {
                 "site_model": {"status": "VALID" if site_model_valid else "INVALID", "path": to_home_relative(target_site or site_model), "device_count": device_count},
                 "validator": {"status": "UP" if validator_up else "DOWN", "version": "1.4.2", "schema_valid": True},
@@ -879,6 +1171,19 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
 
         env = os.environ.copy()
         env['UDMI_NO_SUDO'] = 'true'
+        env['MQTT_PORT'] = str(assigned_port)
+        env['ETCD_PORT'] = str(assigned_port + 1)
+        env['INFLUX_PORT'] = str(assigned_port + 2)
+        env['POSTGRES_PORT'] = str(assigned_port + 3)
+
+        # For local setup, reset out/udmis.log so fresh logs stream cleanly
+        udmis_log = os.path.join(ROOT_DIR, 'out', 'udmis.log')
+        try:
+            os.makedirs(os.path.dirname(udmis_log), exist_ok=True)
+            with open(udmis_log, 'w', encoding='utf-8') as f:
+                f.write(f"Launching LOCAL setup pipeline for {site_model_resolved} ({project_spec})...\n")
+        except Exception:
+            pass
 
         try:
             with open(log_path, 'wb', buffering=0) as log_file:
@@ -947,11 +1252,18 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             os.path.join(ROOT_DIR, 'out', 'sessions', target_sid, 'testbed_start.log') if target_sid else None
         )
 
-        ready = os.path.exists(os.path.join(ROOT_DIR, 'var', 'pod_ready.txt'))
+        proc_type = target_meta.get('type') if target_meta else 'testbed'
+        if proc_type == 'pubber':
+            active_log_path = log_path
+            ready = False
+        else:
+            udmis_log = os.path.join(ROOT_DIR, 'out', 'udmis.log')
+            active_log_path = udmis_log if os.path.exists(udmis_log) else log_path
+            ready = os.path.exists(os.path.join(ROOT_DIR, 'var', 'pod_ready.txt'))
 
-        if log_path and os.path.exists(log_path):
+        if active_log_path and os.path.exists(active_log_path):
             try:
-                with open(log_path, 'r', encoding='utf-8', errors='replace') as f:
+                with open(active_log_path, 'r', encoding='utf-8', errors='replace') as f:
                     f.seek(0, os.SEEK_END)
                     file_size = f.tell()
                     if offset < file_size:
@@ -961,7 +1273,10 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             except Exception as e:
                 log_content = f"[Server Error reading log: {str(e)}]\n"
 
-        if "UUFI Service is READY" in log_content:
+        if proc_type == 'pubber':
+            if "Publishing" in log_content or "Starting pubber" in log_content or "Connected" in log_content or "Connection successful" in log_content or "Sending message" in log_content or is_running:
+                ready = True
+        elif "UUFI Service is READY" in log_content:
             ready = True
 
         self.send_json_response({
@@ -969,6 +1284,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             "exit_code": exit_code,
             "ready": ready,
             "session_id": target_sid,
+            "type": proc_type,
             "log": log_content,
             "offset": new_offset
         })
@@ -1000,7 +1316,34 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                     pass
             subprocess.run(['pkill', '-x', 'mosquitto'], capture_output=True)
             subprocess.run(['pkill', '-f', 'pubber-1.0-SNAPSHOT-all.jar'], capture_output=True)
+            pid_file = os.path.join(ROOT_DIR, 'var', 'etcd_explorer.pid')
+            if os.path.exists(pid_file):
+                try:
+                    with open(pid_file) as pf:
+                        pid = int(pf.read().strip())
+                        os.kill(pid, signal.SIGTERM)
+                except Exception:
+                    pass
+                if os.path.exists(pid_file):
+                    os.remove(pid_file)
+            subprocess.run(['pkill', '-f', 'EtcdExplorerServer'], capture_output=True)
             subprocess.run(['pkill', '-f', 'etcd'], capture_output=True)
+            subprocess.run(['pkill', '-f', 'influxd'], capture_output=True)
+            subprocess.run(['pkill', '-f', 'postgres'], capture_output=True)
+
+            with active_processes_lock:
+                for sid, meta in list(active_processes.items()):
+                    if meta.get('type') in ('testbed', 'pubber'):
+                        proc = meta.get('process')
+                        if proc and proc.poll() is None:
+                            try:
+                                os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+                            except Exception:
+                                try:
+                                    proc.terminate()
+                                except Exception:
+                                    pass
+                        del active_processes[sid]
 
             self.send_json_response({
                 "status": "stopped",
@@ -1023,8 +1366,22 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             cmd = ["bin/start_udmis"]
         elif component == 'mqtt_broker':
             cmd = ["bin/start_mosquitto"]
+        elif component == 'etcd':
+            cmd = ["bin/start_etcd"]
+        elif component == 'etcd_explorer':
+            ok = start_etcd_explorer_service()
+            self.send_json_response({
+                "status": "UP" if ok else "DOWN",
+                "component": "etcd_explorer",
+                "message": "ETCD Explorer launched successfully." if ok else "Failed to launch ETCD Explorer."
+            })
+            return
+        elif component == 'influx':
+            cmd = ["bin/start_influx"]
+        elif component == 'postgresql':
+            cmd = ["bin/start_postgresql"]
         elif component == 'pubber':
-            cmd = ["bin/pubber", site_model, project_spec, "AHU-1", "SN-10492"]
+            cmd = ["bin/pubber", site_model, project_spec, "AHU-1", "10492"]
         else:
             self.send_error_response(400, f"Unknown component '{component}'")
             return
@@ -1072,6 +1429,35 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                 subprocess.run(['pkill', '-x', 'mosquitto'], capture_output=True)
             elif component == 'pubber':
                 subprocess.run(['pkill', '-f', 'pubber-1.0-SNAPSHOT-all.jar'], capture_output=True)
+            elif component == 'etcd_explorer':
+                pid_file = os.path.join(ROOT_DIR, 'var', 'etcd_explorer.pid')
+                if os.path.exists(pid_file):
+                    try:
+                        with open(pid_file) as pf:
+                            pid = int(pf.read().strip())
+                            os.kill(pid, signal.SIGTERM)
+                    except Exception:
+                        pass
+                    if os.path.exists(pid_file):
+                        os.remove(pid_file)
+                subprocess.run(['pkill', '-f', 'EtcdExplorerServer'], capture_output=True)
+            elif component == 'etcd':
+                pid_file = os.path.join(ROOT_DIR, 'var', 'etcd_explorer.pid')
+                if os.path.exists(pid_file):
+                    try:
+                        with open(pid_file) as pf:
+                            pid = int(pf.read().strip())
+                            os.kill(pid, signal.SIGTERM)
+                    except Exception:
+                        pass
+                    if os.path.exists(pid_file):
+                        os.remove(pid_file)
+                subprocess.run(['pkill', '-f', 'EtcdExplorerServer'], capture_output=True)
+                subprocess.run(['pkill', '-f', 'etcd'], capture_output=True)
+            elif component == 'influx':
+                subprocess.run(['pkill', '-f', 'influxd'], capture_output=True)
+            elif component == 'postgresql':
+                subprocess.run(['pkill', '-f', 'postgres'], capture_output=True)
 
             self.send_json_response({
                 "status": "DOWN",
@@ -1080,6 +1466,114 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             })
         except Exception as e:
             self.send_error_response(500, f"Failed to stop component {component}: {str(e)}")
+
+    def handle_testbed_start_pubber(self, query_string, post_data=None):
+        params = urllib.parse.parse_qs(query_string) if query_string else {}
+        data = post_data or {}
+        device_id = data.get('device_id') or params.get('device_id', ['AHU-1'])[0]
+        serial_no = data.get('serial_no') or params.get('serial_no', ['10491'])[0]
+        site_model = data.get('site_model') or params.get('site_model', ['sites/udmi_site_model'])[0]
+        project_spec = data.get('project_spec') or params.get('project_spec', ['//mqtt/localhost:18833'])[0]
+
+        target_site, err = self._resolve_and_verify_path(site_model)
+        if err or not os.path.exists(target_site):
+            target_site = os.path.abspath(os.path.join(ROOT_DIR, site_model))
+
+        # Check if pubber is already running for this device
+        with active_processes_lock:
+            for sid, meta in list(active_processes.items()):
+                if meta.get('type') == 'pubber' and meta.get('device_id') == device_id:
+                    proc = meta.get('process')
+                    if proc and proc.poll() is None:
+                        self.send_json_response({
+                            "session_id": sid,
+                            "status": "running",
+                            "already_running": True,
+                            "device_id": device_id,
+                            "serial_no": serial_no,
+                            "cmd": f"UDMI_NO_SUDO=true bin/pubber {site_model} {project_spec} {device_id} {serial_no}",
+                            "message": f"Pubber emulator for {device_id} is already active."
+                        })
+                        return
+                    else:
+                        del active_processes[sid]
+
+        session_id = f"pubber-{device_id}-{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+        session_dir = os.path.join(ROOT_DIR, 'out', 'sessions', session_id)
+        os.makedirs(session_dir, exist_ok=True)
+        log_path = os.path.join(session_dir, 'pubber.log')
+        prune_old_sessions(15)
+
+        cmd = ["bin/pubber", target_site, project_spec, device_id, str(serial_no)]
+        env = os.environ.copy()
+        env['UDMI_NO_SUDO'] = 'true'
+
+        try:
+            with open(log_path, 'wb', buffering=0) as log_file:
+                proc = subprocess.Popen(
+                    cmd,
+                    cwd=ROOT_DIR,
+                    env=env,
+                    stdout=log_file,
+                    stderr=subprocess.STDOUT,
+                    preexec_fn=os.setsid
+                )
+
+            with active_processes_lock:
+                active_processes[session_id] = {
+                    "process": proc,
+                    "type": "pubber",
+                    "device_id": device_id,
+                    "serial_no": serial_no,
+                    "site_model": target_site,
+                    "project_spec": project_spec,
+                    "session_dir": session_dir,
+                    "log_path": log_path,
+                    "created_at": datetime.now().isoformat()
+                }
+
+            self.send_json_response({
+                "session_id": session_id,
+                "status": "starting",
+                "device_id": device_id,
+                "serial_no": serial_no,
+                "cmd": f"UDMI_NO_SUDO=true bin/pubber {site_model} {project_spec} {device_id} {serial_no}",
+                "message": f"Pubber background process started for {device_id} (Serial {serial_no})."
+            })
+        except Exception as e:
+            self.send_error_response(500, f"Failed to start pubber for {device_id}: {str(e)}")
+
+    def handle_testbed_stop_pubber(self, query_string, post_data=None):
+        params = urllib.parse.parse_qs(query_string) if query_string else {}
+        data = post_data or {}
+        device_id = data.get('device_id') or params.get('device_id', [None])[0]
+
+        stopped = False
+        with active_processes_lock:
+            for sid, meta in list(active_processes.items()):
+                if meta.get('type') == 'pubber' and (device_id is None or meta.get('device_id') == device_id):
+                    proc = meta.get('process')
+                    if proc and proc.poll() is None:
+                        try:
+                            os.killpg(os.getpgid(proc.pid), signal.SIGTERM)
+                        except Exception:
+                            try:
+                                proc.terminate()
+                            except Exception:
+                                pass
+                    del active_processes[sid]
+                    stopped = True
+
+        if device_id:
+            subprocess.run(['pkill', '-f', f'pubber.*{device_id}'], capture_output=True)
+        else:
+            subprocess.run(['pkill', '-f', 'pubber-1.0-SNAPSHOT-all.jar'], capture_output=True)
+
+        self.send_json_response({
+            "status": "stopped",
+            "device_id": device_id,
+            "message": f"Pubber process stopped for {device_id or 'all devices'}."
+        })
 
     def handle_log_diff(self, query_string, post_data=None):
         params = urllib.parse.parse_qs(query_string)
@@ -1160,6 +1654,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         site_model = data.get('site_model') or (data.get('context') or {}).get('site_model', 'sites/udmi_site_model')
         device_id = data.get('device_id') or (data.get('context') or {}).get('active_device', '')
         test_id = data.get('test_id') or (data.get('context') or {}).get('active_test', '')
+        project_spec = data.get('project_spec') or (data.get('context') or {}).get('project_spec', '')
 
         query_id = f"q-{uuid.uuid4().hex[:6]}"
         answer_markdown = ""
@@ -1178,7 +1673,8 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                     udmi_root=ROOT_DIR,
                     site_model=site_model,
                     device_id=device_id or None,
-                    test_id=test_id or None
+                    test_id=test_id or None,
+                    project_spec=project_spec or None
                 )
                 answer_markdown = asyncio.run(chat_session.send_message(query))
             except Exception as e:
@@ -1207,9 +1703,10 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         site_model = data.get('site_model')
         device_id = data.get('device_id')
         test_id = data.get('test_id')
+        project_spec = data.get('project_spec')
         provider = data.get('provider')
         api_key = data.get('api_key') or bearer_key or os.getenv("GEMINI_API_KEY")
-        gcp_project = data.get('gcp_project') or os.getenv("GCLOUD_PROJECT") or os.getenv("GOOGLE_CLOUD_PROJECT") or "mantis-predator"
+        gcp_project = data.get('gcp_project') or os.getenv("GCLOUD_PROJECT") or os.getenv("GOOGLE_CLOUD_PROJECT") or "bos-platform-dev"
         gcp_location = data.get('gcp_location') or os.getenv("GCP_LOCATION", "global")
 
         if api_key:
@@ -1259,6 +1756,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                         site_model=site_model,
                         device_id=device_id or None,
                         test_id=test_id or None,
+                        project_spec=project_spec or None,
                         use_vertex=use_vertex,
                         gcp_project=gcp_project,
                         gcp_location=gcp_location

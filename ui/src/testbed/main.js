@@ -5,34 +5,8 @@ import { stateStore } from '../shared/state-store.js?v=3.0';
 import { LogViewer } from '../shared/components/log-viewer.js?v=3.0';
 import { NotificationManager } from '../shared/components/notification-toast.js?v=3.0';
 
-const SEQUENCER_TEST_CATALOG = [
-  {
-    category: "System & Base",
-    icon: "dns",
-    tests: [
-      { id: "system.base.telemetry", name: "system.base.telemetry", desc: "Core telemetry heartbeats & state payload validation" },
-      { id: "system.base.state", name: "system.base.state", desc: "Base device state reporting & lifecycle schema" },
-      { id: "system.firmware.state", name: "system.firmware.state", desc: "Firmware version and hardware revision reporting" }
-    ]
-  },
-  {
-    category: "Pointset & Telemetry",
-    icon: "analytics",
-    tests: [
-      { id: "pointset.telemetry.events", name: "pointset.telemetry.events", desc: "Pointset event publishing & value schema compliance" },
-      { id: "pointset.telemetry.write", name: "pointset.telemetry.write", desc: "Writable point value update & actuation confirmation" },
-      { id: "pointset.sample.rate", name: "pointset.sample.rate", desc: "Telemetry sample interval & timing tolerance" }
-    ]
-  },
-  {
-    category: "Gateway & Network",
-    icon: "router",
-    tests: [
-      { id: "gateway.proxy.target", name: "gateway.proxy.target", desc: "Proxy gateway target message routing" },
-      { id: "gateway.proxy.discovery", name: "gateway.proxy.discovery", desc: "Proxy sub-device discovery & binding" }
-    ]
-  }
-];
+// Dynamic Sequencer Test Catalog (loaded live from docs/specs/sequences/generated.md)
+export let SEQUENCER_TEST_CATALOG = [];
 
 export class TestbedGraphController {
   constructor() {
@@ -55,6 +29,8 @@ export class TestbedGraphController {
     this.logOffsets = new Map(); // sessionId -> offset
     this.setupLogsInterval = null;
     this.latestSetupSessionId = null;
+    this.testTimerInterval = null;
+    this.testStartTime = null;
 
     // Site Model Devices & Execution Modes State
     this.discoveredDevices = [];
@@ -69,6 +45,7 @@ export class TestbedGraphController {
     this.updateSetupButtons();
     this.renderGraph();
     this.loadSiteModelDevices();
+    this.fetchSequencerCatalog();
     setTimeout(() => this.updateTabIndicator(), 50);
     setTimeout(() => this.checkAndRecoverBackgroundJobs(), 1000);
   }
@@ -386,6 +363,41 @@ export class TestbedGraphController {
         `;
       }
     }
+  }
+
+  async fetchSequencerCatalog() {
+    try {
+      const res = await fetch('/api/sequences/catalog');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.catalog && Array.isArray(data.catalog) && data.catalog.length > 0) {
+          SEQUENCER_TEST_CATALOG = data.catalog;
+          this.deviceNodes.forEach(node => {
+            if (!node.selectedTests || node.selectedTests.size === 0) {
+              node.selectedTests = new Set(this.getSmokeTestIds());
+            }
+          });
+          if (this.isInspectorOpen) {
+            this.renderInspector();
+          }
+          if (this.activeViewMode === 'matrix') {
+            this.renderComplianceMatrix();
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("Could not dynamically fetch sequencer catalog:", e);
+    }
+  }
+
+  getSmokeTestIds() {
+    const stable = [];
+    SEQUENCER_TEST_CATALOG.forEach(c => (c.tests || []).forEach(t => {
+      if ((t.stage || 'STABLE').toUpperCase() === 'STABLE') {
+        stable.push(t.id);
+      }
+    }));
+    return stable.length > 0 ? stable.slice(0, 6) : (SEQUENCER_TEST_CATALOG[0]?.tests?.map(t => t.id) || []);
   }
 
   onDiscoveredDevices(devices, metadata = {}) {
@@ -765,6 +777,11 @@ export class TestbedGraphController {
       this.renderComplianceMatrix();
     } else if (mode === 'canvas') {
       this.renderGraph();
+    } else if (mode === 'logs') {
+      const activeNode = this.deviceNodes.find(n => n.isTestingRunning) || this.nodes.find(n => n.id === this.selectedNodeId) || this.deviceNodes[0];
+      if (activeNode) {
+        this.updateActiveExecutionProgress(activeNode);
+      }
     }
   }
 
@@ -777,27 +794,68 @@ export class TestbedGraphController {
     if (tab === 'diff') this.populateDiffBaselines();
   }
 
+  generateDeviceSerialNo(devId) {
+    if (!devId) return `${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const existingSerials = new Set();
+    (this.deviceNodes || []).forEach(n => {
+      if (n.inputs && n.inputs.serial_no && n.inputs.device_id !== devId) {
+        existingSerials.add(String(n.inputs.serial_no));
+      }
+    });
+    (this.nodes || []).forEach(n => {
+      if (n.inputs && n.inputs.serial_no && n.inputs.device_id !== devId) {
+        existingSerials.add(String(n.inputs.serial_no));
+      }
+    });
+
+    const metaSerial = this.deviceMetadata?.[devId]?.serial_no;
+    if (metaSerial && !existingSerials.has(String(metaSerial))) {
+      return String(metaSerial);
+    }
+
+    const numMatch = devId.match(/\d+/);
+    let baseNum = numMatch ? (10490 + parseInt(numMatch[0], 10)) : 0;
+    if (!baseNum || isNaN(baseNum)) {
+      let hash = 0;
+      for (let i = 0; i < devId.length; i++) {
+        hash = (hash * 31 + devId.charCodeAt(i)) % 90000;
+      }
+      baseNum = 10000 + Math.abs(hash);
+    }
+
+    let candidate = `${baseNum}`;
+    let inc = 0;
+    while (existingSerials.has(candidate)) {
+      inc++;
+      candidate = `${baseNum + inc}`;
+    }
+    return candidate;
+  }
+
   // --- NODE TYPE SPECIFICATIONS ---
-  getNodeSpec(type) {
+  getNodeSpec(type, devId = null) {
     const parsed = this.parseProjectSpec(this.projectSpec);
     const envProject = parsed.project || 'bos-platform-dev';
     const envNamespace = parsed.effectiveNamespace || 'udmis';
     const isCloud = parsed.isCloud;
+    const targetDevId = devId || 'AHU-1';
+    const serialNo = this.generateDeviceSerialNo(targetDevId);
 
     const specs = {
       pubber: {
         type: 'pubber',
         label: 'Device Emulator (Pubber)',
         icon: 'robot_2',
-        inputs: { device_id: 'AHU-1', serial_no: 'SN-10492', interval_sec: '10' },
+        inputs: { device_id: targetDevId, serial_no: serialNo, interval_sec: '10' },
         subText: (n) => {
-          const devId = n.inputs.device_id || n.label;
-          const meta = this.deviceMetadata && this.deviceMetadata[devId];
+          const dId = n.inputs.device_id || n.label;
+          const meta = this.deviceMetadata && this.deviceMetadata[dId];
           const ver = meta?.version || n.inputs.version;
           return ver ? `v${ver.replace(/^v/, '')}` : 'UDMI Ready';
         },
         runConfig: (n) => `out/pubber_config.json (site: ${this.siteModel}, dev: ${n.inputs.device_id || 'AHU-1'})`,
-        runCommand: (n) => `UDMI_NO_SUDO=true bin/pubber ${this.siteModel} ${this.projectSpec || '//mqtt/localhost:18833'} ${n.inputs.device_id || 'AHU-1'} ${n.inputs.serial_no || 'SN-10492'}`,
+        runCommand: (n) => `UDMI_NO_SUDO=true bin/pubber ${this.siteModel} ${this.projectSpec || '//mqtt/localhost:18833'} ${n.inputs.device_id || 'AHU-1'} ${n.inputs.serial_no || this.generateDeviceSerialNo(n.inputs.device_id || 'AHU-1')}`,
         healthProbe: (n) => `Message Probe: bin/pull_mqtt for /r/+/d/${n.inputs.device_id || 'AHU-1'}/state`
       },
       spotter: {
@@ -815,10 +873,10 @@ export class TestbedGraphController {
         type: 'actual_device',
         label: 'Actual Device',
         icon: 'home_iot_device',
-        inputs: { device_id: 'AHU-22', address: '192.168.1.105', protocol: 'BACnet/IP' },
+        inputs: { device_id: targetDevId || 'AHU-22', address: '192.168.1.105', protocol: 'BACnet/IP' },
         subText: (n) => {
-          const devId = n.inputs.device_id || n.label;
-          const meta = this.deviceMetadata && this.deviceMetadata[devId];
+          const dId = n.inputs.device_id || n.label;
+          const meta = this.deviceMetadata && this.deviceMetadata[dId];
           const ver = meta?.version || n.inputs.version;
           return ver ? `v${ver.replace(/^v/, '')}` : 'UDMI Ready';
         },
@@ -1099,6 +1157,9 @@ export class TestbedGraphController {
     if (this.btnViewSetupLogs) {
       this.btnViewSetupLogs.style.display = (this.setupMode === 'LOCAL' && this.latestSetupSessionId) ? 'inline-flex' : 'none';
     }
+    if (this.btnStopPipeline) {
+      this.btnStopPipeline.style.display = 'inline-flex';
+    }
   }
 
   async startPipeline() {
@@ -1167,10 +1228,35 @@ export class TestbedGraphController {
   }
 
   async stopPipeline() {
-    this.nodes.forEach(n => { if (n.type !== 'actual_device') n.status = 'INITIALIZING'; });
+    this.nodes.forEach(n => {
+      if (n.type !== 'actual_device') {
+        n.status = 'DOWN';
+      }
+      if (n.isTestingRunning) {
+        n.isTestingRunning = false;
+      }
+    });
+    this.deviceNodes.forEach(n => {
+      if (n.isTestingRunning) {
+        n.isTestingRunning = false;
+      }
+    });
     this.renderGraph();
+    this.renderInspector();
+    NotificationManager.showToast({
+      title: "Stopping Local Services",
+      message: "Stopping all local pipeline and pubber components...",
+      type: "info"
+    });
     try {
-      await fetch('/api/testbed/stop', { method: 'POST' });
+      const res = await fetch('/api/testbed/stop', { method: 'POST' });
+      if (res.ok) {
+        NotificationManager.showToast({
+          title: "Pipeline Stopped",
+          message: "All local pipeline and pubber components have been stopped.",
+          type: "success"
+        });
+      }
     } catch (e) {
       console.error("Failed to stop pipeline:", e);
     }
@@ -1181,23 +1267,33 @@ export class TestbedGraphController {
   }
 
   createNodeObject(type, x, y, deviceId = null) {
-    const spec = this.getNodeSpec(type);
-    const isDevice = type === 'pubber' || type === 'actual_device' || type === 'spotter' || type === 'ancillary';
     const devId = deviceId || null;
+    const spec = this.getNodeSpec(type, devId);
+    const isDevice = type === 'pubber' || type === 'actual_device' || type === 'spotter' || type === 'ancillary';
     const inputs = { ...spec.inputs };
     if (devId) {
       inputs.device_id = devId;
+      if (type === 'pubber') {
+        inputs.serial_no = this.generateDeviceSerialNo(devId);
+      }
+    }
+    const isLocalUp = this.infraNodes.some(n => n.type === 'mqtt_broker' && n.status === 'UP');
+    let initStatus = '';
+    if (type === 'pubber') {
+      initStatus = isLocalUp ? 'UP' : 'DOWN';
+    } else if (type !== 'actual_device') {
+      initStatus = 'UP';
     }
     return {
       id: devId ? `device_${devId}` : ('node_' + Math.random().toString(36).substr(2, 7)),
       type: spec.type,
       label: devId || spec.label,
       icon: spec.icon,
-      status: type === 'actual_device' ? '' : 'UP',
+      status: initStatus,
       x,
       y,
       inputs,
-      selectedTests: isDevice ? new Set(['system.base.telemetry', 'system.base.state', 'pointset.telemetry.events']) : new Set(),
+      selectedTests: isDevice ? new Set(this.getSmokeTestIds()) : new Set(),
       testResults: null,
       isTestingRunning: false,
       lastSessionId: null
@@ -1209,7 +1305,6 @@ export class TestbedGraphController {
     const node = this.createNodeObject(type, x, y);
     this.deviceNodes.push(node);
     this.selectNode(node.id, false);
-    this.fetchDeviceResultsFromDisk(node);
     this.renderGraph();
     this.runHealthCheckForNode(node);
   }
@@ -1217,7 +1312,7 @@ export class TestbedGraphController {
   deleteNode(id) {
     const isDevice = this.deviceNodes.some(n => n.id === id);
     if (!isDevice) return;
-    
+
     const node = this.deviceNodes.find(n => n.id === id);
     if (node && node.inputs && node.inputs.device_id) {
       const devId = node.inputs.device_id;
@@ -1287,6 +1382,9 @@ export class TestbedGraphController {
     this.updateCanvasSelectionClasses();
     this.renderInspector();
     this.renderSiteDevicesList();
+    if (primaryNode) {
+      this.updateActiveExecutionProgress(primaryNode);
+    }
   }
 
   getNodeLayer(type) {
@@ -1434,30 +1532,26 @@ export class TestbedGraphController {
       const devId = node.inputs.device_id || node.label;
 
       let badgeClass = 'badge-up';
-      let badgeContent = node.status;
+      let badgeContent = node.status || 'DOWN';
 
       if (node.isTestingRunning) {
         badgeClass = 'badge-init';
         badgeContent = `<span class="spinner-sm"></span> TESTING`;
-      } else if (node.testResults) {
-        const fails = Object.values(node.testResults).filter(r => r.status === 'FAIL' || r.status === 'FAILED').length;
-        if (fails > 0) {
-          badgeClass = 'badge-down';
-          badgeContent = `${fails} FAIL`;
-        } else {
-          badgeClass = 'badge-up';
-          badgeContent = `PASS`;
-        }
       } else if (node.status === 'DOWN') {
         badgeClass = 'badge-down';
+        badgeContent = 'DOWN';
+      } else if (node.status === 'UP') {
+        badgeClass = 'badge-up';
+        badgeContent = 'UP';
       } else if (node.status === 'INITIALIZING') {
         badgeClass = 'badge-init';
         badgeContent = `<span class="spinner-sm"></span>`;
       } else if (node.status === 'DISABLED') {
         badgeClass = 'badge-disabled';
+        badgeContent = 'DISABLED';
       }
 
-      const showBadge = (node.type !== 'actual_device' || node.isTestingRunning || node.testResults) && Boolean(node.status) && node.status !== 'UNAVAILABLE' && node.status !== 'UNKNOWN';
+      const showBadge = (node.type !== 'actual_device' || node.isTestingRunning) && Boolean(node.status) && node.status !== 'UNAVAILABLE' && node.status !== 'UNKNOWN';
 
       const card = document.createElement('div');
       const modeNodeClass = isDeviceNode ? (node.type === 'pubber' ? 'is-pubber-node' : 'is-actual-node') : '';
@@ -1468,7 +1562,7 @@ export class TestbedGraphController {
 
       let etcdUrl = null;
       if (node.type === 'etcd') {
-        etcdUrl = 'http://localhost:8085';
+        etcdUrl = window.location && window.location.origin ? `${window.location.origin}/etcd_explorer/` : 'http://localhost:8085';
         if (this.setupMode === 'CLOUD' || (this.projectSpec && !this.projectSpec.includes('localhost'))) {
           const parsed = this.parseProjectSpec(this.projectSpec);
           const proj = parsed.project || 'bos-platform-dev';
@@ -1510,8 +1604,8 @@ export class TestbedGraphController {
                     data-current-mode="${node.type}"
                     role="switch" 
                     aria-checked="${isPub ? 'true' : 'false'}" 
-                    title="${isPub ? 'Pubber Emulator Mode (Click to switch to Physical Device)' : 'Physical Device Mode (Click to switch to Pubber Emulator)'}"
-                    aria-label="${isPub ? 'Switch to Physical Device' : 'Switch to Pubber Emulator'}">
+                    title="${isPub ? 'Switch to Physical Device mode' : 'Switch to Pubber Emulator mode'}"
+                    aria-label="${isPub ? 'Switch to Physical Device mode' : 'Switch to Pubber Emulator mode'}">
               <div class="m3-switch-track">
                 <div class="m3-switch-thumb">
                   <span class="material-symbols-outlined">${isPub ? 'robot_2' : 'home_iot_device'}</span>
@@ -1669,7 +1763,7 @@ export class TestbedGraphController {
       const btnSmoke = document.getElementById('btn-batch-smoke');
       if (btnSmoke) {
         btnSmoke.addEventListener('click', () => {
-          selectedDevices.forEach(d => { d.selectedTests = new Set(['system.base.telemetry', 'system.base.state', 'pointset.telemetry.events']); });
+          selectedDevices.forEach(d => { d.selectedTests = new Set(this.getSmokeTestIds()); });
         });
       }
       return;
@@ -1725,8 +1819,8 @@ export class TestbedGraphController {
     `;
 
     if (isDeviceNode) {
-      if (!node.selectedTests) {
-        node.selectedTests = new Set(['system.base.telemetry', 'system.base.state', 'pointset.telemetry.events']);
+      if (!node.selectedTests || node.selectedTests.size === 0) {
+        node.selectedTests = new Set(this.getSmokeTestIds());
       }
 
       let testSuiteHtml = `
@@ -1739,33 +1833,53 @@ export class TestbedGraphController {
           </div>
 
           <div style="display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap;">
-            <button id="btn-preset-smoke" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;">⚡ Smoke Test</button>
+            <button id="btn-preset-smoke" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;" title="Select Core Smoke Tests">⚡ Smoke</button>
+            <button id="btn-preset-stable" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;" title="Select All STABLE Tests">⭐ Stable</button>
             <button id="btn-preset-rerun" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;" ${(!node.testResults || !Object.values(node.testResults).some(r => r.status === 'FAIL' || r.status === 'FAILED')) ? 'disabled' : ''}>🔄 Re-run Failures</button>
-            <button id="btn-preset-all" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;">Select All</button>
+            <button id="btn-preset-all" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;">All</button>
             <button id="btn-preset-none" class="btn btn-outlined" style="padding:2px 8px; font-size:10px; height:24px;">Clear</button>
           </div>
 
-          <input type="text" id="inp-test-filter" placeholder="Filter test cases..." class="form-input" style="font-size:11px; padding:4px 8px; margin-bottom:8px; width:100%; box-sizing:border-box;" />
+          <input type="text" id="inp-test-filter" placeholder="Filter sequences (e.g. extra_config, pointset)..." class="form-input" style="font-size:11px; padding:4px 8px; margin-bottom:8px; width:100%; box-sizing:border-box;" />
 
-          <div id="test-tree-container" style="max-height: 180px; overflow-y: auto; border: 1px solid #f1f3f4; border-radius: 4px; padding: 6px;">
+          <div id="test-tree-container" style="max-height: 220px; overflow-y: auto; border: 1px solid #f1f3f4; border-radius: 6px; padding: 6px; background: #fafafa;">
+            ${SEQUENCER_TEST_CATALOG.length === 0 ? `
+              <div style="font-size: 11px; color: #5f6368; padding: 16px 8px; text-align: center;">
+                <span class="spinner-sm" style="margin-bottom: 4px;"></span>
+                <div>Loading sequence test catalog from generated.md...</div>
+              </div>
+            ` : ''}
       `;
 
       SEQUENCER_TEST_CATALOG.forEach(cat => {
         testSuiteHtml += `
           <div class="test-category-block" style="margin-bottom: 8px;">
-            <div style="font-size: 11px; font-weight: 700; color: #5f6368; display: flex; align-items: center; gap: 4px; padding-bottom: 2px; border-bottom: 1px solid #f1f3f4;">
-              <span class="material-symbols-outlined" style="font-size:14px; color:#5f6368;">${cat.icon}</span>
-              <span>${cat.category}</span>
+            <div style="font-size: 11px; font-weight: 700; color: #5f6368; display: flex; align-items: center; justify-content: space-between; padding-bottom: 3px; border-bottom: 1px solid #e8eaed;">
+              <div style="display: flex; align-items: center; gap: 4px;">
+                <span class="material-symbols-outlined" style="font-size:14px; color:#5f6368;">${cat.icon}</span>
+                <span>${cat.category}</span>
+              </div>
+              <span style="font-size: 10px; color: #80868b; font-weight: normal;">(${cat.tests.length})</span>
             </div>
-            <div style="padding-left: 8px; margin-top: 4px;">
+            <div style="padding-left: 4px; margin-top: 4px; display: flex; flex-direction: column; gap: 2px;">
         `;
 
         cat.tests.forEach(test => {
           const isChecked = node.selectedTests.has(test.id);
+          const stage = (test.stage || 'STABLE').toUpperCase();
+          const stageStyle = stage === 'STABLE'
+            ? 'background: #e6f4ea; color: #137333; border: 1px solid #ceead6;'
+            : (stage === 'BETA'
+              ? 'background: #fef7e0; color: #b06000; border: 1px solid #feefc3;'
+              : 'background: #f3e8fd; color: #7c3aed; border: 1px solid #e9d5ff;');
+
           testSuiteHtml += `
-            <label class="test-item-row" data-test-id="${test.id}" style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: #3c4043; cursor: pointer; padding: 2px 0;" title="${test.desc}">
-              <input type="checkbox" class="chk-test-item" value="${test.id}" ${isChecked ? 'checked' : ''} />
-              <span style="font-family: monospace;">${test.name}</span>
+            <label class="test-item-row" data-test-id="${test.id}" data-category="${cat.category}" style="display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 11px; color: #3c4043; cursor: pointer; padding: 2px 4px; border-radius: 4px; background: #ffffff; border: 1px solid #f1f3f4;" title="${test.desc}">
+              <div style="display: flex; align-items: center; gap: 6px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                <input type="checkbox" class="chk-test-item" value="${test.id}" ${isChecked ? 'checked' : ''} />
+                <span style="font-family: monospace; font-size: 11px; color: #202124;">${test.name}</span>
+              </div>
+              <span style="font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: 700; flex-shrink: 0; ${stageStyle}">${stage}</span>
             </label>
           `;
         });
@@ -1859,8 +1973,9 @@ export class TestbedGraphController {
         inpFilter.addEventListener('input', (e) => {
           const q = e.target.value.toLowerCase().trim();
           document.querySelectorAll('.test-item-row').forEach(row => {
-            const tId = row.getAttribute('data-test-id').toLowerCase();
-            row.style.display = tId.includes(q) ? 'flex' : 'none';
+            const tId = (row.getAttribute('data-test-id') || '').toLowerCase();
+            const title = (row.getAttribute('title') || '').toLowerCase();
+            row.style.display = (tId.includes(q) || title.includes(q)) ? 'flex' : 'none';
           });
         });
       }
@@ -1868,7 +1983,19 @@ export class TestbedGraphController {
       const btnPresetSmoke = document.getElementById('btn-preset-smoke');
       if (btnPresetSmoke) {
         btnPresetSmoke.addEventListener('click', () => {
-          node.selectedTests = new Set(['system.base.telemetry', 'system.base.state', 'pointset.telemetry.events']);
+          node.selectedTests = new Set(this.getSmokeTestIds());
+          this.renderInspector();
+        });
+      }
+
+      const btnPresetStable = document.getElementById('btn-preset-stable');
+      if (btnPresetStable) {
+        btnPresetStable.addEventListener('click', () => {
+          const stableIds = [];
+          SEQUENCER_TEST_CATALOG.forEach(c => c.tests.forEach(t => {
+            if ((t.stage || 'STABLE').toUpperCase() === 'STABLE') stableIds.push(t.id);
+          }));
+          node.selectedTests = new Set(stableIds);
           this.renderInspector();
         });
       }
@@ -1923,6 +2050,16 @@ export class TestbedGraphController {
     const btnToggle = document.getElementById('btn-toggle-node');
     if (btnToggle && !isCloudComponent) {
       btnToggle.addEventListener('click', async () => {
+        if (node.type === 'pubber') {
+          const devId = node.inputs.device_id || node.label;
+          if (node.status === 'UP') {
+            await this.stopPubberForDevice(devId);
+          } else {
+            await this.startPubberForDevice(node);
+          }
+          await this.runHealthCheckForNode(node);
+          return;
+        }
         const action = node.status === 'UP' ? 'stop' : 'start';
         node.status = 'INITIALIZING';
         this.renderGraph();
@@ -1951,10 +2088,36 @@ export class TestbedGraphController {
     const deviceId = node.inputs.device_id || 'AHU-1';
 
     node.isTestingRunning = true;
+    node.currentRunTests = new Set(node.selectedTests);
+    node.activeRunResults = {};
+    if (!node.testResults) node.testResults = {};
+    for (const testId of node.currentRunTests) {
+      node.activeRunResults[testId] = { status: 'RUNNING', message: 'Executing...' };
+      node.testResults[testId] = { status: 'RUNNING', message: 'Executing...' };
+    }
     this.renderGraph();
     this.renderInspector();
     if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
     this.updateExecutionControlsState();
+
+    if (this.suiteProgressFill) this.suiteProgressFill.style.width = '0%';
+    if (this.metricPassed) this.metricPassed.textContent = '0';
+    if (this.metricFailed) this.metricFailed.textContent = '0';
+    if (this.metricSkipped) this.metricSkipped.textContent = '0';
+    if (this.metricTime) this.metricTime.textContent = '00:00';
+
+    if (this.testTimerInterval) {
+      clearInterval(this.testTimerInterval);
+    }
+    this.testStartTime = Date.now();
+    this.testTimerInterval = setInterval(() => {
+      if (this.metricTime && this.testStartTime) {
+        const elapsedSec = Math.floor((Date.now() - this.testStartTime) / 1000);
+        const mm = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+        const ss = String(elapsedSec % 60).padStart(2, '0');
+        this.metricTime.textContent = `${mm}:${ss}`;
+      }
+    }, 1000);
 
     if (this.logViewer) {
       this.logViewer.append(`\n▶️ Starting Sequencer test suite against device [${deviceId}] via ${this.projectSpec}...`, 'info');
@@ -2001,10 +2164,107 @@ export class TestbedGraphController {
       if (this.logViewer) {
         this.logViewer.append(`❌ ERROR starting sequencer process: ${e.message}`, 'error');
       }
+      if (this.testTimerInterval) {
+        clearInterval(this.testTimerInterval);
+        this.testTimerInterval = null;
+      }
       node.isTestingRunning = false;
       this.renderGraph();
       this.renderInspector();
       this.updateExecutionControlsState();
+    }
+  }
+
+  parseSequencerLogLineForProgress(node, line) {
+    if (!node) return false;
+    if (!node.testResults) node.testResults = {};
+    if (!node.activeRunResults) node.activeRunResults = {};
+    const trimmed = line.trim();
+
+    // Match standard RESULT output: RESULT PASS/FAIL/SKIP/ERROR <bucket> <test_name> ...
+    // e.g. "RESULT PASS beta extra_config BETA 1/1 Sequence completed successfully"
+    // or "RESULT START beta extra_config BETA 0/1 ..."
+    const resultMatch = trimmed.match(/^RESULT\s+(START|PASS|FAIL|SKIP|ERROR)\s+(?:\S+\s+)?([a-zA-Z0-9_-]+)(?:\s+\S+\s+\S+)?(?:\s+(.*))?/i);
+    if (resultMatch) {
+      const status = resultMatch[1].toUpperCase();
+      const testId = resultMatch[2];
+      const msg = resultMatch[3] || '';
+      if (status === 'PASS') {
+        const entry = { status: 'PASS', message: msg || 'Passed' };
+        node.testResults[testId] = entry;
+        node.activeRunResults[testId] = entry;
+        return true;
+      } else if (status === 'FAIL' || status === 'ERROR') {
+        const entry = { status: 'FAIL', message: msg || 'Failed' };
+        node.testResults[testId] = entry;
+        node.activeRunResults[testId] = entry;
+        return true;
+      } else if (status === 'SKIP') {
+        const entry = { status: 'SKIP', message: msg || 'Skipped' };
+        node.testResults[testId] = entry;
+        node.activeRunResults[testId] = entry;
+        return true;
+      } else if (status === 'START') {
+        const entry = { status: 'RUNNING', message: 'Executing...' };
+        node.testResults[testId] = entry;
+        node.activeRunResults[testId] = entry;
+        return true;
+      }
+    }
+
+    // Match Start / Begin test logs:
+    const startMatch = trimmed.match(/(?:Begin\s+test|Starting\s+test|Start\s+test)\s+([a-zA-Z0-9_-]+)/i);
+    if (startMatch) {
+      const testId = startMatch[1];
+      if (!node.testResults[testId] || node.testResults[testId].status === 'RUNNING') {
+        const entry = { status: 'RUNNING', message: 'Executing...' };
+        node.testResults[testId] = entry;
+        node.activeRunResults[testId] = entry;
+        return true;
+      }
+    }
+
+    // Match PASSED / FAILED / SKIPPED prefix:
+    const altMatch = trimmed.match(/^(?:\[.*?\]\s*)?(PASSED|FAILED|SKIPPED|PASS|FAIL|SKIP):\s*([a-zA-Z0-9_-]+)(?:\s*-\s*(.*))?/i);
+    if (altMatch) {
+      const rawStatus = altMatch[1].toUpperCase();
+      const testId = altMatch[2];
+      const msg = altMatch[3] || '';
+      const status = (rawStatus === 'PASSED' || rawStatus === 'PASS') ? 'PASS' : ((rawStatus === 'SKIPPED' || rawStatus === 'SKIP') ? 'SKIP' : 'FAIL');
+      const entry = { status: status, message: msg || (status === 'PASS' ? 'Passed' : (status === 'SKIP' ? 'Skipped' : 'Failed')) };
+      node.testResults[testId] = entry;
+      node.activeRunResults[testId] = entry;
+      return true;
+    }
+
+    return false;
+  }
+
+  updateActiveExecutionProgress(node) {
+    if (!node) return;
+    const runTests = node.currentRunTests && node.currentRunTests.size > 0
+      ? Array.from(node.currentRunTests)
+      : (node.selectedTests && node.selectedTests.size > 0 ? Array.from(node.selectedTests) : Object.keys(node.activeRunResults || {}));
+
+    const totalSelected = runTests.length;
+    const results = runTests.map(tId => node.activeRunResults?.[tId] || node.testResults?.[tId]).filter(Boolean);
+
+    const passed = results.filter(r => r.status === 'PASS' || r.status === 'PASSED').length;
+    const failed = results.filter(r => r.status === 'FAIL' || r.status === 'FAILED').length;
+    const skipped = results.filter(r => r.status === 'SKIP' || r.status === 'SKIPPED').length;
+    const finished = passed + failed + skipped;
+
+    if (this.metricPassed) this.metricPassed.textContent = passed;
+    if (this.metricFailed) this.metricFailed.textContent = failed;
+    if (this.metricSkipped) this.metricSkipped.textContent = skipped;
+
+    const pct = totalSelected > 0 ? Math.min(100, Math.round((finished / totalSelected) * 100)) : 0;
+    if (this.suiteProgressFill) {
+      this.suiteProgressFill.style.width = `${pct}%`;
+    }
+
+    if (this.isInspectorOpen && this.selectedNodeId === node.id) {
+      this.renderInspector();
     }
   }
 
@@ -2017,16 +2277,27 @@ export class TestbedGraphController {
 
       if (data.log && data.log.trim() !== '' && this.logViewer) {
         const lines = data.log.split('\n');
+        let hadProgress = false;
         lines.forEach(line => {
           if (line.trim()) {
+            if (this.parseSequencerLogLineForProgress(node, line)) {
+              hadProgress = true;
+            }
             const type = line.includes('ERROR') || line.includes('FAIL') ? 'error' : (line.includes('PASS') || line.includes('SUCCESS') ? 'success' : 'info');
             this.logViewer.append(line, type);
           }
         });
+        if (hadProgress) {
+          this.updateActiveExecutionProgress(node);
+        }
       }
       this.logOffsets.set(sessionId, data.offset || offset);
 
       if (!data.running) {
+        if (this.testTimerInterval) {
+          clearInterval(this.testTimerInterval);
+          this.testTimerInterval = null;
+        }
         const interval = this.activePolls.get(sessionId);
         if (interval) {
           clearInterval(interval);
@@ -2037,36 +2308,49 @@ export class TestbedGraphController {
         }
         node.isTestingRunning = false;
         await this.fetchDeviceResultsFromDisk(node);
+        this.updateActiveExecutionProgress(node);
+        if (this.suiteProgressFill) {
+          this.suiteProgressFill.style.width = '100%';
+        }
         this.renderGraph();
         this.renderInspector();
         if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
         this.updateExecutionControlsState();
 
-        // Check for test failures and fire notifications & automated AI triage (Requirement 6 & 8)
-        if (node.testResults) {
-          const results = Object.entries(node.testResults);
-          const failCount = results.filter(([_, r]) => r.status === 'FAIL' || r.status === 'FAILED').length;
-          const passCount = results.filter(([_, r]) => r.status === 'PASS' || r.status === 'PASSED').length;
-          const failingEntry = results.find(([_, r]) => r.status === 'FAIL' || r.status === 'FAILED');
+        // Check for test failures strictly within tests executed in THIS run
+        const executedTestIds = node.currentRunTests && node.currentRunTests.size > 0
+          ? Array.from(node.currentRunTests)
+          : (node.selectedTests ? Array.from(node.selectedTests) : []);
 
-          if (failCount > 0 && failingEntry) {
+        if (executedTestIds.length > 0) {
+          const runResults = executedTestIds.map(tId => ({
+            testId: tId,
+            result: node.activeRunResults?.[tId] || node.testResults?.[tId]
+          })).filter(entry => entry.result);
+
+          const currentFailures = runResults.filter(e => e.result.status === 'FAIL' || e.result.status === 'FAILED');
+          const currentPasses = runResults.filter(e => e.result.status === 'PASS' || e.result.status === 'PASSED');
+
+          if (currentFailures.length > 0) {
+            const failingTestIds = currentFailures.map(f => f.testId);
+            const targetTestSpec = failingTestIds.join(', ');
             NotificationManager.notify({
               title: "⚠️ Test Failures Detected",
-              body: `Device [${node.inputs.device_id || node.label}]: ${failCount} failed, ${passCount} passed. Mantis AI is automatically triaging the root cause...`,
+              body: `Device [${node.inputs.device_id || node.label}]: ${currentFailures.length} failed (${targetTestSpec}), ${currentPasses.length} passed. Mantis AI is diagnosing the failure(s)...`,
               type: "warning",
               duration: 8000
             });
-            this.triggerMantisForTest(node, failingEntry[0], true /* autoRun */);
-          } else if (passCount > 0) {
+            this.triggerMantisForTest(node, targetTestSpec, true /* autoRun */);
+          } else if (currentPasses.length > 0) {
             NotificationManager.notify({
               title: "✅ Test Suite Passed",
-              body: `Device [${node.inputs.device_id || node.label}]: All ${passCount} compliance tests passed successfully!`,
+              body: `Device [${node.inputs.device_id || node.label}]: All ${currentPasses.length} executed tests passed successfully!`,
               type: "success",
               duration: 6000
             });
           }
 
-          this.checkAndDispatchEmailResultAlert(node, passCount, failCount);
+          this.checkAndDispatchEmailResultAlert(node, currentPasses.length, currentFailures.length);
         }
       }
     } catch (e) {
@@ -2075,6 +2359,10 @@ export class TestbedGraphController {
   }
 
   async stopDeviceTests(node) {
+    if (this.testTimerInterval) {
+      clearInterval(this.testTimerInterval);
+      this.testTimerInterval = null;
+    }
     if (!node || !node.lastSessionId) {
       node.isTestingRunning = false;
       this.renderGraph();
@@ -2108,6 +2396,7 @@ export class TestbedGraphController {
     }
     node.isTestingRunning = false;
     await this.fetchDeviceResultsFromDisk(node);
+    this.updateActiveExecutionProgress(node);
     this.renderGraph();
     this.renderInspector();
     if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
@@ -2139,16 +2428,21 @@ export class TestbedGraphController {
   }
 
   async fetchDeviceResultsFromDisk(node) {
+    if (!node || !node.currentRunTests || node.currentRunTests.size === 0) return;
     const devId = node.inputs.device_id || node.label;
     try {
       const res = await fetch(`/api/device_results?site_model=${encodeURIComponent(this.siteModel)}&device=${encodeURIComponent(devId)}`);
       if (res.ok) {
         const data = await res.json();
         if (data.results && Object.keys(data.results).length > 0) {
-          node.testResults = data.results;
-        } else if (!node.testResults) {
-          // Provide baseline default state if no tests have run on disk yet
-          node.testResults = {};
+          if (!node.testResults) node.testResults = {};
+          if (!node.activeRunResults) node.activeRunResults = {};
+          for (const tId of node.currentRunTests) {
+            if (data.results[tId]) {
+              node.testResults[tId] = data.results[tId];
+              node.activeRunResults[tId] = data.results[tId];
+            }
+          }
         }
       }
     } catch (e) {
@@ -2205,12 +2499,18 @@ export class TestbedGraphController {
   }
 
   triggerMantisForTest(node, testId, autoRun = false) {
+    const deviceId = node.inputs?.device_id || node.label || 'AHU-1';
     const data = {
-      deviceId: node.inputs.device_id || 'AHU-1',
+      deviceId: deviceId,
+      device_id: deviceId,
       testId: testId,
+      test_id: testId,
       siteModel: this.siteModel,
+      site_model: this.siteModel,
       projectSpec: this.projectSpec,
+      project_spec: this.projectSpec,
       sessionId: node.lastSessionId,
+      session_id: node.lastSessionId,
       autoRun: autoRun
     };
     stateStore.emit('open_mantis_triage', data);
@@ -2271,15 +2571,15 @@ export class TestbedGraphController {
           overallPill = `<span class="status-pill pass">✅ 100% (${devPass} Pass)</span>`;
         }
 
-        const sysTests = results.filter(([t]) => t.startsWith('system.'));
+        const sysTests = results.filter(([t]) => t.startsWith('system_') || ['broken_config', 'extra_config', 'device_config_acked', 'config_logging', 'valid_serial_no', 'state_make_model', 'state_software'].includes(t));
         const sysPass = sysTests.filter(([_, r]) => r.status === 'PASS' || r.status === 'PASSED').length;
         if (sysTests.length > 0) sysPill = (sysPass === sysTests.length ? `<span class="status-pill pass">✅ ${sysPass}/${sysTests.length}</span>` : `<span class="status-pill fail">❌ ${sysTests.length - sysPass} Fail</span>`);
 
-        const ptTests = results.filter(([t]) => t.startsWith('pointset.'));
+        const ptTests = results.filter(([t]) => t.startsWith('pointset_'));
         const ptPass = ptTests.filter(([_, r]) => r.status === 'PASS' || r.status === 'PASSED').length;
         if (ptTests.length > 0) ptPill = (ptPass === ptTests.length ? `<span class="status-pill pass">✅ ${ptPass}/${ptTests.length}</span>` : `<span class="status-pill fail">❌ ${ptTests.length - ptPass} Fail</span>`);
 
-        const gwTests = results.filter(([t]) => t.startsWith('gateway.'));
+        const gwTests = results.filter(([t]) => t.startsWith('gateway_') || t.startsWith('bad_'));
         const gwPass = gwTests.filter(([_, r]) => r.status === 'PASS' || r.status === 'PASSED').length;
         if (gwTests.length > 0) gwPill = (gwPass === gwTests.length ? `<span class="status-pill pass">✅ ${gwPass}/${gwTests.length}</span>` : `<span class="status-pill fail">❌ ${gwTests.length - gwPass} Fail</span>`);
       }
@@ -2399,7 +2699,12 @@ export class TestbedGraphController {
         if (res.ok) {
           const data = await res.json();
           const components = data.components || {};
-          if (node.type === 'mqtt_broker') newStatus = components.mqtt_broker && components.mqtt_broker.status === 'UP' ? 'UP' : 'DOWN';
+          if (node.type === 'pubber') {
+            const devId = node.inputs.device_id || node.label;
+            const isPubberRunning = Array.isArray(data.active_pubbers) ? data.active_pubbers.includes(devId) : false;
+            newStatus = isPubberRunning ? 'UP' : 'DOWN';
+          }
+          else if (node.type === 'mqtt_broker') newStatus = components.mqtt_broker && components.mqtt_broker.status === 'UP' ? 'UP' : 'DOWN';
           else if (node.type === 'udmis') newStatus = components.udmis && components.udmis.status === 'UP' ? 'UP' : 'DOWN';
           else if (node.type === 'zanzara_ingress') {
             const comp = components.zanzara_ingress;
@@ -2418,7 +2723,7 @@ export class TestbedGraphController {
           }
           else if (node.type === 'etcd') {
             const comp = components.etcd;
-            if (this.setupMode === 'CLOUD') {
+            if (this.setupMode === 'CLOUD' || (this.projectSpec && !this.projectSpec.includes('localhost'))) {
               newStatus = comp?.status === 'UP' ? 'UP' : (comp?.status === 'DOWN' ? 'DOWN' : null);
               node.healthDetails = comp?.status !== 'UNAVAILABLE' ? (comp?.details || '') : '';
             } else {
@@ -2453,11 +2758,11 @@ export class TestbedGraphController {
     const alertBox = document.getElementById('git-protected-alert');
     const branchInput = document.getElementById('git-branch-input');
     const commitInput = document.getElementById('git-commit-msg-input');
-    
+
     if (!modal) return;
     modal.classList.add('active');
     modal.style.display = 'flex';
-    
+
     const activeDev = stateStore.get('activeDevice') || 'AHU-1';
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     if (branchInput) branchInput.value = `test-results-${activeDev}-${dateStr}`;
@@ -2713,7 +3018,6 @@ export class TestbedGraphController {
       node.inputs = { ...node.inputs, ...newInputs };
       if (newInputs.device_id) node.label = newInputs.device_id;
       this.deviceNodes.push(node);
-      this.fetchDeviceResultsFromDisk(node);
       this.selectNode(node.id, false);
       NotificationManager.showToast({ title: "➕ Component Created", message: `Spawned ${node.label} on graph.`, type: "success" });
     } else {
@@ -2732,14 +3036,18 @@ export class TestbedGraphController {
   addDeviceToCanvas(devId, mode = 'actual_device', x = null, y = null) {
     if (!devId) return null;
     let node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+    const isLocalUp = this.infraNodes.some(n => n.type === 'mqtt_broker' && n.status === 'UP');
     if (node) {
       if (mode && node.type !== mode && mode !== 'ancillary' && mode !== 'spotter') {
-        const spec = this.getNodeSpec(mode);
+        const spec = this.getNodeSpec(mode, devId);
         node.type = spec.type;
         node.label = devId;
         node.icon = spec.icon;
-        node.status = mode === 'actual_device' ? '' : 'UP';
+        node.status = mode === 'actual_device' ? '' : (isLocalUp ? 'UP' : 'DOWN');
         node.inputs = { ...spec.inputs, device_id: devId };
+        if (mode === 'pubber') {
+          node.inputs.serial_no = this.generateDeviceSerialNo(devId);
+        }
       }
       return node;
     }
@@ -2755,7 +3063,6 @@ export class TestbedGraphController {
     node = this.createNodeObject(mode, x, y, devId);
     this.deviceNodes.push(node);
     this.deviceConfigs.set(devId, { enabled: true, mode: mode });
-    this.fetchDeviceResultsFromDisk(node);
     this.selectNode(node.id, false);
     return node;
   }
@@ -2793,14 +3100,18 @@ export class TestbedGraphController {
     config.mode = newMode;
     this.deviceConfigs.set(devId, config);
 
+    const isLocalUp = this.infraNodes.some(n => n.type === 'mqtt_broker' && n.status === 'UP');
     const node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
     if (node) {
-      const spec = this.getNodeSpec(newMode);
+      const spec = this.getNodeSpec(newMode, devId);
       node.type = spec.type;
       node.label = devId;
       node.icon = spec.icon;
-      node.status = newMode === 'actual_device' ? '' : 'UP';
+      node.status = newMode === 'actual_device' ? '' : (isLocalUp ? 'UP' : 'DOWN');
       node.inputs = { ...spec.inputs, device_id: devId };
+      if (newMode === 'pubber') {
+        node.inputs.serial_no = this.generateDeviceSerialNo(devId);
+      }
     } else {
       // Auto add device to canvas in selected mode
       this.addDeviceToCanvas(devId, newMode);
@@ -2810,6 +3121,95 @@ export class TestbedGraphController {
     this.renderGraph();
     this.renderInspector();
     if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
+
+    if (newMode === 'pubber') {
+      this.startPubberForDevice(devId);
+    } else if (newMode === 'actual_device') {
+      this.stopPubberForDevice(devId);
+    }
+  }
+
+  async startPubberForDevice(nodeOrDevId) {
+    const devId = typeof nodeOrDevId === 'string' ? nodeOrDevId : (nodeOrDevId.inputs?.device_id || nodeOrDevId.label);
+    let node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+    if (!node) {
+      node = this.addDeviceToCanvas(devId, 'pubber');
+    }
+    const serialNo = (node && node.inputs && node.inputs.serial_no) || this.generateDeviceSerialNo(devId);
+    if (node) {
+      node.inputs.serial_no = serialNo;
+      node.status = 'INITIALIZING';
+      this.renderGraph();
+    }
+
+    try {
+      const res = await fetch('/api/testbed/start_pubber', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          device_id: devId,
+          serial_no: serialNo,
+          site_model: this.siteModel,
+          project_spec: this.projectSpec || '//mqtt/localhost:18833'
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (node) {
+          node.status = 'UP';
+          this.renderGraph();
+          this.renderInspector();
+        }
+        if (data.session_id) {
+          this.openSetupLogsModal(data.session_id, 'PUBBER', this.projectSpec, data.already_running || false, {
+            deviceId: devId,
+            serialNo: serialNo,
+            cmd: data.cmd || `UDMI_NO_SUDO=true bin/pubber ${this.siteModel} ${this.projectSpec || '//mqtt/localhost:18833'} ${devId} ${serialNo}`
+          });
+        }
+      } else {
+        const err = await res.json().catch(() => ({}));
+        NotificationManager.showToast({
+          title: "Pubber Launch Failed",
+          message: err.error || `Could not start pubber emulator for ${devId}.`,
+          type: "error"
+        });
+        if (node) {
+          node.status = 'DOWN';
+          this.renderGraph();
+        }
+      }
+    } catch (e) {
+      console.error("Failed to start pubber:", e);
+      if (node) {
+        node.status = 'DOWN';
+        this.renderGraph();
+      }
+    }
+  }
+
+  async stopPubberForDevice(devId) {
+    const node = this.deviceNodes.find(n => n.inputs.device_id === devId || n.id === `device_${devId}`);
+    if (node) {
+      node.status = 'DOWN';
+      this.renderGraph();
+      this.renderInspector();
+    }
+    try {
+      await fetch('/api/testbed/stop_pubber', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ device_id: devId })
+      });
+      NotificationManager.showToast({
+        title: "Pubber Stopped",
+        message: `Stopped pubber emulator for ${devId}.`,
+        type: "info"
+      });
+    } catch (e) {
+      console.error("Failed to stop pubber:", e);
+    }
   }
 
   selectDeviceFromList(devId) {
@@ -2851,13 +3251,17 @@ export class TestbedGraphController {
 
   setBulkDeviceMode(newMode) {
     if (newMode === 'ancillary' || newMode === 'spotter') return; // Disabled for now
+    const isLocalUp = this.infraNodes.some(n => n.type === 'mqtt_broker' && n.status === 'UP');
     this.deviceNodes.forEach(node => {
       const devId = node.inputs.device_id;
-      const spec = this.getNodeSpec(newMode);
+      const spec = this.getNodeSpec(newMode, devId);
       node.type = spec.type;
       node.icon = spec.icon;
-      node.status = newMode === 'actual_device' ? '' : 'UP';
+      node.status = newMode === 'actual_device' ? '' : (isLocalUp ? 'UP' : 'DOWN');
       node.inputs = { ...spec.inputs, device_id: devId };
+      if (newMode === 'pubber') {
+        node.inputs.serial_no = this.generateDeviceSerialNo(devId);
+      }
       if (devId) {
         this.deviceConfigs.set(devId, { enabled: true, mode: newMode });
       }
@@ -2868,16 +3272,17 @@ export class TestbedGraphController {
     if (this.activeViewMode === 'matrix') this.renderComplianceMatrix();
   }
 
-  openSetupLogsModal(sessionId = null, mode = 'LOCAL', projectSpec = '', isReused = false) {
+  openSetupLogsModal(sessionId = null, mode = 'LOCAL', projectSpec = '', isReused = false, extra = {}) {
     const modal = document.getElementById('setup-logs-modal');
-    if (!modal || mode !== 'LOCAL') return;
+    if (!modal) return;
 
     const targetSessionId = sessionId || this.latestSetupSessionId;
-    if (targetSessionId) {
+    if (targetSessionId && mode === 'LOCAL') {
       this.latestSetupSessionId = targetSessionId;
     }
 
     const titleEl = document.getElementById('setup-logs-modal-title');
+    const iconEl = document.getElementById('setup-logs-modal-icon');
     const cmdEl = document.getElementById('setup-logs-cmd');
     const badgeEl = document.getElementById('setup-logs-status-badge');
     const contentEl = document.getElementById('setup-logs-content');
@@ -2888,28 +3293,97 @@ export class TestbedGraphController {
     const portMatch = (projectSpec || this.projectSpec || '').match(/:(\d+)/);
     const mqttPort = portMatch ? portMatch[1] : '18833';
 
-    if (titleEl) titleEl.textContent = 'Local Setup Status';
-    if (cmdEl) cmdEl.textContent = `bin/start_local ${this.siteModel} ${projectSpec || this.projectSpec}`;
+    modal.classList.remove('is-ready');
+    if (mode === 'PUBBER') {
+      if (titleEl) titleEl.textContent = `Pubber Emulator (${extra.deviceId || 'Device'})`;
+      if (iconEl) {
+        iconEl.textContent = 'robot_2';
+        iconEl.style.color = '#0b57d0';
+      }
+      if (cmdEl) cmdEl.textContent = extra.cmd || `UDMI_NO_SUDO=true bin/pubber ${this.siteModel} ${projectSpec || this.projectSpec} ${extra.deviceId || 'AHU-1'} ${extra.serialNo || '10491'}`;
+    } else {
+      if (titleEl) titleEl.textContent = 'Local Setup Status';
+      if (iconEl) {
+        iconEl.textContent = 'terminal';
+        iconEl.style.color = '#0b57d0';
+      }
+      if (cmdEl) cmdEl.textContent = `bin/start_local ${this.siteModel} ${projectSpec || this.projectSpec}`;
+    }
 
-    if (isReused) {
+    let autoCloseTimer = null;
+    const cleanup = () => {
+      if (autoCloseTimer) {
+        clearTimeout(autoCloseTimer);
+        autoCloseTimer = null;
+      }
+      if (this.setupLogsInterval) {
+        clearInterval(this.setupLogsInterval);
+        this.setupLogsInterval = null;
+      }
+      modal.classList.remove('active');
+      modal.classList.remove('is-ready');
+      this.runAllHealthChecks();
+    };
+
+    const setReadyState = (showToast = true) => {
+      modal.classList.add('is-ready');
+      if (mode === 'PUBBER') {
+        if (titleEl) titleEl.textContent = `Pubber READY (${extra.deviceId || 'Device'})`;
+      } else {
+        if (titleEl) titleEl.textContent = 'Local Setup READY';
+      }
+      if (iconEl) {
+        iconEl.textContent = 'check_circle';
+        iconEl.style.color = '#137333';
+      }
       if (badgeEl) {
         badgeEl.className = 'badge badge-success';
-        badgeEl.style.background = '#c8e6c9';
-        badgeEl.style.color = '#1b5e20';
+        badgeEl.style.background = '#ceead6';
+        badgeEl.style.color = '#137333';
         badgeEl.innerHTML = `READY`;
       }
+      this.runAllHealthChecks();
+
+      if (!autoCloseTimer) {
+        autoCloseTimer = setTimeout(() => {
+          cleanup();
+          if (showToast) {
+            NotificationManager.showToast({
+              title: mode === 'PUBBER' ? "Pubber Emulator Ready" : "Local Setup Ready",
+              message: mode === 'PUBBER'
+                ? `Pubber emulator running in background for ${extra.deviceId || 'Device'} (Serial: ${extra.serialNo || 'N/A'}).`
+                : "Local testbed environment is ready and operational.",
+              type: "success"
+            });
+          }
+        }, 1200);
+      }
+    };
+
+    if (isReused) {
+      setReadyState(false);
       if (contentEl) {
-        contentEl.textContent = `Active ${mode} Setup Found\n` +
-          `==================================================\n` +
-          `Status: READY\n` +
-          `Target Spec: ${projectSpec || this.projectSpec}\n\n` +
-          `Active Services:\n` +
-          `• Mosquitto MQTT Broker: UP (Port ${mqttPort})\n` +
-          `• etcd Key-Value Store: UP (Port ${parseInt(mqttPort) + 1})\n` +
-          `• InfluxDB Time-Series: UP (Port ${parseInt(mqttPort) + 2})\n` +
-          `• PostgreSQL Database: UP (Port ${parseInt(mqttPort) + 3})\n` +
-          `• UDMIS Service: UP (Pod Ready)\n\n` +
-          `Local pipeline is operational and ready.\n`;
+        if (mode === 'PUBBER') {
+          contentEl.textContent = `⚡ Active Pubber Emulator Found\n` +
+            `==================================================\n` +
+            `Device ID: ${extra.deviceId || 'AHU-1'}\n` +
+            `Serial No: ${extra.serialNo || 'N/A'}\n` +
+            `Target Spec: ${projectSpec || this.projectSpec}\n` +
+            `Status: RUNNING\n\n` +
+            `Pubber emulator process is actively running in background.\n`;
+        } else {
+          contentEl.textContent = `Active ${mode} Setup Found\n` +
+            `==================================================\n` +
+            `Status: READY\n` +
+            `Target Spec: ${projectSpec || this.projectSpec}\n\n` +
+            `Active Services:\n` +
+            `• Mosquitto MQTT Broker: UP (Port ${mqttPort})\n` +
+            `• etcd Key-Value Store: UP (Port ${parseInt(mqttPort) + 1})\n` +
+            `• InfluxDB Time-Series: UP (Port ${parseInt(mqttPort) + 2})\n` +
+            `• PostgreSQL Database: UP (Port ${parseInt(mqttPort) + 3})\n` +
+            `• UDMIS Service: UP (Pod Ready)\n\n` +
+            `Local pipeline is operational and ready.\n`;
+        }
       }
     } else {
       if (badgeEl) {
@@ -2919,7 +3393,9 @@ export class TestbedGraphController {
         badgeEl.innerHTML = `<span class="spinner-sm"></span> Initializing...`;
       }
       if (!contentEl.textContent || sessionId) {
-        contentEl.textContent = `Launching ${mode} setup pipeline...\n`;
+        contentEl.textContent = mode === 'PUBBER'
+          ? `Launching Pubber emulator for ${extra.deviceId || 'device'} (Serial: ${extra.serialNo || 'N/A'})...\n`
+          : `Launching ${mode} setup pipeline...\n`;
       }
     }
 
@@ -2933,15 +3409,6 @@ export class TestbedGraphController {
 
     let offset = 0;
     let isFinished = isReused;
-
-    const cleanup = () => {
-      if (this.setupLogsInterval) {
-        clearInterval(this.setupLogsInterval);
-        this.setupLogsInterval = null;
-      }
-      modal.classList.remove('active');
-      this.runAllHealthChecks();
-    };
 
     if (btnClose) btnClose.onclick = cleanup;
     modal.onclick = (e) => {
@@ -2976,7 +3443,7 @@ export class TestbedGraphController {
         if (!res.ok) return;
         const data = await res.json();
 
-        if (data.session_id && !this.latestSetupSessionId) {
+        if (data.session_id && !this.latestSetupSessionId && mode === 'LOCAL') {
           this.latestSetupSessionId = data.session_id;
         }
 
@@ -2989,28 +3456,17 @@ export class TestbedGraphController {
         offset = data.offset || offset;
 
         if (data.ready) {
-          if (badgeEl) {
-            badgeEl.className = 'badge badge-success';
-            badgeEl.style.background = '#c8e6c9';
-            badgeEl.style.color = '#1b5e20';
-            badgeEl.innerHTML = `READY`;
-          }
-          this.runAllHealthChecks();
+          setReadyState(true);
         }
 
-        if (!data.running) {
+        if (!data.running && mode !== 'PUBBER') {
           isFinished = true;
           if (this.setupLogsInterval) {
             clearInterval(this.setupLogsInterval);
             this.setupLogsInterval = null;
           }
           if (data.exit_code === 0 || data.ready) {
-            if (badgeEl) {
-              badgeEl.className = 'badge badge-success';
-              badgeEl.style.background = '#c8e6c9';
-              badgeEl.style.color = '#1b5e20';
-              badgeEl.innerHTML = `READY`;
-            }
+            setReadyState(true);
             if (contentEl && (contentEl.textContent.trim() === `Launching ${mode} setup pipeline...` || !contentEl.textContent.trim())) {
               contentEl.textContent = `⚡ Active ${mode} Setup Ready\n` +
                 `==================================================\n` +
@@ -3034,6 +3490,25 @@ export class TestbedGraphController {
             }
           }
           this.runAllHealthChecks();
+        } else if (!data.running && mode === 'PUBBER') {
+          if (data.exit_code !== null && data.exit_code !== 0 && !data.ready) {
+            isFinished = true;
+            if (this.setupLogsInterval) {
+              clearInterval(this.setupLogsInterval);
+              this.setupLogsInterval = null;
+            }
+            if (badgeEl) {
+              badgeEl.className = 'badge badge-danger';
+              badgeEl.style.background = '#fce8e6';
+              badgeEl.style.color = '#c5221f';
+              badgeEl.innerHTML = `FAILED (Exit: ${data.exit_code})`;
+            }
+            const devNode = this.deviceNodes.find(n => n.inputs.device_id === extra.deviceId || n.id === `device_${extra.deviceId}`);
+            if (devNode) {
+              devNode.status = 'DOWN';
+              this.renderGraph();
+            }
+          }
         }
       } catch (e) {
         console.warn("Failed to poll setup logs:", e);

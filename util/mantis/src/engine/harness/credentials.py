@@ -51,7 +51,7 @@ class EnvCredentialsProvider(BaseCredentialsProvider):
             except Exception:
                 pass
         if not project_id:
-            project_id = "mantis-predator"
+            project_id = "bos-platform-dev"
 
 
         location = self.location or os.getenv("GCP_LOCATION", "global")

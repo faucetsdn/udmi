@@ -51,6 +51,7 @@ class MantisChatSession:
         device_id: Optional[str] = None,
         test_id: Optional[str] = None,
         site_model: Optional[str] = None,
+        project_spec: Optional[str] = None,
         playbook_path: Optional[str] = None,
         use_vertex: Optional[bool] = None,
         gcp_project: Optional[str] = None,
@@ -64,6 +65,7 @@ class MantisChatSession:
         self.active_device = device_id
         self.active_test = test_id
         self.active_site_model = site_model
+        self.project_spec = project_spec
         self.playbook_path = playbook_path
         self.gcp_project = gcp_project
         self.gcp_location = gcp_location
@@ -431,14 +433,18 @@ class MantisChatSession:
         return build_deterministic_timeline(found_logs[:2000])
 
     def get_active_session_context(self) -> str:
-        """Tool: Returns the current active session state, including active device, test case, site model, and paths."""
+        """Tool: Returns the current active session state, including active device, test case, site model, project spec, and execution mode."""
+        is_cloud = bool(self.project_spec and "localhost" not in self.project_spec)
         return json.dumps({
             "workspace_root": self.udmi_root,
             "manifest_path": self.manifest_path,
             "test_runs_dir": self.test_runs_dir,
             "active_device": self.active_device or "None",
             "active_test": self.active_test or "None",
-            "active_site_model": self.active_site_model or "None"
+            "active_site_model": self.active_site_model or "None",
+            "project_spec": self.project_spec or "None",
+            "execution_mode": "CLOUD" if is_cloud else "LOCAL",
+            "cloud_logging_recommended": is_cloud
         }, indent=2)
 
     def _refresh_system_prompt(self) -> None:
@@ -448,6 +454,7 @@ class MantisChatSession:
             active_site_model=self.active_site_model,
             active_device=self.active_device,
             active_test=self.active_test,
+            project_spec=self.project_spec,
             manifest_path=self.manifest_path,
             test_runs_dir=self.test_runs_dir
         )

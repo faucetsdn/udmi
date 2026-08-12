@@ -279,6 +279,32 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+/* Setup Logs Modal Ready State */
+#setup-logs-modal.is-ready .modal-card {
+  border: 2px solid #34a853 !important;
+  box-shadow: 0 8px 32px rgba(52, 168, 83, 0.25) !important;
+  transition: all 0.3s ease;
+}
+
+#setup-logs-modal.is-ready .modal-header {
+  background: #e6f4ea !important;
+  border-bottom: 1px solid #ceead6 !important;
+  transition: all 0.3s ease;
+}
+
+#setup-logs-modal.is-ready #setup-logs-modal-title {
+  color: #137333 !important;
+}
+
+#setup-logs-modal.is-ready #setup-logs-modal-icon {
+  color: #137333 !important;
+}
+
+#setup-logs-modal.is-ready #setup-logs-status-badge {
+  background: #ceead6 !important;
+  color: #137333 !important;
+}
+
 .modal-header h3 {
   margin: 0;
   font-size: 16px;

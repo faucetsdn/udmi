@@ -19,7 +19,7 @@ export class MantisController {
     // Settings (persisted in localStorage, default to Vertex ADC for Corp)
     this.provider = localStorage.getItem('mantis_provider') || 'vertex';
     this.apiKey = localStorage.getItem('mantis_api_key') || '';
-    this.gcpProject = localStorage.getItem('mantis_gcp_project') || 'mantis-predator';
+    this.gcpProject = localStorage.getItem('mantis_gcp_project') || 'bos-platform-dev';
     this.gcpLocation = localStorage.getItem('mantis_gcp_location') || 'global';
     this.baselineRun = localStorage.getItem('mantis_baseline_run') || '';
     this.graphvizCache = new Map();
@@ -282,14 +282,21 @@ export class MantisController {
   }
 
   triggerTriage(data) {
-    if (data.site_model) this.siteModel = data.site_model;
-    if (data.device_id) this.device = data.device_id;
-    if (data.test_id) this.testId = data.test_id;
+    if (!data) return;
+    const siteModel = data.site_model || data.siteModel || stateStore.get('siteModel') || localStorage.getItem('udmi_site_model') || '';
+    const deviceId = data.device_id || data.deviceId || stateStore.get('activeDevice') || 'AHU-1';
+    const testId = data.test_id || data.testId || '';
+    const projectSpec = data.project_spec || data.projectSpec || stateStore.get('projectSpec') || '//mqtt/localhost:18833';
+
+    if (siteModel) this.siteModel = siteModel;
+    if (deviceId) this.device = deviceId;
+    if (testId) this.testId = testId;
+    if (projectSpec) this.projectSpec = projectSpec;
 
     if (this.deviceSelect) this.deviceSelect.value = this.device;
     if (this.scenarioSelect) this.scenarioSelect.value = this.testId;
 
-    const query = `Diagnose why test ${this.testId} failed for ${this.device} in ${this.siteModel}${this.baselineRun ? ' against baseline ' + this.baselineRun : ''}`;
+    const query = `/diagnose ${this.testId || ''}`.trim();
     if (this.chatInput) this.chatInput.value = query;
     this.handleSendMessage();
   }
@@ -350,11 +357,16 @@ export class MantisController {
     if (rawText.startsWith('/diagnose')) {
       const arg = rawText.replace(/^\/diagnose\s*/, '').trim();
       if (arg) {
-        messageToSend = `Diagnose the test failure '${arg}' in ${this.siteModel || 'the active site'}. Retrieve test execution logs and determine the root cause.`;
-      } else if (this.testId) {
-        messageToSend = `Diagnose why test '${this.testId}' failed for device '${this.device || 'target device'}' in ${this.siteModel || 'the active site'}. Retrieve test execution logs and determine the root cause.`;
+        const tests = arg.split(/[\s,]+/).filter(t => t && t.toLowerCase() !== 'and');
+        if (tests.length > 1) {
+          this.testId = tests[0];
+          messageToSend = `Diagnose why the following tests failed for device '${this.device || 'target device'}' in site model '${this.siteModel || 'the active site'}': ${tests.map(t => `'${t}'`).join(', ')}. Retrieve test execution logs for each test, analyze state/config synchronization, and determine the root cause for each failure.`;
+        } else if (tests.length === 1) {
+          this.testId = tests[0];
+          messageToSend = `Diagnose why test '${this.testId}' failed for device '${this.device || 'target device'}' in site model '${this.siteModel || 'the active site'}'. Retrieve test execution logs, validate schema state, and determine the root cause.`;
+        }
       } else {
-        messageToSend = `Diagnose the active test failure in ${this.siteModel || 'the active site'}. Retrieve test execution logs and determine the root cause.`;
+        messageToSend = `Diagnose the active test failure for device '${this.device || 'target device'}' in site model '${this.siteModel || 'the active site'}'. Retrieve test execution logs, validate schema state, and determine the root cause.`;
       }
     } else if (rawText.startsWith('/diff')) {
 
@@ -397,6 +409,7 @@ export class MantisController {
         site_model: this.siteModel,
         device_id: this.device,
         test_id: this.testId,
+        project_spec: this.projectSpec,
         provider: this.provider,
         api_key: this.apiKey,
         gcp_project: this.gcpProject,
