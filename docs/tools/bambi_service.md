@@ -2,6 +2,8 @@
 
 # BAMBI: BOS Automated Management Building Interface
 
+*For a high-level overview of how changes propagate through BAMBI into the site model, see the [BAMBI Workflow](bambi_flow.md).*
+
 BAMBI is the backend service responsible for automating the management of Building Operating System (BOS) device and site models within the UDMI framework. It primarily listens for messages, typically from a Google Sheet, and then handles the import, export, and synchronization of site configuration data.
 
 ---
