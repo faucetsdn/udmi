@@ -28,19 +28,36 @@ else
 fi
 
 # Parse arguments
+VERSION="${UDMI_WORKBENCH_VERSION:-v2}"
+if [ "$VERSION" = "1" ] || [ "$VERSION" = "v1" ]; then
+  VERSION="v1"
+else
+  VERSION="v2"
+fi
+
 MANUAL_PORT=""
 STOP_REQUESTED=false
 
 show_usage() {
-  echo "Usage: $0 [stop] [--port=PORT | -p PORT | PORT]"
+  echo "Usage: $0 [--v1 | --v2] [stop] [--port=PORT | -p PORT | PORT]"
   echo ""
   echo "Arguments:"
+  echo "  --v1              Launch UDMI Workbench v1 (Classic)"
+  echo "  --v2              Launch UDMI Workbench v2 (Modern, Default)"
   echo "  stop              Stop running UDMI Workbench backend server process(es)"
   echo "  --port=N, -p N    Specify custom TCP port (default: 8080)"
 }
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
+    --v1)
+      VERSION="v1"
+      shift
+      ;;
+    --v2)
+      VERSION="v2"
+      shift
+      ;;
     stop)
       STOP_REQUESTED=true
       shift
@@ -83,7 +100,7 @@ stop_workbench_server() {
     local PIDS=$(lsof -t -i :"${target_port}" 2>/dev/null || true)
     for pid in $PIDS; do
       local cmdline=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null || true)
-      if [[ "$cmdline" == *"ui/src/server.py"* ]]; then
+      if [[ "$cmdline" == *"ui/v2/server.py"* || "$cmdline" == *"ui/v1/server.py"* || "$cmdline" == *"ui/src/server.py"* || "$cmdline" == *"ui/server.py"* ]]; then
         echo "Stopping UDMI Workbench process (PID ${pid}) on port ${target_port}..."
         kill -9 "$pid" 2>/dev/null || true
       else
@@ -91,8 +108,11 @@ stop_workbench_server() {
       fi
     done
   else
-    # Fallback: kill any remaining python process matching ui/src/server.py
+    # Fallback: kill any remaining python process matching ui workbench servers
+    pkill -9 -f "ui/v2/server.py" 2>/dev/null || true
+    pkill -9 -f "ui/v1/server.py" 2>/dev/null || true
     pkill -9 -f "ui/src/server.py" 2>/dev/null || true
+    pkill -9 -f "ui/server.py" 2>/dev/null || true
   fi
 
   sleep 0.5
@@ -116,7 +136,7 @@ check_port_owner() {
   local pid=$(lsof -t -i :"$check_port" 2>/dev/null | head -n 1 || true)
   if [ -n "$pid" ]; then
     local cmdline=$(tr '\0' ' ' < /proc/"$pid"/cmdline 2>/dev/null || true)
-    if [[ "$cmdline" == *"ui/src/server.py"* ]]; then
+    if [[ "$cmdline" == *"ui/v2/server.py"* || "$cmdline" == *"ui/v1/server.py"* || "$cmdline" == *"ui/src/server.py"* || "$cmdline" == *"ui/server.py"* ]]; then
       echo "workbench"
       return
     fi
@@ -159,9 +179,19 @@ else
 fi
 
 if [ "$SERVER_RUNNING" = false ]; then
-  echo "Starting UDMI Workbench backend server on port ${PORT}..."
+  echo "Starting UDMI Workbench ($VERSION) backend server on port ${PORT}..."
   mkdir -p out
-  setsid python3 ui/src/server.py --port="${PORT}" > out/workbench_server.log 2>&1 &
+  if [ "$VERSION" = "v1" ] && [ -f "ui/v1/server.py" ]; then
+    SERVER_SCRIPT="ui/v1/server.py"
+  elif [ -f "ui/v2/server.py" ]; then
+    SERVER_SCRIPT="ui/v2/server.py"
+  elif [ -f "ui/src/server.py" ]; then
+    SERVER_SCRIPT="ui/src/server.py"
+  else
+    SERVER_SCRIPT="ui/server.py"
+  fi
+
+  setsid python3 "$SERVER_SCRIPT" --port="${PORT}" > out/workbench_server.log 2>&1 &
   
   # Wait for the server to spin up
   for i in {1..10}; do
@@ -181,9 +211,13 @@ else
 fi
 
 # Build URL
-URL="http://localhost:${PORT}/ui/src/index.html"
+if [ "$VERSION" = "v1" ]; then
+  URL="http://localhost:${PORT}/ui/v1/index.html"
+else
+  URL="http://localhost:${PORT}/ui/v2/index.html"
+fi
 
-echo "Opening UDMI Workbench in your default browser..."
+echo "Opening UDMI Workbench ($VERSION) in your default browser..."
 echo "Workbench running at: ${URL}"
 
 if command -v xdg-open > /dev/null 2>&1; then

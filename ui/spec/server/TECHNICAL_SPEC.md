@@ -1,12 +1,12 @@
-# 🖥️ Technical Specification: Backend Server (`ui/src/server.py`)
+# 🖥️ Technical Specification: Backend Server (`ui/v2/server.py`)
 
-This document defines the technical architecture, HTTP REST endpoint contracts, JSON request/response formats, Server-Sent Event (SSE) log streaming protocols, process management, session lifecycle, and local CLI tool translations for the UDMI Workbench backend server (`ui/src/server.py`).
+This document defines the technical architecture, HTTP REST endpoint contracts, JSON request/response formats, Server-Sent Event (SSE) log streaming protocols, process management, session lifecycle, and local CLI tool translations for the UDMI Workbench backend server (`ui/v2/server.py`).
 
 ---
 
 ## 1. Core Server Responsibilities
 
-The UDMI Workbench backend server (`ui/src/server.py`) is a lightweight Python HTTP server that bridges the web interface with local UDMI command-line utilities and subprocesses. Its core responsibilities are:
+The UDMI Workbench backend server (`ui/v2/server.py`) is a lightweight Python HTTP server that bridges the web interface with local UDMI command-line utilities and subprocesses. Its core responsibilities are:
 
 1. **Frontend Asset Serving**: Serves static HTML, JavaScript, CSS, and media assets for the Host Shell and micro-frontend plugins.
 2. **Subprocess Execution Routing**: Translates frontend HTTP REST requests into validated local tool invocations (`bin/start_local`, `bin/sequencer`, `util/mantis/bin/triage`, `bin/test_validator`).

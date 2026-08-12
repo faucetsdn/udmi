@@ -52,8 +52,9 @@ def generate_custom_playbook(
     output_path: Optional[str] = None
 ) -> str:
     """Programmatically generates a new Mantis YAML playbook file."""
-    udmi_root = get_udmi_root()
-    default_playbook_path = os.path.join(udmi_root, "util/mantis/src/engine/config/default_playbook.yaml")
+    default_playbook_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "engine", "config", "default_playbook.yaml")
+    if not os.path.exists(default_playbook_path):
+        default_playbook_path = os.path.join(udmi_root, "util/mantis/v2/engine/config/default_playbook.yaml")
 
     playbook_data: Dict[str, Any] = {}
     if os.path.exists(default_playbook_path):

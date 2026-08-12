@@ -14,8 +14,12 @@ import urllib.parse
 import urllib.request
 from http.server import HTTPServer
 
-import ui.src.server as ui_server
-from ui.src.server import UDMIRequestHandler
+try:
+    import ui.v2.server as ui_server
+    from ui.v2.server import UDMIRequestHandler
+except ImportError:
+    import ui.src.server as ui_server
+    from ui.src.server import UDMIRequestHandler
 
 
 class TestUIServer(unittest.TestCase):

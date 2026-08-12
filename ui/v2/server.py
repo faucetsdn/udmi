@@ -29,12 +29,14 @@ ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 HOME_DIR = os.path.abspath(os.path.expanduser('~'))
 
 # Ensure Mantis and local tools are importable
+mantis_v2 = os.path.join(ROOT_DIR, "util", "mantis", "v2")
 mantis_src = os.path.join(ROOT_DIR, "util", "mantis", "src")
+mantis_v1 = os.path.join(ROOT_DIR, "util", "mantis", "v1")
+mantis_dir = os.path.join(ROOT_DIR, "util", "mantis")
 tools_dir = os.path.join(ROOT_DIR, "tools")
-if mantis_src not in sys.path:
-    sys.path.insert(0, mantis_src)
-if tools_dir not in sys.path:
-    sys.path.insert(0, tools_dir)
+for p in [mantis_v2, mantis_src, mantis_v1, mantis_dir, tools_dir]:
+    if os.path.exists(p) and p not in sys.path:
+        sys.path.insert(0, p)
 
 
 def to_home_relative(path_str):
@@ -482,6 +484,31 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
+
+        # Redirect root and version aliases
+        if parsed_url.path in ('', '/', '/index.html'):
+            self.send_response(302)
+            self.send_header('Location', '/ui/v2/index.html')
+            self.end_headers()
+            return
+        if parsed_url.path in ('/ui/v2', '/ui/v2/'):
+            self.send_response(302)
+            self.send_header('Location', '/ui/v2/index.html')
+            self.end_headers()
+            return
+        if parsed_url.path in ('/ui/v1', '/ui/v1/'):
+            self.send_response(302)
+            self.send_header('Location', '/ui/v1/index.html')
+            self.end_headers()
+            return
+        if parsed_url.path.startswith('/ui/src/'):
+            new_path = '/ui/v2/' + parsed_url.path[len('/ui/src/'):]
+            if parsed_url.query:
+                new_path += '?' + parsed_url.query
+            self.send_response(302)
+            self.send_header('Location', new_path)
+            self.end_headers()
+            return
 
         routes = {
             '/api/list': lambda: self.handle_api_list(parsed_url.query),
@@ -2271,10 +2298,11 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             cmd.extend(["--playbook", playbook_path])
 
         env = os.environ.copy()
+        mantis_v2 = os.path.join(ROOT_DIR, 'util', 'mantis', 'v2')
         mantis_dir = os.path.join(ROOT_DIR, 'util', 'mantis')
         util_dir = os.path.join(ROOT_DIR, 'util')
         tools_dir = os.path.join(ROOT_DIR, 'tools')
-        env['PYTHONPATH'] = f"{mantis_dir}:{tools_dir}:{util_dir}:{env.get('PYTHONPATH', '')}"
+        env['PYTHONPATH'] = f"{mantis_v2}:{mantis_dir}:{tools_dir}:{util_dir}:{env.get('PYTHONPATH', '')}"
         env['UDMI_NO_SUDO'] = 'true'
 
         if gemini_key:

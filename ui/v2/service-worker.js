@@ -88,7 +88,7 @@ async function handleSessionCompletion(sessionId, deviceId, siteModel, exitCode)
       icon: '/assets/workbench_logo.png',
       tag: `udmi-session-${sessionId}`,
       requireInteraction: failCount > 0,
-      data: { url: '/ui/src/index.html', deviceId, sessionId, passCount, failCount }
+      data: { url: '/ui/v2/index.html', deviceId, sessionId, passCount, failCount }
     });
   }
 
@@ -109,7 +109,7 @@ async function handleSessionCompletion(sessionId, deviceId, siteModel, exitCode)
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const data = event.notification.data || {};
-  const targetUrl = data.url || '/ui/src/index.html';
+  const targetUrl = data.url || '/ui/v2/index.html';
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {

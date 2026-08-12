@@ -6,7 +6,7 @@ This document specifies the technical architecture, micro-frontend container iso
 
 ## 1. Host Shell Core Responsibilities
 
-The **Host Shell** serves as the primary top-level container and orchestrator for the UDMI Workbench frontend (`ui/src/index.html`, `main.js`, `style.css`):
+The **Host Shell** serves as the primary top-level container and orchestrator for the UDMI Workbench frontend (`ui/v2/index.html`, `main.js`, `style.css`):
 
 1. **Workspace Context Management**: Manages the active site model path state and coordinates directory browser navigation.
 2. **Security Policy & Feature Flag Enforcement**: Queries backend security policy (`GET /api/features`), parses URL query parameters (`?features=...`), and dynamically mounts allowed plugin micro-frontends.
@@ -32,7 +32,7 @@ To ensure system stability, security, and independent component lifecycle:
 
 ## 3. Global Application State Store
 
-The Host Shell maintains a central state store (`ui/src/main.js`) defined by the following keys:
+The Host Shell maintains a central state store (`ui/v2/main.js`) defined by the following keys:
 
 | State Key | Type | Scope | Description |
 | :--- | :--- | :--- | :--- |
