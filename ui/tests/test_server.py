@@ -14,6 +14,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from http.server import HTTPServer
+from unittest.mock import patch
 
 try:
     import ui.v2.server as ui_server
@@ -379,7 +380,16 @@ class TestUIServer(unittest.TestCase):
         for e in remaining_dummies:
             shutil.rmtree(os.path.join(sessions_dir, e), ignore_errors=True)
 
-    def test_graphviz_render_success(self):
+    @patch("ui.v2.server.shutil.which", return_value="/usr/bin/dot")
+    @patch("ui.v2.server.os.path.exists", side_effect=lambda p: True if p == "/usr/bin/dot" else os.path.exists(p))
+    @patch("ui.v2.server.subprocess.run")
+    def test_graphviz_render_success(self, mock_subproc, mock_exists, mock_which):
+        mock_subproc.return_value = subprocess.CompletedProcess(
+            args=["/usr/bin/dot", "-Tsvg"],
+            returncode=0,
+            stdout="<svg><g id='TestTopology'></g></svg>",
+            stderr=""
+        )
         url = f"http://127.0.0.1:{self.port}/api/graphviz/render"
         payload = json.dumps({
             "dot": "digraph TestTopology { A -> B [label=\"proxy\"]; }"
@@ -393,7 +403,16 @@ class TestUIServer(unittest.TestCase):
             self.assertIn("<svg", data.get("svg", ""))
             self.assertIn("TestTopology", data.get("svg", ""))
 
-    def test_graphviz_render_invalid(self):
+    @patch("ui.v2.server.shutil.which", return_value="/usr/bin/dot")
+    @patch("ui.v2.server.os.path.exists", side_effect=lambda p: True if p == "/usr/bin/dot" else os.path.exists(p))
+    @patch("ui.v2.server.subprocess.run")
+    def test_graphviz_render_invalid(self, mock_subproc, mock_exists, mock_which):
+        mock_subproc.return_value = subprocess.CompletedProcess(
+            args=["/usr/bin/dot", "-Tsvg"],
+            returncode=1,
+            stdout="",
+            stderr="syntax error in line 1"
+        )
         url = f"http://127.0.0.1:{self.port}/api/graphviz/render"
         payload = json.dumps({
             "dot": "invalid syntax not a graph"
@@ -407,6 +426,23 @@ class TestUIServer(unittest.TestCase):
             self.assertEqual(e.code, 422)
             data = json.loads(e.read().decode('utf-8'))
             self.assertEqual(data.get("status"), "error")
+
+    @patch("ui.v2.server.shutil.which", return_value=None)
+    @patch("ui.v2.server.os.path.exists", side_effect=lambda p: False if p == "/usr/bin/dot" else os.path.exists(p))
+    def test_graphviz_render_not_installed(self, mock_exists, mock_which):
+        url = f"http://127.0.0.1:{self.port}/api/graphviz/render"
+        payload = json.dumps({
+            "dot": "digraph TestTopology { A -> B; }"
+        }).encode('utf-8')
+        headers = {"Content-Type": "application/json"}
+        req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+        try:
+            with urllib.request.urlopen(req) as response:
+                self.fail("Expected HTTP 501 when dot is not installed")
+        except urllib.error.HTTPError as e:
+            self.assertEqual(e.code, 501)
+            data = json.loads(e.read().decode('utf-8'))
+            self.assertIn("not installed", data.get("error", ""))
 
     def test_testbed_proc_status(self):
         url = f"http://127.0.0.1:{self.port}/api/testbed_proc_status"
