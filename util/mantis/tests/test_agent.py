@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
 
-from app.agent import (
+from mantis.agent.agent import (
     parse_merged_logs_from_payload,
     build_deterministic_timeline,
     harvest_test_code_context,
@@ -90,11 +90,11 @@ class TestUDMITriagePipelineAndAsync(unittest.TestCase):
         """Test UDMITriagePipeline run_intent_deterministically hook."""
         mock_client = MagicMock()
         pipeline = UDMITriagePipeline(client=mock_client)
-        with patch("app.agent.get_workspace_root", return_value=""):
+        with patch("mantis.agent.agent.get_workspace_root", return_value=""):
             res = pipeline.run_intent_deterministically("test_1", "Global_Pubber_Log: true")
             self.assertIsNone(res)
 
-    @patch("app.agent.run_triage_session_async", new_callable=AsyncMock)
+    @patch("mantis.agent.agent.run_triage_session_async", new_callable=AsyncMock)
     def test_run_triage_analysis_async(self, mock_session):
         """Test run_triage_analysis_async parses metadata and invokes session orchestrator."""
         mock_session.return_value = "# Diagnostic Report Summary"
@@ -114,7 +114,7 @@ class TestUDMITriagePipelineAndAsync(unittest.TestCase):
         self.assertEqual(call_kwargs["target_id"], "test_1")
         self.assertIn("Test ID: test_1", call_kwargs["cache_query"])
 
-    @patch("app.agent.run_triage_analysis_async", return_value="Sync Report")
+    @patch("mantis.agent.agent.run_triage_analysis_async", return_value="Sync Report")
     def test_run_triage_analysis_sync_wrapper(self, mock_async):
         """Test backward-compatible synchronous wrapper run_triage_analysis."""
         res = run_triage_analysis("payload")
