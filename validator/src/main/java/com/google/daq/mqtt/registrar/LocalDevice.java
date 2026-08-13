@@ -186,16 +186,6 @@ class LocalDevice implements SiteDevice {
           ES_PUBLIC_PEM,
           ES2_PUBLIC_PEM,
           ES3_PUBLIC_PEM);
-  private static final Set<String> ALL_PRIVATE_KEY_FILES =
-      ImmutableSet.of(
-          RSA_PRIVATE_PEM,
-          RSA_PRIVATE_PKCS8,
-          RSA_PRIVATE_CRT,
-          RSA_PRIVATE_CSR,
-          ES_PRIVATE_PEM,
-          ES_PRIVATE_PKCS8,
-          EC_PRIVATE_CRT,
-          EC_PRIVATE_CSR);
   private static final Set<String> ALL_CERT_FILES = ImmutableSet.of(RSA_CERT_PEM, ES_CERT_PEM);
   private static final int MAX_JSON_LENGTH = 32767;
   private final String deviceId;
@@ -402,15 +392,14 @@ class LocalDevice implements SiteDevice {
 
     if (isGateway() || isDirect()) {
       Set<String> privateKeyFiles = getPrivateKeyFiles();
-      if (!privateKeyFiles.isEmpty()
-          && Sets.intersection(privateKeyFiles, actualFiles).isEmpty()) {
-        LOGGER.info("No private key found for device {}", deviceId);
+      if (!privateKeyFiles.isEmpty()) {
+        Set<String> presentPrivateKeys = Sets.intersection(privateKeyFiles, actualFiles);
+        if (presentPrivateKeys.isEmpty()) {
+          LOGGER.info("No private key found for device {}", deviceId);
+        } else {
+          LOGGER.warn("Private key file(s) {} found for device {}", presentPrivateKeys, deviceId);
+        }
       }
-    }
-
-    Set<String> presentPrivateKeys = Sets.intersection(ALL_PRIVATE_KEY_FILES, actualFiles);
-    if (!presentPrivateKeys.isEmpty()) {
-      LOGGER.warn("Private key file(s) {} found for device {}", presentPrivateKeys, deviceId);
     }
     exceptionMap.throwIfNotEmpty();
   }
