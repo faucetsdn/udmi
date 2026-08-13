@@ -3,13 +3,12 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
-
 if [[ $# -lt 4 ]]; then
     usage site_model project device_id command [targets...]
 fi
 
-[[ ! -d $UDMI_ROOT/validator/src ]] ||
-    up_to_date $UDMI_JAR $UDMI_ROOT/validator/src ||
-    $UDMI_ROOT/validator/bin/build
+if [ -f "$UDMI_ROOT/venv/bin/activate" ]; then
+    source "$UDMI_ROOT/venv/bin/activate"
+fi
 
-java -cp $UDMI_JAR com.google.daq.mqtt.mapping.MappingAgent "$@"
+exec python3 $UDMI_ROOT/butler/bin/butler "$@"

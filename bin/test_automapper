@@ -49,6 +49,9 @@ echo Waiting for discovery...
 sleep 20
 
 echo Extracting results at $(date -u -Is)
+echo "Running mapper BEFORE registrar to populate extras"
+bin/mapper $site_path $project_spec GAT-123 map
+bin/registrar $site_path $project_spec -i
 bin/registrar $site_path $project_spec
 
 echo Checking that there was no bacnet discovery...
@@ -62,6 +65,8 @@ type=$(jq -r .resource_type $site_path/extras/discovered_vendor-20231/cloud_mode
 echo Checking vendor extracted device type $type
 [[ $type == PROXIED ]] || fail Vendor device type should be PROXIED, was $type
 
+echo "Restoring cloud_metadata/ deleted by registrar"
+bin/mapper $site_path $project_spec GAT-123 map
 echo Checking discovered device metadata
 addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)
 [[ $addr == 20231 ]] || fail Vendor device addr should be 20231, was $addr
@@ -74,7 +79,7 @@ extra_device_metadata=$site_path/extras/discovered_vendor-28179023/cloud_metadat
 jq '.refs.new_ref = {"point":"new_point","units":"new_units"}' $extra_device_metadata | sponge $extra_device_metadata
 
 echo "Starting the mapping process for the extra devices"
-bin/mapper $site_path $project_spec GAT-123 map vendor
+bin/mapper $site_path $project_spec GAT-123 map
 
 [[ -f $site_path/devices/UNK-1/metadata.json ]] || fail "Terminating because of extra device which does not exist didn't map correctly."
 
@@ -115,6 +120,9 @@ echo Waiting 20s for the second discovery to complete...
 sleep 20
 
 echo Extracting updated results at $(date -u -Is)
+echo "Running mapper BEFORE registrar to populate extras"
+bin/mapper $site_path $project_spec GAT-123 map
+bin/registrar $site_path $project_spec -i
 bin/registrar $site_path $project_spec
 
 echo Checking that there was bacnet discovery...
