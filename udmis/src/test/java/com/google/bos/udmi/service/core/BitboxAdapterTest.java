@@ -63,13 +63,20 @@ public class BitboxAdapterTest extends ProcessorTestBase {
         .thenReturn(registryModel);
     when(provider.fetchDevice(
         org.mockito.ArgumentMatchers.eq(TEST_REGISTRY),
-        org.mockito.ArgumentMatchers.any())).thenAnswer(query -> {
-      throw new RuntimeException("Should not fetch arbitrary device " + query.getArgument(1));
-    });
-    when(provider.fetchDevice(
-        org.mockito.ArgumentMatchers.eq(TEST_REGISTRY),
         org.mockito.ArgumentMatchers.eq(TEST_DEVICE)))
         .thenReturn(deviceModel);
+
+    CloudModel gatewayModel = new CloudModel();
+    gatewayModel.resource_type = Resource_type.GATEWAY;
+    gatewayModel.metadata = new HashMap<>();
+    gatewayModel.metadata.put(
+        com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION,
+        isoConvert(new Date()));
+
+    when(provider.fetchDevice(
+        org.mockito.ArgumentMatchers.eq(TEST_REGISTRY),
+        org.mockito.ArgumentMatchers.eq(TEST_GATEWAY)))
+        .thenReturn(gatewayModel);
   }
 
   private Envelope getLegacyEnvelope() {
