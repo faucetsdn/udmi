@@ -9,4 +9,43 @@ else
   PYTHON_BIN="python3"
 fi
 
-PYTHONPATH=.:util/mantis/src $PYTHON_BIN -m pytest util/mantis/tests "$@"
+TEST_TARGET="all"
+ARGS=()
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --v1)
+      TEST_TARGET="v1"
+      shift
+      ;;
+    --v2)
+      TEST_TARGET="v2"
+      shift
+      ;;
+    *)
+      ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [ "$TEST_TARGET" = "v1" ] || [ "$TEST_TARGET" = "all" ]; then
+  if [ -d "util/mantis/v1/tests" ]; then
+    echo "Running Mantis v1 test suite..."
+    PYTHONPATH=.:util/mantis/v1:util/mantis/v1/src $PYTHON_BIN -m pytest util/mantis/v1/tests "${ARGS[@]}"
+  elif [ "$TEST_TARGET" = "v1" ]; then
+    echo "Error: Mantis v1 tests not found at util/mantis/v1/tests"
+    exit 1
+  fi
+fi
+
+if [ "$TEST_TARGET" = "v2" ] || [ "$TEST_TARGET" = "all" ]; then
+  if [ -d "util/mantis/tests" ]; then
+    echo "Running Mantis v2 test suite..."
+    PYTHONPATH=.:util/mantis/v2:util/mantis $PYTHON_BIN -m pytest util/mantis/tests "${ARGS[@]}"
+  elif [ -d "util/mantis/v2/tests" ]; then
+    echo "Running Mantis v2 test suite..."
+    PYTHONPATH=.:util/mantis/v2 $PYTHON_BIN -m pytest util/mantis/v2/tests "${ARGS[@]}"
+  fi
+fi
+

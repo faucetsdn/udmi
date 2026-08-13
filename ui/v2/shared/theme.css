@@ -1,0 +1,243 @@
+/**
+ * UDMI Shared Design System
+ * Aligned with Google Testrun Material 3 (M3) styling.
+ */
+
+:root {
+  /* Layout Dimensions */
+  --toolbar-height: 56px;
+
+  /* Color Palette (Google Material 3 Light Theme) */
+  --color-primary: #0b57d0;         /* Google Blue */
+  --color-primary-hover: #0842a0;
+  --color-secondary: #00639b;       /* Slate Steel Blue */
+  --color-tertiary: #146c2e;        /* Google Green (Success) */
+  --color-error: #b3261e;           /* Google Red (Error) */
+  --color-warning: #e86e00;         /* Google Orange (Warning) */
+  
+  /* Surface Colors (Stepped depth levels) */
+  --bg-app: #f8fafd;                /* Application background (Surface Low) */
+  --bg-surface: #ffffff;            /* High surface (Cards, Modals) */
+  --bg-surface-container: #f0f4f9;  /* Mid-level containers */
+  --bg-surface-high: #e9eef6;       /* Higher contrast containers */
+  --bg-surface-highest: #dde3ea;    /* Strongest contrast containers */
+
+  /* Stepped container aliases */
+  --bg-surface-container-lowest: #f8fafd;
+  --bg-surface-container-low: #f0f4f9;
+  --bg-surface-container-high: #e9eef6;
+
+  /* Text Colors */
+  --text-primary: #1f1f1f;          /* High contrast text */
+  --text-secondary: #3c4043;        /* Mid contrast text */
+  --text-muted: #5f6368;            /* Low contrast text (labels) */
+  --on-primary: #ffffff;            /* Text on primary buttons */
+
+  /* Borders & Dividers */
+  --border-color: #c4c7c5;          /* Subtle outlines */
+  --border-color-active: #0b57d0;   /* Active/Focus outlines */
+
+  /* Border Radii */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* Typography */
+  --font-primary: 'Google Sans', 'Google Sans Text', 'Roboto', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* Transitions */
+  --transition-fast: all 0.15s ease;
+  --transition-normal: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Reset & Global Styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden; /* App layout handles scrolling internally */
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Common Layout Utilities */
+.card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.container-box {
+  background-color: var(--bg-surface-container);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-primary);
+  font-size: 14px;
+  font-weight: 500;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-md);
+  border: none;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--on-primary);
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-outlined {
+  background-color: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-outlined:hover {
+  background-color: var(--bg-surface-container);
+  border-color: var(--text-muted);
+}
+
+.btn-danger-outlined {
+  background-color: transparent;
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+}
+
+.btn-danger-outlined:hover {
+  background-color: rgba(179, 38, 30, 0.05);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.badge-success {
+  background-color: rgba(20, 108, 46, 0.1);
+  color: var(--color-tertiary);
+}
+
+.badge-error {
+  background-color: rgba(179, 38, 30, 0.1);
+  color: var(--color-error);
+}
+
+.badge-warning {
+  background-color: rgba(232, 110, 0, 0.1);
+  color: var(--color-warning);
+}
+
+.badge-info {
+  background-color: rgba(11, 87, 208, 0.1);
+  color: var(--color-primary);
+}
+
+.badge-neutral {
+  background-color: var(--bg-surface-highest);
+  color: var(--text-secondary);
+}
+
+/* --- UNIFIED FORM COMPONENT STYLES --- */
+.form-input {
+  font-family: inherit;
+  font-size: 13px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface-container-low);
+  color: var(--text-primary);
+  transition: border-color var(--transition-fast);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--border-color-active);
+  background-color: var(--bg-surface);
+}
+
+.form-input:disabled {
+  background-color: var(--bg-surface-container-high);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.form-select {
+  font-family: inherit;
+  font-size: 13px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-surface-container-low);
+  color: var(--text-primary);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.form-select:focus {
+  border-color: var(--border-color-active);
+}
+
+.form-select:disabled {
+  background-color: var(--bg-surface-container-high);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
