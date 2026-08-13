@@ -69,7 +69,7 @@ class UufiClient:
             spec_body = spec[2:]
             if "/" in spec_body:
                 provider, endpoint = spec_body.split("/", 1)
-                self.is_ssl = provider in ("ssl", "mqtts", "tcps", "wss")
+                self.is_ssl = provider in ("ssl", "mqtts", "tcps", "wss", "mqtt")
                 spec = f"mqtt://{endpoint}"
 
         url = urlparse(spec)
