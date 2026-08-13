@@ -18,7 +18,11 @@ else
     req_src="<(sed -E 's/^(grpcio|grpcio-status|cryptography|cffi)==/\1>=/' etc/requirements.txt)"
 fi
 
-if [[ -z $UDMI_NO_SUDO ]]; then sudo $update_cmd; else $update_cmd; fi $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
+if [[ -z $UDMI_NO_SUDO ]]; then
+    sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
+else
+    $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
+fi
 
 python3 --version
 python3 -m venv $venv_opts venv
