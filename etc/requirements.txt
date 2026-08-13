@@ -54,6 +54,7 @@ opentelemetry-sdk==1.27.0
 opentelemetry-semantic-conventions==0.48b0
 packaging==24.1
 paho-mqtt==1.6.1
+pillow==12.3.0
 platformdirs==2.6.0
 pluggy==1.5.0
 proto-plus==1.24.0
@@ -67,6 +68,7 @@ pydantic_core==2.46.4
 Pygments==2.20.0
 PyJWT==2.13.0
 pylint==4.0.5
+pyOpenSSL==26.4.0
 pyparsing==3.1.0
 pytest==9.0.3
 pytest-xdist==3.7.0

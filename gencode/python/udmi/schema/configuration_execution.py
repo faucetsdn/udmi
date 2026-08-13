@@ -8,7 +8,6 @@ from typing import List, Optional
 
 from ._base import DataModel
 from .common import IotProvider
-from .config_mapping import MappingConfig
 from .configuration_endpoint import EndpointConfiguration
 
 
@@ -52,4 +51,3 @@ class ExecutionConfiguration(DataModel):
     alt_registry: Optional[str] = None
     block_unknown: Optional[bool] = None
     sequences: Optional[List[str]] = None
-    mapping_configuration: Optional[MappingConfig] = None
