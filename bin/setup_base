@@ -20,8 +20,10 @@ fi
 
 if [[ -z $UDMI_NO_SUDO ]]; then
     sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
-else
+elif [[ $(id -u) == 0 ]]; then
     $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
+else
+    echo "Skipping system package installation in unprivileged mode (UDMI_NO_SUDO is set and not root)"
 fi
 
 python3 --version

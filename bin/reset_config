@@ -3,16 +3,20 @@
 ROOT=$(realpath $(dirname $0)/..)
 source $ROOT/etc/shell_common.sh
 
-if [[ $# -lt 4 || $# -gt 5 ]]; then
-    echo "Usage: $0 SITE_DIR PROJECT_ID DEVICE_ID <CONFIG_FILE | TEST_NAME | query | reset> [OUTPUT_FILE]"
+if [[ $# -lt 3 || $# -gt 5 ]]; then
+    echo "Usage: $0 SITE_DIR PROJECT_ID DEVICE_ID [CONFIG_FILE | TEST_NAME | query | reset] [OUTPUT_FILE]"
     false
 fi
 
 site_dir=$(realpath $1)
 project_id=$2
 device_id=$3
-cmd=$4
-shift 4
+cmd=${4:-reset}
+if [[ $# -ge 4 ]]; then
+    shift 4
+else
+    shift $#
+fi
 
 REFLECTOR_CONFIG=/tmp/reflector_config.json
 src_config=""
