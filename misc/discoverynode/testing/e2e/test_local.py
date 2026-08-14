@@ -132,6 +132,8 @@ def docker_devices():
               f"--ip={localnet['ipv4']['addr']}",
               "-e",
               f"BACNET_ID={localnet['bacnet']['addr']}",
+              "-e",
+              "PYTHONUNBUFFERED=1",
               "test-bacnet-device",
           ])
       )
@@ -198,6 +200,8 @@ def discovery_node():
             "run",
             "-d",
             f"--name=discoverynode-test-node",
+            "-e",
+            "PYTHONUNBUFFERED=1",
             f"--network=discoverynode-network",
             "--mount",
             f"type=bind,source={ROOT_DIR}/discovery_node_config.json,target=/app/config.json",
