@@ -128,6 +128,9 @@ bin/registrar $site_path $project_spec
 echo Checking that there was bacnet discovery...
 ls -d $site_path/extras/discovered_bacnet-*
 
+echo "Restoring cloud_metadata/ deleted by registrar for second scan"
+bin/mapper $site_path $project_spec GAT-123 map
+
 second_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`
 echo Second discovered generation is $second_generation
 
