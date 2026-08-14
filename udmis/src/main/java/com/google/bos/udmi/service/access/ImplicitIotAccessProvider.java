@@ -680,9 +680,6 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
           listBoundDevices(registryId, deviceId).keySet().stream().toList();
     } else if (properties.get(BOUND_TO_KEY) != null) {
       cloudModel.resource_type = PROXIED;
-      if (!PROXIED.toString().equals(properties.get(RESOURCE_TYPE_PROPERTY))) {
-        registryDeviceRef(registryId, deviceId).put(RESOURCE_TYPE_PROPERTY, PROXIED.toString());
-      }
     }
     cloudModel.operation = READ;
     return cloudModel;
@@ -757,15 +754,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       cloudModel.auth_type = CloudModel.Auth_type.fromValue(authType);
     }
     String boundTo = properties.get(BOUND_TO_KEY);
-    if (boundTo != null) {
-      cloudModel.resource_type = PROXIED;
-      if (!PROXIED.toString().equals(properties.get(RESOURCE_TYPE_PROPERTY))) {
-        registryDeviceRef(registryId, deviceId).put(RESOURCE_TYPE_PROPERTY, PROXIED.toString());
-      }
-    } else {
-      cloudModel.resource_type = ofNullable(properties.get(RESOURCE_TYPE_PROPERTY))
-          .map(Resource_type::fromValue).orElse(DIRECT);
-    }
+    cloudModel.resource_type = boundTo != null ? PROXIED
+        : ofNullable(properties.get(RESOURCE_TYPE_PROPERTY))
+            .map(Resource_type::fromValue).orElse(DIRECT);
     cloudModel.blocked = "true".equals(properties.get(BLOCKED_PROPERTY)) ? true : null;
     cloudModel.updated_time = JsonUtil.getDate(properties.get(CREATED_AT_PROPERTY));
     return cloudModel;

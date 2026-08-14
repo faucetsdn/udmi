@@ -191,14 +191,22 @@ class ImplicitIotAccessProviderTest {
   }
 
   @Test
-  void testFetchLegacyBoundDeviceAutoHeals() {
+  void testFetchLegacyBoundDeviceProjectsProxied() {
     store.put("r/test-reg/d/test-dev:bound_to", "test-gateway");
     store.put("r/test-reg/d/test-dev:bind_status", "bound");
     store.put("r/test-reg/d/test-dev:resource_type", "DIRECT");
 
     CloudModel fetched = provider.fetchDevice(TEST_REGISTRY, TEST_DEVICE);
 
+    // Read projects PROXIED dynamically
     assertEquals(udmi.schema.CloudModel.Resource_type.PROXIED, fetched.resource_type);
+    // Read is side-effect free: store was not mutated during read
+    assertEquals("DIRECT", store.get("r/test-reg/d/test-dev:resource_type"));
+
+    // Write operation (updateDevice) persists PROXIED to store
+    CloudModel updateModel = new CloudModel();
+    updateModel.operation = ModelOperation.UPDATE;
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, updateModel, null);
     assertEquals("PROXIED", store.get("r/test-reg/d/test-dev:resource_type"));
   }
 
