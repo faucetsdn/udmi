@@ -95,9 +95,6 @@ mkdir -p out
 echo "Cloning test site model..."
 clone_site_model "$SITE_MODEL_PATH"
 
-# Generate valid keys/certs for AHU-1 to avoid validation errors
-"$UDMI_ROOT/bin/keygen" CERT "$SITE_MODEL_PATH/devices/AHU-1"
-
 mkdir -p "$SITE_MODEL_PATH/out"
 chmod a+rwx "$SITE_MODEL_PATH/out" 2>/dev/null || true
 
@@ -120,6 +117,9 @@ if ! docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
     docker logs udmis || true
     exit 1
 fi
+
+# Generate valid keys/certs for AHU-1 inside validator container to avoid validation errors
+docker exec validator bin/keygen CERT site_model/devices/AHU-1
 
 echo "Executing discovery sequence..."
 sleep 5
