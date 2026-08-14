@@ -13,35 +13,31 @@ At a high-level, the process involves different message subgroups that handle sl
 
 The overall mapping sequence involves multiple components that work together to provide the overall flow. The mapping process is entirely message-based, cleanly separating site model file manipulation from the mapping logic itself.
 
-* **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data. They emit discovery messages.
+* **Discovery**: Thing that runs on-prem fieldbus discovery and emits discovery messages.
+* **Mapping Service**: Takes model messages (from the Registrar) and discovery messages (from Devices) as input, and outputs updated model messages.
 * **Registrar**: Reads the existing site model from the source repository and generates base model messages for the system.
-* **Mapping Service**: A message-based service that takes model messages (from the Registrar) and discovery messages (from Devices) as input, and outputs updated model messages. It does not access the site model files directly.
 * **Reconciler**: Receives updated model messages from the Mapping Service and performs reconciliation to update the site model files.
-* **Source Repo**: Ultimate source of truth for the particular site, having all the devices and Gateways part of the site in the Cloud Source Repository.
+* **Source Repo**: Ultimate source of truth for the particular site, containing all the consolidated information.
 
 ```mermaid
 sequenceDiagram
   %%{wrap}%%
-  participant Devices as Devices<br/>(w/ Spotter)
-  participant Mapping Service
+  participant Discovery
+  participant Mapping
   participant Registrar
   participant Reconciler
-  participant Source Repo 
+  participant Source Repo
   
-  Source Repo->>Registrar: Read Base Site Model
-  Registrar->>Mapping Service: Base Model Messages
-  Devices->>Mapping Service: Discovery Messages / Complete Event
-  Note over Mapping Service: Map Results (Message In, Message Out)
+  Registrar->>Source Repo: Fetch Site Model
+  Registrar->>Mapping: Base Model Messages
+  Discovery->>Mapping: Discovery Messages
+  Note over Mapping Service: Map Results
   Mapping Service->>Reconciler: Updated Model Messages
-  Reconciler->>Source Repo: Reconcile / Update Site Model
+  Reconciler->>Source Repo: Update Site Model
 ```
 
-* **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** wraps the device info from the discovery
-  into a UDMI-normalized format, e.g.:
-  "Device `78F936` has points { }, with a public key `XYZZYZ`"
-* **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json)** having `event_no` as negative value.
-
-The Mapping Service subscribes to discovery and model topics. When it receives a Discovery Complete event, it initiates the mapping process based on the current model state.
+* **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** information from local on-prem fieldbus discovery.
+* **[Model Events](../../tests/schemas/metadata/bacmodel.json)** comprehensive representation of the device, including all protocols.
 
 ### Key Workflow Steps
 * **Registrar Model Loading**: The Registrar reads the `Source Repo` and publishes the current site model as messages to the system.
