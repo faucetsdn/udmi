@@ -476,7 +476,7 @@ jobs:
         run: |
           mkdir -p out
           docker rm -f udmis || true
-          docker run -d --net udminet --name udmis -p 8883:8883 \
+          docker run -d --net udminet --name udmis -p 8883:8883 -p 18836:5432 \
             -v $PWD/site_model:/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
@@ -523,6 +523,8 @@ jobs:
         # unless it too is root, or the behaviour is changed, or the permisions
         # are fixed. This also requires playing some fancy games with the sudo
         # eng and PATH, so that the right version of java is picked up!
+        env:
+          POSTGRES_PORT: 18836
         run: |
           export SAVE_PATH=$PATH
           sudo -E bash -c 'PATH=$SAVE_PATH misc/discoverynode/testing/e2e/test_local site_model'
