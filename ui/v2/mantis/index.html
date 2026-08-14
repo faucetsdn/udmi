@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mantis AI Autonomous Diagnostics</title>
+
+  <!-- Fonts & Material Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+    rel="stylesheet" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="../shared/theme.css?v=2.2">
+  <link rel="stylesheet" href="style.css?v=2.2">
+</head>
+
+<body style="margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden;">
+
+  <!-- Mantis Chat Container -->
+  <div class="mantis-chat-layout welcome-layout">
+
+    
+    <!-- Header Context Bar -->
+    <header class="mantis-chat-header">
+      <div class="mantis-header-left">
+        <span class="mantis-brand-badge">
+          <span class="material-symbols-outlined">auto_awesome</span>
+          <span>Mantis AI</span>
+        </span>
+        
+        <div class="mantis-context-group">
+          <select id="mantis-device-select" class="mantis-context-select" aria-label="Select Target Device">
+            <option value="">-- Select Device --</option>
+          </select>
+
+          <select id="scenario-select" class="mantis-context-select" aria-label="Select Target Test Case">
+            <option value="">-- Select Test --</option>
+          </select>
+
+          <span id="mantis-test-status-badge" class="badge scenario-status-badge" style="display: none;"></span>
+        </div>
+      </div>
+
+      <div class="mantis-header-actions">
+        <button type="button" id="btn-mantis-factcheck" class="btn-mantis-action" title="Adversarial Fact-Check (/fact-check)">
+          <span class="material-symbols-outlined">verified</span>
+          <span>Fact-check</span>
+        </button>
+        <button type="button" id="btn-mantis-clear" class="btn-mantis-action" title="Clear Conversation (/clear)" aria-label="Clear session">
+          <span class="material-symbols-outlined">refresh</span>
+        </button>
+        <button type="button" id="btn-mantis-copy" class="btn-mantis-action" title="Copy Transcript as Markdown" aria-label="Copy transcript as Markdown">
+          <span class="material-symbols-outlined">content_copy</span>
+        </button>
+        <button type="button" id="btn-mantis-export" class="btn-mantis-action" title="Export Transcript (/export)" aria-label="Export transcript">
+          <span class="material-symbols-outlined">download</span>
+        </button>
+
+        <button type="button" id="btn-mantis-settings" class="btn-mantis-action" title="Diagnostic Settings" aria-label="Settings">
+          <span class="material-symbols-outlined">settings</span>
+        </button>
+
+      </div>
+    </header>
+
+    <!-- Conversational Stream -->
+    <main id="mantis-chat-stream" class="mantis-chat-stream" style="position: relative;">
+      <!-- Clearing Session Inactive Overlay -->
+      <div id="mantis-clearing-overlay" class="mantis-clearing-overlay" style="display: none;">
+        <div class="mantis-clearing-content">
+          <div class="mantis-thinking-loader" style="padding: 0; min-height: unset;">
+            <div class="mantis-fade-dots"></div>
+          </div>
+          <span class="mantis-clearing-text">Starting a new session...</span>
+        </div>
+      </div>
+
+      <!-- Welcome State Card -->
+      <div id="mantis-empty-state" class="mantis-welcome-card">
+        <div class="mantis-welcome-icon">
+          <span class="material-symbols-outlined" style="font-size: 32px;">psychology</span>
+        </div>
+        <div class="mantis-welcome-title">Mantis Autonomous Diagnostics</div>
+        <div class="mantis-welcome-desc">
+          Your assistant for everything UDMI — architecture, schemas, testing, and diagnostics.
+        </div>
+        <div class="mantis-welcome-shortcuts">
+          <span class="mantis-shortcut-item"><kbd class="mantis-kbd">Enter</kbd> to send</span>
+          <span class="mantis-shortcut-sep">&bull;</span>
+          <span class="mantis-shortcut-item"><kbd class="mantis-kbd">Shift</kbd> + <kbd class="mantis-kbd">Enter</kbd> for newline</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Messages Container -->
+      <div id="mantis-messages-container" style="display: flex; flex-direction: column; gap: 16px; width: 100%;"></div>
+    </main>
+
+    <!-- Bottom Floating Composer -->
+    <footer class="mantis-composer-container">
+      <div class="mantis-composer-wrapper">
+        <div class="mantis-slash-hints">
+          <span style="font-size: 11px; color: var(--text-muted);">Quick Commands:</span>
+          <span class="mantis-hint-chip" data-cmd="/diagnose" title="Diagnose test failure for active target or specify test">/diagnose</span>
+          <span class="mantis-hint-chip" data-cmd="/diff" title="Run differential analysis between 2 sets of logs or against baseline">/diff</span>
+          <span class="mantis-hint-chip" data-cmd="/fact-check" title="Adversarially fact-check and verify previous conclusions (Double-click to run immediately)">/fact-check</span>
+          <span class="mantis-hint-chip" data-cmd="/current-context" title="Display active site model, device target, and session context (Double-click to run immediately)">/current-context</span>
+        </div>
+
+
+
+
+
+        <div class="mantis-input-box">
+          <textarea id="mantis-chat-input" class="mantis-textarea" rows="1" placeholder="Ask Mantis anything..."></textarea>
+          <button type="button" id="btn-mantis-send" class="mantis-send-btn" title="Send message">
+            <span class="material-symbols-outlined">send</span>
+          </button>
+          <button type="button" id="btn-mantis-stop" class="mantis-send-btn stop" title="Stop generating" style="display: none;">
+            <span class="material-symbols-outlined">stop</span>
+          </button>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Settings Modal Popover -->
+    <div id="mantis-settings-modal" class="mantis-modal-overlay">
+      <div class="mantis-modal-card">
+        <div class="mantis-modal-header">
+          <div class="mantis-modal-title">
+            <span class="material-symbols-outlined" style="color: var(--mantis-primary);">tune</span>
+            <span>Diagnostic Settings</span>
+          </div>
+          <button type="button" id="btn-close-mantis-settings" class="btn-close" aria-label="Close settings">&times;</button>
+        </div>
+
+        <div class="mantis-modal-body">
+          <div class="control-group">
+            <label for="setting-provider-select" class="control-label">AI Auth Provider</label>
+            <select id="setting-provider-select" class="form-select w-full" style="width: 100%;">
+              <option value="gemini">Gemini API Key</option>
+              <option value="vertex">Google Vertex AI (ADC)</option>
+            </select>
+          </div>
+
+          <div id="setting-group-api-key" class="control-group">
+            <label for="setting-api-key" class="control-label">Gemini API Key</label>
+            <input type="password" id="setting-api-key" class="form-input w-full" style="width: 100%;" placeholder="AIzaSy... (or from shell environment)" />
+          </div>
+
+          <div id="setting-group-vertex" class="control-group" style="display: none; flex-direction: column; gap: 8px;">
+            <div>
+              <label for="setting-gcp-project" class="control-label">GCP Project ID</label>
+              <input type="text" id="setting-gcp-project" class="form-input w-full" style="width: 100%;"
+                placeholder="e.g. bos-platform-dev" />
+            </div>
+            <div>
+              <label for="setting-gcp-location" class="control-label">GCP Location</label>
+              <input type="text" id="setting-gcp-location" class="form-input w-full" style="width: 100%;" value="global" placeholder="global" />
+            </div>
+          </div>
+
+          <div class="control-group">
+            <label for="setting-baseline-run" class="control-label">Reference Baseline Run (Commit SHA or Path)</label>
+            <input type="text" id="setting-baseline-run" class="form-input w-full" style="width: 100%;" placeholder="e.g. 7c9c02ca27b1f34c5699db751b34d41d50b98c06" />
+          </div>
+        </div>
+
+        <div class="mantis-modal-footer">
+          <button type="button" id="btn-save-mantis-settings" class="btn btn-primary">Save Settings</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { MantisController } from './main.js';
+    window.mantisController = new MantisController();
+  </script>
+</body>
+
+</html>

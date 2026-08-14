@@ -111,6 +111,10 @@ port = url.port or (8883 if is_ssl else 1883)
 now_utc_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 payload = {
+    "subType": "model",
+    "subFolder": "system",
+    "deviceRegistryId": registry_id,
+    "deviceId": device_id,
     "projectId": "vibrant",
     "transactionId": f"TXN-{os.urandom(4).hex()}",
     "publishTime": now_utc_str,

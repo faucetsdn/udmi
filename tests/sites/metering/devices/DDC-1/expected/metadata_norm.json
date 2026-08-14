@@ -13,14 +13,14 @@
         }
       },
       "modbus": {
-        "addr": "0",
         "adjunct": {
           "baud": "9600",
           "bits": "8",
           "enconding": "rtu",
           "stop": "2"
         },
-        "parent_id": "DDC-1"
+        "parent_id": "DDC-1",
+        "unitid": "0"
       }
     }
   },
@@ -28,5 +28,6 @@
     "min_loglevel": 300
   },
   "timestamp": "2020-05-01T13:39:07Z",
-  "version": "1.5.3"
+  "upgraded_from": "1.5.3",
+  "version": "1.5.7"
 }

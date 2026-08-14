@@ -1,0 +1,34 @@
+#!/bin/bash -e
+
+# Script to test the pull_files | pull_capture database pipeline
+# Assumes necessary database infrastructure is already running.
+
+UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$UDMI_ROOT"
+source "$UDMI_ROOT/etc/shell_common.sh"
+
+echo "=== Running pull_files | pull_save db pipeline..."
+bin/pull_files tests/traces/simple | bin/pull_save db
+
+echo "=== Verifying PostgreSQL records..."
+postgres_count=$(psql -h 127.0.0.1 -p ${POSTGRES_PORT:-5432} -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres} -t -A -c "SELECT count(*) FROM udmi_messages;")
+
+if [[ $postgres_count -gt 0 ]]; then
+    echo "PASS: Found $postgres_count records in PostgreSQL."
+else
+    echo "FAIL: No records found in PostgreSQL!"
+    exit 1
+fi
+
+echo "=== Verifying InfluxDB records..."
+influx_out=$(udmis/bin/influxctl query --token "test-influx-token-12345" --org "bridgehead" 'from(bucket: "home") |> range(start: -10y) |> filter(fn: (r) => r._measurement == "point_value")' || true)
+
+if echo "$influx_out" | grep -q "point_value"; then
+    echo "PASS: Successfully verified point_value records in InfluxDB."
+else
+    echo "FAIL: No point_value records found in InfluxDB!"
+    echo "Query output: $influx_out"
+    exit 1
+fi
+
+echo "=== All capture pipeline tests passed successfully!"

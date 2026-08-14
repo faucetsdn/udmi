@@ -11,6 +11,7 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.base.Splitter;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.hash.Hashing;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.protobuf.ByteString;
@@ -35,9 +36,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.net.ssl.KeyManagerFactory;
@@ -88,8 +94,52 @@ public class MqttToPubSubBridge {
   private static final Pattern TOPIC_PATTERN = Pattern.compile("/r/([^/]+)/d/([^/]+)/?(.*)");
   private static final Logger logger = LoggerFactory.getLogger(MqttToPubSubBridge.class);
 
+  // Maximum capacity for the in-memory executor task queue.
+  // This acts as a defensive 10x safety buffer above MQTT v5 Receive Maximum (100).
+  // Under normal MQTT v5 operation, the broker throttles delivery to at most 100 in-flight
+  // unacknowledged messages, so this 1000-element queue is a defensive precaution for bursts,
+  // QoS 0 traffic, or MQTT v3.1.1 fallback.
   private static final int MAX_QUEUE_SIZE = 1000;
   private static final int NUM_THREADS = 24;
+  public static final int DEFAULT_UNACKED_THRESHOLD = 100;
+  public static final long DEFAULT_CIRCUIT_BREAKER_TIMEOUT_MS = 300000L; // 5 minutes
+
+  /**
+   * Represents the lifecycle state of an unacknowledged MQTT message.
+   */
+  public enum MessageState {
+    IN_PROCESS,
+    ABANDONED
+  }
+
+  /**
+   * Represents a recorded message entry tracking its state and insertion timestamp.
+   */
+  public static class MessageRecord {
+    private final long timestamp;
+    private volatile MessageState state;
+
+    public MessageRecord(MessageState state) {
+      this(state, System.currentTimeMillis());
+    }
+
+    public MessageRecord(MessageState state, long timestamp) {
+      this.state = state;
+      this.timestamp = timestamp;
+    }
+
+    public long getTimestamp() {
+      return timestamp;
+    }
+
+    public MessageState getState() {
+      return state;
+    }
+
+    public void setState(MessageState state) {
+      this.state = state;
+    }
+  }
 
   private static final Cache<String, String> numIdCache = CacheBuilder.newBuilder()
       .expireAfterWrite(1, TimeUnit.MINUTES)
@@ -97,7 +147,53 @@ public class MqttToPubSubBridge {
       .build();
 
   private final ThreadPoolExecutor executor;
+  private final ScheduledExecutorService retryScheduler;
   private volatile boolean tripped = false;
+  private volatile boolean stopping = false;
+  private final ConcurrentHashMap<String, MessageRecord> unackedMessages =
+      new ConcurrentHashMap<>();
+
+  public int getUnackedCount() {
+    return unackedMessages.size();
+  }
+
+  public int getInProcessCount() {
+    return (int) unackedMessages.values().stream()
+        .filter(r -> r.getState() == MessageState.IN_PROCESS).count();
+  }
+
+  public int getAbandonedCount() {
+    return (int) unackedMessages.values().stream()
+        .filter(r -> r.getState() == MessageState.ABANDONED).count();
+  }
+
+  public MessageState getMessageState(String messageKey) {
+    MessageRecord record = unackedMessages.get(messageKey);
+    return record != null ? record.getState() : null;
+  }
+
+  public MessageRecord getMessageRecord(String messageKey) {
+    return unackedMessages.get(messageKey);
+  }
+
+  void putMessageRecordForTest(String messageKey, MessageRecord record) {
+    if (record == null) {
+      unackedMessages.remove(messageKey);
+    } else {
+      unackedMessages.put(messageKey, record);
+    }
+  }
+
+  static String getMessageHash(String topic, MqttMessage message) {
+    byte[] payload = message.getPayload() != null ? message.getPayload() : new byte[0];
+    String payloadHash = Hashing.murmur3_128().hashBytes(payload).toString();
+    String prefix = topic != null && !topic.isEmpty() ? topic + ":" : "";
+    return prefix + message.getId() + ":" + payloadHash;
+  }
+
+  static String getMessageHash(MqttMessage message) {
+    return getMessageHash("", message);
+  }
 
   static void clearCacheForTest() {
     numIdCache.invalidateAll();
@@ -112,7 +208,24 @@ public class MqttToPubSubBridge {
         0L, TimeUnit.MILLISECONDS,
         new ArrayBlockingQueue<>(MAX_QUEUE_SIZE),
         new ThreadFactoryBuilder().setNameFormat("mqtt-bridge-%d").setDaemon(true).build(),
-        new ThreadPoolExecutor.AbortPolicy());
+        (runnable, exec) -> {
+          if (exec.isShutdown()) {
+            throw new RejectedExecutionException("Executor is shut down");
+          }
+          try {
+            // Block up to 2 seconds to absorb transient bursts and apply TCP backpressure
+            boolean added = exec.getQueue().offer(runnable, 2, TimeUnit.SECONDS);
+            if (!added) {
+              throw new RejectedExecutionException("Executor queue full after 2s wait");
+            }
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RejectedExecutionException(
+                "Interrupted while waiting for executor queue capacity", e);
+          }
+        });
+    this.retryScheduler = Executors.newScheduledThreadPool(4,
+        new ThreadFactoryBuilder().setNameFormat("mqtt-bridge-retry-%d").setDaemon(true).build());
   }
 
   /**
@@ -124,36 +237,115 @@ public class MqttToPubSubBridge {
     return tripped;
   }
 
+  void setTrippedForTest(boolean tripped) {
+    this.tripped = tripped;
+  }
+
+  public boolean isStopping() {
+    return stopping;
+  }
+
+  public void setStopping(boolean stopping) {
+    this.stopping = stopping;
+  }
+
   private void startCircuitBreaker(IMqttClient mqttClient) {
+    startCircuitBreaker(mqttClient, DEFAULT_UNACKED_THRESHOLD, DEFAULT_CIRCUIT_BREAKER_TIMEOUT_MS);
+  }
+
+  void startCircuitBreaker(IMqttClient mqttClient, int abandonedThreshold, long timeoutMs) {
     Thread monitor = new Thread(() -> {
-      long fullStartTime = 0;
-      while (!tripped) {
+      while (!tripped && !stopping) {
         try {
           Thread.sleep(1000);
-          // Check if we've received the maximum number of inflight messages (100)
-          if (executor.getActiveCount() + executor.getQueue().size() >= 100) {
-            if (fullStartTime == 0) {
-              fullStartTime = System.currentTimeMillis();
-            } else if (System.currentTimeMillis() - fullStartTime >= 60000) {
-              tripped = true;
-              logger.error("Queue saturated for 60 seconds! Tripping circuit breaker.");
-              try {
-                mqttClient.disconnect();
-              } catch (Exception e) {
-                logger.error("Error disconnecting during circuit breaker trip", e);
-              }
+          long now = System.currentTimeMillis();
+
+          // 1. Check if any message is stuck in-flight longer than timeoutMs
+          boolean hasStuckMessage = unackedMessages.values().stream()
+              .filter(record -> record != null && record.getState() == MessageState.IN_PROCESS)
+              .anyMatch(record -> (now - record.getTimestamp()) >= timeoutMs);
+
+          // 2. Check if abandoned messages have exhausted capacity (>= abandonedThreshold)
+          boolean abandonedExceeded = getAbandonedCount() >= abandonedThreshold;
+
+          if (hasStuckMessage || abandonedExceeded) {
+            tripped = true;
+            if (hasStuckMessage) {
+              logger.error(
+                  "Message stuck in unacked queue for >= {}ms! Tripping circuit breaker.",
+                  timeoutMs);
             }
-          } else {
-            fullStartTime = 0; // reset
+            if (abandonedExceeded) {
+              logger.error(
+                  "Abandoned message threshold ({} messages) reached! Tripping circuit breaker.",
+                  abandonedThreshold);
+            }
+            try {
+              mqttClient.disconnectForcibly();
+            } catch (Exception e) {
+              logger.error("Error disconnecting during circuit breaker trip", e);
+            }
+            exit(1);
           }
         } catch (InterruptedException e) {
           Thread.currentThread().interrupt();
           break;
+        } catch (Exception e) {
+          logger.error("Error in circuit breaker monitor", e);
         }
       }
     });
     monitor.setDaemon(true);
+    monitor.setName("mqtt-circuit-breaker");
     monitor.start();
+  }
+
+  protected void exit(int status) {
+    System.exit(status);
+  }
+
+  void startPeriodicReconnect(IMqttClient mqttClient, int baseIntervalSec) {
+    if (baseIntervalSec <= 0) {
+      return;
+    }
+    Thread reconnectThread = new Thread(() -> {
+      while (!tripped) {
+        try {
+          // Jitter: +/- 50% random delay around baseIntervalSec
+          int jitterSec = (int) (baseIntervalSec * 0.5);
+          int delaySec = baseIntervalSec
+              + (jitterSec > 0
+              ? (ThreadLocalRandom.current().nextInt(jitterSec * 2 + 1) - jitterSec) : 0);
+          Thread.sleep(Math.max(1, delaySec) * 1000L);
+          if (mqttClient.isConnected() && !tripped) {
+            logger.info(
+                "Executing scheduled reconnect (interval: {}s) to rebalance shared subscription...",
+                delaySec);
+            try {
+              mqttClient.disconnect(1000L);
+            } catch (Exception e) {
+              logger.warn("Error disconnecting for scheduled reconnect", e);
+            }
+            try {
+              mqttClient.reconnect();
+            } catch (Exception e) {
+              logger.error(
+                  "FATAL: Error reconnecting during scheduled reconnect. Exiting for K8s restart.",
+                  e);
+              exit(1);
+            }
+          }
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          break;
+        } catch (Exception e) {
+          logger.warn("Error during scheduled reconnect", e);
+        }
+      }
+    });
+    reconnectThread.setDaemon(true);
+    reconnectThread.setName("mqtt-reconnect-timer");
+    reconnectThread.start();
   }
 
   /**
@@ -184,6 +376,15 @@ public class MqttToPubSubBridge {
     String mqttKeepAliveInterval = commandLine.getOptionValue("mqtt_keep_alive_interval", "15");
     int keepAliveInterval = Integer.parseInt(mqttKeepAliveInterval);
     boolean mqttTls = commandLine.hasOption("mqtt_tls");
+    int reconnectIntervalSec = Integer.parseInt(
+        commandLine.getOptionValue("mqtt_reconnect_interval_sec", "900"));
+    int circuitBreakerThreshold = Integer.parseInt(
+        commandLine.getOptionValue("circuit_breaker_unacked_threshold",
+            String.valueOf(DEFAULT_UNACKED_THRESHOLD)));
+    long circuitBreakerTimeoutMs = Long.parseLong(
+        commandLine.getOptionValue("circuit_breaker_timeout_sec", "300")) * 1000L;
+    boolean cleanStart = commandLine.hasOption("mqtt_clean_start")
+        || commandLine.hasOption("clean_start");
     String mqttCaPath = commandLine.getOptionValue("mqtt_ca_path");
     String mqttUsername = commandLine.getOptionValue("mqtt_username");
     String mqttPassword = commandLine.getOptionValue("mqtt_password");
@@ -208,6 +409,9 @@ public class MqttToPubSubBridge {
     Publisher publisher = null;
     IMqttClient mqttClient = null;
     EtcdDataProvider etcdProvider = null;
+    MqttToPubSubBridge bridge = null;
+    AtomicBoolean isShuttingDown = new AtomicBoolean(false);
+    Thread shutdownHook = null;
 
     try {
       etcdProvider = createEtcdProvider(etcdTarget, etcdOptions);
@@ -218,7 +422,7 @@ public class MqttToPubSubBridge {
           new MqttClient(
               mqttBrokerUrl, mqttClientId, new MemoryPersistence());
       MqttConnectionOptions connOpts = new MqttConnectionOptions();
-      connOpts.setCleanStart(false);
+      connOpts.setCleanStart(cleanStart);
       connOpts.setSessionExpiryInterval(sessionExpiryInterval);
       connOpts.setKeepAliveInterval(keepAliveInterval);
       connOpts.setAutomaticReconnect(true);
@@ -240,10 +444,26 @@ public class MqttToPubSubBridge {
       mqttClient.connect(connOpts);
       logger.debug("Connected to MQTT broker.");
 
-      MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+      bridge = new MqttToPubSubBridge();
+
+      final MqttToPubSubBridge finalBridge = bridge;
+      final IMqttClient finalMqttClient = mqttClient;
+      final Publisher finalPublisher = publisher;
+      final EtcdDataProvider finalEtcdProvider = etcdProvider;
+
+      Runnable shutdownTask = () -> {
+        if (isShuttingDown.compareAndSet(false, true)) {
+          gracefulShutdown(finalBridge, finalMqttClient, finalPublisher, finalEtcdProvider);
+        }
+      };
+
+      shutdownHook = new Thread(shutdownTask, "mqtt-bridge-shutdown-hook");
+      Runtime.getRuntime().addShutdownHook(shutdownHook);
 
       // Start the circuit breaker monitor
-      bridge.startCircuitBreaker(mqttClient);
+      bridge.startCircuitBreaker(mqttClient, circuitBreakerThreshold, circuitBreakerTimeoutMs);
+      // Start periodic reconnect with random jitter
+      bridge.startPeriodicReconnect(mqttClient, reconnectIntervalSec);
 
       // Set up MQTT Message Callback
       bridge.setupBridge(mqttClient, publisher, mqttSubscriptionTopic,
@@ -261,35 +481,26 @@ public class MqttToPubSubBridge {
 
     } catch (MqttException e) {
       logger.error("MQTT Error", e);
+      System.exit(1);
     } catch (IOException e) {
       logger.error("Pub/Sub Error", e);
+      System.exit(1);
     } catch (Exception e) {
       logger.error("An unexpected error occurred", e);
+      System.exit(1);
     } finally {
-      // Shutdown
-      if (etcdProvider != null) {
+      if (isShuttingDown.compareAndSet(false, true)) {
+        gracefulShutdown(bridge, mqttClient, publisher, etcdProvider);
+      }
+      if (shutdownHook != null) {
         try {
-          etcdProvider.shutdown();
-          logger.debug("EtcdDataProvider shut down.");
-        } catch (Exception e) {
-          logger.warn("Error shutting down EtcdDataProvider", e);
+          Runtime.getRuntime().removeShutdownHook(shutdownHook);
+        } catch (IllegalStateException ignored) {
+          // VM is already shutting down
         }
       }
-      if (mqttClient != null && mqttClient.isConnected()) {
-        try {
-          mqttClient.disconnect();
-          logger.debug("MQTT client disconnected.");
-        } catch (MqttException e) {
-          logger.warn("Error disconnecting MQTT client", e);
-        }
-      }
-      if (publisher != null) {
-        try {
-          publisher.shutdown();
-          logger.debug("Pub/Sub Publisher shut down.");
-        } catch (Exception e) {
-          logger.warn("Error shutting down Pub/Sub publisher", e);
-        }
+      if (bridge != null && bridge.isTripped()) {
+        System.exit(1);
       }
     }
   }
@@ -320,6 +531,16 @@ public class MqttToPubSubBridge {
         "Path to client private key for etcd TLS.");
     options.addOption(null, "source_attribute", true, "Value for the source attribute.");
     options.addOption(null, "shared_subscription", true, "Shared subscription name.");
+    options.addOption(null, "mqtt_reconnect_interval_sec", true,
+        "Periodic reconnect interval in seconds (default 900, 0 to disable).");
+    options.addOption(null, "mqtt_clean_start", false,
+        "Enable clean start for MQTT connection (default false for persistent session).");
+    options.addOption(null, "clean_start", false,
+        "Enable clean start for MQTT connection (alias for mqtt_clean_start).");
+    options.addOption(null, "circuit_breaker_unacked_threshold", true,
+        "Abandoned message count threshold for circuit breaker (default 100).");
+    options.addOption(null, "circuit_breaker_timeout_sec", true,
+        "Max in-flight message age in seconds before circuit breaker trips (default 300).");
     options.addOption("h", "help", false, "Print usage info.");
 
     CommandLineParser parser = new DefaultParser();
@@ -419,6 +640,10 @@ public class MqttToPubSubBridge {
             if (reconnect) {
               logger.debug("MQTT automatically reconnected to broker: {}", serverUri);
               executor.submit(() -> {
+                if (tripped) {
+                  // ABORT REQUEST RECEIVED, ABANDON REQUESTS
+                  return;
+                }
                 try {
                   mqttClient.subscribe(actualSubscriptionTopic, 1);
                   logger.debug("Successfully re-subscribed to topic: {}", actualSubscriptionTopic);
@@ -444,9 +669,47 @@ public class MqttToPubSubBridge {
 
           @Override
           public void messageArrived(String topic, MqttMessage message) {
+            if (tripped || stopping) {
+              // ABORT OR SHUTDOWN IN PROGRESS, IGNORE NEW MESSAGE ARRIVALS
+              return;
+            }
+            logger.debug(
+                "MQTT message received: ID={}, topic={}, queueSize={}, inProcess={},"
+                    + " abandoned={}, unackedTotal={}",
+                message.getId(), topic, executor.getQueue().size(), getInProcessCount(),
+                getAbandonedCount(), getUnackedCount());
+            final String receiveTime = java.time.Instant.now().toString();
             try {
-              final String receiveTime = java.time.Instant.now().toString();
               executor.submit(() -> {
+                if (tripped || stopping) {
+                  // ABORT REQUEST RECEIVED, ABANDON REQUESTS
+                  return;
+                }
+                String messageKey = getMessageHash(topic, message);
+                final java.util.concurrent.atomic.AtomicBoolean shouldProcess =
+                    new java.util.concurrent.atomic.AtomicBoolean(false);
+
+                unackedMessages.compute(messageKey, (key, existingRecord) -> {
+                  if (existingRecord != null
+                      && existingRecord.getState() == MessageState.IN_PROCESS) {
+                    // Message is currently in-flight, skip duplicate processing
+                    return existingRecord;
+                  }
+                  // New message (existingRecord == null) OR previously ABANDONED
+                  // Transition to IN_PROCESS and process
+                  shouldProcess.set(true);
+                  return new MessageRecord(MessageState.IN_PROCESS);
+                });
+
+                if (!shouldProcess.get()) {
+                  logger.warn(
+                      "MQTT message ID {} (key: {}) is already in process."
+                              + " Skipping duplicate execution.",
+                      message.getId(), messageKey);
+                  return;
+                }
+
+                boolean publishInitiated = false;
                 try {
                   byte[] payload = message.getPayload();
                   logger.debug("MQTT Message Received - Topic: {}, Payload Length: {}",
@@ -503,36 +766,30 @@ public class MqttToPubSubBridge {
                   PubsubMessage pubsubMessage =
                       pubsubMessageBuilder.putAllAttributes(attributes).build();
 
-                  // Publish to Pub/Sub and acknowledge asynchronously
-                  ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
-                  ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
-                    @Override
-                    public void onSuccess(String msgId) {
-                      logger.debug("Published to Pub/Sub with message ID: {}", msgId);
-                      try {
-                        mqttClient.messageArrivedComplete(message.getId(), message.getQos());
-                      } catch (MqttException e) {
-                        logger.error("Failed to ACK MQTT message, it will be redelivered", e);
-                      }
-                    }
-
-                    @Override
-                    public void onFailure(Throwable t) {
-                      logger.warn(
-                          "Error publishing to Pub/Sub, dropping ACK so broker can redeliver", t);
-                    }
-                  }, MoreExecutors.directExecutor());
-
-                } catch (RuntimeException e) {
+                  // Publish with 5x retry + exponential backoff
+                  publishWithRetry(publisher, pubsubMessage, message, messageKey,
+                      topic, mqttClient, 1);
+                  publishInitiated = true;
+                } catch (Exception e) {
                   logger.warn("Error processing MQTT message", e);
+                } finally {
+                  if (!publishInitiated) {
+                    unackedMessages.remove(messageKey);
+                  }
                 }
               });
-            } catch (RejectedExecutionException e) {
-              logger.error("Execution rejected, queue full! Dropping MQTT connection.", e);
-              try {
-                mqttClient.disconnectForcibly();
-              } catch (MqttException me) {
-                logger.error("Error while forcing disconnect", me);
+            } catch (Exception e) {
+              String messageKey = getMessageHash(topic, message);
+              // In QoS 1, if executor rejected, message remains unacknowledged in session.
+              // Mark as ABANDONED so the circuit breaker tracks session capacity exhaustion.
+              unackedMessages.put(messageKey, new MessageRecord(MessageState.ABANDONED));
+              if (e instanceof RejectedExecutionException) {
+                logger.warn(
+                    "Unable to queue MQTT message ID {} (queue saturated, marked as ABANDONED"
+                        + " in session)",
+                    message.getId(), e);
+              } else {
+                logger.error("Error submitting message ID {} to executor", message.getId(), e);
               }
             }
           }
@@ -547,6 +804,75 @@ public class MqttToPubSubBridge {
     logger.debug("Subscribing to MQTT topic: {}", actualSubscriptionTopic);
     mqttClient.subscribe(actualSubscriptionTopic, 1);
     logger.debug("Subscribed. Waiting for messages...");
+  }
+
+  private void publishWithRetry(Publisher publisher, PubsubMessage pubsubMessage,
+      MqttMessage mqttMessage, String messageKey, String topic, IMqttClient mqttClient,
+      int attempt) {
+    if (tripped) {
+      // ABORT REQUEST RECEIVED, ABANDON REQUESTS
+      return;
+    }
+    try {
+      ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
+      ApiFutures.addCallback(messageIdFuture, new ApiFutureCallback<String>() {
+        @Override
+        public void onSuccess(String msgId) {
+          if (tripped) {
+            // ABORT REQUEST RECEIVED, ABANDON REQUESTS
+            return;
+          }
+          logger.debug("Published to Pub/Sub with message ID: {}", msgId);
+          unackedMessages.remove(messageKey);
+          try {
+            mqttClient.messageArrivedComplete(mqttMessage.getId(), mqttMessage.getQos());
+          } catch (MqttException e) {
+            logger.error("Failed to ACK MQTT message, it will be redelivered", e);
+          }
+        }
+
+        @Override
+        public void onFailure(Throwable t) {
+          handlePublishFailure(
+              publisher, pubsubMessage, mqttMessage, messageKey, topic, mqttClient, attempt, t);
+        }
+      }, MoreExecutors.directExecutor());
+    } catch (Exception e) {
+      handlePublishFailure(
+          publisher, pubsubMessage, mqttMessage, messageKey, topic, mqttClient, attempt, e);
+    }
+  }
+
+  private void handlePublishFailure(Publisher publisher, PubsubMessage pubsubMessage,
+      MqttMessage mqttMessage, String messageKey, String topic, IMqttClient mqttClient,
+      int attempt, Throwable t) {
+    if (attempt < 5 && !tripped) {
+      long baseMs = (1L << (attempt - 1)) * 800L;
+      int backoffMs = (int) baseMs
+          + ThreadLocalRandom.current().nextInt((int) (baseMs * 0.5));
+      logger.warn("Error publishing to Pub/Sub (attempt {}/5), retrying in {}ms...",
+          attempt, backoffMs, t);
+      retryScheduler.schedule(() -> {
+        if (tripped) {
+          // ABORT REQUEST RECEIVED, ABANDON REQUESTS
+          return;
+        }
+        publishWithRetry(publisher, pubsubMessage, mqttMessage, messageKey,
+            topic, mqttClient, attempt + 1);
+      }, backoffMs, TimeUnit.MILLISECONDS);
+    } else {
+      logger.error(
+          "Failed to publish to Pub/Sub after 5 attempts."
+              + " Leaving message ID {} unacked (marked as ABANDONED).",
+          mqttMessage.getId(), t);
+      unackedMessages.compute(messageKey, (key, existingRecord) -> {
+        if (existingRecord != null) {
+          existingRecord.setState(MessageState.ABANDONED);
+          return existingRecord;
+        }
+        return new MessageRecord(MessageState.ABANDONED);
+      });
+    }
   }
 
   private static SSLSocketFactory getSocketFactory(
@@ -706,6 +1032,95 @@ public class MqttToPubSubBridge {
           registryId, deviceId);
       numIdCache.put(cacheKey, ""); // Cache empty string for negative lookups
       return null;
+    }
+  }
+
+  static void gracefulShutdown(MqttToPubSubBridge bridge, IMqttClient mqttClient,
+      Publisher publisher, EtcdDataProvider etcdProvider) {
+    logger.info("Initiating graceful shutdown of MqttToPubSubBridge...");
+    // 1. Signal bridge to ignore newly arriving MQTT messages
+    if (bridge != null) {
+      bridge.setStopping(true);
+    }
+
+    // 2. Shut down bridge executors and drain in-flight message processing
+    // Keep MQTT client connected while draining so PUBACKs can be returned to broker
+    if (bridge != null) {
+      try {
+        bridge.shutdown();
+        logger.debug("Bridge executors drained and shut down.");
+      } catch (Exception e) {
+        logger.warn("Error draining bridge executors", e);
+      }
+    }
+
+    // 3. Shut down Pub/Sub publisher and await pending publish futures
+    if (publisher != null) {
+      try {
+        publisher.shutdown();
+        if (!publisher.awaitTermination(10, TimeUnit.SECONDS)) {
+          logger.warn("Pub/Sub publisher did not terminate within 10 seconds");
+        }
+        logger.debug("Pub/Sub Publisher shut down.");
+      } catch (Exception e) {
+        logger.warn("Error shutting down Pub/Sub publisher", e);
+      }
+    }
+
+    // 4. Disconnect MQTT client after in-flight message ACKs have completed
+    if (mqttClient != null && mqttClient.isConnected()) {
+      try {
+        mqttClient.disconnect();
+        logger.debug("MQTT client disconnected.");
+      } catch (Exception e) {
+        logger.warn("Error disconnecting MQTT client during shutdown", e);
+      }
+    }
+
+    // 5. Shut down Etcd data provider
+    if (etcdProvider != null) {
+      try {
+        etcdProvider.shutdown();
+        logger.debug("EtcdDataProvider shut down.");
+      } catch (Exception e) {
+        logger.warn("Error shutting down EtcdDataProvider", e);
+      }
+    }
+    logger.info("Graceful shutdown of MqttToPubSubBridge completed.");
+  }
+
+  /**
+   * Shuts down the bridge executors with a default timeout of 10 seconds.
+   */
+  public void shutdown() {
+    shutdown(10, TimeUnit.SECONDS);
+  }
+
+  /**
+   * Shuts down the bridge executors awaiting termination up to the specified timeout.
+   *
+   * @param timeout the maximum time to wait
+   * @param unit the time unit of the timeout argument
+   */
+  public void shutdown(long timeout, TimeUnit unit) {
+    executor.shutdown();
+    retryScheduler.shutdown();
+    try {
+      long halfTimeout = Math.max(1, timeout / 2);
+      if (!executor.awaitTermination(halfTimeout, unit)) {
+        logger.warn("Executor did not terminate within {} {}, forcing shutdown",
+            halfTimeout, unit);
+        executor.shutdownNow();
+      }
+      if (!retryScheduler.awaitTermination(halfTimeout, unit)) {
+        logger.warn("Retry scheduler did not terminate within {} {}, forcing shutdown",
+            halfTimeout, unit);
+        retryScheduler.shutdownNow();
+      }
+    } catch (InterruptedException e) {
+      executor.shutdownNow();
+      retryScheduler.shutdownNow();
+      Thread.currentThread().interrupt();
     }
   }
 }

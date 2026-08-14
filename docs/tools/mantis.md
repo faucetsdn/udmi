@@ -14,50 +14,89 @@ export GEMINI_API_KEY="your_gemini_api_key"
 ```
 
 **Option B: Enterprise GCP Vertex AI (ADC Endpoint)**
-Source the `enable_vertex` script to auto-detect your active `gcloud` project or set an explicit project ID:
+Auto-detect your active `gcloud` project or pass explicit project credentials:
 ```bash
-source tools/mantis/bin/enable_vertex [gcp_project_id]
+bin/mantis --vertex
+# Or set environment variables:
+export MANTIS_USE_VERTEXAI=true
+export GCP_PROJECT=my-gcp-project
 ```
 
 # Running Mantis
 
-Run `bin/triage` from the UDMI root directory. Provide test bundle archives (`.zip`, `.tgz`) or extracted directories as input via `-i`.
+Run **`bin/mantis`** from the UDMI root directory.
 
 ```bash
-tools/mantis/bin/triage -i path/to/bundle1.zip path/to/bundle2.zip
+# 1. Launch Interactive Chat Mode (Default)
+bin/mantis
+
+# 2. Targeted Diagnostics for a Failing Test
+bin/mantis sites/udmi_site_model AHU-1 pointset_publish
+
+# 3. Batch Triage from Test Bundles
+bin/mantis triage -i path/to/bundle1.zip path/to/bundle2.zip
+
+# 4. Multi-Run Stability Evaluation
+bin/mantis eval -i out/mantis/run_1/ out/mantis/run_2/
+
+# 5. Run Classic Mantis v1
+bin/mantis --v1 triage -i path/to/bundle1.zip
 ```
 
-Alternatively, point to extracted directories:
+## Interactive Chat Mode (`bin/mantis` or `bin/mantis chat`)
+
+Mantis includes an interactive **Chat Mode** allowing developers and integrators to have multi-turn conversations with the diagnostic agent, ask follow-up questions, drill into specific log intervals, and inspect schemas dynamically:
+
 ```bash
-tools/mantis/bin/triage -i out/mantis/run_1/ out/mantis/run_2/
+# Launch interactive chat mode with a test bundle
+bin/mantis chat -i out/mantis/run_1/
+
+# Execute a one-shot query from the terminal
+bin/mantis "Why did AHU-1 fail pointset_publish?"
 ```
 
-## CLI Reference (`bin/triage`)
+### Chat Slash Commands
 
-| Argument | Description | Example |
+Inside the chat REPL, the following slash commands are available:
+* `/help`: Display available chat commands.
+* `/load <path>`: Load a new test bundle directory or `triage_manifest.json`.
+* `/device <device_id>`: Set or switch active target device (e.g. `AHU-1`).
+* `/test <test_name>`: Set or switch active test case (e.g. `system_min_loglevel`).
+* `/tools`: List all registered diagnostic tools.
+* `/context`: View active session context and targets.
+* `/clear`: Clear conversation history.
+* `/export [file]`: Export the diagnostic chat session transcript to markdown.
+* `/exit`: Exit interactive chat session.
+
+## CLI Reference (`bin/mantis`)
+
+| Command / Option | Description | Example |
 |---|---|---|
-| `-i`, `--test-runs` | **(Required)** Test bundle paths or extracted directories (space-separated). | `-i path/run1.zip path/run2.zip` |
-| `-p`, `--project-path`| Path to the UDMI project root. Use when testing against a different branch or PR directory. | `-p ~/Projects/udmi/pr-branch` |
-| `-d`, `--device` | Filter triage by specific device ID. | `-d AHU-1` |
-| `-t`, `--test` | Filter triage by specific test case name. | `-t system_min_loglevel` |
-| `--all` | Force triage of all identified failed tests. | `--all` |
-| `--swe` | Use the SWE software debugging playbook instead of the default OEM integrator playbook. | `--swe` |
-| `-h`, `--help` | Show usage instructions. | `-h` |
+| `bin/mantis` | Launch Mantis in interactive Chat Mode REPL. | `bin/mantis` |
+| `bin/mantis <site> [dev] [test]` | Perform targeted diagnostics on a specific test failure. | `bin/mantis sites/udmi_site_model AHU-1 pointset_publish` |
+| `bin/mantis triage -i <runs>` | Batch triage of test bundles or extracted directories. | `bin/mantis triage -i run1.zip run2.zip` |
+| `bin/mantis eval -i <runs>` | Multi-run flake rate and stability evaluation. | `bin/mantis eval -i run_1/ run_2/` |
+| `bin/mantis collect [opts]` | Actively execute test loops or retrieve CI runs. | `bin/mantis collect --runs 3` |
+| `-q`, `--query` | Execute a single natural language query against Mantis and exit. | `bin/mantis -q "Explain failure"` |
+| `--v1` | Dispatch to classic Mantis v1 implementation. | `bin/mantis --v1 diagnose` |
+| `--v2` | Dispatch to modern Mantis v2 implementation (Default). | `bin/mantis --v2` |
+| `-h`, `--help` | Show usage instructions. | `bin/mantis -h` |
+
 
 # Utilities
 
 ## Active Test Loop Collection
 
-Use `collect_test_runs` to actively execute new test loops locally or fetch historical CI runs:
+Use `bin/mantis collect` to actively execute new test loops locally or fetch historical CI runs:
 ```bash
 # Run the sequencer locally 3 times in a row
-tools/mantis/bin/collect_test_runs --mode local --target //mqtt/localhost --runs 3
+bin/mantis collect --mode local --target //mqtt/localhost --runs 3
 
 # Fetch the last 5 completed CI runs from GitHub
-tools/mantis/bin/collect_test_runs --mode ci_search --runs 5
+bin/mantis collect --mode ci_search --runs 5
 ```
 
-### CLI Reference (`bin/collect_test_runs`)
+### CLI Reference (`bin/mantis collect`)
 
 | Argument | Description | Example |
 |---|---|---|
@@ -73,13 +112,13 @@ tools/mantis/bin/collect_test_runs --mode ci_search --runs 5
 
 ## Custom Playbook Creator
 
-If you need specialized AI behavior (e.g., custom prompts or different concurrency limits), use the interactive playbook generator. Note that this is a fully interactive terminal wizard and does not accept standard command-line arguments:
+If you need specialized AI behavior (e.g., custom prompts or different concurrency limits), use the interactive playbook generator:
 ```bash
-tools/mantis/bin/create_playbook
+bin/mantis create-playbook my_custom_playbook.yaml
 ```
 This utility will ask for your preferences and generate a new custom YAML playbook in your current directory. You can then pass it to Mantis using the `--playbook` flag:
 ```bash
-tools/mantis/bin/triage -i out/mantis/run_data --playbook ./my_custom_playbook.yaml
+bin/mantis triage -i out/mantis/run_data --playbook ./my_custom_playbook.yaml
 ```
 
 # Output Artifacts & Interpreting Results

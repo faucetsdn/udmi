@@ -54,7 +54,7 @@ trap "GOT_HANDSHAKE=1" USR1
 sleep 2
 
 echo "Sending UUFI handshake Step 1 (State Declaration)... (txn: $TXN_ID)"
-HANDSHAKE_STATE="{\"version\":\"1.5.2\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"setup\":{\"functions_ver\":9,\"transaction_id\":\"$TXN_ID\",\"msg_source\":\"$CLIENT_ID\"}}"
+HANDSHAKE_STATE="{\"subType\":\"state\",\"subFolder\":\"udmi\",\"version\":\"1.5.2\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"setup\":{\"functions_ver\":9,\"transaction_id\":\"$TXN_ID\",\"msg_source\":\"$CLIENT_ID\"}}"
 echo "Handshake payload: $HANDSHAKE_STATE"
 mosquitto_pub $MQTT_ARGS -t "/uufi/c/state/udmi" -m "$HANDSHAKE_STATE"
 

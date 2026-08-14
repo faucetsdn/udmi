@@ -1,0 +1,64 @@
+#!/bin/bash -e
+#
+# Mantis: AI-Powered Autonomous Diagnostics and Triage for UDMI
+#
+# Usage:
+#   bin/mantis                                           # Interactive Chat Mode
+#   bin/mantis chat [options]                            # Explicit Chat Mode
+#   bin/mantis sites/<site> [device] [test]              # Quick targeted diagnostics
+#   bin/mantis diagnose [options]                        # Explicit diagnosis
+#   bin/mantis "why did test X fail?"                    # One-shot query
+#   bin/mantis eval -i <test_runs>                       # Stability metric evaluation
+#   bin/mantis triage -i <bundle.zip...>                 # Full batch stability + triage
+#   bin/mantis collect [options]                         # Test loop collection
+#
+
+ROOT_DIR=$(realpath $(dirname $0)/..)
+cd "$ROOT_DIR"
+
+# Activate virtual environment if present
+if [ -d "venv" ]; then
+    source venv/bin/activate
+fi
+
+# Parse version selection
+MANTIS_VERSION="${UDMI_MANTIS_VERSION:-v2}"
+ARGS=()
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --v1)
+      MANTIS_VERSION="v1"
+      shift
+      ;;
+    --v2)
+      MANTIS_VERSION="v2"
+      shift
+      ;;
+    *)
+      ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [ "$MANTIS_VERSION" = "v1" ]; then
+  if [ -d "util/mantis/v1" ]; then
+    export PYTHONPATH="$ROOT_DIR/util/mantis/v1:$ROOT_DIR/util/mantis/v1/src:$ROOT_DIR/tools:$PYTHONPATH"
+    if [ "${#ARGS[@]}" -gt 0 ] && [ -x "util/mantis/v1/bin/${ARGS[0]}" ]; then
+      SUB_CMD="${ARGS[0]}"
+      ARGS=("${ARGS[@]:1}")
+      exec "$ROOT_DIR/util/mantis/v1/bin/$SUB_CMD" "${ARGS[@]}"
+    elif [ -f "util/mantis/v1/src/app/cli.py" ]; then
+      exec python3 -m app.cli "${ARGS[@]}"
+    else
+      exec python3 -m mantis.cli "${ARGS[@]}"
+    fi
+  else
+    echo "Error: Mantis v1 not found at util/mantis/v1"
+    exit 1
+  fi
+else
+  export PYTHONPATH="$ROOT_DIR/util/mantis/v2:$ROOT_DIR/util/mantis/src:$ROOT_DIR/tools:$PYTHONPATH"
+  exec python3 -m mantis.cli "${ARGS[@]}"
+fi
