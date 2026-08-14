@@ -1,6 +1,13 @@
 import psycopg2
 import json
 import os
+import sys
+import uuid
+
+try:
+    from src.connection import ButlerConnection
+except (ImportError, ModuleNotFoundError):
+    from butler.src.connection import ButlerConnection
 
 POSTGRES_PORT = os.environ.get("POSTGRES_PORT", "5432")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
@@ -333,3 +340,29 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                     
             with open(meta_path, "w") as f:
                 json.dump(meta, f, indent=2)
+
+    # Publish updated model messages to the message bus (mapping.md compliance)
+    if conn_spec and outputs:
+        connection = ButlerConnection(conn_spec, registry_id, site_model)
+        actual_registry = connection.actual_registry
+        topic_msg_pairs = []
+        for out in outputs:
+            dev_id = out["deviceId"]
+            tx_id = f"TXN-{uuid.uuid4().hex[:8]}"
+            source_id = f"{actual_registry}/{connection.client_id}" if actual_registry else connection.client_id
+            msg = {
+                "subType": "model",
+                "subFolder": "system",
+                "deviceRegistryId": actual_registry,
+                "deviceId": dev_id,
+                "projectId": connection.project or "vibrant",
+                "transactionId": tx_id,
+                "publishTime": now,
+                "source": source_id,
+                "principal": source_id,
+                "payload": out["model"],
+            }
+            topics = connection.get_model_topics(dev_id)
+            for t in topics:
+                topic_msg_pairs.append((t, msg))
+        connection.publish_messages(topic_msg_pairs)
