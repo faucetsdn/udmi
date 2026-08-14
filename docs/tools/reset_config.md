@@ -47,7 +47,7 @@ and store the `config.json` file in the `devices/DEVICE_ID/config` folder.
 
 ## Querying Device Configuration
 
-The `reset_config` tool can also be used to query the current device configuration or model by specifying `query` (or `-q`) as the 4th argument:
+The `reset_config` tool can also be used to query the current device configuration or model by specifying `query` (or `-q`) as the fourth argument:
 
 ```
 bin/reset_config SITE_DIR PROJECT_ID DEVICE_ID query [OUTPUT_FILE]
@@ -55,7 +55,7 @@ bin/reset_config SITE_DIR PROJECT_ID DEVICE_ID query [OUTPUT_FILE]
 
 When invoked with `query`:
 - By default, it writes the retrieved configuration to `devices/DEVICE_ID/config/queried_config.json`.
-- If an optional 5th argument (`OUTPUT_FILE`) is provided, it writes the configuration to that explicit file path instead:
+- If an optional fifth argument (`OUTPUT_FILE`) is provided, it writes the configuration to that explicit file path instead:
 
 ```
 bin/reset_config SITE_DIR PROJECT_ID DEVICE_ID query /path/to/output.json
