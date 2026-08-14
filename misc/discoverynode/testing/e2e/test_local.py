@@ -265,6 +265,10 @@ def test_discovered_proxied_devices_are_created(
 
   time.sleep(30)
 
+  shutil.rmtree(os.path.join(SITE_PATH, "extras"), ignore_errors=True)
+
+  run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 map bacnet")
+
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
   site_model = Path(SITE_PATH)
@@ -307,6 +311,10 @@ def test_discovered_devices_are_created(
   run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 discover")
 
   time.sleep(30)
+
+  shutil.rmtree(os.path.join(SITE_PATH, "extras"), ignore_errors=True)
+
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 map vendor")
 
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
