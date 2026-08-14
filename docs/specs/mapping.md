@@ -67,7 +67,7 @@ sequenceDiagram
   participant Postgres as Local Postgres DB
   participant Logic as Mapping Executable
   
-  MessageBus->>Postfres: Model & Discovery Messages (In)
+  MessageBus->>Postgres: Model & Discovery Messages (In)
   Logic->>Postgres: Read Messages
   Note over Logic: Execute Mapping Logic
   Logic->>MessageBus: Updated Model Messages (Out)
@@ -75,7 +75,7 @@ sequenceDiagram
 
 ### Reference Mapping Logic
 
-The mapping logic itself (the "Execute Mapping Logic" step) executes the following rules when computing the mappings:
+The mapping logic itself (the "Execute Mapping Logic" step) executes something like the following rules when computing the mappings:
 * **Device Matching**: The Mapping Service checks if the received discovery data corresponds to an existing device based on the ingested model state.
 * **Handling New Devices**: If no matching device is found based on the family (bacnet/vendor, etc.) and address combination, a new device representation is created. The new device is named using the convention UNK-X, where UNK stands for "Unknown" and X is an increasing number starting from 1.
 * **Updating Existing Devices**: If a match is found, the Mapping Service updates the existing device representation. New details from the Pointset Complete event are appended.
