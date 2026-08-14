@@ -5,9 +5,7 @@
 The overall "mapping" flow consists of a number of separate subflows stitched together for a complete
 end-to-end process to take an "unknown" device and ensure that it's properly integrated with backend services.
 
-At a high-level, the process involves different message subgroups that handle slightly different
-scopes of device data:
-* **(Native)**: Device communication using some non-UDMI native protocol (e.g. BACnet, Modbus, etc...)
+At a high-level, the process involves different message subgroups that handle slightly different scopes of device data:
 * **[Discovery](discovery.md)**: Messages relating to the discovery (and provisioning) of devices (e.g. messy BACnet info)
 * **[Mapping](mapping.md)**: Messages relating to a 'resolved' device type and ID (e.g. the device is an `AHU` called `AHU-1`)
 
@@ -26,9 +24,9 @@ sequenceDiagram
   %%{wrap}%%
   participant Devices as Devices<br/>(w/ Spotter)
   participant Registrar
-  participant Mapping Service
-  participant Reconciler
   participant Source Repo 
+  participant Reconciler
+  participant Mapping Service
   
   Source Repo->>Registrar: Read Base Site Model
   Registrar->>Mapping Service: Base Model Messages
@@ -50,6 +48,12 @@ The Mapping Service subscribes to discovery and model topics. When it receives a
 * **Device Mapping**: The Mapping Service processes the incoming discovery and model messages to resolve and compute the desired end-state mapping.
 * **Reconciliation**: The Mapping Service outputs the resulting updated model messages. The Reconciler consumes these messages and applies the necessary changes to the `Source Repo`.
 
+### Device Mapping Component
+The "Device Mapping" step is a conceptual module that can be served by many different sub-modules, e.g.:
+* **Local Mapping**: The reference implementation described below that does very simple deterministic mapping flows.
+* **Agentic Mapping**: A throw-it-at-the-LLM capability that throws caution to the wind and does everything automagically.
+* **External Mapper**: An externally integrated (through UUFI messages) system with proper analytics and user interface.
+
 ## Local Mapping Reference Implementation
 
 While the mapping service is strictly message-in and message-out conceptually, a concrete internal implementation may utilize an intermediary database for state management. The internal reference implementation captures incoming discovery and model messages into a local PostgreSQL database. A separate mapping executable then reads from this database, performs its mapping logic, and outputs the updated model messages.
@@ -60,13 +64,11 @@ This design satisfies the "message in, message out" guideline while using the da
 sequenceDiagram
   %%{wrap}%%
   participant MessageBus as Message Bus
-  participant Ingest as DB Ingest
   participant Postgres as Local Postgres DB
   participant Logic as Mapping Executable
   
-  MessageBus->>Ingest: Model & Discovery Messages (In)
-  Ingest->>Postgres: Store Message State
-  Logic->>Postgres: Read State
+  MessageBus->>Postfres: Model & Discovery Messages (In)
+  Logic->>Postgres: Read Messages
   Note over Logic: Execute Mapping Logic
   Logic->>MessageBus: Updated Model Messages (Out)
 ```
