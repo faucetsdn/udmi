@@ -314,7 +314,7 @@ def test_discovered_devices_are_created(
 
   shutil.rmtree(os.path.join(SITE_PATH, "extras"), ignore_errors=True)
 
-  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 map vendor")
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 map bacnet")
 
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
@@ -373,6 +373,7 @@ def new_site_model():
     if delete:
       with contextlib.suppress(FileNotFoundError):
         shutil.rmtree(devices_directory)
+      run("docker exec udmis psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -c \"TRUNCATE TABLE udmi_messages;\"")
 
     os.mkdir(devices_directory)
 
