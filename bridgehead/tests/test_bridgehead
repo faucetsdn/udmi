@@ -95,10 +95,8 @@ mkdir -p out
 echo "Cloning test site model..."
 clone_site_model "$SITE_MODEL_PATH"
 
-# Clean up extra keys in AHU-1 that cause validation errors
-rm -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_private.pem"
-rm -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_private.pkcs8"
-rm -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_public.pem"
+# Generate valid keys/certs for AHU-1 to avoid validation errors
+"$UDMI_ROOT/bin/keygen" CERT "$SITE_MODEL_PATH/devices/AHU-1"
 
 mkdir -p "$SITE_MODEL_PATH/out"
 chmod a+rwx "$SITE_MODEL_PATH/out" 2>/dev/null || true
