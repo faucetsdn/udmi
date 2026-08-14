@@ -1,16 +1,19 @@
 acked
 addr
+Agentic
 AHU
 AHUs
 alarmset
 Alarmset
 anagement
+analytics
 api
 APIs
 ARP
 ascii
 auth
 Auth
+automagically
 backend
 backoff
 bacnet
@@ -136,6 +139,7 @@ kubectl
 Kubernetes
 lifecycle
 Lifecycle
+LLM
 localhost
 localnet
 logentry

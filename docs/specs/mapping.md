@@ -14,7 +14,7 @@ At a high-level, the process involves different message subgroups that handle sl
 The overall mapping sequence involves multiple components that work together to provide the overall flow. The mapping process is entirely message-based, cleanly separating site model file manipulation from the mapping logic itself.
 
 * **Discovery**: Thing that runs on-prem fieldbus discovery and emits discovery messages.
-* **Mapping Service**: Takes model messages (from the Registrar) and discovery messages (from Devices) as input, and outputs updated model messages.
+* **Mapping**: Takes model messages (from the Registrar) and discovery messages (from Devices) as input, and outputs updated model messages.
 * **Registrar**: Reads the existing site model from the source repository and generates base model messages for the system.
 * **Reconciler**: Receives updated model messages from the Mapping Service and performs reconciliation to update the site model files.
 * **Source Repo**: Ultimate source of truth for the particular site, containing all the consolidated information.
@@ -31,8 +31,8 @@ sequenceDiagram
   Registrar->>Source Repo: Fetch Site Model
   Registrar->>Mapping: Base Model Messages
   Discovery->>Mapping: Discovery Messages
-  Note over Mapping Service: Map Results
-  Mapping Service->>Reconciler: Updated Model Messages
+  Note over Mapping: Map Results
+  Mapping->>Reconciler: Updated Model Messages
   Reconciler->>Source Repo: Update Site Model
 ```
 
@@ -64,7 +64,7 @@ sequenceDiagram
   participant Logic as Mapping Executable
   
   MessageBus->>Postgres: Model & Discovery Messages (In)
-  Logic->>Postgres: Read Messages
+  Logic->>Postgres: Fetch Recent Results
   Note over Logic: Execute Mapping Logic
   Logic->>MessageBus: Updated Model Messages (Out)
 ```

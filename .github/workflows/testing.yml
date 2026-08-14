@@ -617,7 +617,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      UDMI_NO_SUDO: true
+      TARGET_PROJECT: //mqtt/localhost:18833
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -631,7 +631,7 @@ jobs:
           bin/clone_model
       - name: Start Local Services
         run: |
-          bin/start_local sites/udmi_site_model //mqtt/localhost
+          bin/start_local sites/udmi_site_model ${{ env.TARGET_PROJECT }}
       - name: Run Openbridge Test
         run: |
           bin/test_openbridge

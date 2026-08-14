@@ -40,6 +40,7 @@ echo Mirroring udmi files...
 cp -a ../bin build/udmi_bin/
 cp -a ../etc build/udmi_etc/
 cp -a ../schema build/schema/
+cp -a ../butler build/butler/
 
 if [[ -n $check ]]; then
     $UDMI_ROOT/bin/clone_model
