@@ -1,7 +1,6 @@
 import psycopg2
 import json
 import os
-from src.uufi_client import UufiClient
 
 POSTGRES_PORT = os.environ.get("POSTGRES_PORT", "5432")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
@@ -334,11 +333,3 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                     
             with open(meta_path, "w") as f:
                 json.dump(meta, f, indent=2)
-
-
-    if conn_spec and outputs:
-        client = UufiClient(conn_spec, registry_id, site_model)
-        print("Connecting UUFI map...", file=sys.stderr); client.connect()
-        for out in outputs:
-            client.publish_model(out["deviceId"], out["model"])
-        client.disconnect()

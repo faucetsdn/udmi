@@ -36,8 +36,10 @@ bin/registrar $site_path $project_spec GAT-123
 entries=$(wc -l < $site_path/out/registration_summary.csv)
 [[ $entries == 2 ]] || fail Unexpected registered entries, found $entries
 
-echo Launching bg pubber for testing
-pubber_bg GAT-123
+echo Launching bg pubber for testing using bin/start_dut
+serial_no="automapper-$RANDOM"
+trap "bin/start_dut stop $serial_no 2>/dev/null || true" EXIT
+bin/start_dut $site_path $project_spec GAT-123 $serial_no
 
 echo Enable the gateway to auto-provision
 bin/mapper $site_path $project_spec GAT-123 provision
@@ -135,6 +137,10 @@ second_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/c
 echo Second discovered generation is $second_generation
 
 [[ $first_generation != $second_generation ]] || fail Second discovery generation was not updated!
+
+echo Stopping DUT $serial_no...
+bin/start_dut stop $serial_no
+trap - EXIT
 
 echo
 echo Done with automapper test
