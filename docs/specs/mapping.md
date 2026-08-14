@@ -23,10 +23,10 @@ The overall mapping sequence involves multiple components that work together to 
 sequenceDiagram
   %%{wrap}%%
   participant Devices as Devices<br/>(w/ Spotter)
-  participant Registrar
-  participant Source Repo 
-  participant Reconciler
   participant Mapping Service
+  participant Registrar
+  participant Reconciler
+  participant Source Repo 
   
   Source Repo->>Registrar: Read Base Site Model
   Registrar->>Mapping Service: Base Model Messages
