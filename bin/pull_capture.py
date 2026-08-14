@@ -17,7 +17,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 POSTGRES_PORT = os.environ.get("POSTGRES_PORT", "5432")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
 POSTGRES_DB = os.environ.get("POSTGRES_DB", "postgres")
-POSTGRES_HOST = "127.0.0.1"
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "127.0.0.1")
 
 INFLUXDB_TOKEN = os.environ.get("INFLUXDB_TOKEN", "test-influx-token-12345")
 INFLUXDB_ORG = os.environ.get("INFLUXDB_ORG", "bridgehead")
