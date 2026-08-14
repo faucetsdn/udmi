@@ -253,11 +253,11 @@ def test_discovered_proxied_devices_are_created(
       site_path=SITE_PATH
   )
 
-  run("bin/mapper GAT-1 provision")
+  run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 provision")
 
   time.sleep(5)
 
-  run("bin/mapper GAT-1 discover")
+  run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 discover")
 
   time.sleep(30)
 
@@ -296,11 +296,11 @@ def test_discovered_devices_are_created(
       site_path=SITE_PATH
   )
 
-  run("bin/mapper AHU-1 provision")
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 provision")
 
   time.sleep(5)
 
-  run("bin/mapper AHU-1 discover")
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 discover")
 
   time.sleep(30)
 
