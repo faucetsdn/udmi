@@ -46,11 +46,11 @@ sequenceDiagram
 
 ### Device Mapping Component
 The "Device Mapping" step is a conceptual module that can be served by many different sub-modules, e.g.:
-* **Local Mapping**: The reference implementation described below that does very simple deterministic mapping flows.
+* **Implicit Mapping**: The reference implementation described below that does very simple deterministic mapping flows.
 * **Agentic Mapping**: A throw-it-at-the-LLM capability that throws caution to the wind and does everything automagically.
-* **External Mapper**: An externally integrated (through UUFI messages) system with proper analytics and user interface.
+* **External Mapping**: An externally integrated (through UUFI messages) system with proper analytics and user interface.
 
-## Local Mapping Reference Implementation
+## Local Implicit Mapping 
 
 While the mapping service is strictly message-in and message-out conceptually, a concrete internal implementation may utilize an intermediary database for state management. The internal reference implementation captures incoming discovery and model messages into a local PostgreSQL database. A separate mapping executable then reads from this database, performs its mapping logic, and outputs the updated model messages.
 
