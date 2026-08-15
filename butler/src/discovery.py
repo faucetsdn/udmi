@@ -28,7 +28,7 @@ def run_discovery(conn_spec, registry_id, device_id, target_families, site_model
         }
 
     tx_id = f"TXN-{uuid.uuid4().hex[:8]}"
-    source_id = f"{actual_registry}/{connection.client_id}" if actual_registry else connection.client_id
+    source_id = "butler"
     payload = {
         "version": "1.5.2",
         "timestamp": now,

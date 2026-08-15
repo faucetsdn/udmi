@@ -52,6 +52,7 @@ pubber_opts=${5:-}
 PUBBER_LOG=out/pubber.$serial_no.log
 mkdir -p out
 ln -sf "pubber.$serial_no.log" out/pubber.log
+ln -sf "pubber.$serial_no.log" "out/pubber.log.$device_id"
 
 stop_existing_dut_with_serial "$serial_no"
 

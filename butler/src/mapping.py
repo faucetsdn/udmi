@@ -349,7 +349,7 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
         for out in outputs:
             dev_id = out["deviceId"]
             tx_id = f"TXN-{uuid.uuid4().hex[:8]}"
-            source_id = f"{actual_registry}/{connection.client_id}" if actual_registry else connection.client_id
+            source_id = "butler"
             msg = {
                 "subType": "model",
                 "subFolder": "system",

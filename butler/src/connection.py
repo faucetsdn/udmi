@@ -324,7 +324,12 @@ class ButlerConnection:
             file=sys.stderr,
         )
         client.connect(self.host, self.port, 60)
-        for topic, msg in topic_message_pairs:
-            print(f"Publishing message to {topic}: {msg}", file=sys.stderr)
-            client.publish(topic, json.dumps(msg), qos=1)
-        client.disconnect()
+        client.loop_start()
+        try:
+            for topic, msg in topic_message_pairs:
+                print(f"Publishing message to {topic}: {msg}", file=sys.stderr)
+                inf = client.publish(topic, json.dumps(msg), qos=1)
+                inf.wait_for_publish(timeout=10)
+        finally:
+            client.loop_stop()
+            client.disconnect()
