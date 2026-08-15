@@ -217,11 +217,8 @@ class ButlerConnection:
 
         else:  # 'mqtt', 'ssl', 'local', etc.
             self.host = self.project or "localhost"
-            is_isolated = (
-                str(self.port_override) in ("46432", "8883")
-                or os.environ.get("MQTT_PORT") is not None
-            )
-            self.port = self.port_override or (DEFAULT_BRIDGE_PORT if is_isolated else 1883)
+            env_port = os.environ.get("MQTT_PORT")
+            self.port = self.port_override or (int(env_port) if env_port else DEFAULT_BRIDGE_PORT)
             self.client_id = (
                 f"/{self.prefix}/{self.actual_registry}/butler_{client_uuid}"
                 if self.prefix
@@ -287,19 +284,37 @@ class ButlerConnection:
             client.username_pw_set(self.username, self.password)
 
         if self.is_tls:
+            ca_cert = os.path.join(self.site_model, "reflector", "ca.crt") if self.site_model else None
+            cert_candidates = []
             if self.site_model:
-                ca_cert = os.path.join(self.site_model, "reflector", "ca.crt")
-                cert_file = os.path.join(self.site_model, "reflector", "rsa_private.crt")
-                key_pem = os.path.join(self.site_model, "reflector", "rsa_private.pem")
-                if os.path.exists(ca_cert) and os.path.exists(cert_file) and os.path.exists(key_pem):
+                if self.device_id:
+                    cert_candidates.append((
+                        os.path.join(self.site_model, "devices", self.device_id, "rsa_private.crt"),
+                        os.path.join(self.site_model, "devices", self.device_id, "rsa_private.pem"),
+                    ))
+                cert_candidates.extend([
+                    (os.path.join(self.site_model, "reflector", "rsa_private.crt"), os.path.join(self.site_model, "reflector", "rsa_private.pem")),
+                    (os.path.join(self.site_model, "reflector", "server.crt"), os.path.join(self.site_model, "reflector", "server.key")),
+                ])
+
+            client_cert = None
+            client_key = None
+            for c_cert, c_key in cert_candidates:
+                if os.path.exists(c_cert) and os.path.exists(c_key):
+                    client_cert = c_cert
+                    client_key = c_key
+                    break
+
+            if ca_cert and os.path.exists(ca_cert):
+                if client_cert and client_key:
                     client.tls_set(
                         ca_certs=ca_cert,
-                        certfile=cert_file,
-                        keyfile=key_pem,
+                        certfile=client_cert,
+                        keyfile=client_key,
                         cert_reqs=ssl.CERT_NONE,
                     )
                 else:
-                    client.tls_set(cert_reqs=ssl.CERT_NONE)
+                    client.tls_set(ca_certs=ca_cert, cert_reqs=ssl.CERT_NONE)
             else:
                 client.tls_set(cert_reqs=ssl.CERT_NONE)
             client.tls_insecure_set(True)
