@@ -2,7 +2,7 @@
 
 # Mapping
 
-The overall "mapping" flow consists of a number of separate subflows stitched together for a complete
+The overall "mapping" flow is part of the broader [onboarding](onboarding.md) flow and consists of a number of separate subflows stitched together for a complete
 end-to-end process to take an "unknown" device and ensure that it's properly integrated with backend services.
 
 At a high-level, the process involves different message subgroups that handle slightly different scopes of device data:
