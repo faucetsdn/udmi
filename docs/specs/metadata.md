@@ -33,8 +33,6 @@ The various tools will generate some output files in the same `devices/` directo
 
 The structure of the metadata file is shown in the [🧬metadata schema](../../gencode/docs/metadata.html).
 
-Specifically, the `externals` block allows linking UDMI devices to external ontologies. See the [Externals Model](externals.md) for examples (e.g., DBO, Haystack, Brick, BIM).
-
 ## Metadata Registration and Validation
 
 Using UDMI on a project entails not only the base device implementations, but also
