@@ -59,6 +59,6 @@ if [ "$MANTIS_VERSION" = "v1" ]; then
     exit 1
   fi
 else
-  export PYTHONPATH="$ROOT_DIR/util/mantis/v2:$ROOT_DIR/util/mantis/src:$ROOT_DIR/tools:$PYTHONPATH"
+  export PYTHONPATH="$ROOT_DIR/util/mantis:$ROOT_DIR/tools:$PYTHONPATH"
   exec python3 -m mantis.cli "${ARGS[@]}"
 fi
