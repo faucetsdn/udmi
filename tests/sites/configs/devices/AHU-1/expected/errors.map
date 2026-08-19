@@ -3,7 +3,7 @@ Exceptions for AHU-1
   While loading credentials for local device AHU-1
     Found 0 credentials
   expected files mismatch
-    Missing files: [rsa_private.pem, rsa_private.pkcs8, rsa_public.pem]
+    Missing files: [rsa_public.pem]
   While converting device config
     While reading config file: non-existant.file
     REDACTED/sites/configs/devices/AHU-1/config/non-existant.file
