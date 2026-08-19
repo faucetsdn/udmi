@@ -281,6 +281,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       }
       registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
       registryDeviceRef(registryId, deviceId).delete(BIND_STATUS_KEY);
+      registryDeviceRef(registryId, deviceId).put(RESOURCE_TYPE_PROPERTY, DIRECT.toString());
       gatewayBoundRef(registryId, gatewayId).delete(deviceId);
       if (brokerAuth) {
         futures.add(withQueueRetry(() -> broker.unbindGateway(
@@ -389,6 +390,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
         // Clear database entries for the bound device
         registryDeviceRef(registryId, deviceId).delete(BOUND_TO_KEY);
         registryDeviceRef(registryId, deviceId).delete(BIND_STATUS_KEY);
+        registryDeviceRef(registryId, deviceId).put(RESOURCE_TYPE_PROPERTY, DIRECT.toString());
         gatewayBoundRef(registryId, gatewayId).delete(deviceId);
 
         // Unbind in the broker
@@ -556,7 +558,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
   private void updateDevice(String registryId, String deviceId, CloudModel cloudModel) {
     touchDeviceEntry(registryId, deviceId);
+    DataRef deviceRef = registryDeviceRef(registryId, deviceId);
+    String boundTo = deviceRef.get(BOUND_TO_KEY);
     Map<String, String> map = toDeviceMap(cloudModel, null);
+    if (boundTo != null && !GATEWAY.equals(cloudModel.resource_type)) {
+      map.put(RESOURCE_TYPE_PROPERTY, PROXIED.toString());
+    }
     mungeDevice(registryId, deviceId, map);
   }
 
@@ -671,6 +678,8 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       cloudModel.gateway = new GatewayModel();
       cloudModel.gateway.proxy_ids =
           listBoundDevices(registryId, deviceId).keySet().stream().toList();
+    } else if (properties.get(BOUND_TO_KEY) != null) {
+      cloudModel.resource_type = PROXIED;
     }
     cloudModel.operation = READ;
     return cloudModel;
