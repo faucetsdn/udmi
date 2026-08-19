@@ -82,7 +82,10 @@ if [[ $project_id =~ ^// ]]; then
     no_provider=${no_prefix#*/}
     project_id=${no_provider%%/*}
     udmi_namespace=${no_provider#$project_id}
-    if [[ $project_id == *:* ]]; then
+    if [[ $project_id == *@* ]]; then
+        quoted_bridge=\"${project_id#*@}\"
+        project_id=${project_id%@*}
+    elif [[ $project_id == *:* ]]; then
         quoted_bridge=\"$project_id\"
         project_id=${project_id%:*}
     fi

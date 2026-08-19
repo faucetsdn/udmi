@@ -71,6 +71,9 @@ if [[ -n ${project_spec:-} ]]; then
     iot_provider=${no_prefix%%/*}
     no_provider=${no_prefix#*/}
     project_target=${no_provider%%/*}
+    if [[ $project_target == *@* ]]; then
+        project_target=${project_target%@*}
+    fi
     if [[ $project_target == *:* ]]; then
         project_target=${project_target%:*}
     fi

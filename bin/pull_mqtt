@@ -19,6 +19,8 @@ spec_clean=${project_spec#//mqtt/}
 spec_clean=${spec_clean%%%*}
 projectId=$(echo "$spec_clean" | tr '/' ' ' | awk '{print $1}')
 projectId=${projectId%+*}
+projectId=${projectId%@*}
+projectId=${projectId%:*}
 
 registry_id=${project_spec##*%}
 [[ $registry_id != $project_spec ]] || registry_id=+
