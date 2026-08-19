@@ -17,8 +17,7 @@ In DBO, the `type` refers to a specific equipment class, and `ext_id` is a UUID 
 "externals": {
   "dbo": {
     "ext_id": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
-    "type": "HVAC/VAV_SD_DSP",
-    "label": "VAV-1"
+    "type": "HVAC/VAV_SD_DSP"
   }
 }
 ```
@@ -32,8 +31,7 @@ In Haystack, entities are typically identified by an opaque Ref (reference) stri
 "externals": {
   "haystack": {
     "ext_id": "2180b666-7032054c",
-    "type": "vav equip",
-    "label": "VAV-1"
+    "type": "vav equip"
   }
 }
 ```
@@ -48,8 +46,7 @@ In Brick, entities are nodes in a graph identified by URIs, and their types are 
 "externals": {
   "brick": {
     "ext_id": "bldg:VAV-1",
-    "type": "brick:VAV",
-    "label": "VAV-1"
+    "type": "brick:VAV"
   }
 }
 ```
@@ -64,8 +61,8 @@ In IFC, objects are uniquely identified by an IFC GlobalId (a 22-character Base6
 "externals": {
   "bim": {
     "ext_id": "1K1$W$h3v0$Q1mO6O$uR5R",
-    "type": "IfcUnitaryEquipment",
-    "label": "VAV-1"
+    "type": "IfcUnitaryEquipment"
+
   }
 }
 ```
