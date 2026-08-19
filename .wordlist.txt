@@ -20,6 +20,7 @@ bambi
 BAMBI
 bcd
 BCD
+BIM
 blobset
 Blobset
 blobsets
@@ -102,6 +103,7 @@ Github
 GitLab
 gittools
 GKE
+GlobalId
 googlegroups
 GraphQL
 hardcoded
@@ -111,6 +113,7 @@ https
 IAM
 idempotency
 idToken
+IFC
 incrementing
 influxd
 integrations
@@ -159,6 +162,7 @@ mTLS
 multithreaded
 mydomain
 namespace
+namespaced
 namespaces
 namespacing
 niversal
@@ -173,6 +177,8 @@ OEM
 OIDC
 onboarding
 Onboarding
+ontologies
+Ontologies
 OPC
 optionality
 Optionality
@@ -208,6 +214,7 @@ pubsub
 PubSub
 QoS
 QUDT
+RDF
 Readme
 reconciler
 Reconciler
@@ -312,6 +319,7 @@ url
 uufi
 Uufi
 UUFI
+UUID
 validator
 varchar
 verifiers
