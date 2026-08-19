@@ -1,3 +1,5 @@
+[**UDMI**](../../) / [**Docs**](../) / [**Tools**](./) / [BAMBI Tool Workflow](#)
+
 # BAMBI Workflow: Site Model Update Process
 
 This document outlines the end-to-end workflow of how changes submitted through the BAMBI (BOS Automated Management Building Interface) Google Sheet ultimately end up in the active site model and the production Cloud IoT Registry.
