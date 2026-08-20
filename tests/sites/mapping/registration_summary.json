@@ -1,0 +1,12 @@
+{
+  "Credential" : {
+    "GAT-123" : "While loading credentials for local device GAT-123"
+  },
+  "Initializing" : {
+    "GAT-123" : "Invalid auth type null"
+  },
+  "Validating" : {
+    "GAT-123" : "1 schema violations found"
+  },
+  "udmi_version" : "1.5.0-62-ged4753125"
+}
