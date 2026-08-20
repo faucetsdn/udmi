@@ -31,7 +31,7 @@ The various tools will generate some output files in the same `devices/` directo
 
 ## Metadata Structure
 
-The structure of the metadata file is shown in the [🧬metadata schema](../../gencode/docs/metadata.html)
+The structure of the metadata file is shown in the [🧬metadata schema](../../gencode/docs/metadata.html).
 
 ## Metadata Registration and Validation
 
