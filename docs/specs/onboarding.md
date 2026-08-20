@@ -19,7 +19,7 @@ _arms_ (provisioning), and fall into the simple _see_, _think_, _do_ adage:
 
 Once completed, Onboarding enables the flow of [Pointset](../messages/pointset.md) data, the 'phase' of actually sending pointset telemetry from the on-prem devices to the actual pipeline. The ultimate goal!
 
-## Architecural Flow
+## Architectural Flow
 
 Each of these steps can be applied individually, and the continuous application of
 all of them together constitutes _automation_, which is a key step towards enabling
