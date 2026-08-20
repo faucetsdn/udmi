@@ -50,6 +50,7 @@ for arg in "${@:-}" "${TARGET_PROJECT:-}" "${project_spec:-}" "${project_id:-}";
         export MQTT_PORT="${BASH_REMATCH[1]}"
         export ETCD_PORT=$((MQTT_PORT + 1))
         export INFLUX_PORT=$((MQTT_PORT + 2))
+        export POSTGRES_PORT=$((MQTT_PORT + 3))
         export UDMI_NO_SUDO=true
         break
     fi

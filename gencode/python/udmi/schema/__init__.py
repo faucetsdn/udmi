@@ -6,7 +6,6 @@ from .building_config_entity import *
 from .building_translation import *
 from .category import *
 from .commands_discovery import *
-from .commands_mapping import *
 from .common import *
 from .config import *
 from .config_alarmset import *
@@ -18,8 +17,6 @@ from .config_discovery_family import *
 from .config_gateway import *
 from .config_localnet import *
 from .config_localnet_family import *
-from .config_mapping import *
-from .config_mapping_device import *
 from .config_pointset import *
 from .config_pointset_point import *
 from .config_system import *
@@ -43,9 +40,6 @@ from .events import *
 from .events_alarmset import *
 from .events_alarmset_alarm import *
 from .events_discovery import *
-from .events_mapping import *
-from .events_mapping_entities import *
-from .events_mapping_entity import *
 from .events_pointset import *
 from .events_pointset_point import *
 from .events_system import *
@@ -94,8 +88,6 @@ from .state_discovery_family import *
 from .state_gateway import *
 from .state_localnet import *
 from .state_localnet_family import *
-from .state_mapping import *
-from .state_mapping_device import *
 from .state_pointset import *
 from .state_pointset_point import *
 from .state_system import *

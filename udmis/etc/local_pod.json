@@ -28,11 +28,6 @@
     "control": {
       "recv_id": "c/control/#"
     },
-    "provision": {
-      "recv_id": "events/discovery",
-      "send_id": "events",
-      "enabled": "yes"
-    },
     "distributor": {
       "enabled": "false"
     },
@@ -51,6 +46,12 @@
     "uufi_events": {
       "recv_id": "events/#",
       "send_id": "/uufi/#"
+    },
+    "capture_state": {
+      "recv_id": "state/#"
+    },
+    "capture_events": {
+      "recv_id": "events/#"
     }
   },
   "crons": {

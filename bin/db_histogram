@@ -1,0 +1,158 @@
+#!/bin/bash
+
+# Utility to generate a histogram of content in InfluxDB and PostgreSQL instances
+# as started by start_local.
+
+ROOT=$(dirname $0)/..
+
+if [ -f "$ROOT/etc/shell_common.sh" ]; then
+    source "$ROOT/etc/shell_common.sh"
+fi
+
+set +e
+set +o pipefail
+
+INFLUXDB_TOKEN=${INFLUXDB_TOKEN:-test-influx-token-12345}
+INFLUXDB_ORG=${INFLUXDB_ORG:-bridgehead}
+INFLUXDB_BUCKET=${INFLUXDB_BUCKET:-home}
+# Default to 8086 if not running in isolated mode
+INFLUXDB_PORT=${INFLUX_PORT:-8086}
+
+POSTGRES_USER=${POSTGRES_USER:-postgres}
+POSTGRES_DB=${POSTGRES_DB:-postgres}
+POSTGRES_PORT=${POSTGRES_PORT:-5432}
+
+echo "=== Histogram of Message Counts per SubFolder ==="
+echo -e "Source\t\t| SubFolder\t| Count"
+echo "--------------------------------------------------------"
+
+# Postgres Query for subFolder
+psql -h 127.0.0.1 -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "
+SELECT 'Postgres', COALESCE(sub_folder, 'null'), count(*) 
+FROM udmi_messages 
+WHERE created_at >= NOW() - INTERVAL '24 hours' 
+GROUP BY sub_folder;" 2>/dev/null | while IFS='|' read -r src sf count; do
+  if [[ -n "$src" ]]; then
+    printf "%-15s | %-13s | %s\n" "$src" "$sf" "$count"
+  fi
+done
+
+# Influx Query for subFolder (always pointset)
+if [ -f "$ROOT/udmis/bin/influxctl" ]; then
+  export INFLUX_HOST="http://127.0.0.1:${INFLUXDB_PORT:-8086}"
+  $ROOT/udmis/bin/influxctl query -r --token "$INFLUXDB_TOKEN" --org "$INFLUXDB_ORG" "
+from(bucket: \"$INFLUXDB_BUCKET\")
+  |> range(start: -24h)
+  |> filter(fn: (r) => r._measurement == \"point_value\")
+  |> keep(columns: [\"_time\"])
+  |> group()
+  |> unique(column: \"_time\")
+  |> map(fn: (r) => ({ r with c: 1 }))
+  |> sum(column: \"c\")
+" 2>/dev/null | awk -F',' '
+    NR>4 && $3 != "" {
+      printf "%-15s | %-13s | %s\n", "InfluxDB", "pointset", $4
+    }'
+fi
+
+echo ""
+echo "=== Histogram of Message Counts per SubType ==="
+echo -e "Source\t\t| SubType\t| Count"
+echo "--------------------------------------------------------"
+
+# Postgres Query for subType
+psql -h 127.0.0.1 -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "
+SELECT 'Postgres', COALESCE(sub_type, 'null'), count(*) 
+FROM udmi_messages 
+WHERE created_at >= NOW() - INTERVAL '24 hours' 
+GROUP BY sub_type;" 2>/dev/null | while IFS='|' read -r src st count; do
+  if [[ -n "$src" ]]; then
+    printf "%-15s | %-13s | %s\n" "$src" "$st" "$count"
+  fi
+done
+
+# Influx Query for subType (always events)
+if [ -f "$ROOT/udmis/bin/influxctl" ]; then
+  export INFLUX_HOST="http://127.0.0.1:${INFLUXDB_PORT:-8086}"
+  $ROOT/udmis/bin/influxctl query -r --token "$INFLUXDB_TOKEN" --org "$INFLUXDB_ORG" "
+from(bucket: \"$INFLUXDB_BUCKET\")
+  |> range(start: -24h)
+  |> filter(fn: (r) => r._measurement == \"point_value\")
+  |> keep(columns: [\"_time\"])
+  |> group()
+  |> unique(column: \"_time\")
+  |> map(fn: (r) => ({ r with c: 1 }))
+  |> sum(column: \"c\")
+" 2>/dev/null | awk -F',' '
+    NR>4 && $3 != "" {
+      printf "%-15s | %-13s | %s\n", "InfluxDB", "events", $4
+    }'
+fi
+
+echo ""
+echo "=== Histogram of Message Counts per RegistryId ==="
+echo -e "Source\t\t| RegistryId\t\t| Count"
+echo "----------------------------------------------------------------------"
+
+# Postgres Query for messages per registryId
+psql -h 127.0.0.1 -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "
+SELECT 'Postgres', COALESCE(registry_id, 'null'), count(*) 
+FROM udmi_messages 
+WHERE created_at >= NOW() - INTERVAL '24 hours' 
+GROUP BY registry_id;" 2>/dev/null | while IFS='|' read -r src reg count; do
+  if [[ -n "$src" ]]; then
+    printf "%-15s | %-21s | %s\n" "$src" "$reg" "$count"
+  fi
+done
+
+# Influx Query for messages per registryId
+if [ -f "$ROOT/udmis/bin/influxctl" ]; then
+  export INFLUX_HOST="http://127.0.0.1:${INFLUXDB_PORT:-8086}"
+  $ROOT/udmis/bin/influxctl query -r --token "$INFLUXDB_TOKEN" --org "$INFLUXDB_ORG" "
+from(bucket: \"$INFLUXDB_BUCKET\")
+  |> range(start: -24h)
+  |> filter(fn: (r) => r._measurement == \"point_value\")
+  |> keep(columns: [\"_time\", \"registry_id\"])
+  |> group(columns: [\"registry_id\"])
+  |> unique(column: \"_time\")
+  |> map(fn: (r) => ({ r with c: 1 }))
+  |> sum(column: \"c\")
+" 2>/dev/null | awk -F',' '
+    NR>4 && $4 != "" {
+      printf "%-15s | %-21s | %s\n", "InfluxDB", $4, $5
+    }'
+fi
+
+echo ""
+echo "=== Unique DeviceId Count per RegistryId ==="
+echo -e "Source\t\t| RegistryId\t\t| Unique Devices Count"
+echo "----------------------------------------------------------------------"
+
+# Postgres Query for devices
+psql -h 127.0.0.1 -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "
+SELECT 'Postgres', COALESCE(registry_id, 'null'), count(DISTINCT device_id)
+FROM udmi_messages 
+WHERE created_at >= NOW() - INTERVAL '24 hours' 
+GROUP BY registry_id;" 2>/dev/null | while IFS='|' read -r src reg count; do
+  if [[ -n "$src" ]]; then
+    printf "%-15s | %-21s | %s\n" "$src" "$reg" "$count"
+  fi
+done
+
+# Influx Query for devices
+if [ -f "$ROOT/udmis/bin/influxctl" ]; then
+  export INFLUX_HOST="http://127.0.0.1:${INFLUXDB_PORT:-8086}"
+  $ROOT/udmis/bin/influxctl query -r --token "$INFLUXDB_TOKEN" --org "$INFLUXDB_ORG" "
+from(bucket: \"$INFLUXDB_BUCKET\")
+  |> range(start: -24h)
+  |> filter(fn: (r) => r._measurement == \"point_value\")
+  |> keep(columns: [\"registry_id\", \"device_id\"])
+  |> group(columns: [\"registry_id\"])
+  |> unique(column: \"device_id\")
+  |> map(fn: (r) => ({ r with c: 1 }))
+  |> sum(column: \"c\")
+" 2>/dev/null | awk -F',' '
+    NR>4 && $4 != "" {
+      printf "%-15s | %-21s | %s\n", "InfluxDB", $4, $5
+    }'
+fi

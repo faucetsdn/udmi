@@ -81,7 +81,7 @@ else
     UDMI_NAMESPACE=
 fi
 
-current_user=$USER@$HOSTNAME
+current_user=${USER:-unknown}@$HOSTNAME
 
 revparse=`git rev-parse HEAD`
 

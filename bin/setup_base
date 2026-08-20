@@ -5,7 +5,7 @@ ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
 if [[ -n $(which apt-get) ]]; then
-    sudo apt-get update -y
+    if [[ -z $UDMI_NO_SUDO ]]; then sudo apt-get update -y; fi
     update_cmd="apt-get install -y"
     extra_packages=""
     venv_opts=""
@@ -18,7 +18,13 @@ else
     req_src="<(sed -E 's/^(grpcio|grpcio-status|cryptography|cffi)==/\1>=/' etc/requirements.txt)"
 fi
 
-sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
+if [[ -z $UDMI_NO_SUDO ]]; then
+    sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
+elif [[ $(id -u) == 0 ]]; then
+    $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
+else
+    echo "Skipping system package installation in unprivileged mode (UDMI_NO_SUDO is set and not root)"
+fi
 
 python3 --version
 python3 -m venv $venv_opts venv

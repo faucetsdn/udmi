@@ -29,5 +29,20 @@ find $device_out -name \*.attr | xargs fgrep "While converting string"
 fgrep "{ broken by" -r $device_out/tests/broken_config/trace
 
 echo
+echo Checking config query functionality...
+query_out=$device_out/query_test.json
+bin/reset_config $site_path $project_spec $device_id query $query_out
+fgrep '"version"' $query_out
+
+# TODO: UDMIS bug - UDMIS currently returns a synthesized state ({"configAcked":false})
+# instead of an error when querying a non-existent device. Uncomment this test once fixed.
+# echo Checking config query for non-existent device...
+# if bin/reset_config $site_path $project_spec INVALID-DEVICE-123 query > /dev/null 2>&1; then
+#     fail "Querying a non-existent device should have failed!"
+# else
+#     echo "Failed as expected."
+# fi
+
+echo
 echo Done with special sequence tests.
 echo

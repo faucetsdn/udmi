@@ -243,9 +243,6 @@
         "display": "show",
         "style": "bold"
       }
-    },
-    "mapping_configuration": {
-      "$ref": "file:config_mapping.json"
     }
   }
 }

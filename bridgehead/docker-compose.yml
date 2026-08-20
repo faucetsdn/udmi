@@ -34,6 +34,17 @@ services:
     restart: always
     command: ["etcd", "-listen-client-urls=http://0.0.0.0:2379", "-advertise-client-urls=http://etcd:2379", "--data-dir", "/var/etcd"]
 
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    networks:
+      - udminet
+    restart: always
+
   udmis:
     build:
       context: .
@@ -54,6 +65,8 @@ services:
         condition: service_started
       mosquitto:
         condition: service_started
+      postgres:
+        condition: service_started
     restart: always
     ports:
       - "8080:8080"
@@ -70,6 +83,10 @@ services:
       - INFLUXDB_TOKEN=${INFLUXDB_TOKEN}
       - INFLUXDB_ORG=bridgehead
       - INFLUXDB_BUCKET=home
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
 
   validator:
     build:
@@ -86,9 +103,16 @@ services:
     depends_on:
       udmis:
         condition: service_started
+      postgres:
+        condition: service_started
     restart: always
     networks:
       - udminet
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=postgres
       
   influxdb:
     container_name: influxdb

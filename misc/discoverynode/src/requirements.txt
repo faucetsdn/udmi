@@ -15,3 +15,5 @@ python-dotenv==1.2.2
 pytz==2025.2
 scapy==2.7.0
 pyasyncore==1.0.5
+netifaces
+

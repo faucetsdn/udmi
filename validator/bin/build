@@ -26,7 +26,7 @@ if [[ ! -d $UDMI_ROOT/gencode ]]; then
     exit 0
 fi
 
-newest=$(ls -rt `find src/ $UDMI_ROOT/gencode/java -type f` | tail -n 1)
+newest=$(ls -rt `find src/ $UDMI_ROOT/gencode/java $UDMI_ROOT/common/src -type f` | tail -n 1)
 if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
     echo $jarfile up-to-date, skipping build.
     exit 0
@@ -40,6 +40,7 @@ echo Mirroring udmi files...
 cp -a ../bin build/udmi_bin/
 cp -a ../etc build/udmi_etc/
 cp -a ../schema build/schema/
+cp -a ../butler build/butler/
 
 if [[ -n $check ]]; then
     $UDMI_ROOT/bin/clone_model

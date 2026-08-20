@@ -79,7 +79,7 @@ jobs:
     timeout-minutes: 10
     if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
+      TARGET_PROJECT: //mqtt/localhost:9001
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -129,7 +129,7 @@ jobs:
     timeout-minutes: 20
     needs: automapping
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
+      TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
@@ -181,7 +181,7 @@ jobs:
       matrix:
         shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
+      TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
       MATRIX_SHARD_COUNT: 10
@@ -286,6 +286,11 @@ jobs:
         run: bin/test_postgresql_postrun
       - name: bin/test_capture
         run: bin/test_capture
+      - name: bin/test_udmis_capture
+        run: bin/test_udmis_capture
+      - name: db histogram
+        if: ${{ !cancelled() }}
+        run: bin/db_histogram $TARGET_PROJECT
       - name: mosquitto debug
         if: ${{ !cancelled() }}
         run: |
@@ -362,7 +367,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
+      TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_REGISTRY_SUFFIX: _BU
     steps:
       - uses: actions/checkout@v6
@@ -401,7 +406,7 @@ jobs:
     needs: [ baseline, sequencer, endpoint, runlocal, blobupdates ]
     if: ${{ !cancelled() }}
     env:
-      TARGET_PROJECT: ${{ vars.TARGET_PROJECT || '//mqtt/localhost:9001' }}
+      TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
     steps:
       - uses: actions/checkout@v6
@@ -471,7 +476,7 @@ jobs:
         run: |
           mkdir -p out
           docker rm -f udmis || true
-          docker run -d --net udminet --name udmis -p 8883:8883 \
+          docker run -d --net udminet --name udmis -p 8883:8883 -p 18836:5432 \
             -v $PWD/site_model:/root/site_model \
             -v $PWD/var/tmp:/tmp \
             -v $PWD/var/etcd:/root/udmi/var/etcd \
@@ -518,6 +523,8 @@ jobs:
         # unless it too is root, or the behaviour is changed, or the permisions
         # are fixed. This also requires playing some fancy games with the sudo
         # eng and PATH, so that the right version of java is picked up!
+        env:
+          POSTGRES_PORT: 18836
         run: |
           export SAVE_PATH=$PATH
           sudo -E bash -c 'PATH=$SAVE_PATH misc/discoverynode/testing/e2e/test_local site_model'
@@ -612,7 +619,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
-      UDMI_NO_SUDO: true
+      TARGET_PROJECT: //mqtt/localhost:18833
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -626,7 +633,7 @@ jobs:
           bin/clone_model
       - name: Start Local Services
         run: |
-          bin/start_local sites/udmi_site_model //mqtt/localhost
+          bin/start_local sites/udmi_site_model ${{ env.TARGET_PROJECT }}
       - name: Run Openbridge Test
         run: |
           bin/test_openbridge

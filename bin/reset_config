@@ -3,18 +3,25 @@
 ROOT=$(realpath $(dirname $0)/..)
 source $ROOT/etc/shell_common.sh
 
-if [[ $# != 3 && $# != 4 ]]; then
-    echo Usage: $0 SITE_DIR PROJECT_ID DEVICE_ID [CONFIG_FILE / TEST_NAME]
+if [[ $# -lt 3 || $# -gt 5 ]]; then
+    echo "Usage: $0 SITE_DIR PROJECT_ID DEVICE_ID [CONFIG_FILE | TEST_NAME | query | reset] [OUTPUT_FILE]"
     false
 fi
 
 site_dir=$(realpath $1)
 project_id=$2
 device_id=$3
-shift 3
+cmd=${4:-reset}
+if [[ $# -ge 4 ]]; then
+    shift 4
+else
+    shift $#
+fi
+
 REFLECTOR_CONFIG=/tmp/reflector_config.json
 src_config=""
 config_file=""
+out_file=""
 
 if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
     echo Using registry suffix $UDMI_REGISTRY_SUFFIX
@@ -23,32 +30,48 @@ else
     registry_suffix=null
 fi
 
-if [[ -n ${1:-} ]]; then
-   test_name=$1
-   src_config=${site_dir}/out/devices/${device_id}/tests/${test_name}/config_update.json
-   ls -l $src_config && shift
-fi
-   
-if [[ -n ${1:-} ]]; then
-    config_file=$1
-    src_config=${site_dir}/devices/${device_id}/config/${config_file}
-    ls -l $src_config
-    shift
-fi
-
-if [[ ! -f $src_config ]]; then
+is_query=false
+if [[ $cmd == "query" || $cmd == "-q" ]]; then
+    is_query=true
+    if [[ -n ${1:-} ]]; then
+        out_file=$1
+    else
+        out_file=${site_dir}/devices/${device_id}/config/queried_config.json
+    fi
+elif [[ $cmd == "reset" ]]; then
     src_config=${site_dir}/devices/${device_id}/out/generated_config.json
+    if [[ ! -f $src_config ]]; then
+        echo "Error: Generated config not found at $src_config"
+        false
+    fi
     ls -l ${src_config}
+else
+    test_name=$cmd
+    src_config=${site_dir}/out/devices/${device_id}/tests/${test_name}/config_update.json
+    if [[ -f $src_config ]]; then
+        ls -l $src_config
+    else
+        config_file=$cmd
+        src_config=${site_dir}/devices/${device_id}/config/${config_file}
+        if [[ -f $src_config ]]; then
+            ls -l $src_config
+        else
+            echo "Error: Could not find config for $cmd"
+            false
+        fi
+    fi
 fi
 
 cd ${ROOT}
 
 dst_config=/tmp/${device_id}_config.json
 
-now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
-echo Setting config timestamp ${now_date}
-jq < ${src_config} .timestamp=\"${now_date}\" |\
-    jq .system.testing.sequence_name=\"${config_file%.json}\" > ${dst_config}
+if [[ $is_query == false ]]; then
+    now_date=$(python3 -c 'import datetime; print(datetime.datetime.utcnow().isoformat() + "Z")')
+    echo Setting config timestamp ${now_date}
+    jq < ${src_config} .timestamp=\"${now_date}\" |\
+        jq .system.testing.sequence_name=\"${config_file%.json}\" > ${dst_config}
+fi
 
 quoted_namespace=null
 quoted_bridge=null
@@ -59,7 +82,10 @@ if [[ $project_id =~ ^// ]]; then
     no_provider=${no_prefix#*/}
     project_id=${no_provider%%/*}
     udmi_namespace=${no_provider#$project_id}
-    if [[ $project_id == *:* ]]; then
+    if [[ $project_id == *@* ]]; then
+        quoted_bridge=\"${project_id#*@}\"
+        project_id=${project_id%@*}
+    elif [[ $project_id == *:* ]]; then
         quoted_bridge=\"$project_id\"
         project_id=${project_id%:*}
     fi
@@ -78,9 +104,8 @@ else
     quoted_id=null
 fi
 
-echo Resetting device ${device_id} config...
 echo Writing config to $REFLECTOR_CONFIG
-cat <<EOF > $REFLECTOR_CONFIG
+cat <<EOF2 > $REFLECTOR_CONFIG
 {
   "iot_provider": $iot_provider,
   "project_id": $quoted_id,
@@ -90,11 +115,30 @@ cat <<EOF > $REFLECTOR_CONFIG
   "device_id": "$device_id",
   "registry_suffix": $registry_suffix
 }
-EOF
+EOF2
 
-validator/bin/reflector $REFLECTOR_CONFIG update/config:${dst_config}
+if [[ $is_query == true ]]; then
+    query_file=/tmp/${device_id}_query.json
+    cat <<EOF2 > $query_file
+{}
+EOF2
+    echo Querying device ${device_id} config...
+    mkdir -p $(dirname "$out_file")
+    raw_query=/tmp/${device_id}_raw_query.txt
+    validator/bin/reflector $REFLECTOR_CONFIG invalid/config:${query_file} > $raw_query
+    
+    echo Removing invalid config block from device ${device_id}...
+    sed -n '/^{/,$p' < $raw_query | jq 'del(.invalid)' > "$out_file"
+    validator/bin/reflector $REFLECTOR_CONFIG update/config:"$out_file" > /dev/null
 
-echo
-cat ${dst_config}
-echo
-echo That config ^^^^ was applied!
+    echo "Queried clean config written to $out_file:"
+    cat "$out_file"
+else
+    echo Resetting device ${device_id} config...
+    validator/bin/reflector $REFLECTOR_CONFIG update/config:${dst_config}
+
+    echo
+    cat ${dst_config}
+    echo
+    echo That config ^^^^ was applied!
+fi

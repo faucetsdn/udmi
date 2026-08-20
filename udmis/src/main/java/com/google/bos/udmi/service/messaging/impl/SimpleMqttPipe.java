@@ -66,7 +66,7 @@ public class SimpleMqttPipe extends MessageBase {
   private static final Envelope EXCEPTION_ENVELOPE = makeExceptionEnvelope();
   private static final String SUB_BASE_FORMAT = "/r/+/d/+/%s";
   private static final String DEFAULT_NAMESPACE = "default";
-  private static final long CONNECT_TIMEOUT_SEC = 10;
+  private static final long CONNECT_TIMEOUT_SEC = 30;
   private final String autoId = format("mqtt-%08x", (long) (Math.random() * 0x100000000L));
   private final String clientId;
   private final String namespace;
