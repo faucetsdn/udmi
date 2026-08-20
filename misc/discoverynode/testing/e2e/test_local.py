@@ -132,6 +132,8 @@ def docker_devices():
               f"--ip={localnet['ipv4']['addr']}",
               "-e",
               f"BACNET_ID={localnet['bacnet']['addr']}",
+              "-e",
+              "PYTHONUNBUFFERED=1",
               "test-bacnet-device",
           ])
       )
@@ -198,6 +200,8 @@ def discovery_node():
             "run",
             "-d",
             f"--name=discoverynode-test-node",
+            "-e",
+            "PYTHONUNBUFFERED=1",
             f"--network=discoverynode-network",
             "--mount",
             f"type=bind,source={ROOT_DIR}/discovery_node_config.json,target=/app/config.json",
@@ -253,13 +257,17 @@ def test_discovered_proxied_devices_are_created(
       site_path=SITE_PATH
   )
 
-  run("bin/mapper GAT-1 provision")
+  run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 provision")
 
   time.sleep(5)
 
-  run("bin/mapper GAT-1 discover")
+  run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 discover")
 
   time.sleep(30)
+
+  shutil.rmtree(os.path.join(SITE_PATH, "extras"), ignore_errors=True)
+
+  run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 map bacnet")
 
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
@@ -296,13 +304,17 @@ def test_discovered_devices_are_created(
       site_path=SITE_PATH
   )
 
-  run("bin/mapper AHU-1 provision")
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 provision")
 
   time.sleep(5)
 
-  run("bin/mapper AHU-1 discover")
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 discover")
 
   time.sleep(30)
+
+  shutil.rmtree(os.path.join(SITE_PATH, "extras"), ignore_errors=True)
+
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 map bacnet")
 
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
@@ -361,6 +373,7 @@ def new_site_model():
     if delete:
       with contextlib.suppress(FileNotFoundError):
         shutil.rmtree(devices_directory)
+      run("docker exec udmis psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -c \"TRUNCATE TABLE udmi_messages;\"")
 
     os.mkdir(devices_directory)
 

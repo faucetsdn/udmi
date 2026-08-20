@@ -119,6 +119,10 @@ elif [[ -z ${iot_provider:-} ]]; then
     iot_provider=gbos
 fi
 
+if [[ $project_target == *@* ]]; then
+    broker_hostname=${project_target#*@}
+    project_target=${project_target%@*}
+fi
 if [[ $project_target == *:* ]]; then
     [[ -n $broker_hostname ]] || broker_hostname=$project_target
     project_target=${project_target%:*}
@@ -143,7 +147,7 @@ if [[ $iot_provider == clearblade ]]; then
 elif [[ $iot_provider == gbos ]]; then
     broker_hostname=mqtt.bos.goog
 elif [[ $iot_provider == mqtt ]]; then
-    broker_hostname=$project_target
+    [[ -n $broker_hostname ]] || broker_hostname=$project_target
     gateway_id=$(jq -r .gateway.gateway_id $site_model/devices/$device_id/metadata.json) || true
     echo Attached to gateway $gateway_id
     [[ -z $gateway_id || $gateway_id == null ]] || target_id=$gateway_id

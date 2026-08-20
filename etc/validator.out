@@ -581,6 +581,13 @@ sites/udmi_site_model/out/devices/GAT-123/events_mapping.out
   "errors": [
     {
       "category": "validation.device.receive",
+      "detail": "events_mapping: Unknown schema subFolder 'events_mapping' for GAT-123 REDACTED_ERROR",
+      "level": 500,
+      "message": "Unknown schema subFolder 'events_mapping' for GAT-123",
+      "timestamp": "REDACTED_TIMESTAMP"
+    },
+    {
+      "category": "validation.device.receive",
       "detail": "events_mapping: Raw string message for GAT-123 events_mapping REDACTED_ERROR",
       "level": 500,
       "message": "Raw string message for GAT-123 events_mapping",
@@ -588,10 +595,10 @@ sites/udmi_site_model/out/devices/GAT-123/events_mapping.out
     }
   ],
   "status": {
-    "category": "validation.device.receive",
-    "detail": "events_mapping: Raw string message for GAT-123 events_mapping REDACTED_ERROR",
+    "category": "validation.device.multiple",
+    "detail": "Unknown schema subFolder 'events_mapping' for GAT-123; Raw string message for GAT-123 events_mapping",
     "level": 500,
-    "message": "Raw string message for GAT-123 events_mapping",
+    "message": "Multiple validation errors",
     "timestamp": "REDACTED_TIMESTAMP"
   },
   "sub_folder": "mapping",

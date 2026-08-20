@@ -1,0 +1,62 @@
+#!/bin/bash -e
+#
+# Integration test for native UDMIS CaptureProcessor direct database capture.
+# Spins up Pubber in quick-exit (smokeCheck) mode to generate telemetry and state messages,
+# then verifies system state ended up in PostgreSQL and telemetry metrics ended up in InfluxDB.
+
+UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$UDMI_ROOT"
+
+target_project="${1:-${TARGET_PROJECT:-//mqtt/localhost:9001}}"
+
+source "$UDMI_ROOT/etc/shell_common.sh"
+
+SITE_MODEL="sites/udmi_site_model"
+DEVICE_ID="AHU-1"
+SERIAL_NO="capture-smoke-check"
+
+echo "=== Launching Pubber DUT for device $DEVICE_ID in quick-exit mode (smokeCheck)..."
+$UDMI_ROOT/bin/start_dut "$SITE_MODEL" "$target_project" "$DEVICE_ID" "$SERIAL_NO" "smokeCheck"
+
+echo "=== Waiting for Pubber messages to be processed by UDMIS CaptureProcessor..."
+sleep 5
+
+# 1. Verify PostgreSQL records created by CaptureProcessor
+echo "=== Verifying PostgreSQL database records..."
+PG_PORT=${POSTGRES_PORT:-5432}
+PG_USER=${POSTGRES_USER:-postgres}
+PG_DB=${POSTGRES_DB:-postgres}
+
+pg_count=$(psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -A -c "SELECT count(*) FROM udmi_messages WHERE device_id = '$DEVICE_ID';" 2>/dev/null || echo "0")
+
+echo "PostgreSQL message count for device $DEVICE_ID: $pg_count"
+if [[ $pg_count -gt 0 ]]; then
+  echo "PASS: Successfully verified $pg_count records in PostgreSQL via UDMIS CaptureProcessor!"
+else
+  echo "FAIL: No records found in PostgreSQL table udmi_messages for device $DEVICE_ID!"
+  echo "=== Tail of out/udmis.log ==="
+  tail -n 50 out/udmis.log || true
+  exit 1
+fi
+
+# 2. Verify InfluxDB records created by CaptureProcessor
+echo "=== Verifying InfluxDB metric records..."
+INF_PORT=${INFLUX_PORT:-8086}
+echo "Querying InfluxDB at http://localhost:$INF_PORT..."
+influx_out=$(udmis/bin/influxctl query --host "http://localhost:$INF_PORT" --token "test-influx-token-12345" --org "bridgehead" 'from(bucket: "home") |> range(start: -10y) |> filter(fn: (r) => r._measurement == "point_value")' 2>/dev/null || true)
+
+echo "InfluxDB output:"
+echo "$influx_out"
+
+if echo "$influx_out" | grep -q "point_value"; then
+  echo "PASS: Successfully verified telemetry point_value records in InfluxDB via UDMIS CaptureProcessor!"
+else
+  echo "FAIL: No point_value records found in InfluxDB!"
+  echo "=== Tail of out/udmis.log ==="
+  tail -n 50 out/udmis.log || true
+  exit 1
+fi
+
+echo "=========================================================================="
+echo "SUCCESS: UDMIS CaptureProcessor Integration Test Passed!"
+echo "=========================================================================="

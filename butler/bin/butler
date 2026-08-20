@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+import sys
+import json
+import os
+import argparse
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
+from src.discovery import run_discovery
+from src.mapping import run_mapping
+
+def get_registry_id(site_model):
+    config_path = os.path.join(site_model, "cloud_iot_config.json")
+    try:
+        with open(config_path, "r") as f:
+            config = json.load(f)
+            return config.get("registry_id", "default")
+    except Exception as e:
+        return "default"
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('site_model')
+    parser.add_argument('project_spec')
+    parser.add_argument('device_id')
+    parser.add_argument('command', choices=['provision', 'discover', 'map'])
+    parser.add_argument('targets', nargs='*')
+    args = parser.parse_args()
+    
+    registry_id = get_registry_id(args.site_model)
+    
+    if args.command == 'discover':
+        run_discovery(args.project_spec, registry_id, args.device_id, args.targets, args.site_model)
+    elif args.command == 'map':
+        run_mapping(args.project_spec, registry_id, args.site_model, args.targets)
+    elif args.command == 'provision':
+        # No-op for provision for now
+        pass
+
+if __name__ == '__main__':
+    main()

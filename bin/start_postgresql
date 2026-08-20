@@ -72,6 +72,7 @@ if [[ ! -d "$DATA_DIR" ]]; then
         # initdb requires to run under current user. We use trust auth for local development testing.
         $BINDIR/initdb -D "$DATA_DIR" -U "${postgres_user}" --auth-local=trust --auth-host=trust --nosync
     fi
+    echo "host all all 0.0.0.0/0 trust" >> "$DATA_DIR/pg_hba.conf"
 fi
 
 echo Starting postgresql locally...
@@ -79,11 +80,11 @@ echo Starting postgresql locally...
 # We use -k /tmp to ensure unix socket files are created in /tmp (where we have write permission) instead of /var/run/postgresql.
 if [[ $(id -u) -eq 0 ]]; then
     chown -R postgres:postgres out var/postgresql
-    nohup su -s /bin/bash postgres -c "$BINDIR/postgres -D '$DATA_DIR' -p ${postgres_port} -h 127.0.0.1 -k /tmp" > $POSTGRES_LOG 2>&1 &
+    nohup su -s /bin/bash postgres -c "$BINDIR/postgres -D '$DATA_DIR' -p ${postgres_port} -h '*' -k /tmp" > $POSTGRES_LOG 2>&1 &
 else
     nohup $BINDIR/postgres -D "$DATA_DIR" \
                            -p ${postgres_port} \
-                           -h 127.0.0.1 \
+                           -h '*' \
                            -k /tmp \
                            > $POSTGRES_LOG 2>&1 &
 fi

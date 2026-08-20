@@ -17,7 +17,7 @@ from influxdb_client.client.write_api import SYNCHRONOUS
 POSTGRES_PORT = os.environ.get("POSTGRES_PORT", "5432")
 POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
 POSTGRES_DB = os.environ.get("POSTGRES_DB", "postgres")
-POSTGRES_HOST = "127.0.0.1"
+POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "127.0.0.1")
 
 INFLUXDB_TOKEN = os.environ.get("INFLUXDB_TOKEN", "test-influx-token-12345")
 INFLUXDB_ORG = os.environ.get("INFLUXDB_ORG", "bridgehead")
@@ -176,8 +176,15 @@ def main():
 
         if sub_folder == "pointset" and sub_type == "events":
           save_to_influx(envelope, payload, write_api)
+          target_db = "influx"
         else:
           save_to_postgres(envelope, payload)
+          target_db = "postgres"
+
+        registry_id = envelope.get("deviceRegistryId", "unknown")
+        device_id = envelope.get("deviceId", "unknown")
+        print(f"db:{target_db}/{registry_id}/{device_id}"
+              f"/{sub_folder}/{sub_type}")
       except (json.JSONDecodeError, KeyError, psycopg2.Error,
               InfluxWriteError) as e:
         print(f"Error processing message: {e}", file=sys.stderr)

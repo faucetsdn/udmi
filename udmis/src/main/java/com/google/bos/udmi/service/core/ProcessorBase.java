@@ -31,6 +31,7 @@ import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static com.google.udmi.util.JsonUtil.toStringMap;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static udmi.schema.Envelope.SubFolder.INVALID;
 import static udmi.schema.Envelope.SubFolder.UPDATE;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
@@ -332,7 +333,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     ifNotNullThen(updatePayload, p -> updatePayload.remove(TIMESTAMP_KEY));
     ifNotNullThen(updatePayload, p -> updatePayload.remove(VERSION_KEY));
 
-    if (attributes.subFolder != null && attributes.subFolder != UPDATE) {
+    if (attributes.subFolder != null && attributes.subFolder != UPDATE
+        && attributes.subFolder != INVALID) {
       payload.put(attributes.subFolder.value(), updatePayload);
     }
 

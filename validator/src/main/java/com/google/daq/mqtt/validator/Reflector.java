@@ -5,9 +5,12 @@ import static com.google.udmi.util.Common.ERROR_KEY;
 import static com.google.udmi.util.Common.GCP_REFLECT_KEY_PKCS8;
 import static com.google.udmi.util.Common.NO_SITE;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
+import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static com.google.udmi.util.Common.removeNextArg;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -22,6 +25,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.ExecutionConfiguration;
 
@@ -99,27 +103,66 @@ public class Reflector {
     String sendId = client.publish(executionConfiguration.device_id, topic, data);
     Instant startTime = Instant.now();
     Instant endTime = startTime.plusSeconds(QuerySpeed.SHORT.seconds());
+    boolean isQuery = topic.startsWith("query") || topic.endsWith("/query");
+    Map<String, Object> resultPayload = null;
+
     try {
-      MessageBundle messageBundle;
+      MessageBundle messageBundle = null;
 
       do {
         if (endTime.isBefore(Instant.now())) {
+          if (isQuery && resultPayload != null) {
+            break;
+          }
           throw new RuntimeException("Timeout waiting for reflector response");
         }
         messageBundle = client.takeNextMessage(QuerySpeed.SHORT);
         if (messageBundle == null) {
+          if (isQuery && resultPayload != null) {
+            break;
+          }
           System.err.println("Receive timeout, retries left: " + --retryCount);
           if (retryCount == 0) {
             throw new RuntimeException("Maximum retry count reached");
           }
         } else {
           recvId = messageBundle.attributes.get("transactionId");
+          String subType = messageBundle.attributes.get(SUBTYPE_PROPERTY_KEY);
+          String subFolder = messageBundle.attributes.get(SUBFOLDER_PROPERTY_KEY);
+
+          if (isQuery) {
+            boolean isReplyOp = "REPLY".equals(
+                ifNotNullGet(messageBundle.message, m -> (String) m.get("operation")));
+            if (Validator.isReplySubtype(subType) || isReplyOp) {
+              if (sendId.equals(recvId)) {
+                recvId = null;
+              }
+              continue;
+            }
+            boolean isUpdate = SubFolder.UPDATE.value().equals(subFolder);
+            boolean isCloud = SubFolder.CLOUD.value().equals(subFolder);
+            boolean isError = SubFolder.ERROR.value().equals(subFolder);
+            if (isError) {
+              throw new RuntimeException("Received reflector error: " + messageBundle.message);
+            }
+            if (isUpdate || isCloud) {
+              resultPayload = messageBundle.message;
+              recvId = sendId;
+            }
+          } else {
+            resultPayload = messageBundle.message;
+          }
         }
       } while (!sendId.equals(recvId));
 
-      if (SubFolder.ERROR.value().equals(messageBundle.attributes.get(SUBFOLDER_PROPERTY_KEY))) {
+      boolean isError = messageBundle != null
+          && SubFolder.ERROR.value().equals(messageBundle.attributes.get(SUBFOLDER_PROPERTY_KEY));
+      if (isError) {
         throw new RuntimeException(
             "Error processing request: " + messageBundle.message.get(ERROR_KEY));
+      }
+      if (resultPayload != null && !resultPayload.isEmpty()) {
+        System.out.println(stringify(resultPayload));
       }
     } catch (Exception e) {
       throw new RuntimeException(format("While waiting for return transaction %s started %s",

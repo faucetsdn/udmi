@@ -28,6 +28,8 @@ fi
 export INFLUX_HOST="http://127.0.0.1:${INFLUX_PORT:-8086}"
 export INFLUX_CONFIGS_PATH="${SCRIPT_DIR}/../../var/influx/configs"
 
+mkdir -p "$(dirname "${INFLUX_CONFIGS_PATH}")"
+
 if [[ $# -gt 0 ]]; then
     exec ${TARGET_DIR}/influx "$@"
 fi

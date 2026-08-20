@@ -54,6 +54,8 @@ date >> $LOGFILE
 
 export ETCD_CLUSTER=127.0.0.1
 export ETCD_PORT=${ETCD_PORT:-2379}
+export INFLUX_PORT=${INFLUX_PORT:-8086}
+export POSTGRES_PORT=${POSTGRES_PORT:-5432}
 export ETCD_SCHEME=${ETCD_SCHEME:-http}
 export ETCD_CA=${ETCD_CA:-}
 export ETCD_CERT=${ETCD_CERT:-}
@@ -112,7 +114,7 @@ nohup $UDMIS_DIR/bin/run $UDMIS_CONFIG >> $LOGFILE 2>&1 &
 PID=$!
 echo $PID > $UDMIS_PID_FILE
 
-WAITING=30
+WAITING=90
 for i in `seq 1 $WAITING`; do
     if [[ -f $POD_READY || ! -d /proc/$PID ]]; then
         break

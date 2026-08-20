@@ -31,6 +31,8 @@ class Depth(Enum):
     entries = 'entries'
     details = 'details'
     parts = 'parts'
+    system = 'system'
+    refs = 'refs'
 
 
 class IotProvider(Enum):

@@ -36,19 +36,24 @@ bin/registrar $site_path $project_spec GAT-123
 entries=$(wc -l < $site_path/out/registration_summary.csv)
 [[ $entries == 2 ]] || fail Unexpected registered entries, found $entries
 
-echo Launching bg pubber for testing
-pubber_bg GAT-123
+echo Launching bg pubber for testing using bin/start_dut
+serial_no="automapper-$RANDOM"
+trap "bin/start_dut stop $serial_no 2>/dev/null || true" EXIT
+bin/start_dut $site_path $project_spec GAT-123 $serial_no
 
 echo Enable the gateway to auto-provision
-bin/mapper GAT-123 provision
+bin/mapper $site_path $project_spec GAT-123 provision
 
 echo Kick off a discovery run for the gateway
-bin/mapper GAT-123 discover vendor
+bin/mapper $site_path $project_spec GAT-123 discover vendor
 
 echo Waiting for discovery...
 sleep 20
 
 echo Extracting results at $(date -u -Is)
+echo "Running mapper BEFORE registrar to populate extras"
+bin/mapper $site_path $project_spec GAT-123 map
+bin/registrar $site_path $project_spec -i
 bin/registrar $site_path $project_spec
 
 echo Checking that there was no bacnet discovery...
@@ -62,6 +67,8 @@ type=$(jq -r .resource_type $site_path/extras/discovered_vendor-20231/cloud_mode
 echo Checking vendor extracted device type $type
 [[ $type == PROXIED ]] || fail Vendor device type should be PROXIED, was $type
 
+echo "Restoring cloud_metadata/ deleted by registrar"
+bin/mapper $site_path $project_spec GAT-123 map
 echo Checking discovered device metadata
 addr=$(jq -r .addr $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json)
 [[ $addr == 20231 ]] || fail Vendor device addr should be 20231, was $addr
@@ -74,7 +81,7 @@ extra_device_metadata=$site_path/extras/discovered_vendor-28179023/cloud_metadat
 jq '.refs.new_ref = {"point":"new_point","units":"new_units"}' $extra_device_metadata | sponge $extra_device_metadata
 
 echo "Starting the mapping process for the extra devices"
-bin/mapper GAT-123 map vendor
+bin/mapper $site_path $project_spec GAT-123 map
 
 [[ -f $site_path/devices/UNK-1/metadata.json ]] || fail "Terminating because of extra device which does not exist didn't map correctly."
 
@@ -109,21 +116,31 @@ first_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cl
 echo First discovered generation is $first_generation
 
 echo Kick off a second discovery scan to validate updates
-bin/mapper GAT-123 discover
+bin/mapper $site_path $project_spec GAT-123 discover
 
 echo Waiting 20s for the second discovery to complete...
 sleep 20
 
 echo Extracting updated results at $(date -u -Is)
+echo "Running mapper BEFORE registrar to populate extras"
+bin/mapper $site_path $project_spec GAT-123 map
+bin/registrar $site_path $project_spec -i
 bin/registrar $site_path $project_spec
 
 echo Checking that there was bacnet discovery...
 ls -d $site_path/extras/discovered_bacnet-*
 
+echo "Restoring cloud_metadata/ deleted by registrar for second scan"
+bin/mapper $site_path $project_spec GAT-123 map
+
 second_generation=`jq -r .generation $site_path/extras/discovered_vendor-20231/cloud_metadata/udmi_discovered_with.json`
 echo Second discovered generation is $second_generation
 
 [[ $first_generation != $second_generation ]] || fail Second discovery generation was not updated!
+
+echo Stopping DUT $serial_no...
+bin/start_dut stop $serial_no
+trap - EXIT
 
 echo
 echo Done with automapper test

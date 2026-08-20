@@ -34,9 +34,14 @@ pull_limit=100
 
 while true; do
     date -u -Is >&2
-    pubsub_json=$(gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack 2>/dev/null || true)
+    pubsub_json=$(gcloud --format=json --project=$project_id pubsub subscriptions pull $subscription --limit $pull_limit --auto-ack 2>&1 || true)
 
-    if [[ -z $pubsub_json || $pubsub_json == "[]" || $pubsub_json == null ]]; then
+    if [[ $pubsub_json == *"ERROR"* ]]; then
+	echo $pubsub_json >&2
+        exit 1
+    fi
+
+    if [[ -z $pubsub_json || $pubsub_json == "[]" || $pubsub_json == null || $pubsub_json == *"ERROR:"* ]]; then
         sleep 1
         continue
     fi
@@ -79,15 +84,14 @@ while true; do
         attributes_json=$(echo "$message_json" | jq -c .attributes 2>/dev/null || echo "{}")
 
         # Output single-line JSON to STDOUT
-        jq -n \
+        printf "%s" "$data" | jq -Rs \
           --arg devId "$deviceId" \
           --arg regId "$registryId" \
           --arg subF "$subFolder" \
           --arg subT "$subType" \
           --arg ts "$timestamp" \
           --arg projId "$project_id" \
-          --arg rawPayload "$data" \
-          '{
+          '. as $rawPayload | {
             envelope: {
               deviceId: $devId,
               deviceRegistryId: $regId,
