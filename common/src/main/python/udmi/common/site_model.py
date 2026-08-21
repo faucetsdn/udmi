@@ -27,56 +27,74 @@ def load_site_config(site_model: Optional[str]) -> Dict[str, Any]:
 
 
 def find_key_file(site_model: Optional[str], device_id: Optional[str] = None) -> Optional[str]:
-    """Finds private key in site_model reflector or device directory."""
-    if not site_model:
-        return None
-    candidates = [
-        os.path.join(site_model, "reflector", "rsa_private.pkcs8"),
-        os.path.join(site_model, "reflector", "rsa_private.pem"),
-        os.path.join(site_model, "reflector", "rsa_private.key"),
-    ]
-    if device_id:
+    """Finds private key in site_model reflector or device directory or env."""
+    candidates = []
+    if os.environ.get("SSL_SECRETS_DIR"):
         candidates.extend([
-            os.path.join(site_model, "devices", device_id, "rsa_private.pkcs8"),
-            os.path.join(site_model, "devices", device_id, "rsa_private.pem"),
-            os.path.join(site_model, "devices", device_id, "rsa_private.key"),
+            os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.pkcs8"),
+            os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.pem"),
+            os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.key"),
         ])
+    if site_model:
+        candidates.extend([
+            os.path.join(site_model, "reflector", "rsa_private.pkcs8"),
+            os.path.join(site_model, "reflector", "rsa_private.pem"),
+            os.path.join(site_model, "reflector", "rsa_private.key"),
+        ])
+        if device_id:
+            candidates.extend([
+                os.path.join(site_model, "devices", device_id, "rsa_private.pkcs8"),
+                os.path.join(site_model, "devices", device_id, "rsa_private.pem"),
+                os.path.join(site_model, "devices", device_id, "rsa_private.key"),
+            ])
     for cand in candidates:
-        if os.path.exists(cand):
+        if cand and os.path.exists(cand):
             return cand
     return None
 
 
 def find_ca_file(site_model: Optional[str]) -> Optional[str]:
-    """Finds CA certificate in site_model."""
-    if not site_model:
-        return None
-    candidates = [
-        os.path.join(site_model, "reflector", "ca.crt"),
-        os.path.join(site_model, "ca.crt"),
-    ]
+    """Finds CA certificate in site_model or standard environment locations."""
+    candidates = []
+    if os.environ.get("CA_CERT"):
+        candidates.append(os.environ.get("CA_CERT"))
+    if os.environ.get("SSL_SECRETS_DIR"):
+        candidates.append(os.path.join(os.environ["SSL_SECRETS_DIR"], "ca.crt"))
+    if site_model:
+        candidates.extend([
+            os.path.join(site_model, "reflector", "ca.crt"),
+            os.path.join(site_model, "ca.crt"),
+        ])
+    candidates.extend([
+        "/etc/mosquitto/certs/ca.crt",
+        "/var/mosquitto/certs/ca.crt",
+    ])
     for cand in candidates:
-        if os.path.exists(cand):
+        if cand and os.path.exists(cand):
             return cand
     return None
 
 
 def find_cert_file(site_model: Optional[str], device_id: Optional[str] = None) -> Optional[Tuple[str, str]]:
-    """Finds client certificate and key in site_model."""
-    if not site_model:
-        return None
+    """Finds client certificate and key in site_model or SSL_SECRETS_DIR."""
     candidates = []
-    if device_id:
+    if site_model and device_id:
         candidates.append((
             os.path.join(site_model, "devices", device_id, "rsa_private.crt"),
             os.path.join(site_model, "devices", device_id, "rsa_private.pem"),
         ))
-    candidates.extend([
-        (os.path.join(site_model, "reflector", "rsa_private.crt"), os.path.join(site_model, "reflector", "rsa_private.pem")),
-        (os.path.join(site_model, "reflector", "server.crt"), os.path.join(site_model, "reflector", "server.key")),
-    ])
+    if site_model:
+        candidates.extend([
+            (os.path.join(site_model, "reflector", "rsa_private.crt"), os.path.join(site_model, "reflector", "rsa_private.pem")),
+            (os.path.join(site_model, "reflector", "server.crt"), os.path.join(site_model, "reflector", "server.key")),
+        ])
+    if os.environ.get("SSL_SECRETS_DIR"):
+        candidates.append((
+            os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.crt"),
+            os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.pem"),
+        ))
     for cert, key in candidates:
-        if os.path.exists(cert) and os.path.exists(key):
+        if cert and key and os.path.exists(cert) and os.path.exists(key):
             return cert, key
     return None
 
