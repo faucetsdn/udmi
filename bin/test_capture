@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-# Script to test the pull_files | pull_save db pipeline using Bailey ingestion
+# Script to test the pull_files | pull_save db pipeline using Bunker ingestion
 # Assumes necessary database infrastructure is already running.
 
 UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)

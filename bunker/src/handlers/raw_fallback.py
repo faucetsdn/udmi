@@ -1,7 +1,7 @@
 """Fallback handler for unhandled UDMI messages, saving raw JSONB to PostgreSQL."""
 
 from typing import Any, Dict, Optional
-from bailey.src.handlers.base import BaseHandler
+from bunker.src.handlers.base import BaseHandler
 from udmi.common.db.influx import InfluxManager
 from udmi.common.db.postgres import PostgresManager
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI entrypoint for Bailey database ingestion service."""
+"""CLI entrypoint for Bunker database ingestion service."""
 
 import argparse
 import os
@@ -18,11 +18,11 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "common", "src", "main", "python"))
 sys.path.insert(0, os.path.join(REPO_ROOT, "gencode", "python"))
 sys.path.insert(0, REPO_ROOT)
 
-from bailey.src.service import BaileyService
+from bunker.src.service import BunkerService
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Bailey UDMI Database Ingestion Service")
+    parser = argparse.ArgumentParser(description="Bunker UDMI Database Ingestion Service")
     parser.add_argument(
         "arg1",
         nargs="?",
@@ -65,7 +65,7 @@ def main():
         else:
             site_model = args.arg1
 
-    service = BaileyService(
+    service = BunkerService(
         project_spec=project_spec,
         site_model=site_model,
         always_save_raw=args.always_save_raw,

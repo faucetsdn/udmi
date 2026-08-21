@@ -1,7 +1,7 @@
 """Handler for UDMI validation messages."""
 
 from typing import Any, Dict, List, Optional
-from bailey.src.handlers.base import BaseHandler
+from bunker.src.handlers.base import BaseHandler
 from udmi.common.db.influx import InfluxManager
 from udmi.common.db.postgres import PostgresManager
 

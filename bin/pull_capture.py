@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Script to parse JSON stream from stdin and save messages to databases.
 
-Uses Bailey ingestion engine with consistent UDMI DB schema.
+Uses Bunker ingestion engine with consistent UDMI DB schema.
 """
 import os
 import sys
@@ -12,12 +12,12 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "gencode", "python"))
 sys.path.insert(0, REPO_ROOT)
 
 # pylint: disable=wrong-import-position
-from bailey.src.service import BaileyService
+from bunker.src.service import BunkerService
 
 
 def main():
   """Main entry point for pull_capture."""
-  service = BaileyService(always_save_raw=True)
+  service = BunkerService(always_save_raw=True)
   service.run_stdin()
 
 

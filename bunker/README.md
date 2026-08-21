@@ -1,12 +1,12 @@
-# Bailey (UDMI Data Ingestion Service)
+# Bunker (UDMI Data Ingestion Service)
 
-**Bailey** is a standalone Python service within the UDMI support ecosystem (alongside `butler` and `BAMBI`). Its primary responsibility is consuming messages from the `udmi_target` topic/feed and persisting structured data into InfluxDB and PostgreSQL instances.
+**Bunker** is a standalone Python service within the UDMI support ecosystem (alongside `butler` and `BAMBI`). Its primary responsibility is consuming messages from the `udmi_target` topic/feed and persisting structured data into InfluxDB and PostgreSQL instances.
 
 ---
 
 ## Overview & Architecture
 
-Bailey connects to a message broker (MQTT or Google Cloud Pub/Sub) or reads JSON messages from standard input. Incoming messages are inspected and routed by the message dispatcher to specialized handlers based on the message `sub_folder` and `sub_type`.
+Bunker connects to a message broker (MQTT or Google Cloud Pub/Sub) or reads JSON messages from standard input. Incoming messages are inspected and routed by the message dispatcher to specialized handlers based on the message `sub_folder` and `sub_type`.
 
 ```mermaid
 flowchart TD
@@ -16,8 +16,8 @@ flowchart TD
         STDIN["Piped Stdin (JSON envelopes)"]
     end
 
-    subgraph Bailey Core
-        SVC["BaileyService (service.py)"]
+    subgraph Bunker Core
+        SVC["BunkerService (service.py)"]
         DISP["MessageDispatcher (dispatcher.py)"]
     end
 
@@ -87,7 +87,7 @@ Tables are automatically initialized upon startup if they do not exist:
 
 ---
 
-## Local Development & Running Bailey
+## Local Development & Running Bunker
 
 ### 1. Prerequisites & Environment Setup
 Ensure the Python virtual environment and dependencies are installed:
@@ -98,7 +98,7 @@ bin/setup_base
 The shared Python libraries reside under [`common/src/main/python`](../common/src/main/python) and generated schemas under [`gencode/python`](../gencode/python).
 
 ### 2. Starting Local Services
-To run Bailey against local instances of MQTT, InfluxDB, and PostgreSQL, start local services in isolated mode (e.g., using port `46432`):
+To run Bunker against local instances of MQTT, InfluxDB, and PostgreSQL, start local services in isolated mode (e.g., using port `46432`):
 ```bash
 bin/start_local sites/udmi_site_model //mqtt/localhost:46432
 ```
@@ -107,33 +107,33 @@ This automatically initializes:
 * InfluxDB on port `46434` (org: `bridgehead`, bucket: `home`, token: `test-influx-token-12345`)
 * PostgreSQL on port `46435` (database: `udmi`, user: `$USER`)
 
-### 3. Running Bailey CLI
+### 3. Running Bunker CLI
 
-Bailey can be run using `bin/bailey` (or `bailey/bin/bailey`):
+Bunker can be run using `bin/bunker` (or `bunker/bin/bunker`):
 
 #### Continuous Subscription Mode:
 Subscribes to the message broker and processes messages in real time:
 ```bash
-bin/bailey sites/udmi_site_model //mqtt/localhost:46432
+bin/bunker sites/udmi_site_model //mqtt/localhost:46432
 ```
 
 #### Piped Stdin Ingestion:
 Processes newline-delimited JSON envelopes or telemetry messages from standard input:
 ```bash
-cat messages.jsonl | bin/bailey --stdin sites/udmi_site_model //mqtt/localhost:46432
+cat messages.jsonl | bin/bunker --stdin sites/udmi_site_model //mqtt/localhost:46432
 ```
 
 #### Always Capture Raw Messages:
 To persist all envelopes to `udmi_messages` in addition to specialized tables:
 ```bash
-bin/bailey --always-save-raw sites/udmi_site_model //mqtt/localhost:46432
+bin/bunker --always-save-raw sites/udmi_site_model //mqtt/localhost:46432
 ```
 
 ---
 
 ## Environment Variables & Configuration
 
-Bailey respects standard database environment variables:
+Bunker respects standard database environment variables:
 
 | Variable | Default | Description |
 | :--- | :--- | :--- |
@@ -152,14 +152,14 @@ Bailey respects standard database environment variables:
 
 ## Testing & Verification
 
-### Running Bailey Unit Tests
+### Running Bunker Unit Tests
 ```bash
-pytest bailey/tests/
+pytest bunker/tests/
 ```
 
-### Running Bailey End-to-End Test Suite
+### Running Bunker End-to-End Test Suite
 ```bash
-bin/test_bailey //mqtt/localhost:46432
+bin/test_bunker //mqtt/localhost:46432
 ```
 
 ### Inspecting Ingested Data
@@ -173,12 +173,12 @@ bin/db_histogram //mqtt/localhost:46432
 ## Directory Structure
 
 ```
-bailey/
+bunker/
 ├── bin/
-│   └── bailey              # CLI executable wrapper
+│   └── bunker              # CLI executable wrapper
 ├── src/
 │   ├── __init__.py
-│   ├── service.py          # BaileyService runner (MQTT/PubSub & Stdin loops)
+│   ├── service.py          # BunkerService runner (MQTT/PubSub & Stdin loops)
 │   ├── dispatcher.py       # MessageDispatcher routing logic
 │   └── handlers/
 │       ├── __init__.py

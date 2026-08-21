@@ -1,0 +1,45 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname "$0")/..
+source "$UDMI_ROOT/etc/shell_common.sh"
+
+BUNKER_LOG=out/bunker.log
+mkdir -p out var
+
+BUNKER_PID_FILE=var/bunker.pid
+if [[ -f $BUNKER_PID_FILE ]]; then
+    old_pid=$(cat $BUNKER_PID_FILE)
+    if ps -p $old_pid > /dev/null 2>&1; then
+        echo "Killing existing local bunker pid $old_pid..."
+        kill $old_pid 2>/dev/null || true
+        sleep 1
+    fi
+    rm -f $BUNKER_PID_FILE
+else
+    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+        old_pid=$(ps ax | fgrep python | fgrep bunker | fgrep -v grep | awk '{print $1}') || true
+        if [[ -n $old_pid ]]; then
+            echo "Killing existing bunker pid $old_pid..."
+            kill $old_pid 2>/dev/null || true
+        fi
+    fi
+fi
+
+if [[ ${1:-} == stop ]]; then
+    exit 0
+fi
+
+site_model="${1:-sites/udmi_site_model}"
+target_project="${2:-${TARGET_PROJECT:-//mqtt/localhost:${MQTT_PORT:-8883}}}"
+
+export PYTHONUNBUFFERED=1
+export POSTGRES_PORT=${POSTGRES_PORT:-5432}
+export INFLUX_PORT=${INFLUX_PORT:-8086}
+
+echo "Starting bunker on $target_project with model $site_model..."
+nohup $UDMI_ROOT/bin/bunker "$site_model" "$target_project" >> $BUNKER_LOG 2>&1 &
+BUNKER_PID=$!
+echo $BUNKER_PID > $BUNKER_PID_FILE
+disown $BUNKER_PID 2>/dev/null || true
+
+echo "Started bunker daemon (PID $BUNKER_PID)"

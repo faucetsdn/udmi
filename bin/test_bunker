@@ -1,6 +1,6 @@
 #!/bin/bash -e
 #
-# Integration and unit test suite for Bailey database ingestion service.
+# Integration and unit test suite for Bunker database ingestion service.
 #
 
 UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
@@ -9,13 +9,13 @@ cd "$UDMI_ROOT"
 source "$UDMI_ROOT/etc/shell_common.sh"
 
 echo "=========================================================================="
-echo "Running Bailey Unit Tests..."
+echo "Running Bunker Unit Tests..."
 echo "=========================================================================="
-PYTHONPATH=common/src/main/python:gencode/python:. venv/bin/python3 -m unittest discover -s bailey/tests
+PYTHONPATH=common/src/main/python:gencode/python:. venv/bin/python3 -m unittest discover -s bunker/tests
 
 echo ""
 echo "=========================================================================="
-echo "Testing Bailey Ingestion Pipeline (stdin stream)..."
+echo "Testing Bunker Ingestion Pipeline (stdin stream)..."
 echo "=========================================================================="
 
 PG_PORT=${POSTGRES_PORT:-5432}
@@ -27,15 +27,15 @@ INF_PORT=${INFLUX_PORT:-8086}
 if psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -c "SELECT 1;" >/dev/null 2>&1; then
     echo "PostgreSQL is active on port $PG_PORT."
     
-    echo "Piping simple trace into Bailey..."
-    bin/pull_files tests/traces/simple | bailey/bin/bailey --stdin --always-save-raw
+    echo "Piping simple trace into Bunker..."
+    bin/pull_files tests/traces/simple | bunker/bin/bunker --stdin --always-save-raw
     
     echo "Verifying PostgreSQL records in udmi_messages..."
     msg_count=$(psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -A -c "SELECT count(*) FROM udmi_messages;" 2>/dev/null || echo 0)
     echo "udmi_messages count: $msg_count"
     
     if [[ $msg_count -gt 0 ]]; then
-        echo "PASS: Successfully verified records in udmi_messages via Bailey."
+        echo "PASS: Successfully verified records in udmi_messages via Bunker."
     else
         echo "FAIL: No records found in udmi_messages!"
         exit 1
@@ -53,5 +53,5 @@ fi
 
 echo ""
 echo "=========================================================================="
-echo "SUCCESS: Bailey Test Suite Passed!"
+echo "SUCCESS: Bunker Test Suite Passed!"
 echo "=========================================================================="
