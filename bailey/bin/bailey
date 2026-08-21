@@ -42,7 +42,8 @@ def main():
     )
     parser.add_argument(
         "--always-save-raw",
-        action="store_true",
+        action=argparse.BooleanOptionalAction,
+        default=True,
         help="Always insert raw JSONB record into udmi_messages in addition to specialized table writes",
     )
 

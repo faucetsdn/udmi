@@ -55,6 +55,10 @@ def parse_mqtt_topic(topic: str) -> Dict[str, Optional[str]]:
                 sub_type = parts[r_idx + 2]
             if r_idx + 3 < len(parts):
                 sub_folder = parts[r_idx + 3]
+        elif len(parts) > 0 and parts[0] in ("events", "state", "commands", "config"):
+            sub_type = parts[0]
+            if len(parts) > 1:
+                sub_folder = parts[1]
 
     return {
         "deviceRegistryId": registry_id,
@@ -71,7 +75,7 @@ class BaileyService:
         self,
         project_spec: Optional[str] = None,
         site_model: Optional[str] = None,
-        always_save_raw: bool = False,
+        always_save_raw: bool = True,
     ):
         self.project_spec = project_spec
         self.site_model = site_model

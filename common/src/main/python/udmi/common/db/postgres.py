@@ -8,6 +8,24 @@ import psycopg2
 from psycopg2.extras import Json
 
 
+import math
+
+
+def sanitize_for_json(obj: Any) -> Any:
+    """Recursively replaces NaN and Infinity float values with None for JSON compliance."""
+    if isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    if isinstance(obj, dict):
+        return {k: sanitize_for_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [sanitize_for_json(v) for v in obj]
+    if isinstance(obj, tuple):
+        return tuple(sanitize_for_json(v) for v in obj)
+    return obj
+
+
 class PostgresManager:
     """Manages PostgreSQL connection and insertion operations."""
 
@@ -217,7 +235,9 @@ class PostgresManager:
                     for col_name, val in row.items():
                         columns.append(col_name)
                         if isinstance(val, (dict, list)):
-                            values.append(Json(val))
+                            values.append(Json(sanitize_for_json(val)))
+                        elif isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+                            values.append(None)
                         else:
                             values.append(val)
 

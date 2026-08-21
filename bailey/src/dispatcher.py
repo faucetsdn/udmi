@@ -22,7 +22,7 @@ class MessageDispatcher:
         postgres_manager: PostgresManager,
         influx_manager: InfluxManager,
         custom_handlers: Optional[List[BaseHandler]] = None,
-        always_save_raw: bool = False,
+        always_save_raw: bool = True,
     ):
         self.postgres_manager = postgres_manager
         self.influx_manager = influx_manager
