@@ -28,10 +28,11 @@ PG_USER=${POSTGRES_USER:-postgres}
 PG_DB=${POSTGRES_DB:-postgres}
 
 pg_count=$(psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -A -c "SELECT count(*) FROM udmi_messages WHERE device_id = '$DEVICE_ID';" 2>/dev/null || echo "0")
+pg_sys_count=$(psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -A -c "SELECT count(*) FROM udmi_system_state WHERE device_id = '$DEVICE_ID';" 2>/dev/null || echo "0")
 
-echo "PostgreSQL message count for device $DEVICE_ID: $pg_count"
+echo "PostgreSQL message count for device $DEVICE_ID in udmi_messages: $pg_count, udmi_system_state: $pg_sys_count"
 if [[ $pg_count -gt 0 ]]; then
-  echo "PASS: Successfully verified $pg_count records in PostgreSQL via UDMIS CaptureProcessor!"
+  echo "PASS: Successfully verified records in PostgreSQL via UDMIS CaptureProcessor!"
 else
   echo "FAIL: No records found in PostgreSQL table udmi_messages for device $DEVICE_ID!"
   echo "=== Tail of out/udmis.log ==="
@@ -48,7 +49,7 @@ influx_out=$(udmis/bin/influxctl query --host "http://localhost:$INF_PORT" --tok
 echo "InfluxDB output:"
 echo "$influx_out"
 
-if echo "$influx_out" | grep -q "point_value"; then
+if [[ "$influx_out" == *"point_value"* ]]; then
   echo "PASS: Successfully verified telemetry point_value records in InfluxDB via UDMIS CaptureProcessor!"
 else
   echo "FAIL: No point_value records found in InfluxDB!"

@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+"""CLI entrypoint for Bailey database ingestion service."""
+
+import argparse
+import os
+import sys
+
+# Add repository python sources to sys.path
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+venv_python = os.path.join(REPO_ROOT, "venv", "bin", "python3")
+if os.path.exists(venv_python) and sys.executable != venv_python and not os.environ.get("VIRTUAL_ENV"):
+    os.execv(venv_python, [venv_python] + sys.argv)
+
+sys.path.insert(0, os.path.join(REPO_ROOT, "common", "src", "main", "python"))
+sys.path.insert(0, os.path.join(REPO_ROOT, "gencode", "python"))
+sys.path.insert(0, REPO_ROOT)
+
+from bailey.src.service import BaileyService
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Bailey UDMI Database Ingestion Service")
+    parser.add_argument(
+        "project_spec",
+        nargs="?",
+        default=os.environ.get("TARGET_PROJECT", "//mqtt/localhost"),
+        help="Project target specification, e.g., //mqtt/localhost:18833 or //pubsub/project/namespace",
+    )
+    parser.add_argument(
+        "site_model",
+        nargs="?",
+        default=None,
+        help="Path to site model directory (optional)",
+    )
+    parser.add_argument(
+        "--stdin",
+        action="store_true",
+        help="Read JSON message stream directly from standard input",
+    )
+    parser.add_argument(
+        "--always-save-raw",
+        action="store_true",
+        help="Always insert raw JSONB record into udmi_messages in addition to specialized table writes",
+    )
+
+    args = parser.parse_args()
+
+    service = BaileyService(
+        project_spec=args.project_spec,
+        site_model=args.site_model,
+        always_save_raw=args.always_save_raw,
+    )
+
+    if args.stdin or not sys.stdin.isatty():
+        service.run_stdin()
+    else:
+        service.run()
+
+
+if __name__ == "__main__":
+    main()

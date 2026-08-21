@@ -91,23 +91,133 @@ public class CaptureProcessor extends ProcessorBase {
   }
 
   private void initPostgres() {
-    String sql = "CREATE TABLE IF NOT EXISTS udmi_messages ("
-        + "id SERIAL PRIMARY KEY, "
-        + "project_id VARCHAR(255), "
-        + "registry_id VARCHAR(255), "
-        + "device_id VARCHAR(255), "
-        + "sub_folder VARCHAR(50), "
-        + "sub_type VARCHAR(50), "
-        + "publish_time TIMESTAMP, "
-        + "payload JSONB, "
-        + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
-        + ");";
+    String[] sqlStatements = new String[] {
+        "CREATE TABLE IF NOT EXISTS udmi_messages ("
+            + "id SERIAL PRIMARY KEY, "
+            + "project_id VARCHAR(255), "
+            + "registry_id VARCHAR(255), "
+            + "device_id VARCHAR(255), "
+            + "sub_folder VARCHAR(50), "
+            + "sub_type VARCHAR(50), "
+            + "publish_time TIMESTAMP, "
+            + "payload JSONB, "
+            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            + ");",
+        "CREATE TABLE IF NOT EXISTS udmi_point_state ("
+            + "id SERIAL PRIMARY KEY, "
+            + "timestamp TIMESTAMP, "
+            + "device_id VARCHAR(255), "
+            + "device_registry_id VARCHAR(255), "
+            + "message_id VARCHAR(255), "
+            + "point_name VARCHAR(255), "
+            + "value_state VARCHAR(50), "
+            + "units VARCHAR(50), "
+            + "status_timestamp TIMESTAMP, "
+            + "level INTEGER, "
+            + "category VARCHAR(100), "
+            + "message TEXT, "
+            + "detail TEXT, "
+            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            + ");",
+        "CREATE TABLE IF NOT EXISTS udmi_system_state ("
+            + "id SERIAL PRIMARY KEY, "
+            + "timestamp TIMESTAMP, "
+            + "publish_timestamp TIMESTAMP, "
+            + "device_registry_id VARCHAR(255), "
+            + "device_id VARCHAR(255), "
+            + "device_num_id VARCHAR(255), "
+            + "gateway_id VARCHAR(255), "
+            + "make VARCHAR(255), "
+            + "model VARCHAR(255), "
+            + "serial_no VARCHAR(255), "
+            + "rev VARCHAR(255), "
+            + "sku VARCHAR(255), "
+            + "software JSONB, "
+            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            + ");",
+        "CREATE TABLE IF NOT EXISTS udmi_discovery ("
+            + "id SERIAL PRIMARY KEY, "
+            + "timestamp TIMESTAMP, "
+            + "generation TIMESTAMP, "
+            + "device_registry_id VARCHAR(255), "
+            + "device_id VARCHAR(255), "
+            + "message_id VARCHAR(255), "
+            + "scan_family VARCHAR(50), "
+            + "ether_addr VARCHAR(255), "
+            + "ipv4_addr VARCHAR(255), "
+            + "bacnet_addr VARCHAR(255), "
+            + "hostname VARCHAR(255), "
+            + "fqdn VARCHAR(255), "
+            + "hardware_make VARCHAR(255), "
+            + "hardware_model VARCHAR(255), "
+            + "firmware_version VARCHAR(255), "
+            + "serial_no VARCHAR(255), "
+            + "status_level INTEGER, "
+            + "status_category VARCHAR(100), "
+            + "status_message TEXT, "
+            + "ports JSONB, "
+            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            + ");",
+        "CREATE TABLE IF NOT EXISTS udmi_validation ("
+            + "id SERIAL PRIMARY KEY, "
+            + "timestamp TIMESTAMP, "
+            + "device_registry_id VARCHAR(255), "
+            + "device_id VARCHAR(255), "
+            + "message_type VARCHAR(100), "
+            + "message TEXT, "
+            + "detail TEXT, "
+            + "category VARCHAR(100), "
+            + "level INTEGER, "
+            + "errors JSONB, "
+            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            + ");",
+        "CREATE TABLE IF NOT EXISTS udmi_alarms ("
+            + "id SERIAL PRIMARY KEY, "
+            + "timestamp TIMESTAMP, "
+            + "device_registry_id VARCHAR(255), "
+            + "device_id VARCHAR(255), "
+            + "alarm_category VARCHAR(100), "
+            + "alarm_priority VARCHAR(50), "
+            + "alarm_type VARCHAR(100), "
+            + "controller VARCHAR(255), "
+            + "equipment VARCHAR(255), "
+            + "fault BOOLEAN, "
+            + "from_state VARCHAR(50), "
+            + "to_state VARCHAR(50), "
+            + "generation_time TIMESTAMP, "
+            + "in_alarm BOOLEAN, "
+            + "location_path VARCHAR(255), "
+            + "message_text TEXT, "
+            + "out_of_service BOOLEAN, "
+            + "overridden BOOLEAN, "
+            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            + ");",
+        "CREATE TABLE IF NOT EXISTS udmi_metadata ("
+            + "id SERIAL PRIMARY KEY, "
+            + "timestamp TIMESTAMP, "
+            + "device_id VARCHAR(255), "
+            + "device_registry_id VARCHAR(255), "
+            + "system_hardware_make VARCHAR(255), "
+            + "system_hardware_model VARCHAR(255), "
+            + "system_hardware_sku VARCHAR(255), "
+            + "system_hardware_rev VARCHAR(255), "
+            + "system_location_room VARCHAR(255), "
+            + "system_location_floor VARCHAR(255), "
+            + "localnet_families_ipv4_addr VARCHAR(255), "
+            + "localnet_families_ether_addr VARCHAR(255), "
+            + "cloud_connection_type VARCHAR(50), "
+            + "metadata JSONB, "
+            + "created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+            + ");"
+    };
     try (Connection conn = getPostgresConnection();
          Statement stmt = conn.createStatement()) {
-      stmt.execute(sql);
-      info("Initialized PostgreSQL udmi_messages table.");
+      for (String sql : sqlStatements) {
+        stmt.execute(sql);
+      }
+      info("Initialized PostgreSQL standard UDMI tables.");
     } catch (Exception e) {
-      warn("Failed to initialize PostgreSQL table: " + friendlyStackTrace(e));
+      warn("Failed to initialize PostgreSQL tables: " + friendlyStackTrace(e));
     }
   }
 
@@ -149,6 +259,43 @@ public class CaptureProcessor extends ProcessorBase {
       stmt.executeUpdate();
     } catch (Exception e) {
       error("Error saving message to PostgreSQL: " + friendlyStackTrace(e));
+    }
+
+    if (envelope.subFolder == SubFolder.SYSTEM && envelope.subType == SubType.STATE) {
+      saveSystemState(envelope, payload);
+    }
+  }
+
+  private void saveSystemState(Envelope envelope, Object payload) {
+    String sql = "INSERT INTO udmi_system_state ("
+        + "timestamp, publish_timestamp, device_registry_id, device_id, device_num_id, gateway_id, "
+        + "make, model, serial_no, rev, sku, software"
+        + ") VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb)";
+    try (Connection conn = getPostgresConnection();
+         PreparedStatement stmt = conn.prepareStatement(sql)) {
+      Map<String, Object> map = toMap(payload);
+      @SuppressWarnings("unchecked")
+      Map<String, Object> hw = (Map<String, Object>) map.getOrDefault("hardware", Map.of());
+      @SuppressWarnings("unchecked")
+      Map<String, Object> sw = (Map<String, Object>) map.getOrDefault("software", Map.of());
+      Timestamp ts = envelope.publishTime != null
+          ? new Timestamp(envelope.publishTime.getTime())
+          : null;
+      stmt.setTimestamp(1, ts);
+      stmt.setTimestamp(2, ts);
+      stmt.setString(3, envelope.deviceRegistryId);
+      stmt.setString(4, envelope.deviceId);
+      stmt.setString(5, envelope.deviceNumId);
+      stmt.setString(6, envelope.gatewayId);
+      stmt.setString(7, (String) hw.get("make"));
+      stmt.setString(8, (String) hw.get("model"));
+      stmt.setString(9, (String) map.get("serial_no"));
+      stmt.setString(10, (String) hw.get("rev"));
+      stmt.setString(11, (String) hw.get("sku"));
+      stmt.setString(12, stringify(sw));
+      stmt.executeUpdate();
+    } catch (Exception e) {
+      debug("Could not insert into udmi_system_state: " + friendlyStackTrace(e));
     }
   }
 

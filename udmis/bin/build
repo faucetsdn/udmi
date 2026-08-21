@@ -51,6 +51,8 @@ echo Building udmis in $PWD
 
 ./gradlew shadow $check $covg $*
 
+[[ -f $jarfile || ! -f $jartmp ]] || cp -a $jartmp $jarfile
+
 ls -l $jarfile
 
 echo Done with udmis build.

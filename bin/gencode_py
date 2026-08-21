@@ -3,16 +3,20 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd "$ROOT_DIR"
 
-if [[ -n $(which apt-get) ]]; then
-    update_cmd="apt-get install -y"
-    extra_packages=""
-else
-    update_cmd="apk add"
-    # Some extra packages are necessary for alpine based docker builds.
-    extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc"
-fi
+source "$ROOT_DIR/etc/shell_common.sh"
+export LC_ALL=C
 
-sudo $update_cmd $extra_packages moreutils expect python3 python3-pip python3-venv
+if [[ ${UDMI_NO_SUDO:-false} != true ]] && ! which sponge &>/dev/null; then
+    if [[ -n $(which apt-get) ]]; then
+        update_cmd="apt-get install -y"
+        extra_packages=""
+    else
+        update_cmd="apk add"
+        # Some extra packages are necessary for alpine based docker builds.
+        extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc"
+    fi
+    sudo $update_cmd $extra_packages moreutils expect python3 python3-pip python3-venv || true
+fi
 
 python3 --version
 
