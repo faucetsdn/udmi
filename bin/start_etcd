@@ -69,6 +69,7 @@ nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:${etcd_port} \
              > $ETCD_LOG 2>&1 &
 ETCD_PID=$!
 echo $ETCD_PID > $ETCD_PID_FILE
+disown $ETCD_PID 2>/dev/null || true
 
 echo Waiting 10s for etcd to start on port ${etcd_port}, log in $ETCD_LOG
 sleep 10

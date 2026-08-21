@@ -55,6 +55,10 @@ else
     fi
 fi
 
+if [[ ${1:-} == stop ]]; then
+    exit 0
+fi
+
 postgres_port=${POSTGRES_PORT:-5432}
 postgres_user=${POSTGRES_USER:-postgres}
 postgres_db=${POSTGRES_DB:-postgres}
