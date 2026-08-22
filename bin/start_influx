@@ -57,6 +57,7 @@ nohup $BINDIR/influxd \
              > $INFLUX_LOG 2>&1 &
 INFLUX_PID=$!
 echo $INFLUX_PID > $INFLUX_PID_FILE
+disown $INFLUX_PID 2>/dev/null || true
 
 echo Waiting 10s for influxd to start on port ${influx_port}, log in $INFLUX_LOG
 sleep 10

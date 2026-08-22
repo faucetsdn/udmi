@@ -39,6 +39,10 @@ echo Mirroring udmi files...
 cp -a ../bin/ build/udmi_bin/
 cp -a ../etc/ build/udmi_etc/
 cp -a ../schema build/schema/
+cp -a ../butler build/butler/
+cp -a ../common build/common/
+cp -a ../gencode build/gencode/
+
 
 newer_files=$([[ -f $jarfile ]] && find src/ $BASE/gencode/java -type f -newer $jarfile || echo missing)
 if [[ -z $check && -z $covg && -z $newer_files ]]; then
@@ -50,6 +54,8 @@ fi
 echo Building udmis in $PWD
 
 ./gradlew shadow $check $covg $*
+
+[[ -f $jarfile || ! -f $jartmp ]] || cp -a $jartmp $jarfile
 
 ls -l $jarfile
 

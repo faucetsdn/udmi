@@ -55,6 +55,10 @@ else
     fi
 fi
 
+if [[ ${1:-} == stop ]]; then
+    exit 0
+fi
+
 postgres_port=${POSTGRES_PORT:-5432}
 postgres_user=${POSTGRES_USER:-postgres}
 postgres_db=${POSTGRES_DB:-postgres}
@@ -90,6 +94,7 @@ else
 fi
 POSTGRES_PID=$!
 echo $POSTGRES_PID > $POSTGRES_PID_FILE
+disown $POSTGRES_PID 2>/dev/null || true
 
 echo Waiting for postgresql to start on port ${postgres_port}, log in $POSTGRES_LOG
 # Wait up to 15s, polling to check if it's ready

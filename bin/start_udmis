@@ -113,6 +113,7 @@ nohup $UDMIS_DIR/bin/run $UDMIS_CONFIG >> $LOGFILE 2>&1 &
 
 PID=$!
 echo $PID > $UDMIS_PID_FILE
+disown $PID 2>/dev/null || true
 
 WAITING=90
 for i in `seq 1 $WAITING`; do

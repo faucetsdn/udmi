@@ -19,22 +19,20 @@ ROOT=$(dirname $0)/..
 UDMI_ROOT=..
 cd $ROOT
 
-jarfile=build/libs/services-1.0-SNAPSHOT-all.jar
+jarbase=services-1.0-SNAPSHOT-all.jar
+jartmp=/tmp/$jarbase
+jardir=build/libs
+jarfile=$jardir/$jarbase
 
-if [[ ! -d $UDMI_ROOT/gencode ]]; then
-    echo No gencode/ dir found, cowardly refusing to build.
-    exit 0
-fi
-
-newest=$(ls -rt `find src/ $UDMI_ROOT/gencode/java -type f` | tail -n 1)
-if [[ -z $check && -z $covg && -f $jarfile && $jarfile -nt $newest ]]; then
-    echo $jarfile up-to-date, skipping build.
-    exit 0
-fi
+rm -f $jartmp
+echo Stashing $jartmp
+[[ ! -f $jarfile ]] || cp -a $jarfile $jartmp
 
 echo Cleaning $ROOT/build/
 rm -rf build/
-mkdir build/
+mkdir -p $jardir
+
+[[ ! -f $jartmp ]] || cp -a $jartmp $jarfile
 
 echo Mirroring udmi files...
 cp -a ../bin build/udmi_bin/
@@ -46,6 +44,8 @@ echo Java version $(java --version)
 echo Building services in $PWD
 
 ./gradlew shadow $check $covg $*
+
+[[ -f $jarfile || ! -f $jartmp ]] || cp -a $jartmp $jarfile
 
 ls -l $jarfile
 

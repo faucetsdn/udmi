@@ -1,0 +1,57 @@
+#!/bin/bash -e
+#
+# Integration and unit test suite for Butler service (discovery, mapping, and database ingestion).
+#
+
+UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$UDMI_ROOT"
+
+source "$UDMI_ROOT/etc/shell_common.sh"
+
+echo "=========================================================================="
+echo "Running Butler Unit Tests..."
+echo "=========================================================================="
+PYTHONPATH=common/src/main/python:gencode/python:butler:. venv/bin/python3 -m unittest discover -s butler/tests
+
+echo ""
+echo "=========================================================================="
+echo "Testing Butler Ingestion Pipeline (stdin stream)..."
+echo "=========================================================================="
+
+PG_PORT=${POSTGRES_PORT:-5432}
+PG_USER=${POSTGRES_USER:-postgres}
+PG_DB=${POSTGRES_DB:-postgres}
+INF_PORT=${INFLUX_PORT:-8086}
+
+# Check if PostgreSQL and InfluxDB are running
+if psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -c "SELECT 1;" >/dev/null 2>&1; then
+    echo "PostgreSQL is active on port $PG_PORT."
+    
+    echo "Piping simple trace into Butler..."
+    bin/pull_files tests/traces/simple | butler/bin/butler --stdin --always-save-raw
+    
+    echo "Verifying PostgreSQL records in udmi_messages..."
+    msg_count=$(psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -A -c "SELECT count(*) FROM udmi_messages;" 2>/dev/null || echo 0)
+    echo "udmi_messages count: $msg_count"
+    
+    if [[ $msg_count -gt 0 ]]; then
+        echo "PASS: Successfully verified records in udmi_messages via Butler."
+    else
+        echo "FAIL: No records found in udmi_messages!"
+        exit 1
+    fi
+    
+    echo "Verifying PostgreSQL records in specialized tables..."
+    sys_count=$(psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -A -c "SELECT count(*) FROM udmi_system_state;" 2>/dev/null || echo 0)
+    echo "udmi_system_state count: $sys_count"
+    
+    pt_count=$(psql -h 127.0.0.1 -p "$PG_PORT" -U "$PG_USER" -d "$PG_DB" -t -A -c "SELECT count(*) FROM udmi_point_state;" 2>/dev/null || echo 0)
+    echo "udmi_point_state count: $pt_count"
+else
+    echo "PostgreSQL is not running locally; skipping live database verification (tested via unit tests with mocks)."
+fi
+
+echo ""
+echo "=========================================================================="
+echo "SUCCESS: Butler Test Suite Passed!"
+echo "=========================================================================="

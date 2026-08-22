@@ -1,7 +1,8 @@
 # Common setup for running mosquitto_ctrl
 
-if [[ -z ${UDMI_ROOT:-} ]]; then
-    UDMI_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+if [ -z "${UDMI_ROOT:-}" ]; then
+    _MOSQ_SCRIPT_DIR="${BASH_SOURCE:-$0}"
+    UDMI_ROOT=$(cd "$(dirname "$_MOSQ_SCRIPT_DIR")/.." && pwd)
 fi
 
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then

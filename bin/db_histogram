@@ -156,3 +156,13 @@ from(bucket: \"$INFLUXDB_BUCKET\")
       printf "%-15s | %-21s | %s\n", "InfluxDB", $4, $5
     }'
 fi
+
+echo ""
+echo "=== PostgreSQL UDMI Structured Tables Record Counts ==="
+echo -e "Table Name\t\t\t| Count"
+echo "--------------------------------------------------------"
+for tbl in udmi_messages udmi_point_state udmi_system_state udmi_discovery udmi_validation udmi_alarms udmi_metadata; do
+  cnt=$(psql -h 127.0.0.1 -p "$POSTGRES_PORT" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -A -c "SELECT count(*) FROM $tbl;" 2>/dev/null || echo "0")
+  printf "%-31s | %s\n" "$tbl" "$cnt"
+done
+

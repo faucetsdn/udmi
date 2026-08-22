@@ -45,13 +45,15 @@ function normalize_conn_spec {
 }
 
 # Auto-detect isolated mode from any command-line arguments or variables matching localhost:<port>
-for arg in "${@:-}" "${TARGET_PROJECT:-}" "${project_spec:-}" "${project_id:-}"; do
+for arg in "${@:-}" "${TARGET_PROJECT:-}" "${target_project:-}" "${project_spec:-}" "${project_id:-}"; do
     if [[ -n $arg && $arg =~ localhost:([0-9]+) ]]; then
         export MQTT_PORT="${BASH_REMATCH[1]}"
-        export ETCD_PORT=$((MQTT_PORT + 1))
-        export INFLUX_PORT=$((MQTT_PORT + 2))
-        export POSTGRES_PORT=$((MQTT_PORT + 3))
-        export UDMI_NO_SUDO=true
+        if [[ $MQTT_PORT != 8883 ]]; then
+            export ETCD_PORT=$((MQTT_PORT + 1))
+            export INFLUX_PORT=$((MQTT_PORT + 2))
+            export POSTGRES_PORT=$((MQTT_PORT + 3))
+            export UDMI_NO_SUDO=true
+        fi
         break
     fi
 done
