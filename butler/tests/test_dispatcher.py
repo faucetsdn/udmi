@@ -1,4 +1,4 @@
-"""Unit tests for Bunker MessageDispatcher."""
+"""Unit tests for Butler MessageDispatcher."""
 
 import os
 import sys
@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "common", "src", "main", "python"))
 sys.path.insert(0, os.path.join(REPO_ROOT, "gencode", "python"))
 sys.path.insert(0, REPO_ROOT)
 
-from bunker.src.dispatcher import MessageDispatcher
+from butler.src.dispatcher import MessageDispatcher
 
 
 class DispatcherTests(unittest.TestCase):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Script to parse JSON stream from stdin and save messages to databases.
 
-Uses Bunker ingestion engine with consistent UDMI DB schema.
+Uses Butler ingestion engine with consistent UDMI DB schema.
 """
 import os
 import sys
@@ -12,14 +12,15 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "gencode", "python"))
 sys.path.insert(0, REPO_ROOT)
 
 # pylint: disable=wrong-import-position
-from bunker.src.service import BunkerService
+from butler.src.service import ButlerService
 
 
 def main():
   """Main entry point for pull_capture."""
-  service = BunkerService(always_save_raw=True)
+  service = ButlerService(always_save_raw=True)
   service.run_stdin()
 
 
 if __name__ == "__main__":
   main()
+

@@ -88,7 +88,7 @@ echo starting up telegraf
 
 telegraf --config /usr/local/bin/startup/telegraf.conf > /tmp/telegraf.log 2>&1 &
 
-echo Starting bunker... | tee -a $UDMIS_LOG
-$UDMI_ROOT/bin/start_bunker "$site_model" "$project_spec" >> $UDMIS_LOG 2>&1 || true
+echo Starting butler... | tee -a $UDMIS_LOG
+$UDMI_ROOT/bin/start_butler "$site_model" "$project_spec" >> $UDMIS_LOG 2>&1 || true
 
 (echo Blocking until termination. && tail -f /dev/null)

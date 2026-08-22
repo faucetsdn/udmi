@@ -1,4 +1,4 @@
-"""Bunker standalone database capture service."""
+"""Butler standalone database capture service."""
 
 from datetime import datetime
 import json
@@ -8,7 +8,7 @@ import sys
 import time
 from typing import Any, Dict, List, Optional, Union
 
-from bunker.src.dispatcher import MessageDispatcher
+from butler.src.dispatcher import MessageDispatcher
 from udmi.common.connection import MessageConnection
 from udmi.common.db.influx import InfluxManager
 from udmi.common.db.postgres import PostgresManager
@@ -68,8 +68,8 @@ def parse_mqtt_topic(topic: str) -> Dict[str, Optional[str]]:
     }
 
 
-class BunkerService:
-    """Bunker standalone service capturing messages from MQTT / PubSub into databases."""
+class ButlerService:
+    """Butler standalone service capturing messages from MQTT / PubSub into databases."""
 
     def __init__(
         self,
@@ -130,13 +130,13 @@ class BunkerService:
             dev = envelope.get("deviceId", "unknown")
             sf = envelope.get("subFolder", "unknown")
             st = envelope.get("subType", "unknown")
-            print(f"bunker:db:{target}/{reg}/{dev}/{sf}/{st} (records: {count})")
+            print(f"butler:db:{target}/{reg}/{dev}/{sf}/{st} (records: {count})")
         except Exception as e:
             print(f"Error dispatching message to database: {e}", file=sys.stderr)
 
     def run_stdin(self) -> None:
         """Reads JSON stream line by line from stdin (for piped operation)."""
-        print("Bunker listening on stdin stream...", file=sys.stderr)
+        print("Butler listening on stdin stream...", file=sys.stderr)
         self.running = True
         try:
             for line in sys.stdin:
@@ -154,7 +154,7 @@ class BunkerService:
     def run_mqtt(self, topics: Optional[List[str]] = None) -> None:
         """Connects to MQTT broker and starts message loop."""
         subscribe_topics = topics or self.connection.get_default_subscribe_topics()
-        print(f"Bunker starting MQTT listener on topics: {subscribe_topics}", file=sys.stderr)
+        print(f"Butler starting MQTT listener on topics: {subscribe_topics}", file=sys.stderr)
         self.running = True
 
         mqtt_client = self.connection.subscribe_mqtt(
@@ -179,11 +179,13 @@ class BunkerService:
         if provider == "mqtt":
             self.run_mqtt()
         else:
-            print(f"Starting Bunker for provider: {provider}", file=sys.stderr)
+            print(f"Starting Butler for provider: {provider}", file=sys.stderr)
             self.run_mqtt()
 
     def stop(self) -> None:
-        """Shuts down Bunker service and closes database connections."""
+        """Shuts down Butler service and closes database connections."""
         self.running = False
         self.influx_manager.close()
-        print("Bunker service stopped.", file=sys.stderr)
+        print("Butler service stopped.", file=sys.stderr)
+
+

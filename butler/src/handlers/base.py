@@ -1,4 +1,4 @@
-"""Base message handler interface for Bunker."""
+"""Base message handler interface for Butler."""
 
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
@@ -8,7 +8,7 @@ from udmi.common.db.postgres import PostgresManager
 
 
 class BaseHandler(ABC):
-    """Abstract base class for all Bunker message handlers."""
+    """Abstract base class for all Butler message handlers."""
 
     @abstractmethod
     def can_handle(self, sub_folder: Optional[str], sub_type: Optional[str], payload: Dict[str, Any]) -> bool:

@@ -1,4 +1,4 @@
-"""Unit tests for Bunker message handlers."""
+"""Unit tests for Butler message handlers."""
 
 import os
 import sys
@@ -10,14 +10,14 @@ sys.path.insert(0, os.path.join(REPO_ROOT, "common", "src", "main", "python"))
 sys.path.insert(0, os.path.join(REPO_ROOT, "gencode", "python"))
 sys.path.insert(0, REPO_ROOT)
 
-from bunker.src.handlers.alarms import AlarmsHandler
-from bunker.src.handlers.discovery import DiscoveryHandler
-from bunker.src.handlers.metadata import MetadataHandler
-from bunker.src.handlers.point_state import PointStateHandler
-from bunker.src.handlers.pointset_events import PointsetEventsHandler
-from bunker.src.handlers.raw_fallback import RawFallbackHandler
-from bunker.src.handlers.system_state import SystemStateHandler
-from bunker.src.handlers.validation import ValidationHandler
+from butler.src.handlers.alarms import AlarmsHandler
+from butler.src.handlers.discovery import DiscoveryHandler
+from butler.src.handlers.metadata import MetadataHandler
+from butler.src.handlers.point_state import PointStateHandler
+from butler.src.handlers.pointset_events import PointsetEventsHandler
+from butler.src.handlers.raw_fallback import RawFallbackHandler
+from butler.src.handlers.system_state import SystemStateHandler
+from butler.src.handlers.validation import ValidationHandler
 
 
 class HandlerTests(unittest.TestCase):

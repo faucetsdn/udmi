@@ -25,9 +25,9 @@ ADD var/ var/
 ADD build/udmi_etc/ udmi/etc/
 ADD build/schema/ udmi/schema/
 ADD build/butler/ udmi/butler/
-ADD build/bunker/ udmi/bunker/
 ADD build/common/ udmi/common/
 ADD build/gencode/ udmi/gencode/
+
 
 ENV NO_CACHE_DIR=true
 RUN cd udmi && bin/setup_base

@@ -1,7 +1,7 @@
 """Handler for UDMI alarm messages."""
 
 from typing import Any, Dict, Optional
-from bunker.src.handlers.base import BaseHandler
+from butler.src.handlers.base import BaseHandler
 from udmi.common.db.influx import InfluxManager
 from udmi.common.db.postgres import PostgresManager
 

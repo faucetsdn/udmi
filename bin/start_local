@@ -6,10 +6,11 @@ source $UDMI_ROOT/etc/shell_common.sh
 if [[ "${1:-}" == "stop" ]]; then
     echo "Stopping local UDMI infrastructure..."
     
-    echo "Stopping bunker..."
-    $UDMI_ROOT/bin/start_bunker stop || true
+    echo "Stopping butler..."
+    $UDMI_ROOT/bin/start_butler stop || true
 
     echo "Stopping UDMIS..."
+
     $UDMI_ROOT/bin/start_udmis stop || true
 
     echo "Stopping etcd..."
@@ -143,10 +144,11 @@ fi
 echo Starting udmis proper... | tee -a $UDMIS_LOG
 $UDMI_ROOT/bin/start_udmis >> $UDMIS_LOG 2>&1
 
-echo Starting bunker... | tee -a $UDMIS_LOG
-$UDMI_ROOT/bin/start_bunker "$site_model" "${project_spec:-//mqtt/localhost:${MQTT_PORT:-8883}}" >> $UDMIS_LOG 2>&1
+echo Starting butler... | tee -a $UDMIS_LOG
+$UDMI_ROOT/bin/start_butler "$site_model" "${project_spec:-//mqtt/localhost:${MQTT_PORT:-8883}}" >> $UDMIS_LOG 2>&1
 
 echo Done with local server setup.
+
 
 echo ""
 echo "################################################################"
