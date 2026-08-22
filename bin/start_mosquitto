@@ -6,7 +6,7 @@ source $UDMI_ROOT/etc/shell_common.sh
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 SUDO=sudo
-if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
+if [[ ${UDMI_NO_SUDO:-false} == true || $(id -u) == 0 ]]; then
     SUDO=""
 fi
 

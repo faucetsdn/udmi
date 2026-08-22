@@ -9,7 +9,7 @@ source $UDMI_ROOT/etc/shell_common.sh
 
 OUT_DIR=$UDMI_ROOT/out
 mkdir -p $OUT_DIR
-rm -f $OUT_DIR/$util_name.log
+rm -f $OUT_DIR/$util_name.log 2>/dev/null || true
 
 [[ ! -d $UDMI_ROOT/validator/src ]] ||
     up_to_date $UDMI_JAR $UDMI_ROOT/validator/src ||

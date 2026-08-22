@@ -121,6 +121,7 @@ def docker_devices():
   def _docker_devices(*, devices):
     for i in devices:
       localnet = localnet_block_from_id(i)
+      run(f"docker rm -f discoverynode-test-device{i} 2>/dev/null || true")
       run(
           shlex.join([
               "docker",
@@ -194,6 +195,7 @@ def discovery_node():
     ) as f:
       json.dump(config, f, indent=2)
 
+    run("docker rm -f discoverynode-test-node 2>/dev/null || true")
     run(
         shlex.join([
             "docker",
@@ -263,7 +265,7 @@ def test_discovered_proxied_devices_are_created(
 
   run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 discover")
 
-  time.sleep(30)
+  time.sleep(45)
 
   shutil.rmtree(os.path.join(SITE_PATH, "extras"), ignore_errors=True)
 
@@ -373,6 +375,7 @@ def new_site_model():
     if delete:
       with contextlib.suppress(FileNotFoundError):
         shutil.rmtree(devices_directory)
+      shutil.rmtree(os.path.join(site_path, "extras"), ignore_errors=True)
       run("docker exec udmis psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -c \"TRUNCATE TABLE udmi_messages;\"")
 
     os.mkdir(devices_directory)
