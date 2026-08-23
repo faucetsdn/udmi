@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""GUMMI Management Web Interface Server CLI."""
+
+import os
+import sys
+
+# Ensure repo root and common python modules are in PYTHONPATH
+script_dir = os.path.dirname(os.path.realpath(__file__))
+REPO_ROOT = os.path.abspath(os.path.join(script_dir, "../.."))
+venv_dir = os.path.join(REPO_ROOT, "venv")
+venv_python = os.path.join(venv_dir, "bin", "python3")
+if os.path.exists(venv_python) and sys.prefix != venv_dir:
+    os.environ["VIRTUAL_ENV"] = venv_dir
+    os.execv(venv_python, [venv_python] + sys.argv)
+
+sys.path.insert(0, os.path.join(REPO_ROOT, "common", "src", "main", "python"))
+sys.path.insert(0, os.path.join(REPO_ROOT, "gencode", "python"))
+sys.path.insert(0, os.path.join(REPO_ROOT, "gummi"))
+sys.path.insert(0, REPO_ROOT)
+
+from gummi.src.server import main
+
+if __name__ == "__main__":
+    main()
