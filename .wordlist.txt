@@ -292,6 +292,7 @@ transpiles
 triaged
 triages
 txt
+tmux
 UCUM
 udmi
 UDMI

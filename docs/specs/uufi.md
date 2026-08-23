@@ -411,7 +411,7 @@ To tear down or stop running test infrastructure and DUT simulations in isolated
 * **Prohibition:** For test compliance, it is forbidden to set any environment variable to try and influence or impact the UDMI implementation.
 
 ### 9.9. Agentic Test Infrastructure Management (MCP Server & CLI)
-For AI agents (such as agents developing against GUMMI) or automated CI runners, the test infrastructure is managed via the **Test Infrastructure MCP Server** (`bin/test_infra_mcp`) or unified CLI (`bin/test_setup`). This abstracts away manual process management, PID tracking, and socket polling.
+During development or for automated CI runners, the test infrastructure is managed via the **Test Infrastructure MCP Server** (`bin/test_infra_mcp`) or unified CLI (`bin/test_setup`). This abstracts away manual process management, PID tracking, and socket polling.
 
 - **MCP Tools:**
   - `ensure_test_setup(test_id, [site_model], [dut_device_id], [dut_serial_no], [clean], [timeout_seconds])`: Deterministically assigns an isolated port block, launches the service stack in an isolated `tmux` session, verifies stack readiness, and returns the active connection URL (`mqtt://rocket:monkey@localhost:<port>`), available semantic window tags (`["main", "dut"]`), TLS certificates, and port mapping.
