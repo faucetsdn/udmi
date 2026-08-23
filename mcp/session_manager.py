@@ -91,7 +91,10 @@ class SessionManager:
         if os.path.isfile(info_path):
             try:
                 with open(info_path, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                    data = json.load(f)
+                    if self.is_session_active(session_name):
+                        data["windows"] = self.list_test_windows(test_id)
+                    return data
             except Exception:
                 return None
         return None
@@ -215,12 +218,15 @@ class SessionManager:
                 check=False,
             )
 
+        windows = self.list_test_windows(test_id)
+
         result_info = {
             "status": "READY",
             "test_id": test_id,
             "session_name": session_name,
             "connection_url": connection_url,
             "project_spec": project_spec,
+            "windows": windows,
             "tls": {
                 "ca_cert": os.path.join(site_model_path, "reflector", "ca.crt"),
                 "client_cert": os.path.join(site_model_path, "reflector", "rsa_private.crt"),
@@ -270,6 +276,25 @@ class SessionManager:
             "session_name": session_name,
         }
 
+    def list_test_windows(self, test_id: str) -> List[str]:
+        """List available semantic window tags for an active test session."""
+        session_name = self.sanitize_session_name(test_id)
+        if not self.is_session_active(session_name):
+            return []
+
+        res = subprocess.run(
+            ["tmux", "list-windows", "-t", session_name, "-F", "#{window_name}"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            check=False,
+        )
+        if res.returncode != 0:
+            return []
+
+        windows = [line.strip() for line in res.stdout.strip().splitlines() if line.strip()]
+        return windows
+
     def list_test_setups(self) -> List[Dict[str, Any]]:
         """List all active UDMI test sessions."""
         res = subprocess.run(
@@ -292,14 +317,33 @@ class SessionManager:
                     "test_id": test_id,
                     "session_name": sname,
                 }
+                info["windows"] = self.list_test_windows(test_id)
                 active_sessions.append(info)
         return active_sessions
 
     def get_test_logs(
         self, test_id: str, window: str = "main", lines: int = 100
     ) -> str:
-        """Capture recent pane logs from a tmux session window."""
+        """Capture recent pane logs from a named semantic tmux window."""
         session_name = self.sanitize_session_name(test_id)
+        if not self.is_session_active(session_name):
+            raise RuntimeError(f"Session '{session_name}' for test_id '{test_id}' is not active.")
+
+        # Reject numerical indices to enforce semantic window tags
+        if str(window).strip().isdigit():
+            available = self.list_test_windows(test_id)
+            raise ValueError(
+                f"Window parameter must be a semantic tag (e.g. 'main', 'dut'), not a numerical index '{window}'. "
+                f"Available semantic windows: {available}"
+            )
+
+        available_windows = self.list_test_windows(test_id)
+        if window not in available_windows:
+            raise ValueError(
+                f"Semantic window '{window}' not found in session '{session_name}'. "
+                f"Available semantic windows: {available_windows}"
+            )
+
         target = f"{session_name}:{window}"
         res = subprocess.run(
             ["tmux", "capture-pane", "-t", target, "-p", "-S", f"-{lines}"],

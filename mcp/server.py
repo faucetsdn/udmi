@@ -85,8 +85,25 @@ MCP_TOOLS = [
         },
     },
     {
+        "name": "list_test_windows",
+        "description": "Lists the available semantic window tags for an active test session (e.g. 'main', 'dut').",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "test_id": {
+                    "type": "string",
+                    "description": "Identifier of the active test session.",
+                },
+            },
+            "required": ["test_id"],
+        },
+    },
+    {
         "name": "get_test_logs",
-        "description": "Captures live console output from a tmux window for an active test session.",
+        "description": (
+            "Captures live console output from a named semantic tmux window (e.g. 'main', 'dut') "
+            "for an active test session. The window MUST be specified using a semantic tag, not a numerical index."
+        ),
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -96,7 +113,7 @@ MCP_TOOLS = [
                 },
                 "window": {
                     "type": "string",
-                    "description": "Window name (default: 'main').",
+                    "description": "Semantic window tag (e.g. 'main', 'dut'). Numerical indices are not permitted.",
                     "default": "main",
                 },
                 "lines": {
@@ -209,7 +226,7 @@ class MCPServer:
                 dut_device_id=args.get("dut_device_id"),
                 dut_serial_no=args.get("dut_serial_no"),
                 clean=args.get("clean", True),
-                timeout_seconds=args.get("timeout_seconds", 90),
+                timeout_seconds=args.get("timeout_seconds", 150),
             )
         if name == "terminate_test_setup":
             return self.session_mgr.terminate_test_setup(
@@ -218,6 +235,8 @@ class MCPServer:
             )
         if name == "list_test_setups":
             return self.session_mgr.list_test_setups()
+        if name == "list_test_windows":
+            return self.session_mgr.list_test_windows(test_id=args["test_id"])
         if name == "get_test_logs":
             return self.session_mgr.get_test_logs(
                 test_id=args["test_id"],
@@ -290,6 +309,15 @@ def main() -> None:
         "--json", action="store_true", help="Output full JSON response"
     )
 
+    # windows subcommand
+    windows_parser = subparsers.add_parser(
+        "windows", help="List available semantic windows for an active test session"
+    )
+    windows_parser.add_argument("test_id", help="Identifier of the test session")
+    windows_parser.add_argument(
+        "--json", action="store_true", help="Output full JSON response"
+    )
+
     # status subcommand
     status_parser = subparsers.add_parser(
         "status", help="Get status of a specific test setup"
@@ -305,7 +333,10 @@ def main() -> None:
     )
     logs_parser.add_argument("test_id", help="Identifier of the test session")
     logs_parser.add_argument(
-        "window", nargs="?", default="main", help="Window name (default: main)"
+        "window",
+        nargs="?",
+        default="main",
+        help="Semantic window tag (default: main). Numerical indices are not permitted.",
     )
     logs_parser.add_argument(
         "-n", "--lines", type=int, default=100, help="Number of lines to capture"
@@ -353,8 +384,19 @@ def main() -> None:
                     print(
                         f"{item.get('test_id', 'unknown')}: "
                         f"url={item.get('connection_url', 'N/A')} "
-                        f"session={item.get('session_name', 'N/A')}"
+                        f"session={item.get('session_name', 'N/A')} "
+                        f"windows={item.get('windows', [])}"
                     )
+
+    elif args.command == "windows":
+        windows = session_mgr.list_test_windows(args.test_id)
+        if args.json:
+            print(json.dumps(windows, indent=2))
+        else:
+            if not windows:
+                print(f"No active windows found for {args.test_id}")
+            else:
+                print(f"Available windows for {args.test_id}: {', '.join(windows)}")
 
     elif args.command == "status":
         res = session_mgr.get_session_info(args.test_id)
@@ -365,6 +407,7 @@ def main() -> None:
                 res = {
                     "status": "ACTIVE_UNTRACKED",
                     "test_id": args.test_id,
+                    "windows": session_mgr.list_test_windows(args.test_id),
                 }
             else:
                 res = {"status": "NOT_FOUND", "test_id": args.test_id}
@@ -374,6 +417,8 @@ def main() -> None:
             print(f"Status: {res.get('status')}")
             if "connection_url" in res:
                 print(f"Connection URL: {res['connection_url']}")
+            if "windows" in res:
+                print(f"Windows: {', '.join(res['windows'])}")
 
     elif args.command == "logs":
         logs = session_mgr.get_test_logs(
