@@ -25,8 +25,9 @@ While UDMI handles the underlying data standards, schema validation, and communi
 ## **Implementation Specification**
 
 * Implemented as a web-app using the Flask Python framework.  
-* Postgres access via SQLAlchemy and InfluxDB access via the official Python Client (without custom MCP abstraction layers).  
-* Interface with the rest of the system is through the UDMI UUFI message-passing interface, with connectivity defined by existing codebase standards.  
+* Data access and storage schemas are defined and managed by the Butler subsystem ([butler/](file:///home/peringknife/udmi/butler/)).  
+* Interface with the rest of the system is through the UDMI UUFI message-passing interface ([docs/specs/uufi.md](file:///home/peringknife/udmi/docs/specs/uufi.md)).  
+* Test infrastructure management and local integration for agents is handled via the UDMI Test Infrastructure MCP Server (`bin/test_infra_mcp` / `bin/test_setup`), as defined in [docs/specs/uufi.md](file:///home/peringknife/udmi/docs/specs/uufi.md#99-agentic-test-infrastructure-management-mcp-server--cli).  
 * The UI is declarative: its primary write function is setting the desired state, while state reconciliation and execution are handled by external backend systems.  
 * Supported authentication methods are No Authentication (relying on network-level access controls) and Identity-Aware Proxy (IAP).
 
@@ -104,10 +105,8 @@ The system follows a decoupled front-end/back-end architecture optimized for rap
 
 Each instance of GUMMI will need to have the following configuration parameters defined to be functional:
 
-* **UUFI connection**  
-  * URL. As per the UDMI UUFI spec, there's URL that's required to connect into the UUFI channel.  
-  * Designated principal for UUFI communication, to be included in the UUFI payloads  
-* **Local DBs** configuration: for direct access to the necessary local DBs that supply data not through UUFI  
+* **UUFI connection**: The connection URL and credentials required to connect to the UUFI channel (defined in [docs/specs/uufi.md](file:///home/peringknife/udmi/docs/specs/uufi.md) and dynamically provisioned by the MCP test server's `ensure_test_setup`).  
+* **Local DBs**: Data storage access configured according to the Butler specification ([butler/](file:///home/peringknife/udmi/butler/)).  
 * **Auth model**: Supported authentication methods are No Authentication (relying on network-level access control) and IAP (Identity-Aware Proxy).
 
 ## **Front-End Layer (GUMMI UI)**
@@ -120,10 +119,12 @@ Each instance of GUMMI will need to have the following configuration parameters 
 
 # **Agentic Workflow Guidance for UX Prototype**
 
-To successfully generate the prototype, the development agent should focus on the following priorities:
+To successfully generate and validate the prototype, the development agent should focus on the following priorities:
 
 1. **Interactive Navigation**: Ensure seamless routing between the Dashboard, Explorer, and Detail views to maintain user context.  
 2. **Data Density**: Strike a balance between technical depth (UDMI schemas) and operational readability for fleet managers; prioritize "at-a-glance" comprehension.  
 3. **Simulated Interactions**: Implement functional 'Save' buttons for configuration changes that update the local or mock state to demonstrate the workflow loop to users during demos.  
-4. **Error Handling Representation**: Design visual states for "Offline" devices or "Schema Violations" to test how operators react to system failures.
+4. **Error Handling Representation**: Design visual states for "Offline" devices or "Schema Violations" to test how operators react to system failures.  
+5. **E2E Testing with Playwright**: Implement and run end-to-end browser tests using **Playwright** to verify UI page routing, responsive table filtering/pagination, form interactions, and real-time Server-Sent Events rendering.  
+6. **Test Infrastructure Management via MCP**: When running integration and Playwright tests against local backend services, use the **Test Infrastructure MCP Server** (`bin/test_infra_mcp` / `bin/test_setup`) to orchestrate (`ensure_test_setup`), inspect (`list_test_windows`, `get_test_logs`), and teardown (`terminate_test_setup`) hermetic test environments.
 
