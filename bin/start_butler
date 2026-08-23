@@ -3,10 +3,11 @@
 UDMI_ROOT=$(dirname "$0")/..
 source "$UDMI_ROOT/etc/shell_common.sh"
 
-BUTLER_LOG=out/butler.log
-mkdir -p out var
+BUTLER_LOG=${BUTLER_LOG:-out/butler.log}
+mkdir -p $(dirname "$BUTLER_LOG")
 
-BUTLER_PID_FILE=var/butler.pid
+BUTLER_PID_FILE=${BUTLER_PID_FILE:-var/butler.pid}
+mkdir -p $(dirname "$BUTLER_PID_FILE")
 if [[ -f $BUTLER_PID_FILE ]]; then
     old_pid=$(cat $BUTLER_PID_FILE)
     if ps -p $old_pid > /dev/null 2>&1; then
@@ -16,10 +17,12 @@ if [[ -f $BUTLER_PID_FILE ]]; then
     fi
     rm -f $BUTLER_PID_FILE
 fi
-old_pid=$(ps ax | fgrep python | fgrep butler | fgrep -v grep | awk '{print $1}') || true
-if [[ -n $old_pid ]]; then
-    echo "Killing existing butler pid $old_pid..."
-    kill $old_pid 2>/dev/null || true
+if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+    old_pid=$(ps ax | fgrep python | fgrep butler | fgrep -v grep | awk '{print $1}') || true
+    if [[ -n $old_pid ]]; then
+        echo "Killing existing butler pid $old_pid..."
+        kill $old_pid 2>/dev/null || true
+    fi
 fi
 
 

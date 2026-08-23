@@ -63,8 +63,8 @@ if [[ -d var/ && ! -d etc/ ]]; then
 fi
 
 cd "$UDMI_ROOT"
-UDMIS_LOG=out/udmis.log
-mkdir -p out
+UDMIS_LOG=${UDMIS_LOG:-out/udmis.log}
+mkdir -p $(dirname "$UDMIS_LOG")
 # Do sudo now to prefetch incase it's needed later...
 if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
     sudo true

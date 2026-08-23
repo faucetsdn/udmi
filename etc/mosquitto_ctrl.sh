@@ -6,7 +6,7 @@ if [ -z "${UDMI_ROOT:-}" ]; then
 fi
 
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-    ETC_DIR=var/mosquitto
+    ETC_DIR=${MOSQUITTO_ETC_DIR:-var/mosquitto}
     NEED_SUDO=""
 elif [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
     ETC_DIR=/var/mosquitto_isolated
