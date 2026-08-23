@@ -61,6 +61,7 @@ butler/
 ├── tests/                  # Unit and integration test suites
 │   ├── test_dispatcher.py
 │   └── test_handlers.py
+├── SCHEMAS.md              # Database schemas (PostgreSQL & InfluxDB)
 └── README.md
 ```
 
