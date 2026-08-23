@@ -25,18 +25,17 @@ if [[ -f $INFLUX_PID_FILE ]]; then
     old_pid=$(cat $INFLUX_PID_FILE)
     if ps -p $old_pid > /dev/null 2>&1; then
         echo Killing existing local influxd pid $old_pid...
-        kill $old_pid || true
+        kill $old_pid 2>/dev/null || true
         sleep 1
     fi
-else
-    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
-        old_pid=$(ps ax | fgrep influxd | fgrep -v grep | awk '{print $1}') || true
-        if [[ -n $old_pid ]]; then
-            echo Killing existing influxd pid $old_pid...
-            kill $old_pid || true
-        fi
-    fi
 fi
+old_pid=$(ps -u $(id -u) -o pid,comm | fgrep influxd | awk '{print $1}') || true
+if [[ -n $old_pid ]]; then
+    echo Killing existing influxd pid $old_pid...
+    kill $old_pid 2>/dev/null || true
+    sleep 1
+fi
+
 
 if [[ ${1:-} == stop ]]; then
     exit 0

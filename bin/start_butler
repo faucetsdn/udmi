@@ -15,15 +15,13 @@ if [[ -f $BUTLER_PID_FILE ]]; then
         sleep 1
     fi
     rm -f $BUTLER_PID_FILE
-else
-    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
-        old_pid=$(ps ax | fgrep python | fgrep butler | fgrep -v grep | awk '{print $1}') || true
-        if [[ -n $old_pid ]]; then
-            echo "Killing existing butler pid $old_pid..."
-            kill $old_pid 2>/dev/null || true
-        fi
-    fi
 fi
+old_pid=$(ps ax | fgrep python | fgrep butler | fgrep -v grep | awk '{print $1}') || true
+if [[ -n $old_pid ]]; then
+    echo "Killing existing butler pid $old_pid..."
+    kill $old_pid 2>/dev/null || true
+fi
+
 
 if [[ ${1:-} == stop ]]; then
     exit 0
