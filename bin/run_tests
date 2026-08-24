@@ -58,6 +58,7 @@ case "$1" in
     test_wrap bin/test_generated_classes_py
     test_wrap bin/test_pull
     test_wrap bin/test_butler
+    test_wrap bin/test_gummi
     ;;
 
   schema_tests)

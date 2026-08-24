@@ -25,6 +25,7 @@ google-cloud-pubsub==2.25.2
 google-cloud-trace==1.13.5
 google-genai==2.7.0
 googleapis-common-protos==1.65.0
+greenlet==3.5.5
 grpc-google-iam-v1==0.13.1
 grpcio==1.67.0
 grpcio-status==1.67.0
@@ -56,6 +57,7 @@ packaging==24.1
 paho-mqtt==1.6.1
 pillow==12.3.0
 platformdirs==2.6.0
+playwright==1.62.0
 pluggy==1.5.0
 proto-plus==1.24.0
 protobuf==5.29.6
@@ -65,14 +67,18 @@ pyasn1_modules==0.4.1
 pycparser==2.22
 pydantic==2.13.4
 pydantic_core==2.46.4
+pyee==13.0.1
 Pygments==2.20.0
 PyJWT==2.13.0
 pylint==4.0.5
 pyOpenSSL==26.4.0
 pyparsing==3.1.0
 pytest==9.0.3
+pytest-base-url==2.1.0
+pytest-playwright==0.9.0
 pytest-xdist==3.7.0
 python-dateutil==2.9.0.post0
+python-slugify==8.0.4
 pytz==2021.3
 PyYAML==6.0.2
 reactivex==5.1.0
@@ -83,6 +89,7 @@ setuptools==83.0.0
 six==1.16.0
 sniffio==1.3.1
 tenacity==9.1.4
+text-unidecode==1.3
 tomli==2.0.1
 tomlkit==0.11.6
 typing-inspect==0.7.1
