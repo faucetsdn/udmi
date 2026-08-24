@@ -30,6 +30,7 @@ class GummiDB:
         self.pg = pg_manager or (PostgresManager() if PostgresManager else None)
         self.influx = influx_manager or (InfluxManager() if InfluxManager else None)
         self._mock_fleet = self._generate_mock_fleet()
+        self._mock_messages = self._generate_mock_messages()
 
     # --------------------------------------------------------------------------
     # Health & Connectivity
@@ -542,8 +543,229 @@ class GummiDB:
             return self._mock_telemetry(registry_id, device_id, point_names)
 
     # --------------------------------------------------------------------------
-    # Mock Data Generators
+    # Message Lifecycle & Mapping Queries (Model -> Discovery -> Proposal)
     # --------------------------------------------------------------------------
+
+    def get_device_messages(
+        self,
+        registry_id: str,
+        device_id: str,
+    ) -> List[Dict[str, Any]]:
+        """Queries udmi_messages for all lifecycle messages (model, discovery, propose) for a device."""
+        if not self.pg:
+            return self._mock_device_messages(registry_id, device_id)
+
+        try:
+            conn = self.pg.get_connection()
+            with conn.cursor() as cur:
+                # Query messages for this device directly, or discovery events that reference this device
+                cur.execute("""
+                    SELECT id, timestamp, registry_id, device_id, sub_type, sub_folder, payload, attributes
+                    FROM udmi_messages
+                    WHERE registry_id = %s
+                      AND (device_id = %s OR attributes->>'gatewayId' = %s OR payload::text LIKE %s)
+                    ORDER BY timestamp ASC, id ASC;
+                """, (registry_id, device_id, device_id, f'%"{device_id}"%'))
+                rows = cur.fetchall()
+            conn.close()
+
+            if not rows:
+                return self._mock_device_messages(registry_id, device_id)
+
+            messages = []
+            for r in rows:
+                p_load = r[6]
+                if isinstance(p_load, str):
+                    try:
+                        p_load = json.loads(p_load)
+                    except Exception:
+                        pass
+                attrs = r[7] if isinstance(r[7], dict) else {}
+                if isinstance(attrs, str):
+                    try:
+                        attrs = json.loads(attrs)
+                    except Exception:
+                        attrs = {}
+
+                messages.append({
+                    "id": r[0],
+                    "timestamp": r[1].isoformat() if hasattr(r[1], "isoformat") else str(r[1]),
+                    "registry_id": r[2],
+                    "device_id": r[3],
+                    "sub_type": r[4],
+                    "sub_folder": r[5],
+                    "payload": p_load,
+                    "updateFrom": attrs.get("updateFrom") or (p_load.get("updateFrom") if isinstance(p_load, dict) else None),
+                    "source": attrs.get("source") or (p_load.get("source") if isinstance(p_load, dict) else "system"),
+                    "transaction_id": attrs.get("transactionId"),
+                })
+            return messages
+        except Exception:
+            return self._mock_device_messages(registry_id, device_id)
+
+    def populate_mapping_scenario(
+        self,
+        registry_id: str = "ZZ-TRI-FECTA",
+    ) -> Dict[str, Any]:
+        """Populates the database or mock store with original models, discovery events, and generated proposals."""
+        now = datetime.now(timezone.utc)
+        t_model = (now - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        t_disc = (now - timedelta(minutes=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        t_prop = (now - timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        # 1. Base Model for AHU-22
+        model_payload = {
+            "version": "1.5.7",
+            "timestamp": t_model,
+            "system": {
+                "location": {"site": "US-SFO-XYY", "room": "Room-204", "floor": "Floor-2"},
+                "serial_no": "SN-AHU-22",
+                "hardware": {"make": "Acme Controls", "model": "HVAC-3000"},
+            },
+            "localnet": {
+                "families": {
+                    "vendor": {"addr": "0x65"}
+                }
+            },
+            "pointset": {
+                "points": {
+                    "supply_air_temperature_sensor": {"units": "Degrees-Celsius"}
+                }
+            }
+        }
+
+        # 2. Discovery Event from GAT-123 discovering new vendor address and bacnet address
+        discovery_payload = {
+            "timestamp": t_disc,
+            "version": "1.5.7",
+            "generation": t_disc,
+            "family": "vendor",
+            "addr": "0x68",
+            "families": {
+                "vendor": {"addr": "0x68"},
+                "bacnet": {"addr": "10022"},
+                "ipv4": {"addr": "192.168.1.122"}
+            }
+        }
+
+        # 3. Reconciled Proposal generated by mapper
+        proposal_localnet = {
+            "version": "1.5.7",
+            "timestamp": t_prop,
+            "families": {
+                "vendor": {"addr": "0x68"},
+                "bacnet": {"addr": "10022"},
+                "ipv4": {"addr": "192.168.1.122"}
+            }
+        }
+
+        proposal_pointset = {
+            "version": "1.5.7",
+            "timestamp": t_prop,
+            "points": {
+                "supply_air_temperature_sensor": {"units": "Degrees-Celsius"},
+                "return_air_temperature_sensor": {"ref": "point_ret_temp"}
+            }
+        }
+
+        records = [
+            {
+                "timestamp": t_model,
+                "registry_id": registry_id,
+                "device_id": "AHU-22",
+                "sub_type": "model",
+                "sub_folder": "system",
+                "payload": model_payload,
+                "attributes": {"source": "registrar"},
+            },
+            {
+                "timestamp": t_disc,
+                "registry_id": registry_id,
+                "device_id": "GAT-123",
+                "sub_type": "events",
+                "sub_folder": "discovery",
+                "payload": discovery_payload,
+                "attributes": {"source": "pubber", "gatewayId": "GAT-123"},
+            },
+            {
+                "timestamp": t_prop,
+                "registry_id": registry_id,
+                "device_id": "AHU-22",
+                "sub_type": "propose",
+                "sub_folder": "localnet",
+                "payload": proposal_localnet,
+                "attributes": {"source": "butler", "updateFrom": t_model, "transactionId": "TXN-map-01"},
+            },
+            {
+                "timestamp": t_prop,
+                "registry_id": registry_id,
+                "device_id": "AHU-22",
+                "sub_type": "propose",
+                "sub_folder": "pointset",
+                "payload": proposal_pointset,
+                "attributes": {"source": "butler", "updateFrom": t_model, "transactionId": "TXN-map-02"},
+            },
+        ]
+
+        if self.pg:
+            try:
+                conn = self.pg.get_connection()
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        CREATE TABLE IF NOT EXISTS udmi_messages (
+                            id SERIAL PRIMARY KEY,
+                            timestamp TIMESTAMPTZ,
+                            registry_id TEXT,
+                            device_id TEXT,
+                            sub_type TEXT,
+                            sub_folder TEXT,
+                            payload JSONB,
+                            attributes JSONB
+                        );
+                    """)
+                    for r in records:
+                        cur.execute("""
+                            INSERT INTO udmi_messages (timestamp, registry_id, device_id, sub_type, sub_folder, payload, attributes)
+                            VALUES (%s, %s, %s, %s, %s, %s, %s);
+                        """, (
+                            r["timestamp"],
+                            r["registry_id"],
+                            r["device_id"],
+                            r["sub_type"],
+                            r["sub_folder"],
+                            json.dumps(r["payload"]),
+                            json.dumps(r["attributes"]),
+                        ))
+                    conn.commit()
+                conn.close()
+            except Exception as e:
+                print(f"Warning: Failed to insert mapping records to postgres: {e}", file=sys.stderr)
+
+        # Also store in mock store
+        key = (registry_id, "AHU-22")
+        self._mock_messages[key] = [
+            {
+                "id": idx + 1,
+                "timestamp": r["timestamp"],
+                "registry_id": r["registry_id"],
+                "device_id": r["device_id"],
+                "sub_type": r["sub_type"],
+                "sub_folder": r["sub_folder"],
+                "payload": r["payload"],
+                "updateFrom": r["attributes"].get("updateFrom"),
+                "source": r["attributes"].get("source"),
+                "transaction_id": r["attributes"].get("transactionId"),
+            }
+            for idx, r in enumerate(records)
+        ]
+
+        return {
+            "status": "SUCCESS",
+            "registry_id": registry_id,
+            "device_id": "AHU-22",
+            "records_inserted": len(records),
+            "messages": self._mock_messages[key],
+        }
 
     def _generate_mock_fleet(self) -> List[Dict[str, Any]]:
         """Generates realistic mock device catalog."""
@@ -558,7 +780,30 @@ class GummiDB:
             ("Schneider Electric", "EcoStruxure-9", "3.0.2"),
         ]
 
-        # 1. Primary Air Handling Units (AHU)
+        # 1. Primary Air Handling Units & Gateways (AHU & GAT)
+        devices.append({
+            "id": len(devices) + 1,
+            "registry_id": "ZZ-TRI-FECTA",
+            "device_id": "AHU-22",
+            "make": "Acme Controls",
+            "model": "HVAC-3000",
+            "serial_no": "SN-AHU-22",
+            "software_version": "2.4.1",
+            "liveness_status": "ONLINE",
+            "last_seen": datetime.now(timezone.utc).isoformat(),
+        })
+        devices.append({
+            "id": len(devices) + 1,
+            "registry_id": "ZZ-TRI-FECTA",
+            "device_id": "GAT-123",
+            "make": "Siemens",
+            "model": "Desigo-CC-40",
+            "serial_no": "SN-GAT-123",
+            "software_version": "4.2.0",
+            "liveness_status": "ONLINE",
+            "last_seen": datetime.now(timezone.utc).isoformat(),
+        })
+
         for i in range(1, 7):
             mm = makes_models[(i - 1) % len(makes_models)]
             devices.append({
@@ -843,3 +1088,112 @@ class GummiDB:
             "device_id": device_id,
             "series": series_list,
         }
+
+    def _generate_mock_messages(self) -> Dict[Tuple[str, str], List[Dict[str, Any]]]:
+        """Generates initial mock message lifecycle records for AHU-22 and AHU-1."""
+        now = datetime.now(timezone.utc)
+        t_model = (now - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        t_disc = (now - timedelta(minutes=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        t_prop = (now - timedelta(minutes=10)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+        mock_msgs: Dict[Tuple[str, str], List[Dict[str, Any]]] = {}
+
+        # AHU-22
+        mock_msgs[("ZZ-TRI-FECTA", "AHU-22")] = [
+            {
+                "id": 1,
+                "timestamp": t_model,
+                "registry_id": "ZZ-TRI-FECTA",
+                "device_id": "AHU-22",
+                "sub_type": "model",
+                "sub_folder": "system",
+                "payload": {
+                    "version": "1.5.7",
+                    "timestamp": t_model,
+                    "system": {
+                        "location": {"site": "US-SFO-XYY", "room": "Room-204", "floor": "Floor-2"},
+                        "serial_no": "SN-AHU-22",
+                    },
+                    "localnet": {
+                        "families": {
+                            "vendor": {"addr": "0x65"}
+                        }
+                    }
+                },
+                "updateFrom": None,
+                "source": "registrar",
+                "transaction_id": "TXN-init-01",
+            },
+            {
+                "id": 2,
+                "timestamp": t_disc,
+                "registry_id": "ZZ-TRI-FECTA",
+                "device_id": "GAT-123",
+                "sub_type": "events",
+                "sub_folder": "discovery",
+                "payload": {
+                    "timestamp": t_disc,
+                    "generation": t_disc,
+                    "family": "vendor",
+                    "addr": "0x68",
+                    "families": {
+                        "vendor": {"addr": "0x68"},
+                        "bacnet": {"addr": "10022"},
+                        "ipv4": {"addr": "192.168.1.122"}
+                    }
+                },
+                "updateFrom": None,
+                "source": "pubber",
+                "transaction_id": "TXN-scan-01",
+            },
+            {
+                "id": 3,
+                "timestamp": t_prop,
+                "registry_id": "ZZ-TRI-FECTA",
+                "device_id": "AHU-22",
+                "sub_type": "propose",
+                "sub_folder": "localnet",
+                "payload": {
+                    "version": "1.5.7",
+                    "timestamp": t_prop,
+                    "families": {
+                        "vendor": {"addr": "0x68"},
+                        "bacnet": {"addr": "10022"},
+                        "ipv4": {"addr": "192.168.1.122"}
+                    }
+                },
+                "updateFrom": t_model,
+                "source": "butler",
+                "transaction_id": "TXN-map-01",
+            }
+        ]
+
+        return mock_msgs
+
+    def _mock_device_messages(self, registry_id: str, device_id: str) -> List[Dict[str, Any]]:
+        key = (registry_id, device_id)
+        if key in self._mock_messages:
+            return self._mock_messages[key]
+
+        # Generate standard default lifecycle for any other device
+        now = datetime.now(timezone.utc)
+        t_model = (now - timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        return [
+            {
+                "id": 1,
+                "timestamp": t_model,
+                "registry_id": registry_id,
+                "device_id": device_id,
+                "sub_type": "model",
+                "sub_folder": "system",
+                "payload": {
+                    "version": "1.5.7",
+                    "timestamp": t_model,
+                    "system": {"serial_no": f"SN-{device_id}-001"},
+                    "localnet": {"families": {"bacnet": {"addr": "1001"}}}
+                },
+                "updateFrom": None,
+                "source": "registrar",
+                "transaction_id": "TXN-base",
+            }
+        ]

@@ -45,6 +45,10 @@
       "type": "string",
       "format": "date-time"
     },
+    "updateFrom": {
+      "description": "Timestamp of the base model message this update or proposal is derived from",
+      "type": "string"
+    },
     "rawFolder": {
       "type": "string"
     },
@@ -79,7 +83,8 @@
         "state",
         "query",
         "reply",
-        "model"
+        "model",
+        "propose"
       ]
     }
   },

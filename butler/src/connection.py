@@ -274,6 +274,23 @@ class ButlerConnection:
             uufi_topic = f"/{self.prefix}{uufi_topic}"
         return [uufi_topic]
 
+    def get_propose_topics(self, device_id, sub_folder="system"):
+        """Returns list of topics to publish propose update for target device."""
+        if self.provider in ("gbos", "clearblade"):
+            return [
+                f"/uufi/r/{self.actual_registry}/d/{device_id}/c/propose/{sub_folder}",
+                f"/devices/{device_id}/propose",
+            ]
+        if self.provider == "jwt":
+            return [
+                f"/uufi/r/{self.actual_registry}/d/{device_id}/c/propose/{sub_folder}",
+                f"/devices/{device_id}/propose",
+            ]
+        uufi_topic = f"/uufi/r/{self.actual_registry}/d/{device_id}/c/propose/{sub_folder}"
+        if self.prefix:
+            uufi_topic = f"/{self.prefix}{uufi_topic}"
+        return [uufi_topic]
+
     def publish_messages(self, topic_message_pairs):
         """Connects once and publishes multiple (topic, message_dict) pairs."""
         if not topic_message_pairs:

@@ -283,9 +283,79 @@ window.selectDevice = async function (registryId, deviceId) {
     document.getElementById("detail-reported-state").textContent = JSON.stringify(data.state || {}, null, 2);
     document.getElementById("detail-desired-config").textContent = JSON.stringify(data.config || {}, null, 2);
 
+    // Load message lifecycle
+    loadDeviceMessages(registryId, deviceId);
+
     switchTab("device-detail");
   } catch (err) {
     console.error("Failed to load device details:", err);
+  }
+};
+
+async function loadDeviceMessages(registryId, deviceId) {
+  const container = document.getElementById("detail-messages-timeline");
+  container.innerHTML = '<div class="empty-state">Loading lifecycle messages...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/devices/${encodeURIComponent(registryId)}/${encodeURIComponent(deviceId)}/messages`);
+    const data = await res.json();
+    const msgs = data.messages || [];
+
+    if (msgs.length === 0) {
+      container.innerHTML = '<div class="empty-state">No lifecycle messages (model, discovery, propose) recorded for this device.</div>';
+      return;
+    }
+
+    container.innerHTML = "";
+    msgs.forEach((m, idx) => {
+      const card = document.createElement("div");
+      card.style.borderLeft = `4px solid ${m.sub_type === "propose" ? "#1a73e8" : m.sub_type === "events" ? "#f2994a" : "#34a853"}`;
+      card.style.background = "#f8f9fa";
+      card.style.padding = "0.75rem 1rem";
+      card.style.marginBottom = "0.75rem";
+      card.style.borderRadius = "0 4px 4px 0";
+
+      const badgeClass = m.sub_type === "propose" ? "badge-primary" : m.sub_type === "events" ? "badge-warning" : "badge-success";
+      const updateFromTag = m.updateFrom ? `<span style="font-size:0.75rem; color:#5f6368; margin-left:0.5rem;">[updateFrom: <code>${escapeHtml(m.updateFrom)}</code>]</span>` : "";
+
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.25rem;">
+          <div>
+            <strong>Step ${idx + 1}: ${m.sub_type.toUpperCase()} / ${m.sub_folder}</strong>
+            <span class="badge ${badgeClass}" style="margin-left:0.5rem;">${m.sub_type}</span>
+            ${updateFromTag}
+          </div>
+          <span style="font-size:0.8rem; color:#5f6368;">${formatTime(m.timestamp)} | Source: <code>${escapeHtml(m.source || "system")}</code></span>
+        </div>
+        <pre class="code-box" style="margin-top:0.25rem; font-size:0.8rem; max-height:160px; overflow-y:auto;">${escapeHtml(JSON.stringify(m.payload, null, 2))}</pre>
+      `;
+      container.appendChild(card);
+    });
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state">Error loading messages: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+window.triggerMappingScenario = async function () {
+  const regId = state.selectedDevice?.registryId || "ZZ-TRI-FECTA";
+  const btn = document.getElementById("btn-seed-mapping");
+  if (btn) btn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/api/mapping/run`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ registry_id: regId }),
+    });
+    const result = await res.json();
+    alert(`Mapping scenario populated successfully (${result.records_inserted} messages inserted).`);
+    if (state.selectedDevice) {
+      loadDeviceMessages(state.selectedDevice.registryId, state.selectedDevice.deviceId);
+    }
+  } catch (err) {
+    alert(`Failed to trigger mapping: ${err.message}`);
+  } finally {
+    if (btn) btn.disabled = false;
   }
 };
 
