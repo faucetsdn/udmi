@@ -131,20 +131,23 @@ class GummiRequestHandler(SimpleHTTPRequestHandler):
             )
             return self._send_json(res)
 
-        # 5. Device Detail & Telemetry (e.g. /api/devices/<reg>/<dev>[/telemetry])
-        dev_match = re.match(r"^/api/devices/([^/]+)/([^/]+)(/telemetry)?$", path)
+        # 5. Device Detail, Telemetry & Message Lifecycle
+        dev_match = re.match(r"^/api/devices/([^/]+)/([^/]+)(/(telemetry|messages))?$", path)
         if dev_match:
             reg_id = unquote(dev_match.group(1))
             dev_id = unquote(dev_match.group(2))
-            is_telemetry = bool(dev_match.group(3))
+            sub_path = dev_match.group(4)
 
-            if is_telemetry:
+            if sub_path == "telemetry":
                 pts_raw = query.get("points", [""])[0]
                 points = [p.strip() for p in pts_raw.split(",") if p.strip()]
                 start = query.get("start", ["-1h"])[0]
                 stop = query.get("stop", ["now()"])[0]
                 telem = self.db.get_device_telemetry(reg_id, dev_id, points, start=start, stop=stop)
                 return self._send_json(telem)
+            elif sub_path == "messages":
+                messages = self.db.get_device_messages(reg_id, dev_id)
+                return self._send_json({"registry_id": reg_id, "device_id": dev_id, "messages": messages})
             else:
                 detail = self.db.get_device_detail(reg_id, dev_id)
                 if detail is None:
@@ -218,10 +221,13 @@ class GummiRequestHandler(SimpleHTTPRequestHandler):
                 res = self.uufi.pause_rollout(r_id)
             else:
                 res = self.uufi.cancel_rollout(r_id)
+            return self._send_json(res, status_code=200)
 
-            if res:
-                return self._send_json(res)
-            return self._send_json({"error": "Rollout not found"}, status_code=404)
+        # 4. Mapping Lifecycle Simulation & Seeder (/api/mapping/run or /api/mapping/seed)
+        if path in ("/api/mapping/run", "/api/mapping/seed"):
+            reg_id = body.get("registry_id", "ZZ-TRI-FECTA")
+            result = self.db.populate_mapping_scenario(reg_id)
+            return self._send_json(result, status_code=200)
 
         return self._send_json({"error": "Not Found"}, status_code=404)
 

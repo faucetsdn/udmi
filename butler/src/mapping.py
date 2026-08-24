@@ -169,9 +169,12 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                 elif other['device_id'] and primary['device_id'] != other['device_id']:
                     primary['device_id'] = f"{primary['device_id']}+{other['device_id']}"
                     
-    # 3. Generate Model Diff Messages
+    # 3. Generate Model Proposal Messages
     outputs = []
     unknown_counter = 1
+    
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     
     for ent in entities:
         dev_id = ent['device_id']
@@ -181,9 +184,12 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
         v_addr = sorted(ent['vendor'])[0] if ent['vendor'] else None
         
         if dev_id:
-            orig = original_models.get(dev_id, {})
-            orig_localnet = orig.get('localnet', {}).get('families', {})
+            import copy
+            orig = copy.deepcopy(original_models.get(dev_id, {}))
+            orig['version'] = '1.5.7'
+            orig['timestamp'] = now
             
+            orig_localnet = orig.get('localnet', {}).get('families', {})
             orig_b = orig_localnet.get('bacnet', {}).get('addr') if 'bacnet' in orig_localnet else None
             orig_i = orig_localnet.get('ipv4', {}).get('addr') if 'ipv4' in orig_localnet else None
             orig_v = orig_localnet.get('vendor', {}).get('addr') if 'vendor' in orig_localnet else None
@@ -197,22 +203,16 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                 diff_families['vendor'] = {'addr': v_addr}
                 
             if diff_families:
-                # Merge with orig version if exists
-                from datetime import datetime, timezone
-                now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-                diff = {
-                    'version': '1.5.2',
-                    'timestamp': now,
-                    'localnet': {'families': diff_families}
-                }
-                outputs.append({'deviceId': dev_id, 'model': diff})
+                if 'localnet' not in orig:
+                    orig['localnet'] = {}
+                if 'families' not in orig['localnet']:
+                    orig['localnet']['families'] = {}
+                orig['localnet']['families'].update(diff_families)
 
-            # Try to read extra metadata to see if there are any new refs
+            # Check for extra metadata with new refs
             if site_model:
                 import os
                 import json
-                
-                # Check for each family if we have cloud metadata with refs
                 for family in ['vendor', 'bacnet', 'ipv4']:
                     addr = None
                     if family == 'vendor' and v_addr: addr = v_addr
@@ -229,30 +229,25 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                                 
                             refs = extra_meta.get("refs", {})
                             if refs:
-                                # We need to update the device metadata in site_model
-                                dev_meta_path = os.path.join(site_model, "devices", dev_id, "metadata.json")
-                                if os.path.exists(dev_meta_path):
-                                    with open(dev_meta_path, "r") as dmf:
-                                        dev_meta = json.load(dmf)
-                                        
-                                    if "pointset" not in dev_meta:
-                                        dev_meta["pointset"] = {}
-                                    if "points" not in dev_meta["pointset"]:
-                                        dev_meta["pointset"]["points"] = {}
-                                        
-                                    points = dev_meta["pointset"]["points"]
-                                    for ref_key, ref_val in refs.items():
-                                        pt_name = ref_val.get("point", ref_key)
-                                        if pt_name not in points:
-                                            points[pt_name] = {}
-                                        points[pt_name]["ref"] = ref_key
-                                        
-                                    with open(dev_meta_path, "w") as dmf:
-                                        json.dump(dev_meta, dmf, indent=2)
+                                if "pointset" not in orig:
+                                    orig["pointset"] = {}
+                                if "points" not in orig["pointset"]:
+                                    orig["pointset"]["points"] = {}
+                                    
+                                points = orig["pointset"]["points"]
+                                for ref_key, ref_val in refs.items():
+                                    pt_name = ref_val.get("point", ref_key)
+                                    if pt_name not in points:
+                                        points[pt_name] = {}
+                                    points[pt_name]["ref"] = ref_key
                         except Exception as e:
                             print(f"Error merging refs: {e}")
+
+            orig_timestamp = original_models.get(dev_id, {}).get("timestamp", "")
+            if diff_families or site_model:
+                outputs.append({'deviceId': dev_id, 'model': orig, 'updateFrom': orig_timestamp})
         else:
-            # New device: create minimal model
+            # New device: create complete proposed model
             dev_id = f"UNK-{unknown_counter}"
             unknown_counter += 1
             
@@ -261,15 +256,12 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
             if i_addr: new_families['ipv4'] = {'addr': i_addr}
             if v_addr: new_families['vendor'] = {'addr': v_addr}
             
-            from datetime import datetime, timezone
-            now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-            diff = {
-                'version': '1.5.2',
+            proposed = {
+                'version': '1.5.7',
                 'timestamp': now,
                 'localnet': {'families': new_families}
             }
-            outputs.append({'deviceId': dev_id, 'model': diff})
-            
+            outputs.append({'deviceId': dev_id, 'model': proposed, 'updateFrom': ''})
 
     if site_model:
         import os
@@ -293,11 +285,9 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                         }, f)
                         
                     with open(os.path.join(dev_dir, "cloud_metadata", "udmi_discovered_with.json"), "w") as f:
-                        
                         gen = d.get('generation')
                         if not gen:
-                            from datetime import datetime, timezone
-                            gen = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                            gen = now
                             
                         json.dump({
                             "addr": str(addr),
@@ -311,32 +301,10 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
             os.makedirs(dev_dir, exist_ok=True)
             meta_path = os.path.join(dev_dir, "metadata.json")
             
-            meta = {}
-            if os.path.exists(meta_path):
-                try:
-                    with open(meta_path, "r") as f:
-                        meta = json.load(f)
-                except:
-                    pass
-            
-            # Apply localnet families diff
-            diff_families = out["model"].get("localnet", {}).get("families", {})
-            if diff_families:
-                if "localnet" not in meta: meta["localnet"] = {}
-                if "families" not in meta["localnet"]: meta["localnet"]["families"] = {}
-                for fam, data in diff_families.items():
-                    meta["localnet"]["families"][fam] = data
-            
-            if "version" not in meta:
-                meta["version"] = "1.4.1"
-            
-            if "timestamp" not in meta:
-                meta["timestamp"] = now
-                    
             with open(meta_path, "w") as f:
-                json.dump(meta, f, indent=2)
+                json.dump(out["model"], f, indent=2)
 
-    # Publish updated model messages to the message bus (mapping.md compliance)
+    # Publish proposed model messages to the message bus (aligned with standard UDMI subfolder schemas)
     if conn_spec and outputs:
         connection = ButlerConnection(conn_spec, registry_id, site_model)
         actual_registry = connection.actual_registry
@@ -345,19 +313,36 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
             dev_id = out["deviceId"]
             tx_id = f"TXN-{uuid.uuid4().hex[:8]}"
             source_id = "butler"
-            msg = {
-                "subType": "model",
-                "subFolder": "system",
-                "deviceRegistryId": actual_registry,
-                "deviceId": dev_id,
-                "projectId": connection.project or "vibrant",
-                "transactionId": tx_id,
-                "publishTime": now,
-                "source": source_id,
-                "principal": source_id,
-                "payload": out["model"],
-            }
-            topics = connection.get_model_topics(dev_id)
-            for t in topics:
-                topic_msg_pairs.append((t, msg))
+            model = out["model"]
+            update_from = out.get("updateFrom", "")
+            
+            # Publish sharded subfolder proposals (unwrapped payload matching subFolder schema)
+            subfolders_to_publish = []
+            for sub_folder in ["localnet", "pointset", "system", "gateway"]:
+                if sub_folder in model and isinstance(model[sub_folder], dict) and model[sub_folder]:
+                    sub_payload = dict(model[sub_folder])
+                    sub_payload["version"] = model.get("version", "1.5.7")
+                    sub_payload["timestamp"] = model.get("timestamp", now)
+                    subfolders_to_publish.append((sub_folder, sub_payload))
+
+            if not subfolders_to_publish:
+                subfolders_to_publish.append(("localnet", {"version": "1.5.7", "timestamp": now, "families": {}}))
+
+            for sub_folder, sub_payload in subfolders_to_publish:
+                msg = {
+                    "subType": "propose",
+                    "subFolder": sub_folder,
+                    "deviceRegistryId": actual_registry,
+                    "deviceId": dev_id,
+                    "projectId": connection.project or "vibrant",
+                    "transactionId": tx_id,
+                    "publishTime": now,
+                    "updateFrom": update_from,
+                    "source": source_id,
+                    "principal": source_id,
+                    "payload": sub_payload,
+                }
+                topics = connection.get_propose_topics(dev_id, sub_folder)
+                for t in topics:
+                    topic_msg_pairs.append((t, msg))
         connection.publish_messages(topic_msg_pairs)
