@@ -11,6 +11,7 @@ if [[ "${1:-}" == "stop" ]]; then
     $UDMI_ROOT/bin/start_butler stop || true
 
     echo "Stopping UDMIS..."
+
     $UDMI_ROOT/bin/start_udmis stop || true
 
     echo "Stopping etcd..."
@@ -228,6 +229,7 @@ else
 fi
 
 echo Done with local server setup.
+
 
 echo ""
 echo "################################################################"

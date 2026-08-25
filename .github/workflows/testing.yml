@@ -651,7 +651,9 @@ jobs:
         with:
           python-version: '3.13'
       - name: Setup Base
-        run: bin/setup_base
+        run: |
+          bin/setup_base
+          bin/clone_model
       - name: Run MCP Infrastructure Tests
         run: |
           bin/test_mcp

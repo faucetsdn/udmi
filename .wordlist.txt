@@ -175,6 +175,7 @@ msb
 mTLS
 multithreaded
 mydomain
+MCP
 namespace
 namespaced
 namespaces
@@ -302,6 +303,7 @@ transpiles
 triaged
 triages
 txt
+tmux
 UCUM
 UDMI
 udmi
