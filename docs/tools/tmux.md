@@ -58,7 +58,7 @@ bin/tmux_barbican start btesting
 - **Separable Site Model**: Resolves site model path to `sites/udmi~<namespace>`.
 
 ### B. Default Execution (No Target Provided)
-When no target is passed (e.g. `bin/tmux_barbican start` or `bin/start_local`):
+When no target is passed (e.g. `bin/tmux_barbican start` or `bin/udmi start`):
 - Defaults to namespace **`default`**.
 - Session name: `udmi_<box>~default`.
 - Project spec: `//mqtt/localhost:35950/default`.
@@ -97,21 +97,21 @@ Fine-tune which services run inside the tmux session during `start`:
 
 ---
 
-## 5. Orchestration: `bin/start_local`
+## 5. Orchestration: `bin/udmi`
 
-[`bin/start_local`](../../bin/start_local) unifies and manages the entire local service pipeline by delegating to `tmux_barbican` and `tmux_butler`:
+[`bin/udmi`](../../bin/udmi) unifies and manages the entire local service pipeline by delegating to `tmux_barbican` and `tmux_butler`:
 
 ```bash
 # Start full local infrastructure under namespace 'btesting' (preserves state)
-bin/start_local btesting
+bin/udmi start btesting
 
 # Reset and start fresh under namespace 'btesting' (clean-slate)
-bin/start_local restart btesting
+bin/udmi restart btesting
 
 # Start full stack under default namespace
-bin/start_local
+bin/udmi start
 
 # Stop local infrastructure
-bin/start_local stop btesting
-bin/start_local stop
+bin/udmi stop btesting
+bin/udmi stop
 ```

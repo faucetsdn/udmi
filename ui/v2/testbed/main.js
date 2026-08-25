@@ -3307,7 +3307,7 @@ export class TestbedGraphController {
         iconEl.textContent = 'terminal';
         iconEl.style.color = '#0b57d0';
       }
-      if (cmdEl) cmdEl.textContent = `bin/start_local ${this.siteModel} ${projectSpec || this.projectSpec}`;
+      if (cmdEl) cmdEl.textContent = `bin/udmi start ${this.siteModel} ${projectSpec || this.projectSpec}`;
     }
 
     let autoCloseTimer = null;

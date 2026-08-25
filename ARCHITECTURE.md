@@ -98,7 +98,7 @@ The UDMI ecosystem is structured around the following core subsystems, ordered b
 
 ## Local Development Startup & Service Control
 
-When bringing up a local development or CI environment via `bin/start_local` or the modular `bin/tmux_*` tools, services initialize across the sequential phases corresponding directly to the subsystem tools:
+When bringing up a local development or CI environment via `bin/udmi start` or the modular `bin/tmux_*` tools, services initialize across the sequential phases corresponding directly to the subsystem tools:
 
 ```text
 Phase 0: bin/tmux_mcp        ──►  MCP Server: Test setup orchestrator & agent tool gateway
@@ -110,8 +110,8 @@ Phase 4: bin/tmux_bridgehead ──►  Bridgehead: Brings up edge device emulat
 
 ### Service Filter Modifiers
 
-*   **`+<service>`**: Run **only** this service (e.g. `bin/tmux_barbican +mosquitto`).
-*   **`!<service>`**: Exclude this service from startup (e.g. `bin/start_local !influxdb !postgres`).
-*   **`++<service>`**: Include an otherwise **optional** service (e.g. `bin/start_local ++validator`, `bin/start_local ++pubsub`, `bin/tmux_butler ++registrar`, `bin/tmux_bridgehead ++spotter`).
+*   **`+<service>`**: Run **only** this service (e.g. `bin/tmux_barbican start +mosquitto`).
+*   **`!<service>`**: Exclude this service from startup (e.g. `bin/udmi start !influxdb !postgres`).
+*   **`++<service>`**: Include an otherwise **optional** service (e.g. `bin/udmi start ++validator`, `bin/udmi start ++pubsub`, `bin/tmux_butler start ++registrar`, `bin/tmux_bridgehead start ++spotter`).
 
 
