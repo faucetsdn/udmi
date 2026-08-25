@@ -34,7 +34,7 @@ parse_tmux_args() {
         shift
 
         case "$arg" in
-            start|stop|status|logs|attach|help)
+            start|stop|restart|clean|status|logs|attach|help)
                 TMUX_ACTION="$arg"
                 ;;
             -h|--help)
@@ -131,7 +131,7 @@ parse_tmux_args() {
         SESSION_NAME="${SESSION_NAME}~${TMUX_NAMESPACE}"
     fi
 
-    if [[ "$TMUX_ACTION" == "start" && ${UDMI_NO_SUDO:-false} != true && $(id -u) != 0 ]]; then
+    if [[ ("$TMUX_ACTION" == "start" || "$TMUX_ACTION" == "restart") && ${UDMI_NO_SUDO:-false} != true && $(id -u) != 0 ]]; then
         if command -v sudo >/dev/null 2>&1; then
             echo "Pre-authenticating sudo credentials in foreground..."
             sudo -v || true
@@ -172,8 +172,10 @@ tmux_show_help() {
     echo "Usage: $script_name <command> [site_model] [project_spec] [target_id] [+only | !exclude | ++optional]"
     echo ""
     echo "Available commands:"
-    echo "  start   : Start all enabled services in this tmux session"
-    echo "  stop    : Stop all running services and terminate this tmux session"
+    echo "  start   : Start all enabled services in this tmux session (preserves existing state)"
+    echo "  stop    : Stop all running services and terminate this tmux session (preserves state for diagnosis)"
+    echo "  clean   : Purge runtime state, cached certificates, databases, and artifacts"
+    echo "  restart : Sequence { stop, clean, start } (clean-slate fresh restart)"
     echo "  status  : Show status of the tmux session and diagnostic probes for all services"
     echo "  logs    : View logs from tmux windows (usage: $script_name logs [window_name] [num_lines])"
     echo "  attach  : Attach to the tmux session (usage: $script_name attach [window_name])"

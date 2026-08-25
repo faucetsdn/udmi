@@ -11,6 +11,18 @@ parse_tmux_args "$@"
 tmux_validate_services "Butler" "${ALLOWED_SERVICES[@]}"
 
 case "$TMUX_ACTION" in
+    clean)
+        echo "Purging Butler runtime state..."
+        rm -f "$UDMI_ROOT/var/butler.pid" "$UDMI_ROOT/out/butler.log" "$UDMI_ROOT/out/influx.log" "$UDMI_ROOT/out/postgres.log"
+        ;;
+    restart)
+        $UDMI_ROOT/bin/start_butler stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_influx stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_postgresql stop >/dev/null 2>&1 || true
+        tmux_stop_session "$SESSION_NAME"
+        echo "Purging Butler runtime state..."
+        rm -f "$UDMI_ROOT/var/butler.pid" "$UDMI_ROOT/out/butler.log" "$UDMI_ROOT/out/influx.log" "$UDMI_ROOT/out/postgres.log"
+        ;&
     stop)
         $UDMI_ROOT/bin/start_butler stop >/dev/null 2>&1 || true
         $UDMI_ROOT/bin/start_influx stop >/dev/null 2>&1 || true

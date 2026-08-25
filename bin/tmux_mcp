@@ -11,6 +11,15 @@ parse_tmux_args "$@"
 tmux_validate_services "MCP" "${ALLOWED_SERVICES[@]}"
 
 case "$TMUX_ACTION" in
+    clean)
+        echo "Purging MCP runtime state..."
+        rm -f "$UDMI_ROOT/out/mcp.log"
+        ;;
+    restart)
+        tmux_stop_session "$SESSION_NAME"
+        echo "Purging MCP runtime state..."
+        rm -f "$UDMI_ROOT/out/mcp.log"
+        ;&
     stop)
         tmux_stop_session "$SESSION_NAME"
         ;;

@@ -30,8 +30,14 @@ Running any `bin/tmux_<name>` script with **no arguments** (or `help`, `-h`, `--
 
 ### Available Commands
 
-* **`start`**: Initializes and starts the configured services in a dedicated background `tmux` session.
-* **`stop`**: Shuts down the services and terminates the `tmux` session.
+The lifecycle of each controller revolves around four operational states:
+
+* **`start`**: Initializes and starts configured services in a background `tmux` session. Preserves existing certificates, cloned models, and runtime database state (non-destructive, idempotent).
+* **`stop`**: Shuts down services and terminates the `tmux` session **without** deleting site models, certs, or data files, preserving state for diagnostic inspection.
+* **`clean`**: The destructive operation that purges runtime state, cached certificates, databases, and cloned site models (`sites/udmi~<ns>`) without starting any services.
+* **`restart`**: Clean-slate fresh restart equivalent to the sequence `{ stop, clean, start }`.
+
+#### Diagnostic & Inspection Commands:
 * **`status`**: Displays session lifecycle status and semantic diagnostic health probes (PIDs, listening ports, health checks).
 * **`logs`**: Dumps pane scrollback buffer (`bin/tmux_<box> logs [window] [lines]`).
 * **`attach`**: Interactively attaches to the session or specific window (`Ctrl-b d` to detach).
@@ -96,8 +102,11 @@ Fine-tune which services run inside the tmux session during `start`:
 [`bin/start_local`](../../bin/start_local) unifies and manages the entire local service pipeline by delegating to `tmux_barbican` and `tmux_butler`:
 
 ```bash
-# Start full local infrastructure under namespace 'btesting'
+# Start full local infrastructure under namespace 'btesting' (preserves state)
 bin/start_local btesting
+
+# Reset and start fresh under namespace 'btesting' (clean-slate)
+bin/start_local restart btesting
 
 # Start full stack under default namespace
 bin/start_local

@@ -4,4 +4,6 @@
 * Do not automatically create git commits. Leave changes unstaged/uncommitted unless explicitly instructed by the user to commit.
 * Deterministic Design and No Ambiguous Proposals: Always commit to a single, explicit implementation and behavior. Do not hedge, offer multiple unselected alternatives, or describe system behavior with ambiguous branching (such as "copied or cloned" or "either X or Y"). If requirements or architectural trade-offs are underspecified, stop and ask the user directly for clarification rather than implementing or proposing an ambiguous design.
 * Fail Fast and No Silent Fallbacks: Avoid opportunistic fallbacks, implicit defaults, or workarounds that mask missing configurations, missing dependencies, or invalid parameters. If a requested resource, namespace, file path, or prerequisite is missing or invalid, fail immediately with an explicit, actionable error message rather than silently falling back to a generic default or attempting alternative recovery heuristics.
+* Singular Canonical Interfaces (No Redundant Aliases or Over-Flexibility): Do not provide, accept, or promote multiple alternative ways to execute the same operation (such as adding multiple command aliases like `reset` vs `restart`, or accepting multiple conflicting syntax variants). Commit strictly to a single, canonical mechanism and reject non-canonical variants.
+
 

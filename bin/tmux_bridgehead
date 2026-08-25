@@ -11,6 +11,15 @@ parse_tmux_args "$@"
 tmux_validate_services "Bridgehead" "${ALLOWED_SERVICES[@]}"
 
 case "$TMUX_ACTION" in
+    clean)
+        echo "Purging Bridgehead runtime state..."
+        rm -f "$UDMI_ROOT/out/pubber.log" "$UDMI_ROOT/out/spotter.log"
+        ;;
+    restart)
+        tmux_stop_session "$SESSION_NAME"
+        echo "Purging Bridgehead runtime state..."
+        rm -f "$UDMI_ROOT/out/pubber.log" "$UDMI_ROOT/out/spotter.log"
+        ;&
     stop)
         tmux_stop_session "$SESSION_NAME"
         ;;
