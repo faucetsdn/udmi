@@ -39,3 +39,6 @@ if [[ -z $NO_CACHE_DIR ]]; then
 fi
 
 java -version
+
+echo "Initializing base site model..."
+$ROOT_DIR/bin/clone_model

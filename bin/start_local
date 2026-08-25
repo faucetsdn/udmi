@@ -25,10 +25,18 @@ if [[ "${1:-}" == "stop" ]]; then
     echo "Stopping mosquitto..."
     $UDMI_ROOT/bin/start_mosquitto stop || true
 
+    echo "Stopping pubsub..."
+    if [[ -f $UDMI_ROOT/out/pubsub.pid ]]; then
+        kill $(cat $UDMI_ROOT/out/pubsub.pid) 2>/dev/null || true
+        rm -f $UDMI_ROOT/out/pubsub.pid
+    fi
+    ps ax | fgrep cloud-pubsub-emulator | fgrep -v grep | awk '{print $1}' | xargs -r kill 2>/dev/null || true
+
     # Also terminate any active tmux sessions
     $UDMI_ROOT/bin/tmux_barbican stop >/dev/null 2>&1 || true
     $UDMI_ROOT/bin/tmux_butler stop >/dev/null 2>&1 || true
     $UDMI_ROOT/bin/tmux_bridgehead stop >/dev/null 2>&1 || true
+    $UDMI_ROOT/bin/tmux_base stop >/dev/null 2>&1 || true
     $UDMI_ROOT/bin/tmux_model stop >/dev/null 2>&1 || true
 
     echo "Local UDMI infrastructure stopped cleanly."
@@ -53,7 +61,7 @@ for arg in "$@"; do
     esac
 done
 
-ALLOWED_SERVICES=(mosquitto udmis etcd postgres influxdb butler validator registrar)
+ALLOWED_SERVICES=(mosquitto udmis etcd postgres influxdb butler validator registrar pubsub)
 
 # Parse and strictly validate filter arguments
 parse_tmux_args "${FILTER_ARGS[@]}"
@@ -127,7 +135,8 @@ registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
 
 should_start() {
     local svc="$1"
-    tmux_should_run_service "$svc"
+    local is_optional="${2:-false}"
+    tmux_should_run_service "$svc" "$is_optional"
 }
 
 # 1. etcd
@@ -208,6 +217,14 @@ if should_start "butler"; then
     $UDMI_ROOT/bin/start_butler "$site_model" "${project_spec:-//mqtt/localhost:${MQTT_PORT:-8883}}" >> $UDMIS_LOG 2>&1
 else
     echo "Skipping butler (filtered)" | tee -a $UDMIS_LOG
+fi
+
+# 7. pubsub (optional: ++pubsub)
+if should_start "pubsub" "true"; then
+    echo Starting pubsub emulator... | tee -a $UDMIS_LOG
+    $UDMI_ROOT/bin/start_pubsub >> $UDMIS_LOG 2>&1
+else
+    echo "Skipping pubsub (filtered)" | tee -a $UDMIS_LOG
 fi
 
 echo Done with local server setup.

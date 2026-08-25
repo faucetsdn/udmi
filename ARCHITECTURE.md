@@ -20,6 +20,7 @@ graph TB
     %% 1. Barbican - Core Message Broker & System Plane
     subgraph BARBICAN ["🏰 Barbican (Core Messaging & Control Plane)"]
         MOSQ["Mosquitto MQTT Broker<br/>(Dynamic Security / TLS / mTLS)"]
+        PUBSUB["pubsub<br/>(GCP PubSub Local Emulator)"]
         UDMIS["UDMIS Core Pod<br/>(UdmiServicePod / Reflection Engine)"]
         ETCD["etcd Server<br/>(KV Runtime State & Config Store)"]
     end
@@ -76,6 +77,7 @@ The UDMI ecosystem is structured around the following core subsystems, ordered b
 *   **2. Barbican** (Tool: `bin/tmux_barbican`, Session: `udmi_barbican`): The central messaging and control plane for the system, handling message routing, security enforcement, and configuration distribution.
     *   **`etcd`** *(Default: Enabled)*: Key-value store for runtime service coordination (port `2379`).
     *   **`mosquitto`** *(Default: Enabled)*: MQTT message broker providing authenticated and encrypted communication across device and service channels with dynamic security ACLs (port `8883`).
+    *   **`pubsub`** *(Optional: `++pubsub`)*: Local GCP Pub/Sub emulator for cloud messaging integration tests.
     *   **`udmis`** *(Default: Enabled)*: Java `UdmiServicePod` reflection core that processes incoming device messages, handles system queries, and routes resolved device configurations.
 *   **3. Butler** (Tool: `bin/tmux_butler`, Session: `udmi_butler`): Data persistence, stream ingestion services, and schema validation engine.
     *   **`postgres`** *(Default: Enabled)*: PostgreSQL relational database storing structured device state tables, message logs, and discovery events (port `5432`).
@@ -110,6 +112,6 @@ Phase 4: bin/tmux_bridgehead ──►  Bridgehead: Brings up edge device emulat
 
 *   **`+<service>`**: Run **only** this service (e.g. `bin/tmux_barbican +mosquitto`).
 *   **`!<service>`**: Exclude this service from startup (e.g. `bin/start_local !influxdb !postgres`).
-*   **`++<service>`**: Include an otherwise **optional** service (e.g. `bin/start_local ++validator`, `bin/tmux_butler ++registrar`, `bin/tmux_bridgehead ++spotter`).
+*   **`++<service>`**: Include an otherwise **optional** service (e.g. `bin/start_local ++validator`, `bin/start_local ++pubsub`, `bin/tmux_butler ++registrar`, `bin/tmux_bridgehead ++spotter`).
 
 
