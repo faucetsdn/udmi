@@ -5,15 +5,24 @@ source $UDMI_ROOT/etc/shell_common.sh
 source $UDMI_ROOT/etc/tmux_common.sh
 
 if [[ "${1:-}" == "stop" ]]; then
-    echo "Stopping local UDMI infrastructure via tmux sessions..."
+    target_spec="${2:-}"
+    if [[ -n "$target_spec" ]]; then
+        target_spec=$(normalize_conn_spec "$target_spec")
+    fi
+    namespace=""
+    if [[ $target_spec =~ localhost:[0-9]+/([a-zA-Z0-9_-]+) ]]; then
+        namespace="${BASH_REMATCH[1]}"
+    fi
+    ns_arg="${namespace:-}"
+    echo "Stopping local UDMI infrastructure${namespace:+ (namespace: $namespace)} via tmux sessions..."
 
     # Terminate any active tmux sessions (which also stop background daemons)
-    $UDMI_ROOT/bin/tmux_barbican stop >/dev/null 2>&1 || true
-    $UDMI_ROOT/bin/tmux_butler stop >/dev/null 2>&1 || true
-    $UDMI_ROOT/bin/tmux_bridgehead stop >/dev/null 2>&1 || true
-    $UDMI_ROOT/bin/tmux_base stop >/dev/null 2>&1 || true
-    $UDMI_ROOT/bin/tmux_model stop >/dev/null 2>&1 || true
-    $UDMI_ROOT/bin/tmux_mcp stop >/dev/null 2>&1 || true
+    $UDMI_ROOT/bin/tmux_barbican stop $ns_arg >/dev/null 2>&1 || true
+    $UDMI_ROOT/bin/tmux_butler stop $ns_arg >/dev/null 2>&1 || true
+    $UDMI_ROOT/bin/tmux_bridgehead stop $ns_arg >/dev/null 2>&1 || true
+    $UDMI_ROOT/bin/tmux_base stop $ns_arg >/dev/null 2>&1 || true
+    $UDMI_ROOT/bin/tmux_model stop $ns_arg >/dev/null 2>&1 || true
+    $UDMI_ROOT/bin/tmux_mcp stop $ns_arg >/dev/null 2>&1 || true
 
     echo "Local UDMI infrastructure stopped cleanly."
     exit 0
@@ -46,21 +55,25 @@ tmux_validate_services "start_local" "${ALLOWED_SERVICES[@]}"
 set -- "${POSITIONAL_ARGS[@]}"
 
 if [[ $# -eq 0 ]]; then
-    site_config="sites/udmi_site_model"
+    project_spec="default"
+    site_config="sites/udmi~default"
 elif [[ $# -eq 1 ]]; then
-    site_config=$(realpath "$1")
-    if [[ -d $site_config ]]; then
-        site_config=$site_config/cloud_iot_config.json
+    if [[ "$1" =~ ^[a-zA-Z0-9_-]+$ && ! -d "$1" && "$1" != sites/* ]]; then
+        project_spec="$1"
+        site_config="sites/udmi~$1"
+    else
+        fail "An explicit site model ('$1') requires an explicit project spec (e.g. //mqtt/localhost:46432 or a namespace)."
     fi
 else
-    site_config=$(realpath "$1")
-    if [[ -d $site_config ]]; then
-        site_config=$site_config/cloud_iot_config.json
-    fi
+    site_config="$1"
     project_spec="$2"
 fi
 
 if [[ -d "$site_config" ]]; then
+    site_config="$site_config/cloud_iot_config.json"
+elif [[ -f "$site_config" ]]; then
+    site_config=$(realpath "$site_config")
+elif [[ "$site_config" == sites/* || "$site_config" == */* ]]; then
     site_config="$site_config/cloud_iot_config.json"
 fi
 

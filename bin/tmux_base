@@ -42,8 +42,8 @@ case "$TMUX_ACTION" in
             [[ -n "$project_target" ]] || project_target="localhost"
         fi
 
-        # 1. Clone (optional / setup: ++clone)
-        if tmux_should_run_service "clone" "true"; then
+        # 1. Clone (default: enabled, idempotent)
+        if tmux_should_run_service "clone"; then
             tmux_init_or_add_window "$SESSION_NAME" "clone" "bin/clone_model '$TMUX_SITE_MODEL'"
         fi
 

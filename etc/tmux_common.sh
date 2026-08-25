@@ -14,11 +14,14 @@ TMUX_EXCLUDE_LIST=()
 TMUX_OPTIONAL_LIST=()
 TMUX_EXTRA_ARGS=()
 
+TMUX_NAMESPACE=""
+
 parse_tmux_args() {
     TMUX_ACTION=""
     TMUX_SITE_MODEL="sites/udmi_site_model"
     TMUX_PROJECT_SPEC="//mqtt/localhost:${MQTT_PORT:-8883}"
     TMUX_TARGET_ID=""
+    TMUX_NAMESPACE="${UDMI_NAMESPACE:-}"
     TMUX_ONLY_LIST=()
     TMUX_EXCLUDE_LIST=()
     TMUX_OPTIONAL_LIST=()
@@ -55,7 +58,10 @@ parse_tmux_args() {
             *)
                 case $positional_count in
                     0)
-                        if [[ -d "$arg" || -f "$arg" || "$arg" == sites/* || "$arg" == */* ]]; then
+                        if [[ "$arg" =~ ^[a-zA-Z0-9_-]+$ && ! -d "$arg" && ! -f "$arg" && "$arg" != sites/* && "$arg" != */* ]]; then
+                            TMUX_PROJECT_SPEC="$arg"
+                            positional_count=2
+                        elif [[ -d "$arg" || -f "$arg" || "$arg" == sites/* || "$arg" == */* ]]; then
                             TMUX_SITE_MODEL="$arg"
                             positional_count=1
                         else
@@ -79,6 +85,22 @@ parse_tmux_args() {
         esac
     done
 
+    case $positional_count in
+        0)
+            # When no target is provided, namespace defaults to 'default'
+            TMUX_PROJECT_SPEC="default"
+            TMUX_SITE_MODEL="$UDMI_ROOT/sites/udmi~default"
+            TMUX_NAMESPACE="default"
+            ;;
+        1)
+            # Explicit site model provided without a project spec -> fail fast
+            echo "ERROR: An explicit site model ('$TMUX_SITE_MODEL') requires an explicit project spec (e.g. //mqtt/localhost:46432 or a namespace)." >&2
+            exit 1
+            ;;
+        *)
+            ;;
+    esac
+
     if [[ -d "$TMUX_SITE_MODEL" && -f "$TMUX_SITE_MODEL/cloud_iot_config.json" ]]; then
         TMUX_SITE_MODEL=$(realpath "$TMUX_SITE_MODEL")
     fi
@@ -94,6 +116,19 @@ parse_tmux_args() {
                 export UDMI_NO_SUDO=true
             fi
         fi
+        if [[ $TMUX_PROJECT_SPEC =~ localhost:[0-9]+/([a-zA-Z0-9_-]+) ]]; then
+            export TMUX_NAMESPACE="${BASH_REMATCH[1]}"
+        fi
+    fi
+
+    if [[ -n "${TMUX_NAMESPACE:-}" ]]; then
+        if [[ "$TMUX_SITE_MODEL" == "sites/udmi_site_model" || "$TMUX_SITE_MODEL" == "$UDMI_ROOT/sites/udmi_site_model" ]]; then
+            TMUX_SITE_MODEL="$UDMI_ROOT/sites/udmi~${TMUX_NAMESPACE}"
+        fi
+    fi
+
+    if [[ -n "${TMUX_NAMESPACE:-}" && -n "${SESSION_NAME:-}" && ! "$SESSION_NAME" =~ ~ ]]; then
+        SESSION_NAME="${SESSION_NAME}~${TMUX_NAMESPACE}"
     fi
 
     if [[ "$TMUX_ACTION" == "start" && ${UDMI_NO_SUDO:-false} != true && $(id -u) != 0 ]]; then

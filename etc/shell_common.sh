@@ -7,12 +7,38 @@
 set -eu
 set -o pipefail
 
+function derive_port_from_namespace {
+    local ns="$1"
+    python3 -c "import hashlib; print(20000 + (int(hashlib.sha256(b'$ns').hexdigest(), 16) % 3500) * 10)" 2>/dev/null || {
+        local hex=$(printf '%s' "$ns" | md5sum | awk '{print $1}')
+        local slot=$(( 16#${hex: -6} % 3500 ))
+        echo $(( 20000 + slot * 10 ))
+    }
+}
+
 function normalize_conn_spec {
     local spec="${1:-}"
     if [[ -z "$spec" ]]; then
         printf '%s\n' "$spec"
         return 0
     fi
+
+    # Handle bare semantic namespace identifier
+    local namespace=""
+    if [[ "$spec" =~ ^[a-zA-Z0-9_-]+$ && ! "$spec" =~ ^(localhost|none|mqtt|mqtts|ssl|gcp|all|start|stop|status|logs|attach|help)$ ]]; then
+        namespace="$spec"
+    elif [[ "$spec" =~ ^//mqtt/localhost:[0-9]+/([a-zA-Z0-9_-]+)$ ]]; then
+        # Already has port and namespace
+        printf '%s\n' "$spec"
+        return 0
+    fi
+
+    if [[ -n "$namespace" ]]; then
+        local port=$(derive_port_from_namespace "$namespace")
+        printf '%s\n' "//mqtt/localhost:${port}/${namespace}"
+        return 0
+    fi
+
     if [[ "$spec" =~ ^//(mqtts|ssl)/(.*)$ ]]; then
         spec="//mqtt/${BASH_REMATCH[2]}"
     fi
@@ -44,17 +70,23 @@ function normalize_conn_spec {
     printf '%s\n' "$spec"
 }
 
-# Auto-detect isolated mode from any command-line arguments or variables matching localhost:<port>
+# Auto-detect isolated mode from any command-line arguments or variables matching localhost:<port> or semantic namespace
 for arg in "${@:-}" "${TARGET_PROJECT:-}" "${target_project:-}" "${project_spec:-}" "${project_id:-}"; do
-    if [[ -n $arg && $arg =~ localhost:([0-9]+) ]]; then
-        export MQTT_PORT="${BASH_REMATCH[1]}"
-        if [[ $MQTT_PORT != 8883 ]]; then
-            export ETCD_PORT=$((MQTT_PORT + 1))
-            export INFLUX_PORT=$((MQTT_PORT + 2))
-            export POSTGRES_PORT=$((MQTT_PORT + 3))
-            export UDMI_NO_SUDO=true
+    if [[ -n "$arg" ]]; then
+        normalized=$(normalize_conn_spec "$arg" 2>/dev/null || echo "$arg")
+        if [[ $normalized =~ localhost:([0-9]+) ]]; then
+            export MQTT_PORT="${BASH_REMATCH[1]}"
+            if [[ $MQTT_PORT != 8883 ]]; then
+                export ETCD_PORT=$((MQTT_PORT + 1))
+                export INFLUX_PORT=$((MQTT_PORT + 2))
+                export POSTGRES_PORT=$((MQTT_PORT + 3))
+                export UDMI_NO_SUDO=true
+            fi
+            if [[ $normalized =~ localhost:[0-9]+/([a-zA-Z0-9_-]+) ]]; then
+                export UDMI_NAMESPACE="${BASH_REMATCH[1]}"
+            fi
+            break
         fi
-        break
     fi
 done
 
