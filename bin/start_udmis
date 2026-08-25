@@ -104,7 +104,13 @@ if [[ -z ${UDMIS_CONFIG:-} || $UDMIS_CONFIG == var/local_pod.json || -n ${UDMI_R
         INCLUDE_PATH="$UDMI_ROOT/udmis/etc/prod_pod.json"
     fi
     ABS_CERT_DIR=$(realpath $CERT_DIR)
+    udmi_prefix=""
+    if [[ -n "${UDMI_NAMESPACE:-}" ]]; then
+        udmi_prefix="${UDMI_NAMESPACE}~"
+    fi
+    export UDMI_PREFIX="$udmi_prefix"
     jq '.include = "'"$INCLUDE_PATH"'" |
+        .base.udmi_prefix = "'"$udmi_prefix"'" |
         .flow_defaults.ca_file = "'"$ABS_CERT_DIR/ca.crt"'" |
         .flow_defaults.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
         .flow_defaults.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |

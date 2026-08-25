@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+UDMI_ROOT=$(dirname "$0")/..
+source "$UDMI_ROOT/etc/shell_common.sh"
+
 IMAGE=influxdb:v2.7.1
 
 UDMI_ROOT=$(dirname "$0")/..

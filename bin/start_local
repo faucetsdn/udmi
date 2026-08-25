@@ -172,7 +172,7 @@ done
 
 should_run_butler=false
 for s in "${BUTLER_SERVICES[@]}"; do
-    if tmux_should_run_service "$s" "$([[ "$s" == "validator" || "$s" == "registrar" ]] && echo true || echo false)"; then
+    if tmux_should_run_service "$s" "$([[ "$s" == "validator" ]] && echo true || echo false)"; then
         should_run_butler=true
         break
     fi

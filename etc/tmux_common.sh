@@ -58,12 +58,31 @@ parse_tmux_args() {
             *)
                 case $positional_count in
                     0)
-                        if [[ "$arg" =~ ^[a-zA-Z0-9_-]+$ && ! -d "$arg" && ! -f "$arg" && "$arg" != sites/* && "$arg" != */* ]]; then
-                            TMUX_PROJECT_SPEC="$arg"
-                            positional_count=2
-                        elif [[ -d "$arg" || -f "$arg" || "$arg" == sites/* || "$arg" == */* ]]; then
+                        if [[ -f "$arg/cloud_iot_config.json" || "$arg" == sites/* || ( -d "$arg" && "$arg" == */* ) ]]; then
                             TMUX_SITE_MODEL="$arg"
                             positional_count=1
+                        elif [[ "$arg" =~ ^// || "$arg" =~ ^(mqtt|mqtts|ssl):// || "$arg" =~ localhost: ]]; then
+                            TMUX_PROJECT_SPEC="$arg"
+                            positional_count=2
+                        elif [[ "$TMUX_ACTION" == "logs" || "$TMUX_ACTION" == "attach" ]]; then
+                            if [[ "$arg" =~ ^[0-9]+$ ]]; then
+                                TMUX_EXTRA_ARGS+=("$arg")
+                                positional_count=3
+                            elif [[ $# -gt 0 && ! "$arg" =~ ^(mosquitto|udmis|etcd|pubsub|postgres|influxdb|butler|validator|registrar|certs|clone|pubber|spotter|server|AHU-1)$ ]]; then
+                                TMUX_PROJECT_SPEC="$arg"
+                                positional_count=2
+                            else
+                                TMUX_TARGET_ID="$arg"
+                                positional_count=3
+                            fi
+                        elif [[ "$arg" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+                            if [[ -d "$UDMI_ROOT/sites/udmi_site_model/devices/$arg" ]]; then
+                                TMUX_TARGET_ID="$arg"
+                                positional_count=3
+                            else
+                                TMUX_PROJECT_SPEC="$arg"
+                                positional_count=2
+                            fi
                         else
                             TMUX_TARGET_ID="$arg"
                             positional_count=3
@@ -96,6 +115,14 @@ parse_tmux_args() {
             # Explicit site model provided without a project spec -> fail fast
             echo "ERROR: An explicit site model ('$TMUX_SITE_MODEL') requires an explicit project spec (e.g. //mqtt/localhost:46432 or a namespace)." >&2
             exit 1
+            ;;
+        3)
+            # When target ID was specified without site model/project spec, default to default namespace
+            if [[ "$TMUX_SITE_MODEL" == "sites/udmi_site_model" || "$TMUX_SITE_MODEL" == "$UDMI_ROOT/sites/udmi_site_model" ]]; then
+                TMUX_PROJECT_SPEC="default"
+                TMUX_SITE_MODEL="$UDMI_ROOT/sites/udmi~default"
+                TMUX_NAMESPACE="default"
+            fi
             ;;
         *)
             ;;
@@ -361,8 +388,11 @@ tmux_probe_service() {
             ;;
         registrar)
             local pids=$(pgrep -f "registrar.*Registrar" 2>/dev/null || true)
+            local summary="${site_model}/out/registration_summary.json"
             if [[ -n "$pids" ]]; then
                 echo "RUNNING (PID $(echo $pids | tr '\n' ' '))"
+            elif [[ -f "$summary" ]]; then
+                echo "COMPLETED (registered in $site_model)"
             else
                 echo "STOPPED"
             fi
@@ -384,7 +414,7 @@ tmux_probe_service() {
             fi
             ;;
         pubber)
-            local pids=$(pgrep -f "com.google.bos.udmi.service.core.Pubber|validator.pubber.Pubber|udmi.lib.client.host.PublisherHost" 2>/dev/null || true)
+            local pids=$(pgrep -f "pubber.*jar|pubber\.serialNo|validator\.pubber\.Pubber|com\.google\.bos\.udmi\.service\.core\.Pubber" 2>/dev/null || true)
             if [[ -n "$pids" ]]; then
                 echo "RUNNING (PID $(echo $pids | tr '\n' ' '))"
             else
@@ -439,6 +469,11 @@ tmux_capture_logs() {
     local session_name="$1"
     local window_name="${2:-}"
     local lines="${3:-50}"
+
+    if [[ "$window_name" =~ ^[0-9]+$ && -z "${3:-}" ]]; then
+        lines="$window_name"
+        window_name=""
+    fi
 
     if ! tmux_session_exists "$session_name"; then
         echo "Session '$session_name' is not running."

@@ -11,17 +11,13 @@ parse_tmux_args "$@"
 tmux_validate_services "Bridgehead" "${ALLOWED_SERVICES[@]}"
 
 case "$TMUX_ACTION" in
+    stop)
+        pkill -f "pubber.serialNo" 2>/dev/null || true
+        tmux_stop_session "$SESSION_NAME"
+        ;;
     clean)
         echo "Purging Bridgehead runtime state..."
-        rm -f "$UDMI_ROOT/out/pubber.log" "$UDMI_ROOT/out/spotter.log"
-        ;;
-    restart)
-        tmux_stop_session "$SESSION_NAME"
-        echo "Purging Bridgehead runtime state..."
-        rm -f "$UDMI_ROOT/out/pubber.log" "$UDMI_ROOT/out/spotter.log"
-        ;&
-    stop)
-        tmux_stop_session "$SESSION_NAME"
+        rm -rf "$UDMI_ROOT/out/pubber"* "$UDMI_ROOT/out/spotter.log"
         ;;
     status)
         tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
@@ -32,6 +28,12 @@ case "$TMUX_ACTION" in
     attach)
         tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
         ;;
+    restart)
+        pkill -f "pubber.serialNo" 2>/dev/null || true
+        tmux_stop_session "$SESSION_NAME"
+        echo "Purging Bridgehead runtime state..."
+        rm -rf "$UDMI_ROOT/out/pubber"* "$UDMI_ROOT/out/spotter.log"
+        ;&
     start)
         tmux_stop_session "$SESSION_NAME"
 
@@ -46,7 +48,7 @@ case "$TMUX_ACTION" in
 
         # 1. pubber (DUT - default: enabled, can be disabled via !pubber)
         if tmux_should_run_service "pubber"; then
-            tmux_init_or_add_window "$SESSION_NAME" "pubber" "bin/start_dut '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC' '$DUT_ID' '$SERIAL_NO'"
+            tmux_init_or_add_window "$SESSION_NAME" "pubber" "bin/start_dut '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC' '$DUT_ID' '$SERIAL_NO' && tail -f out/pubber.log"
         fi
 
         # 2. spotter (Discovery Scanner - optional: ++spotter)

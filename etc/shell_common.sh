@@ -25,7 +25,7 @@ function normalize_conn_spec {
 
     # Handle bare semantic namespace identifier
     local namespace=""
-    if [[ "$spec" =~ ^[a-zA-Z0-9_-]+$ && ! "$spec" =~ ^(localhost|none|mqtt|mqtts|ssl|gcp|all|start|stop|status|logs|attach|help)$ ]]; then
+    if [[ "$spec" =~ ^[a-zA-Z0-9_-]+$ && ! "$spec" =~ ^(localhost|none|mqtt|mqtts|ssl|gcp|all|start|stop|restart|clean|status|logs|attach|help)$ ]]; then
         namespace="$spec"
     elif [[ "$spec" =~ ^//mqtt/localhost:[0-9]+/([a-zA-Z0-9_-]+)$ ]]; then
         # Already has port and namespace

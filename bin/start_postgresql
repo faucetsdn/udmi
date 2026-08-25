@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+UDMI_ROOT=$(dirname "$0")/..
+source "$UDMI_ROOT/etc/shell_common.sh"
+
 function find_postgres_bin {
     # Check standard system paths first
     for dir in \

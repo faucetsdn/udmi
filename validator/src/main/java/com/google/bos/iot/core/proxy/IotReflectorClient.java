@@ -520,8 +520,9 @@ public class IotReflectorClient implements MessagePublisher {
     } else if ("r".equals(leader)) {
       // Next field is registry, not device, since the reflector device id is the site registry.
       String parsedReg = parts.remove(0);
-      checkState(UDMI_REFLECT.equals(parsedReg),
-          format("registry id %s does not match expected %s", parsedReg, UDMI_REFLECT));
+      String expectedReg = getNamespacePrefix(executionConfig.udmi_namespace) + UDMI_REFLECT;
+      checkState(expectedReg.equals(parsedReg) || UDMI_REFLECT.equals(parsedReg),
+          format("registry id %s does not match expected %s", parsedReg, expectedReg));
       String devSep = parts.remove(0);
       checkState("d".equals(devSep), format("unexpected dev separator %s", devSep));
       String deviceId = parts.remove(0);

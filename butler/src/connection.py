@@ -237,7 +237,8 @@ class ButlerConnection:
                 self.password = env_pass or "monkey"
             elif self.key_bytes:
                 derived_pass = hashlib.sha256(self.key_bytes).hexdigest()[:HASH_PASSWORD_LENGTH]
-                self.username = f"/r/UDMI-REFLECT/d/{self.actual_registry}"
+                ns_prefix = f"{self.prefix}~" if self.prefix else ""
+                self.username = f"/r/{ns_prefix}UDMI-REFLECT/d/{self.actual_registry}"
                 self.password = derived_pass
 
     def get_discovery_topics(self, device_id):
