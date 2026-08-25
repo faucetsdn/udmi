@@ -1,0 +1,58 @@
+#!/bin/bash -e
+# Tmux-encapsulated controller for Bridgehead (pubber, spotter)
+
+UDMI_ROOT=$(dirname $(realpath $0))/..
+source $UDMI_ROOT/etc/tmux_common.sh
+
+SESSION_NAME="udmi_bridgehead"
+ALLOWED_SERVICES=(pubber spotter)
+
+parse_tmux_args "$@"
+tmux_validate_services "Bridgehead" "${ALLOWED_SERVICES[@]}"
+
+case "$TMUX_ACTION" in
+    stop)
+        tmux_stop_session "$SESSION_NAME"
+        ;;
+    status)
+        tmux_session_status "$SESSION_NAME"
+        ;;
+    logs)
+        tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
+        ;;
+    attach)
+        tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
+        ;;
+    start)
+        echo "=== Starting Bridgehead in tmux session '$SESSION_NAME' ==="
+        echo "Site Model:   $TMUX_SITE_MODEL"
+        echo "Project Spec: $TMUX_PROJECT_SPEC"
+        echo "Target/DUT:   ${TMUX_TARGET_ID:-AHU-1}"
+
+        cd "$UDMI_ROOT"
+        DUT_ID="${TMUX_TARGET_ID:-AHU-1}"
+        SERIAL_NO="dut-${DUT_ID}-$RANDOM"
+
+        # 1. pubber (DUT - default: enabled, can be disabled via !pubber)
+        if tmux_should_run_service "pubber"; then
+            tmux_init_or_add_window "$SESSION_NAME" "pubber" "bin/start_dut '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC' '$DUT_ID' '$SERIAL_NO'"
+        fi
+
+        # 2. spotter (Discovery Scanner - optional: ++spotter)
+        if tmux_should_run_service "spotter" "true"; then
+            tmux_init_or_add_window "$SESSION_NAME" "spotter" "echo Starting spotter discovery agent...; tail -f /dev/null"
+        fi
+
+        # Ensure Bridgehead session is always running even if no devices are launched immediately
+        if ! tmux_session_exists "$SESSION_NAME"; then
+            tmux_init_or_add_window "$SESSION_NAME" "bridgehead" "echo 'Bridgehead session active. Ready to launch devices (pubber/spotter).'; tail -f /dev/null"
+        fi
+
+        echo "Bridgehead session '$SESSION_NAME' initialized."
+        tmux_session_status "$SESSION_NAME"
+        ;;
+    *)
+        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [site_model] [project_spec] [target_id] [+only | !exclude | ++optional]"
+        exit 1
+        ;;
+esac

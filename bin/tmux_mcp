@@ -1,0 +1,43 @@
+#!/bin/bash -e
+# Tmux-encapsulated controller for UDMI MCP Server (server)
+
+UDMI_ROOT=$(dirname $(realpath $0))/..
+source $UDMI_ROOT/etc/tmux_common.sh
+
+SESSION_NAME="udmi_mcp"
+ALLOWED_SERVICES=(server)
+
+parse_tmux_args "$@"
+tmux_validate_services "MCP" "${ALLOWED_SERVICES[@]}"
+
+case "$TMUX_ACTION" in
+    stop)
+        tmux_stop_session "$SESSION_NAME"
+        ;;
+    status)
+        tmux_session_status "$SESSION_NAME"
+        ;;
+    logs)
+        tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
+        ;;
+    attach)
+        tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
+        ;;
+    start)
+        echo "=== Starting MCP Server in tmux session '$SESSION_NAME' ==="
+
+        cd "$UDMI_ROOT"
+
+        # 1. MCP Server Daemon (default: enabled)
+        if tmux_should_run_service "server"; then
+            tmux_init_or_add_window "$SESSION_NAME" "server" "python3 mcp/server.py mcp"
+        fi
+
+        echo "MCP Server session '$SESSION_NAME' initialized."
+        tmux_session_status "$SESSION_NAME"
+        ;;
+    *)
+        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [+only | !exclude | ++optional]"
+        exit 1
+        ;;
+esac

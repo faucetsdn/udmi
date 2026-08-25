@@ -43,6 +43,16 @@ MCP_TOOLS = [
                     "type": "string",
                     "description": "Optional serial number for the emulated DUT.",
                 },
+                "exclude": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of canonical sub-services to exclude (e.g. ['udmis', 'influxdb']).",
+                },
+                "added": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of optional sub-services to add (e.g. ['validator', 'spotter']).",
+                },
                 "clean": {
                     "type": "boolean",
                     "description": "Whether to clean existing state before startup (default: true).",
@@ -225,6 +235,8 @@ class MCPServer:
                 site_model=args.get("site_model", "sites/udmi_site_model"),
                 dut_device_id=args.get("dut_device_id"),
                 dut_serial_no=args.get("dut_serial_no"),
+                exclude=args.get("exclude"),
+                added=args.get("added"),
                 clean=args.get("clean", True),
                 timeout_seconds=args.get("timeout_seconds", 150),
             )
@@ -268,6 +280,20 @@ def main() -> None:
     )
     ensure_parser.add_argument(
         "--serial", dest="dut_serial_no", help="Serial number for emulated DUT"
+    )
+    ensure_parser.add_argument(
+        "--exclude",
+        "-x",
+        nargs="*",
+        dest="exclude",
+        help="List of canonical services to exclude (e.g. -x udmis influxdb)",
+    )
+    ensure_parser.add_argument(
+        "--added",
+        "-a",
+        nargs="*",
+        dest="added",
+        help="List of optional services to add (e.g. -a validator spotter)",
     )
     ensure_parser.add_argument(
         "--no-clean",
@@ -350,11 +376,22 @@ def main() -> None:
     session_mgr = SessionManager()
 
     if args.command == "ensure":
+        exclude_list = []
+        if args.exclude:
+            for item in args.exclude:
+                exclude_list.extend([s.strip() for s in item.split(",") if s.strip()])
+        added_list = []
+        if args.added:
+            for item in args.added:
+                added_list.extend([s.strip() for s in item.split(",") if s.strip()])
+
         res = session_mgr.ensure_test_setup(
             test_id=args.test_id,
             site_model=args.site_model,
             dut_device_id=args.dut_device_id,
             dut_serial_no=args.dut_serial_no,
+            exclude=exclude_list or None,
+            added=added_list or None,
             clean=args.clean,
             timeout_seconds=args.timeout_seconds,
         )
