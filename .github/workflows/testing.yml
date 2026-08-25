@@ -286,8 +286,6 @@ jobs:
         run: bin/test_postgresql_postrun
       - name: bin/test_capture
         run: bin/test_capture
-      - name: bin/test_udmis_capture
-        run: bin/test_udmis_capture
       - name: db histogram
         if: ${{ !cancelled() }}
         run: bin/db_histogram $TARGET_PROJECT
@@ -643,4 +641,34 @@ jobs:
         with:
           name: openbridge-logs
           path: |
+            out/
+
+  mcp:
+    name: MCP Test Infrastructure
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Setup Base
+        run: |
+          bin/setup_base
+          bin/clone_model
+      - name: Run MCP Infrastructure Tests
+        run: |
+          bin/test_mcp
+      - name: Upload logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: mcp-logs
+          path: |
+            var/instances/
             out/

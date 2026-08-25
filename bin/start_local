@@ -6,7 +6,11 @@ source $UDMI_ROOT/etc/shell_common.sh
 if [[ "${1:-}" == "stop" ]]; then
     echo "Stopping local UDMI infrastructure..."
     
+    echo "Stopping butler..."
+    $UDMI_ROOT/bin/start_butler stop || true
+
     echo "Stopping UDMIS..."
+
     $UDMI_ROOT/bin/start_udmis stop || true
 
     echo "Stopping etcd..."
@@ -14,6 +18,9 @@ if [[ "${1:-}" == "stop" ]]; then
 
     echo "Stopping influx..."
     $UDMI_ROOT/bin/start_influx stop || true
+
+    echo "Stopping postgresql..."
+    $UDMI_ROOT/bin/start_postgresql stop || true
 
     echo "Stopping mosquitto..."
     $UDMI_ROOT/bin/start_mosquitto stop || true
@@ -56,8 +63,8 @@ if [[ -d var/ && ! -d etc/ ]]; then
 fi
 
 cd "$UDMI_ROOT"
-UDMIS_LOG=out/udmis.log
-mkdir -p out
+UDMIS_LOG=${UDMIS_LOG:-out/udmis.log}
+mkdir -p $(dirname "$UDMIS_LOG")
 # Do sudo now to prefetch incase it's needed later...
 if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
     sudo true
@@ -137,7 +144,11 @@ fi
 echo Starting udmis proper... | tee -a $UDMIS_LOG
 $UDMI_ROOT/bin/start_udmis >> $UDMIS_LOG 2>&1
 
+echo Starting butler... | tee -a $UDMIS_LOG
+$UDMI_ROOT/bin/start_butler "$site_model" "${project_spec:-//mqtt/localhost:${MQTT_PORT:-8883}}" >> $UDMIS_LOG 2>&1
+
 echo Done with local server setup.
+
 
 echo ""
 echo "################################################################"

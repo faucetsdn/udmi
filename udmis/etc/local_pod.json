@@ -46,12 +46,6 @@
     "uufi_events": {
       "recv_id": "events/#",
       "send_id": "/uufi/#"
-    },
-    "capture_state": {
-      "recv_id": "state/#"
-    },
-    "capture_events": {
-      "recv_id": "events/#"
     }
   },
   "crons": {

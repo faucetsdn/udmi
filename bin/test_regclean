@@ -140,6 +140,11 @@ elif [[ -z $broker_hostname ]]; then
     broker_hostname=mqtt.googleapis.com
 fi
 
+port_line=""
+if [[ -n ${MQTT_PORT:-} ]]; then
+    port_line="\"port\": $MQTT_PORT,"
+fi
+
 cat <<EOF > $pubber_config
 {
     "endpoint": {
@@ -148,6 +153,7 @@ cat <<EOF > $pubber_config
       "client_id": $client_id,
       "topic_prefix": $topic_prefix,
       "auth_provider": $auth_provider,
+      $port_line
       "hostname": "$broker_hostname"
     },
     "sitePath": "$site_path",

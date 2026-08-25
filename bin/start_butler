@@ -1,0 +1,46 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname "$0")/..
+source "$UDMI_ROOT/etc/shell_common.sh"
+
+BUTLER_LOG=${BUTLER_LOG:-out/butler.log}
+mkdir -p $(dirname "$BUTLER_LOG")
+
+BUTLER_PID_FILE=${BUTLER_PID_FILE:-var/butler.pid}
+mkdir -p $(dirname "$BUTLER_PID_FILE")
+if [[ -f $BUTLER_PID_FILE ]]; then
+    old_pid=$(cat $BUTLER_PID_FILE)
+    if ps -p $old_pid > /dev/null 2>&1; then
+        echo "Killing existing local butler pid $old_pid..."
+        kill $old_pid 2>/dev/null || true
+        sleep 1
+    fi
+    rm -f $BUTLER_PID_FILE
+fi
+if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+    old_pid=$(ps ax | fgrep python | fgrep butler | fgrep -v grep | awk '{print $1}') || true
+    if [[ -n $old_pid ]]; then
+        echo "Killing existing butler pid $old_pid..."
+        kill $old_pid 2>/dev/null || true
+    fi
+fi
+
+
+if [[ ${1:-} == stop ]]; then
+    exit 0
+fi
+
+site_model="${1:-sites/udmi_site_model}"
+target_project="${2:-${TARGET_PROJECT:-//mqtt/localhost:${MQTT_PORT:-8883}}}"
+
+export PYTHONUNBUFFERED=1
+export POSTGRES_PORT=${POSTGRES_PORT:-5432}
+export INFLUX_PORT=${INFLUX_PORT:-8086}
+
+echo "Starting butler on $target_project with model $site_model..."
+nohup $UDMI_ROOT/bin/butler "$site_model" "$target_project" >> $BUTLER_LOG 2>&1 &
+BUTLER_PID=$!
+echo $BUTLER_PID > $BUTLER_PID_FILE
+disown $BUTLER_PID 2>/dev/null || true
+
+echo "Started butler daemon (PID $BUTLER_PID)"

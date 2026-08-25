@@ -9,17 +9,12 @@ try:
 except (ImportError, ModuleNotFoundError):
     from butler.src.connection import ButlerConnection
 
-POSTGRES_PORT = os.environ.get("POSTGRES_PORT", "5432")
-POSTGRES_USER = os.environ.get("POSTGRES_USER", "postgres")
-POSTGRES_DB = os.environ.get("POSTGRES_DB", "postgres")
-POSTGRES_HOST = os.environ.get("POSTGRES_HOST", "127.0.0.1")
-
 def get_postgres_connection():
     return psycopg2.connect(
-        host=POSTGRES_HOST,
-        port=POSTGRES_PORT,
-        user=POSTGRES_USER,
-        dbname=POSTGRES_DB
+        host=os.environ.get("POSTGRES_HOST", "127.0.0.1"),
+        port=os.environ.get("POSTGRES_PORT", "5432"),
+        user=os.environ.get("POSTGRES_USER", "postgres"),
+        dbname=os.environ.get("POSTGRES_DB", "postgres")
     )
 
 import sys

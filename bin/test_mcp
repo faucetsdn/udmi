@@ -1,0 +1,127 @@
+#!/bin/bash -e
+# Test Suite for UDMI Test Infrastructure MCP Server & CLI Tool
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR/.."
+source etc/shell_common.sh
+
+TEST_ID="ci_mcp_test_$$"
+SITE_MODEL="sites/udmi_site_model"
+
+echo "=================================================================="
+echo "Starting MCP Infrastructure & CLI Verification Test"
+echo "=================================================================="
+
+# Ensure cleanup on failure
+cleanup() {
+    echo "Cleaning up any active test sessions..."
+    bin/test_setup terminate "$TEST_ID" >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+# 1. Test JSON-RPC 2.0 stdio MCP protocol
+echo "Step 1: Verifying MCP stdio JSON-RPC protocol..."
+python3 -c '
+import subprocess, json
+
+proc = subprocess.Popen(["bin/test_infra_mcp"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+# 1. initialize
+proc.stdin.write(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}) + "\n")
+proc.stdin.flush()
+init_resp = json.loads(proc.stdout.readline())
+assert init_resp.get("result", {}).get("serverInfo", {}).get("name") == "udmi-test-infra", f"Unexpected init response: {init_resp}"
+print("  - MCP initialize PASSED")
+
+# 2. tools/list
+proc.stdin.write(json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}) + "\n")
+proc.stdin.flush()
+tools_resp = json.loads(proc.stdout.readline())
+tools = [t["name"] for t in tools_resp.get("result", {}).get("tools", [])]
+assert "ensure_test_setup" in tools, "ensure_test_setup not found in tools"
+assert "terminate_test_setup" in tools, "terminate_test_setup not found in tools"
+assert "list_test_setups" in tools, "list_test_setups not found in tools"
+assert "list_test_windows" in tools, "list_test_windows not found in tools"
+assert "get_test_logs" in tools, "get_test_logs not found in tools"
+print("  - MCP tools/list PASSED (tools:", tools, ")")
+
+proc.stdin.close()
+proc.wait()
+'
+
+# 2. Test CLI ensure command
+echo "Step 2: Starting test infrastructure via CLI (bin/test_setup ensure)..."
+CONN_INFO=$(bin/test_setup ensure "$TEST_ID" "$SITE_MODEL" --json)
+echo "$CONN_INFO" | jq .
+
+CONN_URL=$(echo "$CONN_INFO" | jq -r .connection_url)
+STATUS=$(echo "$CONN_INFO" | jq -r .status)
+MQTT_PORT=$(echo "$CONN_INFO" | jq -r .ports.mqtt)
+WINDOWS=$(echo "$CONN_INFO" | jq -r '.windows | join(",")')
+
+if [[ "$STATUS" != "READY" || -z "$CONN_URL" || "$CONN_URL" == "null" ]]; then
+    fail "Failed to start test infrastructure: $CONN_INFO"
+fi
+if [[ "$WINDOWS" != *"main"* ]]; then
+    fail "Expected 'main' window in ensure response, got: $WINDOWS"
+fi
+echo "  - Test infrastructure successfully started at $CONN_URL (Port: $MQTT_PORT, Windows: $WINDOWS)"
+
+# 3. Test CLI windows command
+echo "Step 3: Querying available semantic windows via CLI (bin/test_setup windows)..."
+WIN_LIST=$(bin/test_setup windows "$TEST_ID" --json)
+echo "$WIN_LIST" | jq .
+if ! echo "$WIN_LIST" | jq -e 'contains(["main"])' >/dev/null; then
+    fail "Expected 'main' in windows output: $WIN_LIST"
+fi
+
+# 4. Test CLI status command
+echo "Step 4: Querying status via CLI (bin/test_setup status)..."
+STATUS_INFO=$(bin/test_setup status "$TEST_ID" --json)
+echo "$STATUS_INFO" | jq .
+if [[ $(echo "$STATUS_INFO" | jq -r .status) != "READY" ]]; then
+    fail "Unexpected status response: $STATUS_INFO"
+fi
+
+# 5. Test CLI list command
+echo "Step 5: Querying active setups via CLI (bin/test_setup list)..."
+LIST_INFO=$(bin/test_setup list --json)
+echo "$LIST_INFO" | jq .
+if ! echo "$LIST_INFO" | jq -e ".[] | select(.test_id == \"$TEST_ID\")" >/dev/null; then
+    fail "Test session $TEST_ID not found in active list: $LIST_INFO"
+fi
+
+# 6. Test CLI logs command with semantic tag
+echo "Step 6: Inspecting live console logs with semantic tag (bin/test_setup logs $TEST_ID main)..."
+LOGS=$(bin/test_setup logs "$TEST_ID" main -n 20)
+echo "$LOGS"
+if [[ "$LOGS" != *"UUFI Service is READY"* && "$LOGS" != *"Starting"* ]]; then
+    fail "Expected startup logs not captured: $LOGS"
+fi
+
+# 7. Test CLI logs command rejecting numerical index
+echo "Step 7: Verifying numerical index rejection for logs (bin/test_setup logs $TEST_ID 0)..."
+if bin/test_setup logs "$TEST_ID" 0 >/tmp/err.log 2>&1; then
+    fail "Expected numerical window index '0' to fail, but it succeeded"
+else
+    echo "  - Numerical window index correctly rejected: $(cat /tmp/err.log)"
+fi
+
+# 8. Test CLI terminate command
+echo "Step 8: Terminating test setup via CLI (bin/test_setup terminate)..."
+TERM_INFO=$(bin/test_setup terminate "$TEST_ID" --json)
+echo "$TERM_INFO" | jq .
+if [[ $(echo "$TERM_INFO" | jq -r .status) != "TERMINATED" ]]; then
+    fail "Unexpected terminate response: $TERM_INFO"
+fi
+
+# 9. Verify session list is clean
+LIST_AFTER=$(bin/test_setup list --json)
+if echo "$LIST_AFTER" | jq -e ".[] | select(.test_id == \"$TEST_ID\")" >/dev/null; then
+    fail "Test session $TEST_ID still present in active list after termination: $LIST_AFTER"
+fi
+
+trap - EXIT
+echo "=================================================================="
+echo "MCP Test Infrastructure & CLI Verification PASSED"
+echo "=================================================================="

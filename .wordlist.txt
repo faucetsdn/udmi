@@ -166,6 +166,7 @@ msb
 mTLS
 multithreaded
 mydomain
+MCP
 namespace
 namespaced
 namespaces
@@ -195,6 +196,7 @@ pagent
 parameterization
 parsers
 Pathing
+PID
 pointname
 pointset
 pointsets
@@ -290,6 +292,7 @@ transpiles
 triaged
 triages
 txt
+tmux
 UCUM
 udmi
 UDMI

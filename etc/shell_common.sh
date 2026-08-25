@@ -45,19 +45,38 @@ function normalize_conn_spec {
 }
 
 # Auto-detect isolated mode from any command-line arguments or variables matching localhost:<port>
-for arg in "${@:-}" "${TARGET_PROJECT:-}" "${project_spec:-}" "${project_id:-}"; do
+for arg in "${@:-}" "${TARGET_PROJECT:-}" "${target_project:-}" "${project_spec:-}" "${project_id:-}"; do
     if [[ -n $arg && $arg =~ localhost:([0-9]+) ]]; then
         export MQTT_PORT="${BASH_REMATCH[1]}"
-        export ETCD_PORT=$((MQTT_PORT + 1))
-        export INFLUX_PORT=$((MQTT_PORT + 2))
-        export POSTGRES_PORT=$((MQTT_PORT + 3))
-        export UDMI_NO_SUDO=true
+        if [[ $MQTT_PORT != 8883 ]]; then
+            export ETCD_PORT=$((MQTT_PORT + 1))
+            export INFLUX_PORT=$((MQTT_PORT + 2))
+            export POSTGRES_PORT=$((MQTT_PORT + 3))
+            export UDMI_NO_SUDO=true
+        fi
         break
     fi
 done
 
 if [[ -n ${MQTT_PORT:-} && $MQTT_PORT != 8883 ]]; then
     export UDMI_NO_SUDO=true
+fi
+
+if [[ -n ${UDMI_RUN_DIR:-} ]]; then
+    mkdir -p "$UDMI_RUN_DIR/var" "$UDMI_RUN_DIR/out"
+    export MOSQUITTO_ETC_DIR="${MOSQUITTO_ETC_DIR:-$UDMI_RUN_DIR/var/mosquitto}"
+    export ETCD_DIR="${ETCD_DIR:-$UDMI_RUN_DIR/var/etcd}"
+    export ETCD_LOG="${ETCD_LOG:-$UDMI_RUN_DIR/out/etcd.log}"
+    export INFLUX_DIR="${INFLUX_DIR:-$UDMI_RUN_DIR/var/influx}"
+    export INFLUX_LOG="${INFLUX_LOG:-$UDMI_RUN_DIR/out/influx.log}"
+    export POSTGRES_DIR="${POSTGRES_DIR:-$UDMI_RUN_DIR/var/postgresql}"
+    export POSTGRES_LOG="${POSTGRES_LOG:-$UDMI_RUN_DIR/out/postgresql.log}"
+    export UDMIS_PID_FILE="${UDMIS_PID_FILE:-$UDMI_RUN_DIR/var/udmis.pid}"
+    export UDMI_POD_READY="${UDMI_POD_READY:-$UDMI_RUN_DIR/var/pod_ready.txt}"
+    export UDMIS_CONFIG="${UDMIS_CONFIG:-$UDMI_RUN_DIR/var/local_pod.json}"
+    export UDMIS_LOG="${UDMIS_LOG:-$UDMI_RUN_DIR/out/udmis.log}"
+    export BUTLER_PID_FILE="${BUTLER_PID_FILE:-$UDMI_RUN_DIR/var/butler.pid}"
+    export BUTLER_LOG="${BUTLER_LOG:-$UDMI_RUN_DIR/out/butler.log}"
 fi
 
 if [[ $(id -u) == 0 ]]; then

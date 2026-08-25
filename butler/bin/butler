@@ -1,41 +1,129 @@
 #!/usr/bin/env python3
-import sys
+"""Unified CLI entrypoint for Butler services (Discovery, Mapping, Ingestion)."""
+
+import argparse
 import json
 import os
-import argparse
+import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+# Ensure venv python is used if present
+script_dir = os.path.dirname(os.path.realpath(__file__))
+REPO_ROOT = os.path.abspath(os.path.join(script_dir, "../.."))
+venv_dir = os.path.join(REPO_ROOT, "venv")
+venv_python = os.path.join(venv_dir, "bin", "python3")
+if os.path.exists(venv_python) and sys.prefix != venv_dir:
+    os.environ["VIRTUAL_ENV"] = venv_dir
+    os.execv(venv_python, [venv_python] + sys.argv)
 
-from src.discovery import run_discovery
-from src.mapping import run_mapping
+sys.path.insert(0, os.path.join(REPO_ROOT, "common", "src", "main", "python"))
+sys.path.insert(0, os.path.join(REPO_ROOT, "gencode", "python"))
+sys.path.insert(0, os.path.join(REPO_ROOT, "butler"))
+sys.path.insert(0, REPO_ROOT)
 
-def get_registry_id(site_model):
+from butler.src.discovery import run_discovery
+from butler.src.mapping import run_mapping
+from butler.src.service import ButlerService
+
+
+def get_registry_id(site_model: str) -> str:
+    if not site_model:
+        return "default"
     config_path = os.path.join(site_model, "cloud_iot_config.json")
     try:
-        with open(config_path, "r") as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
             return config.get("registry_id", "default")
-    except Exception as e:
+    except Exception:
         return "default"
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('site_model')
-    parser.add_argument('project_spec')
-    parser.add_argument('device_id')
-    parser.add_argument('command', choices=['provision', 'discover', 'map'])
-    parser.add_argument('targets', nargs='*')
-    args = parser.parse_args()
-    
-    registry_id = get_registry_id(args.site_model)
-    
-    if args.command == 'discover':
-        run_discovery(args.project_spec, registry_id, args.device_id, args.targets, args.site_model)
-    elif args.command == 'map':
-        run_mapping(args.project_spec, registry_id, args.site_model, args.targets)
-    elif args.command == 'provision':
-        # No-op for provision for now
-        pass
 
-if __name__ == '__main__':
+def main():
+    raw_args = sys.argv[1:]
+
+    # Check if this is a mapping/discovery command
+    # e.g.: butler <site_model> <project_spec> <device_id> <provision|discover|map> [targets...]
+    mapping_commands = {"provision", "discover", "map"}
+    is_mapping_cmd = False
+    for arg in raw_args:
+        if arg in mapping_commands:
+            is_mapping_cmd = True
+            break
+
+    if is_mapping_cmd and not any(a == "--stdin" for a in raw_args):
+        parser = argparse.ArgumentParser(description="Butler Device Discovery and Mapping")
+        parser.add_argument("site_model")
+        parser.add_argument("project_spec")
+        parser.add_argument("device_id")
+        parser.add_argument("command", choices=["provision", "discover", "map"])
+        parser.add_argument("targets", nargs="*")
+        args = parser.parse_args()
+
+        registry_id = get_registry_id(args.site_model)
+
+        if args.command == "discover":
+            run_discovery(args.project_spec, registry_id, args.device_id, args.targets, args.site_model)
+        elif args.command == "map":
+            run_mapping(args.project_spec, registry_id, args.site_model, args.targets)
+        elif args.command == "provision":
+            pass
+        return
+
+    # Ingestion service mode
+    parser = argparse.ArgumentParser(description="Butler UDMI Database Ingestion Service")
+    parser.add_argument(
+        "arg1",
+        nargs="?",
+        default=None,
+        help="Site model directory or project target specification (e.g. sites/udmi_site_model or //mqtt/localhost:18833)",
+    )
+    parser.add_argument(
+        "arg2",
+        nargs="?",
+        default=None,
+        help="Project target specification or site model directory",
+    )
+    parser.add_argument(
+        "--stdin",
+        action="store_true",
+        help="Read JSON message stream directly from standard input",
+    )
+    parser.add_argument(
+        "--always-save-raw",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Always insert raw JSONB record into udmi_messages in addition to specialized table writes",
+    )
+
+    args = parser.parse_args()
+
+    site_model = None
+    project_spec = os.environ.get("TARGET_PROJECT", "//mqtt/localhost")
+
+    if args.arg1 and args.arg2:
+        if args.arg1.startswith("//"):
+            project_spec = args.arg1
+            site_model = args.arg2
+        else:
+            site_model = args.arg1
+            project_spec = args.arg2
+    elif args.arg1:
+        if args.arg1.startswith("//"):
+            project_spec = args.arg1
+        else:
+            site_model = args.arg1
+
+    service = ButlerService(
+        project_spec=project_spec,
+        site_model=site_model,
+        always_save_raw=args.always_save_raw,
+    )
+
+    if args.stdin:
+        service.run_stdin()
+    else:
+        service.run()
+
+
+if __name__ == "__main__":
     main()
+

@@ -6,7 +6,7 @@ source $UDMI_ROOT/etc/shell_common.sh
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 SUDO=sudo
-if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
+if [[ ${UDMI_NO_SUDO:-false} == true || $(id -u) == 0 ]]; then
     SUDO=""
 fi
 
@@ -153,8 +153,9 @@ function mosquitto_diag {
 
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
     # Raw mode for running without sudo
-    mosquitto -c $ETC_DIR/mosquitto.conf > $MOSQUITTO_LOG 2>&1 &
+    nohup mosquitto -c $ETC_DIR/mosquitto.conf > $MOSQUITTO_LOG 2>&1 &
     MOSQUITTO_PID=$!
+    disown $MOSQUITTO_PID 2>/dev/null || true
     echo Waiting 10s for background mosquitto to start...
     sleep 10
     [[ -d /proc/$MOSQUITTO_PID ]] || (mosquitto_diag && cat $MOSQUITTO_LOG && fail starting mosquitto)

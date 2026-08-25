@@ -14,7 +14,8 @@ if [[ -n $SUDO ]]; then
     $SUDO touch /dev/null
 fi
 
-UDMIS_PID_FILE=var/udmis.pid
+UDMIS_PID_FILE=${UDMIS_PID_FILE:-var/udmis.pid}
+mkdir -p $(dirname "$UDMIS_PID_FILE")
 if [[ -f $UDMIS_PID_FILE ]]; then
     OLD_PID=$(cat $UDMIS_PID_FILE)
     if ps -p $OLD_PID > /dev/null 2>&1; then
@@ -39,6 +40,7 @@ if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
 else
     POD_READY=${UDMI_POD_READY:-var/pod_ready.txt}
 fi
+mkdir -p $(dirname "$POD_READY")
 export UDMI_POD_READY=$(realpath $POD_READY)
 rm -f $POD_READY
 
@@ -48,8 +50,8 @@ fi
 
 $UDMI_ROOT/bin/container udmis prep --no-check || true
 
-LOGFILE=out/udmis.log
-mkdir -p out
+LOGFILE=${UDMIS_LOG:-out/udmis.log}
+mkdir -p $(dirname "$LOGFILE")
 date >> $LOGFILE
 
 export ETCD_CLUSTER=127.0.0.1
@@ -82,8 +84,9 @@ else
 fi
 
 # Default config preprocessing
-if [[ -z ${UDMIS_CONFIG:-} ]]; then
-    mkdir -p var
+if [[ -z ${UDMIS_CONFIG:-} || $UDMIS_CONFIG == var/local_pod.json || -n ${UDMI_RUN_DIR:-} ]]; then
+    target_config=${UDMIS_CONFIG:-var/local_pod.json}
+    mkdir -p $(dirname "$target_config")
     if [[ -f /root/var/local_pod.json ]]; then
         SOURCE_POD_CONFIG=/root/var/local_pod.json
         INCLUDE_PATH=/root/var/prod_pod.json
@@ -103,8 +106,8 @@ if [[ -z ${UDMIS_CONFIG:-} ]]; then
         .iot_access.implicit.endpoint.cert_file = "'"$ABS_CERT_DIR/rsa_private.crt"'" |
         .iot_access.implicit.endpoint.key_file = "'"$ABS_CERT_DIR/rsa_private.pem"'" |
         .iot_data.database.project_id = "'"${ETCD_SCHEME}"'://${ETCD_CLUSTER}:'"${ETCD_PORT}"'"' \
-        $SOURCE_POD_CONFIG | sponge var/local_pod.json
-    UDMIS_CONFIG=var/local_pod.json
+        $SOURCE_POD_CONFIG | sponge "$target_config"
+    UDMIS_CONFIG="$target_config"
 fi
 
 echo Using UDMIS_CONFIG $UDMIS_CONFIG
@@ -113,6 +116,7 @@ nohup $UDMIS_DIR/bin/run $UDMIS_CONFIG >> $LOGFILE 2>&1 &
 
 PID=$!
 echo $PID > $UDMIS_PID_FILE
+disown $PID 2>/dev/null || true
 
 WAITING=90
 for i in `seq 1 $WAITING`; do
