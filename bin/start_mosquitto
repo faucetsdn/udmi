@@ -10,21 +10,61 @@ if [[ ${UDMI_NO_SUDO:-false} == true || $(id -u) == 0 ]]; then
     SUDO=""
 fi
 
-if [[ -f $ETC_DIR/mosquitto.pid ]]; then
-    OLD_PID=$(cat $ETC_DIR/mosquitto.pid)
-    if ps -p $OLD_PID > /dev/null 2>&1; then
-        echo "Killing existing local mosquitto process with PID $OLD_PID..."
-        $SUDO kill $OLD_PID 2>/dev/null || kill $OLD_PID || true
-        sleep 1
+for pid_path in "$ETC_DIR/mosquitto.pid" "var/mosquitto/mosquitto.pid" "/var/mosquitto/mosquitto.pid"; do
+    if [[ -f "$pid_path" ]]; then
+        OLD_PID=$(cat "$pid_path" 2>/dev/null || true)
+        if [[ -n "$OLD_PID" ]] && ps -p "$OLD_PID" > /dev/null 2>&1; then
+            echo "Killing existing local mosquitto process with PID $OLD_PID..."
+            kill "$OLD_PID" 2>/dev/null || $SUDO kill "$OLD_PID" 2>/dev/null || true
+            sleep 1
+        fi
     fi
-fi
+done
 
 if [[ ${1:-} == stop ]]; then
     if [[ ${UDMI_NO_SUDO:-false} != true ]] && command -v systemctl >/dev/null 2>&1; then
         echo "Stopping mosquitto systemd service..."
-        sudo systemctl stop mosquitto || true
+        sudo -n systemctl stop mosquitto 2>/dev/null || true
     fi
     exit 0
+fi
+
+site_model="${1:-}"
+project_spec="${2:-}"
+site_config=""
+
+if [[ -n "$site_model" ]]; then
+    if [[ -d "$site_model" ]]; then
+        site_config="$site_model/cloud_iot_config.json"
+    else
+        site_config="$site_model"
+        site_model=$(dirname "$site_config")
+    fi
+
+    if [[ -f "$site_config" ]]; then
+        if [[ -n "$project_spec" ]]; then
+            project_spec=$(normalize_conn_spec "$project_spec")
+            no_prefix=${project_spec#//}
+            iot_provider=${no_prefix%%/*}
+            no_provider=${no_prefix#*/}
+            project_target=${no_provider%%/*}
+            if [[ $project_target == *@* ]]; then
+                project_target=${project_target%@*}
+            fi
+            if [[ $project_target == *:* ]]; then
+                project_target=${project_target%:*}
+            fi
+        fi
+        [[ -n ${project_target:-} ]] || project_target=$(jq -r .project_id $site_config 2>/dev/null || echo "localhost")
+        if [[ $project_target == *:* ]]; then
+            project_target=${project_target%:*}
+        fi
+        registry_id=$(jq -r .registry_id $site_config 2>/dev/null || true)${UDMI_REGISTRY_SUFFIX:-}
+
+        mkdir -p $CERT_DIR
+        echo "Setting up CA certificates for site model $site_model on server $project_target..."
+        $UDMI_ROOT/bin/setup_ca "$site_model" "$project_target"
+    fi
 fi
 
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
@@ -188,4 +228,12 @@ if [[ $clients =~ ${AUTH_USER} ]]; then
     echo Found expected client $AUTH_USER
 else
     fail Improper client: $clients
+fi
+
+if [[ -n "${site_model:-}" && -f "${site_config:-}" ]]; then
+    $UDMI_ROOT/bin/mosquctl_site "$site_model" 2>/dev/null || true
+
+    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+        sudo chmod a+r /var/log/mosquitto/mosquitto.log 2>/dev/null || true
+    fi
 fi

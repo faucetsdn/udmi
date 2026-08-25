@@ -4,6 +4,21 @@ UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
+UDMIS_PID_FILE=${UDMIS_PID_FILE:-var/udmis.pid}
+mkdir -p $(dirname "$UDMIS_PID_FILE")
+
+if [[ ${1:-} == stop ]]; then
+    if [[ -f $UDMIS_PID_FILE ]]; then
+        OLD_PID=$(cat $UDMIS_PID_FILE)
+        if ps -p $OLD_PID > /dev/null 2>&1; then
+            echo "Killing old udmis process $OLD_PID from local PID file..."
+            kill $OLD_PID 2>/dev/null || true
+            sleep 1
+        fi
+    fi
+    exit 0
+fi
+
 SUDO=sudo
 if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
     SUDO=""
@@ -14,8 +29,6 @@ if [[ -n $SUDO ]]; then
     $SUDO touch /dev/null
 fi
 
-UDMIS_PID_FILE=${UDMIS_PID_FILE:-var/udmis.pid}
-mkdir -p $(dirname "$UDMIS_PID_FILE")
 if [[ -f $UDMIS_PID_FILE ]]; then
     OLD_PID=$(cat $UDMIS_PID_FILE)
     if ps -p $OLD_PID > /dev/null 2>&1; then
@@ -43,10 +56,6 @@ fi
 mkdir -p $(dirname "$POD_READY")
 export UDMI_POD_READY=$(realpath $POD_READY)
 rm -f $POD_READY
-
-if [[ ${1:-} == stop ]]; then
-    exit 0
-fi
 
 $UDMI_ROOT/bin/container udmis prep --no-check || true
 

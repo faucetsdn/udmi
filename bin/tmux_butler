@@ -12,10 +12,13 @@ tmux_validate_services "Butler" "${ALLOWED_SERVICES[@]}"
 
 case "$TMUX_ACTION" in
     stop)
+        $UDMI_ROOT/bin/start_butler stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_influx stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_postgresql stop >/dev/null 2>&1 || true
         tmux_stop_session "$SESSION_NAME"
         ;;
     status)
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
         ;;
     logs)
         tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
@@ -24,6 +27,8 @@ case "$TMUX_ACTION" in
         tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
         ;;
     start)
+        tmux_stop_session "$SESSION_NAME"
+
         echo "=== Starting Butler in tmux session '$SESSION_NAME' ==="
         echo "Site Model:   $TMUX_SITE_MODEL"
         echo "Project Spec: $TMUX_PROJECT_SPEC"
@@ -56,10 +61,14 @@ case "$TMUX_ACTION" in
         fi
 
         echo "Butler session '$SESSION_NAME' initialized."
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
+        ;;
+    help|"")
+        tmux_show_help "Butler" "${ALLOWED_SERVICES[@]}"
+        exit 0
         ;;
     *)
-        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [site_model] [project_spec] [+only | !exclude | ++optional]"
+        tmux_show_help "Butler" "${ALLOWED_SERVICES[@]}"
         exit 1
         ;;
 esac

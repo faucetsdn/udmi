@@ -15,7 +15,7 @@ case "$TMUX_ACTION" in
         tmux_stop_session "$SESSION_NAME"
         ;;
     status)
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
         ;;
     logs)
         tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
@@ -24,11 +24,23 @@ case "$TMUX_ACTION" in
         tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
         ;;
     start)
+        tmux_stop_session "$SESSION_NAME"
+
         echo "=== Initializing Base in tmux session '$SESSION_NAME' ==="
         echo "Site Model:   $TMUX_SITE_MODEL"
         echo "Project Spec: $TMUX_PROJECT_SPEC"
 
         cd "$UDMI_ROOT"
+
+        project_target="localhost"
+        if [[ -n "$TMUX_PROJECT_SPEC" ]]; then
+            no_prefix=${TMUX_PROJECT_SPEC#//}
+            no_provider=${no_prefix#*/}
+            project_target=${no_provider%%/*}
+            project_target=${project_target%@*}
+            project_target=${project_target%:*}
+            [[ -n "$project_target" ]] || project_target="localhost"
+        fi
 
         # 1. Clone (optional / setup: ++clone)
         if tmux_should_run_service "clone" "true"; then
@@ -37,14 +49,18 @@ case "$TMUX_ACTION" in
 
         # 2. Certs / Keygen (default: enabled)
         if tmux_should_run_service "certs"; then
-            tmux_init_or_add_window "$SESSION_NAME" "certs" "bin/setup_ca '$TMUX_SITE_MODEL' localhost"
+            tmux_init_or_add_window "$SESSION_NAME" "certs" "bin/setup_ca '$TMUX_SITE_MODEL' '$project_target'"
         fi
 
         echo "Base session '$SESSION_NAME' initialized."
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
+        ;;
+    help|"")
+        tmux_show_help "Base" "${ALLOWED_SERVICES[@]}"
+        exit 0
         ;;
     *)
-        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [site_model] [project_spec] [+only | !exclude | ++optional]"
+        tmux_show_help "Base" "${ALLOWED_SERVICES[@]}"
         exit 1
         ;;
 esac

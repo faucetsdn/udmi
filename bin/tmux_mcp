@@ -15,7 +15,7 @@ case "$TMUX_ACTION" in
         tmux_stop_session "$SESSION_NAME"
         ;;
     status)
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
         ;;
     logs)
         tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
@@ -24,6 +24,8 @@ case "$TMUX_ACTION" in
         tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
         ;;
     start)
+        tmux_stop_session "$SESSION_NAME"
+
         echo "=== Starting MCP Server in tmux session '$SESSION_NAME' ==="
 
         cd "$UDMI_ROOT"
@@ -34,10 +36,14 @@ case "$TMUX_ACTION" in
         fi
 
         echo "MCP Server session '$SESSION_NAME' initialized."
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
+        ;;
+    help|"")
+        tmux_show_help "MCP" "${ALLOWED_SERVICES[@]}"
+        exit 0
         ;;
     *)
-        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [+only | !exclude | ++optional]"
+        tmux_show_help "MCP" "${ALLOWED_SERVICES[@]}"
         exit 1
         ;;
 esac
