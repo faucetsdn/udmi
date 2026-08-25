@@ -29,8 +29,7 @@ jobs:
       - name: start and test local servers
         run: |
           bin/setup_base
-          bin/clone_model
-          bin/start_pubsub
+          bin/start_local +pubsub
       - name: bin/run_tests all_tests
         run: bin/run_tests all_tests
       - name: all test output
@@ -88,9 +87,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: |
-          bin/setup_base
-          bin/clone_model
+        run: bin/setup_base
       - name: local setup
         run: |
           bin/start_local sites/udmi_site_model $TARGET_PROJECT
@@ -139,7 +136,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: bin/run_tests install_dependencies
+        run: bin/setup_base
       - name: local setup
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
@@ -194,7 +191,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: bin/run_tests install_dependencies
+        run: bin/setup_base
       - name: local setup
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
@@ -254,7 +251,6 @@ jobs:
       - name: base setup
         run: |
           bin/setup_base
-          bin/clone_model
           bin/registrar sites/udmi_site_model
       - name: local setup
         run: |
@@ -337,7 +333,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: bin/run_tests install_dependencies
+        run: bin/setup_base
       - name: local setup
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
@@ -377,7 +373,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: bin/run_tests install_dependencies
+        run: bin/setup_base
       - name: local setup
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
@@ -455,7 +451,6 @@ jobs:
       - name: Setup prerequisites
         run: |
           bin/setup_base
-          bin/clone_model
           ln -s sites/udmi_site_model/ site_model
           (cd site_model; git log -n 1)
           docker network create udminet --subnet 192.168.99.0/24
@@ -626,9 +621,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: Setup Base
-        run: |
-          bin/setup_base
-          bin/clone_model
+        run: bin/setup_base
       - name: Start Local Services
         run: |
           bin/start_local sites/udmi_site_model ${{ env.TARGET_PROJECT }}
@@ -671,4 +664,31 @@ jobs:
           name: mcp-logs
           path: |
             var/instances/
+            out/
+
+  gummi:
+    name: GUMMI Management Interface
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Setup Base
+        run: bin/setup_base
+      - name: Run GUMMI Tests
+        run: |
+          bin/test_gummi
+      - name: Upload logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: gummi-logs
+          path: |
             out/

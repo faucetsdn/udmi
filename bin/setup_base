@@ -34,4 +34,11 @@ echo $venv_pip3
 $(dirname ${venv_pip3})/python3 -m pip install --upgrade pip $PIP_OPTS
 eval "${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r $req_src $PIP_OPTS"
 
+if [[ -z $NO_CACHE_DIR ]]; then
+    $(dirname ${venv_pip3})/playwright install chromium
+fi
+
 java -version
+
+echo "Initializing base site model..."
+$ROOT_DIR/bin/clone_model

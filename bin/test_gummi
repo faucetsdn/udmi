@@ -1,0 +1,29 @@
+#!/bin/bash -e
+#
+# Integration and unit test suite for GUMMI Management Interface.
+#
+
+UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$UDMI_ROOT"
+
+source "$UDMI_ROOT/etc/shell_common.sh"
+
+echo "=========================================================================="
+echo "Running GUMMI Unit & Integration Tests..."
+echo "=========================================================================="
+
+venv/bin/playwright install chromium
+
+PYTHONPATH=common/src/main/python:gencode/python:gummi:. venv/bin/pytest -v gummi/tests
+
+echo ""
+echo "=========================================================================="
+echo "Testing GUMMI CLI..."
+echo "=========================================================================="
+bin/gummi --help >/dev/null
+echo "PASS: GUMMI CLI is executable and responds to --help."
+
+echo ""
+echo "=========================================================================="
+echo "SUCCESS: GUMMI Test Suite Passed!"
+echo "=========================================================================="

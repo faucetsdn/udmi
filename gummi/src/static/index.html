@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GUMMI — Fleet Management Interface</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div id="app" class="app-layout">
+    <!-- Top Header -->
+    <header class="top-header">
+      <div class="header-brand">
+        <div class="logo-icon">🌿</div>
+        <div class="brand-text">
+          <h1>GUMMI</h1>
+          <span class="sub-title">Glorious Unified Methodical Management Interface</span>
+        </div>
+      </div>
+      <div class="header-status">
+        <div id="system-badge" class="badge badge-neutral">
+          <span class="indicator-dot"></span>
+          <span id="system-status-text">Probing System...</span>
+        </div>
+        <div id="uufi-badge" class="badge badge-neutral">
+          <span class="indicator-dot"></span>
+          <span id="uufi-status-text">UUFI: Local</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Navigation Bar -->
+    <nav class="nav-bar">
+      <button class="nav-tab active" data-tab="portfolio">
+        <span class="tab-icon">📊</span> Portfolio Overview
+      </button>
+      <button class="nav-tab" data-tab="devices">
+        <span class="tab-icon">🔍</span> Devices Explorer
+      </button>
+      <button class="nav-tab" data-tab="device-detail">
+        <span class="tab-icon">⚙️</span> Device Properties
+      </button>
+      <button class="nav-tab" data-tab="config">
+        <span class="tab-icon">📝</span> Configuration
+      </button>
+      <button class="nav-tab" data-tab="rollout">
+        <span class="tab-icon">🚀</span> Managed Rollout
+      </button>
+      <button class="nav-tab" data-tab="admin">
+        <span class="tab-icon">🛠️</span> Bridgehead Admin
+      </button>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="main-content">
+      <!-- 1. Portfolio Overview Pane -->
+      <section id="pane-portfolio" class="tab-pane active">
+        <div class="section-header">
+          <h2>Portfolio Overview</h2>
+          <button id="btn-refresh-portfolio" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+        </div>
+
+        <!-- Metric Counter Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Total Devices</span>
+            <span id="metric-total-devices" class="metric-value">0</span>
+            <span class="metric-sub">Across all registries</span>
+          </div>
+          <div class="metric-card card-success">
+            <span class="metric-label">Online</span>
+            <span id="metric-online-devices" class="metric-value">0</span>
+            <span class="metric-sub">Active telemetry</span>
+          </div>
+          <div class="metric-card card-warning">
+            <span class="metric-label">Offline</span>
+            <span id="metric-offline-devices" class="metric-value">0</span>
+            <span class="metric-sub">No recent packets</span>
+          </div>
+          <div class="metric-card card-danger">
+            <span class="metric-label">Error States</span>
+            <span id="metric-error-devices" class="metric-value">0</span>
+            <span class="metric-sub">Active alerts</span>
+          </div>
+        </div>
+
+        <!-- Alert Feed & Portfolio Details -->
+        <div class="dashboard-grid">
+          <div class="panel">
+            <div class="panel-header">
+              <h3>🚨 Critical Alert Feed (24h)</h3>
+            </div>
+            <div class="panel-body">
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Time</th>
+                      <th>Device ID</th>
+                      <th>Level</th>
+                      <th>Category</th>
+                      <th>Message</th>
+                    </tr>
+                  </thead>
+                  <tbody id="portfolio-alerts-table">
+                    <tr><td colspan="5" class="empty-state">No critical alerts detected</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Devices Explorer Pane -->
+      <section id="pane-devices" class="tab-pane">
+        <div class="section-header">
+          <h2>Devices Explorer</h2>
+          <div class="header-actions">
+            <button id="btn-refresh-devices" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+          </div>
+        </div>
+
+        <!-- Filters Bar -->
+        <div class="filter-card">
+          <div class="filter-row">
+            <div class="filter-group flex-2">
+              <label for="filter-search">Search</label>
+              <input type="text" id="filter-search" placeholder="Search by Device ID, make, model...">
+            </div>
+            <div class="filter-group">
+              <label for="filter-registry">Registry</label>
+              <input type="text" id="filter-registry" placeholder="All registries">
+            </div>
+            <div class="filter-group">
+              <label for="filter-prefix">Device Prefix</label>
+              <input type="text" id="filter-prefix" placeholder="e.g. AHU-">
+            </div>
+            <div class="filter-group">
+              <label for="filter-make">Make</label>
+              <input type="text" id="filter-make" placeholder="e.g. Acme">
+            </div>
+            <div class="filter-group btn-align">
+              <button id="btn-apply-filters" class="btn btn-primary">Apply Filters</button>
+              <button id="btn-clear-filters" class="btn btn-secondary">Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Devices Table -->
+        <div class="panel">
+          <div class="panel-body">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Device ID</th>
+                    <th>Registry</th>
+                    <th>Make / Model</th>
+                    <th>Software</th>
+                    <th>Status</th>
+                    <th>Last Seen</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="devices-table-body">
+                  <tr><td colspan="7" class="empty-state">Loading devices from database...</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- Pagination Controls -->
+            <div class="pagination-bar">
+              <span id="pagination-info">Showing 0 of 0 devices</span>
+              <div class="pagination-buttons">
+                <button id="btn-prev-page" class="btn btn-secondary btn-sm" disabled>◀ Previous</button>
+                <button id="btn-next-page" class="btn btn-secondary btn-sm" disabled>Next ▶</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Device Properties Pane -->
+      <section id="pane-device-detail" class="tab-pane">
+        <div class="section-header">
+          <div class="title-with-breadcrumb">
+            <h2>Device Properties: <span id="detail-device-title">Select a Device</span></h2>
+            <span id="detail-registry-badge" class="badge badge-neutral">Registry: None</span>
+          </div>
+        </div>
+
+        <div class="detail-grid">
+          <!-- Metadata Card -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3>📦 Hardware & System Metadata</h3>
+            </div>
+            <div class="panel-body">
+              <dl class="property-list">
+                <dt>Hardware Make:</dt><dd id="detail-make">—</dd>
+                <dt>Hardware Model:</dt><dd id="detail-model">—</dd>
+                <dt>Serial Number:</dt><dd id="detail-serial">—</dd>
+                <dt>Location (Room / Floor):</dt><dd id="detail-location">—</dd>
+                <dt>Software Versions:</dt><dd id="detail-software">—</dd>
+                <dt>Last Seen Timestamp:</dt><dd id="detail-lastseen">—</dd>
+              </dl>
+            </div>
+          </div>
+
+          <!-- Telemetry Points Card -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3>📈 Telemetry & Point States</h3>
+            </div>
+            <div class="panel-body">
+              <div class="table-container">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Point Name</th>
+                      <th>Value State</th>
+                      <th>Units</th>
+                      <th>Level</th>
+                      <th>Status Message</th>
+                    </tr>
+                  </thead>
+                  <tbody id="detail-points-table">
+                    <tr><td colspan="5" class="empty-state">No points reported</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- State vs Config Comparison -->
+        <div class="panel margin-top">
+          <div class="panel-header">
+            <h3>⚖️ State vs Desired Configuration Comparison</h3>
+          </div>
+          <div class="panel-body diff-grid">
+            <div>
+              <h4>Reported State</h4>
+              <pre id="detail-reported-state" class="code-box">{}</pre>
+            </div>
+            <div>
+              <h4>Desired Configuration</h4>
+              <pre id="detail-desired-config" class="code-box">{}</pre>
+            </div>
+          </div>
+        </div>
+        <!-- Message Lifecycle (Model -> Discovery -> Proposal) -->
+        <div class="panel margin-top">
+          <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>🔄 Message Lifecycle (Model → Discovery → Proposal)</h3>
+            <button id="btn-seed-mapping" class="btn btn-secondary btn-sm" onclick="triggerMappingScenario()">⚡ Seed Mapping Lifecycle</button>
+          </div>
+          <div class="panel-body">
+            <div id="detail-messages-timeline">
+              <div class="empty-state">Loading lifecycle messages...</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Configuration Management Pane -->
+      <section id="pane-config" class="tab-pane">
+        <div class="section-header">
+          <h2>Configuration Management</h2>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h3>📝 Declare Target Device Configuration</h3>
+          </div>
+          <div class="panel-body">
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="config-reg-input">Target Registry</label>
+                <input type="text" id="config-reg-input" placeholder="e.g. ZZ-TRI-FECTA">
+              </div>
+              <div class="form-group flex-1">
+                <label for="config-dev-input">Target Device ID</label>
+                <input type="text" id="config-dev-input" placeholder="e.g. AHU-1">
+              </div>
+              <div class="form-group flex-1">
+                <label for="config-subfolder-select">Configuration Subfolder</label>
+                <select id="config-subfolder-select">
+                  <option value="system">system</option>
+                  <option value="pointset">pointset</option>
+                  <option value="gateway">gateway</option>
+                  <option value="discovery">discovery</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group margin-top">
+              <label for="config-payload-editor">Configuration Payload (JSON)</label>
+              <textarea id="config-payload-editor" class="code-editor" rows="10">
+{
+  "system": {
+    "software": {
+      "system": "2.5.0"
+    }
+  }
+}
+              </textarea>
+            </div>
+
+            <div class="form-actions">
+              <button id="btn-validate-config" class="btn btn-secondary">🔍 Validate Schema</button>
+              <button id="btn-publish-config" class="btn btn-primary">🚀 Publish to UUFI</button>
+              <span id="config-status-msg" class="status-inline"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Managed Rollout Pane -->
+      <section id="pane-rollout" class="tab-pane">
+        <div class="section-header">
+          <h2>Managed Rollouts</h2>
+          <button id="btn-new-rollout" class="btn btn-primary btn-sm">➕ New Rollout Campaign</button>
+        </div>
+
+        <!-- Active Rollouts List -->
+        <div class="panel">
+          <div class="panel-header">
+            <h3>Campaigns & Staged Deployments</h3>
+          </div>
+          <div class="panel-body">
+            <div id="rollouts-list" class="rollouts-grid">
+              <div class="empty-state">No active rollout campaigns. Click "New Rollout Campaign" to create one.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Bridgehead Admin & Test Infrastructure Pane -->
+      <section id="pane-admin" class="tab-pane">
+        <div class="section-header">
+          <h2>Bridgehead Administration & Test Infrastructure</h2>
+          <button id="btn-probe-admin" class="btn btn-secondary btn-sm">🔄 Probe Status</button>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="component-card" id="card-mqtt">
+            <div class="comp-title">📡 MQTT Broker (Mosquitto)</div>
+            <div class="comp-status status-up">UP</div>
+            <div class="comp-meta">Port: 1883 • Latency: <span class="comp-lat">2ms</span></div>
+          </div>
+          <div class="component-card" id="card-pg">
+            <div class="comp-title">🐘 PostgreSQL (Butler)</div>
+            <div class="comp-status status-up">UP</div>
+            <div class="comp-meta">Port: 5432 • Latency: <span class="comp-lat">1ms</span></div>
+          </div>
+          <div class="component-card" id="card-influx">
+            <div class="comp-title">📈 InfluxDB (Telemetry)</div>
+            <div class="comp-status status-up">UP</div>
+            <div class="comp-meta">Port: 8086 • Latency: <span class="comp-lat">3ms</span></div>
+          </div>
+          <div class="component-card" id="card-etcd">
+            <div class="comp-title">🗄️ etcd (Coordination)</div>
+            <div class="comp-status status-up">UP</div>
+            <div class="comp-meta">Port: 2379 • Latency: <span class="comp-lat">2ms</span></div>
+          </div>
+        </div>
+
+        <!-- MCP Test Infrastructure Connection -->
+        <div class="panel margin-top">
+          <div class="panel-header">
+            <h3>🧪 Test Infrastructure MCP Server Integration</h3>
+          </div>
+          <div class="panel-body">
+            <p>The GUMMI backend is configured to work in parallel with the <strong>UDMI Test Infrastructure MCP Server</strong> (<code>bin/test_infra_mcp</code> / <code>bin/test_setup</code>).</p>
+            <dl class="property-list">
+              <dt>MCP Server CLI:</dt><dd><code>bin/test_setup ensure &lt;test_id&gt; sites/udmi_site_model</code></dd>
+              <dt>Window Diagnostics:</dt><dd><code>bin/test_setup logs &lt;test_id&gt; main</code></dd>
+              <dt>Clean Teardown:</dt><dd><code>bin/test_setup terminate &lt;test_id&gt;</code></dd>
+            </dl>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

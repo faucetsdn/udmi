@@ -105,6 +105,8 @@ class SessionManager:
         site_model: str = "sites/udmi_site_model",
         dut_device_id: Optional[str] = None,
         dut_serial_no: Optional[str] = None,
+        exclude: Optional[List[str]] = None,
+        added: Optional[List[str]] = None,
         clean: bool = True,
         timeout_seconds: int = 150,
     ) -> Dict[str, Any]:
@@ -144,6 +146,21 @@ class SessionManager:
         project_spec = f"//mqtt/localhost:{mqtt_port}"
         connection_url = f"mqtt://rocket:monkey@localhost:{mqtt_port}"
 
+        # Build filter flags
+        filter_flags = []
+        if exclude:
+            if isinstance(exclude, str):
+                exclude = [s.strip() for s in exclude.split(",") if s.strip()]
+            for svc in exclude:
+                filter_flags.append(f"!{svc}")
+        if added:
+            if isinstance(added, str):
+                added = [s.strip() for s in added.split(",") if s.strip()]
+            for svc in added:
+                filter_flags.append(f"++{svc}")
+
+        filter_str = (" " + " ".join(filter_flags)) if filter_flags else ""
+
         # Build start_local command
         start_cmd = (
             f"export UDMI_ROOT='{self.udmi_root}' && "
@@ -153,7 +170,7 @@ class SessionManager:
             f"export INFLUX_PORT='{influx_port}' && "
             f"export POSTGRES_PORT='{postgres_port}' && "
             f"cd '{self.udmi_root}' && "
-            f"bin/start_local block '{site_model_path}' '{project_spec}'"
+            f"bin/start_local block '{site_model_path}' '{project_spec}'{filter_str}"
         )
 
         # Launch in background tmux session
@@ -242,6 +259,8 @@ class SessionManager:
                 "influx": influx_port,
                 "postgres": postgres_port,
             },
+            "exclude": exclude or [],
+            "added": added or [],
             "site_model": site_model_path,
             "run_dir": run_dir,
         }

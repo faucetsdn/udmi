@@ -8,7 +8,6 @@ usage error: $*
 $0 [step]
 
 where [step] is one of:
-  install_dependencies
   code_tests
   schema_tests
   trace_tests
@@ -44,10 +43,6 @@ function test_wrap {
 }
 
 case "$1" in
-  install_dependencies)
-    test_wrap bin/setup_base
-    test_wrap bin/clone_model
-    ;;
   code_tests)
     test_wrap bin/gencode check
     test_wrap pubber/bin/build check
@@ -58,6 +53,7 @@ case "$1" in
     test_wrap bin/test_generated_classes_py
     test_wrap bin/test_pull
     test_wrap bin/test_butler
+    test_wrap bin/test_gummi
     ;;
 
   schema_tests)
@@ -79,7 +75,6 @@ case "$1" in
     test_wrap bin/test_workbench
     ;;
   all_tests)
-    run_wrap install_dependencies
     run_wrap code_tests
     run_wrap schema_tests
     run_wrap trace_tests
