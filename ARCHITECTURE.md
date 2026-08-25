@@ -1,3 +1,5 @@
+[**UDMI**](./) / [Architecture](#)
+
 # UDMI System Architecture
 
 This document provides a high-level architectural overview of the UDMI (Universal Device Management Interface) ecosystem, detailing the core components, their responsibilities, sub-components, and runtime interactions.
@@ -8,8 +10,8 @@ This document provides a high-level architectural overview of the UDMI (Universa
 
 ```mermaid
 graph TB
-    %% Site Model - Central Source of Truth
-    subgraph MODEL ["📁 Model"]
+    %% Base - Site Model & Cryptographic Foundation
+    subgraph BASE ["📁 Base (Site Model & Local Setup)"]
         SM_FILES["Declarative Model<br/>(on-prem device schemas, points, topology)"]
         CLONE["clone<br/>(clone_model / Repo Initializer)"]
         CERTS["certs<br/>(CA & Device Certificate Generator)"]
@@ -68,7 +70,7 @@ The UDMI ecosystem is structured around the following core subsystems, ordered b
 
 *   **0. MCP Server** (Tool: `bin/tmux_mcp`, Session: `udmi_mcp`): Test infrastructure orchestration and AI agent tool gateway.
     *   **`server`** *(Default: Enabled)*: JSON-RPC 2.0 / CLI test setup supervisor managing isolated port allocations, test environments, and log capture (`bin/test_setup`).
-*   **1. Model** (Tool: `bin/tmux_model`, Session: `udmi_model`): Declarative model of the on-prem components and cryptographic assets.
+*   **1. Base** (Tool: `bin/tmux_base`, Session: `udmi_base`): Declarative site model, repository initialization, and cryptographic baseline.
     *   **`clone`** *(Optional / Setup)*: Clones and initializes site model repositories from templates or version control (`clone_model`).
     *   **`certs`** *(Default: Enabled)*: Generates root CA and device certificate pairs (`ca.crt`, `rsa_private.crt`) on disk from site model definitions.
 *   **2. Barbican** (Tool: `bin/tmux_barbican`, Session: `udmi_barbican`): The central messaging and control plane for the system, handling message routing, security enforcement, and configuration distribution.
@@ -98,7 +100,7 @@ When bringing up a local development or CI environment via `bin/start_local` or 
 
 ```text
 Phase 0: bin/tmux_mcp        ──►  MCP Server: Test setup orchestrator & agent tool gateway
-Phase 1: bin/tmux_model      ──►  Model:      Prepares certificates and keys on disk
+Phase 1: bin/tmux_base       ──►  Base:       Prepares repository clone, certificates, and keys on disk
 Phase 2: bin/tmux_barbican   ──►  Barbican:   Brings up messaging, KV store, and reflection core
 Phase 3: bin/tmux_butler     ──►  Butler:     Brings up databases, telemetry ingestion, and optional registration
 Phase 4: bin/tmux_bridgehead ──►  Bridgehead: Brings up edge device emulation / discovery
