@@ -45,7 +45,7 @@ The lifecycle of each controller revolves around four operational states:
 
 ---
 
-## 3. Namespacing & Zero-Sudo Execution
+## 3. Namespacing & Non-Root Execution
 
 ### A. Semantic Namespace Identifiers (Recommended)
 Passing a bare semantic namespace identifier (e.g. `btesting`, `alpha`, `staging`):
@@ -53,7 +53,7 @@ Passing a bare semantic namespace identifier (e.g. `btesting`, `alpha`, `staging
 bin/tmux_barbican start btesting
 ```
 - **Deterministic Port Mapping**: Derives an unprivileged port block using SHA-256 in the range `[20000, 55000]` ($\text{port} = 20000 + ((\text{SHA-256}(ns) \bmod 3500) \times 10)$).
-- **Zero-Sudo**: Automatically sets `UDMI_NO_SUDO=true`, isolating data directories to `var/` and running user-space processes without root privileges.
+- **Default Non-Root Execution**: Runs in user-space without sudo, isolating runtime data directories to `var/`. Root permissions are only required when installing system-level dependencies (e.g., `sudo bin/setup_base`).
 - **Namespaced Sessions**: Sets session name to `udmi_<box>~<namespace>` (e.g. `udmi_barbican~btesting`).
 - **Separable Site Model**: Resolves site model path to `sites/udmi~<namespace>`.
 
@@ -61,7 +61,7 @@ bin/tmux_barbican start btesting
 When no target is passed (e.g. `bin/tmux_barbican start` or `bin/udmi start`):
 - Defaults to namespace **`default`**.
 - Session name: `udmi_<box>~default`.
-- Project spec: `//mqtt/localhost:35950/default`.
+- Project spec: `//mqtt/localhost:<port>` (derived for `default`).
 - Site model: `sites/udmi~default`.
 
 ### C. Explicit Site Model Path
@@ -70,10 +70,10 @@ When specifying a custom site model directory (e.g. `sites/my_site`):
   ```bash
   # Valid:
   bin/tmux_barbican start sites/my_site //mqtt/localhost:46432
-  bin/tmux_barbican start sites/my_site btesting
 
   # Invalid (fails fast):
   bin/tmux_barbican start sites/my_site
+  bin/tmux_barbican start sites/my_site btesting
   ```
 
 ---
@@ -97,21 +97,7 @@ Fine-tune which services run inside the tmux session during `start`:
 
 ---
 
-## 5. Orchestration: `bin/udmi`
+## 5. Unified Orchestration
 
-[`bin/udmi`](../../bin/udmi) unifies and manages the entire local service pipeline by delegating to `tmux_barbican` and `tmux_butler`:
+For unified local infrastructure orchestration across multiple service controllers, see [**`bin/udmi` (UDMI Local Orchestrator)**](udmi_tools.md).
 
-```bash
-# Start full local infrastructure under namespace 'btesting' (preserves state)
-bin/udmi start btesting
-
-# Reset and start fresh under namespace 'btesting' (clean-slate)
-bin/udmi restart btesting
-
-# Start full stack under default namespace
-bin/udmi start
-
-# Stop local infrastructure
-bin/udmi stop btesting
-bin/udmi stop
-```

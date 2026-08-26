@@ -23,7 +23,6 @@ for cmd in java nc base64 openssl curl tar jq gcloud mosquitto; do
   fi
 done
 
-export UDMI_NO_SUDO=true
 export HOST_IP="127.0.0.1"
 export MOSQUITTO_LOG_PATH="$(pwd)/var/mosquitto/log/mosquitto.log"
 

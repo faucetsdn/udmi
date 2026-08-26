@@ -49,16 +49,6 @@ if [[ -f $POSTGRES_PID_FILE ]]; then
         kill $old_pid || true
         sleep 1
     fi
-else
-    # Fallback to check for any local postgres process belonging to this user
-    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
-        old_pid=$(ps ax | fgrep "$BINDIR/postgres" | fgrep -v grep | awk '{print $1}') || true
-        if [[ -n $old_pid ]]; then
-            echo Killing existing postgres pid $old_pid...
-            kill $old_pid || true
-            sleep 1
-        fi
-    fi
 fi
 
 if [[ ${1:-} == stop ]]; then

@@ -33,14 +33,6 @@ if [[ -f $INFLUX_PID_FILE ]]; then
         sleep 1
     fi
 fi
-if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
-    old_pid=$(ps -u $(id -u) -o pid,comm | fgrep influxd | awk '{print $1}') || true
-    if [[ -n $old_pid ]]; then
-        echo Killing existing influxd pid $old_pid...
-        kill $old_pid 2>/dev/null || true
-        sleep 1
-    fi
-fi
 
 if [[ ${1:-} == stop ]]; then
     exit 0

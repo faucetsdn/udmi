@@ -4,6 +4,15 @@
 UDMI_ROOT=$(dirname $(realpath ${BASH_SOURCE[0]}))/..
 source $UDMI_ROOT/etc/shell_common.sh
 
+function derive_port_from_namespace {
+    local ns="$1"
+    python3 -c "import hashlib; print(20000 + (int(hashlib.sha256(b'$ns').hexdigest(), 16) % 3500) * 10)" 2>/dev/null || {
+        local hex=$(printf '%s' "$ns" | md5sum | awk '{print $1}')
+        local slot=$(( 16#${hex: -6} % 3500 ))
+        echo $(( 20000 + slot * 10 ))
+    }
+}
+
 # Global parsed arguments
 TMUX_ACTION=""
 TMUX_SITE_MODEL="sites/udmi_site_model"
@@ -19,7 +28,7 @@ TMUX_NAMESPACE=""
 parse_tmux_args() {
     TMUX_ACTION=""
     TMUX_SITE_MODEL="sites/udmi_site_model"
-    TMUX_PROJECT_SPEC="//mqtt/localhost:${MQTT_PORT:-8883}"
+    TMUX_PROJECT_SPEC=""
     TMUX_TARGET_ID=""
     TMUX_NAMESPACE="${UDMI_NAMESPACE:-}"
     TMUX_ONLY_LIST=()
@@ -27,7 +36,7 @@ parse_tmux_args() {
     TMUX_OPTIONAL_LIST=()
     TMUX_EXTRA_ARGS=()
 
-    local positional_count=0
+    local positional_args=()
 
     while [[ $# -gt 0 ]]; do
         local arg="$1"
@@ -56,113 +65,100 @@ parse_tmux_args() {
                 TMUX_EXCLUDE_LIST+=("$svc")
                 ;;
             *)
-                case $positional_count in
-                    0)
-                        if [[ -f "$arg/cloud_iot_config.json" || "$arg" == sites/* || ( -d "$arg" && "$arg" == */* ) ]]; then
-                            TMUX_SITE_MODEL="$arg"
-                            positional_count=1
-                        elif [[ "$arg" =~ ^// || "$arg" =~ ^(mqtt|mqtts|ssl):// || "$arg" =~ localhost: ]]; then
-                            TMUX_PROJECT_SPEC="$arg"
-                            positional_count=2
-                        elif [[ "$TMUX_ACTION" == "logs" || "$TMUX_ACTION" == "attach" ]]; then
-                            if [[ "$arg" =~ ^[0-9]+$ ]]; then
-                                TMUX_EXTRA_ARGS+=("$arg")
-                                positional_count=3
-                            elif [[ $# -gt 0 && ! "$arg" =~ ^(mosquitto|udmis|etcd|pubsub|postgres|influxdb|butler|validator|registrar|certs|clone|pubber|spotter|server|AHU-1)$ ]]; then
-                                TMUX_PROJECT_SPEC="$arg"
-                                positional_count=2
-                            else
-                                TMUX_TARGET_ID="$arg"
-                                positional_count=3
-                            fi
-                        elif [[ "$arg" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-                            if [[ -d "$UDMI_ROOT/sites/udmi_site_model/devices/$arg" ]]; then
-                                TMUX_TARGET_ID="$arg"
-                                positional_count=3
-                            else
-                                TMUX_PROJECT_SPEC="$arg"
-                                positional_count=2
-                            fi
-                        else
-                            TMUX_TARGET_ID="$arg"
-                            positional_count=3
-                        fi
-                        ;;
-                    1)
-                        TMUX_PROJECT_SPEC="$arg"
-                        positional_count=2
-                        ;;
-                    2)
-                        TMUX_TARGET_ID="$arg"
-                        positional_count=3
-                        ;;
-                    *)
-                        TMUX_EXTRA_ARGS+=("$arg")
-                        ;;
-                esac
+                positional_args+=("$arg")
                 ;;
         esac
     done
 
-    case $positional_count in
-        0)
-            # When no target is provided, namespace defaults to 'default'
-            TMUX_PROJECT_SPEC="default"
-            TMUX_SITE_MODEL="$UDMI_ROOT/sites/udmi~default"
-            TMUX_NAMESPACE="default"
-            ;;
-        1)
-            # Explicit site model provided without a project spec -> fail fast
-            echo "ERROR: An explicit site model ('$TMUX_SITE_MODEL') requires an explicit project spec (e.g. //mqtt/localhost:46432 or a namespace)." >&2
-            exit 1
-            ;;
-        3)
-            # When target ID was specified without site model/project spec, default to default namespace
-            if [[ "$TMUX_SITE_MODEL" == "sites/udmi_site_model" || "$TMUX_SITE_MODEL" == "$UDMI_ROOT/sites/udmi_site_model" ]]; then
-                TMUX_PROJECT_SPEC="default"
-                TMUX_SITE_MODEL="$UDMI_ROOT/sites/udmi~default"
-                TMUX_NAMESPACE="default"
+    if [[ "$TMUX_ACTION" == "logs" || "$TMUX_ACTION" == "attach" ]]; then
+        if [[ ${#positional_args[@]} -gt 0 ]]; then
+            if [[ "$TMUX_ACTION" == "logs" && "${positional_args[0]}" =~ ^[0-9]+$ && ${#positional_args[@]} -eq 1 ]]; then
+                TMUX_TARGET_ID=""
+                TMUX_EXTRA_ARGS=("${positional_args[0]}")
+            else
+                TMUX_TARGET_ID="${positional_args[0]}"
+                TMUX_EXTRA_ARGS=("${positional_args[@]:1}")
             fi
-            ;;
-        *)
-            ;;
-    esac
+        fi
+    else
+        case ${#positional_args[@]} in
+            0)
+                # No target provided: default to namespace 'default'
+                TMUX_NAMESPACE="default"
+                TMUX_SITE_MODEL="$UDMI_ROOT/sites/udmi~default"
+                local port=$(derive_port_from_namespace "default")
+                TMUX_PROJECT_SPEC="//mqtt/localhost:${port}"
+                ;;
+            1)
+                local arg="${positional_args[0]}"
+                if [[ -d "$arg" || -f "$arg/cloud_iot_config.json" || ( "$arg" == sites/* && -d "$arg" ) ]]; then
+                    echo "ERROR: An explicit site model ('$arg') requires an explicit project spec (e.g. //mqtt/localhost:46432)." >&2
+                    exit 1
+                elif [[ -f "$arg" ]]; then
+                    TMUX_SITE_MODEL=$(dirname "$arg")
+                    TMUX_PROJECT_SPEC="$arg"
+                    TMUX_NAMESPACE=""
+                elif [[ "$arg" =~ ^// || "$arg" =~ ^(mqtt|mqtts|ssl):// || "$arg" =~ localhost: || "$arg" =~ :[0-9]+ ]]; then
+                    TMUX_SITE_MODEL="sites/udmi_site_model"
+                    TMUX_PROJECT_SPEC=$(normalize_conn_spec "$arg")
+                    TMUX_NAMESPACE=""
+                elif [[ "$arg" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+                    TMUX_NAMESPACE="$arg"
+                    TMUX_SITE_MODEL="$UDMI_ROOT/sites/udmi~${arg}"
+                    local port=$(derive_port_from_namespace "$arg")
+                    TMUX_PROJECT_SPEC="//mqtt/localhost:${port}"
+                else
+                    echo "ERROR: Invalid target '$arg'. Expected a namespace, connection spec (//mqtt/localhost:...), or config file." >&2
+                    exit 1
+                fi
+                ;;
+            2)
+                local arg1="${positional_args[0]}"
+                local arg2="${positional_args[1]}"
+                if [[ -d "$arg1" || -f "$arg1/cloud_iot_config.json" || ( "$arg1" == sites/* && -d "$arg1" ) ]]; then
+                    TMUX_SITE_MODEL="$arg1"
+                    if [[ -f "$arg2" ]]; then
+                        TMUX_PROJECT_SPEC="$arg2"
+                        TMUX_NAMESPACE=""
+                    elif [[ "$arg2" =~ ^// || "$arg2" =~ ^(mqtt|mqtts|ssl):// || "$arg2" =~ localhost: || "$arg2" =~ :[0-9]+ ]]; then
+                        TMUX_PROJECT_SPEC=$(normalize_conn_spec "$arg2")
+                        TMUX_NAMESPACE=""
+                    elif [[ "$arg2" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+                        echo "ERROR: Cannot combine explicit site model ('$arg1') with namespace ('$arg2'). Specify an explicit connection spec (e.g. //mqtt/localhost:46432) or use a solo namespace." >&2
+                        exit 1
+                    else
+                        echo "ERROR: Invalid project spec '$arg2' for site model '$arg1'." >&2
+                        exit 1
+                    fi
+                else
+                    echo "ERROR: Unexpected argument pair: '$arg1' '$arg2'. Expected [site_model_dir] [project_spec]." >&2
+                    exit 1
+                fi
+                ;;
+            *)
+                echo "ERROR: Too many positional arguments: ${positional_args[*]}" >&2
+                exit 1
+                ;;
+        esac
+    fi
 
     if [[ -d "$TMUX_SITE_MODEL" && -f "$TMUX_SITE_MODEL/cloud_iot_config.json" ]]; then
         TMUX_SITE_MODEL=$(realpath "$TMUX_SITE_MODEL")
     fi
 
     if [[ -n "$TMUX_PROJECT_SPEC" ]]; then
-        TMUX_PROJECT_SPEC=$(normalize_conn_spec "$TMUX_PROJECT_SPEC")
         if [[ $TMUX_PROJECT_SPEC =~ localhost:([0-9]+) ]]; then
             export MQTT_PORT="${BASH_REMATCH[1]}"
             if [[ $MQTT_PORT != 8883 ]]; then
                 export ETCD_PORT=$((MQTT_PORT + 1))
                 export INFLUX_PORT=$((MQTT_PORT + 2))
                 export POSTGRES_PORT=$((MQTT_PORT + 3))
-                export UDMI_NO_SUDO=true
             fi
-        fi
-        if [[ $TMUX_PROJECT_SPEC =~ localhost:[0-9]+/([a-zA-Z0-9_-]+) ]]; then
-            export TMUX_NAMESPACE="${BASH_REMATCH[1]}"
-        fi
-    fi
-
-    if [[ -n "${TMUX_NAMESPACE:-}" ]]; then
-        if [[ "$TMUX_SITE_MODEL" == "sites/udmi_site_model" || "$TMUX_SITE_MODEL" == "$UDMI_ROOT/sites/udmi_site_model" ]]; then
-            TMUX_SITE_MODEL="$UDMI_ROOT/sites/udmi~${TMUX_NAMESPACE}"
         fi
     fi
 
     if [[ -n "${TMUX_NAMESPACE:-}" && -n "${SESSION_NAME:-}" && ! "$SESSION_NAME" =~ ~ ]]; then
         SESSION_NAME="${SESSION_NAME}~${TMUX_NAMESPACE}"
-    fi
-
-    if [[ ("$TMUX_ACTION" == "start" || "$TMUX_ACTION" == "restart") && ${UDMI_NO_SUDO:-false} != true && $(id -u) != 0 ]]; then
-        if command -v sudo >/dev/null 2>&1; then
-            echo "Pre-authenticating sudo credentials in foreground..."
-            sudo -v || true
-        fi
     fi
 }
 
@@ -263,7 +259,7 @@ tmux_init_or_add_window() {
     local window_name="$2"
     local cmd="$3"
 
-    local env_exports="export UDMI_ROOT='$UDMI_ROOT' UDMI_NO_SUDO='${UDMI_NO_SUDO:-false}' MQTT_PORT='${MQTT_PORT:-8883}' ETCD_PORT='${ETCD_PORT:-2379}' INFLUX_PORT='${INFLUX_PORT:-8086}' POSTGRES_PORT='${POSTGRES_PORT:-5432}' TARGET_PROJECT='${TARGET_PROJECT:-}'"
+    local env_exports="export UDMI_ROOT='$UDMI_ROOT' MQTT_PORT='${MQTT_PORT:-8883}' ETCD_PORT='${ETCD_PORT:-2379}' INFLUX_PORT='${INFLUX_PORT:-8086}' POSTGRES_PORT='${POSTGRES_PORT:-5432}' TARGET_PROJECT='${TARGET_PROJECT:-}'"
     local full_cmd="$env_exports; $cmd; ec=\$?; echo \"=== [$window_name] exited with code \$ec ===\"; while true; do read -r _ 2>/dev/null || sleep 3600; done"
 
     if ! tmux_session_exists "$session_name"; then
@@ -280,11 +276,23 @@ tmux_init_or_add_window() {
 
 tmux_stop_session() {
     local session_name="$1"
+    local stopped=false
     if tmux_session_exists "$session_name"; then
         echo "Terminating tmux session '$session_name'..."
         tmux kill-session -t "$session_name" 2>/dev/null || true
         echo "Session '$session_name' stopped."
-    else
+        stopped=true
+    fi
+    if [[ "$session_name" =~ ~default$ ]]; then
+        local base_sess="${session_name%~default}"
+        if tmux_session_exists "$base_sess"; then
+            echo "Terminating tmux session '$base_sess'..."
+            tmux kill-session -t "$base_sess" 2>/dev/null || true
+            echo "Session '$base_sess' stopped."
+            stopped=true
+        fi
+    fi
+    if [[ "$stopped" == false ]]; then
         echo "Session '$session_name' is not running."
     fi
 }

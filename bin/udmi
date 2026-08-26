@@ -49,19 +49,11 @@ esac
 if [[ "$CMD" == "stop" || "$CMD" == "clean" ]]; then
     action="$CMD"
     shift
-    target_spec="${1:-}"
-    if [[ -n "$target_spec" ]]; then
-        target_spec=$(normalize_conn_spec "$target_spec")
-    fi
-    namespace=""
-    if [[ $target_spec =~ localhost:[0-9]+/([a-zA-Z0-9_-]+) ]]; then
-        namespace="${BASH_REMATCH[1]}"
-    elif [[ $target_spec =~ ^[a-zA-Z0-9_-]+$ && ! -d "$target_spec" && "$target_spec" != sites/* ]]; then
-        namespace="$target_spec"
-    fi
-    ns_arg="${namespace:-}"
+    parse_tmux_args "$@"
+    ns_arg="${TMUX_NAMESPACE:-}"
+    [[ -n "$ns_arg" ]] || ns_arg="${TMUX_PROJECT_SPEC:-}"
     if [[ "$action" == "stop" ]]; then
-        echo "Stopping local UDMI infrastructure${namespace:+ (namespace: $namespace)} via tmux sessions..."
+        echo "Stopping local UDMI infrastructure${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)} via tmux sessions..."
         $UDMI_ROOT/bin/tmux_barbican stop $ns_arg >/dev/null 2>&1 || true
         $UDMI_ROOT/bin/tmux_butler stop $ns_arg >/dev/null 2>&1 || true
         $UDMI_ROOT/bin/tmux_bridgehead stop $ns_arg >/dev/null 2>&1 || true
@@ -70,7 +62,7 @@ if [[ "$CMD" == "stop" || "$CMD" == "clean" ]]; then
         $UDMI_ROOT/bin/tmux_mcp stop $ns_arg >/dev/null 2>&1 || true
         echo "Local UDMI infrastructure stopped cleanly."
     elif [[ "$action" == "clean" ]]; then
-        echo "Cleaning local UDMI infrastructure state${namespace:+ (namespace: $namespace)}..."
+        echo "Cleaning local UDMI infrastructure state${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)}..."
         $UDMI_ROOT/bin/tmux_barbican clean $ns_arg >/dev/null 2>&1 || true
         $UDMI_ROOT/bin/tmux_butler clean $ns_arg >/dev/null 2>&1 || true
         $UDMI_ROOT/bin/tmux_bridgehead clean $ns_arg >/dev/null 2>&1 || true
@@ -85,18 +77,10 @@ fi
 # 2. Status command
 if [[ "$CMD" == "status" ]]; then
     shift
-    target_spec="${1:-}"
-    if [[ -n "$target_spec" ]]; then
-        target_spec=$(normalize_conn_spec "$target_spec")
-    fi
-    namespace=""
-    if [[ $target_spec =~ localhost:[0-9]+/([a-zA-Z0-9_-]+) ]]; then
-        namespace="${BASH_REMATCH[1]}"
-    elif [[ $target_spec =~ ^[a-zA-Z0-9_-]+$ && ! -d "$target_spec" && "$target_spec" != sites/* ]]; then
-        namespace="$target_spec"
-    fi
-    ns_arg="${namespace:-}"
-    echo "=== UDMI Infrastructure Status${namespace:+ (namespace: $namespace)} ==="
+    parse_tmux_args "$@"
+    ns_arg="${TMUX_NAMESPACE:-}"
+    [[ -n "$ns_arg" ]] || ns_arg="${TMUX_PROJECT_SPEC:-}"
+    echo "=== UDMI Infrastructure Status${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)} ==="
     $UDMI_ROOT/bin/tmux_barbican status $ns_arg
     echo ""
     $UDMI_ROOT/bin/tmux_butler status $ns_arg
@@ -172,27 +156,14 @@ done
 
 ALLOWED_SERVICES=(mosquitto udmis etcd postgres influxdb butler validator registrar pubsub)
 
-# Parse and strictly validate filter arguments
-parse_tmux_args "${FILTER_ARGS[@]}"
+# Parse and strictly validate arguments via parse_tmux_args
+parse_tmux_args "${POSITIONAL_ARGS[@]}" "${FILTER_ARGS[@]}"
 tmux_validate_services "udmi" "${ALLOWED_SERVICES[@]}"
 
-set -- "${POSITIONAL_ARGS[@]}"
+site_model="$TMUX_SITE_MODEL"
+project_spec="$TMUX_PROJECT_SPEC"
 
-if [[ $# -eq 0 ]]; then
-    project_spec="default"
-    site_config="sites/udmi~default"
-elif [[ $# -eq 1 ]]; then
-    if [[ "$1" =~ ^[a-zA-Z0-9_-]+$ && ! -d "$1" && "$1" != sites/* ]]; then
-        project_spec="$1"
-        site_config="sites/udmi~$1"
-    else
-        fail "An explicit site model ('$1') requires an explicit project spec (e.g. //mqtt/localhost:46432 or a namespace)."
-    fi
-else
-    site_config="$1"
-    project_spec="$2"
-fi
-
+site_config="$site_model"
 if [[ -d "$site_config" ]]; then
     site_config="$site_config/cloud_iot_config.json"
 elif [[ -f "$site_config" ]]; then
@@ -201,7 +172,11 @@ elif [[ "$site_config" == sites/* || "$site_config" == */* ]]; then
     site_config="$site_config/cloud_iot_config.json"
 fi
 
-if [[ ! -f $site_config ]]; then
+if [[ ! -f "$site_config" && "$site_model" =~ /sites/udmi~ ]]; then
+    $UDMI_ROOT/bin/clone_model "$site_model"
+fi
+
+if [[ ! -f "$site_config" ]]; then
     fail "local startup requires explicit site path file ($site_config not found)."
 fi
 site_model=$(dirname "$site_config")
@@ -214,10 +189,6 @@ fi
 cd "$UDMI_ROOT"
 UDMIS_LOG=${UDMIS_LOG:-out/udmis.log}
 mkdir -p $(dirname "$UDMIS_LOG")
-# Do sudo now to prefetch incase it's needed later...
-if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
-    sudo true
-fi
 echo Starting local services at $(date -u -Is) | tee $UDMIS_LOG
 
 iot_provider=$(jq -r .iot_provider $site_config)
