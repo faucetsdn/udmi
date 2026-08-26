@@ -31,7 +31,7 @@ docker run -d --rm --net udminet --name udmis -p 8883:8883 \
     -v $PWD/var/tmp:/tmp \
     -v $PWD/var/etcd:/root/udmi/var/etcd \
     -v $PWD/var/mosquitto:/etc/mosquitto \
-    ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/udmi start block site_model/cloud_iot_config.json //mqtt/localhost:8883
+    ghcr.io/faucetsdn/udmi:udmis-latest udmi/bin/udmi start block site_model //mqtt/localhost:8883
 ```
 
 ## UDMIS Startup Diagnostics
