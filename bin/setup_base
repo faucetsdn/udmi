@@ -45,3 +45,7 @@ java -version
 
 echo "Initializing base site model..."
 $ROOT_DIR/bin/clone_model
+
+if [[ $(id -u) == 0 ]]; then
+    chmod -R a+rwX sites venv 2>/dev/null || true
+fi
