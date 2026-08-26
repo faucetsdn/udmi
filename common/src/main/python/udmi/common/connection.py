@@ -3,8 +3,10 @@
 import hashlib
 import json
 import os
+import socket
 import ssl
 import sys
+import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -196,7 +198,22 @@ class MessageConnection:
             f"Connecting to MQTT provider '{self.provider}' at {self.host}:{self.port} with client_id '{self.client_id}'...",
             file=sys.stderr,
         )
-        client.connect(self.host, self.port, keepalive=60)
+        connected = False
+        connect_err = None
+        for attempt in range(30):
+            try:
+                client.connect(self.host, self.port, keepalive=60)
+                connected = True
+                break
+            except (ConnectionRefusedError, OSError, socket.error) as e:
+                connect_err = e
+                time.sleep(1)
+
+        if not connected:
+            if connect_err:
+                raise connect_err
+            client.connect(self.host, self.port, keepalive=60)
+
         self._mqtt_client = client
         return client
 

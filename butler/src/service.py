@@ -115,6 +115,19 @@ class ButlerService:
             # Structured envelope + payload JSON stream (from pull_messages / pull_mqtt)
             envelope = data.get("envelope", {})
             payload = data.get("payload", {})
+        elif isinstance(data, dict) and "payload" in data and isinstance(data.get("payload"), dict) and ("source" in data or "subFolder" in data):
+            # UDMIS wrapped format
+            topic_env = parse_mqtt_topic(topic_or_channel)
+            envelope = {
+                "deviceRegistryId": data.get("deviceRegistryId") or topic_env.get("deviceRegistryId"),
+                "deviceId": data.get("deviceId") or topic_env.get("deviceId"),
+                "subType": data.get("subType") or topic_env.get("subType"),
+                "subFolder": data.get("subFolder") or topic_env.get("subFolder"),
+                "projectId": data.get("projectId") or self.spec_info.get("project"),
+                "publishTime": data.get("publishTime") or (datetime.utcnow().isoformat() + "Z"),
+                "transactionId": data.get("transactionId"),
+            }
+            payload = data.get("payload", {})
         else:
             # Direct MQTT topic message
             envelope = parse_mqtt_topic(topic_or_channel)

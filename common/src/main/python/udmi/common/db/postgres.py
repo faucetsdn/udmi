@@ -1,14 +1,14 @@
 """PostgreSQL database management and row insertion utilities."""
 
 import json
+import math
 import os
 import sys
+import time
 from typing import Any, Dict, List, Optional, Union
 import psycopg2
+import psycopg2.errors
 from psycopg2.extras import Json
-
-
-import math
 
 
 def sanitize_for_json(obj: Any) -> Any:
@@ -43,8 +43,8 @@ class PostgresManager:
         self.password = password or os.environ.get("POSTGRES_PASSWORD", "")
         self.database = database or os.environ.get("POSTGRES_DB", "postgres")
 
-    def get_connection(self):
-        """Returns a psycopg2 connection."""
+    def get_connection(self, retry_timeout_sec: int = 0):
+        """Returns a psycopg2 connection, optionally retrying until timeout."""
         conn_kwargs = {
             "host": self.host,
             "port": self.port,
@@ -53,7 +53,22 @@ class PostgresManager:
         }
         if self.password:
             conn_kwargs["password"] = self.password
-        return psycopg2.connect(**conn_kwargs)
+
+        if retry_timeout_sec <= 0:
+            return psycopg2.connect(**conn_kwargs)
+
+        start_time = time.time()
+        last_err = None
+        while time.time() - start_time <= retry_timeout_sec:
+            try:
+                return psycopg2.connect(**conn_kwargs)
+            except psycopg2.OperationalError as e:
+                last_err = e
+                time.sleep(1)
+
+        raise last_err or psycopg2.OperationalError(
+            f"Could not connect to PostgreSQL at {self.host}:{self.port}"
+        )
 
     def execute_sql(self, sql: str, params: Optional[tuple] = None) -> None:
         """Executes a single SQL command with optional parameters."""
@@ -72,8 +87,8 @@ class PostgresManager:
         except psycopg2.Error as e:
             print(f"Warning: PostgreSQL table initialization error: {e}", file=sys.stderr)
 
-    def init_default_tables(self) -> None:
-        """Initializes default tables for UDMI messages."""
+    def init_default_tables(self, retry_timeout_sec: int = 30) -> None:
+        """Initializes default tables for UDMI messages with connection retry."""
         raw_table_sql = """
         CREATE TABLE IF NOT EXISTS udmi_messages (
             id SERIAL PRIMARY KEY,
@@ -206,7 +221,7 @@ class PostgresManager:
         );
         """
 
-        for sql in [
+        tables = [
             raw_table_sql,
             point_state_sql,
             system_state_sql,
@@ -214,8 +229,26 @@ class PostgresManager:
             validation_sql,
             alarms_sql,
             metadata_sql,
-        ]:
-            self.init_table(sql)
+        ]
+
+        try:
+            conn = self.get_connection(retry_timeout_sec=retry_timeout_sec)
+        except Exception as e:
+            print(
+                f"Warning: PostgreSQL table initialization connection error: {e}",
+                file=sys.stderr,
+            )
+            return
+
+        try:
+            with conn.cursor() as cur:
+                for sql in tables:
+                    cur.execute(sql)
+            conn.commit()
+        except psycopg2.Error as e:
+            print(f"Warning: PostgreSQL table initialization error: {e}", file=sys.stderr)
+        finally:
+            conn.close()
 
     def insert_row(self, table_name: str, row: Dict[str, Any]) -> None:
         """Inserts a single row dictionary into the target table."""
@@ -226,25 +259,34 @@ class PostgresManager:
         if not rows:
             return
 
-        conn = self.get_connection()
-        try:
-            with conn.cursor() as cur:
-                for row in rows:
-                    columns = []
-                    values = []
-                    for col_name, val in row.items():
-                        columns.append(col_name)
-                        if isinstance(val, (dict, list)):
-                            values.append(Json(sanitize_for_json(val)))
-                        elif isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
-                            values.append(None)
-                        else:
-                            values.append(val)
+        for attempt in range(2):
+            conn = self.get_connection()
+            try:
+                with conn.cursor() as cur:
+                    for row in rows:
+                        columns = []
+                        values = []
+                        for col_name, val in row.items():
+                            columns.append(col_name)
+                            if isinstance(val, (dict, list)):
+                                values.append(Json(sanitize_for_json(val)))
+                            elif isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+                                values.append(None)
+                            else:
+                                values.append(val)
 
-                    col_list = ", ".join(columns)
-                    placeholders = ", ".join(["%s"] * len(values))
-                    sql = f"INSERT INTO {table_name} ({col_list}) VALUES ({placeholders})"
-                    cur.execute(sql, tuple(values))
-            conn.commit()
-        finally:
-            conn.close()
+                        col_list = ", ".join(columns)
+                        placeholders = ", ".join(["%s"] * len(values))
+                        sql = f"INSERT INTO {table_name} ({col_list}) VALUES ({placeholders})"
+                        cur.execute(sql, tuple(values))
+                conn.commit()
+                return
+            except psycopg2.errors.UndefinedTable:
+                conn.close()
+                if attempt == 0:
+                    self.init_default_tables()
+                    continue
+                raise
+            finally:
+                if not conn.closed:
+                    conn.close()
