@@ -29,7 +29,6 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
 
     if PostgresManager:
         pg_mgr = PostgresManager(port=pg_port)
-        pg_mgr.init_default_tables()
         try:
             conn = pg_mgr.get_connection()
         except psycopg2.Error as e:

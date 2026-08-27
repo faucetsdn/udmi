@@ -7,7 +7,6 @@ import sys
 import time
 from typing import Any, Dict, List, Optional, Union
 import psycopg2
-import psycopg2.errors
 from psycopg2.extras import Json
 
 
@@ -259,34 +258,25 @@ class PostgresManager:
         if not rows:
             return
 
-        for attempt in range(2):
-            conn = self.get_connection()
-            try:
-                with conn.cursor() as cur:
-                    for row in rows:
-                        columns = []
-                        values = []
-                        for col_name, val in row.items():
-                            columns.append(col_name)
-                            if isinstance(val, (dict, list)):
-                                values.append(Json(sanitize_for_json(val)))
-                            elif isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
-                                values.append(None)
-                            else:
-                                values.append(val)
+        conn = self.get_connection()
+        try:
+            with conn.cursor() as cur:
+                for row in rows:
+                    columns = []
+                    values = []
+                    for col_name, val in row.items():
+                        columns.append(col_name)
+                        if isinstance(val, (dict, list)):
+                            values.append(Json(sanitize_for_json(val)))
+                        elif isinstance(val, float) and (math.isnan(val) or math.isinf(val)):
+                            values.append(None)
+                        else:
+                            values.append(val)
 
-                        col_list = ", ".join(columns)
-                        placeholders = ", ".join(["%s"] * len(values))
-                        sql = f"INSERT INTO {table_name} ({col_list}) VALUES ({placeholders})"
-                        cur.execute(sql, tuple(values))
-                conn.commit()
-                return
-            except psycopg2.errors.UndefinedTable:
-                conn.close()
-                if attempt == 0:
-                    self.init_default_tables()
-                    continue
-                raise
-            finally:
-                if not conn.closed:
-                    conn.close()
+                    col_list = ", ".join(columns)
+                    placeholders = ", ".join(["%s"] * len(values))
+                    sql = f"INSERT INTO {table_name} ({col_list}) VALUES ({placeholders})"
+                    cur.execute(sql, tuple(values))
+            conn.commit()
+        finally:
+            conn.close()

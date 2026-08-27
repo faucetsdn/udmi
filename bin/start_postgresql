@@ -108,4 +108,7 @@ if ! kill -0 $POSTGRES_PID >/dev/null 2>&1; then
     exit 1
 fi
 
+echo "Initializing default PostgreSQL tables..."
+PYTHONPATH="$UDMI_ROOT/common/src/main/python:$UDMI_ROOT" python3 -c "from udmi.common.db.postgres import PostgresManager; PostgresManager(port='${postgres_port}').init_default_tables()"
+
 echo Completed postgresql startup.
