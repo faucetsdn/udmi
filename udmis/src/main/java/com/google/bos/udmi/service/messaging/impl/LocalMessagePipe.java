@@ -1,6 +1,8 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
+import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 
@@ -34,9 +36,9 @@ public class LocalMessagePipe extends MessageBase {
   public LocalMessagePipe(EndpointConfiguration config) {
     namespace = normalizeNamespace(config.hostname);
     sourceName = config.recv_id;
-    setSourceQueue(getQueueForScope(sourceName));
+    ifNotNullThen(sourceName, s -> setSourceQueue(getQueueForScope(s)));
     destinationName = config.send_id;
-    destinationQueue = getQueueForScope(destinationName);
+    destinationQueue = ifNotNullGet(destinationName, this::getQueueForScope);
     info(
         format("Created local pipe from %s to %s as %s", sourceName, destinationName, this));
   }
