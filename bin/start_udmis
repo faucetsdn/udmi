@@ -23,8 +23,8 @@ if [[ -f $UDMIS_PID_FILE ]]; then
         $SUDO kill $OLD_PID || true
         sleep 2
     fi
-else
-    # Fallback only if no local PID file and not in NO_SUDO mode
+elif [[ "$UDMIS_PID_FILE" == "var/udmis.pid" ]]; then
+    # Fallback only if default PID file and not in NO_SUDO mode
     if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
         OLD_PID=$(ps ax | fgrep java | fgrep udmis | awk '{print $1}') || true
         if [[ -n $OLD_PID ]]; then
@@ -48,7 +48,9 @@ if [[ ${1:-} == stop ]]; then
     exit 0
 fi
 
-$UDMI_ROOT/bin/container udmis prep --no-check || true
+if [[ ${UDMIS_SKIP_PREP:-false} != true ]]; then
+    $UDMI_ROOT/bin/container udmis prep --no-check || true
+fi
 
 LOGFILE=${UDMIS_LOG:-out/udmis.log}
 mkdir -p $(dirname "$LOGFILE")
