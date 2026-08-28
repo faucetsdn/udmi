@@ -37,7 +37,9 @@ mkdir -p $(dirname "$POD_READY")
 export UDMI_POD_READY=$(realpath $POD_READY)
 rm -f $POD_READY
 
-$UDMI_ROOT/bin/container udmis prep --no-check || true
+if [[ ! -f $UDMIS_DIR/build/libs/udmis-1.0-SNAPSHOT-all.jar && ! -f /root/build/libs/udmis-1.0-SNAPSHOT-all.jar ]]; then
+    $UDMI_ROOT/bin/container udmis prep --no-check || true
+fi
 
 LOGFILE=${UDMIS_LOG:-out/udmis.log}
 mkdir -p $(dirname "$LOGFILE")
@@ -60,7 +62,9 @@ if [[ ${ETCD_USE_SSL:-false} == true ]]; then
 fi
 
 export SSL_SECRETS_DIR=$(realpath $CERT_DIR)
-export MOSQUITTO_LOG_PATH=$(realpath $ETC_DIR/log/mosquitto.log)
+mkdir -p "$ETC_DIR/log"
+touch "$ETC_DIR/log/mosquitto.log" 2>/dev/null || true
+export MOSQUITTO_LOG_PATH=$(realpath -m "$ETC_DIR/log/mosquitto.log")
 
 if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
     UDMIS_DIR=/root

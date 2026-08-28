@@ -4,6 +4,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.catchToElse;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static java.util.Optional.ofNullable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -109,7 +110,8 @@ public class MosquittoBroker extends ContainerBase implements ConnectionBroker {
   }
 
   private String getMosquittoLogPath() {
-    return ofNullable(System.getenv("MOSQUITTO_LOG_PATH")).orElse(DEFAULT_MOSQUITTO_LOG_PATH);
+    String logPath = System.getenv("MOSQUITTO_LOG_PATH");
+    return isNotEmpty(logPath) ? logPath : DEFAULT_MOSQUITTO_LOG_PATH;
   }
 
   private void consumeLogs(String clientPrefix, Consumer<BrokerEvent> eventConsumer) {

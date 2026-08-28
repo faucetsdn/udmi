@@ -27,9 +27,9 @@ fi
 if ! $MOSQUITTO_CTRL getClient rocket >/dev/null 2>&1; then
     echo "Configuring default service user..."
     $MOSQUITTO_CTRL createClient rocket -p monkey 2>/dev/null || true
-    $MOSQUITTO_CTRL addClientRole rocket service 2>/dev/null || true
-    $MOSQUITTO_CTRL addClientRole rocket uufi 2>/dev/null || true
 fi
+$MOSQUITTO_CTRL addClientRole rocket service 2>/dev/null || true
+$MOSQUITTO_CTRL addClientRole rocket uufi 2>/dev/null || true
 
 # Provision device clients with cloud auth configured
 for device_dir in "$site_path"/devices/*; do
