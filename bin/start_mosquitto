@@ -86,7 +86,6 @@ fi
 
 GROUP=mosquitto
 UDMI_FILE=$ETC_DIR/conf.d/udmi.conf
-PASS_FILE=$ETC_DIR/mosquitto.passwd
 DYN_FILE=$ETC_DIR/dynamic_security.json
 
 mkdir -p $(dirname $MOSQUITTO_LOG) $ETC_DIR/data
@@ -107,17 +106,16 @@ if [[ ! -f $UDMI_FILE ]]; then
     mkdir -p $(dirname $UDMI_FILE)
     cp $UDMI_ROOT/etc/mosquitto_udmi.conf $UDMI_FILE
     sed -i "s%listener 8883%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
-    # Always normalize password file, dynamic security file, and certificate paths
-    sed -i "s%/etc/mosquitto/mosquitto.passwd%$PASS_FILE%" $UDMI_FILE
+    # Always normalize dynamic security file and certificate paths
     sed -i "s%plugin_opt_config_file dynsec%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
     sed -i "s%/etc/mosquitto/certs/%$CERT_DIR/%" $UDMI_FILE
 fi
 
-# Always ensure correct dynamic security plugin, password file, and config file paths are set
+# Always ensure correct dynamic security plugin, dynamic security file, and config file paths are set
 echo Configuring dynamic security plugin $PLUGIN_FILE
 sed -i "s%plugin .*%plugin $PLUGIN_FILE%" $UDMI_FILE
 sed -i "s%plugin_opt_config_file .*%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
-sed -i "s%password_file .*%password_file $PASS_FILE%" $UDMI_FILE
+sed -i "/password_file/d" $UDMI_FILE
 sed -i "s%listener [0-9]*%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
 [[ $(whoami) == root ]] && ! grep -q "^user root" $UDMI_FILE && echo "user root" >> $UDMI_FILE
 
@@ -136,17 +134,6 @@ fi
 if [[ $(id -u) == 0 ]]; then
     chgrp $GROUP $DYN_FILE 2>/dev/null || true
     chmod 0660 $DYN_FILE 2>/dev/null || true
-fi
-
-if [[ ! -f $PASS_FILE ]]; then
-    echo Creating $PASS_FILE
-    touch $PASS_FILE
-    mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
-fi
-
-if [[ $(id -u) == 0 ]]; then
-    chown mosquitto:mosquitto $PASS_FILE 2>/dev/null || true
-    chmod 0600 $PASS_FILE 2>/dev/null || true
 fi
 
 function mosquitto_diag {
@@ -211,9 +198,7 @@ $MOSQUITTO_CTRL createRole uufi || true
 $MOSQUITTO_CTRL addRoleACL uufi subscribePattern '/uufi/#' allow || true
 $MOSQUITTO_CTRL addRoleACL uufi publishClientSend '/uufi/#' allow || true
 
-if ! $MOSQUITTO_CTRL getClient rocket >/dev/null 2>&1; then
-    $MOSQUITTO_CTRL createClient rocket -p monkey 2>/dev/null || true
-fi
+$MOSQUITTO_CTRL createClient rocket -p monkey 2>/dev/null || true
 $MOSQUITTO_CTRL addClientRole rocket service 2>/dev/null || true
 $MOSQUITTO_CTRL addClientRole rocket uufi 2>/dev/null || true
 

@@ -24,10 +24,8 @@ else
     registry_id=$(jq -r .registry_id $site_config)
 fi
 
-if ! $MOSQUITTO_CTRL getClient rocket >/dev/null 2>&1; then
-    echo "Configuring default service user..."
-    $MOSQUITTO_CTRL createClient rocket -p monkey 2>/dev/null || true
-fi
+echo "Configuring default service user..."
+$MOSQUITTO_CTRL createClient rocket -p monkey 2>/dev/null || true
 $MOSQUITTO_CTRL addClientRole rocket service 2>/dev/null || true
 $MOSQUITTO_CTRL addClientRole rocket uufi 2>/dev/null || true
 

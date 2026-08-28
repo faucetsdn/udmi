@@ -38,7 +38,7 @@ cp -a ../bin build/udmi_bin/
 cp -a ../etc build/udmi_etc/
 
 echo Building pubber in $PWD
-./gradlew shadow $check $covg
+./gradlew --console=plain shadow $check $covg
 
 [[ -f $jarfile || ! -f $jartmp ]] || cp -a $jartmp $jarfile
 
