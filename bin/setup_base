@@ -17,7 +17,7 @@ if [[ $(id -u) == 0 ]]; then
         venv_opts="--system-site-packages"
         req_src="<(sed -E 's/^(grpcio|grpcio-status|cryptography|cffi)==/\1>=/' etc/requirements.txt)"
     fi
-    $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
+    $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux
 else
     echo "Skipping system package installation in non-root mode (run 'sudo bin/setup_base' to install system packages)."
     if [[ -n $(which apt-get) ]]; then
