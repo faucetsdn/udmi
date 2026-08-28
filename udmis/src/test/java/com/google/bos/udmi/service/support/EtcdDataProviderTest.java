@@ -34,4 +34,13 @@ class EtcdDataProviderTest {
     EtcdDataProvider provider = new EtcdDataProvider(iotAccess);
     assertEquals(Integer.MAX_VALUE, provider.getMaxInboundMessageSize());
   }
+
+  @Test
+  void testListRegistriesWhenDisabled() {
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.provider = IotProvider.ETCD;
+    iotAccess.options = "enabled=false";
+    EtcdDataProvider provider = new EtcdDataProvider(iotAccess);
+    assertEquals(0, provider.listRegistries().size());
+  }
 }

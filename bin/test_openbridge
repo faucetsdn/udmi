@@ -96,12 +96,12 @@ export registry_id="$REGISTRY_ID"
 # 2. Check Base Infrastructure Services (Etcd & Mosquitto)
 echo "Checking base infrastructure services..."
 ETCD_PORT=${ETCD_PORT:-2379}
+MQTT_PORT=${MQTT_PORT:-8883}
 if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
   echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
 
-MQTT_PORT=${MQTT_PORT:-8883}
 if ! nc -z 127.0.0.1 "$MQTT_PORT" &>/dev/null; then
   echo "Error: Mosquitto is not running on 127.0.0.1:$MQTT_PORT. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
@@ -513,7 +513,11 @@ if [[ "$DEVICES_VAL" != *"$DEVICE_ID"* ]]; then
 fi
 echo "Device discovery PASSED for device: $DEVICE_ID under registry: $REGISTRY_ID"
 
-# 3. Trigger CloudQuery discovery (depth: details) and capture published DiscoveryEvents payloads
+# 3. Verify Self-Healing / Dynamic Discovery for Untracked Registry
+echo "Writing untracked registry '/r/UNTRACKED-TEST-REG/d/DEV-1' directly to etcd..."
+udmis/bin/etcdctl put "/r/UNTRACKED-TEST-REG/d/DEV-1:last_state" '{"version":"1.4.0"}'
+
+# 4. Trigger CloudQuery discovery (depth: details) and capture published DiscoveryEvents payloads
 echo "Subscribing probe to capture DiscoveryEvents from Pub/Sub topic 'udmi_target'..."
 curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe" \
   -H "Content-Type: application/json" \
@@ -558,6 +562,11 @@ if [ -n "$REGISTRY_DISCOVERY_PAYLOAD" ] && [ "$REGISTRY_DISCOVERY_PAYLOAD" != "n
   echo "Registry Discovery Payload (no deviceID/registryID attributes):"
   echo "=================================================================="
   echo "$REGISTRY_DISCOVERY_PAYLOAD" | jq .
+  if [[ "$REGISTRY_DISCOVERY_PAYLOAD" != *"UNTRACKED-TEST-REG"* ]]; then
+    echo "Error: Untracked registry UNTRACKED-TEST-REG was not discovered in CloudQuery payload!" >&2
+    exit 1
+  fi
+  echo "Dynamic registry discovery & self-healing PASSED for UNTRACKED-TEST-REG!"
 fi
 
 if [ -n "$DEVICE_DISCOVERY_PAYLOAD" ] && [ "$DEVICE_DISCOVERY_PAYLOAD" != "null" ]; then

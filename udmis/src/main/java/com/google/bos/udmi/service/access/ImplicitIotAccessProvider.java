@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -709,8 +710,25 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       return ImmutableSet.of();
     }
     String regionsString = ofNullable(database.ref().get(REGISTRIES_KEY)).orElse("");
-    return Arrays.stream(regionsString.split(",")).map(String::trim)
+    Set<String> trackedRegistries = Arrays.stream(regionsString.split(",")).map(String::trim)
         .filter(GeneralUtils::isNotEmpty).collect(Collectors.toSet());
+
+    Set<String> activeRegistries = database.listRegistries();
+
+    Set<String> allRegistries = new HashSet<>(trackedRegistries);
+    allRegistries.addAll(activeRegistries);
+
+    if (allRegistries.size() > trackedRegistries.size()) {
+      info("Self-healing :registries index in etcd (discovered %d untracked registries)",
+          allRegistries.size() - trackedRegistries.size());
+      try {
+        database.ref().put(REGISTRIES_KEY, String.join(",", allRegistries));
+      } catch (Exception e) {
+        warn("Failed to self-heal :registries index: %s", friendlyStackTrace(e));
+      }
+    }
+
+    return allRegistries;
   }
 
   @Override

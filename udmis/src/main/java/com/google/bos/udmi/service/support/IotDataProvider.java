@@ -5,7 +5,9 @@ import static java.lang.String.format;
 
 import com.google.bos.udmi.service.pod.UdmiComponent;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import java.util.Map;
+import java.util.Set;
 import udmi.schema.IotAccess;
 import udmi.schema.IotAccess.IotProvider;
 
@@ -33,4 +35,11 @@ public interface IotDataProvider extends UdmiComponent {
   }
 
   DataRef ref();
+
+  /**
+   * Scan and return all distinct registry IDs found in the database.
+   */
+  default Set<String> listRegistries() {
+    return ImmutableSet.of();
+  }
 }

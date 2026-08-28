@@ -32,6 +32,7 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -129,6 +130,37 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
           .toList();
     } catch (Exception e) {
       throw new RuntimeException("While listing keys for prefix " + prefixPath, e);
+    }
+  }
+
+  /**
+   * Scans etcd for all unique registry IDs under the /r/ prefix.
+   */
+  @Override
+  public Set<String> listRegistries() {
+    if (!enabled || kvClient == null) {
+      return Set.of();
+    }
+    try {
+      List<String> prefixKeys = getPrefixKeys("/r/");
+      Set<String> registries = new HashSet<>();
+      for (String key : prefixKeys) {
+        if (key.startsWith("/r/") && key.length() > 3) {
+          String sub = key.substring(3);
+          int slashIdx = sub.indexOf('/');
+          int colonIdx = sub.indexOf(':');
+          int endIdx = (slashIdx >= 0 && colonIdx >= 0) ? Math.min(slashIdx, colonIdx)
+              : (slashIdx >= 0) ? slashIdx : colonIdx;
+          String regId = endIdx >= 0 ? sub.substring(0, endIdx) : sub;
+          if (!regId.isEmpty()) {
+            registries.add(regId);
+          }
+        }
+      }
+      return registries;
+    } catch (Exception e) {
+      warn("Failed to list registries from etcd prefix /r/: %s", friendlyStackTrace(e));
+      return Set.of();
     }
   }
 

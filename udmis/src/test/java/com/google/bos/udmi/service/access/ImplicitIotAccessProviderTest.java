@@ -51,6 +51,23 @@ class ImplicitIotAccessProviderTest {
     store = new HashMap<>();
     IotDataProvider mockDatabase = mock(IotDataProvider.class);
     when(mockDatabase.ref()).thenAnswer(inv -> new FakeDataRef(store));
+    when(mockDatabase.listRegistries()).thenAnswer(inv -> {
+      Set<String> regs = new java.util.HashSet<>();
+      for (String key : store.keySet()) {
+        if (key.startsWith("r/") || key.startsWith("/r/")) {
+          String s = key.startsWith("/") ? key.substring(3) : key.substring(2);
+          int idx = s.indexOf(':');
+          int slash = s.indexOf('/');
+          int end = (idx >= 0 && slash >= 0) ? Math.min(idx, slash) : (idx >= 0 ? idx : slash);
+          if (end >= 0) {
+            regs.add(s.substring(0, end));
+          } else if (!s.isEmpty()) {
+            regs.add(s);
+          }
+        }
+      }
+      return regs;
+    });
     UdmiServicePod.putComponent("database", () -> mockDatabase);
 
     ReflectProcessor mockReflect = mock(ReflectProcessor.class);
@@ -352,6 +369,21 @@ class ImplicitIotAccessProviderTest {
 
     Set<String> registries = provider.getRegistries();
     assertTrue(registries.contains(TEST_REGISTRY));
+  }
+
+  @Test
+  void testRegistryDiscoverySelfHealsWhenRegistriesKeyMissing() {
+    // 1. Manually simulate pre-existing untracked data under /r/UNTRACKED_REG/d/DEV_1
+    store.put("r/UNTRACKED_REG/d/DEV_1:last_state", "{}");
+
+    // 2. Clear out :registries key
+    store.remove("registries");
+    store.remove(":registries");
+
+    // 3. getRegistries discovers UNTRACKED_REG and self-heals :registries key
+    Set<String> registries = provider.getRegistries();
+    assertTrue(registries.contains("UNTRACKED_REG"));
+    assertEquals("UNTRACKED_REG", store.get(":registries"));
   }
 
 
