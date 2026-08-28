@@ -66,8 +66,13 @@ ETCD_PID=$!
 echo $ETCD_PID > $ETCD_PID_FILE
 disown $ETCD_PID 2>/dev/null || true
 
-echo Waiting 10s for etcd to start on port ${etcd_port}, log in $ETCD_LOG
-sleep 10
+echo Waiting for etcd to start on port ${etcd_port}, log in $ETCD_LOG
+for i in {1..30}; do
+    if timeout 1 bash -c "</dev/tcp/127.0.0.1/${etcd_port}" 2>/dev/null || curl -sf "http://127.0.0.1:${etcd_port}/health" >/dev/null 2>&1; then
+        break
+    fi
+    sleep 0.2
+done
 [[ -d /proc/$ETCD_PID ]] || (cat $ETCD_LOG && echo error starting etcd && false)
 
 echo Completed etcd startup.

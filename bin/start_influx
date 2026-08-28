@@ -55,8 +55,13 @@ INFLUX_PID=$!
 echo $INFLUX_PID > $INFLUX_PID_FILE
 disown $INFLUX_PID 2>/dev/null || true
 
-echo Waiting 10s for influxd to start on port ${influx_port}, log in $INFLUX_LOG
-sleep 10
+echo Waiting for influxd to start on port ${influx_port}, log in $INFLUX_LOG
+for i in {1..30}; do
+    if timeout 1 bash -c "</dev/tcp/127.0.0.1/${influx_port}" 2>/dev/null || curl -sf "http://127.0.0.1:${influx_port}/health" >/dev/null 2>&1; then
+        break
+    fi
+    sleep 0.2
+done
 [[ -d /proc/$INFLUX_PID ]] || (cat $INFLUX_LOG && echo error starting influxd && false)
 
 echo Initializing InfluxDB default organization and bucket...

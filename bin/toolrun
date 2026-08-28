@@ -43,6 +43,17 @@ if [[ $# -ge 1 && "$1" != -* ]]; then
     fi
 fi
 
+if [[ -n "${project_spec:-}" && "$project_spec" =~ localhost: ]]; then
+    if [[ -d "${ETC_DIR:-var/mosquitto}" ]]; then
+        for i in {1..50}; do
+            if [[ -f "${ETC_DIR:-var/mosquitto}/mosquitto.ready" ]]; then
+                break
+            fi
+            sleep 0.2
+        done
+    fi
+fi
+
 cmd="java -cp $UDMI_JAR $JDWP $JAVA_CLASS $util_name $@"
 echo $cmd
 $cmd 2>&1 | tee $OUT_DIR/$util_name.log

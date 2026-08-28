@@ -5,6 +5,12 @@ if [ -z "${UDMI_ROOT:-}" ]; then
     UDMI_ROOT=$(cd "$(dirname "$_MOSQ_SCRIPT_DIR")/.." && pwd)
 fi
 
+if [[ -n "${TARGET_PROJECT:-}" && -z "${MQTT_PORT:-}" ]]; then
+    if [[ $TARGET_PROJECT =~ localhost:([0-9]+) ]]; then
+        export MQTT_PORT="${BASH_REMATCH[1]}"
+    fi
+fi
+
 if [[ $(id -u) == 0 && ! -f /.dockerenv && -z ${UDMI_CONTAINER:-} && ${MQTT_PORT:-8883} == 8883 ]]; then
     ETC_DIR=/etc/mosquitto
 elif [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then

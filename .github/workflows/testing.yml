@@ -307,7 +307,7 @@ jobs:
           $MOSQUITTO_CTRL listRoles || true
       - name: mosquitto logs
         if: ${{ !cancelled() }}
-        run: cat /var/log/mosquitto/mosquitto.log || true
+        run: cat var/mosquitto/log/mosquitto.log /var/log/mosquitto/mosquitto.log 2>/dev/null || true
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_

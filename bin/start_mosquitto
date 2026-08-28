@@ -17,6 +17,7 @@ for pid_path in "$ETC_DIR/mosquitto.pid" "var/mosquitto/mosquitto.pid" "/var/mos
 done
 
 if [[ ${1:-} == stop ]]; then
+    rm -f "$ETC_DIR/mosquitto.ready" "$UDMI_ROOT/var/mosquitto/mosquitto.ready" "/var/mosquitto/mosquitto.ready" 2>/dev/null || true
     if [[ $(id -u) == 0 ]] && command -v systemctl >/dev/null 2>&1; then
         echo "Stopping mosquitto systemd service..."
         systemctl stop mosquitto 2>/dev/null || true
@@ -175,8 +176,16 @@ else
     nohup mosquitto -c $ETC_DIR/mosquitto.conf > $MOSQUITTO_LOG 2>&1 &
     MOSQUITTO_PID=$!
     disown $MOSQUITTO_PID 2>/dev/null || true
-    echo Waiting 10s for background mosquitto to start...
-    sleep 10
+    echo Waiting for background mosquitto on port ${MQTT_PORT:-8883}...
+    for i in $(seq 1 50); do
+        if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT:-8883}" 2>/dev/null; then
+            break
+        fi
+        if ! ps -p $MOSQUITTO_PID >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.2
+    done
     [[ -d /proc/$MOSQUITTO_PID ]] || (mosquitto_diag && cat $MOSQUITTO_LOG && fail starting mosquitto)
     echo Completed mosquitto startup.
 fi
@@ -218,3 +227,7 @@ fi
 if [[ -n "${site_model:-}" && -f "${site_config:-}" ]]; then
     $UDMI_ROOT/bin/mosquctl_site "$site_model" 2>/dev/null || true
 fi
+
+mkdir -p "$ETC_DIR"
+touch "$ETC_DIR/mosquitto.ready"
+echo "Mosquitto is ready and fully provisioned."
