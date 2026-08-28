@@ -96,6 +96,7 @@ ETHMAC
 ETL
 evice
 Fallbacks
+fallbacks
 FastMCP
 faucetsdn
 FCU
@@ -334,6 +335,7 @@ unopinionated
 unparseable
 unprocessable
 unscoped
+unselected
 unstaged
 Untrusted
 unwriteable

@@ -291,7 +291,7 @@ fi
 if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
     echo Registering alt registry $UDMI_ALT_REGISTRY...
     if [[ $iot_provider == "\"mqtt\"" ]]; then
-        MQTT_PORT=${MQTT_PORT:-} $UDMI_ROOT/bin/mosquctl_site $site_path $UDMI_ALT_REGISTRY 2>/dev/null || true
+        $UDMI_ROOT/bin/mosquctl_site $site_path $UDMI_ALT_REGISTRY
     fi
     echo $UDMI_ROOT/bin/registrar $site_args -a $UDMI_ALT_REGISTRY
     $UDMI_ROOT/bin/registrar $site_args -a $UDMI_ALT_REGISTRY

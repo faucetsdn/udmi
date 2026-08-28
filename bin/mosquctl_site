@@ -24,11 +24,12 @@ else
     registry_id=$(jq -r .registry_id $site_config)
 fi
 
-echo "Configuring default service user..."
-$MOSQUITTO_CTRL deleteClient rocket 2>/dev/null || true
-$MOSQUITTO_CTRL createClient rocket -p monkey 2>/dev/null || true
-$MOSQUITTO_CTRL addClientRole rocket service 2>/dev/null || true
-$MOSQUITTO_CTRL addClientRole rocket uufi 2>/dev/null || true
+if ! $MOSQUITTO_CTRL getClient rocket >/dev/null 2>&1; then
+    echo "Configuring default service user..."
+    $MOSQUITTO_CTRL createClient rocket -p monkey 2>/dev/null || true
+    $MOSQUITTO_CTRL addClientRole rocket service 2>/dev/null || true
+    $MOSQUITTO_CTRL addClientRole rocket uufi 2>/dev/null || true
+fi
 
 # Provision device clients with cloud auth configured
 for device_dir in "$site_path"/devices/*; do
@@ -67,11 +68,18 @@ if [[ -n "$ns_prefix" ]]; then
 fi
 
 if [[ -n ${UDMI_ALT_REGISTRY:-} && $# -eq 0 ]]; then
-    ALT_USER=/r/UDMI-REFLECT/d/$UDMI_ALT_REGISTRY
+    ALT_USER=/r/UDMI-REFLECT/d/$UDMI_ALT_REGISTRY${UDMI_REGISTRY_SUFFIX:-}
     echo "Configuring alternate registry $ALT_USER..."
     $MOSQUITTO_CTRL deleteClient $ALT_USER 2>/dev/null || true
     $MOSQUITTO_CTRL createClient $ALT_USER -p $SERV_PASS 2>/dev/null || true
     $MOSQUITTO_CTRL addClientRole $ALT_USER service 2>/dev/null || true
+
+    if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
+        BARE_ALT_USER=/r/UDMI-REFLECT/d/$UDMI_ALT_REGISTRY
+        $MOSQUITTO_CTRL deleteClient $BARE_ALT_USER 2>/dev/null || true
+        $MOSQUITTO_CTRL createClient $BARE_ALT_USER -p $SERV_PASS 2>/dev/null || true
+        $MOSQUITTO_CTRL addClientRole $BARE_ALT_USER service 2>/dev/null || true
+    fi
 fi
 
 echo Registered sites:
