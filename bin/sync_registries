@@ -86,34 +86,29 @@ if [[ "$IS_LOCAL" != "true" && -z "$TARGET_SPEC" ]]; then
     exit 1
 fi
 
-PROJECT_ID="$TARGET_SPEC"
-
-# Normalize project spec and extract namespace if combined (e.g. //gbos/bos-platform-dev:udmis, bos-platform-dev:udmis, etc.)
-if [[ -n "$PROJECT_ID" ]]; then
-    if [[ "$PROJECT_ID" =~ localhost ]]; then
+if [[ -n "$TARGET_SPEC" ]]; then
+    if [[ "$TARGET_SPEC" == "localhost"* ]]; then
         IS_LOCAL=true
     fi
 
-    # Strip leading //gbos/ or //domain/ if present
-    if [[ "$PROJECT_ID" =~ ^//gbos/(.*)$ ]]; then
-        PROJECT_ID="${BASH_REMATCH[1]}"
-    elif [[ "$PROJECT_ID" =~ ^//([^/]+)/(.*)$ ]]; then
-        PROJECT_ID="${BASH_REMATCH[2]}"
+    if [[ "$TARGET_SPEC" =~ : ]]; then
+        PROJECT_ID="${TARGET_SPEC%%:*}"
+        NAMESPACE="${TARGET_SPEC#*:}"
+    else
+        PROJECT_ID="$TARGET_SPEC"
     fi
 
-    # Check for :namespace suffix or /namespace suffix
-    if [[ "$PROJECT_ID" =~ : ]]; then
-        NAMESPACE="${PROJECT_ID#*:}"
-        PROJECT_ID="${PROJECT_ID%%:*}"
-    elif [[ "$PROJECT_ID" =~ / ]]; then
-        NAMESPACE="${PROJECT_ID#*/}"
-        PROJECT_ID="${PROJECT_ID%%/*}"
-    fi
-
-    if [[ -z "$PROJECT_ID" && "$IS_LOCAL" != "true" ]]; then
-        echo "Error: Project ID cannot be empty. Namespace without project is not supported."
-        echo "Usage: $0 PROJECT_ID[:NAMESPACE] [OPTIONS]"
-        exit 1
+    if [[ "$IS_LOCAL" != "true" ]]; then
+        if [[ -z "$PROJECT_ID" ]]; then
+            echo "Error: Project ID cannot be empty. Namespace without project is not supported."
+            echo "Usage: $0 PROJECT_ID[:NAMESPACE] [OPTIONS]"
+            exit 1
+        fi
+        if [[ "$PROJECT_ID" =~ / || "$PROJECT_ID" =~ ^// ]]; then
+            echo "Error: Project ID must be a literal GCP project ID (e.g. 'bos-platform-dev'), not a project spec."
+            echo "Usage: $0 PROJECT_ID[:NAMESPACE] [OPTIONS]"
+            exit 1
+        fi
     fi
 fi
 
