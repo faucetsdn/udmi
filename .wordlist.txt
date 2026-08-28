@@ -32,6 +32,7 @@ biquencer
 blobset
 Blobset
 blobsets
+bmod
 BMS
 boolean
 BOS
@@ -95,6 +96,7 @@ ETHMAC
 ETL
 evice
 Fallbacks
+FastMCP
 faucetsdn
 FCU
 fieldbus
@@ -171,6 +173,7 @@ modbus
 monorepos
 Mosquitto
 MQTT
+mqtt
 MQTTS
 msb
 mTLS
@@ -187,6 +190,7 @@ nonce
 Nonces
 nonces
 npm
+ns
 nterface
 observability
 OEM
@@ -207,6 +211,7 @@ parameterization
 parsers
 Pathing
 PID
+PIDs
 pointname
 pointset
 pointsets
@@ -250,6 +255,7 @@ sanitization
 Sanitization
 schemas
 Schemas
+scrollback
 SDK
 Serialisation
 serialise

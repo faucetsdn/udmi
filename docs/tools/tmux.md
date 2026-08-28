@@ -52,7 +52,7 @@ Passing a bare semantic namespace identifier (e.g. `btesting`, `alpha`, `staging
 ```bash
 bin/tmux_barbican start btesting
 ```
-- **Deterministic Port Mapping**: Derives an unprivileged port block using SHA-256 in the range `[20000, 55000]` ($\text{port} = 20000 + ((\text{SHA-256}(ns) \bmod 3500) \times 10)$).
+- **Deterministic Port Mapping**: Derives an unprivileged port block using SHA-256 in the range `[20000, 55000]` (`port = 20000 + ((SHA-256(ns) % 3500) * 10)`).
 - **Default Non-Root Execution**: Runs in user-space without sudo, isolating runtime data directories to `var/`. Root permissions are only required when installing system-level dependencies (e.g., `sudo bin/setup_base`).
 - **Namespaced Sessions**: Sets session name to `udmi_<box>~<namespace>` (e.g. `udmi_barbican~btesting`).
 - **Separable Site Model**: Resolves site model path to `sites/udmi~<namespace>`.
@@ -61,7 +61,7 @@ bin/tmux_barbican start btesting
 When no target is passed (e.g. `bin/tmux_barbican start` or `bin/udmi start`):
 - Defaults to namespace **`default`**.
 - Session name: `udmi_<box>~default`.
-- Project spec: `//mqtt/localhost:<port>` (derived for `default`).
+- Project spec: `//mqtt/localhost:<PORT>` (derived for `default`).
 - Site model: `sites/udmi~default`.
 
 ### C. Explicit Site Model Path
