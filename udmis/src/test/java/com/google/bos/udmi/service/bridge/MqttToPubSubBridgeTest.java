@@ -68,7 +68,7 @@ class MqttToPubSubBridgeTest {
     assertEquals(testTopic, attributes.get("mqttTopic"));
     assertEquals("my-device", attributes.get("deviceId"));
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
-    assertEquals("bridge", attributes.get("source"));
+    assertEquals("zanzara", attributes.get("source"));
     org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("receiveTime"));
     assertEquals("test-client", attributes.get("distributorClientId"));
   }

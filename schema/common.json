@@ -41,6 +41,7 @@
         "local",
         "dynamic",
         "implicit",
+        "zanzara",
         "pubsub",
         "mqtt",
         "gbos",

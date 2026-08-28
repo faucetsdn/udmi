@@ -98,7 +98,7 @@ import udmi.schema.IotAccess.IotProvider;
  * interval between publishing dynamic security command batches.</li>
  * </ul>
  */
-public class ImplicitIotAccessProvider extends IotAccessBase {
+public class ZanzaraIotAccessProvider extends IotAccessBase {
 
   private static final String CONFIG_VER_KEY = "config_ver";
   private static final String DISABLE_LOGGING_KEY = "disable_logging";
@@ -153,12 +153,12 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private EndpointConfiguration endpointConfig;
   private SimpleMqttPipe mqttPipe;
   private final String clientId =
-      format("implicit-access-%08x", (long) (Math.random() * 0x100000000L));
+      format("zanzara-access-%08x", (long) (Math.random() * 0x100000000L));
 
   /**
-   * Create an access provider with implicit internal resources.
+   * Create an access provider with zanzara (Mosquitto + etcd) resources.
    */
-  public ImplicitIotAccessProvider(IotAccess iotAccess) {
+  public ZanzaraIotAccessProvider(IotAccess iotAccess) {
     super(iotAccess);
 
     enabled = isNullOrNotEmpty(options.get(ENABLED_KEY));
@@ -640,11 +640,11 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   }
 
   private void connectMqttClient() {
-    info("Initializing SimpleMqttPipe for ImplicitIotAccessProvider");
+    info("Initializing SimpleMqttPipe for ZanzaraIotAccessProvider");
     try {
 
       if (endpointConfig.send_id == null) {
-        endpointConfig.send_id = "implicit";
+        endpointConfig.send_id = "zanzara";
       }
 
       mqttPipe = new SimpleMqttPipe(endpointConfig);
@@ -908,7 +908,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
       Envelope envelope = deepCopy(baseEnvelope);
       envelope.subFolder = folder;
       envelope.subType = SubType.COMMANDS;
-      envelope.source = IotProvider.IMPLICIT.value();
+      envelope.source = IotProvider.ZANZARA.value();
 
       Bundle bundle = new Bundle(envelope, MessageDispatcher.rawString(message));
       mqttPipe.publish(bundle);

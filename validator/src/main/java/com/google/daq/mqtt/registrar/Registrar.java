@@ -1294,6 +1294,7 @@ public class Registrar {
               // TODO: Put a proper fix and not depend on specific fixes for testing.
               boolean isLocal =
                   cloudIotManager.executionConfiguration.iot_provider == IotProvider.MQTT
+                  || cloudIotManager.executionConfiguration.iot_provider == IotProvider.ZANZARA
                   || cloudIotManager.executionConfiguration.iot_provider == IotProvider.IMPLICIT;
               cloudIotManager.bindDevices(isLocal ? proxyIds : toBind, gatewayId, true);
             }

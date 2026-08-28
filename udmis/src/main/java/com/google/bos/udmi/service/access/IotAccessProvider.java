@@ -21,13 +21,15 @@ import udmi.schema.IotAccess.IotProvider;
  */
 public interface IotAccessProvider extends UdmiComponent {
 
-  Map<IotProvider, Class<? extends IotAccessBase>> PROVIDERS = ImmutableMap.of(
-      IotProvider.DYNAMIC, DynamicIotAccessProvider.class,
-      IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class,
-      IotProvider.PUBSUB, PubSubIotAccessProvider.class,
-      IotProvider.IMPLICIT, ImplicitIotAccessProvider.class,
-      IotProvider.LOCAL, LocalIotAccessProvider.class
-  );
+  Map<IotProvider, Class<? extends IotAccessBase>> PROVIDERS =
+      ImmutableMap.<IotProvider, Class<? extends IotAccessBase>>builder()
+          .put(IotProvider.DYNAMIC, DynamicIotAccessProvider.class)
+          .put(IotProvider.CLEARBLADE, ClearBladeIotAccessProvider.class)
+          .put(IotProvider.PUBSUB, PubSubIotAccessProvider.class)
+          .put(IotProvider.ZANZARA, ZanzaraIotAccessProvider.class)
+          .put(IotProvider.IMPLICIT, ZanzaraIotAccessProvider.class)
+          .put(IotProvider.LOCAL, LocalIotAccessProvider.class)
+          .build();
 
   /**
    * Factory constructor for new instances.
