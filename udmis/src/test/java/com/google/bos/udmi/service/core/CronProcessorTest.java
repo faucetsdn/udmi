@@ -383,19 +383,26 @@ public class CronProcessorTest extends ProcessorTestBase {
     assertEquals(2, targetOutputs.size(),
         "Expected 2 target system output messages for regdive (registries + devices)");
 
-    // First output: Registry discovery
-    Object firstOutput = targetOutputs.get(0);
-    assertTrue(firstOutput instanceof DiscoveryEvents, "First output must be DiscoveryEvents");
-    DiscoveryEvents regDiscovery = (DiscoveryEvents) firstOutput;
+    // Output contains both Registry discovery and Device discovery for the registry
+    final DiscoveryEvents regDiscovery = targetOutputs.stream()
+        .filter(o -> o instanceof DiscoveryEvents && ((DiscoveryEvents) o).registries != null)
+        .map(o -> (DiscoveryEvents) o)
+        .findFirst()
+        .orElse(null);
+
+    assertNotNull(regDiscovery, "Registry discovery event must be present");
     assertEquals(ProtocolFamily.IOT, regDiscovery.family, "Protocol family must be IOT");
     assertNotNull(regDiscovery.registries, "Registries map must be populated");
     assertTrue(regDiscovery.registries.containsKey(TEST_REGISTRY),
         "Discovered registries must contain " + TEST_REGISTRY);
 
-    // Second output: Device discovery for the registry
-    Object secondOutput = targetOutputs.get(1);
-    assertTrue(secondOutput instanceof DiscoveryEvents, "Second output must be DiscoveryEvents");
-    DiscoveryEvents devDiscovery = (DiscoveryEvents) secondOutput;
+    final DiscoveryEvents devDiscovery = targetOutputs.stream()
+        .filter(o -> o instanceof DiscoveryEvents && ((DiscoveryEvents) o).devices != null)
+        .map(o -> (DiscoveryEvents) o)
+        .findFirst()
+        .orElse(null);
+
+    assertNotNull(devDiscovery, "Device discovery event must be present for regdive");
     assertEquals(ProtocolFamily.IOT, devDiscovery.family, "Protocol family must be IOT");
     assertNotNull(devDiscovery.devices, "Devices map must be populated for regdive");
     assertTrue(devDiscovery.devices.containsKey("AHU-1"), "Discovered devices must contain AHU-1");

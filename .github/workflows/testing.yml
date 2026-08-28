@@ -26,10 +26,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - name: start and test local servers
-        run: |
-          bin/setup_base
-          bin/start_local +pubsub
+      - name: Setup Base
+        run: bin/setup_base
       - name: bin/run_tests all_tests
         run: bin/run_tests all_tests
       - name: all test output
