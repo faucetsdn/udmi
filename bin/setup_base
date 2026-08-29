@@ -47,5 +47,8 @@ echo "Initializing base site model..."
 $ROOT_DIR/bin/clone_model
 
 if [[ $(id -u) == 0 ]]; then
+    if [[ -n ${SUDO_UID:-} && -n ${SUDO_GID:-} ]]; then
+        chown -R ${SUDO_UID}:${SUDO_GID} sites venv 2>/dev/null || true
+    fi
     chmod -R a+rwX sites venv 2>/dev/null || true
 fi
