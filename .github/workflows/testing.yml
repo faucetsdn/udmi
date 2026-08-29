@@ -26,10 +26,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - name: start and test local servers
-        run: |
-          bin/setup_base
-          bin/start_local +pubsub
+      - name: base setup
+        run: sudo bin/setup_base
       - name: bin/run_tests all_tests
         run: bin/run_tests all_tests
       - name: all test output
@@ -87,7 +85,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: bin/setup_base
+        run: sudo bin/setup_base
       - name: local setup
         run: |
           bin/start_local sites/udmi_site_model $TARGET_PROJECT
@@ -136,7 +134,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: bin/setup_base
+        run: sudo bin/setup_base
       - name: local setup
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
@@ -191,7 +189,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: bin/setup_base
+        run: sudo bin/setup_base
       - name: local setup
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
@@ -250,7 +248,7 @@ jobs:
           cache: 'gradle'
       - name: base setup
         run: |
-          bin/setup_base
+          sudo bin/setup_base
           bin/registrar sites/udmi_site_model
       - name: local setup
         run: |
@@ -333,7 +331,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: bin/setup_base
+        run: sudo bin/setup_base
       - name: local setup
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
@@ -373,7 +371,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: bin/setup_base
+        run: sudo bin/setup_base
       - name: local setup
         run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
@@ -408,7 +406,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Base setup
-        run: bin/setup_base
+        run: sudo bin/setup_base
       - name: Download all sharded support packages
         uses: actions/download-artifact@v8
         with:
@@ -450,7 +448,7 @@ jobs:
           cache: 'gradle'
       - name: Setup prerequisites
         run: |
-          bin/setup_base
+          sudo bin/setup_base
           ln -s sites/udmi_site_model/ site_model
           (cd site_model; git log -n 1)
           docker network create udminet --subnet 192.168.99.0/24
@@ -582,7 +580,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: Setup Base
-        run: bin/setup_base
+        run: sudo bin/setup_base
       - name: Run Bridgehead Test
         run: |
           bridgehead/tests/test_bridgehead
@@ -621,7 +619,7 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: Setup Base
-        run: bin/setup_base
+        run: sudo bin/setup_base
       - name: Start Local Services
         run: |
           bin/start_local sites/udmi_site_model ${{ env.TARGET_PROJECT }}
@@ -652,7 +650,7 @@ jobs:
           python-version: '3.13'
       - name: Setup Base
         run: |
-          bin/setup_base
+          sudo bin/setup_base
           bin/clone_model
       - name: Run MCP Infrastructure Tests
         run: |
@@ -681,7 +679,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Setup Base
-        run: bin/setup_base
+        run: sudo bin/setup_base
       - name: Run GUMMI Tests
         run: |
           bin/test_gummi
