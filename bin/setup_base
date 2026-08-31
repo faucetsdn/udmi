@@ -4,26 +4,45 @@ PIP_OPTS="--index-url https://pypi.org/simple"
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd $ROOT_DIR
 
-if [[ -n $(which apt-get) ]]; then
-    if [[ -z $UDMI_NO_SUDO ]]; then sudo apt-get update -y; fi
-    update_cmd="apt-get install -y"
-    extra_packages=""
-    venv_opts=""
-    req_src="etc/requirements.txt"
+# Packages provided by Alpine system repos where exact pins should be relaxed
+ALPINE_RELAX_PACKAGES=(
+    cffi
+    cryptography
+    grpcio
+    grpcio-status
+)
+
+get_requirements_file() {
+    if [[ -n $(which apt-get) ]]; then
+        echo "etc/requirements.txt"
+        return
+    fi
+
+    local req_file="/tmp/requirements_alpine.txt"
+    cp etc/requirements.txt "$req_file"
+    for pkg in "${ALPINE_RELAX_PACKAGES[@]}"; do
+        sed -i "s/^${pkg}==/${pkg}>=/" "$req_file"
+    done
+    echo "$req_file"
+}
+
+if [[ $(id -u) == 0 ]]; then
+    if [[ -n $(which apt-get) ]]; then
+        apt-get update -y
+        update_cmd="apt-get install -y"
+        extra_packages=""
+    else
+        update_cmd="apk add"
+        extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc py3-grpcio py3-cryptography py3-cffi"
+    fi
+    $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux
 else
-    update_cmd="apk add"
-    # Some extra packages are necessary for alpine based docker builds.
-    extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc py3-grpcio py3-cryptography py3-cffi"
-    venv_opts="--system-site-packages"
-    req_src="<(sed -E 's/^(grpcio|grpcio-status|cryptography|cffi)==/\1>=/' etc/requirements.txt)"
+    echo "Skipping system package installation in non-root mode (run 'sudo bin/setup_base' to install system packages)."
 fi
 
-if [[ -z $UDMI_NO_SUDO ]]; then
-    sudo $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
-elif [[ $(id -u) == 0 ]]; then
-    $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client
-else
-    echo "Skipping system package installation in unprivileged mode (UDMI_NO_SUDO is set and not root)"
+venv_opts=""
+if [[ -z $(which apt-get) ]]; then
+    venv_opts="--system-site-packages"
 fi
 
 python3 --version
@@ -32,7 +51,8 @@ python3 -m venv $venv_opts venv
 venv_pip3=$($(dirname $0)/which_venv_pip3)
 echo $venv_pip3
 $(dirname ${venv_pip3})/python3 -m pip install --upgrade pip $PIP_OPTS
-eval "${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r $req_src $PIP_OPTS"
+req_src=$(get_requirements_file)
+${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r "$req_src" $PIP_OPTS
 
 if [[ -z $NO_CACHE_DIR ]]; then
     $(dirname ${venv_pip3})/playwright install chromium
@@ -42,3 +62,10 @@ java -version
 
 echo "Initializing base site model..."
 $ROOT_DIR/bin/clone_model
+
+if [[ $(id -u) == 0 ]]; then
+    if [[ -n ${SUDO_UID:-} && -n ${SUDO_GID:-} ]]; then
+        chown -R ${SUDO_UID}:${SUDO_GID} sites venv 2>/dev/null || true
+    fi
+    chmod -R a+rwX sites venv 2>/dev/null || true
+fi
