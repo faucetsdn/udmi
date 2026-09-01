@@ -49,7 +49,7 @@ class TestSpotterSelfTest(unittest.TestCase):
 
     def test_mock_loop(self):
         """Verify Spotter endpoint config mapping and manager initialization without crash."""
-        from edge.spotter.src.agent import build_endpoint_config, TraceDiscoveryManager
+        from edge.spotter.src.agent import build_endpoint_config, SpotterDiscoveryManager
         config = {
             "mqtt": {
                 "device_id": "SN-SELFTEST",
@@ -63,7 +63,7 @@ class TestSpotterSelfTest(unittest.TestCase):
         }
         try:
             endpoint = build_endpoint_config(config)
-            manager = TraceDiscoveryManager()
+            manager = SpotterDiscoveryManager()
             self.assertEqual(endpoint.client_id, "projects/test-project/locations/us-central1/registries/ZZ-TRI-FECTA/devices/SN-SELFTEST")
             self.assertIsNotNone(manager)
         except Exception as e:

@@ -313,7 +313,6 @@ allow_anonymous true
         spotter_config = {
             "mqtt": {
                 "device_id": "DN-1",
-                "spotter_device_id": "SN-1",
                 "host": "192.168.12.254",
                 "port": self.mqtt_port,
                 "registry_id": "ZZ-TRI-FECTA",

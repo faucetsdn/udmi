@@ -8,7 +8,6 @@ from edge.spotter.src.agent import (
     build_endpoint_config,
     calculate_local_password,
     SpotterDiscoveryManager,
-    TraceDiscoveryManager,
 )
 from udmi.schema import Protocol, Config, DiscoveryConfig, FamilyDiscoveryConfig, Depth, State
 from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
@@ -182,9 +181,6 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
         self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
         self.assertEqual(f_state.status.level, 500)
         self.assertIn("Network interface down", f_state.status.message)
-
-
-TestTraceDiscoveryManager = TestSpotterDiscoveryManager
 
 
 class TestCommandsSecret(unittest.TestCase):

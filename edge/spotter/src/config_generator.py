@@ -90,7 +90,7 @@ def parse_project_spec(project_spec, site_config):
     }
 
 
-def generate_spotter_config(site_path, project_spec, device_id, spotter_device_id=None, out_path=None):
+def generate_spotter_config(site_path, project_spec, device_id, out_path=None):
     site_path = os.path.abspath(site_path)
     if not os.path.isdir(site_path):
         raise ValueError(f"Site path directory not found: {site_path}")
@@ -151,9 +151,6 @@ def generate_spotter_config(site_path, project_spec, device_id, spotter_device_i
         },
     }
 
-    if spotter_device_id:
-        config["mqtt"]["spotter_device_id"] = spotter_device_id
-
     if out_path:
         os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
         with open(out_path, "w", encoding="utf-8") as f:
@@ -167,7 +164,6 @@ def main():
     parser.add_argument("--site_path", required=True, help="Path to site model directory")
     parser.add_argument("--project_spec", required=True, help="Project specification string")
     parser.add_argument("--device_id", required=True, help="Target device ID")
-    parser.add_argument("--spotter_device_id", default=None, help="Deprecated optional alias")
     parser.add_argument("--out", required=True, help="Output config path")
 
     args = parser.parse_args()
@@ -176,7 +172,6 @@ def main():
             args.site_path,
             args.project_spec,
             args.device_id,
-            args.spotter_device_id,
             args.out,
         )
         print(f"Dynamic configuration generated: {args.out}")

@@ -180,10 +180,6 @@ class SpotterDiscoveryManager(DiscoveryManager):
             self.trigger_state_update()
 
 
-# Backward compatibility alias for tests
-TraceDiscoveryManager = SpotterDiscoveryManager
-
-
 def calculate_local_password(key_file: str) -> str:
     """Calculates password for udmi_local authentication mechanism."""
     pkcs_file = f"{key_file.rpartition('.')[0]}.pkcs8"

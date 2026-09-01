@@ -144,7 +144,6 @@ cat <<EOF > "$TEST_DIR/spotter_config.json"
   "log_level": "DEBUG",
   "mqtt": {
     "device_id": "DN-1",
-    "spotter_device_id": "SN-1",
     "registry_id": "ZZ-TRI-FECTA",
     "host": "192.168.12.254",
     "port": 18883,

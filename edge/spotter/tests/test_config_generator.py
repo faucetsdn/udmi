@@ -55,12 +55,10 @@ class TestConfigGenerator(unittest.TestCase):
             site_path=self.site_path,
             project_spec="//mqtt/localhost:18883",
             device_id="DN-1",
-            spotter_device_id="SN-1",
             out_path=out_path,
         )
 
         self.assertEqual(config["mqtt"]["device_id"], "DN-1")
-        self.assertEqual(config["mqtt"]["spotter_device_id"], "SN-1")
         self.assertEqual(config["mqtt"]["port"], 18883)
         self.assertTrue(os.path.isfile(out_path))
 

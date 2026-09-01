@@ -23,7 +23,7 @@ class SpotterMetrics:
         self._server_thread = None
         
         # Metric catalog counters and gauges
-        self.cpu_usage_ratio: Dict[str, float] = {"spotter": 0.0, "legacy": 0.0}
+        self.cpu_usage_ratio: Dict[str, float] = {"spotter": 0.0}
         self.memory_bytes: Dict[str, int] = {"rss": 0, "cgroup_limit": 0}
         self.open_fds: int = 0
         self.pcap_packets_total: Dict[str, int] = {"captured": 0, "dropped": 0}
