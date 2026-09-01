@@ -1,0 +1,290 @@
+#!/bin/bash
+#
+# Dynamically synchronizes the ':registries' key in etcd with all active registries
+# found under the '/r/' prefix in the backing etcd database.
+#
+# Usage:
+#   bin/sync_registries PROJECT_ID[:NAMESPACE] [OPTIONS]
+#
+# Examples:
+#   bin/sync_registries bos-platform-dev             # Lists UDMIS-enabled namespaces
+#   bin/sync_registries bos-platform-dev:udmis       # Dry run for :udmis namespace
+#   bin/sync_registries bos-platform-dev:udmis --commit
+#   bin/sync_registries --local --commit
+#
+
+set -eu
+set -o pipefail
+
+UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$UDMI_ROOT"
+
+if [[ -f etc/shell_common.sh ]]; then
+    source etc/shell_common.sh
+fi
+
+TARGET_SPEC=""
+NAMESPACE=""
+PROJECT_ID=""
+DRY_RUN=true
+IS_LOCAL=false
+REGION="us-central1"
+CLUSTER="main"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --commit)
+            DRY_RUN=false
+            shift
+            ;;
+        --dry-run|-d)
+            DRY_RUN=true
+            shift
+            ;;
+        --local|-l)
+            IS_LOCAL=true
+            shift
+            ;;
+        --region|-r)
+            REGION="$2"
+            shift 2
+            ;;
+        --cluster|-c)
+            CLUSTER="$2"
+            shift 2
+            ;;
+        --help|-h)
+            echo "Usage: $0 PROJECT_ID[:NAMESPACE] [OPTIONS]"
+            echo ""
+            echo "Options:"
+            echo "  --commit             Commit planned changes to etcd (default is dry-run mode)"
+            echo "  -d, --dry-run        Dry run mode (default: do not modify etcd)"
+            echo "  -l, --local          Connect to local etcd instance"
+            echo "  -r, --region REGION  GCP region for GKE cluster (default: us-central1)"
+            echo "  -c, --cluster NAME   GKE cluster name (default: main)"
+            echo "  -h, --help           Show this help message"
+            exit 0
+            ;;
+        *)
+            if [[ -z "$TARGET_SPEC" ]]; then
+                TARGET_SPEC="$1"
+                shift
+            else
+                echo "Unknown argument: $1"
+                echo "Usage: $0 PROJECT_ID[:NAMESPACE] [OPTIONS]"
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+if [[ "$IS_LOCAL" != "true" && -z "$TARGET_SPEC" ]]; then
+    echo "Usage: $0 PROJECT_ID[:NAMESPACE] [OPTIONS]"
+    echo ""
+    echo "Error: PROJECT_ID is required (e.g. $0 bos-platform-dev)"
+    exit 1
+fi
+
+if [[ -n "$TARGET_SPEC" ]]; then
+    if [[ "$TARGET_SPEC" == "localhost"* ]]; then
+        IS_LOCAL=true
+    fi
+
+    if [[ "$TARGET_SPEC" =~ : ]]; then
+        PROJECT_ID="${TARGET_SPEC%%:*}"
+        NAMESPACE="${TARGET_SPEC#*:}"
+    else
+        PROJECT_ID="$TARGET_SPEC"
+    fi
+
+    if [[ "$IS_LOCAL" != "true" ]]; then
+        if [[ -z "$PROJECT_ID" ]]; then
+            echo "Error: Project ID cannot be empty. Namespace without project is not supported."
+            echo "Usage: $0 PROJECT_ID[:NAMESPACE] [OPTIONS]"
+            exit 1
+        fi
+        if [[ "$PROJECT_ID" =~ / || "$PROJECT_ID" =~ ^// ]]; then
+            echo "Error: Project ID must be a literal GCP project ID (e.g. 'bos-platform-dev'), not a project spec."
+            echo "Usage: $0 PROJECT_ID[:NAMESPACE] [OPTIONS]"
+            exit 1
+        fi
+    fi
+fi
+
+if [[ "$IS_LOCAL" == "true" ]]; then
+    ETCD_PORT="${ETCD_PORT:-2379}"
+    ETCD_ENDPOINT="http://127.0.0.1:${ETCD_PORT}"
+    echo "=========================================================================="
+    echo "Syncing ':registries' on Local etcd (${ETCD_ENDPOINT})"
+    echo "=========================================================================="
+
+    ETCDCTL="udmis/bin/etcd_bin/etcdctl"
+    if [[ ! -x "$ETCDCTL" ]]; then
+        ETCDCTL="etcdctl"
+    fi
+
+    python3 - "$DRY_RUN" "$ETCDCTL --endpoints=${ETCD_ENDPOINT}" <<'EOF_LOCAL'
+import subprocess, sys
+
+dry_run = sys.argv[1] == "true"
+prefix_cmd = sys.argv[2].split()
+
+def run_cmd(args):
+    cmd = prefix_cmd + args
+    return subprocess.check_output(cmd).decode('utf-8')
+
+raw_keys = run_cmd(["get", "/r/", "--prefix", "--keys-only"])
+found_registries = set()
+for line in raw_keys.splitlines():
+    line = line.strip()
+    if line.startswith('/r/'):
+        parts = line[3:].split('/')
+        reg = parts[0].split(':')[0]
+        if reg and reg != 'UDMI-REFLECT':
+            found_registries.add(reg)
+
+try:
+    current_raw = run_cmd(["get", ":registries", "--print-value-only"]).strip()
+except Exception:
+    current_raw = ""
+
+current_registries = set(r.strip() for r in current_raw.split(',') if r.strip())
+
+missing = sorted(list(found_registries - current_registries))
+obsolete = sorted(list(current_registries - found_registries))
+
+new_list = sorted(list(found_registries))
+new_raw = ",".join(new_list)
+
+print(f"Total registries found under /r/: {len(found_registries)}")
+print(f"Currently in :registries:          {len(current_registries)}")
+if missing:
+    print(f"Missing from :registries:          {len(missing)} -> {missing}")
+if obsolete:
+    print(f"Obsolete in :registries:           {len(obsolete)} -> {obsolete}")
+
+if current_raw == new_raw:
+    print("STATUS: :registries is already fully up to date. No changes needed.")
+    sys.exit(0)
+
+if dry_run:
+    print("STATUS: [DRY-RUN] Planned update to :registries:")
+    print(f"  {new_raw}")
+else:
+    cmd = prefix_cmd + ["put", ":registries", new_raw]
+    subprocess.check_call(cmd)
+    print(f"STATUS: Successfully synchronized {len(new_list)} registries to ':registries' in local etcd.")
+EOF_LOCAL
+    exit 0
+fi
+
+# Ensure GKE credentials
+CONTEXT="gke_${PROJECT_ID}_${REGION}_${CLUSTER}"
+CURRENT_CONTEXT=$(kubectl config current-context 2>/dev/null || echo "")
+
+if [[ "$CURRENT_CONTEXT" != "$CONTEXT" ]]; then
+    echo "Switching kubectl context to $CONTEXT..."
+    if ! kubectl config use-context "$CONTEXT" >/dev/null 2>&1; then
+        echo "Fetching credentials for cluster $CLUSTER in $REGION ($PROJECT_ID)..."
+        gcloud container clusters get-credentials "$CLUSTER" --region "$REGION" --project "$PROJECT_ID"
+    fi
+fi
+
+# If no namespace is specified, query and list available UDMIS namespaces
+if [[ -z "$NAMESPACE" ]]; then
+    echo "=========================================================================="
+    echo "UDMIS-enabled Namespaces in GKE (Project: $PROJECT_ID, Cluster: $CLUSTER)"
+    echo "=========================================================================="
+    
+    UDMIS_NS=$(kubectl get pods -A -l app=udmis --no-headers -o custom-columns=NAMESPACE:.metadata.namespace 2>/dev/null | sort -u || true)
+    
+    if [[ -n "$UDMIS_NS" ]]; then
+        while read -r ns; do
+            [[ -n "$ns" ]] && echo "  * $ns"
+        done <<< "$UDMIS_NS"
+    else
+        echo "  (No running udmis pods detected)"
+    fi
+    
+    echo ""
+    echo "Run with a target namespace:"
+    echo "  $0 ${PROJECT_ID}:<namespace> [--commit]"
+    exit 0
+fi
+
+echo "=========================================================================="
+echo "Syncing ':registries' in GKE (Project: $PROJECT_ID, Namespace: $NAMESPACE)"
+echo "Dry Run: $DRY_RUN"
+echo "=========================================================================="
+
+# Locate an active udmis pod
+echo "Finding active UDMIS pod in namespace '$NAMESPACE'..."
+UDMIS_POD=$(kubectl get pods -n "$NAMESPACE" -l app=udmis --field-selector=status.phase=Running -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+
+if [[ -z "$UDMIS_POD" ]]; then
+    echo "No running udmis pod found with label app=udmis in namespace '$NAMESPACE'. Trying etcd pod directly..."
+    ETCD_POD=$(kubectl get pods -n "$NAMESPACE" -l app=etcd -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "etcd-0")
+    EXEC_TARGET="$ETCD_POD"
+    EXEC_CMD_PREFIX=""
+else
+    EXEC_TARGET="$UDMIS_POD"
+    EXEC_CMD_PREFIX="/root/bin/etcd_bin/etcdctl --endpoints=https://etcd:2379 --cacert=/etc/udmis/certs/ca.crt --cert=/etc/udmis/certs/tls.crt --key=/etc/udmis/certs/tls.key"
+fi
+
+echo "Executing sync on pod: $EXEC_TARGET"
+
+kubectl exec -i -n "$NAMESPACE" "$EXEC_TARGET" -- python3 - "$DRY_RUN" "$EXEC_CMD_PREFIX" <<'EOF_REMOTE'
+import subprocess, sys
+
+dry_run = sys.argv[1] == "true"
+prefix_cmd = sys.argv[2].split() if len(sys.argv) > 2 and sys.argv[2] else ["etcdctl"]
+
+def run_cmd(args):
+    cmd = prefix_cmd + args
+    return subprocess.check_output(cmd).decode('utf-8')
+
+raw_keys = run_cmd(["get", "/r/", "--prefix", "--keys-only"])
+found_registries = set()
+for line in raw_keys.splitlines():
+    line = line.strip()
+    if line.startswith('/r/'):
+        parts = line[3:].split('/')
+        reg = parts[0].split(':')[0]
+        if reg and reg != 'UDMI-REFLECT':
+            found_registries.add(reg)
+
+try:
+    current_raw = run_cmd(["get", ":registries", "--print-value-only"]).strip()
+except Exception:
+    current_raw = ""
+
+current_registries = set(r.strip() for r in current_raw.split(',') if r.strip())
+
+missing = sorted(list(found_registries - current_registries))
+obsolete = sorted(list(current_registries - found_registries))
+
+new_list = sorted(list(found_registries))
+new_raw = ",".join(new_list)
+
+print(f"Total registries found under /r/: {len(found_registries)}")
+print(f"Currently in :registries:          {len(current_registries)}")
+if missing:
+    print(f"Missing from :registries:          {len(missing)} -> {missing}")
+if obsolete:
+    print(f"Obsolete in :registries:           {len(obsolete)} -> {obsolete}")
+
+if current_raw == new_raw:
+    print("STATUS: :registries is already fully up to date. No changes needed.")
+    sys.exit(0)
+
+if dry_run:
+    print("STATUS: [DRY-RUN] Planned update to :registries:")
+    print(f"  {new_raw}")
+else:
+    cmd = prefix_cmd + ["put", ":registries", new_raw]
+    subprocess.check_call(cmd)
+    print(f"STATUS: Successfully synchronized {len(new_list)} registries to ':registries' in etcd.")
+EOF_REMOTE
+
+echo "Done."
