@@ -64,7 +64,7 @@ class TestSpotterSelfTest(unittest.TestCase):
         try:
             endpoint = build_endpoint_config(config)
             manager = TraceDiscoveryManager()
-            self.assertEqual(endpoint.client_id, "projects/test-project/locations/us-central1/registries/ZZ-TRI-FECTA/devices/SN-SELFTEST-spotter")
+            self.assertEqual(endpoint.client_id, "projects/test-project/locations/us-central1/registries/ZZ-TRI-FECTA/devices/SN-SELFTEST")
             self.assertIsNotNone(manager)
         except Exception as e:
             self.fail(f"Staged mock loop initialization crash: {e}")

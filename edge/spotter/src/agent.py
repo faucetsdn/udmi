@@ -1,121 +1,140 @@
+"""UDMI Spotter Core Agent.
+
+Unified single-process edge node implementing network discovery,
+remote ephemeral packet capture (PCAP), and automated lifecycle management.
+"""
+
 import argparse
 import base64
 import hashlib
 import json
 import logging
 import os
+import signal
 import sys
-import time
 import threading
+import time
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
 from udmi.constants import UDMI_VERSION
 from udmi.core.factory import create_device, ClientConfig
+from udmi.core.managers import SystemManager, DiscoveryManager, LocalnetManager
 from udmi.core.messaging.mqtt_messaging_client import TlsConfig
-from udmi.core.managers import SystemManager
-from udmi.core.managers.base_manager import BaseManager
 from udmi.schema import (
-    AuthProvider, Basic, EndpointConfiguration, Protocol,
-    Config, State, DiscoveryState, FamilyDiscoveryState,
-    StreamEvents, Entry
+    AuthProvider,
+    Basic,
+    Config,
+    DiscoveryEvents,
+    DiscoveryState,
+    EndpointConfiguration,
+    Entry,
+    FamilyDiscoveryConfig,
+    FamilyDiscoveryState,
+    Protocol,
+    State,
+    StreamEvents,
 )
-from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
 from udmi.schema.common import Depth
+from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
+
+try:
+    from providers.bacnet import BacnetFamilyProvider
+    from providers.ether import EtherFamilyProvider
+    from providers.passive import PassiveFamilyProvider
+except ImportError:
+    from edge.spotter.src.providers.bacnet import BacnetFamilyProvider
+    from edge.spotter.src.providers.ether import EtherFamilyProvider
+    from edge.spotter.src.providers.passive import PassiveFamilyProvider
 
 LOGGER = logging.getLogger("spotter_agent")
 
-class TraceDiscoveryManager(BaseManager):
-    """Manages TRACE-level diagnostic discovery operations (e.g. PCAP network capturing).
 
-    In Spotter's dual-process co-existence runtime, this manager selectively processes only
-    discovery families configured with depth == Depth.trace, ignoring standard BACnet/IP scans
-    to prevent contention with the legacy discovery daemon.
+class SpotterDiscoveryManager(DiscoveryManager):
+    """Unified Discovery Manager for Spotter.
+
+    Extends standard DiscoveryManager to natively handle both active protocol sweeps
+    (BACnet, Ether, Passive) and TRACE-level packet streaming (PCAP) over events/stream.
     """
-
-    @property
-    def model_field_name(self) -> str:
-        return "discovery"
 
     def __init__(self) -> None:
         super().__init__()
-        self._discovery_state = DiscoveryState(families={})
-        self._active_threads: Dict[str, threading.Thread] = {}
-        LOGGER.info("TraceDiscoveryManager initialized.")
+        self._active_trace_threads: Dict[str, threading.Thread] = {}
 
-    def update_state(self, state: State) -> None:
-        if self._discovery_state.families:
-            state.discovery = self._discovery_state
+    def _handle_scan_result(self, device_id: str, event: DiscoveryEvents) -> None:
+        LOGGER.info("Discovery event received for device: %s", device_id)
+        if not event.timestamp:
+            event.timestamp = datetime.now(timezone.utc).isoformat()
+        if not event.version:
+            event.version = UDMI_VERSION
+        self.publish_event(event, "discovery")
 
-    def handle_command(self, command_name: str, payload: dict) -> None:
-        pass
+    def _should_scan(self, family: str, config: FamilyDiscoveryConfig) -> bool:
+        depth_val = getattr(config, "depth", None)
+        if depth_val == Depth.trace or str(depth_val).lower() == "trace":
+            state_gen = None
+            if family in self._discovery_state.families:
+                state_gen = self._discovery_state.families[family].generation
+            return bool(config.generation and config.generation != state_gen)
+        return super()._should_scan(family, config)
 
-    def handle_config(self, config: Config) -> None:
-        if not config.discovery or not config.discovery.families:
+    def _run_scan(self, family: str, provider: Any) -> None:
+        fam_config = None
+        if self._config and self._config.families:
+            fam_config = self._config.families.get(family)
+
+        depth_val = getattr(fam_config, "depth", None) if fam_config else None
+        if depth_val == Depth.trace or str(depth_val).lower() == "trace":
+            self._run_trace_capture(family, fam_config)
             return
 
-        for family, fam_config in config.discovery.families.items():
-            depth_val = getattr(fam_config, "depth", None)
-            # In dual-process mode, ONLY process TRACE operations
-            if depth_val != Depth.trace and str(depth_val) != "trace" and depth_val != "Depth.trace":
-                LOGGER.debug("Ignoring non-trace discovery family '%s' (handled by legacy discovery node).", family)
-                continue
+        super()._run_scan(family, provider)
 
-            current_state = self._discovery_state.families.get(family)
-            if current_state and current_state.generation == fam_config.generation and current_state.phase != DiscoveryPhase.stopped:
-                LOGGER.debug("Already processing TRACE generation '%s' for family '%s'", fam_config.generation, family)
-                continue
+    def _run_trace_capture(self, family: str, fam_config: Any) -> None:
+        """Executes ephemeral PCAP capture and streams chunks over events/stream."""
+        f_state = self._discovery_state.families.get(family)
+        if not f_state:
+            f_state = FamilyDiscoveryState(generation=fam_config.generation)
+            self._discovery_state.families[family] = f_state
 
-            LOGGER.info("Starting TRACE discovery operation for family '%s' (generation: %s)", family, fam_config.generation)
-            self._start_trace_capture(family, fam_config)
-
-    def _start_trace_capture(self, family: str, fam_config: Any) -> None:
-        f_state = FamilyDiscoveryState(
-            generation=fam_config.generation,
-            phase=DiscoveryPhase.active,
-            status=Entry(
-                category="discovery.family",
-                level=200,
-                message=f"Starting trace capture for family '{family}'..."
-            )
+        f_state.phase = DiscoveryPhase.active
+        f_state.status = Entry(
+            category="discovery.family",
+            level=200,
+            message=f"Starting trace capture for family '{family}'...",
         )
-        self._discovery_state.families[family] = f_state
         self.trigger_state_update()
 
-        thread = threading.Thread(
-            target=self._run_trace_worker,
-            args=(family, fam_config),
-            name=f"TraceCapture-{family}",
-            daemon=True
-        )
-        self._active_threads[family] = thread
-        thread.start()
-
-    def _run_trace_worker(self, family: str, fam_config: Any) -> None:
         try:
-            from pcap import capture_packets
-        except ImportError:
-            from edge.spotter.src.pcap import capture_packets
+            try:
+                from pcap import capture_packets
+            except ImportError:
+                from edge.spotter.src.pcap import capture_packets
 
-        interface = getattr(fam_config, "interface", None) or "any"
-        filter_str = getattr(fam_config, "filter", None) or ""
-        max_duration_sec = int(getattr(fam_config, "scan_duration_sec", None) or 60)
-        max_bytes = int(getattr(fam_config, "max_bytes", None) or (10 * 1024 * 1024))
+            interface = getattr(fam_config, "interface", None) or "any"
+            filter_str = getattr(fam_config, "filter", None) or ""
+            max_duration_sec = int(getattr(fam_config, "scan_duration_sec", None) or 60)
+            max_bytes = int(getattr(fam_config, "max_bytes", None) or (10 * 1024 * 1024))
 
-        f_state = self._discovery_state.families[family]
-        try:
-            LOGGER.info("Spawning capture worker on interface '%s' (filter: '%s', max_duration: %ds, max_bytes: %d)", interface, filter_str, max_duration_sec, max_bytes)
+            LOGGER.info(
+                "Spawning TRACE capture worker on '%s' (filter: '%s', max_duration: %ds, max_bytes: %d)",
+                interface,
+                filter_str,
+                max_duration_sec,
+                max_bytes,
+            )
+
             data_generator = capture_packets(
                 interface=interface,
                 filter_str=filter_str,
                 max_duration_sec=max_duration_sec,
-                max_bytes=max_bytes
+                max_bytes=max_bytes,
             )
 
             captured_chunks = list(data_generator)
             full_data = b"".join(captured_chunks)
 
-            LOGGER.info("Capture complete (%d total bytes captured). Publishing StreamEvents over MQTT...", len(full_data))
+            LOGGER.info("Capture complete (%d bytes). Emitting StreamEvents...", len(full_data))
             chunk_size = 128 * 1024  # 128KB chunks
             total_bytes = len(full_data)
             total_chunks = (total_bytes + chunk_size - 1) // chunk_size if total_bytes > 0 else 1
@@ -125,7 +144,6 @@ class TraceDiscoveryManager(BaseManager):
                 start = idx * chunk_size
                 end = min(start + chunk_size, total_bytes)
                 chunk_data = full_data[start:end]
-
                 b64_data = base64.b64encode(chunk_data).decode()
 
                 chunk_event = StreamEvents(
@@ -135,51 +153,50 @@ class TraceDiscoveryManager(BaseManager):
                     event_no=idx,
                     chunk_index=idx,
                     total_chunks=total_chunks,
-                    data=b64_data
+                    data=b64_data,
                 )
                 self.publish_event(chunk_event, "stream")
-                LOGGER.info("Published TRACE stream chunk %d/%d (event_no: %d, %d bytes)", idx + 1, total_chunks, idx, len(chunk_data))
+                LOGGER.info("Published stream chunk %d/%d (event_no: %d, %d bytes)", idx + 1, total_chunks, idx, len(chunk_data))
 
             f_state.phase = DiscoveryPhase.stopped
             f_state.active_count = total_chunks
             f_state.status = Entry(
                 category="discovery.family",
                 level=200,
-                message=f"Trace capture complete. {total_chunks} stream chunks emitted over MQTT."
+                message=f"Trace capture complete. {total_chunks} stream chunks emitted.",
             )
-            LOGGER.info("TRACE discovery completed successfully for family '%s'.", family)
 
-        except Exception as e: # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught
             LOGGER.error("Trace capture failed for family '%s': %s", family, e, exc_info=True)
             f_state.phase = DiscoveryPhase.stopped
             f_state.status = Entry(
                 category="discovery.family",
                 level=500,
-                message=str(e)
+                message=str(e),
             )
         finally:
-            if family in self._active_threads:
-                del self._active_threads[family]
             self.trigger_state_update()
 
+
+# Backward compatibility alias for tests
+TraceDiscoveryManager = SpotterDiscoveryManager
+
+
 def calculate_local_password(key_file: str) -> str:
-    """Calculates password for udmi_local authentication mechanism.
-    
-    This is based on the first 8 characters of the sha256 hash of the pkcs8 private key.
-    """
+    """Calculates password for udmi_local authentication mechanism."""
     pkcs_file = f"{key_file.rpartition('.')[0]}.pkcs8"
     if not os.path.exists(pkcs_file):
-        # Fallback to key_file if pkcs8 file does not exist
         pkcs_file = key_file
-    with open(pkcs_file, 'rb') as f:
+    with open(pkcs_file, "rb") as f:
         key_bytes = f.read()
         h = hashlib.sha256(key_bytes).hexdigest()
         return h[:8]
 
+
 def build_endpoint_config(config: Dict[str, Any]) -> EndpointConfiguration:
+    """Builds a single UDMI EndpointConfiguration."""
     mqtt_config = config.get("mqtt", {})
     device_id = mqtt_config.get("device_id")
-    spotter_device_id = mqtt_config.get("spotter_device_id") or (f"{device_id}-spotter" if device_id else None)
     registry_id = mqtt_config.get("registry_id")
     host = mqtt_config.get("host", "localhost")
     port = int(mqtt_config.get("port", 8883))
@@ -190,30 +207,32 @@ def build_endpoint_config(config: Dict[str, Any]) -> EndpointConfiguration:
     ca_file = mqtt_config.get("ca_file")
 
     if auth_mechanism == "jwt_gcp":
-        topic_prefix = f"/devices/"
-        client_id = f"projects/{mqtt_config.get('project_id')}/locations/{mqtt_config.get('region')}/registries/{registry_id}/devices/{spotter_device_id}"
+        topic_prefix = "/devices/"
+        client_id = (
+            f"projects/{mqtt_config.get('project_id')}/locations/"
+            f"{mqtt_config.get('region')}/registries/{registry_id}/devices/{device_id}"
+        )
     else:
         topic_prefix = f"/r/{registry_id}/d/"
-        client_id = f"/r/{registry_id}/d/{spotter_device_id}"
-        client_id = mqtt_config.get("spotter_client_id", client_id)
+        client_id = f"/r/{registry_id}/d/{device_id}"
+
+    if "client_id" in mqtt_config:
+        client_id = mqtt_config["client_id"]
 
     auth_provider = None
     if auth_mechanism == "udmi_local":
-        username = f"/r/{registry_id}/d/{spotter_device_id}"
+        username = f"/r/{registry_id}/d/{device_id}"
         password = calculate_local_password(key_file)
         auth_provider = AuthProvider(
             basic=Basic(
                 username=username,
-                password=password
+                password=password,
             )
         )
     elif auth_mechanism in ("jwt_gcp", "jwt"):
         from udmi.schema import Jwt
-        auth_provider = AuthProvider(
-            jwt=Jwt(
-                audience=mqtt_config.get("project_id")
-            )
-        )
+
+        auth_provider = AuthProvider(jwt=Jwt(audience=mqtt_config.get("project_id")))
 
     return EndpointConfiguration(
         client_id=client_id,
@@ -225,75 +244,12 @@ def build_endpoint_config(config: Dict[str, Any]) -> EndpointConfiguration:
         ca_file=ca_file,
         cert_file=cert_file,
         key_file=key_file,
-        protocol=Protocol.mqtt
+        protocol=Protocol.mqtt,
     )
 
-def main():
-    parser = argparse.ArgumentParser(description="Start Spotter Core Agent")
-    parser.add_argument(
-        "--config_file",
-        type=str,
-        help="path to config file",
-        required=True
-    )
-    args = parser.parse_args()
-
-    # Read config
-    with open(args.config_file, "r") as f:
-        config = json.load(f)
-
-    # Setup logging
-    log_level_str = str(config.get("log_level", "INFO")).upper()
-    log_level = getattr(logging, log_level_str, logging.INFO)
-    
-    log_dir = "/var/log/spotter"
-    if os.path.exists(log_dir) and os.access(log_dir, os.W_OK):
-        log_file = os.path.join(log_dir, "agent.log")
-        handler = logging.FileHandler(log_file)
-    else:
-        handler = logging.StreamHandler(sys.stdout)
-        
-    logging.basicConfig(
-        format="%(asctime)s|%(levelname)s|%(module)s:%(funcName)s %(message)s",
-        handlers=[handler],
-        level=log_level,
-    )
-    LOGGER.setLevel(log_level)
-
-    LOGGER.info("Starting Spotter Core Agent...")
-    endpoint_config = build_endpoint_config(config)
-    LOGGER.info("Endpoint Config: %s", endpoint_config)
-
-    key_file = config.get("mqtt", {}).get("key_file")
-    ca_file = config.get("mqtt", {}).get("ca_file")
-    cert_file = config.get("mqtt", {}).get("cert_file")
-    insecure_tls = config.get("mqtt", {}).get("authentication_mechanism") == "udmi_local"
-    tls_config = TlsConfig(
-        ca_certs=ca_file,
-        cert_file=cert_file,
-        key_file=key_file,
-        insecure=insecure_tls
-    )
-    client_config = ClientConfig(tls_config=tls_config)
-    
-    device = create_device(
-        endpoint_config,
-        managers=[SystemManager(), TraceDiscoveryManager()],
-        client_config=client_config,
-        key_file=key_file
-    )
-
-    sys_mgr = device.get_manager(SystemManager)
-    if sys_mgr:
-        sys_mgr.register_blob_handler("ota_package", process_ota_package, post_process_ota, expects_file=True)
-        sys_mgr.register_blob_handler("discovery_rules", process_discovery_rules, expects_file=True)
-        LOGGER.info("Registered OTA package and discovery rules blob handlers.")
-
-    LOGGER.info("Device created. Running...")
-    device.run()
 
 def process_ota_package(key: str, filepath: str) -> str:
-    """Stages an OTA package blob (.whl or bundle) for supervisor self-testing and promotion."""
+    """Stages an OTA package blob (.whl or bundle)."""
     if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
         raise ValueError(f"Invalid or empty OTA package file for blob '{key}'")
     staging_dir = os.environ.get("SPOTTER_STAGING_DIR", "/tmp/spotter_staging")
@@ -304,25 +260,106 @@ def process_ota_package(key: str, filepath: str) -> str:
     marker_file = os.path.join(staging_dir, "OTA_STAGED")
     with open(marker_file, "w") as f:
         f.write(staged_file)
-    LOGGER.info("OTA package blob '%s' staged at '%s'. Requesting supervisor restart cycle...", key, staged_file)
+    LOGGER.info("OTA package blob '%s' staged at '%s'.", key, staged_file)
     return "staged"
+
 
 def post_process_ota(key: str, output: Any) -> None:
     """Triggers an agent restart with code 42 after final state has been published."""
-    LOGGER.warning("OTA package staged (%s). Triggering exit code 42 in 1s for supervisor sandbox verification...", key)
+    LOGGER.warning("OTA package staged (%s). Triggering exit code 42 in 1s...", key)
+
     def delayed_exit():
         time.sleep(1.0)
         os._exit(42)
+
     threading.Thread(target=delayed_exit, name="OTARestart", daemon=True).start()
 
+
 def process_discovery_rules(key: str, filepath: str) -> str:
-    """Dynamically hot-reloads discovery signature rules without dropping broker connections."""
+    """Dynamically hot-reloads discovery signature rules."""
     if not os.path.exists(filepath):
         raise ValueError(f"Missing discovery rules file for blob '{key}'")
     with open(filepath, "r", encoding="utf-8") as f:
         rules = json.load(f)
     LOGGER.info("Hot-reloaded discovery rules from blob '%s': %s", key, rules)
     return "reloaded"
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Start Spotter Unified Edge Node")
+    parser.add_argument("--config_file", type=str, help="path to config file", required=True)
+    parser.add_argument("--serial_no", type=str, help="optional serial number", default="NA")
+    args = parser.parse_args()
+
+    # Read config
+    with open(args.config_file, "r") as f:
+        config = json.load(f)
+
+    # Setup logging
+    log_level_str = str(config.get("log_level", "INFO")).upper()
+    log_level = getattr(logging, log_level_str, logging.INFO)
+
+    handlers = [logging.StreamHandler(sys.stdout)]
+    log_dir = "/var/log/spotter"
+    if os.path.exists(log_dir) and os.access(log_dir, os.W_OK):
+        log_file = os.path.join(log_dir, "agent.log")
+        handlers.append(logging.FileHandler(log_file))
+
+    logging.basicConfig(
+        format="%(asctime)s|%(levelname)s|%(module)s:%(funcName)s %(message)s",
+        handlers=handlers,
+        level=log_level,
+    )
+    LOGGER.setLevel(log_level)
+
+    LOGGER.info("Starting UDMI Spotter Unified Agent (Serial: %s)...", args.serial_no)
+    endpoint_config = build_endpoint_config(config)
+    LOGGER.info("Endpoint Config: %s", endpoint_config)
+
+    key_file = config.get("mqtt", {}).get("key_file")
+    ca_file = config.get("mqtt", {}).get("ca_file")
+    cert_file = config.get("mqtt", {}).get("cert_file")
+    insecure_tls = config.get("mqtt", {}).get("authentication_mechanism") == "udmi_local"
+    tls_config = TlsConfig(
+        ca_certs=ca_file, cert_file=cert_file, key_file=key_file, insecure=insecure_tls
+    )
+    client_config = ClientConfig(tls_config=tls_config)
+
+    # Initialize Managers
+    system_manager = SystemManager()
+    system_manager.register_blob_handler("ota_package", process_ota_package, post_process_ota, expects_file=True)
+    system_manager.register_blob_handler("discovery_rules", process_discovery_rules, expects_file=True)
+
+    localnet_manager = LocalnetManager()
+    bacnet_cfg = config.get("bacnet", {})
+    bacnet_ip = bacnet_cfg.get("ip")
+    bacnet_port = bacnet_cfg.get("port")
+    localnet_manager.register_provider("bacnet", BacnetFamilyProvider(bacnet_ip=bacnet_ip, bacnet_port=bacnet_port))
+    localnet_manager.register_provider("ether", EtherFamilyProvider())
+    localnet_manager.register_provider("ipv4", PassiveFamilyProvider())
+
+    discovery_manager = SpotterDiscoveryManager()
+
+    # Create Unified Device
+    device = create_device(
+        endpoint_config,
+        managers=[system_manager, localnet_manager, discovery_manager],
+        client_config=client_config,
+        key_file=key_file,
+    )
+
+    # Handle OS termination signals gracefully
+    def handle_signal(signum, frame):
+        LOGGER.info("Signal %s received. Shutting down Spotter...", signum)
+        device.stop()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGTERM, handle_signal)
+
+    LOGGER.info("Spotter Agent running...")
+    device.run()
+
 
 if __name__ == "__main__":
     main()

@@ -13,7 +13,7 @@ elif [[ "${1:-}" == "--integration" || "${1:-}" == "integration" ]]; then
 elif [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "Usage: $0 [unit|integration|all]"
     echo "  unit        : Run logical unit test suites (default)"
-    echo "  integration : Run Docker container lifecycle, PCAP streaming, and co-existence parity integration tests"
+    echo "  integration : Run container lifecycle, PCAP streaming, and parity integration tests"
     echo "  all         : Run both unit and integration test suites"
     exit 0
 fi
@@ -34,39 +34,39 @@ if [[ "$MODE" == "unit" || "$MODE" == "all" ]]; then
 fi
 
 if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
-    echo "--- Step 3: Running Supervisor Process Lifecycle Tests (test_supervisor) ---"
-    "${SCRIPT_DIR}/test_supervisor"
-    echo "-- Supervisor Process Lifecycle: PASSED!"
+    echo "--- Step 3: Building udmi-spotter:latest Container Image ---"
+    CONTAINER_ENGINE="docker"
+    if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then
+        CONTAINER_ENGINE="podman"
+    fi
+    ${CONTAINER_ENGINE} build -t udmi-spotter:latest -f "${WORKSPACE_DIR}/edge/spotter/container/Dockerfile" "${WORKSPACE_DIR}" >/dev/null
 
-    echo "--- Step 4: Building udmi-spotter:latest Docker Image ---"
-    docker build -t udmi-spotter:latest -f "${WORKSPACE_DIR}/edge/spotter/container/Dockerfile" "${WORKSPACE_DIR}" >/dev/null
-
-    echo "--- Step 5: Running Container Lifecycle Integration Tests (test_container) ---"
+    echo "--- Step 4: Running Container Lifecycle Integration Tests (test_container) ---"
     (
         cd "${WORKSPACE_DIR}"
         PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" "${SCRIPT_DIR}/test_container"
     )
     echo "-- Container Lifecycle Integration: PASSED!"
 
-    echo "--- Step 6: Running PCAP Streaming Integration Tests (test_pcap) ---"
+    echo "--- Step 5: Running PCAP Streaming Integration Tests (test_pcap) ---"
     "${SCRIPT_DIR}/test_pcap"
     echo "-- PCAP Streaming Integration: PASSED!"
 
-    echo "--- Step 7: Running Resource Contention Integration Tests (test_resource_contention) ---"
+    echo "--- Step 6: Running Resource Contention Integration Tests (test_resource_contention) ---"
     "${SCRIPT_DIR}/test_resource_contention"
     echo "-- Resource Contention Integration: PASSED!"
 
-    echo "--- Step 8: Running Network Resilience Integration Tests (test_fault_injection) ---"
+    echo "--- Step 7: Running Network Resilience Integration Tests (test_fault_injection) ---"
     "${SCRIPT_DIR}/test_fault_injection"
     echo "-- Network Resilience Integration: PASSED!"
 
-    if docker network inspect spotter-parity-net >/dev/null 2>&1 || docker network create --subnet=192.168.12.0/24 spotter-parity-net >/dev/null 2>&1; then
-        echo "--- Step 9: Running Dual-Process Co-existence Parity Tests (test_parity) ---"
+    if ${CONTAINER_ENGINE} network inspect spotter-parity-net >/dev/null 2>&1 || ${CONTAINER_ENGINE} network create --subnet=192.168.12.0/24 spotter-parity-net >/dev/null 2>&1; then
+        echo "--- Step 8: Running Discovery Parity Tests (test_parity) ---"
         (
             cd "${WORKSPACE_DIR}"
             PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" "${SCRIPT_DIR}/test_parity"
         )
-        echo "-- Dual-Process Co-existence Parity: PASSED!"
+        echo "-- Discovery Parity: PASSED!"
     else
         echo "WARNING: Skipping test_parity due to inability to initialize spotter-parity-net bridge network."
     fi

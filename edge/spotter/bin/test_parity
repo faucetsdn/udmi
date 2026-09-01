@@ -239,12 +239,16 @@ allow_anonymous true
             }
             
             success = False
-            for attempt in range(10):
+            for attempt in range(15):
                 if state_received.is_set():
+                    time.sleep(0.5)
+                    client.publish(f"/r/ZZ-TRI-FECTA/d/{client_id}/config", json.dumps(config_payload), qos=1)
                     success = True
                     break
                 client.publish(f"/r/ZZ-TRI-FECTA/d/{client_id}/config", json.dumps(config_payload), qos=1)
-                if state_received.wait(timeout=2.0):
+                if state_received.wait(timeout=1.0):
+                    time.sleep(0.5)
+                    client.publish(f"/r/ZZ-TRI-FECTA/d/{client_id}/config", json.dumps(config_payload), qos=1)
                     success = True
                     break
             
@@ -363,6 +367,14 @@ def datetime_now_iso():
     import datetime
     return datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
+def remove_none_fields(d):
+    if isinstance(d, dict):
+        return {k: remove_none_fields(v) for k, v in d.items() if v is not None}
+    elif isinstance(d, list):
+        return [remove_none_fields(v) for v in d if v is not None]
+    return d
+
+
 def clean_events(events):
     # Discovery events contain fields like timestamp, generation, and version.
     # We clean/ignore these dynamic fields to compare the core payload.
@@ -370,6 +382,7 @@ def clean_events(events):
     for event in events:
         # copy dict
         evt = json.loads(json.dumps(event))
+        evt = remove_none_fields(evt)
         if "timestamp" in evt:
             evt["timestamp"] = "CLEANED"
         if "generation" in evt:
@@ -377,9 +390,9 @@ def clean_events(events):
         if "version" in evt:
             evt["version"] = "CLEANED"
         # If there are devices/families, clean timestamps there too
-        if "families" in evt:
+        if evt.get("families") and isinstance(evt["families"], dict):
             for family, data in evt["families"].items():
-                if "generation" in data:
+                if isinstance(data, dict) and "generation" in data:
                     data["generation"] = "CLEANED"
         cleaned.append(evt)
     return cleaned

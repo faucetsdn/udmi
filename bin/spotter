@@ -13,13 +13,12 @@ SERIAL_NO=""
 SITE_PATH=""
 PROJECT_SPEC=""
 DEVICE_ID=""
-SPOTTER_DEVICE_ID=""
 ACTION="start"
 
 function show_help() {
     echo "Usage:"
     echo "  1. From Site Model (Local Dev / Sequencer):"
-    echo "     $0 SITE_PATH PROJECT_SPEC DEVICE_ID [SPOTTER_DEVICE_ID] [SERIAL_NO] [options]"
+    echo "     $0 SITE_PATH PROJECT_SPEC DEVICE_ID [SERIAL_NO] [options]"
     echo ""
     echo "  2. From Configuration File (Production / Deployed Device):"
     echo "     $0 CONFIG_FILE [SERIAL_NO] [options]"
@@ -28,25 +27,21 @@ function show_help() {
     echo "     $0 stop [SERIAL_NO] [options]"
     echo ""
     echo "Examples:"
-    echo "  $0 sites/udmi_site_model //mqtt/localhost DN-1 SN-1"
-    echo "  $0 sites/udmi_site_model //mqtt/localhost DN-1 SN-1 1234"
-    echo "  $0 sites/udmi_site_model //mqtt/localhost --device_id DN-1 --spotter_device_id SN-1"
+    echo "  $0 sites/udmi_site_model //mqtt/localhost AHU-1"
+    echo "  $0 sites/udmi_site_model //mqtt/localhost AHU-1 1234"
     echo "  $0 edge/spotter/spotter_config.json 1234 --mode container"
     echo "  $0 stop"
-    echo "  $0 stop 1234 --mode container"
     echo ""
     echo "Arguments:"
     echo "  SITE_PATH                  Path to site model directory"
     echo "  PROJECT_SPEC               Project specification string (e.g. //mqtt/localhost:18883)"
-    echo "  DEVICE_ID                  Target discovery node device ID (e.g. DN-1 or AHU-1)"
-    echo "  SPOTTER_DEVICE_ID          Spotter agent device ID (e.g. SN-1 or AHU-1-spotter)"
+    echo "  DEVICE_ID                  Target device ID (e.g. AHU-1 or SPOTTER-1)"
     echo "  CONFIG_FILE                Path to spotter_config.json file"
     echo "  SERIAL_NO                  Serial number for this Spotter instance (default: NA)"
     echo ""
     echo "Options:"
     echo "  --mode <container|local|all> Specify execution environment (default: local for start, all for stop)"
-    echo "  --device_id <id>           Target discovery node device ID (optional flag override)"
-    echo "  --spotter_device_id <id>   Spotter agent device ID (optional flag override)"
+    echo "  --device_id <id>           Target device ID (optional flag override)"
     echo "  --config_dir <path>        Directory containing config and certificates (optional)"
     echo "  -h, --help                 Show this help message"
     exit 0
@@ -64,7 +59,7 @@ parse_flags() {
                 shift 2
                 ;;
             --spotter_device_id)
-                SPOTTER_DEVICE_ID="$2"
+                # Deprecated compatibility flag
                 shift 2
                 ;;
             --config)
@@ -118,11 +113,6 @@ if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
         shift 3
 
         if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
-            SPOTTER_DEVICE_ID="$1"
-            shift
-        fi
-
-        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
             SERIAL_NO="$1"
             shift
         fi
@@ -154,7 +144,6 @@ if [[ -n "${SITE_PATH}" ]]; then
         --site_path "${SITE_PATH}" \
         --project_spec "${PROJECT_SPEC}" \
         --device_id "${DEVICE_ID}" \
-        ${SPOTTER_DEVICE_ID:+--spotter_device_id "${SPOTTER_DEVICE_ID}"} \
         --out "${CONFIG_PATH}"
 fi
 
@@ -189,18 +178,18 @@ if [[ "${MODE}" == "container" ]]; then
     CONTAINER_NAME="udmi-spotter-agent-${SERIAL_NO}"
     echo "=== Running Spotter Agent (${SERIAL_NO}) in CONTAINER mode ==="
 
-    if ! docker info >/dev/null 2>&1; then
-        echo "Error: Docker daemon is not running or accessible."
-        exit 1
+    CONTAINER_ENGINE="docker"
+    if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then
+        CONTAINER_ENGINE="podman"
     fi
 
-    echo "Building udmi-spotter:latest image..."
-    docker build -t udmi-spotter:latest -f "${WORKSPACE_DIR}/edge/spotter/container/Dockerfile" "${WORKSPACE_DIR}"
+    echo "Building udmi-spotter:latest image with ${CONTAINER_ENGINE}..."
+    ${CONTAINER_ENGINE} build -t udmi-spotter:latest -f "${WORKSPACE_DIR}/edge/spotter/container/Dockerfile" "${WORKSPACE_DIR}"
 
     mkdir -p "${CONFIG_DIR}/logs"
 
     echo "Starting Spotter Agent container '${CONTAINER_NAME}'..."
-    exec docker run -it --rm \
+    exec ${CONTAINER_ENGINE} run -it --rm \
         --name "${CONTAINER_NAME}" \
         -v "${CONFIG_DIR}:/config_dir" \
         -v "${CONFIG_DIR}/logs:/var/log/spotter" \
@@ -214,19 +203,12 @@ elif [[ "${MODE}" == "local" ]]; then
     "${WORKSPACE_DIR}/edge/spotter/bin/setup_env"
 
     VENV_DIR="${WORKSPACE_DIR}/venv"
-    LEGACY_VENV_DIR="${WORKSPACE_DIR}/misc/discoverynode/venv"
+    export PYTHONPATH="${WORKSPACE_DIR}/clientlib/python/src:${WORKSPACE_DIR}/edge/spotter/src:${WORKSPACE_DIR}"
 
-    export LEGACY_PATH="${WORKSPACE_DIR}/misc/discoverynode/src/main.py"
-    export SPOTTER_PATH="${WORKSPACE_DIR}/edge/spotter/src/agent.py"
-    export LEGACY_VENV="${LEGACY_VENV_DIR}/bin/python3"
-    export SPOTTER_VENV="${VENV_DIR}/bin/python3"
-    export PYTHONPATH="${WORKSPACE_DIR}/clientlib/python/src:${WORKSPACE_DIR}/edge/spotter/src"
-
-    mkdir -p "${WORKSPACE_DIR}/out/logs/discovery_node"
     mkdir -p "${WORKSPACE_DIR}/out/logs/spotter"
 
-    echo "Starting supervised local services for Serial No '${SERIAL_NO}'..."
-    exec "${WORKSPACE_DIR}/edge/spotter/container/supervisor.sh" --config_file "${CONFIG_PATH}" --serial_no "${SERIAL_NO}"
+    echo "Starting local Spotter agent for Serial No '${SERIAL_NO}'..."
+    exec "${VENV_DIR}/bin/python3" "${WORKSPACE_DIR}/edge/spotter/src/agent.py" --config_file "${CONFIG_PATH}" --serial_no "${SERIAL_NO}"
 
 else
     echo "Error: Invalid mode '${MODE}'. Allowed modes: container, local."

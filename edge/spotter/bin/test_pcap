@@ -163,8 +163,8 @@ echo "Setting up MQTT subscriber on port 1883 for state and stream event message
 MQTT_OUT="$TEST_DIR/mqtt.out"
 touch "$MQTT_OUT"
 mosquitto_sub -h 127.0.0.1 -p 1883 \
-    -t "/r/ZZ-TRI-FECTA/d/SN-1/state" \
-    -t "/r/ZZ-TRI-FECTA/d/SN-1/events/stream" \
+    -t "/r/ZZ-TRI-FECTA/d/DN-1/state" \
+    -t "/r/ZZ-TRI-FECTA/d/DN-1/events/stream" \
     -F "%t %p" > "$MQTT_OUT" &
 MOSQ_SUB_PID=$!
 
@@ -229,7 +229,7 @@ echo "Starting dummy UDP traffic thread"
 TRAFFIC_PID=$!
 
 echo "Publishing discovery TRACE config to trigger packet capture over MQTT..."
-mosquitto_pub -h 127.0.0.1 -p 1883 -t "/r/ZZ-TRI-FECTA/d/SN-1/config" -f "$TEST_DIR/config_payload.json" -q 1
+mosquitto_pub -h 127.0.0.1 -p 1883 -t "/r/ZZ-TRI-FECTA/d/DN-1/config" -f "$TEST_DIR/config_payload.json" -q 1
 
 echo "Waiting for discovery state 'stopped' and stream transfers"
 END_TIME=$((SECONDS + 25))

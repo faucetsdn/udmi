@@ -6,32 +6,24 @@ import tempfile
 import subprocess
 import unittest
 
-if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h"):
-    print("Usage: ./test_supervisor_integration")
-    print("")
-    print("Validates the docker container's supervisor integration:")
-    print("1. Normal Lifecycle & Graceful Shutdown: Verifies SIGTERM to container propagates to supervisor and exits 0.")
-    print("2. Legacy Node Crash Propagation: Verifies container exits with code 101 when legacy process crashes inside container.")
-    print("3. Spotter Agent Crash Propagation: Verifies container exits with code 102 when spotter process crashes inside container.")
-    print("")
-    print("Prerequisites:")
-    print("- Requires local Docker daemon running.")
-    print("- Requires udmi-spotter:latest image built.")
-    sys.exit(0)
-
 IMAGE_NAME = "udmi-spotter:latest"
 
 class TestContainer(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(cls):
-        print("Checking docker image availability...", flush=True)
-        res = subprocess.run(["docker", "image", "inspect", IMAGE_NAME], 
+        print("Checking container image availability...", flush=True)
+        cls.engine = "docker"
+        res = subprocess.run(["docker", "image", "inspect", IMAGE_NAME],
                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         if res.returncode != 0:
-            print(f"Docker image {IMAGE_NAME} is not available. Run docker build first.")
-            sys.exit(1)
-        print(f"Docker image '{IMAGE_NAME}' verified successfully.", flush=True)
+            if subprocess.run(["podman", "image", "inspect", IMAGE_NAME],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+                cls.engine = "podman"
+            else:
+                print(f"Container image {IMAGE_NAME} is not available. Run build first.")
+                sys.exit(1)
+        print(f"Container image '{IMAGE_NAME}' verified using {cls.engine}.", flush=True)
 
     def setUp(self):
         self.test_dir = tempfile.TemporaryDirectory()
@@ -67,27 +59,25 @@ print(f"MOCK CONTAINER EXIT: {name} (PID: {{os.getpid()}})", flush=True)
         os.chmod(path, 0o755)
         return path
 
-    def run_container_test(self, legacy_behavior, spotter_behavior, action):
-        legacy_path = self.create_mock_script("legacy.py", legacy_behavior)
+    def run_container_test(self, spotter_behavior, action):
         spotter_path = self.create_mock_script("spotter.py", spotter_behavior)
-        
+
         cmd = [
-            "docker", "run", "--rm", "-i",
-            "-v", f"{legacy_path}:/app/legacy/main.py",
+            self.engine, "run", "--rm", "-i",
             "-v", f"{spotter_path}:/app/spotter/agent.py",
             "-v", f"{self.test_dir.name}:/config_dir",
             IMAGE_NAME,
             "--config_file", "/config_dir/config.json"
         ]
-        
+
         print(f"  Spawning container (Action: {action})...", flush=True)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        
+
         exit_code = None
         if action == "shutdown":
-            time.sleep(3)  # Let container boot and start python processes
+            time.sleep(2)
             print("  Sending SIGTERM to container process...", flush=True)
-            proc.terminate()  # Sends SIGTERM to the docker process
+            proc.terminate()
             try:
                 exit_code = proc.wait(timeout=10)
             except subprocess.TimeoutExpired:
@@ -102,45 +92,23 @@ print(f"MOCK CONTAINER EXIT: {name} (PID: {{os.getpid()}})", flush=True)
                 print("  Container timed out, killing process...", flush=True)
                 proc.kill()
                 exit_code = proc.wait()
-                
+
         stdout, stderr = proc.communicate()
         print(f"  Container process exited with code: {exit_code}", flush=True)
-        print(f"\n[CONTAINER STDOUT]:\n{stdout}", flush=True)
-        if stderr.strip():
-            print(f"[CONTAINER STDERR]:\n{stderr}", flush=True)
-            
         return exit_code, stdout, stderr
 
     def test_container_normal_lifecycle_and_shutdown(self):
-        print("\n=== Test: Container Normal Lifecycle & Graceful Shutdown ===", flush=True)
-        exit_code, output, errors = self.run_container_test(
-            "time.sleep(60)", "time.sleep(60)", "shutdown"
-        )
-        
+        print("\n=== Test: Single Process Normal Lifecycle & Graceful Shutdown ===", flush=True)
+        exit_code, output, errors = self.run_container_test("time.sleep(60)", "shutdown")
         self.assertEqual(exit_code, 0, f"Expected exit code 0, got {exit_code}\nSTDOUT:\n{output}\nSTDERR:\n{errors}")
-        self.assertIn("Supervisor: Received shutdown signal", output, f"Logs missing shutdown confirmation\nSTDOUT:\n{output}")
-        self.assertIn("Supervisor: All child processes terminated. Exiting.", output)
         print("PASS: Normal lifecycle and shutdown verified successfully.", flush=True)
 
-    def test_container_legacy_crash(self):
-        print("\n=== Test: Legacy Node Crash Propagation ===", flush=True)
-        exit_code, output, errors = self.run_container_test(
-            "sys.exit(1)", "time.sleep(60)", "wait"
-        )
-        
-        self.assertEqual(exit_code, 101, f"Expected exit code 101, got {exit_code}\nSTDOUT:\n{output}\nSTDERR:\n{errors}")
-        self.assertIn("Supervisor: Fatal crash detected on legacy node. Restarting container.", output)
-        print("PASS: Legacy node crash propagation (Exit Code 101) verified successfully.", flush=True)
+    def test_container_agent_crash(self):
+        print("\n=== Test: Single Process Agent Crash Propagation ===", flush=True)
+        exit_code, output, errors = self.run_container_test("sys.exit(42)", "wait")
+        self.assertEqual(exit_code, 42, f"Expected exit code 42, got {exit_code}\nSTDOUT:\n{output}\nSTDERR:\n{errors}")
+        print("PASS: Agent exit code (42) propagated cleanly.", flush=True)
 
-    def test_container_spotter_crash(self):
-        print("\n=== Test: Spotter Agent Crash Propagation ===", flush=True)
-        exit_code, output, errors = self.run_container_test(
-            "time.sleep(60)", "sys.exit(2)", "wait"
-        )
-        
-        self.assertEqual(exit_code, 102, f"Expected exit code 102, got {exit_code}\nSTDOUT:\n{output}\nSTDERR:\n{errors}")
-        self.assertIn("Supervisor: Fatal crash detected on Spotter agent. Restarting container.", output)
-        print("PASS: Spotter agent crash propagation (Exit Code 102) verified successfully.", flush=True)
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

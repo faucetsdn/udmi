@@ -218,7 +218,7 @@ class Device:
             except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error in connection handler: %s", e)
 
-        self._publish_state()
+        self._publish_state(force=True)
 
     def on_disconnect(self, rc: int) -> None:
         """
@@ -408,6 +408,10 @@ class Device:
                 if not self.dispatcher:
                     self._initialize_connection_robustly()
                     just_connected = True
+                elif not self.dispatcher.is_connected():
+                    self.dispatcher.connect()
+                    self.dispatcher.start_loop()
+                    just_connected = True
 
                 LOGGER.info(
                     "Waiting for initial configuration (Timeout: %ss)...",
@@ -524,7 +528,7 @@ class Device:
                 except (AttributeError, TypeError, KeyError, ValueError) as e:
                     LOGGER.error("Error in %s.update_state: %s",
                                  manager.__class__.__name__, e)
-            self.dispatcher.publish_state(self.state, wait=force)
+            self.dispatcher.publish_state(self.state, wait=False)
             self._loop_state.last_state_publish_time = time.time()
             self._loop_state.state_dirty = False
             LOGGER.debug("State message published.")

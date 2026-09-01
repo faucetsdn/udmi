@@ -103,9 +103,7 @@ def generate_spotter_config(site_path, project_spec, device_id, spotter_device_i
         site_config = json.load(f)
 
     parsed_spec = parse_project_spec(project_spec, site_config)
-
-    if not spotter_device_id:
-        spotter_device_id = f"{device_id}-spotter"
+    effective_device_id = device_id
 
     device_dir = os.path.join(site_path, "devices", device_id)
     if not os.path.isdir(device_dir):
@@ -129,15 +127,6 @@ def generate_spotter_config(site_path, project_spec, device_id, spotter_device_i
     if not base_key:
         raise ValueError(f"Private key file not found in device directory: {device_dir}")
 
-    spotter_device_dir = os.path.join(site_path, "devices", spotter_device_id)
-    if os.path.isdir(spotter_device_dir):
-        s_key, s_cert = find_key_cert(spotter_device_dir)
-        spotter_key_file = s_key or base_key
-        spotter_cert_file = s_cert or base_cert
-    else:
-        spotter_key_file = base_key
-        spotter_cert_file = base_cert
-
     ca_file = None
     if parsed_spec["iot_provider"] == "mqtt":
         ca_file = os.path.join(site_path, "reflector", "ca.crt")
@@ -145,16 +134,15 @@ def generate_spotter_config(site_path, project_spec, device_id, spotter_device_i
     config = {
         "log_level": "INFO",
         "mqtt": {
-            "device_id": device_id,
-            "spotter_device_id": spotter_device_id,
+            "device_id": effective_device_id,
             "registry_id": parsed_spec["registry_id"],
             "host": parsed_spec["host"],
             "port": parsed_spec["port"],
             "authentication_mechanism": parsed_spec["auth_mechanism"],
             "region": parsed_spec["cloud_region"],
             "project_id": parsed_spec["project_id"],
-            "key_file": spotter_key_file,
-            "cert_file": spotter_cert_file,
+            "key_file": base_key,
+            "cert_file": base_cert,
             "ca_file": ca_file,
             "algorithm": "RS256",
         },
@@ -162,6 +150,9 @@ def generate_spotter_config(site_path, project_spec, device_id, spotter_device_i
             "ip": "127.0.0.1",
         },
     }
+
+    if spotter_device_id:
+        config["mqtt"]["spotter_device_id"] = spotter_device_id
 
     if out_path:
         os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
@@ -176,7 +167,7 @@ def main():
     parser.add_argument("--site_path", required=True, help="Path to site model directory")
     parser.add_argument("--project_spec", required=True, help="Project specification string")
     parser.add_argument("--device_id", required=True, help="Target device ID")
-    parser.add_argument("--spotter_device_id", default=None, help="Spotter agent device ID")
+    parser.add_argument("--spotter_device_id", default=None, help="Deprecated optional alias")
     parser.add_argument("--out", required=True, help="Output config path")
 
     args = parser.parse_args()

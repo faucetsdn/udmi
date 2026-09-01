@@ -1,28 +1,22 @@
-# Dual-process container for UDMI Spotter Node
+# Single-process container for UDMI Spotter Unified Edge Node
 
-# --- Stage 1: Build legacy virtualenv ---
-FROM debian:12-slim AS build-legacy
-RUN apt-get update && \
-    apt-get install --no-install-suggests --no-install-recommends --yes python3-venv gcc libpython3-dev && \
-    python3 -m venv /venv_legacy && \
-    /venv_legacy/bin/pip install --upgrade pip setuptools wheel
-COPY misc/discoverynode/src/requirements.txt /requirements_legacy.txt
-RUN /venv_legacy/bin/pip install --disable-pip-version-check -r /requirements_legacy.txt
-
-# --- Stage 2: Build spotter virtualenv ---
+# --- Stage 1: Build Spotter virtual environment ---
 FROM debian:12-slim AS build-spotter
 RUN apt-get update && \
-    apt-get install --no-install-suggests --no-install-recommends --yes python3-venv gcc libpython3-dev && \
-    python3 -m venv /venv_spotter && \
-    /venv_spotter/bin/pip install --upgrade pip setuptools wheel
-# Copy clientlib pyproject.toml first to cache dependencies installation
+    apt-get install --no-install-suggests --no-install-recommends --yes \
+    python3-venv gcc libpython3-dev && \
+    python3 -m venv /venv && \
+    /venv/bin/pip install --upgrade pip setuptools wheel
+
+COPY edge/spotter/requirements.txt /requirements.txt
+RUN /venv/bin/pip install --disable-pip-version-check -r /requirements.txt
+
 COPY clientlib/python /app/clientlib
 COPY gencode/python/udmi/schema /app/gencode_schema
-RUN rm -f /app/clientlib/src/udmi/schema && cp -r /app/gencode_schema /app/clientlib/src/udmi/schema
-RUN /venv_spotter/bin/pip install --disable-pip-version-check /app/clientlib
+RUN rm -rf /app/clientlib/src/udmi/schema && cp -r /app/gencode_schema /app/clientlib/src/udmi/schema
+RUN /venv/bin/pip install --disable-pip-version-check /app/clientlib
 
-
-# --- Stage 3: Final Runtime ---
+# --- Stage 2: Final Runtime ---
 FROM debian:12-slim
 RUN apt-get update && \
     apt-get install --no-install-suggests --no-install-recommends --yes \
@@ -32,26 +26,23 @@ RUN apt-get update && \
     iputils-ping \
     tcpdump \
     libcap2-bin \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy virtual environments
-COPY --from=build-legacy /venv_legacy /venv_legacy
-COPY --from=build-spotter /venv_spotter /venv_spotter
+# Copy virtual environment
+COPY --from=build-spotter /venv /venv
+ENV PATH="/venv/bin:$PATH"
+ENV PYTHONPATH="/app/spotter:/app/clientlib/src"
 
-# Create directories for app files, configuration, and logs
-RUN mkdir -p /app/legacy /app/spotter /var/log/discovery_node /var/log/spotter /config
+# Create application and logging directories
+RUN mkdir -p /app/spotter /var/log/spotter /config
 
 # Copy application files
-COPY misc/discoverynode/src /app/legacy
 COPY clientlib/python /app/clientlib
 COPY edge/spotter/src /app/spotter
-COPY edge/spotter/container/supervisor.sh /app/supervisor.sh
 
-RUN chmod +x /app/supervisor.sh
-
-# Set capability to allow tcpdump to capture packets without root (needed for Phase 2 PCAP)
-# This is a good practice to set up early.
+# Set capabilities for raw socket packet captures
 RUN setcap cap_net_raw,cap_net_admin=eip $(which tcpdump || echo /usr/bin/tcpdump) || true
 
 WORKDIR /app
-ENTRYPOINT ["/bin/bash", "/app/supervisor.sh"]
+ENTRYPOINT ["python3", "/app/spotter/agent.py"]
