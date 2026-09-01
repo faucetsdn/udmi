@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 
 
 
-from engine.config.playbook import Playbook
-from engine.config.cache import SemanticCache
+from mantis.engine.config.playbook import Playbook
+from mantis.engine.config.cache import SemanticCache
 
 
 
@@ -359,7 +359,7 @@ class TestPipelineSkills(unittest.IsolatedAsyncioTestCase):
         shutil.rmtree(self.skills_base_dir)
 
     async def test_multi_skills_loading_and_injection(self):
-        from engine.pipeline import TriagePipeline
+        from mantis.engine.pipeline import TriagePipeline
 
 
         pipeline = TriagePipeline(
@@ -390,7 +390,7 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
         self.mock_client = MagicMock()
 
     async def test_fallback_playbook_initialization(self):
-        from engine.pipeline import TriagePipeline
+        from mantis.engine.pipeline import TriagePipeline
         
         pipeline = TriagePipeline(client=self.mock_client, playbook=None)
         self.assertIsNotNone(pipeline.playbook)
@@ -401,7 +401,7 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
         self.assertIn("critique", pipeline.playbook.stages)
 
     async def test_dynamic_deterministic_bypass(self):
-        from engine.pipeline import TriagePipeline
+        from mantis.engine.pipeline import TriagePipeline
         from typing import Optional
 
         class CustomTriagePipeline(TriagePipeline):
@@ -418,7 +418,7 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(res, "DETERMINISTIC_TIMELINE_OUTPUT")
         self.assertEqual(pipeline.context["timeline"], "DETERMINISTIC_TIMELINE_OUTPUT")
     async def test_run_triage_session_async(self):
-        from engine.pipeline import run_triage_session_async, TriagePipeline
+        from mantis.engine.pipeline import run_triage_session_async, TriagePipeline
         from unittest.mock import patch
 
         mock_pipeline_instance = MagicMock()
@@ -441,8 +441,8 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
             mock_pipeline_instance.run_dynamic_pipeline_async.assert_called_once()
 
     async def test_fail_open_rate_limit_timeout(self):
-        from engine.pipeline import TriagePipeline
-        from engine.harness.rate_limiter import AsyncRateLimiter
+        from mantis.engine.pipeline import TriagePipeline
+        from mantis.engine.harness.rate_limiter import AsyncRateLimiter
 
         # Initialize rate limiter with 1 capacity and exhaust it
         limiter = AsyncRateLimiter(max_requests=1, time_period_seconds=10.0)
@@ -454,7 +454,7 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
             playbook=None
         )
         
-        from engine.harness.rate_limiter import RateLimitTimeoutError
+        from mantis.engine.harness.rate_limiter import RateLimitTimeoutError
         pipeline.engine.execute_loop = AsyncMock(side_effect=[
             "Timeline harvested successfully.",  # first call (timeline stage)
             RateLimitTimeoutError("Simulated Timeout")  # second call (intent/analysis stage)
@@ -473,8 +473,8 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Triage incomplete due to rate limiting", report)
 
     async def test_structured_json_report_generation(self):
-        from engine.pipeline import TriagePipeline
-        from engine.models import TriageReportModel
+        from mantis.engine.pipeline import TriagePipeline
+        from mantis.engine.models import TriageReportModel
         from unittest.mock import patch
 
         # Mock out_dir
@@ -486,7 +486,7 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
             )
             pipeline.engine.execute_loop = AsyncMock(return_value="Successful diagnostics report text.")
 
-            from engine.models import HypothesisEvaluation, RootCauseAnalysis
+            from mantis.engine.models import HypothesisEvaluation, RootCauseAnalysis
 
             mock_model_output = TriageReportModel(
                 target_id="test_target_pydantic",
@@ -505,7 +505,7 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
             )
 
             # Patch extract_structured_report helper
-            with patch("engine.models.extract_structured_report", AsyncMock(return_value=mock_model_output)) as mock_extract:
+            with patch("mantis.engine.models.extract_structured_report", AsyncMock(return_value=mock_model_output)) as mock_extract:
                 report = await pipeline.run_dynamic_pipeline_async(
                     target_id="test_target_pydantic",
                     prompt_payload="Initial prompt",
@@ -531,9 +531,9 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
         finally:
             shutil.rmtree(temp_out)
 
-    @unittest.mock.patch("engine.pipeline.SemanticCache")
+    @unittest.mock.patch("mantis.engine.pipeline.SemanticCache")
     async def test_hypothesis_seeding_h0_loop(self, mock_cache_cls):
-        from engine.pipeline import TriagePipeline
+        from mantis.engine.pipeline import TriagePipeline
 
         # Mock cache lookup hit
         mock_cache = MagicMock()
@@ -544,7 +544,7 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
         mock_cache_cls.return_value = mock_cache
 
         # Set up a playbook with cache enabled
-        from engine.config.playbook import Playbook
+        from mantis.engine.config.playbook import Playbook
         playbook = Playbook.load_default()
         playbook.pipeline_config["cache_path"] = "fake_cache.json"
 
@@ -576,8 +576,8 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
         self.assertIn("Historical root cause was port collision", history_contents)
 
     def test_toolbelt_custom_search_provider(self):
-        from engine.tools import ToolBelt
-        from engine.harness.search import CodeSearchProvider
+        from mantis.engine.tools import ToolBelt
+        from mantis.engine.harness.search import CodeSearchProvider
 
         # Mock custom code search provider
         mock_provider = MagicMock(spec=CodeSearchProvider)
@@ -605,8 +605,8 @@ class TestDynamicStagePipeline(unittest.IsolatedAsyncioTestCase):
         )
 
     def test_toolbelt_custom_search_provider_lookup_symbol(self):
-        from engine.tools import ToolBelt
-        from engine.harness.search import CodeSearchProvider
+        from mantis.engine.tools import ToolBelt
+        from mantis.engine.harness.search import CodeSearchProvider
 
         # Mock custom code search provider
         mock_provider = MagicMock(spec=CodeSearchProvider)
@@ -667,14 +667,14 @@ if __name__ == '__main__':
         shutil.rmtree(self.temp_dir)
 
     def test_subprocess_plugin_success(self):
-        from engine.harness.plugin import SubprocessPluginRunner
+        from mantis.engine.harness.plugin import SubprocessPluginRunner
 
         runner = SubprocessPluginRunner([sys.executable, str(self.script_path)])
         output = runner.run({"value": 6})
         self.assertEqual(output.get("result"), 36)
 
     def test_subprocess_plugin_error_stderr(self):
-        from engine.harness.plugin import SubprocessPluginRunner, PluginExecutionError
+        from mantis.engine.harness.plugin import SubprocessPluginRunner, PluginExecutionError
 
         runner = SubprocessPluginRunner([sys.executable, str(self.script_path)])
         with self.assertRaises(PluginExecutionError) as ctx:
@@ -703,7 +703,7 @@ class TestRegexLogParser(unittest.TestCase):
         shutil.rmtree(self.temp_dir)
 
     def test_parse_line_success(self):
-        from engine.harness.parser import RegexLogParser
+        from mantis.engine.harness.parser import RegexLogParser
 
         parser = RegexLogParser(self.pattern, timestamp_format="%Y-%m-%dT%H:%M:%S")
         entry = parser.parse_line("2026-06-12T10:00:00 [ERROR] pubber: MQTT Broker Down")
@@ -715,7 +715,7 @@ class TestRegexLogParser(unittest.TestCase):
         self.assertEqual(entry["timestamp"].minute, 0)
 
     def test_parse_file_with_timebounds(self):
-        from engine.harness.parser import RegexLogParser
+        from mantis.engine.harness.parser import RegexLogParser
 
         parser = RegexLogParser(self.pattern, timestamp_format="%Y-%m-%dT%H:%M:%S")
         
@@ -732,7 +732,7 @@ class TestRegexLogParser(unittest.TestCase):
 class TestRateLimiter(unittest.IsolatedAsyncioTestCase):
 
     async def test_instant_acquisition_under_limit(self):
-        from engine.harness.rate_limiter import AsyncRateLimiter
+        from mantis.engine.harness.rate_limiter import AsyncRateLimiter
 
         limiter = AsyncRateLimiter(max_requests=5, time_period_seconds=10)
         # We should be able to acquire 5 times instantly
@@ -741,7 +741,7 @@ class TestRateLimiter(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(res)
 
     async def test_blocking_above_limit(self):
-        from engine.harness.rate_limiter import AsyncRateLimiter
+        from mantis.engine.harness.rate_limiter import AsyncRateLimiter
         import time
 
         # Refill is 2 requests per 1 second
@@ -768,7 +768,7 @@ class TestCredentialsProvider(unittest.TestCase):
     @unittest.mock.patch("os.getenv")
     @unittest.mock.patch("google.genai.Client")
     def test_env_credentials_provider_api_key(self, mock_client_cls, mock_getenv):
-        from engine.harness.credentials import EnvCredentialsProvider
+        from mantis.engine.harness.credentials import EnvCredentialsProvider
         
         # Configure env mocks to mimic standard API Key path
         mock_getenv.side_effect = lambda k, default=None: {
@@ -785,7 +785,7 @@ class TestCredentialsProvider(unittest.TestCase):
     @unittest.mock.patch("os.getenv")
     @unittest.mock.patch("google.genai.Client")
     def test_env_credentials_provider_vertex(self, mock_client_cls, mock_getenv):
-        from engine.harness.credentials import EnvCredentialsProvider
+        from mantis.engine.harness.credentials import EnvCredentialsProvider
         
         # Configure env mocks to mimic Vertex AI path
         mock_getenv.side_effect = lambda k, default=None: {
@@ -803,7 +803,7 @@ class TestCredentialsProvider(unittest.TestCase):
 
 class TestStabilityAnalyzer(unittest.TestCase):
     def test_test_execution_key_id_parsing(self):
-        from util.eval_sequencer_stability.analyzer import TestExecutionKey
+        from mantis.workflows.stability.analyzer import TestExecutionKey
 
         # Test key with device ID
         key1 = TestExecutionKey(
@@ -839,7 +839,7 @@ class TestStabilityAnalyzer(unittest.TestCase):
 
 class TestUDMITriageReporter(unittest.TestCase):
     def test_failure_signature_clustering(self):
-        from app.reporter import UDMITriageReporter
+        from mantis.workflows.reporter import UDMITriageReporter
 
         # Setup dummy summaries
         triage_summaries = [

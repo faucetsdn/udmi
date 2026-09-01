@@ -15,26 +15,27 @@ if [[ ! -f "$BINDIR/influxd" ]]; then
     exit 1
 fi
 
-INFLUX_LOG=out/influx.log
+INFLUX_DIR=${INFLUX_DIR:-var/influx}
+INFLUX_LOG=${INFLUX_LOG:-out/influx.log}
 
 echo pwd: $(pwd)
-mkdir -p out var/influx
+mkdir -p $(dirname "$INFLUX_LOG") "$INFLUX_DIR"
 
-INFLUX_PID_FILE=var/influx/influxd.pid
+INFLUX_PID_FILE=${INFLUX_PID_FILE:-$INFLUX_DIR/influxd.pid}
 if [[ -f $INFLUX_PID_FILE ]]; then
     old_pid=$(cat $INFLUX_PID_FILE)
     if ps -p $old_pid > /dev/null 2>&1; then
         echo Killing existing local influxd pid $old_pid...
-        kill $old_pid || true
+        kill $old_pid 2>/dev/null || true
         sleep 1
     fi
-else
-    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
-        old_pid=$(ps ax | fgrep influxd | fgrep -v grep | awk '{print $1}') || true
-        if [[ -n $old_pid ]]; then
-            echo Killing existing influxd pid $old_pid...
-            kill $old_pid || true
-        fi
+fi
+if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+    old_pid=$(ps -u $(id -u) -o pid,comm | fgrep influxd | awk '{print $1}') || true
+    if [[ -n $old_pid ]]; then
+        echo Killing existing influxd pid $old_pid...
+        kill $old_pid 2>/dev/null || true
+        sleep 1
     fi
 fi
 
@@ -44,19 +45,20 @@ fi
 
 $BINDIR/influxd version
 
-rm -rf var/influx/*
-mkdir -p var/influx/engine
+rm -rf "$INFLUX_DIR"/*
+mkdir -p "$INFLUX_DIR/engine"
 
 influx_port=${INFLUX_PORT:-8086}
 
 nohup $BINDIR/influxd \
              --http-bind-address=0.0.0.0:${influx_port} \
-             --engine-path var/influx/engine \
-             --bolt-path var/influx/influxd.bolt \
-             --sqlite-path var/influx/influxd.sqlite \
+             --engine-path "$INFLUX_DIR/engine" \
+             --bolt-path "$INFLUX_DIR/influxd.bolt" \
+             --sqlite-path "$INFLUX_DIR/influxd.sqlite" \
              > $INFLUX_LOG 2>&1 &
 INFLUX_PID=$!
 echo $INFLUX_PID > $INFLUX_PID_FILE
+disown $INFLUX_PID 2>/dev/null || true
 
 echo Waiting 10s for influxd to start on port ${influx_port}, log in $INFLUX_LOG
 sleep 10

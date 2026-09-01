@@ -2,66 +2,88 @@
 
 # Mapping
 
-The overall "mapping" flow consists of a number of separate subflows stitched together for a complete
+The overall "mapping" flow is part of the broader [onboarding](onboarding.md) flow and consists of a number of separate subflows stitched together for a complete
 end-to-end process to take an "unknown" device and ensure that it's properly integrated with backend services.
 
-At a high-level, the process involves different message subgroups that handle slightly different
-scopes of device data:
-* **(Native)**: Device communication using some non-UDMI native protocol (e.g. BACnet, Modbus, etc...)
+At a high-level, the process involves different message subgroups that handle slightly different scopes of device data:
 * **[Discovery](discovery.md)**: Messages relating to the discovery (and provisioning) of devices (e.g. messy BACnet info)
 * **[Mapping](mapping.md)**: Messages relating to a 'resolved' device type and ID (e.g. the device is an `AHU` called `AHU-1`)
 
 ## Sequence Diagram
 
-The overall mapping sequence involves multiple components that work together to provide the overall flow:
-* **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
-* **Provisioning Engine**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
-* **UDMIS**: The Universal Device Management Interface Services, or UDMIS, is a cloud-based infrastructure that serves as the foundation for various tools, including the Registrar and Validator.
-* **Mapping Service**: Mapping service that uses heuristics, ML, or a UI to convert discovery information into a concrete device/pipeline mapping.
-* **Source Repo**: Ultimate source of truth for the particular site, having all the devices and Gateways part of the site in the Cloud Source Repository.
-* **Modeling Phase**: Managing and maintaining the site model data, manually or by automated change-detection process.
+The overall mapping sequence involves multiple components that work together to provide the overall flow. The mapping process is entirely message-based, cleanly separating site model file manipulation from the mapping logic itself.
 
+* **Discovery**: Thing that runs on-prem fieldbus discovery and emits discovery messages.
+* **Mapping**: Takes model messages (from the Registrar) and discovery messages (from Devices) as input, and outputs updated model messages.
+* **Registrar**: Reads the existing site model from the source repository and generates base model messages for the system.
+* **Reconciler**: Receives updated model messages from the Mapping Service and performs reconciliation to update the site model files.
+* **Source Repo**: Ultimate source of truth for the particular site, containing all the consolidated information.
 
 ```mermaid
 sequenceDiagram
   %%{wrap}%%
-  participant Devices as Devices<br/>(w/ Spotter)
-  participant Provisioning Engine
-  participant UDMIS
-  participant Mapping Service
-  participant Source Repo 
-  participant Modeling Phase
-  Devices->>Provisioning Engine: Incremental Results<br/>(Discovery Events)
-  Provisioning Engine->>UDMIS: Incremental Results
-  Devices->>Mapping Service: Discovery Complete Event
-  Source Repo->>Mapping Service: Base Model Import
-  UDMIS->>Mapping Service: All Results
-  Note over Mapping Service: Map Results
-  Mapping Service->>Source Repo: 'discovery' branch
-  Source Repo-->>Modeling Phase: Notify branch updated
+  participant Discovery
+  participant Mapping
+  participant Registrar
+  participant Reconciler
+  participant Source Repo
+  
+  Registrar->>Source Repo: Fetch Site Model
+  Registrar->>Mapping: Base Model Messages
+  Discovery->>Mapping: Discovery Messages
+  Note over Mapping: Map Results
+  Mapping->>Reconciler: Updated Model Messages
+  Reconciler->>Source Repo: Update Site Model
 ```
 
-
-* **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** wraps the device info from the discovery
-  into a UDMI-normalized format, e.g.:
-  "Device `78F936` has points { }, with a public key `XYZZYZ`"
-* **[Discovery Complete Event](../../validator/sequences/scan_single_future/events_discovery.json)** having `event_no` as negative value.
-
-
-The Mapping Service subscribes to the udmi_target topic. When it receives a Discovery Complete event, it initiates the mapping process.
+* **[Discovery Events](../../tests/schemas/events_discovery/enumeration.json)** information from local on-prem fieldbus discovery.
+* **[Model Events](../../tests/schemas/metadata/bacmodel.json)** comprehensive representation of the device, including all protocols.
 
 ### Key Workflow Steps
-* Device Mapping: The service first checks if the received discovery data corresponds to an existing device in the source repository.
-* Handling New Devices: If no matching device is found based on the family (bacnet/vendor, etc.) and address combination, a new device is created. The new device is named using the convention UNK-X, where UNK stands for "Unknown" and X is an increasing number starting from 1.
-* Updating Existing Devices: If a match is found, the service updates the existing device. New details from the Pointset Complete event are appended to the device's existing data.
-* Pushing Changes: All these updates and new device creations are then pushed to the discovery branch, which triggers the subsequent modeling phase.
+* **Registrar Model Loading**: The Registrar reads the `Source Repo` and publishes the current site model as messages to the system.
+* **Device Mapping**: The Mapping Service processes the incoming discovery and model messages to resolve and compute the desired end-state mapping.
+* **Reconciliation**: The Mapping Service outputs the resulting updated model messages. The Reconciler consumes these messages and applies the necessary changes to the `Source Repo`.
+
+### Device Mapping Component
+The "Device Mapping" step is a conceptual module that can be served by many different sub-modules, e.g.:
+* **Implicit Mapping**: The reference implementation described below that does very simple deterministic mapping flows.
+* **Agentic Mapping**: A throw-it-at-the-LLM capability that throws caution to the wind and does everything automagically.
+* **External Mapping**: An externally integrated (through UUFI messages) system with proper analytics and user interface.
+
+## Local Implicit Mapping 
+
+While the mapping service is strictly message-in and message-out conceptually, a concrete internal implementation may utilize an intermediary database for state management. The internal reference implementation captures incoming discovery and model messages into a local PostgreSQL database. A separate mapping executable then reads from this database, performs its mapping logic, and outputs the updated model messages.
+
+This design satisfies the "message in, message out" guideline while using the database as a robust intermediary. Other external implementations may employ different storage mechanisms, provided they adhere to the same external message contracts.
+
+```mermaid
+sequenceDiagram
+  %%{wrap}%%
+  participant MessageBus as Message Bus
+  participant Postgres as Local Postgres DB
+  participant Logic as Mapping Executable
+  
+  MessageBus->>Postgres: Model & Discovery Messages (In)
+  Logic->>Postgres: Fetch Recent Results
+  Note over Logic: Execute Mapping Logic
+  Logic->>MessageBus: Updated Model Messages (Out)
+```
+
+### Reference Mapping Logic
+
+The mapping logic itself (the "Execute Mapping Logic" step) executes something like the following rules when computing the mappings:
+* **Device Matching**: The Mapping Service checks if the received discovery data corresponds to an existing device based on the ingested model state.
+* **Handling New Devices**: If no matching device is found based on the family (bacnet/vendor, etc.) and address combination, a new device representation is created. The new device is named using the convention UNK-X, where UNK stands for "Unknown" and X is an increasing number starting from 1.
+* **Updating Existing Devices**: If a match is found, the Mapping Service updates the existing device representation. New details from the Pointset Complete event are appended.
 
 ## Example Test Setup
 
+*(Note: Test setup sections may need updates in the future as implementation shifts to the new Registrar/Reconciler workflows)*
+
 A standalone test-setup can be used to emulate all the requisite parts of the system.
 
-Cloud PubSub subscriptions (the defaults) on the `udmi_target` topic (need to be manually added):
-* `mapping-service`: To process discovery complete event and complete mapping process.
+Cloud PubSub subscriptions on the target topics (need to be manually added):
+* `mapping-service`: To process discovery complete events and model messages, and complete mapping process.
 
 Local environment setup (e.g.):
 * <code>project_id=<i>test-gcp-project</i></code>

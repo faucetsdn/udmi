@@ -281,8 +281,53 @@ public class MessageUpgrader {
       "^(.*\\b[A-Z]{2,4}):([0-9]+)(#.*)?$");
 
   private void upgradeTo_1_5_7() {
+    ifNotNullThen((ObjectNode) message.get("localnet"), this::upgradeTo_1_5_7_localnet);
+    ifNotNullThen((ObjectNode) message.get("gateway"), this::upgradeTo_1_5_7_gateway);
     if (METADATA_SCHEMA.equals(schemaName)) {
       upgradeTo_1_5_7_metadata();
+    }
+  }
+
+  private void upgradeTo_1_5_7_localnet(ObjectNode localnet) {
+    ifNotNullThen((ObjectNode) localnet.get("families"), this::upgradeTo_1_5_7_families);
+  }
+
+  private void upgradeTo_1_5_7_families(ObjectNode families) {
+    ifNotNullThen((ObjectNode) families.get("modbus"), this::upgradeTo_1_5_7_modbus);
+  }
+
+  private void upgradeTo_1_5_7_modbus(ObjectNode modbus) {
+    if (modbus.has("addr")) {
+      String addr = modbus.get("addr").asText();
+      if (isNumericUnitId(addr)) {
+        modbus.remove("addr");
+        modbus.put("unitid", addr);
+      }
+    }
+  }
+
+  private void upgradeTo_1_5_7_gateway(ObjectNode gateway) {
+    ifNotNullThen((ObjectNode) gateway.get("target"), target -> {
+      String family = ifNotNullGet(target.get("family"), JsonNode::textValue);
+      if ("modbus".equals(family) && target.has("addr")) {
+        String addr = target.get("addr").asText();
+        if (isNumericUnitId(addr)) {
+          target.remove("addr");
+          target.put("unitid", addr);
+        }
+      }
+    });
+  }
+
+  private boolean isNumericUnitId(String addr) {
+    if (addr == null || addr.isEmpty()) {
+      return false;
+    }
+    try {
+      int val = Integer.parseInt(addr);
+      return val >= 0 && val <= 255;
+    } catch (NumberFormatException e) {
+      return false;
     }
   }
 

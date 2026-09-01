@@ -64,7 +64,7 @@ if [[ -n $CLEARBLADE_PROJECT ]]; then
     false
 fi
 
-if [[ -n $CLEARBLADE_CONFIGURATION ]]; then
+if [[ -n $CLEARBLADE_CONFIGURATION && -s $CLEARBLADE_CONFIGURATION ]]; then
     export CLEARBLADE_PROJECT=$(jq -r .project $CLEARBLADE_CONFIGURATION)
     echo Extracted ClearBlade project $CLEARBLADE_PROJECT from $CLEARBLADE_CONFIGURATION
 fi

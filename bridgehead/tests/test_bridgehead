@@ -56,7 +56,8 @@ fi
 cleanup() {
     echo "----- Cleaning up... -----"
     mkdir -p "$UDMI_ROOT/out"
-    docker logs udmis > "$UDMI_ROOT/out/bridgehead_udmis.log" 2>&1 || true
+    docker logs udmis > "$UDMI_ROOT/out/bridgehead_udmis_docker.log" 2>&1 || true
+    docker cp udmis:/tmp/udmis.log "$UDMI_ROOT/out/bridgehead_udmis.log" 2>/dev/null || true
     docker logs validator > "$UDMI_ROOT/out/bridgehead_validator.log" 2>&1 || true
     docker logs pubber > "$UDMI_ROOT/out/bridgehead_pubber.log" 2>&1 || true
     
@@ -95,11 +96,6 @@ mkdir -p out
 echo "Cloning test site model..."
 clone_site_model "$SITE_MODEL_PATH"
 
-# Clean up extra keys in AHU-1 that cause validation errors
-rm -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_private.pem"
-rm -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_private.pkcs8"
-rm -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_public.pem"
-
 mkdir -p "$SITE_MODEL_PATH/out"
 chmod a+rwx "$SITE_MODEL_PATH/out" 2>/dev/null || true
 
@@ -122,6 +118,9 @@ if ! docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
     docker logs udmis || true
     exit 1
 fi
+
+# Generate valid keys/certs for AHU-1 inside validator container to avoid validation errors
+docker exec validator bin/keygen CERT site_model/devices/AHU-1
 
 echo "Executing discovery sequence..."
 sleep 5
@@ -161,7 +160,7 @@ cat out/registrar_output.txt
 
 # Verify expected summary
 failed=0
-grep -q "Device extra: 6" out/registrar_output.txt || failed=1
+grep -q "Device validation: 1" out/registrar_output.txt || failed=1
 grep -q "Device status: 5" out/registrar_output.txt || failed=1
 
 # Also verify specific processed lines as per sample output

@@ -3,21 +3,12 @@
 UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 
-in_file=out/registrar_conf.json
-out_file=out/mapper_conf.json
-
-if [[ $# -lt 2 ]]; then
-    usage device_id command [targets...]
+if [[ $# -lt 4 ]]; then
+    usage site_model project device_id command [targets...]
 fi
 
-device_id=$1
-command=$2
-shift 2
+if [ -f "$UDMI_ROOT/venv/bin/activate" ]; then
+    source "$UDMI_ROOT/venv/bin/activate"
+fi
 
-[[ ! -d $UDMI_ROOT/validator/src ]] ||
-    up_to_date $UDMI_JAR $UDMI_ROOT/validator/src ||
-    $UDMI_ROOT/validator/bin/build
-
-jq .device_id=\"$device_id\" $in_file > $out_file
-
-java -cp $UDMI_JAR com.google.daq.mqtt.mapping.MappingAgent $out_file $command $@
+exec python3 $UDMI_ROOT/butler/bin/butler "$@"

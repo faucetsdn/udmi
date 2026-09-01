@@ -6,14 +6,19 @@ import static java.lang.String.format;
 import static java.time.Duration.between;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
+import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import udmi.lib.ProtocolFamily;
+import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Resource_type;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Envelope;
 import udmi.schema.RefDiscovery;
@@ -33,7 +38,45 @@ public class BitboxAdapterTest extends ProcessorTestBase {
 
   protected void initializeTestInstance() {
     initializeTestInstance(BitboxAdapter.class);
-    ProvisioningEngineTest.initializeProvider(provider, false);
+    initializeProvider(provider, false);
+  }
+
+  static void initializeProvider(IotAccessBase provider, boolean alreadyProvisioned) {
+    CloudModel registryModel = new CloudModel();
+    registryModel.device_ids = new HashMap<>();
+
+    CloudModel deviceModel = new CloudModel();
+    deviceModel.resource_type = Resource_type.DIRECT;
+    registryModel.device_ids.put(TEST_DEVICE, deviceModel);
+
+    if (alreadyProvisioned) {
+      CloudModel provisionedModel = new CloudModel();
+      provisionedModel.resource_type = Resource_type.DIRECT;
+      registryModel.device_ids.put(TEST_GATEWAY, provisionedModel);
+    }
+
+    when(provider.getRegistries())
+        .thenReturn(com.google.common.collect.ImmutableSet.of(TEST_REGISTRY));
+    when(provider.listDevices(
+        org.mockito.ArgumentMatchers.eq(TEST_REGISTRY),
+        org.mockito.ArgumentMatchers.isNull()))
+        .thenReturn(registryModel);
+    when(provider.fetchDevice(
+        org.mockito.ArgumentMatchers.eq(TEST_REGISTRY),
+        org.mockito.ArgumentMatchers.eq(TEST_DEVICE)))
+        .thenReturn(deviceModel);
+
+    CloudModel gatewayModel = new CloudModel();
+    gatewayModel.resource_type = Resource_type.GATEWAY;
+    gatewayModel.metadata = new HashMap<>();
+    gatewayModel.metadata.put(
+        com.google.udmi.util.MetadataMapKeys.UDMI_PROVISION_GENERATION,
+        isoConvert(new Date()));
+
+    when(provider.fetchDevice(
+        org.mockito.ArgumentMatchers.eq(TEST_REGISTRY),
+        org.mockito.ArgumentMatchers.eq(TEST_GATEWAY)))
+        .thenReturn(gatewayModel);
   }
 
   private Envelope getLegacyEnvelope() {

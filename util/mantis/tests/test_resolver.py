@@ -3,8 +3,8 @@ import tempfile
 import unittest
 from unittest.mock import patch, MagicMock
 
-from app.resolver import UDMILogResolver, UDMIResultParser
-from engine.models import TriageFailure
+from mantis.tools.resolver import UDMILogResolver, UDMIResultParser
+from mantis.engine.models import TriageFailure
 
 
 class TestUDMILogResolver(unittest.TestCase):

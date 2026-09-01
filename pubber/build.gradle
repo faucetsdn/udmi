@@ -71,7 +71,6 @@ shadowJar {
 repositories {
     mavenCentral()
     mavenLocal()
-    maven { url 'https://mvnrepository.com' }
     maven { url 'https://jitpack.io' }
 }
 

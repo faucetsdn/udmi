@@ -19,12 +19,13 @@ function find_etcd {
 }
 
 BINDIR=$(find_etcd) || BINDIR=/tmp/etcd
-ETCD_LOG=out/etcd.log
+ETCD_DIR=${ETCD_DIR:-var/etcd}
+ETCD_LOG=${ETCD_LOG:-out/etcd.log}
 
 echo pwd: $(pwd)
-mkdir -p out var/etcd
+mkdir -p $(dirname "$ETCD_LOG") "$ETCD_DIR"
 
-ETCD_PID_FILE=var/etcd/etcd.pid
+ETCD_PID_FILE=${ETCD_PID_FILE:-$ETCD_DIR/etcd.pid}
 if [[ -f $ETCD_PID_FILE ]]; then
     old_pid=$(cat $ETCD_PID_FILE)
     if ps -p $old_pid > /dev/null 2>&1; then
@@ -54,8 +55,8 @@ fi
 
 $BINDIR/etcd -version
 
-rm -rf var/etcd/member
-mkdir -p var/etcd/member
+rm -rf "$ETCD_DIR/member"
+mkdir -p "$ETCD_DIR/member"
 
 etcd_port=${ETCD_PORT:-2379}
 etcd_peer_port=$((etcd_port + 1000))
@@ -65,10 +66,11 @@ nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:${etcd_port} \
              -listen-peer-urls=http://127.0.0.1:${etcd_peer_port} \
              -initial-advertise-peer-urls=http://127.0.0.1:${etcd_peer_port} \
              -initial-cluster=default=http://127.0.0.1:${etcd_peer_port} \
-             --data-dir var/etcd \
+             --data-dir "$ETCD_DIR" \
              > $ETCD_LOG 2>&1 &
 ETCD_PID=$!
 echo $ETCD_PID > $ETCD_PID_FILE
+disown $ETCD_PID 2>/dev/null || true
 
 echo Waiting 10s for etcd to start on port ${etcd_port}, log in $ETCD_LOG
 sleep 10

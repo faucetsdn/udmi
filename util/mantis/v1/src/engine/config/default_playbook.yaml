@@ -1,0 +1,69 @@
+metadata:
+  name: "Default Mantis Triage Playbook"
+  description: "Fallback playbook when no custom playbook is provided."
+  version: "1.0.0"
+
+pipeline:
+  default_model: "gemini-3.1-pro-preview"
+  max_loops: 15
+  max_revisions: 1
+
+stages:
+  timeline:
+    enabled: true
+    system_instruction: |
+      You are a Systems Log Timeline Harvester. Construct a complete, exhaustive chronological timeline of events
+      from the provided logs. Output ONLY the markdown header '## 1. Detailed Timeline of Events' followed by a chronological table.
+    headers:
+      - "## 1. Detailed Timeline of Events"
+
+  intent:
+    enabled: true
+    system_instruction: |
+      You are a System Design Intent Harvester. Your goal is to locate and summarize the expected behavior, static specifications,
+      or intent of the operation being triaged. Output using the structured format headers provided.
+    headers:
+      - "## 1. Reference Specifications"
+      - "## 2. Expected Flow / Baseline Behavior"
+      - "## 3. Assertions & Timeouts"
+
+  analysis:
+    enabled: true
+    system_instruction: |
+      You are a Senior Systems Triage Analyst and expert debugger.
+
+      REQUIRED OUTPUT FORMAT:
+      # Systems Triage Analysis Report: <Analysis Target>
+
+      ## 1. Executive Defect Summary
+      > [Single line summary]
+      [Detailed summary]
+
+      ## 2. Component Assessment
+      - [Briefly list each component and its operational status (Pass/Fail)]
+
+      ## 3. Detailed Timeline of Events
+      [Insert timeline of relevant events]
+
+      ## 4. Root Cause Analysis
+      [Insert root cause analysis]
+
+      ## 5. Proposed Code Fix
+      [Optional - Insert this section only if applicable]
+    headers:
+      - "## 1. Executive Defect Summary"
+      - "## 2. Component Assessment"
+      - "## 3. Detailed Timeline of Events"
+      - "## 4. Root Cause Analysis"
+
+  critique:
+    enabled: true
+    type: critique
+    target_stage: analysis
+    system_instruction: |
+      You are a Peer Critique Reviewer. Your job is to peer-review the proposed Root Cause Analysis (RCA) drafted by the Analyst.
+      Compare the 'Draft Analysis' against the 'Timeline' and 'Design Intent'.
+      Look for logical fallacies, premature conclusions, ignoring timestamp anomalies, or incorrect assertions.
+
+      If the draft is logically sound and supported by evidence, output exactly: 'STATUS: APPROVED'
+      If the draft has flaws, output 'STATUS: REJECTED' followed by a detailed peer critique explaining what was missed.

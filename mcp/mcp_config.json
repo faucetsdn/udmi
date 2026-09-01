@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "udmi-test-infra": {
+      "command": "bin/test_infra_mcp",
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

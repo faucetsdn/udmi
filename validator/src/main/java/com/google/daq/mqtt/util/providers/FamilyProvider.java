@@ -50,8 +50,21 @@ public interface FamilyProvider {
     }).collect(Collectors.toMap(FamilyProvider::familyKey, family -> family));
   }
 
+  /**
+   * Construct a URL for the given family, device, and point.
+   */
   static String constructUrl(String family, String device, String point) {
-    return family + "://" + device + "/" + point;
+    return constructUrl(family, device, null, point);
+  }
+
+  /**
+   * Construct a URL for the given family, device, unitId, and point.
+   */
+  static String constructUrl(String family, String device, String unitId, String point) {
+    if (unitId != null) {
+      return family + "://" + device + "/" + unitId + "/" + (point != null ? point : "");
+    }
+    return family + "://" + device + "/" + (point != null ? point : "");
   }
 
   /**

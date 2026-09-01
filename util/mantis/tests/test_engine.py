@@ -2,7 +2,7 @@ import asyncio
 import unittest
 from unittest.mock import AsyncMock, MagicMock, patch
 from google.genai import types
-from engine.engine import AsyncTriageEngine, _clean_error_message
+from mantis.engine.engine import AsyncTriageEngine, _clean_error_message
 
 
 class TestAsyncTriageEngineRetry(unittest.IsolatedAsyncioTestCase):

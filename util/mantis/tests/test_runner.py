@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch, MagicMock, AsyncMock
 from datetime import datetime
 
-from app.runner import (
+from mantis.workflows.diagnose import (
     truncate_log_lines,
     summarize_log_chunks,
     UDMITriageRunner
@@ -39,7 +39,7 @@ class TestRunnerHelpers(unittest.TestCase):
         result = asyncio.run(summarize_log_chunks(logs, test_id="test_small", chunk_size=10))
         self.assertEqual(result, "```text\nline 1\nline 2\n```")
 
-    @patch("engine.harness.credentials.EnvCredentialsProvider")
+    @patch("mantis.engine.harness.credentials.EnvCredentialsProvider")
     def test_summarize_log_chunks_large_dataset(self, mock_cred_provider):
         """Test summarize_log_chunks with large dataset invokes Map-Reduce parallel summarization."""
         mock_client = MagicMock()
@@ -145,7 +145,7 @@ class TestUDMITriageRunner(unittest.TestCase):
         """Test triaging single failure invoking run_triage_analysis_async."""
         sem = asyncio.Semaphore(1)
         failure_item = {"test_name": "test1", "category": "point"}
-        with patch("app.runner.run_triage_analysis_async", AsyncMock(return_value="Triage analysis report")):
+        with patch("mantis.workflows.diagnose.run_triage_analysis_async", AsyncMock(return_value="Triage analysis report")):
             res = asyncio.run(self.runner.triage_single_failure(
                 idx=0,
                 total_count=1,

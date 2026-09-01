@@ -1,0 +1,60 @@
+#!/bin/bash -e
+# Tmux-encapsulated controller for Barbican (Mosquitto, UDMIS, etcd, pubsub)
+
+UDMI_ROOT=$(dirname $(realpath $0))/..
+source $UDMI_ROOT/etc/tmux_common.sh
+
+SESSION_NAME="udmi_barbican"
+ALLOWED_SERVICES=(mosquitto udmis etcd pubsub)
+
+parse_tmux_args "$@"
+tmux_validate_services "Barbican" "${ALLOWED_SERVICES[@]}"
+
+case "$TMUX_ACTION" in
+    stop)
+        tmux_stop_session "$SESSION_NAME"
+        ;;
+    status)
+        tmux_session_status "$SESSION_NAME"
+        ;;
+    logs)
+        tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
+        ;;
+    attach)
+        tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
+        ;;
+    start)
+        echo "=== Starting Barbican in tmux session '$SESSION_NAME' ==="
+        echo "Site Model:   $TMUX_SITE_MODEL"
+        echo "Project Spec: $TMUX_PROJECT_SPEC"
+
+        cd "$UDMI_ROOT"
+
+        # 1. etcd
+        if tmux_should_run_service "etcd"; then
+            tmux_init_or_add_window "$SESSION_NAME" "etcd" "bin/start_etcd"
+        fi
+
+        # 2. Mosquitto
+        if tmux_should_run_service "mosquitto"; then
+            tmux_init_or_add_window "$SESSION_NAME" "mosquitto" "bin/start_mosquitto"
+        fi
+
+        # 3. UDMIS
+        if tmux_should_run_service "udmis"; then
+            tmux_init_or_add_window "$SESSION_NAME" "udmis" "bin/start_udmis"
+        fi
+
+        # 4. PubSub Emulator (optional: ++pubsub)
+        if tmux_should_run_service "pubsub" "true"; then
+            tmux_init_or_add_window "$SESSION_NAME" "pubsub" "bin/start_pubsub"
+        fi
+
+        echo "Barbican session '$SESSION_NAME' initialized."
+        tmux_session_status "$SESSION_NAME"
+        ;;
+    *)
+        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [site_model] [project_spec] [+only | !exclude | ++optional]"
+        exit 1
+        ;;
+esac

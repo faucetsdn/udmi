@@ -3,10 +3,53 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd "$ROOT_DIR"
 
+COMMON_GIT=$(git rev-parse --git-common-dir 2>/dev/null || true)
+MAIN_ROOT=""
+if [ -n "$COMMON_GIT" ]; then
+  MAIN_ROOT=$(realpath "$COMMON_GIT/..")
+fi
+
 if [ -d "venv" ]; then
   PYTHON_BIN="venv/bin/python3"
+elif [ -n "$MAIN_ROOT" ] && [ -d "$MAIN_ROOT/venv" ]; then
+  PYTHON_BIN="$MAIN_ROOT/venv/bin/python3"
 else
   PYTHON_BIN="python3"
 fi
 
-PYTHONPATH=. $PYTHON_BIN -m pytest ui/tests "$@"
+TEST_TARGET="all"
+ARGS=()
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --v1)
+      TEST_TARGET="v1"
+      shift
+      ;;
+    --v2)
+      TEST_TARGET="v2"
+      shift
+      ;;
+    *)
+      ARGS+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [ "$TEST_TARGET" = "v1" ] || [ "$TEST_TARGET" = "all" ]; then
+  if [ -d "ui/v1/tests" ]; then
+    echo "Running Workbench v1 test suite..."
+    PYTHONPATH=. $PYTHON_BIN -m pytest ui/v1/tests "${ARGS[@]}"
+  elif [ "$TEST_TARGET" = "v1" ]; then
+    echo "Error: Workbench v1 tests not found at ui/v1/tests"
+    exit 1
+  fi
+fi
+
+if [ "$TEST_TARGET" = "v2" ] || [ "$TEST_TARGET" = "all" ]; then
+  if [ -d "ui/tests" ]; then
+    echo "Running Workbench v2 test suite..."
+    PYTHONPATH=. $PYTHON_BIN -m pytest ui/tests "${ARGS[@]}"
+  fi
+fi

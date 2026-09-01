@@ -1,0 +1,12 @@
+#!/bin/bash
+# UDMI Test Infrastructure Control CLI & MCP Server Wrapper
+
+UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+export PYTHONPATH="$UDMI_ROOT:${PYTHONPATH:-}"
+
+if [[ $# -eq 0 && ! -t 0 ]]; then
+    # When stdin is a pipe / redirected, run in MCP stdio server mode
+    exec python3 "$UDMI_ROOT/mcp/server.py" mcp
+else
+    exec python3 "$UDMI_ROOT/mcp/server.py" "$@"
+fi

@@ -1,0 +1,65 @@
+#!/bin/bash -e
+# Tmux-encapsulated controller for Butler (butler, validator, registrar, postgres, influxdb)
+
+UDMI_ROOT=$(dirname $(realpath $0))/..
+source $UDMI_ROOT/etc/tmux_common.sh
+
+SESSION_NAME="udmi_butler"
+ALLOWED_SERVICES=(butler validator registrar postgres influxdb)
+
+parse_tmux_args "$@"
+tmux_validate_services "Butler" "${ALLOWED_SERVICES[@]}"
+
+case "$TMUX_ACTION" in
+    stop)
+        tmux_stop_session "$SESSION_NAME"
+        ;;
+    status)
+        tmux_session_status "$SESSION_NAME"
+        ;;
+    logs)
+        tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
+        ;;
+    attach)
+        tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
+        ;;
+    start)
+        echo "=== Starting Butler in tmux session '$SESSION_NAME' ==="
+        echo "Site Model:   $TMUX_SITE_MODEL"
+        echo "Project Spec: $TMUX_PROJECT_SPEC"
+
+        cd "$UDMI_ROOT"
+
+        # 1. postgres (default: enabled)
+        if tmux_should_run_service "postgres"; then
+            tmux_init_or_add_window "$SESSION_NAME" "postgres" "bin/start_postgresql"
+        fi
+
+        # 2. influxdb (default: enabled)
+        if tmux_should_run_service "influxdb"; then
+            tmux_init_or_add_window "$SESSION_NAME" "influxdb" "bin/start_influx"
+        fi
+
+        # 3. butler (default: enabled)
+        if tmux_should_run_service "butler"; then
+            tmux_init_or_add_window "$SESSION_NAME" "butler" "bin/start_butler '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
+        fi
+
+        # 4. validator (optional: ++validator)
+        if tmux_should_run_service "validator" "true"; then
+            tmux_init_or_add_window "$SESSION_NAME" "validator" "echo Starting validator service...; tail -f /dev/null"
+        fi
+
+        # 5. registrar (optional: ++registrar)
+        if tmux_should_run_service "registrar" "true"; then
+            tmux_init_or_add_window "$SESSION_NAME" "registrar" "bin/registrar '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
+        fi
+
+        echo "Butler session '$SESSION_NAME' initialized."
+        tmux_session_status "$SESSION_NAME"
+        ;;
+    *)
+        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [site_model] [project_spec] [+only | !exclude | ++optional]"
+        exit 1
+        ;;
+esac

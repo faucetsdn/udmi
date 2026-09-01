@@ -23,6 +23,14 @@ ADD build/libs/udmis-1.0-SNAPSHOT-all.jar build/libs/udmis-1.0-SNAPSHOT-all.jar
 ADD var/ var/
 
 ADD build/udmi_etc/ udmi/etc/
+ADD build/schema/ udmi/schema/
+ADD build/butler/ udmi/butler/
+ADD build/common/ udmi/common/
+ADD build/gencode/ udmi/gencode/
+
+
+ENV NO_CACHE_DIR=true
+RUN cd udmi && bin/setup_base
 
 ENV CLEARBLADE_CONFIGURATION=/udmi/clearblade.json
 ENV SHUNT_CONFIGURATION=/udmi/shunt-config.json

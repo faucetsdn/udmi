@@ -15,6 +15,11 @@
         "style": "bold"
       }
     },
+    "unitid": {
+      "type": "string",
+      "description": "The slave unit ID of the device for protocol families like modbus",
+      "examples": ["1", "255"]
+    },
     "network": {
       "type": "string",
       "description": "The network designator for this device in the family-defined format",

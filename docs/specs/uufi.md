@@ -410,6 +410,34 @@ To tear down or stop running test infrastructure and DUT simulations in isolated
 ### 9.8. Environment Variable Restrictions
 * **Prohibition:** For test compliance, it is forbidden to set any environment variable to try and influence or impact the UDMI implementation.
 
+### 9.9. Agentic Test Infrastructure Management (MCP Server & CLI)
+During development or for automated CI runners, the test infrastructure is managed via the **Test Infrastructure MCP Server** (`bin/test_infra_mcp`) or unified CLI (`bin/test_setup`). This abstracts away manual process management, PID tracking, and socket polling.
+
+- **MCP Tools:**
+  - `ensure_test_setup(test_id, [site_model], [dut_device_id], [dut_serial_no], [clean], [timeout_seconds])`: Deterministically assigns an isolated port block, launches the service stack in an isolated `tmux` session, verifies stack readiness, and returns the active connection URL (`mqtt://rocket:monkey@localhost:<port>`), available semantic window tags (`["main", "dut"]`), TLS certificates, and port mapping.
+  - `terminate_test_setup(test_id, [clean_workspace])`: Destroys the `tmux` session and purges per-instance runtime storage.
+  - `list_test_setups()`: Lists all active test sessions, active semantic windows, and connection endpoints.
+  - `list_test_windows(test_id)`: Lists the available semantic window tags for an active test session.
+  - `get_test_logs(test_id, [window], [lines])`: Captures live console output from a named semantic tmux window (e.g. `'main'`, `'dut'`). Window identifiers must be semantic tags; numerical indices are rejected.
+
+- **CLI Usage:**
+  ```bash
+  # Ensure infrastructure is ready and obtain connection URL
+  CONN_URL=$(bin/test_setup ensure my_test_id sites/udmi_site_model)
+
+  # Full JSON response (includes "windows": ["main"])
+  bin/test_setup ensure my_test_id sites/udmi_site_model --json
+
+  # Query available semantic windows
+  bin/test_setup windows my_test_id
+
+  # Capture logs using semantic window tag
+  bin/test_setup logs my_test_id main -n 50
+
+  # Terminate infrastructure
+  bin/test_setup terminate my_test_id
+  ```
+
 ---
 
 # Appendix A: Schemas and Examples

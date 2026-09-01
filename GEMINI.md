@@ -44,7 +44,7 @@ To prevent regressions in this reflectively-coupled system, verification MUST pr
 - **Mandate**: Run the comprehensive local integration suite. This stage is non-negotiable for any change touching `common`, `gencode`, or message-processing logic.
 - **Startup Timeout Hard Stop**: `bin/start_local` must be ready (`UUFI Service is READY`) within **90 seconds**. If local services are not ready after 90 seconds, treat it as an unrecoverable core system failure — stop execution immediately and report the failure. Do NOT attempt to diagnose, debug, or repair the environment.
 - **Commands**:
-  1. `bin/run_tests install_dependencies` (Ensure clean local environment)
+  1. `bin/setup_base` (Ensure clean local environment)
   2. `bin/start_local sites/udmi_site_model //mqtt/localhost:46432` (Start local services; wait max 90s for UUFI Service is READY)
   3. `bin/test_special //mqtt/localhost:46432` (Special sequence integration validation)
   4. `bin/test_validator //mqtt/localhost:46432` (Telemetry validation)

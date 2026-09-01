@@ -22,9 +22,6 @@ state_gateway.json .version
 state_localnet.json .timestamp
 state_localnet.json .version
 
-state_mapping.json .timestamp
-state_mapping.json .version
-
 state_system.json .timestamp
 state_system.json .version
 

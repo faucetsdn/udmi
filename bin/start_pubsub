@@ -5,6 +5,7 @@ cd $ROOT
 
 PUBSUB_DIR=tmp/python-pubsub/samples/snippets
 PUBSUB_UTIL=https://github.com/googleapis/python-pubsub.git
+PUBSUB_VENV=venv/pubsub/
 PROJECT_ID=test-namespace
 FROM_TOPIC=message_from
 TO_TOPIC=message_to
@@ -15,7 +16,11 @@ if [[ ! -d $PUBSUB_DIR ]]; then
     mkdir -p tmp
     echo Cloning $PUBSUB_UTIL
     (cd tmp; git clone $PUBSUB_UTIL)
-    venv/bin/pip install -r $PUBSUB_DIR/requirements.txt
+fi
+
+if [[ ! -d $PUBSUB_VENV ]]; then
+    python3 -m venv $PUBSUB_VENV
+    $PUBSUB_VENV/bin/pip install -r $PUBSUB_DIR/requirements.txt
 fi
 
 #
@@ -65,7 +70,7 @@ gcloud beta emulators pubsub env-init > out/pubsub.env
 cat out/pubsub.env
 source out/pubsub.env
 
-venv/bin/python $PUBSUB_DIR/publisher.py $PROJECT_ID create $FROM_TOPIC
-venv/bin/python $PUBSUB_DIR/publisher.py $PROJECT_ID create $TO_TOPIC
-venv/bin/python $PUBSUB_DIR/subscriber.py $PROJECT_ID create $FROM_TOPIC $FROM_TOPIC
-venv/bin/python $PUBSUB_DIR/subscriber.py $PROJECT_ID create $TO_TOPIC $TO_TOPIC
+$PUBSUB_VENV/bin/python $PUBSUB_DIR/publisher.py $PROJECT_ID create $FROM_TOPIC
+$PUBSUB_VENV/bin/python $PUBSUB_DIR/publisher.py $PROJECT_ID create $TO_TOPIC
+$PUBSUB_VENV/bin/python $PUBSUB_DIR/subscriber.py $PROJECT_ID create $FROM_TOPIC $FROM_TOPIC
+$PUBSUB_VENV/bin/python $PUBSUB_DIR/subscriber.py $PROJECT_ID create $TO_TOPIC $TO_TOPIC

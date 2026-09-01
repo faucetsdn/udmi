@@ -18,6 +18,7 @@ Many tools take a [project spec](project_spec.md) as the second argument.
 - [gittools](gittools.md) - collection of utilities for working with git branches
 - [gcloud](gcloud.md) - various tips and tricks for working with gcloud on GCP
 - [bambi backend service](bambi_service.md) - a service to use Google Sheets as an interface to manage updates to the site model source repository 
+- [bambi workflow](bambi_flow.md) - a step-by-step breakdown and sequence diagram of the BAMBI site model update process
 - [reconciler_service](reconciler_service.md) - a service to automatically open pull requests from proposal branches in the source repository
 - [mantis](mantis.md) - an automated diagnostic tool that triages UDMI test failures using AI
 - [workbench](workbench.md) - a modern, unified visual workspace for UDMI development, compliance testing, and debugging

@@ -121,6 +121,7 @@ def docker_devices():
   def _docker_devices(*, devices):
     for i in devices:
       localnet = localnet_block_from_id(i)
+      run(f"docker rm -f discoverynode-test-device{i} 2>/dev/null || true")
       run(
           shlex.join([
               "docker",
@@ -132,6 +133,8 @@ def docker_devices():
               f"--ip={localnet['ipv4']['addr']}",
               "-e",
               f"BACNET_ID={localnet['bacnet']['addr']}",
+              "-e",
+              "PYTHONUNBUFFERED=1",
               "test-bacnet-device",
           ])
       )
@@ -192,12 +195,15 @@ def discovery_node():
     ) as f:
       json.dump(config, f, indent=2)
 
+    run("docker rm -f discoverynode-test-node 2>/dev/null || true")
     run(
         shlex.join([
             "docker",
             "run",
             "-d",
             f"--name=discoverynode-test-node",
+            "-e",
+            "PYTHONUNBUFFERED=1",
             f"--network=discoverynode-network",
             "--mount",
             f"type=bind,source={ROOT_DIR}/discovery_node_config.json,target=/app/config.json",
@@ -253,13 +259,17 @@ def test_discovered_proxied_devices_are_created(
       site_path=SITE_PATH
   )
 
-  run("bin/mapper GAT-1 provision")
+  run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 provision")
 
   time.sleep(5)
 
-  run("bin/mapper GAT-1 discover")
+  run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 discover")
 
-  time.sleep(30)
+  time.sleep(45)
+
+  shutil.rmtree(os.path.join(SITE_PATH, "extras"), ignore_errors=True)
+
+  run(f"bin/mapper {SITE_PATH} {TARGET} GAT-1 map bacnet")
 
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
@@ -296,13 +306,17 @@ def test_discovered_devices_are_created(
       site_path=SITE_PATH
   )
 
-  run("bin/mapper AHU-1 provision")
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 provision")
 
   time.sleep(5)
 
-  run("bin/mapper AHU-1 discover")
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 discover")
 
   time.sleep(30)
+
+  shutil.rmtree(os.path.join(SITE_PATH, "extras"), ignore_errors=True)
+
+  run(f"bin/mapper {SITE_PATH} {TARGET} AHU-1 map bacnet")
 
   run(f"bin/registrar {SITE_PATH} {TARGET}")
 
@@ -361,6 +375,8 @@ def new_site_model():
     if delete:
       with contextlib.suppress(FileNotFoundError):
         shutil.rmtree(devices_directory)
+      shutil.rmtree(os.path.join(site_path, "extras"), ignore_errors=True)
+      run("docker exec udmis psql -h 127.0.0.1 -p 5432 -U postgres -d postgres -c \"TRUNCATE TABLE udmi_messages;\"")
 
     os.mkdir(devices_directory)
 

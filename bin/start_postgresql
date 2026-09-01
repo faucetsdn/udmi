@@ -23,7 +23,8 @@ BINDIR=$(find_postgres_bin) || {
     exit 1
 }
 
-POSTGRES_LOG=out/postgresql.log
+POSTGRES_DIR=${POSTGRES_DIR:-var/postgresql}
+POSTGRES_LOG=${POSTGRES_LOG:-out/postgresql.log}
 echo pwd: $(pwd)
 
 if [[ $(id -u) -eq 0 ]]; then
@@ -31,13 +32,13 @@ if [[ $(id -u) -eq 0 ]]; then
     # We also make sure parent directories are traversable and /tmp is world-writable so postgres user can write lock files and sockets.
     chmod 755 /root $(pwd) || true
     chmod 777 /tmp || true
-    mkdir -p out var/postgresql
-    chown -R postgres:postgres out var/postgresql
+    mkdir -p $(dirname "$POSTGRES_LOG") "$POSTGRES_DIR"
+    chown -R postgres:postgres $(dirname "$POSTGRES_LOG") "$POSTGRES_DIR"
 else
-    mkdir -p out var/postgresql
+    mkdir -p $(dirname "$POSTGRES_LOG") "$POSTGRES_DIR"
 fi
 
-POSTGRES_PID_FILE=var/postgresql/postgresql.pid
+POSTGRES_PID_FILE=${POSTGRES_PID_FILE:-$POSTGRES_DIR/postgresql.pid}
 if [[ -f $POSTGRES_PID_FILE ]]; then
     old_pid=$(cat $POSTGRES_PID_FILE)
     if kill -0 $old_pid > /dev/null 2>&1; then
@@ -47,19 +48,25 @@ if [[ -f $POSTGRES_PID_FILE ]]; then
     fi
 else
     # Fallback to check for any local postgres process belonging to this user
-    old_pid=$(ps ax | fgrep "$BINDIR/postgres" | fgrep -v grep | awk '{print $1}') || true
-    if [[ -n $old_pid ]]; then
-        echo Killing existing postgres pid $old_pid...
-        kill $old_pid || true
-        sleep 1
+    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+        old_pid=$(ps ax | fgrep "$BINDIR/postgres" | fgrep -v grep | awk '{print $1}') || true
+        if [[ -n $old_pid ]]; then
+            echo Killing existing postgres pid $old_pid...
+            kill $old_pid || true
+            sleep 1
+        fi
     fi
+fi
+
+if [[ ${1:-} == stop ]]; then
+    exit 0
 fi
 
 postgres_port=${POSTGRES_PORT:-5432}
 postgres_user=${POSTGRES_USER:-postgres}
 postgres_db=${POSTGRES_DB:-postgres}
 
-DATA_DIR="var/postgresql/data"
+DATA_DIR="${POSTGRES_DATA_DIR:-$POSTGRES_DIR/data}"
 
 if [[ ! -d "$DATA_DIR" ]]; then
     echo "Initializing new PostgreSQL database cluster at $DATA_DIR..."
@@ -72,6 +79,7 @@ if [[ ! -d "$DATA_DIR" ]]; then
         # initdb requires to run under current user. We use trust auth for local development testing.
         $BINDIR/initdb -D "$DATA_DIR" -U "${postgres_user}" --auth-local=trust --auth-host=trust --nosync
     fi
+    echo "host all all 0.0.0.0/0 trust" >> "$DATA_DIR/pg_hba.conf"
 fi
 
 echo Starting postgresql locally...
@@ -79,16 +87,17 @@ echo Starting postgresql locally...
 # We use -k /tmp to ensure unix socket files are created in /tmp (where we have write permission) instead of /var/run/postgresql.
 if [[ $(id -u) -eq 0 ]]; then
     chown -R postgres:postgres out var/postgresql
-    nohup su -s /bin/bash postgres -c "$BINDIR/postgres -D '$DATA_DIR' -p ${postgres_port} -h 127.0.0.1 -k /tmp" > $POSTGRES_LOG 2>&1 &
+    nohup su -s /bin/bash postgres -c "$BINDIR/postgres -D '$DATA_DIR' -p ${postgres_port} -h '*' -k /tmp" > $POSTGRES_LOG 2>&1 &
 else
     nohup $BINDIR/postgres -D "$DATA_DIR" \
                            -p ${postgres_port} \
-                           -h 127.0.0.1 \
+                           -h '*' \
                            -k /tmp \
                            > $POSTGRES_LOG 2>&1 &
 fi
 POSTGRES_PID=$!
 echo $POSTGRES_PID > $POSTGRES_PID_FILE
+disown $POSTGRES_PID 2>/dev/null || true
 
 echo Waiting for postgresql to start on port ${postgres_port}, log in $POSTGRES_LOG
 # Wait up to 15s, polling to check if it's ready

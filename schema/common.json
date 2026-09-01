@@ -31,6 +31,8 @@
         "entries",
         "details",
         "parts",
+        "system",
+        "refs",
         "trace"
       ]
     },

@@ -1,0 +1,1 @@
+"""UDMI database common utilities."""
