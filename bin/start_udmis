@@ -26,6 +26,16 @@ if [[ -f $UDMIS_PID_FILE ]]; then
         kill $OLD_PID 2>/dev/null || true
         sleep 2
     fi
+elif [[ "$UDMIS_PID_FILE" == "var/udmis.pid" || "$UDMIS_PID_FILE" == "$UDMI_ROOT/var/udmis.pid" ]]; then
+    # Fallback only if default PID file and not in NO_SUDO mode
+    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+        OLD_PID=$(ps ax | fgrep java | fgrep udmis | awk '{print $1}') || true
+        if [[ -n $OLD_PID ]]; then
+            echo "Killing old udmis process $OLD_PID..."
+            $SUDO kill $OLD_PID || true
+            sleep 2
+        fi
+    fi
 fi
 
 if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
@@ -39,9 +49,11 @@ mkdir -p $(dirname "$POD_READY")
 export UDMI_POD_READY=$(realpath -m $POD_READY)
 rm -f $UDMI_POD_READY
 
-if [[ ! -f $UDMIS_DIR/build/libs/udmis-1.0-SNAPSHOT-all.jar || ! -f $UDMIS_DIR/var/deployed_version.json ]]; then
-    if [[ ! -f /root/build/libs/udmis-1.0-SNAPSHOT-all.jar ]]; then
-        $UDMI_ROOT/bin/container udmis prep --no-check || true
+if [[ ${UDMIS_SKIP_PREP:-false} != true ]]; then
+    if [[ ! -f $UDMIS_DIR/build/libs/udmis-1.0-SNAPSHOT-all.jar || ! -f $UDMIS_DIR/var/deployed_version.json ]]; then
+        if [[ ! -f /root/build/libs/udmis-1.0-SNAPSHOT-all.jar ]]; then
+            $UDMI_ROOT/bin/container udmis prep --no-check || true
+        fi
     fi
 fi
 

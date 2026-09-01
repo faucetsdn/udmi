@@ -210,9 +210,13 @@ public class UdmiServicePod extends ContainerBase {
     }
   }
 
+  /**
+   * Reset pod components and state for unit tests.
+   */
   public static void resetForTest() {
     COMPONENT_MAP.clear();
     READY_INDICATOR.delete();
+    CronProcessor.resetForTest();
   }
 
   private static void setConfigName(EndpointConfiguration config, String name) {
