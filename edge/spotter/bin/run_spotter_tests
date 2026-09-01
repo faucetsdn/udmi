@@ -64,6 +64,9 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
 
     if ${CONTAINER_ENGINE} network inspect spotter-parity-net >/dev/null 2>&1 || ${CONTAINER_ENGINE} network create --subnet=192.168.12.0/24 spotter-parity-net >/dev/null 2>&1; then
         echo "--- Step 8: Running Discovery Parity Tests (test_parity) ---"
+        echo "Building legacy discovery node container and simulated BACnet device image..."
+        "${WORKSPACE_DIR}/misc/discoverynode/bin/build_container" test-discovery_node >/dev/null
+        bash "${WORKSPACE_DIR}/misc/discoverynode/testing/docker/bacnet_device/build.sh" >/dev/null
         (
             cd "${WORKSPACE_DIR}"
             PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" "${SCRIPT_DIR}/test_parity"

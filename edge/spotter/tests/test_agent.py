@@ -7,8 +7,8 @@ from unittest.mock import patch, mock_open, MagicMock
 from edge.spotter.src.agent import (
     build_endpoint_config,
     calculate_local_password,
-    SpotterDiscoveryManager,
 )
+from edge.spotter.src.manager.discovery import SpotterDiscoveryManager
 from udmi.schema import Protocol, Config, DiscoveryConfig, FamilyDiscoveryConfig, Depth, State
 from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
 
