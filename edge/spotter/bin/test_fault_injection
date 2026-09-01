@@ -16,7 +16,7 @@ echo "=== Spotter Network Resilience & Fault Injection Test Suite ==="
 echo "--- Step 1: Verifying StreamEvents transport structure and sequence ordering ---"
 (
     cd "${WORKSPACE_DIR}"
-    PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" -m unittest edge.spotter.tests.test_agent.TestTraceDiscoveryManager -v
+    PYTHONPATH=clientlib/python/src:gencode/python:. "${WORKSPACE_DIR}/edge/spotter/venv/bin/python3" -m unittest edge.spotter.tests.test_agent.TestTraceDiscoveryManager -v
 )
 
 echo "--- Step 2: Simulating Transient Broker Socket Disconnection & Backoff Recovery ---"

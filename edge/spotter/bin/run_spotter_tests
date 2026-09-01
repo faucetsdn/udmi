@@ -24,16 +24,18 @@ if [[ "$MODE" == "unit" || "$MODE" == "all" ]]; then
     echo "--- Step 1: Ensuring environment setup ---"
     "${SCRIPT_DIR}/setup_env" >/dev/null
 
+    SPOTTER_PYTHON="${WORKSPACE_DIR}/edge/spotter/venv/bin/python3"
     echo "--- Step 2: Running Unit & Sandbox Self-Test Suites ---"
     (
         cd "${WORKSPACE_DIR}"
-        PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" -m unittest discover -s edge/spotter/tests -v
-        PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" edge/spotter/tests/self_test.py -v
+        PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" -m unittest discover -s edge/spotter/tests -v
+        PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" edge/spotter/tests/self_test.py -v
     )
     echo "-- Unit Tests: PASSED!"
 fi
 
 if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
+    SPOTTER_PYTHON="${WORKSPACE_DIR}/edge/spotter/venv/bin/python3"
     echo "--- Step 3: Building udmi-spotter:latest Container Image ---"
     CONTAINER_ENGINE="docker"
     if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then
@@ -44,7 +46,7 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
     echo "--- Step 4: Running Container Lifecycle Integration Tests (test_container) ---"
     (
         cd "${WORKSPACE_DIR}"
-        PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" "${SCRIPT_DIR}/test_container"
+        PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" "${SCRIPT_DIR}/test_container"
     )
     echo "-- Container Lifecycle Integration: PASSED!"
 
@@ -64,7 +66,7 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
         echo "--- Step 8: Running Discovery Parity Tests (test_parity) ---"
         (
             cd "${WORKSPACE_DIR}"
-            PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" "${SCRIPT_DIR}/test_parity"
+            PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" "${SCRIPT_DIR}/test_parity"
         )
         echo "-- Discovery Parity: PASSED!"
     else

@@ -22,7 +22,7 @@ echo "=== Spotter Resource Contention Test Suite (Mode: $MODE) ==="
 echo "--- Step 1: Executing Observability & Circuit Breaker Unit Verifications ---"
 (
     cd "${WORKSPACE_DIR}"
-    PYTHONPATH=clientlib/python/src:gencode/python:. "./venv/bin/python3" -m unittest edge.spotter.tests.test_observability -v
+    PYTHONPATH=clientlib/python/src:gencode/python:. "${WORKSPACE_DIR}/edge/spotter/venv/bin/python3" -m unittest edge.spotter.tests.test_observability -v
 )
 
 echo "--- Step 2: Simulating Concurrent High-Throughput Packet Capture Workload ---"

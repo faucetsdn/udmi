@@ -202,7 +202,7 @@ elif [[ "${MODE}" == "local" ]]; then
 
     "${WORKSPACE_DIR}/edge/spotter/bin/setup_env"
 
-    VENV_DIR="${WORKSPACE_DIR}/venv"
+    VENV_DIR="${WORKSPACE_DIR}/edge/spotter/venv"
     export PYTHONPATH="${WORKSPACE_DIR}/clientlib/python/src:${WORKSPACE_DIR}/edge/spotter/src:${WORKSPACE_DIR}"
 
     mkdir -p "${WORKSPACE_DIR}/out/logs/spotter"
