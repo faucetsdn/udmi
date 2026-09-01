@@ -250,12 +250,23 @@ class BacnetFamilyProvider(FamilyProvider):
 
         raw_addr = str(device_address)
         ip_part = raw_addr.split(":")[0] if ":" in raw_addr else raw_addr
+        port_part = None
+        if ":" in raw_addr:
+            try:
+                port_part = int(raw_addr.split(":")[1])
+            except ValueError:
+                port_part = None
+        if port_part is None:
+            port_part = self.bacnet_port or 47808
 
         event = DiscoveryEvents(
             generation=generation,
             family="bacnet",
             addr=str(device_id),
-            families={"ipv4": FamilyDiscovery(addr=ip_part)},
+            families={
+                "ipv4": FamilyDiscovery(addr=ip_part),
+                "bacnet": FamilyDiscovery(addr=raw_addr, port=port_part),
+            },
         )
 
         if depth in ("system", "refs", "details", "parts"):

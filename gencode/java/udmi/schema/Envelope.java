@@ -111,7 +111,8 @@ public class Envelope {
         POINTSET("pointset"),
         VALIDATION("validation"),
         BLOBSET("blobset"),
-        MONITORING("monitoring");
+        MONITORING("monitoring"),
+        STREAM("stream");
         private final String value;
         private final static Map<String, Envelope.SubFolder> CONSTANTS = new HashMap<String, Envelope.SubFolder>();
 

@@ -46,6 +46,8 @@ class TestBacnetFamilyProvider(unittest.TestCase):
         self.assertEqual(event.addr, "1234")
         self.assertEqual(event.family, "bacnet")
         self.assertEqual(event.families["ipv4"].addr, "192.168.1.50")
+        self.assertEqual(event.families["bacnet"].port, 47808)
+        self.assertEqual(event.families["bacnet"].addr, "192.168.1.50:47808")
         self.assertEqual(event.system.name, "Main-AHU")
         self.assertEqual(event.system.hardware.make, "Delta")
         self.assertEqual(event.system.hardware.model, "DSC-1212")

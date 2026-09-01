@@ -42,10 +42,14 @@ try:
     from providers.bacnet import BacnetFamilyProvider
     from providers.ether import EtherFamilyProvider
     from providers.passive import PassiveFamilyProvider
+    from secret_vault import GLOBAL_SECRET_VAULT
+    from host_telemetry import get_host_os_info, get_cpu_and_memory_metrics
 except ImportError:
     from edge.spotter.src.providers.bacnet import BacnetFamilyProvider
     from edge.spotter.src.providers.ether import EtherFamilyProvider
     from edge.spotter.src.providers.passive import PassiveFamilyProvider
+    from edge.spotter.src.secret_vault import GLOBAL_SECRET_VAULT
+    from edge.spotter.src.host_telemetry import get_host_os_info, get_cpu_and_memory_metrics
 
 LOGGER = logging.getLogger("spotter_agent")
 
@@ -285,6 +289,13 @@ def process_discovery_rules(key: str, filepath: str) -> str:
     return "reloaded"
 
 
+def process_ephemeral_secret(key: str, data_bytes: bytes) -> str:
+    """Securely stores an ephemeral credential or qualification secret in memory."""
+    GLOBAL_SECRET_VAULT.set_secret(key, data_bytes)
+    LOGGER.info("Successfully ingested ephemeral secret '%s' into in-memory vault.", key)
+    return "applied"
+
+
 def main():
     parser = argparse.ArgumentParser(description="Start Spotter Unified Edge Node")
     parser.add_argument("--config_file", type=str, help="path to config file", required=True)
@@ -329,6 +340,18 @@ def main():
     system_manager = SystemManager()
     system_manager.register_blob_handler("ota_package", process_ota_package, post_process_ota, expects_file=True)
     system_manager.register_blob_handler("discovery_rules", process_discovery_rules, expects_file=True)
+    system_manager.register_blob_handler("ephemeral_secret", process_ephemeral_secret, expects_file=False)
+    system_manager.register_blob_handler("qualification_secret", process_ephemeral_secret, expects_file=False)
+
+    # Populate Host Telemetry Details for TLC
+    os_info = get_host_os_info()
+    if os_info:
+        os_name = os_info.get("PRETTY_NAME") or os_info.get("NAME") or "Linux"
+        os_version = os_info.get("VERSION_ID") or os_info.get("VERSION") or "unknown"
+        if system_manager._system_state.software is None:
+            system_manager._system_state.software = {}
+        system_manager._system_state.software["os"] = os_name
+        system_manager._system_state.software["os_version"] = os_version
 
     localnet_manager = LocalnetManager()
     bacnet_cfg = config.get("bacnet", {})

@@ -16,4 +16,5 @@ class FamilyDiscovery(DataModel):
     """
 
     addr: Optional[str] = None
+    port: Optional[int] = None
     ref: Optional[str] = None
