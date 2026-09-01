@@ -704,11 +704,14 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'gradle'
-      - name: Setup Base
-        run: bin/setup_base
+      - name: base setup
+        run: sudo bin/setup_base
       - name: Run Groot Distribution Test
         run: |
           bin/test_groot ${{ env.TARGET_PROJECT }}
+      - name: Base UDMIS Log
+        if: ${{ !cancelled() }}
+        run: cat out/udmis.log || true
       - name: Instance 1 Log
         if: ${{ !cancelled() }}
         run: cat out/udmis_1.log || true
@@ -724,5 +727,5 @@ jobs:
         with:
           name: groot-logs
           path: |
-            out/udmis_*.log
+            out/udmis*.log
 
