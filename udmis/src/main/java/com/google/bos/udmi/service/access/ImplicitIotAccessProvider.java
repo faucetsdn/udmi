@@ -46,8 +46,10 @@ import com.google.udmi.util.JsonUtil;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -114,6 +116,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private static final String BROKER_PORT_KEY = "broker_port";
   private static final String LAST_CONFIG_KEY = "last_config";
   private static final String LAST_STATE_KEY = "last_state";
+  private static final String LAST_STATE_TIME_KEY = "last_state_time";
   private static final String DEVICES_ACTIVE = "active";
   private static final String BOUND_TO_KEY = "bound_to";
   private static final String BIND_STATUS_KEY = "bind_status";
@@ -140,6 +143,7 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   private final ConnectionBroker broker;
   private final Future<Void> connLogger;
   private IotDataProvider database;
+  private final Set<String> knownRegistries = ConcurrentHashMap.newKeySet();
 
   private final Map<String, Integer> configPublished = new ConcurrentHashMap<>();
   private final String brokerHost;
@@ -529,23 +533,42 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     return properties;
   }
 
-  private synchronized void addRegistryToDatabase(String registryId) {
+  private void addRegistryToDatabase(String registryId) {
     if (registryId == null || registryId.trim().isEmpty()) {
       return;
     }
-    DataRef rootRef = database.ref();
-    try (AutoCloseable lock = rootRef.lock()) {
-      String current = rootRef.get(REGISTRIES_KEY);
-      Set<String> registrySet = current == null || current.trim().isEmpty()
-          ? new java.util.HashSet<>()
-          : new java.util.HashSet<>(Arrays.asList(current.split(",")));
-      if (registrySet.add(registryId.trim())) {
-        rootRef.put(REGISTRIES_KEY, String.join(",", registrySet));
-        info("Added registry %s to database registry tracking", registryId);
+    String regId = registryId.trim();
+    if (knownRegistries.contains(regId)) {
+      return;
+    }
+
+    synchronized (knownRegistries) {
+      if (knownRegistries.contains(regId)) {
+        return;
       }
-    } catch (Exception e) {
-      warn("Failed updating database registry tracking for %s: %s",
-          registryId, friendlyStackTrace(e));
+      try {
+        DataRef rootRef = database.ref();
+        while (true) {
+          String current = rootRef.get(REGISTRIES_KEY);
+          Set<String> registrySet = current == null || current.trim().isEmpty()
+              ? new HashSet<>()
+              : new HashSet<>(Arrays.asList(current.split(",")));
+          if (!registrySet.add(regId)) {
+            knownRegistries.add(regId);
+            break;
+          }
+          String updated = String.join(",", registrySet);
+          if (rootRef.updateIfMatch(REGISTRIES_KEY, current, Map.of(REGISTRIES_KEY, updated),
+              null)) {
+            info("Added registry %s to database registry tracking", regId);
+            knownRegistries.add(regId);
+            break;
+          }
+        }
+      } catch (Exception e) {
+        warn("Failed updating database registry tracking for %s: %s",
+            regId, friendlyStackTrace(e));
+      }
     }
   }
 
@@ -635,9 +658,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
     DataRef dataRef = registryDeviceRef(registryId, deviceId);
-    try (AutoCloseable locked = dataRef.lock()) {
-      String config = dataRef.get(LAST_CONFIG_KEY);
-      String version = dataRef.get(CONFIG_VER_KEY);
+    try {
+      Map<String, String> entries = dataRef.entries();
+      String config = entries.get(LAST_CONFIG_KEY);
+      String version = entries.get(CONFIG_VER_KEY);
       info("Fetched config %s #%s", dataRef, version);
       Long versionLong = ofNullable(version).map(Long::parseLong).orElse(null);
       return new SimpleEntry<>(versionLong, ofNullable(config).orElse(EMPTY_JSON));
@@ -851,20 +875,23 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
   @Override
   public void saveState(String registryId, String deviceId, String stateBlob) {
     DataRef dataRef = registryDeviceRef(registryId, deviceId);
-    try (AutoCloseable lock = dataRef.lock()) {
-      String existingState = dataRef.get(LAST_STATE_KEY);
-      if (existingState != null) {
-        StateUpdate existing = JsonUtil.fromString(StateUpdate.class, existingState);
-        StateUpdate incoming = JsonUtil.fromString(StateUpdate.class, stateBlob);
-        Date existingTime = cleanDate(existing.timestamp);
-        Date incomingTime = cleanDate(incoming.timestamp);
-        if (existingTime != null && incomingTime != null && incomingTime.before(existingTime)) {
+    try {
+      StateUpdate incoming = JsonUtil.fromString(StateUpdate.class, stateBlob);
+      Date incomingTime = cleanDate(incoming.timestamp);
+      String existingTimeStr = dataRef.get(LAST_STATE_TIME_KEY);
+      if (existingTimeStr != null && incomingTime != null) {
+        Date existingTime = cleanDate(JsonUtil.getDate(existingTimeStr));
+        if (existingTime != null && incomingTime.before(existingTime)) {
           info("Skipping out-of-order state update for %s/%s: existing %s vs incoming %s",
-              registryId, deviceId, isoConvert(existingTime), isoConvert(incomingTime));
+              registryId, deviceId, existingTimeStr, isoConvert(incomingTime));
           return;
         }
       }
-      dataRef.put(LAST_STATE_KEY, stateBlob);
+      Map<String, String> puts = Map.of(
+          LAST_STATE_KEY, stateBlob,
+          LAST_STATE_TIME_KEY, ofNullable(incomingTime).map(JsonUtil::isoConvert).orElse("")
+      );
+      dataRef.update(puts, null);
     } catch (Exception e) {
       throw new RuntimeException(
           format("While saving state for %s/%s", registryId, deviceId), e);
@@ -914,14 +941,10 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
     String registryId = envelope.deviceRegistryId;
     String deviceId = envelope.deviceId;
     DataRef dataRef = registryDeviceRef(registryId, deviceId);
-    try (AutoCloseable lock = dataRef.lock()) {
-      String prev = dataRef.get(CONFIG_VER_KEY);
-      if (prevVersion != null && !prevVersion.toString().equals(prev)) {
-        throw new RuntimeException("Config version update mismatch");
-      }
-
+    try {
+      String prev = prevVersion != null ? prevVersion.toString() : dataRef.get(CONFIG_VER_KEY);
       String update = ofNullable(prevVersion).map(v -> v + 1)
-          .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(1L)).toString();
+          .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(0L) + 1L).toString();
 
       Map<String, String> puts = Map.of(
           LAST_CONFIG_KEY, config,
@@ -930,7 +953,9 @@ public class ImplicitIotAccessProvider extends IotAccessBase {
 
       boolean success = dataRef.updateIfMatch(CONFIG_VER_KEY, prev, puts, null);
       if (!success) {
-        throw new RuntimeException("Concurrent modification of config version detected");
+        throw new ConcurrentModificationException(
+            format("Concurrent modification of config version for %s/%s (expected #%s)",
+                registryId, deviceId, prev));
       }
 
       info("Updated config %s #%s to #%s", dataRef, prev, update);
