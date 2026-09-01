@@ -26,10 +26,8 @@ jobs:
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
-      - name: start and test local servers
-        run: |
-          sudo bin/setup_base
-          bin/udmi start sites/udmi_site_model //mqtt/localhost +pubsub
+      - name: base setup
+        run: sudo bin/setup_base
       - name: bin/run_tests all_tests
         run: bin/run_tests all_tests
       - name: all test output
