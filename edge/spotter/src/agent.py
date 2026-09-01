@@ -296,6 +296,12 @@ def process_ephemeral_secret(key: str, data_bytes: bytes) -> str:
     return "applied"
 
 
+def handle_key_rotation(new_pem: bytes, backup_id: str) -> bool:
+    """Invoked when key rotation is executed on Spotter."""
+    LOGGER.info("Spotter key rotation executed (backup: %s, new_key_len: %d)", backup_id, len(new_pem))
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description="Start Spotter Unified Edge Node")
     parser.add_argument("--config_file", type=str, help="path to config file", required=True)
@@ -342,6 +348,7 @@ def main():
     system_manager.register_blob_handler("discovery_rules", process_discovery_rules, expects_file=True)
     system_manager.register_blob_handler("ephemeral_secret", process_ephemeral_secret, expects_file=False)
     system_manager.register_blob_handler("qualification_secret", process_ephemeral_secret, expects_file=False)
+    system_manager.register_key_rotation_callback(handle_key_rotation)
 
     # Populate Host Telemetry Details for TLC
     os_info = get_host_os_info()
