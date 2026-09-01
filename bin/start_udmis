@@ -32,7 +32,7 @@ elif [[ "$UDMIS_PID_FILE" == "var/udmis.pid" || "$UDMIS_PID_FILE" == "$UDMI_ROOT
         OLD_PID=$(ps ax | fgrep java | fgrep udmis | awk '{print $1}') || true
         if [[ -n $OLD_PID ]]; then
             echo "Killing old udmis process $OLD_PID..."
-            $SUDO kill $OLD_PID || true
+            ${SUDO:-} kill $OLD_PID 2>/dev/null || true
             sleep 2
         fi
     fi

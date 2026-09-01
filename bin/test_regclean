@@ -188,6 +188,9 @@ jq ".udmi_namespace = $quoted_namespace" $full_config | sponge $full_config
 jq '.iot_provider = "dynamic"' $iot_config | sponge $iot_config
 jq '.project_id = "this-is-not-right"' $iot_config | sponge $iot_config
 jq '.udmi_namespace = "bunny"' $iot_config | sponge $iot_config
+if [[ $iot_provider == "\"mqtt\"" ]]; then
+    $UDMI_ROOT/bin/mosquctl_site $site_path
+fi
 
 echo Clean out the registry to make sure devices get removed...
 echo $UDMI_ROOT/bin/registrar $site_args -d -x
