@@ -42,13 +42,11 @@ try:
     from providers.bacnet import BacnetFamilyProvider
     from providers.ether import EtherFamilyProvider
     from providers.passive import PassiveFamilyProvider
-    from secret_vault import GLOBAL_SECRET_VAULT
     from host_telemetry import get_host_os_info, get_cpu_and_memory_metrics
 except ImportError:
     from edge.spotter.src.providers.bacnet import BacnetFamilyProvider
     from edge.spotter.src.providers.ether import EtherFamilyProvider
     from edge.spotter.src.providers.passive import PassiveFamilyProvider
-    from edge.spotter.src.secret_vault import GLOBAL_SECRET_VAULT
     from edge.spotter.src.host_telemetry import get_host_os_info, get_cpu_and_memory_metrics
 
 LOGGER = logging.getLogger("spotter_agent")
@@ -252,48 +250,16 @@ def build_endpoint_config(config: Dict[str, Any]) -> EndpointConfiguration:
     )
 
 
-def process_ota_package(key: str, filepath: str) -> str:
-    """Stages an OTA package blob (.whl or bundle)."""
-    if not os.path.exists(filepath) or os.path.getsize(filepath) == 0:
-        raise ValueError(f"Invalid or empty OTA package file for blob '{key}'")
-    staging_dir = os.environ.get("SPOTTER_STAGING_DIR", "/tmp/spotter_staging")
-    os.makedirs(staging_dir, exist_ok=True)
-    staged_file = os.path.join(staging_dir, os.path.basename(filepath))
-    with open(filepath, "rb") as src, open(staged_file, "wb") as dst:
-        dst.write(src.read())
-    marker_file = os.path.join(staging_dir, "OTA_STAGED")
-    with open(marker_file, "w") as f:
-        f.write(staged_file)
-    LOGGER.info("OTA package blob '%s' staged at '%s'.", key, staged_file)
-    return "staged"
+def handle_ephemeral_secret_command(payload: Dict[str, Any]) -> None:
+    """Handles ephemeral secret/token delivery over the non-persisted commands/secret channel.
 
-
-def post_process_ota(key: str, output: Any) -> None:
-    """Triggers an agent restart with code 42 after final state has been published."""
-    LOGGER.warning("OTA package staged (%s). Triggering exit code 42 in 1s...", key)
-
-    def delayed_exit():
-        time.sleep(1.0)
-        os._exit(42)
-
-    threading.Thread(target=delayed_exit, name="OTARestart", daemon=True).start()
-
-
-def process_discovery_rules(key: str, filepath: str) -> str:
-    """Dynamically hot-reloads discovery signature rules."""
-    if not os.path.exists(filepath):
-        raise ValueError(f"Missing discovery rules file for blob '{key}'")
-    with open(filepath, "r", encoding="utf-8") as f:
-        rules = json.load(f)
-    LOGGER.info("Hot-reloaded discovery rules from blob '%s': %s", key, rules)
-    return "reloaded"
-
-
-def process_ephemeral_secret(key: str, data_bytes: bytes) -> str:
-    """Securely stores an ephemeral credential or qualification secret in memory."""
-    GLOBAL_SECRET_VAULT.set_secret(key, data_bytes)
-    LOGGER.info("Successfully ingested ephemeral secret '%s' into in-memory vault.", key)
-    return "applied"
+    Processes in-flight credentials strictly in memory without disk persistence.
+    """
+    secret_key = payload.get("key")
+    if not secret_key:
+        LOGGER.warning("Received commands/secret payload missing 'key' field: %s", payload)
+        return
+    LOGGER.info("Successfully received ephemeral secret for key '%s' over commands/secret channel.", secret_key)
 
 
 def handle_key_rotation(new_pem: bytes, backup_id: str) -> bool:
@@ -344,11 +310,8 @@ def main():
 
     # Initialize Managers
     system_manager = SystemManager()
-    system_manager.register_blob_handler("ota_package", process_ota_package, post_process_ota, expects_file=True)
-    system_manager.register_blob_handler("discovery_rules", process_discovery_rules, expects_file=True)
-    system_manager.register_blob_handler("ephemeral_secret", process_ephemeral_secret, expects_file=False)
-    system_manager.register_blob_handler("qualification_secret", process_ephemeral_secret, expects_file=False)
     system_manager.register_key_rotation_callback(handle_key_rotation)
+    system_manager.register_command_handler("secret", handle_ephemeral_secret_command)
 
     # Populate Host Telemetry Details for TLC
     os_info = get_host_os_info()

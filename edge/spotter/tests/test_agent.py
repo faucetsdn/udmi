@@ -187,36 +187,20 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
 TestTraceDiscoveryManager = TestSpotterDiscoveryManager
 
 
-class TestOtaHandlers(unittest.TestCase):
+class TestCommandsSecret(unittest.TestCase):
+    """Verifies handling of in-flight secrets over commands/secret channel."""
 
-    def setUp(self):
-        self.test_dir = tempfile.TemporaryDirectory()
+    def test_handle_ephemeral_secret_command(self):
+        from edge.spotter.src.agent import handle_ephemeral_secret_command
+        with self.assertLogs("spotter_agent", level="INFO") as log:
+            handle_ephemeral_secret_command({"key": "test_token", "value": "abc123xyz"})
+            self.assertTrue(any("Successfully received ephemeral secret for key 'test_token'" in m for m in log.output))
 
-    def tearDown(self):
-        self.test_dir.cleanup()
-
-    def test_process_ota_package_staging(self):
-        from edge.spotter.src.agent import process_ota_package
-        dummy_whl = os.path.join(self.test_dir.name, "update-1.0.whl")
-        with open(dummy_whl, "wb") as f:
-            f.write(b"MOCK WHEEL DATA")
-
-        with patch.dict("os.environ", {"SPOTTER_STAGING_DIR": self.test_dir.name}):
-            res = process_ota_package("ota_package", dummy_whl)
-            self.assertEqual(res, "staged")
-            staged_path = os.path.join(self.test_dir.name, "update-1.0.whl")
-            self.assertTrue(os.path.exists(staged_path))
-            marker = os.path.join(self.test_dir.name, "OTA_STAGED")
-            self.assertTrue(os.path.exists(marker))
-
-    def test_process_discovery_rules_hot_reload(self):
-        from edge.spotter.src.agent import process_discovery_rules
-        rules_file = os.path.join(self.test_dir.name, "rules.json")
-        with open(rules_file, "w") as f:
-            f.write('{"bacnet_vendor_ids": [10, 25]}')
-
-        res = process_discovery_rules("discovery_rules", rules_file)
-        self.assertEqual(res, "reloaded")
+    def test_handle_ephemeral_secret_command_missing_key(self):
+        from edge.spotter.src.agent import handle_ephemeral_secret_command
+        with self.assertLogs("spotter_agent", level="WARNING") as log:
+            handle_ephemeral_secret_command({"value": "no_key"})
+            self.assertTrue(any("missing 'key' field" in m for m in log.output))
 
 
 if __name__ == "__main__":
