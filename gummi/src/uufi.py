@@ -108,15 +108,27 @@ class GummiUUFIClient:
                     client.connect(host, port, keepalive=30)
                     self.mqtt_client = client
                     client.loop_start()
+                    # Wait up to 5s for on_connect callback to fire
+                    for _ in range(50):
+                        if self.is_connected or not self._running:
+                            break
+                        time.sleep(0.1)
 
                     while self._running and self.is_connected:
                         time.sleep(0.5)
+
+                    try:
+                        client.loop_stop()
+                        client.disconnect()
+                    except Exception:
+                        pass
                 except Exception:
                     self.is_connected = False
-                    for _ in range(20):
-                        if not self._running:
-                            break
-                        time.sleep(0.1)
+
+                for _ in range(20):
+                    if not self._running:
+                        break
+                    time.sleep(0.1)
 
             except Exception:
                 self.is_connected = False

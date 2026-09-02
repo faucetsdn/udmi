@@ -103,9 +103,43 @@ class MqttToPubSubBridgeTest {
     assertEquals(testTopic, attributes.get("mqttTopic"));
     assertEquals("my-device", attributes.get("deviceId"));
     assertEquals("my-registry", attributes.get("deviceRegistryId"));
+    assertEquals("events", attributes.get("subType"));
     assertEquals("subfolder_name", attributes.get("subFolder"));
     org.junit.jupiter.api.Assertions.assertNotNull(attributes.get("receiveTime"));
     assertEquals("test-client", attributes.get("distributorClientId"));
+  }
+
+  @Test
+  void testSetupBridgeWithReflectTopic() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/UDMI-REFLECT/d/ZZ-TRI-FECTA/reflect";
+    String payloadStr = "{\"test\":\"payload\"}";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    new MqttToPubSubBridge().setupBridge(mockMqttClient, mockPublisher, testTopic, null);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+    assertEquals(testTopic, attributes.get("mqttTopic"));
+    assertEquals("ZZ-TRI-FECTA", attributes.get("deviceId"));
+    assertEquals("UDMI-REFLECT", attributes.get("deviceRegistryId"));
+    assertEquals("reflect", attributes.get("subType"));
   }
 
   @Test
