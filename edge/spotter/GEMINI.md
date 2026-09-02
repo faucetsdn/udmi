@@ -32,7 +32,7 @@ All verification tests are categorised into **Unit Tests** and **Integration Tes
 - **Executables**:
   - [test_container](bin/test_container): Validates container lifecycle isolation, volume mounting of configuration files, clean signal termination, and exit code propagation inside Docker.
   - [test_pcap](bin/test_pcap): Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming and verify binary reassembly via [reassemble_pcap](bin/reassemble_pcap).
-  - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on an isolated network, confirming 100% functional telemetry payload parity with legacy discovery node.
+  - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on an isolated network, confirming functional parity with legacy discovery node.
   - [compare_field_parity](bin/compare_field_parity): Automated utility to run sequential discovery parity scans or diff event logs on live field testbeds.
   - [test_resource_contention](bin/test_resource_contention): Validates Spotter process CPU, memory consumption, file descriptor limits, and telemetry latency under concurrent heavy workloads.
   - [test_fault_injection](bin/test_fault_injection): Validates network fault tolerance, streaming MQTT backoff recovery, and socket reconnect logic.
@@ -132,7 +132,7 @@ device:on_ready Connection successful.
 ## 5. Engineering Standards & Parity Verification
 
 To maintain technical integrity and ensure non-regression:
-- **Drop-in Functional Parity**: Spotter must maintain 100% telemetry and sequence parity with legacy discovery nodes for existing protocol sweeps.
+- **Functional Parity**: Spotter must maintain functional parity with legacy discovery nodes for existing protocol sweeps.
 - **Differential Verification**: Run `bin/test_parity` against simulated device fixtures before changes are committed.
 - **Negative Verification**: Confirm reproduction of any failure signatures before declaring a defect repaired.
 

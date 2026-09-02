@@ -172,7 +172,7 @@ def compare_events(
 
     print("\n" + "=" * 64)
     if is_parity:
-        print("VERDICT: [PASS] 100% DISCOVERY PARITY ACHIEVED!")
+        print("VERDICT: [PASS] FUNCTIONAL PARITY ACHIEVED!")
         print("Spotter produces identical telemetry payloads and sequencing.")
     else:
         print("VERDICT: [FAIL] DISCOVERY PARITY NOT ACHIEVED.")

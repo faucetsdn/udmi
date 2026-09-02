@@ -79,7 +79,7 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 | **[bin/spotter](../../bin/spotter)** | Unified CLI orchestrator for starting (local/container) and stopping instances |
 | **[bin/run_spotter_tests](bin/run_spotter_tests)** | Unified verification test runner for unit and integration suites |
 | **[bin/reassemble_pcap](bin/reassemble_pcap)** | Ad-hoc CLI utility to reassemble `events/stream` chunks into `.pcap` files |
-| **[bin/compare_field_parity](bin/compare_field_parity)** | Automated CLI tool to verify 100% field parity between legacy node and Spotter |
+| **[bin/compare_field_parity](bin/compare_field_parity)** | Automated CLI tool to verify functional parity between legacy node and Spotter |
 | **[src/agent.py](src/agent.py)** | Main Spotter agent entry point, manager wiring, and command dispatcher |
 | **[src/providers/](src/providers/)** | Modular protocol discovery providers (BACnet, Ether, Passive) |
 | **[src/host_telemetry.py](src/host_telemetry.py)** | Zero-SSH host OS and performance telemetry probes |
