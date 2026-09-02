@@ -90,7 +90,7 @@ def parse_project_spec(project_spec, site_config):
     }
 
 
-def generate_spotter_config(site_path, project_spec, device_id, out_path=None):
+def generate_spotter_config(site_path, project_spec, device_id, out_path=None, metrics_rate_sec=300):
     site_path = os.path.abspath(site_path)
     if not os.path.isdir(site_path):
         raise ValueError(f"Site path directory not found: {site_path}")
@@ -133,6 +133,9 @@ def generate_spotter_config(site_path, project_spec, device_id, out_path=None):
 
     config = {
         "log_level": "INFO",
+        "system": {
+            "metrics_rate_sec": metrics_rate_sec,
+        },
         "mqtt": {
             "device_id": effective_device_id,
             "registry_id": parsed_spec["registry_id"],
@@ -165,6 +168,7 @@ def main():
     parser.add_argument("--project_spec", required=True, help="Project specification string")
     parser.add_argument("--device_id", required=True, help="Target device ID")
     parser.add_argument("--out", required=True, help="Output config path")
+    parser.add_argument("--metrics_rate_sec", type=int, default=300, help="Metrics reporting rate in seconds (default: 300)")
 
     args = parser.parse_args()
     try:
@@ -173,6 +177,7 @@ def main():
             args.project_spec,
             args.device_id,
             args.out,
+            metrics_rate_sec=args.metrics_rate_sec,
         )
         print(f"Dynamic configuration generated: {args.out}")
     except Exception as e:

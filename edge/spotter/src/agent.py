@@ -163,7 +163,11 @@ def main():
     system_manager = SystemManager()
     system_manager.register_command_handler("secret", handle_ephemeral_secret_command)
 
-    # Populate Host Telemetry Details for TLC
+    # Default metrics reporting rate: 300s (5 minutes) for production, or from config
+    metrics_rate_sec = config.get("system", {}).get("metrics_rate_sec", 300)
+    system_manager._metrics_rate_sec = metrics_rate_sec
+
+    # Populate Host Telemetry Details
     os_info = get_host_os_info()
     if os_info:
         os_name = os_info.get("PRETTY_NAME") or os_info.get("NAME") or "Linux"

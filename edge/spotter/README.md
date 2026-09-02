@@ -153,4 +153,4 @@ The following capabilities are tracked as future milestones:
 1. **UDMIS Native PCAP Ingestion Pipeline**: Native service-side ingestion and reassembly in UDMIS to automatically collect and persist `events/stream` PCAP chunks directly into Cloud Storage (GCS) or BigQuery blob storage.
 2. **Heterogeneous Secret Delivery**: Extensible mechanism for securely injecting multi-tenant operational credentials (e.g., vendor device credentials, BACnet network encryption keys) via encrypted/ephemeral payloads.
 3. **Key Rotation & Lifecycle**: End-to-end device private/public key rotation with automated cloud IoT registry coordination, backup verification, and zero-downtime reconnection.
-4. **Expanded TLC Observability Metrics**: Network adapter error/drop counters, hardware temperature, storage/inode thresholds, and edge-to-cloud roundtrip latency.
+4. **Expanded Host Observability Metrics**: Network adapter error/drop counters, hardware temperature, storage/inode thresholds, and edge-to-cloud roundtrip latency.

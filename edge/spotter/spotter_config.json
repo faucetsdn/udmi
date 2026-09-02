@@ -1,5 +1,8 @@
 {
   "log_level": "INFO",
+  "system": {
+    "metrics_rate_sec": 300
+  },
   "mqtt": {
     "device_id": "DN-1",
     "registry_id": "ZZ-TRI-FECTA",

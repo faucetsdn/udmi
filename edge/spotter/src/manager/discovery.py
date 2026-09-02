@@ -47,7 +47,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
 
     def _should_scan(self, family: str, config: FamilyDiscoveryConfig) -> bool:
         depth_val = getattr(config, "depth", None)
-        if depth_val == Depth.trace or str(depth_val).lower() == "trace":
+        if depth_val in (Depth.trace, Depth.trace.value):
             state_gen = None
             if family in self._discovery_state.families:
                 state_gen = self._discovery_state.families[family].generation
@@ -60,7 +60,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
             fam_config = self._config.families.get(family)
 
         depth_val = getattr(fam_config, "depth", None) if fam_config else None
-        if depth_val == Depth.trace or str(depth_val).lower() == "trace":
+        if depth_val in (Depth.trace, Depth.trace.value):
             self._run_trace_capture(family, fam_config)
             return
 

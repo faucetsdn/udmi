@@ -142,6 +142,9 @@ echo "Preparing spotter config"
 cat <<EOF > "$TEST_DIR/spotter_config.json"
 {
   "log_level": "DEBUG",
+  "system": {
+    "metrics_rate_sec": 10
+  },
   "mqtt": {
     "device_id": "DN-1",
     "registry_id": "ZZ-TRI-FECTA",

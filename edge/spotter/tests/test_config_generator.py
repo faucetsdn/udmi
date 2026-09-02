@@ -60,7 +60,17 @@ class TestConfigGenerator(unittest.TestCase):
 
         self.assertEqual(config["mqtt"]["device_id"], "DN-1")
         self.assertEqual(config["mqtt"]["port"], 18883)
+        self.assertEqual(config["system"]["metrics_rate_sec"], 300)
         self.assertTrue(os.path.isfile(out_path))
+
+        # Test custom metrics_rate_sec override
+        config_override = generate_spotter_config(
+            site_path=self.site_path,
+            project_spec="//mqtt/localhost:18883",
+            device_id="DN-1",
+            metrics_rate_sec=10,
+        )
+        self.assertEqual(config_override["system"]["metrics_rate_sec"], 10)
 
 
 if __name__ == "__main__":

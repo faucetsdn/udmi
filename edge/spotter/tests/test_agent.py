@@ -129,6 +129,13 @@ class TestAgentConfig(unittest.TestCase):
         endpoint = build_endpoint_config(config)
         self.assertEqual(endpoint.client_id, "/r/ZZ-TRI-FECTA/d/custom-spotter-id")
 
+    def test_metrics_rate_sec_default_and_override(self):
+        cfg_prod = {}
+        self.assertEqual(cfg_prod.get("system", {}).get("metrics_rate_sec", 300), 300)
+
+        cfg_test = {"system": {"metrics_rate_sec": 10}}
+        self.assertEqual(cfg_test.get("system", {}).get("metrics_rate_sec", 300), 10)
+
 
 class TestSpotterDiscoveryManager(unittest.TestCase):
 
