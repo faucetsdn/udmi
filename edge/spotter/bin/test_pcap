@@ -206,10 +206,12 @@ cat <<EOF > "$TEST_DIR/config_payload.json"
       "ether": {
         "generation": "$TIMESTAMP",
         "depth": "trace",
-        "interface": "any",
-        "filter": "udp port 47808",
         "scan_duration_sec": 4,
-        "max_bytes": 100000
+        "trace": {
+          "interface": "any",
+          "filter": "udp port 47808",
+          "max_bytes": 100000
+        }
       }
     }
   }

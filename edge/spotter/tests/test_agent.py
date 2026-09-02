@@ -9,7 +9,15 @@ from edge.spotter.src.agent import (
     calculate_local_password,
 )
 from edge.spotter.src.manager.discovery import SpotterDiscoveryManager
-from udmi.schema import Protocol, Config, DiscoveryConfig, FamilyDiscoveryConfig, Depth, State
+from udmi.schema import (
+    Protocol,
+    Config,
+    DiscoveryConfig,
+    FamilyDiscoveryConfig,
+    Depth,
+    State,
+    TraceDiscoveryConfig,
+)
 from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
 
 
@@ -139,8 +147,10 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
         fam_config = FamilyDiscoveryConfig(
             generation="2026-07-08T14:35:00Z",
             depth=Depth.trace,
-            interface="any",
-            filter="udp port 47808",
+            trace=TraceDiscoveryConfig(
+                interface="any",
+                filter="udp port 47808",
+            ),
             scan_duration_sec=2
         )
 
@@ -169,8 +179,10 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
         fam_config = FamilyDiscoveryConfig(
             generation="2026-07-08T14:35:00Z",
             depth=Depth.trace,
-            interface="eth0",
-            filter="udp port 47808",
+            trace=TraceDiscoveryConfig(
+                interface="eth0",
+                filter="udp port 47808",
+            ),
             scan_duration_sec=2
         )
 

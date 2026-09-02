@@ -87,10 +87,24 @@ class SpotterDiscoveryManager(DiscoveryManager):
             except ImportError:
                 from edge.spotter.src.pcap import capture_packets
 
-            interface = getattr(fam_config, "interface", None) or "any"
-            filter_str = getattr(fam_config, "filter", None) or ""
-            max_duration_sec = int(getattr(fam_config, "scan_duration_sec", None) or 60)
-            max_bytes = int(getattr(fam_config, "max_bytes", None) or (10 * 1024 * 1024))
+            trace_cfg = getattr(fam_config, "trace", None)
+            if isinstance(fam_config, dict):
+                trace_cfg = fam_config.get("trace")
+
+            if isinstance(trace_cfg, dict):
+                interface = trace_cfg.get("interface") or "any"
+                filter_str = trace_cfg.get("filter") or ""
+                max_bytes = int(trace_cfg.get("max_bytes") or (10 * 1024 * 1024))
+            elif trace_cfg:
+                interface = getattr(trace_cfg, "interface", None) or "any"
+                filter_str = getattr(trace_cfg, "filter", None) or ""
+                max_bytes = int(getattr(trace_cfg, "max_bytes", None) or (10 * 1024 * 1024))
+            else:
+                interface = getattr(fam_config, "interface", None) or (fam_config.get("interface") if isinstance(fam_config, dict) else None) or "any"
+                filter_str = getattr(fam_config, "filter", None) or (fam_config.get("filter") if isinstance(fam_config, dict) else None) or ""
+                max_bytes = int(getattr(fam_config, "max_bytes", None) or (fam_config.get("max_bytes") if isinstance(fam_config, dict) else None) or (10 * 1024 * 1024))
+
+            max_duration_sec = int(getattr(fam_config, "scan_duration_sec", None) or (fam_config.get("scan_duration_sec") if isinstance(fam_config, dict) else None) or 60)
 
             LOGGER.info(
                 "Spawning TRACE capture worker on '%s' (filter: '%s', max_duration: %ds, max_bytes: %d)",

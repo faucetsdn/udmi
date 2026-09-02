@@ -44,18 +44,9 @@
       "description": "Indicates implicit enumeration of discovered devices",
       "$ref": "file:common.json#/definitions/depth"
     },
-    "interface": {
-      "description": "Network interface to target for trace capture operations",
-      "type": "string"
-    },
-    "filter": {
-      "description": "Protocol or packet filter expression (e.g. BPF filter)",
-      "type": "string"
-    },
-    "max_bytes": {
-      "description": "Maximum byte volume cap for trace collection to prevent exhaustion",
-      "type": "integer",
-      "minimum": 0
+    "trace": {
+      "description": "Trace discovery parameters (when depth is 'trace')",
+      "$ref": "file:config_discovery_trace.json"
     }
   }
 }
