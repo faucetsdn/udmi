@@ -2,7 +2,7 @@
 
 # UDMI Dev Deployment Architecture & Verification Guide
 
-This document details the architecture, component topology, authentication mechanisms, build/deployment workflows, and verification procedures required for development deployment testing against `bos-platform-dev`.
+This document details the architecture, component topology, authentication mechanisms, build/deployment workflows, verification procedures, and configuration migration steps required for development and production deployments (e.g., `bos-platform-dev` and `bos-platform-prod`).
 
 ---
 
@@ -109,13 +109,11 @@ flowchart TD
 udmis/bin/build
 
 # 2. Build and tag udmis container image
-docker build -t us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/udmis:master-gc8ea9ad2a \
-             -t us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/udmis:latest \
+docker build -t us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/udmis:zanzarafix \
              -f udmis/Dockerfile.udmis udmis
 
 # 3. Build and tag bridge2 container image
-docker build -t us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/bridge2:master-gc8ea9ad2a \
-             -t us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/bridge2:latest \
+docker build -t us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/bridge2:zanzarafix \
              -f - . <<EOF
 FROM gcr.io/distroless/java21-debian12
 WORKDIR /app

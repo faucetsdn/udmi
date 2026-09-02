@@ -42,6 +42,7 @@ cp -a ../schema build/schema/
 cp -a ../butler build/butler/
 cp -a ../common build/common/
 cp -a ../gencode build/gencode/
+mkdir -p var && cp -a etc/*.json var/
 
 
 newer_files=$([[ -f $jarfile ]] && find src/ $BASE/gencode/java -type f -newer $jarfile || echo missing)

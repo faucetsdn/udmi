@@ -172,11 +172,34 @@ public class UdmiServicePod extends ContainerBase {
     }
   }
 
+  // TODO: Temporary migration adapter to map legacy 'implicit' provider configuration to 'zanzara'.
+  // This should be removed after fully migrating all cluster configs and deployments to zanzara.
+  private static void adaptImplicitToZanzara(PodConfiguration config) {
+    if (config.iot_access != null && config.iot_access.containsKey("implicit")) {
+      System.err.println(
+          "WARNING: Temporary migration employed - adapting legacy 'implicit' iot_access configuration to 'zanzara'");
+      IotAccess implicitAccess = config.iot_access.remove("implicit");
+      IotAccess zanzaraAccess = config.iot_access.get("zanzara");
+      if (zanzaraAccess != null) {
+        config.iot_access.put("zanzara", mergeObject(zanzaraAccess, implicitAccess));
+      } else {
+        config.iot_access.put("zanzara", implicitAccess);
+      }
+      if (config.iot_access.containsKey("iot-access")) {
+        IotAccess dynamic = config.iot_access.get("iot-access");
+        if (dynamic.project_id != null) {
+          dynamic.project_id = dynamic.project_id.replace("implicit", "zanzara");
+        }
+      }
+    }
+  }
+
   private static PodConfiguration makePodConfiguration(String[] args) {
     if (args.length != 1) {
       throw new RuntimeException("Exactly one argument expected: pod_config.json");
     }
     PodConfiguration config = loadRecursive(new File(args[0]));
+    adaptImplicitToZanzara(config);
     System.err.println(stringify(config));
     ifNotNullThrow(config.include, "unresolved config include directive");
     return config;
