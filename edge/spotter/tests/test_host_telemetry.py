@@ -6,12 +6,29 @@ from unittest.mock import mock_open, patch
 from edge.spotter.src.host_telemetry import (
     check_safety_circuit_breaker,
     get_cpu_and_memory_metrics,
+    get_host_hardware_info,
     get_host_os_info,
 )
 
 
 class TestHostTelemetry(unittest.TestCase):
     """Tests for host metric reading and OS distribution parsing."""
+
+    @patch("os.path.exists")
+    def test_get_host_hardware_info(self, mock_exists):
+        mock_exists.side_effect = lambda p: p in ("/sys/class/dmi/id/sys_vendor", "/sys/class/dmi/id/product_name")
+
+        def custom_open(path, *args, **kwargs):
+            if "sys_vendor" in path:
+                return mock_open(read_data="Google\n")()
+            elif "product_name" in path:
+                return mock_open(read_data="Google Compute Engine\n")()
+            return mock_open()()
+
+        with patch("builtins.open", side_effect=custom_open):
+            hw = get_host_hardware_info()
+            self.assertEqual(hw.get("make"), "Google")
+            self.assertEqual(hw.get("model"), "Google Compute Engine")
 
     @patch("os.path.exists")
     def test_get_host_os_info(self, mock_exists):

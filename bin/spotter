@@ -184,9 +184,19 @@ if [[ "${MODE}" == "container" ]]; then
 
     mkdir -p "${CONFIG_DIR}/logs"
 
+    OS_RELEASE_MOUNT=()
+    if [[ -f /etc/os-release ]]; then
+        OS_RELEASE_MOUNT=(-v /etc/os-release:/host/etc/os-release:ro)
+    fi
+
     echo "Starting Spotter Agent container '${CONTAINER_NAME}'..."
+    ${CONTAINER_ENGINE} rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
     exec ${CONTAINER_ENGINE} run -it --rm \
         --name "${CONTAINER_NAME}" \
+        --network host \
+        --cap-add=NET_RAW --cap-add=NET_ADMIN \
+        "${OS_RELEASE_MOUNT[@]}" \
+        -v "${WORKSPACE_DIR}:${WORKSPACE_DIR}:ro" \
         -v "${CONFIG_DIR}:/config_dir" \
         -v "${CONFIG_DIR}/logs:/var/log/spotter" \
         udmi-spotter:latest \

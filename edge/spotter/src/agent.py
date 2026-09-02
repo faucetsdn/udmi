@@ -21,19 +21,28 @@ from udmi.schema import (
     Basic,
     EndpointConfiguration,
     Protocol,
+    StateSystemHardware,
 )
 
 try:
     from providers.bacnet import BacnetFamilyProvider
     from providers.ether import EtherFamilyProvider
     from providers.passive import PassiveFamilyProvider
-    from host_telemetry import get_host_os_info, get_cpu_and_memory_metrics
+    from host_telemetry import (
+        get_host_os_info,
+        get_host_hardware_info,
+        get_cpu_and_memory_metrics,
+    )
     from manager.discovery import SpotterDiscoveryManager
 except ImportError:
     from edge.spotter.src.providers.bacnet import BacnetFamilyProvider
     from edge.spotter.src.providers.ether import EtherFamilyProvider
     from edge.spotter.src.providers.passive import PassiveFamilyProvider
-    from edge.spotter.src.host_telemetry import get_host_os_info, get_cpu_and_memory_metrics
+    from edge.spotter.src.host_telemetry import (
+        get_host_os_info,
+        get_host_hardware_info,
+        get_cpu_and_memory_metrics,
+    )
     from edge.spotter.src.manager.discovery import SpotterDiscoveryManager
 
 LOGGER = logging.getLogger("spotter_agent")
@@ -171,11 +180,28 @@ def main():
     os_info = get_host_os_info()
     if os_info:
         os_name = os_info.get("PRETTY_NAME") or os_info.get("NAME") or "Linux"
-        os_version = os_info.get("VERSION_ID") or os_info.get("VERSION") or "unknown"
+        os_version = (
+            os_info.get("VERSION_ID")
+            or os_info.get("VERSION")
+            or os_info.get("VERSION_CODENAME")
+            or "unknown"
+        )
         if system_manager._system_state.software is None:
             system_manager._system_state.software = {}
         system_manager._system_state.software["os"] = os_name
         system_manager._system_state.software["os_version"] = os_version
+
+    # Populate Host Hardware Details
+    hw_config = config.get("system", {}).get("hardware", {})
+    hw_probed = get_host_hardware_info()
+    make = hw_config.get("make") or hw_probed.get("make") or "UDMI"
+    model = hw_config.get("model") or hw_probed.get("model") or "Spotter"
+
+    if system_manager._system_state.hardware is None:
+        system_manager._system_state.hardware = StateSystemHardware(make=make, model=model)
+    else:
+        system_manager._system_state.hardware.make = make
+        system_manager._system_state.hardware.model = model
 
     localnet_manager = LocalnetManager()
     bacnet_cfg = config.get("bacnet", {})

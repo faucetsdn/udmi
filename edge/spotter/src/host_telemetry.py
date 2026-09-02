@@ -27,6 +27,56 @@ def get_host_os_info() -> Dict[str, str]:
     return os_info
 
 
+def get_host_hardware_info() -> Dict[str, str]:
+    """Probes host hardware vendor and model from DMI or device-tree."""
+    hardware: Dict[str, str] = {}
+
+    vendor_paths = [
+        "/sys/class/dmi/id/sys_vendor",
+        "/host/sys/class/dmi/id/sys_vendor",
+    ]
+    for path in vendor_paths:
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    val = f.read().strip()
+                    if val:
+                        hardware["make"] = val
+                        break
+            except Exception as err:
+                LOGGER.debug("Could not read %s: %s", path, err)
+
+    model_paths = [
+        "/sys/class/dmi/id/product_name",
+        "/host/sys/class/dmi/id/product_name",
+    ]
+    for path in model_paths:
+        if os.path.exists(path):
+            try:
+                with open(path, "r", encoding="utf-8") as f:
+                    val = f.read().strip()
+                    if val:
+                        hardware["model"] = val
+                        break
+            except Exception as err:
+                LOGGER.debug("Could not read %s: %s", path, err)
+
+    if "model" not in hardware:
+        dt_paths = ["/proc/device-tree/model", "/host/proc/device-tree/model"]
+        for path in dt_paths:
+            if os.path.exists(path):
+                try:
+                    with open(path, "r", encoding="utf-8") as f:
+                        val = f.read().strip().replace("\x00", "")
+                        if val:
+                            hardware["model"] = val
+                            break
+                except Exception as err:
+                    LOGGER.debug("Could not read %s: %s", path, err)
+
+    return hardware
+
+
 def get_cpu_and_memory_metrics() -> Dict[str, Any]:
     """Reads system load averages and memory usage from /proc filesystem."""
     metrics: Dict[str, Any] = {}
