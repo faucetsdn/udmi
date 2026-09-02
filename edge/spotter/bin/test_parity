@@ -12,7 +12,7 @@ if len(sys.argv) > 1 and sys.argv[1] in ("--help", "-h"):
     print("Usage: ./test_parity")
     print("")
     print("Validates BACnet discovery co-existence parity between the legacy")
-    print("discovery node container and the new dual-process container:")
+    print("discovery node container and the new unified Spotter container:")
     print("1. Launches simulated BACnet server container.")
     print("2. Spawns local Mosquitto broker with plain (1883) & TLS (18883) listeners.")
     print("3. Runs legacy and new containers sequentially, triggering scans.")

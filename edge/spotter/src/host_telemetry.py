@@ -66,3 +66,13 @@ def get_cpu_and_memory_metrics() -> Dict[str, Any]:
             LOGGER.debug("Could not parse /proc/loadavg: %s", err)
 
     return metrics
+
+
+def check_safety_circuit_breaker(max_mem_pct: float = 85.0) -> bool:
+    """Evaluates host memory usage. Returns True if memory exceeds safety threshold."""
+    metrics = get_cpu_and_memory_metrics()
+    used_pct = metrics.get("mem_used_pct", 0.0)
+    if used_pct >= max_mem_pct:
+        LOGGER.warning("Safety Circuit Breaker: Memory usage %.2f%% exceeds %.2f%% threshold!", used_pct, max_mem_pct)
+        return True
+    return False

@@ -1,6 +1,6 @@
 # UDMI Spotter Edge Reference Node
 
-The **UDMI Spotter Agent** is the reference edge node for Operational Technology (OT) building automation networks within the UDMI ecosystem. Spotter consolidates field network discovery, automated point mapping, remote ephemeral packet captures (PCAP), host observability telemetry, and automated key rotation into a single unified edge process.
+The **UDMI Spotter Agent** is the reference edge node for Operational Technology (OT) building automation networks within the UDMI ecosystem. Spotter consolidates field network discovery, automated point mapping, remote ephemeral packet captures (PCAP), and host observability telemetry into a single unified edge process.
 
 ---
 
@@ -17,14 +17,13 @@ Spotter runs as a single unified process using the UDMI Python Client Library (`
    - Streams live remote packet capture traces (`events/stream`) safely buffered in RAM.
 3. **`SystemManager`**:
    - Collects host metrics (CPU load, memory, OS distribution) without SSH.
-   - Implements automated zero-downtime key rotation with automated rollback.
    - Handles ephemeral secrets over non-persisted MQTT command channels (`commands/secret`).
 
 ```mermaid
 graph TD
     subgraph "Spotter Edge Process"
         AGENT["Spotter Core Agent (agent.py)"]
-        SYS["SystemManager (Host Telemetry & Key Rotation)"]
+        SYS["SystemManager (Host Telemetry & Ephemeral Secrets)"]
         DISC["SpotterDiscoveryManager (PCAP & Scheduling)"]
         LOC["LocalnetManager (Pluggable Providers)"]
         
@@ -61,6 +60,15 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 2. **Streaming MQTT Egress Transport**:
    - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`StreamEvents`) over the universal streaming MQTT event topic (`events/stream`).
    - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding external network credentials or outbound HTTP rules at the edge.
+3. **Ad-hoc PCAP Reassembly ([bin/reassemble_pcap](bin/reassemble_pcap))**:
+   Reassembles chunked `events/stream` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
+   ```bash
+   # Reassemble stream events file into a pcap file:
+   ./edge/spotter/bin/reassemble_pcap stream_events.json capture.pcap
+
+   # Or stream directly from mosquitto subscriber:
+   mosquitto_sub -h $BROKER -t '/r/+/d/+/events/stream' | ./edge/spotter/bin/reassemble_pcap - live.pcap
+   ```
 
 ---
 
@@ -70,12 +78,11 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 | :--- | :--- |
 | **[bin/spotter](../../bin/spotter)** | Unified CLI orchestrator for starting (local/container) and stopping instances |
 | **[bin/run_spotter_tests](bin/run_spotter_tests)** | Unified verification test runner for unit and integration suites |
+| **[bin/reassemble_pcap](bin/reassemble_pcap)** | Ad-hoc CLI utility to reassemble `events/stream` chunks into `.pcap` files |
 | **[src/agent.py](src/agent.py)** | Main Spotter agent entry point, manager wiring, and command dispatcher |
 | **[src/providers/](src/providers/)** | Modular protocol discovery providers (BACnet, Ether, Passive) |
 | **[src/host_telemetry.py](src/host_telemetry.py)** | Zero-SSH host OS and performance telemetry probes |
 | **[src/pcap.py](src/pcap.py)** | Safe `tcpdump` wrapper yielding binary streams with duration and size caps |
-| **[src/metrics.py](src/metrics.py)** | Observability metrics exporter (Prometheus & UDMI telemetry) |
-| **[src/logger.py](src/logger.py)** | Structured single-line JSON log formatter & W3C traceparent context generator |
 | **[container/Dockerfile](container/Dockerfile)** | Multi-stage Docker image build specification |
 | **[spotter_config.json](spotter_config.json)** | Sample configuration file for endpoint and BACnet parameters |
 | **[GEMINI.md](GEMINI.md)** | Detailed testing standards, execution matrices, and triage guidelines |
@@ -123,3 +130,14 @@ Spotter includes a comprehensive suite of unit and integration tests located in 
 # Run the complete test suite (unit and integration)
 ./edge/spotter/bin/run_spotter_tests all
 ```
+
+---
+
+## Future Roadmap
+
+The following capabilities are tracked as future milestones:
+
+1. **UDMIS Native PCAP Ingestion Pipeline**: Native service-side ingestion and reassembly in UDMIS to automatically collect and persist `events/stream` PCAP chunks directly into Cloud Storage (GCS) or BigQuery blob storage.
+2. **Heterogeneous Secret Delivery**: Extensible mechanism for securely injecting multi-tenant operational credentials (e.g., vendor device credentials, BACnet network encryption keys) via encrypted/ephemeral payloads.
+3. **Key Rotation & Lifecycle**: End-to-end device private/public key rotation with automated cloud IoT registry coordination, backup verification, and zero-downtime reconnection.
+4. **Expanded TLC Observability Metrics**: Network adapter error/drop counters, hardware temperature, storage/inode thresholds, and edge-to-cloud roundtrip latency.

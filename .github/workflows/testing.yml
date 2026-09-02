@@ -749,7 +749,6 @@ jobs:
         run: |
           sudo bin/setup_base
           bin/clone_model
-          bin/start_local sites/udmi_site_model $TARGET_PROJECT
       - name: Run Spotter Unit Tests
         run: edge/spotter/bin/run_spotter_tests unit
       - name: Run Spotter Integration & Parity Tests

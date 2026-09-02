@@ -30,17 +30,17 @@ All verification tests are categorised into **Unit Tests** and **Integration Tes
 - **Target**: Functional pipeline, lifecycle boundaries, container isolation, resource contention, and co-existence parity.
 - **Location**: [bin/](bin) & [tests/](tests)
 - **Executables**:
-  - [test_container](bin/test_container): Validates container lifecycle isolation, volume mounting of on-prem configuration files, and supervisor integration inside Docker.
-  - [test_pcap](bin/test_pcap): Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming.
-  - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on a custom docker network, confirming 100% functional telemetry payload parity.
-  - [test_resource_contention](bin/test_resource_contention): Validates dual-process CPU, memory cgroups, file descriptor limits, and telemetry heartbeat latency under concurrent heavy workloads.
+  - [test_container](bin/test_container): Validates container lifecycle isolation, volume mounting of configuration files, clean signal termination, and exit code propagation inside Docker.
+  - [test_pcap](bin/test_pcap): Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming and verify binary reassembly via [reassemble_pcap](bin/reassemble_pcap).
+  - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on an isolated network, confirming 100% functional telemetry payload parity with legacy discovery node.
+  - [test_resource_contention](bin/test_resource_contention): Validates Spotter process CPU, memory consumption, file descriptor limits, and telemetry latency under concurrent heavy workloads.
   - [test_fault_injection](bin/test_fault_injection): Validates network fault tolerance, streaming MQTT backoff recovery, and socket reconnect logic.
-  - [self_test.py](tests/self_test.py): In-container micro-self-test suite executed by supervisor post-OTA staging to verify imports, credentials, raw socket access, and loop sanity.
+  - [self_test.py](tests/self_test.py): In-container micro-self-test suite executed post-build to verify imports, credentials, raw socket access, and loop sanity.
 
 To get detailed explanations of what each integration test script validates, run them with the `--help` flag:
 ```bash
-./edge/spotter/bin/test_supervisor --help
 ./edge/spotter/bin/test_container --help
+./edge/spotter/bin/test_pcap --help
 ./edge/spotter/bin/test_parity --help
 ./edge/spotter/bin/test_resource_contention --help
 ./edge/spotter/bin/test_fault_injection --help
@@ -101,81 +101,69 @@ To ensure any bug fix is the direct cause of the resolution and not an artifact 
 
 When reviewing test results (automated stdout or manual container logs), verify these key transition signatures:
 
-### 4.1 Supervisor Signal Propagation
-Stdout must show successful process signaling and termination transitions:
+### 4.1 Container Signal Propagation & Graceful Shutdown
+Stdout must show clean signal trapping, manager shutdown, and disconnection:
 ```
-Supervisor: Received shutdown signal, terminating child processes...
-Supervisor: Sending SIGTERM to legacy node (PID: <pid>)
-Supervisor: Sending SIGTERM to Spotter agent (PID: <pid>)
-Supervisor: All child processes terminated. Exiting.
+2026-09-02 07:33:34,917|INFO|agent:handle_signal Signal 15 received. Shutting down Spotter...
+2026-09-02 07:33:34,917|INFO|device:stop Stopping device...
+2026-09-02 07:33:34,917|INFO|base_manager:stop Stopping manager: SystemManager
+2026-09-02 07:33:35,917|INFO|base_manager:stop Stopping manager: LocalnetManager
+2026-09-02 07:33:35,917|INFO|base_manager:stop Stopping manager: SpotterDiscoveryManager
+2026-09-02 07:33:37,400|INFO|device:on_disconnect Client disconnected cleanly.
+2026-09-02 07:33:37,401|INFO|device:stop Device stopped.
 ```
 
-### 4.2 Crash Handlers
-Stdout must show exit code mappings upon internal process failure:
-- Legacy node crash: `Supervisor: Fatal crash detected on legacy node. Restarting container.` (Container exits with status `101`).
-- Spotter agent crash: `Supervisor: Fatal crash detected on Spotter agent. Restarting container.` (Container exits with status `102`).
+### 4.2 Crash Propagation
+Container exit codes must faithfully reflect internal agent terminations (e.g. exit code 42 propagates directly to Docker runtime, verified by `bin/test_container`).
 
-### 4.3 MQTT Local Connection
+### 4.3 MQTT Local Connection & mTLS Handshake
 Logs must show successful client mTLS handshakes:
 ```
-mqtt:on_pre_connect client ID is /r/ZZ-TRI-FECTA/d/AHU-1
-mqtt:on_connect on_connect Success
+mqtt_messaging_client:connect Connecting to MQTT broker at 192.168.12.254:18883
+mqtt_messaging_client:_on_connect Connected to MQTT broker. Subscribing...
+message_dispatcher:_on_connect Dispatcher: Client connected.
+device:on_ready Connection successful.
 ```
 
 ---
 
-## 5. Development Plan Maintenance Policy
+## 5. Engineering Standards & Parity Verification
 
-To maintain project tracking visibility and alignment on behavioral specifications during development:
-- **Mandate**: Every agent developing the Spotter codebase must update the detailed implementation plan ([spotter_plan.md](spotter_plan.md)) as they proceed.
-- **Completeness**: When a task or sub-phase is successfully implemented and verified, the agent must mark it as `[Completed]` in the plan.
-- **Traceability**: The agent must document the precise files modified/created and the specific verification methods/results directly under the task in the plan.
-- **Preservation**: The original behavioral specifications for each task must not be removed or truncated; implementation and testing details should be appended underneath them.
+To maintain technical integrity and ensure non-regression:
+- **Drop-in Functional Parity**: Spotter must maintain 100% telemetry and sequence parity with legacy discovery nodes for existing protocol sweeps.
+- **Differential Verification**: Run `bin/test_parity` against simulated device fixtures before changes are committed.
+- **Negative Verification**: Confirm reproduction of any failure signatures before declaring a defect repaired.
 
 ---
 
-## 6. Production Release Cycle & Execution Matrix
+## 6. Execution Matrix
 
-To move towards a regular, methodological release cycle while protecting live OT infrastructure, tests are categorized by target execution safety:
-
-### 6.1 Target Execution Matrix
 | Test Executable / Profile | Synthetic Local Testbed | Production Edge Targets | Rationale |
 | :--- | :---: | :---: | :--- |
-| **`tests/test_agent.py`** | **Yes** | **No** | Unit test suite; requires local test runner environment. |
-| **`bin/test_supervisor`** | **Yes** | **No** | Destructive process signaling and `sys.exit` crash handlers. |
-| **`bin/test_container`** | **Yes** | **No** | Local container build and volume mount lifecycle checks. |
-| **`bin/test_parity`** | **Yes** | **No** | Uses custom bridge network and mock local Mosquitto instances. |
-| **`bin/test_fault_injection`** | **Yes** | **No** | Induces artificial network drops and latency (`tc/netem`). |
-| **`bin/test_resource_contention`** | **Yes** | **Canary Only** | Full local stress run; production runs in non-destructive canary mode. |
-| **`tests/self_test.py`** | **Yes** | **Yes** | Non-destructive <10s in-container post-OTA staging validation. |
-| **`system.diagnostics.resource_audit`** | **Yes** | **Yes** | Non-destructive on-device cgroup & telemetry health probe. |
-
-### 6.2 3-Tier Release Pipeline
-1. **Tier 1 (Local Pre-Submit Gate)**: Stage 1/2 unit & schema tests plus Stage 3 local integration (`test_container`, `test_resource_contention`).
-2. **Tier 2 (In-Container Staging Rollback)**: OTA wheel packages deployed to `/opt/spotter/staging/venv`. Supervisor executes `self_test.py`. Any non-zero exit code triggers instant rollback without promoting the active symlink.
-3. **Tier 3 (Progressive Production Canary)**: Rollout progresses in stages (1% -> 10% -> 100%). Automated cloud monitoring inspects telemetry latency, cgroup metrics, and heartbeat rates, auto-triggering rollbacks upon anomaly detection.
+| **`tests/test_agent.py`** | **Yes** | **No** | Unit test suite; runs within local Python venv. |
+| **`bin/test_container`** | **Yes** | **No** | Local container build, volume mounts, and signal shutdown. |
+| **`bin/test_pcap`** | **Yes** | **No** | PCAP streaming over MQTT with binary reassembly validation. |
+| **`bin/test_parity`** | **Yes** | **No** | Differential comparison against simulated BACnet fixtures. |
+| **`bin/test_fault_injection`** | **Yes** | **No** | Induces transport disconnects and asserts backoff reconnects. |
+| **`bin/test_resource_contention`** | **Yes** | **Canary Only** | Evaluates CPU, memory ratio, FD stability, and circuit breaker. |
+| **`tests/self_test.py`** | **Yes** | **Yes** | Non-destructive <2s in-container verification of imports & permissions. |
 
 ---
 
-## 7. Observability Standards & Metrics Telemetry Specification
+## 7. Observability & Host Telemetry Standards
 
-### 7.1 Telemetry Delivery Channels
-Spotter supports three distinct metric delivery mechanisms depending on deployment architecture:
-1. **Prometheus / OpenTelemetry (Open-Source)**: HTTP `/metrics` scrape endpoint exposed on container internal port `9090` (or push via OpenTelemetry OTLP exporter).
-2. **Native UDMI MQTT Channel (`events/metrics`)**: Periodic JSON metric events published over mTLS MQTT for firewall-restricted OT environments where inbound HTTP ports cannot be exposed.
+### 7.1 Telemetry Delivery
+Spotter adheres strictly to the UDMI edge security model:
+- **Outbound-Only mTLS Channel**: All telemetry (host metrics, discovery events, PCAP streaming) is published outbound over mTLS MQTT to the cloud broker.
+- **Zero Inbound Ports**: To ensure compliance with firewall-restricted OT environments (BMS networks, industrial VLANs), Spotter runs with zero exposed inbound HTTP/scrape ports.
 
-### 7.2 Metric Catalog
-| Metric Identifier | Metric Type | Labels | Description |
-| :--- | :---: | :--- | :--- |
-| `spotter_cpu_usage_ratio` | Gauge | `process="spotter\|legacy"` | CPU utilization ratio vs allocated quota. |
-| `spotter_memory_bytes` | Gauge | `type="rss\|cgroup_limit"` | Memory consumption vs cgroup memory bounds. |
-| `spotter_open_fds` | Gauge | — | Count of open file descriptors (`ulimit -n`). |
-| `spotter_pcap_packets_total` | Counter | `status="captured\|dropped"` | Count of network packets captured in PCAP driver. |
-| `spotter_pcap_bytes_transferred_total` | Counter | `transport="mqtt"` | Diagnostic stream volume uploaded to cloud over MQTT. |
-| `spotter_pcap_upload_duration_seconds` | Histogram | — | Latency bucket distributions for streaming MQTT uploads. |
-| `spotter_ota_events_total` | Counter | `result="success\|rollback"` | Outcome counters for staged OTA packages. |
-| `spotter_mqtt_connection_status` | Gauge | — | Connectivity indicator (`1`=connected, `0`=disconnected). |
-
-### 7.3 Distributed Tracing & Logging Standards
-- **W3C OpenTelemetry Trace Context**: Spotter injects `traceparent` context headers into MQTT events to correlate edge packet captures with cloud reassembly pipelines.
-- **Single-Line Structured JSON Logs**: stdout/stderr logs are formatted as single-line JSON (`timestamp`, `severity`, `component`, `trace_id`, `message`) for parsing by Cloud Logging or Vector.
+### 7.2 Native UDMI Telemetry Model
+Host health metrics and system attributes are collected via zero-SSH inspection (`/proc/meminfo`, `/proc/loadavg`, `/etc/os-release`) and published natively through `SystemManager`:
+- **Dynamic Metrics (`events/system`)**: Periodically published by `SystemManager.publish_metrics()` as `SystemEvents` payloads:
+  - `metrics.mem_total_mb`: Total host physical memory in megabytes.
+  - `metrics.mem_free_mb`: Available/free host memory in megabytes.
+  - `metrics.system_load`: System load average.
+- **Static Host State (`state`)**: Published in `system_state`:
+  - `system.software.os`: Host OS distribution name (e.g., Debian GNU/Linux 12).
+  - `system.software.os_version`: OS release version identifier.
+- **Safety Circuit Breaker**: Evaluates memory usage against safety thresholds (`check_safety_circuit_breaker`), throttling operations to protect edge devices from kernel OOM termination.

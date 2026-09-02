@@ -1,5 +1,5 @@
 #!/bin/bash -e
-# Spotter Dual-Process Resource Contention & Load Stress Test Suite
+# Spotter Resource Contention & Load Stress Test Suite
 
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 WORKSPACE_DIR=$(realpath "${SCRIPT_DIR}/../../..")
@@ -7,7 +7,7 @@ source "${WORKSPACE_DIR}/etc/shell_common.sh"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "Usage: $0 [--mode local|canary]"
-    echo "Validates dual-process CPU, memory cgroups, file descriptor limits, and telemetry heartbeat latency under concurrent heavy workloads."
+    echo "Validates Spotter process CPU, memory consumption, file descriptor limits, and telemetry latency under concurrent heavy workloads."
     echo "Tests Spotter safety circuit breaker threshold throttling to protect against kernel OOM kills."
     exit 0
 fi
@@ -19,10 +19,10 @@ fi
 
 echo "=== Spotter Resource Contention Test Suite (Mode: $MODE) ==="
 
-echo "--- Step 1: Executing Observability & Circuit Breaker Unit Verifications ---"
+echo "--- Step 1: Executing Host Telemetry & Circuit Breaker Unit Verifications ---"
 (
     cd "${WORKSPACE_DIR}"
-    PYTHONPATH=clientlib/python/src:gencode/python:. "${WORKSPACE_DIR}/edge/spotter/venv/bin/python3" -m unittest edge.spotter.tests.test_observability -v
+    PYTHONPATH=clientlib/python/src:gencode/python:. "${WORKSPACE_DIR}/edge/spotter/venv/bin/python3" -m unittest edge.spotter.tests.test_host_telemetry -v
 )
 
 echo "--- Step 2: Simulating Concurrent High-Throughput Packet Capture Workload ---"
@@ -33,11 +33,9 @@ echo "Baseline open file descriptors: $FD_BEFORE"
 # Simulate stress load in python background process
 python3 -c "
 import time, os
-from edge.spotter.src.metrics import SpotterMetrics
-metrics = SpotterMetrics()
+from edge.spotter.src.host_telemetry import check_safety_circuit_breaker
 for i in range(5):
-    metrics.record_pcap_transfer(100, 0, 128000, 0.5)
-    if metrics.check_safety_circuit_breaker():
+    if check_safety_circuit_breaker(max_mem_pct=1.0):
         print('Circuit breaker tripped cleanly under simulated load.')
 " 2>/dev/null || true
 

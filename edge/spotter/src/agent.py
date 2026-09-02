@@ -117,10 +117,6 @@ def handle_ephemeral_secret_command(payload: Dict[str, Any]) -> None:
     LOGGER.info("Successfully received ephemeral secret for key '%s' over commands/secret channel.", secret_key)
 
 
-def handle_key_rotation(new_pem: bytes, backup_id: str) -> bool:
-    """Invoked when key rotation is executed on Spotter."""
-    LOGGER.info("Spotter key rotation executed (backup: %s, new_key_len: %d)", backup_id, len(new_pem))
-    return True
 
 
 def main():
@@ -165,7 +161,6 @@ def main():
 
     # Initialize Managers
     system_manager = SystemManager()
-    system_manager.register_key_rotation_callback(handle_key_rotation)
     system_manager.register_command_handler("secret", handle_ephemeral_secret_command)
 
     # Populate Host Telemetry Details for TLC

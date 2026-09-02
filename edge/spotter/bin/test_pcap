@@ -277,9 +277,9 @@ if grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -e '.discovery
     exit 1
 fi
 
-echo "Reassembling pcap payload via event_no sequencing"
+echo "Reassembling pcap payload using reassemble_pcap utility"
 grep '/events/stream' "$MQTT_OUT" | sed 's|^[^ ]* ||' > "$TEST_DIR/stream_events.json"
-jq -r -s 'sort_by(.event_no) | .[].data' "$TEST_DIR/stream_events.json" | base64 -d > "$TEST_DIR/assembled.pcap"
+"${SCRIPT_DIR}/reassemble_pcap" "$TEST_DIR/stream_events.json" "$TEST_DIR/assembled.pcap"
 
 echo "Validating pcap payload size"
 SIZE=$(stat -c%s "$TEST_DIR/assembled.pcap")

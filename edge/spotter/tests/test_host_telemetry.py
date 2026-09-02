@@ -3,7 +3,11 @@
 import unittest
 from unittest.mock import mock_open, patch
 
-from edge.spotter.src.host_telemetry import get_cpu_and_memory_metrics, get_host_os_info
+from edge.spotter.src.host_telemetry import (
+    check_safety_circuit_breaker,
+    get_cpu_and_memory_metrics,
+    get_host_os_info,
+)
 
 
 class TestHostTelemetry(unittest.TestCase):
@@ -50,6 +54,16 @@ MemAvailable:    8192000 kB
             self.assertEqual(metrics.get("load_1m"), 0.45)
             self.assertEqual(metrics.get("load_5m"), 0.30)
             self.assertEqual(metrics.get("load_15m"), 0.20)
+
+    @patch("edge.spotter.src.host_telemetry.get_cpu_and_memory_metrics")
+    def test_safety_circuit_breaker(self, mock_metrics):
+        # Normal memory usage (50% <= 85%) -> Safe (False)
+        mock_metrics.return_value = {"mem_used_pct": 50.0}
+        self.assertFalse(check_safety_circuit_breaker(max_mem_pct=85.0))
+
+        # High memory usage (90% >= 85%) -> Tripped (True)
+        mock_metrics.return_value = {"mem_used_pct": 90.0}
+        self.assertTrue(check_safety_circuit_breaker(max_mem_pct=85.0))
 
 
 if __name__ == "__main__":
