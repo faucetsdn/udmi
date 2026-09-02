@@ -33,6 +33,7 @@ All verification tests are categorised into **Unit Tests** and **Integration Tes
   - [test_container](bin/test_container): Validates container lifecycle isolation, volume mounting of configuration files, clean signal termination, and exit code propagation inside Docker.
   - [test_pcap](bin/test_pcap): Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming and verify binary reassembly via [reassemble_pcap](bin/reassemble_pcap).
   - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on an isolated network, confirming 100% functional telemetry payload parity with legacy discovery node.
+  - [compare_field_parity](bin/compare_field_parity): Automated utility to run sequential discovery parity scans or diff event logs on live field testbeds.
   - [test_resource_contention](bin/test_resource_contention): Validates Spotter process CPU, memory consumption, file descriptor limits, and telemetry latency under concurrent heavy workloads.
   - [test_fault_injection](bin/test_fault_injection): Validates network fault tolerance, streaming MQTT backoff recovery, and socket reconnect logic.
   - [self_test.py](tests/self_test.py): In-container micro-self-test suite executed post-build to verify imports, credentials, raw socket access, and loop sanity.
@@ -42,6 +43,7 @@ To get detailed explanations of what each integration test script validates, run
 ./edge/spotter/bin/test_container --help
 ./edge/spotter/bin/test_pcap --help
 ./edge/spotter/bin/test_parity --help
+./edge/spotter/bin/compare_field_parity --help
 ./edge/spotter/bin/test_resource_contention --help
 ./edge/spotter/bin/test_fault_injection --help
 ```
@@ -144,6 +146,7 @@ To maintain technical integrity and ensure non-regression:
 | **`bin/test_container`** | **Yes** | **No** | Local container build, volume mounts, and signal shutdown. |
 | **`bin/test_pcap`** | **Yes** | **No** | PCAP streaming over MQTT with binary reassembly validation. |
 | **`bin/test_parity`** | **Yes** | **No** | Differential comparison against simulated BACnet fixtures. |
+| **`bin/compare_field_parity`** | **Yes** | **Yes** | Safe sequential discovery parity execution on live field devices. |
 | **`bin/test_fault_injection`** | **Yes** | **No** | Induces transport disconnects and asserts backoff reconnects. |
 | **`bin/test_resource_contention`** | **Yes** | **Canary Only** | Evaluates CPU, memory ratio, FD stability, and circuit breaker. |
 | **`tests/self_test.py`** | **Yes** | **Yes** | Non-destructive <2s in-container verification of imports & permissions. |

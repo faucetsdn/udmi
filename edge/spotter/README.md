@@ -79,6 +79,7 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 | **[bin/spotter](../../bin/spotter)** | Unified CLI orchestrator for starting (local/container) and stopping instances |
 | **[bin/run_spotter_tests](bin/run_spotter_tests)** | Unified verification test runner for unit and integration suites |
 | **[bin/reassemble_pcap](bin/reassemble_pcap)** | Ad-hoc CLI utility to reassemble `events/stream` chunks into `.pcap` files |
+| **[bin/compare_field_parity](bin/compare_field_parity)** | Automated CLI tool to verify 100% field parity between legacy node and Spotter |
 | **[src/agent.py](src/agent.py)** | Main Spotter agent entry point, manager wiring, and command dispatcher |
 | **[src/providers/](src/providers/)** | Modular protocol discovery providers (BACnet, Ether, Passive) |
 | **[src/host_telemetry.py](src/host_telemetry.py)** | Zero-SSH host OS and performance telemetry probes |
@@ -129,6 +130,18 @@ Spotter includes a comprehensive suite of unit and integration tests located in 
 
 # Run the complete test suite (unit and integration)
 ./edge/spotter/bin/run_spotter_tests all
+```
+
+### Automated Field Parity Verification ([bin/compare_field_parity](bin/compare_field_parity))
+
+To prove byte-for-byte discovery parity on an actual field testbed machine without manual diffing:
+
+```bash
+# Automated live scan comparison (back-to-back sequential execution):
+sudo ./edge/spotter/bin/compare_field_parity --config /etc/udmi_discovery/config.json --duration 20
+
+# Or offline diff of previously collected discovery event files:
+./edge/spotter/bin/compare_field_parity --diff legacy_events.json spotter_events.json -v
 ```
 
 ---
