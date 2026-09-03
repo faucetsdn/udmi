@@ -72,12 +72,49 @@ parse_tmux_args() {
 
     if [[ "$TMUX_ACTION" == "logs" || "$TMUX_ACTION" == "attach" ]]; then
         if [[ ${#positional_args[@]} -gt 0 ]]; then
-            if [[ "$TMUX_ACTION" == "logs" && "${positional_args[0]}" =~ ^[0-9]+$ && ${#positional_args[@]} -eq 1 ]]; then
+            local first_arg="${positional_args[0]}"
+            if [[ "$first_arg" =~ ^~ ]]; then
+                echo "ERROR: Invalid target '$first_arg'. Leading tilde syntax is not supported; use a namespace (e.g. '${first_arg:1}') or 'session~${first_arg:1}'." >&2
+                exit 1
+            fi
+            if [[ "$TMUX_ACTION" == "logs" && "$first_arg" =~ ^[0-9]+$ && ${#positional_args[@]} -eq 1 ]]; then
                 TMUX_TARGET_ID=""
-                TMUX_EXTRA_ARGS=("${positional_args[0]}")
+                TMUX_EXTRA_ARGS=("$first_arg")
             else
-                TMUX_TARGET_ID="${positional_args[0]}"
                 TMUX_EXTRA_ARGS=("${positional_args[@]:1}")
+                if [[ "$first_arg" =~ ^[0-9]+$ ]]; then
+                    TMUX_TARGET_ID=""
+                    TMUX_EXTRA_ARGS=("$first_arg")
+                elif [[ "$first_arg" =~ ^: ]]; then
+                    # Leading colon (:window) targets a window in the active/default session
+                    TMUX_TARGET_ID="${first_arg#:}"
+                elif [[ "$first_arg" == *:* ]]; then
+                    # namespace:window or session~namespace:window
+                    local target_ns="${first_arg%%:*}"
+                    local target_win="${first_arg#*:}"
+                    if [[ "$target_ns" == *~* ]]; then
+                        local sess="${target_ns%%~*}"
+                        TMUX_NAMESPACE="${target_ns#*~}"
+                        if [[ -n "$SESSION_NAME" && "$SESSION_NAME" != "$sess" && "$SESSION_NAME" != "udmi_${sess}" ]]; then
+                            SESSION_NAME="$sess"
+                        fi
+                    else
+                        TMUX_NAMESPACE="$target_ns"
+                    fi
+                    TMUX_TARGET_ID="$target_win"
+                elif [[ "$first_arg" == *~* ]]; then
+                    # Explicit session~namespace format
+                    local sess="${first_arg%%~*}"
+                    TMUX_NAMESPACE="${first_arg#*~}"
+                    TMUX_TARGET_ID=""
+                    if [[ -n "$SESSION_NAME" && "$SESSION_NAME" != "$sess" && "$SESSION_NAME" != "udmi_${sess}" ]]; then
+                        SESSION_NAME="$sess"
+                    fi
+                else
+                    # Standalone name always matches a namespace
+                    TMUX_NAMESPACE="$first_arg"
+                    TMUX_TARGET_ID=""
+                fi
             fi
         fi
     else
@@ -474,7 +511,7 @@ tmux_session_status() {
 }
 
 tmux_capture_logs() {
-    local session_name="$1"
+    local target="${1:-}"
     local window_name="${2:-}"
     local lines="${3:-50}"
 
@@ -483,30 +520,133 @@ tmux_capture_logs() {
         window_name=""
     fi
 
-    if ! tmux_session_exists "$session_name"; then
-        echo "Session '$session_name' is not running."
+    # Reject leading tilde (~namespace) as an error
+    if [[ "$target" =~ ^~ ]]; then
+        echo "ERROR: Invalid target '$target'. Leading tilde syntax is not supported; use a namespace (e.g. '${target:1}') or 'session~${target:1}'." >&2
         return 1
     fi
 
-    if [[ -n "$window_name" ]]; then
-        echo "=== Logs for $session_name:$window_name (last $lines lines) ==="
-        tmux capture-pane -t "$session_name:$window_name" -p -S "-$lines" 2>/dev/null || echo "Window '$window_name' not found."
-    else
-        echo "=== Windows in $session_name ==="
-        local windows=$(tmux list-windows -t "$session_name" -F "#{window_name}")
-        for w in $windows; do
-            echo "--- Window: $w ---"
-            tmux capture-pane -t "$session_name:$w" -p -S "-$lines" 2>/dev/null || true
+    # Handle :window syntax (e.g. :mosquitto)
+    if [[ "$target" =~ ^: ]]; then
+        window_name="${target#:}"
+        target=""
+    elif [[ "$target" == *:* && -z "$window_name" ]]; then
+        window_name="${target#*:}"
+        target="${target%%:*}"
+    fi
+
+    local target_sessions=()
+
+    # 1. Exact match
+    if [[ -n "$target" ]] && tmux_session_exists "$target"; then
+        target_sessions+=("$target")
+    fi
+
+    # 2. Match with udmi_ prefix if omitted (e.g. barbican -> udmi_barbican, barbican~ns -> udmi_barbican~ns)
+    if [[ -n "$target" && ${#target_sessions[@]} -eq 0 && ! "$target" =~ ^udmi_ ]]; then
+        if tmux_session_exists "udmi_${target}"; then
+            target_sessions+=("udmi_${target}")
+        fi
+    fi
+
+    # 3. Match with active or default namespace if no namespace delimiter present in target
+    if [[ -n "$target" && ${#target_sessions[@]} -eq 0 && ! "$target" =~ ~ ]]; then
+        local ns="${TMUX_NAMESPACE:-default}"
+        if tmux_session_exists "${target}~${ns}"; then
+            target_sessions+=("${target}~${ns}")
+        elif [[ ! "$target" =~ ^udmi_ ]] && tmux_session_exists "udmi_${target}~${ns}"; then
+            target_sessions+=("udmi_${target}~${ns}")
+        fi
+    fi
+
+    # 4. If target is a standalone namespace name, find all sessions matching *~${target}
+    if [[ -n "$target" && ${#target_sessions[@]} -eq 0 ]]; then
+        local running_sessions=$(tmux list-sessions -F "#{session_name}" 2>/dev/null || true)
+        for s in $running_sessions; do
+            if [[ "$s" == *~"${target}" ]]; then
+                target_sessions+=("$s")
+            fi
         done
     fi
+
+    # 5. If target is empty, discover active sessions for TMUX_NAMESPACE or all udmi_* sessions
+    if [[ -z "$target" && ${#target_sessions[@]} -eq 0 ]]; then
+        local running_sessions=$(tmux list-sessions -F "#{session_name}" 2>/dev/null || true)
+        if [[ -n "${TMUX_NAMESPACE:-}" ]]; then
+            for s in $running_sessions; do
+                if [[ "$s" == *~"${TMUX_NAMESPACE}" ]]; then
+                    target_sessions+=("$s")
+                fi
+            done
+        fi
+        if [[ ${#target_sessions[@]} -eq 0 ]]; then
+            for s in $running_sessions; do
+                if [[ "$s" =~ ^udmi_ ]]; then
+                    target_sessions+=("$s")
+                fi
+            done
+        fi
+    fi
+
+    if [[ ${#target_sessions[@]} -eq 0 ]]; then
+        echo "Session '${target:-UDMI}' is not running."
+        return 1
+    fi
+
+    for sess in "${target_sessions[@]}"; do
+        if [[ -n "$window_name" ]]; then
+            echo "=== Logs for $sess:$window_name (last $lines lines) ==="
+            tmux capture-pane -t "$sess:$window_name" -p -S "-$lines" 2>/dev/null || echo "Window '$window_name' not found in session '$sess'."
+        else
+            echo "=== Windows in $sess ==="
+            local windows=$(tmux list-windows -t "$sess" -F "#{window_name}" 2>/dev/null || true)
+            for w in $windows; do
+                echo "--- Window: $w ---"
+                tmux capture-pane -t "$sess:$w" -p -S "-$lines" 2>/dev/null || true
+            done
+        fi
+    done
 }
 
 tmux_attach_session() {
-    local session_name="$1"
+    local target="$1"
     local window_name="${2:-}"
 
+    # Reject leading tilde (~namespace) as an error
+    if [[ "$target" =~ ^~ ]]; then
+        echo "ERROR: Invalid target '$target'. Leading tilde syntax is not supported; use a namespace (e.g. '${target:1}') or 'session~${target:1}'." >&2
+        return 1
+    fi
+
+    # Handle :window syntax
+    if [[ "$target" =~ ^: ]]; then
+        window_name="${target#:}"
+        target=""
+    elif [[ "$target" == *:* && -z "$window_name" ]]; then
+        window_name="${target#*:}"
+        target="${target%%:*}"
+    fi
+
+    local session_name="$target"
+    if [[ -z "$session_name" ]]; then
+        session_name="udmi_barbican"
+    fi
+
     if ! tmux_session_exists "$session_name"; then
-        echo "Session '$session_name' is not running."
+        if [[ ! "$session_name" =~ ^udmi_ ]] && tmux_session_exists "udmi_${session_name}"; then
+            session_name="udmi_${session_name}"
+        elif [[ ! "$session_name" =~ ~ ]]; then
+            local ns="${TMUX_NAMESPACE:-default}"
+            if tmux_session_exists "${session_name}~${ns}"; then
+                session_name="${session_name}~${ns}"
+            elif [[ ! "$session_name" =~ ^udmi_ ]] && tmux_session_exists "udmi_${session_name}~${ns}"; then
+                session_name="udmi_${session_name}~${ns}"
+            fi
+        fi
+    fi
+
+    if ! tmux_session_exists "$session_name"; then
+        echo "Session '$target' is not running."
         return 1
     fi
 

@@ -102,24 +102,7 @@ if [[ "$CMD" == "logs" ]]; then
         lines="$session"
         session=""
     fi
-    if [[ -n "$session" ]]; then
-        if [[ "$session" == *:* ]]; then
-            sess_name="${session%%:*}"
-            win_name="${session#*:}"
-            [[ "$sess_name" =~ ^udmi_ ]] || sess_name="udmi_${sess_name}"
-            tmux_capture_logs "$sess_name" "$win_name" "$lines"
-        else
-            sess_name="$session"
-            [[ "$sess_name" =~ ^udmi_ ]] || sess_name="udmi_${sess_name}"
-            tmux_capture_logs "$sess_name" "" "$lines"
-        fi
-    else
-        for s in udmi_barbican udmi_butler udmi_bridgehead udmi_base udmi_mcp; do
-            if tmux_session_exists "$s"; then
-                tmux_capture_logs "$s" "" "$lines"
-            fi
-        done
-    fi
+    tmux_capture_logs "$session" "" "$lines"
     exit 0
 fi
 
@@ -127,7 +110,6 @@ fi
 if [[ "$CMD" == "attach" ]]; then
     shift
     session="${1:-barbican}"
-    [[ "$session" =~ ^udmi_ ]] || session="udmi_${session}"
     tmux_attach_session "$session" "${2:-}"
     exit 0
 fi
