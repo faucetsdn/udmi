@@ -25,28 +25,12 @@ echo "--- Step 1: Executing Host Telemetry & Circuit Breaker Unit Verifications 
     PYTHONPATH=clientlib/python/src:gencode/python:. "${WORKSPACE_DIR}/edge/spotter/venv/bin/python3" -m unittest edge.spotter.tests.test_host_telemetry -v
 )
 
-echo "--- Step 2: Simulating Concurrent High-Throughput Packet Capture Workload ---"
-# Trigger stress generator against pcap logic while monitoring File Descriptors
-FD_BEFORE=$(ls /proc/$$/fd | wc -l)
-echo "Baseline open file descriptors: $FD_BEFORE"
-
-# Simulate stress load in python background process
-python3 -c "
-import time, os
-from edge.spotter.src.host_telemetry import check_safety_circuit_breaker
-for i in range(5):
-    if check_safety_circuit_breaker(max_mem_pct=1.0):
-        print('Circuit breaker tripped cleanly under simulated load.')
-" 2>/dev/null || true
-
-FD_AFTER=$(ls /proc/$$/fd | wc -l)
-echo "Post-stress open file descriptors: $FD_AFTER"
-FD_DIFF=$((FD_AFTER - FD_BEFORE))
-if [ $FD_DIFF -gt 10 ]; then
-    echo "ERROR: File descriptor leak detected (Diff: $FD_DIFF)!"
-    exit 1
-fi
-echo "-- FD Leak Check: PASSED (Zero FD growth outside acceptable bounds)"
+echo "--- Step 2: Simulating Concurrent Workloads & Verifying File Descriptor Stability ---"
+(
+    cd "${WORKSPACE_DIR}"
+    PYTHONPATH=clientlib/python/src:gencode/python:. "${WORKSPACE_DIR}/edge/spotter/venv/bin/python3" -m unittest edge.spotter.tests.test_resource_contention -v
+)
 
 echo "-- SUCCESS: Resource contention and safety circuit breaker verified under concurrent workload stress."
+
 exit 0

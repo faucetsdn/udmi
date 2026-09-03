@@ -64,6 +64,18 @@ The startup orchestrator [spotter](../../bin/spotter) handles environment setup,
   ./bin/spotter stop
   ```
 
+### 1.4 UDMI Infrastructure Orchestration & Connection Resilience
+Spotter connects to local or cloud-hosted UDMI infrastructure as an edge client node.
+- **Local Infrastructure Pairing**: When testing against local services, start the core stack using the canonical orchestrator [bin/udmi](../../bin/udmi):
+  ```bash
+  # Start Barbican and Butler services
+  bin/udmi start sites/udmi_site_model //mqtt/localhost:46432
+
+  # Launch Spotter targeting the local broker
+  ./bin/spotter sites/udmi_site_model //mqtt/localhost:46432 AHU-1
+  ```
+- **Connection Resilience**: Spotter automatically probes broker reachability via TCP socket probing for up to 30 seconds before client attachment, and employs retry backoff during TLS handshake establishment to withstand broker cold starts.
+
 ---
 
 ## 2. Test Execution Environments & Conditions
@@ -161,7 +173,7 @@ Spotter adheres strictly to the UDMI edge security model:
 - **Zero Inbound Ports**: To ensure compliance with firewall-restricted OT environments (BMS networks, industrial VLANs), Spotter runs with zero exposed inbound HTTP/scrape ports.
 
 ### 7.2 Native UDMI Telemetry Model
-Host health metrics and system attributes are collected via zero-SSH inspection (`/proc/meminfo`, `/proc/loadavg`, `/etc/os-release`) and published natively through `SystemManager`:
+Host health metrics and system attributes are collected via host inspection (`/proc/meminfo`, `/proc/loadavg`, `/etc/os-release`) and published natively through `SystemManager`:
 - **Dynamic Metrics (`events/system`)**: Periodically published by `SystemManager.publish_metrics()` as `SystemEvents` payloads:
   - `metrics.mem_total_mb`: Total host physical memory in megabytes.
   - `metrics.mem_free_mb`: Available/free host memory in megabytes.

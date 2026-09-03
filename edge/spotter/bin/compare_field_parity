@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Spotter Field Parity Verification Tool.
 
-Compares BACnet discovery outputs between the legacy discoverynode and the new Spotter node.
-Supports both direct live testbed execution (automated sequential scans) and offline
-file diffing of captured discovery events.
+Compares BACnet discovery outputs between the legacy discoverynode and the new
+Spotter node. Supports both direct live testbed execution (automated sequential
+scans) and offline file diffing of captured discovery events.
 """
 
 import argparse
@@ -13,102 +13,103 @@ import os
 import subprocess
 import sys
 import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 
 def remove_none_fields(d: Any) -> Any:
-    """Recursively removes None fields from dicts and lists."""
-    if isinstance(d, dict):
-        return {k: remove_none_fields(v) for k, v in d.items() if v is not None}
-    if isinstance(d, list):
-        return [remove_none_fields(v) for v in d if v is not None]
-    return d
+  """Recursively removes None fields from dicts and lists."""
+  if isinstance(d, dict):
+    return {k: remove_none_fields(v) for k, v in d.items() if v is not None}
+  if isinstance(d, list):
+    return [remove_none_fields(v) for v in d if v is not None]
+  return d
 
 
 def clean_event(event: Dict[str, Any]) -> Dict[str, Any]:
-    """Cleans dynamic timestamps, versions, and generations for stable comparison."""
-    evt = json.loads(json.dumps(event))
-    evt = remove_none_fields(evt)
+  """Cleans dynamic timestamps, versions, and generations for comparison."""
+  evt = json.loads(json.dumps(event))
+  evt = remove_none_fields(evt)
 
-    for field in ("timestamp", "generation", "version"):
-        if field in evt:
-            evt[field] = "<NORMALIZED>"
+  for field in ("timestamp", "generation", "version"):
+    if field in evt:
+      evt[field] = "<NORMALIZED>"
 
-    if evt.get("families") and isinstance(evt["families"], dict):
-        for _, fam_data in evt["families"].items():
-            if isinstance(fam_data, dict):
-                for f_field in ("generation", "timestamp"):
-                    if f_field in fam_data:
-                        fam_data[f_field] = "<NORMALIZED>"
+  if evt.get("families") and isinstance(evt["families"], dict):
+    for _, fam_data in evt["families"].items():
+      if isinstance(fam_data, dict):
+        for f_field in ("generation", "timestamp"):
+          if f_field in fam_data:
+            fam_data[f_field] = "<NORMALIZED>"
 
-    return evt
+  return evt
 
 
 def load_events_from_file(filepath: str) -> List[Dict[str, Any]]:
-    """Loads discovery events from JSON array, JSONL, or mosquitto_sub formatted logs."""
-    if not os.path.isfile(filepath):
-        raise FileNotFoundError(f"Event file not found: {filepath}")
+  """Loads discovery events from JSON array, JSONL, or mosquitto_sub logs."""
+  if not os.path.isfile(filepath):
+    raise FileNotFoundError(f"Event file not found: {filepath}")
 
-    with open(filepath, "r", encoding="utf-8") as f:
-        content = f.read().strip()
+  with open(filepath, "r", encoding="utf-8") as f:
+    content = f.read().strip()
 
-    if not content:
-        return []
+  if not content:
+    return []
 
-    # Attempt 1: Full JSON array
-    if content.startswith("["):
-        try:
-            data = json.loads(content)
-            if isinstance(data, list):
-                return [clean_event(e) for e in data if isinstance(e, dict)]
-        except json.JSONDecodeError:
-            pass
+  # Attempt 1: Full JSON array
+  if content.startswith("["):
+    try:
+      data = json.loads(content)
+      if isinstance(data, list):
+        return [clean_event(e) for e in data if isinstance(e, dict)]
+    except json.JSONDecodeError:
+      pass
 
-    # Attempt 2: Line-delimited JSON or mosquitto_sub topic-payload lines
-    events = []
-    for line in content.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        # Check for mosquitto_sub prefix (e.g. "/r/xxx/d/yyy/events/discovery { ... }")
-        if " " in line and line.startswith("/") and "{" in line:
-            _, json_str = line.split(" ", 1)
-            line = json_str.strip()
+  # Attempt 2: Line-delimited JSON or mosquitto_sub topic-payload lines
+  events = []
+  for line in content.splitlines():
+    line = line.strip()
+    if not line:
+      continue
+    # Check for mosquitto_sub prefix (e.g. "/r/.../events/discovery { ... }")
+    if " " in line and line.startswith("/") and "{" in line:
+      _, json_str = line.split(" ", 1)
+      line = json_str.strip()
 
-        try:
-            parsed = json.loads(line)
-            if isinstance(parsed, dict):
-                events.append(clean_event(parsed))
-        except json.JSONDecodeError:
-            continue
+    try:
+      parsed = json.loads(line)
+      if isinstance(parsed, dict):
+        events.append(clean_event(parsed))
+    except json.JSONDecodeError:
+      continue
 
-    return events
+  return events
 
 
 def extract_summary(events: List[Dict[str, Any]]) -> Dict[str, Any]:
-    """Extracts high-level summary metrics from a sequence of discovery events."""
-    start_events = [e for e in events if e.get("event_no") == 0]
-    stop_events = [e for e in events if e.get("event_no") == -1]
-    discovered_devices = {}
+  """Extracts high-level summary metrics from a sequence of discovery events."""
+  start_events = [e for e in events if e.get("event_no") == 0]
+  stop_events = [e for e in events if e.get("event_no") == -1]
+  discovered_devices = {}
 
-    for e in events:
-        event_no = e.get("event_no")
-        if event_no not in (0, -1):
-            # Identification key: addr, id, or device hash
-            dev_key = str(event_no)
-            if "families" in e and isinstance(e["families"], dict):
-                for fam, f_data in e["families"].items():
-                    if isinstance(f_data, dict) and "addr" in f_data:
-                        dev_key = f"{fam}:{f_data['addr']}"
-                        break
-            discovered_devices[dev_key] = e
+  for e in events:
+    event_no = e.get("event_no")
+    if event_no not in (0, -1):
+      # Identification key: addr, id, or device hash
+      dev_key = str(event_no)
+      if "families" in e and isinstance(e["families"], dict):
+        for fam, f_data in e["families"].items():
+          if isinstance(f_data, dict) and "addr" in f_data:
+            addr_val = f_data["addr"]
+            dev_key = f"{fam}:{addr_val}"
+            break
+      discovered_devices[dev_key] = e
 
-    return {
-        "total_events": len(events),
-        "has_start_event": len(start_events) > 0,
-        "has_stop_event": len(stop_events) > 0,
-        "devices": discovered_devices,
-    }
+  return {
+      "total_events": len(events),
+      "has_start_event": len(start_events) > 0,
+      "has_stop_event": len(stop_events) > 0,
+      "devices": discovered_devices,
+  }
 
 
 def compare_events(
@@ -116,225 +117,310 @@ def compare_events(
     spotter_events: List[Dict[str, Any]],
     verbose: bool = False,
 ) -> bool:
-    """Performs deep parity comparison between legacy and Spotter discovery outputs."""
-    legacy_summary = extract_summary(legacy_events)
-    spotter_summary = extract_summary(spotter_events)
+  """Performs deep parity comparison between legacy and Spotter discovery."""
+  legacy_summary = extract_summary(legacy_events)
+  spotter_summary = extract_summary(spotter_events)
 
-    print("\n" + "=" * 64)
-    print("           UDMI DISCOVERY NODE PARITY VERIFICATION REPORT")
-    print("=" * 64)
+  print("\n" + "=" * 64)
+  print("           UDMI DISCOVERY NODE PARITY VERIFICATION REPORT")
+  print("=" * 64)
 
-    print(f"\n[1] Event Volume & Sequencing:")
-    print(f"    - Legacy Events Collected  : {legacy_summary['total_events']}")
-    print(f"    - Spotter Events Collected : {spotter_summary['total_events']}")
-    print(f"    - Start Event (event_no: 0): Legacy={legacy_summary['has_start_event']} | Spotter={spotter_summary['has_start_event']}")
-    print(f"    - Stop Event (event_no: -1): Legacy={legacy_summary['has_stop_event']} | Spotter={spotter_summary['has_stop_event']}")
+  print("\n[1] Event Volume & Sequencing:")
+  total_leg = legacy_summary["total_events"]
+  print(f"    - Legacy Events Collected  : {total_leg}")
+  total_spt = spotter_summary["total_events"]
+  print(f"    - Spotter Events Collected : {total_spt}")
+  has_start_leg = legacy_summary["has_start_event"]
+  has_start_spt = spotter_summary["has_start_event"]
+  print(
+      f"    - Start Event (event_no: 0): Legacy={has_start_leg} | "
+      f"Spotter={has_start_spt}"
+  )
+  has_stop_leg = legacy_summary["has_stop_event"]
+  has_stop_spt = spotter_summary["has_stop_event"]
+  print(
+      f"    - Stop Event (event_no: -1): Legacy={has_stop_leg} | "
+      f"Spotter={has_stop_spt}"
+  )
 
-    legacy_keys = set(legacy_summary["devices"].keys())
-    spotter_keys = set(spotter_summary["devices"].keys())
+  legacy_keys = set(legacy_summary["devices"].keys())
+  spotter_keys = set(spotter_summary["devices"].keys())
 
-    matched_devices = legacy_keys.intersection(spotter_keys)
-    missing_in_spotter = legacy_keys - spotter_keys
-    extra_in_spotter = spotter_keys - legacy_keys
+  matched_devices = legacy_keys.intersection(spotter_keys)
+  missing_in_spotter = legacy_keys - spotter_keys
+  extra_in_spotter = spotter_keys - legacy_keys
 
-    print(f"\n[2] Device Discovery Coverage:")
-    print(f"    - Matched Devices          : {len(matched_devices)} / {len(legacy_keys)}")
-    if missing_in_spotter:
-        print(f"    - Missing in Spotter       : {len(missing_in_spotter)} ({', '.join(sorted(missing_in_spotter))})")
-    if extra_in_spotter:
-        print(f"    - Extra in Spotter         : {len(extra_in_spotter)} ({', '.join(sorted(extra_in_spotter))})")
-
-    # Deep payload diff on matched events
-    attribute_mismatches = 0
-    for dev in sorted(matched_devices):
-        leg_dev = legacy_summary["devices"][dev]
-        spt_dev = spotter_summary["devices"][dev]
-        if leg_dev != spt_dev:
-            attribute_mismatches += 1
-            if verbose:
-                print(f"\n    [!] Attribute diff on device '{dev}':")
-                leg_str = json.dumps(leg_dev, indent=2, sort_keys=True).splitlines()
-                spt_str = json.dumps(spt_dev, indent=2, sort_keys=True).splitlines()
-                for line in difflib.unified_diff(leg_str, spt_str, fromfile="legacy", tofile="spotter", lineterm=""):
-                    print(f"        {line}")
-
-    print(f"\n[3] Payload Attribute Integrity:")
-    print(f"    - Attribute Mismatches     : {attribute_mismatches}")
-
-    # Final Parity Verdict
-    is_parity = (
-        legacy_summary["has_start_event"] == spotter_summary["has_start_event"]
-        and legacy_summary["has_stop_event"] == spotter_summary["has_stop_event"]
-        and len(missing_in_spotter) == 0
-        and attribute_mismatches == 0
-        and len(legacy_events) > 0
+  print("\n[2] Device Discovery Coverage:")
+  print(
+      f"    - Matched Devices          : "
+      f"{len(matched_devices)} / {len(legacy_keys)}"
+  )
+  if missing_in_spotter:
+    missing_str = ", ".join(sorted(missing_in_spotter))
+    print(
+        f"    - Missing in Spotter       : "
+        f"{len(missing_in_spotter)} ({missing_str})"
+    )
+  if extra_in_spotter:
+    extra_str = ", ".join(sorted(extra_in_spotter))
+    print(
+        f"    - Extra in Spotter         : "
+        f"{len(extra_in_spotter)} ({extra_str})"
     )
 
-    print("\n" + "=" * 64)
-    if is_parity:
-        print("VERDICT: [PASS] FUNCTIONAL PARITY ACHIEVED!")
-        print("Spotter produces identical telemetry payloads and sequencing.")
-    else:
-        print("VERDICT: [FAIL] DISCOVERY PARITY NOT ACHIEVED.")
-        if len(legacy_events) == 0:
-            print("Reason: No events were collected to compare.")
-        elif missing_in_spotter:
-            print(f"Reason: Spotter failed to discover {len(missing_in_spotter)} devices found by legacy.")
-        elif attribute_mismatches > 0:
-            print(f"Reason: {attribute_mismatches} devices had payload discrepancies.")
-    print("=" * 64 + "\n")
+  # Deep payload diff on matched events
+  attribute_mismatches = 0
+  for dev in sorted(matched_devices):
+    leg_dev = legacy_summary["devices"][dev]
+    spt_dev = spotter_summary["devices"][dev]
+    if leg_dev != spt_dev:
+      attribute_mismatches += 1
+      if verbose:
+        print(f"\n    [!] Attribute diff on device \"{dev}\":")
+        leg_str = json.dumps(leg_dev, indent=2, sort_keys=True).splitlines()
+        spt_str = json.dumps(spt_dev, indent=2, sort_keys=True).splitlines()
+        diff = difflib.unified_diff(
+            leg_str, spt_str, fromfile="legacy", tofile="spotter", lineterm=""
+        )
+        for line in diff:
+          print(f"        {line}")
 
-    return is_parity
+  print("\n[3] Payload Attribute Integrity:")
+  print(f"    - Attribute Mismatches     : {attribute_mismatches}")
+
+  # Final Parity Verdict
+  is_parity = (
+      legacy_summary["has_start_event"] == spotter_summary["has_start_event"]
+      and legacy_summary["has_stop_event"] == spotter_summary["has_stop_event"]
+      and len(missing_in_spotter) == 0
+      and attribute_mismatches == 0
+      and len(legacy_events) > 0
+  )
+
+  print("\n" + "=" * 64)
+  if is_parity:
+    print("VERDICT: [PASS] FUNCTIONAL PARITY ACHIEVED!")
+    print("Spotter produces identical telemetry payloads and sequencing.")
+  else:
+    print("VERDICT: [FAIL] DISCOVERY PARITY NOT ACHIEVED.")
+    if len(legacy_events) == 0:
+      print("Reason: No events were collected to compare.")
+    elif missing_in_spotter:
+      num_missing = len(missing_in_spotter)
+      print(
+          f"Reason: Spotter failed to discover {num_missing} devices found by "
+          f"legacy."
+      )
+    elif attribute_mismatches > 0:
+      print(
+          f"Reason: {attribute_mismatches} devices had payload discrepancies."
+      )
+  print("=" * 64 + "\n")
+
+  return is_parity
 
 
-def run_live_parity(config_file: str, duration: int, spotter_image: str, output_dir: str, verbose: bool) -> bool:
-    """Executes sequential back-to-back discovery scans on the live machine."""
-    os.makedirs(output_dir, exist_ok=True)
-    legacy_output = os.path.join(output_dir, "legacy_discovery.jsonl")
-    spotter_output = os.path.join(output_dir, "spotter_discovery.jsonl")
+def run_live_parity(
+    config_file: str,
+    duration: int,
+    spotter_image: str,
+    output_dir: str,
+    verbose: bool,
+) -> bool:
+  """Executes sequential back-to-back discovery scans on the live machine."""
+  os.makedirs(output_dir, exist_ok=True)
+  legacy_output = os.path.join(output_dir, "legacy_discovery.jsonl")
+  spotter_output = os.path.join(output_dir, "spotter_discovery.jsonl")
 
-    if not os.path.isfile(config_file):
-        print(f"ERROR: Config file not found at '{config_file}'.")
-        return False
+  if not os.path.isfile(config_file):
+    print(f"ERROR: Config file not found at \"{config_file}\".")
+    return False
 
-    with open(config_file, "r", encoding="utf-8") as f:
-        cfg = json.load(f)
+  with open(config_file, "r", encoding="utf-8") as f:
+    cfg = json.load(f)
 
-    mqtt_cfg = cfg.get("mqtt", {})
-    host = mqtt_cfg.get("host", "localhost")
-    port = mqtt_cfg.get("port", 18883)
-    registry_id = mqtt_cfg.get("registry_id", "+")
-    device_id = mqtt_cfg.get("device_id", "+")
-    ca_file = mqtt_cfg.get("ca_file", "")
-    topic = f"/r/{registry_id}/d/{device_id}/events/discovery"
+  mqtt_cfg = cfg.get("mqtt", {})
+  host = mqtt_cfg.get("host", "localhost")
+  port = mqtt_cfg.get("port", 18883)
+  registry_id = mqtt_cfg.get("registry_id", "+")
+  device_id = mqtt_cfg.get("device_id", "+")
+  ca_file = mqtt_cfg.get("ca_file", "")
+  topic = f"/r/{registry_id}/d/{device_id}/events/discovery"
 
-    # Build mosquitto_sub command base
-    sub_cmd = ["mosquitto_sub", "-h", str(host), "-p", str(port), "-t", topic, "-v"]
-    if ca_file and os.path.isfile(ca_file):
-        sub_cmd.extend(["--cafile", ca_file])
+  # Build mosquitto_sub command base
+  sub_cmd = [
+      "mosquitto_sub", "-h", str(host), "-p", str(port), "-t", topic, "-v"
+  ]
+  if ca_file and os.path.isfile(ca_file):
+    sub_cmd.extend(["--cafile", ca_file])
 
-    print(f"=== Starting Live Parity Verification ===")
-    print(f"Config File   : {config_file}")
-    print(f"MQTT Target   : {host}:{port}")
-    print(f"Topic Pattern : {topic}")
-    print(f"Scan Duration : {duration}s per node")
+  print("=== Starting Live Parity Verification ===")
+  print(f"Config File   : {config_file}")
+  print(f"MQTT Target   : {host}:{port}")
+  print(f"Topic Pattern : {topic}")
+  print(f"Scan Duration : {duration}s per node")
 
-    # Step 1: Capture Legacy Node Output
-    print(f"\n--- Phase 1: Capturing Legacy Discovery Node ({duration}s) ---")
-    with open(legacy_output, "w", encoding="utf-8") as out_f:
-        try:
-            sub_proc = subprocess.Popen(sub_cmd, stdout=out_f, stderr=subprocess.DEVNULL)
-            time.sleep(duration)
-            sub_proc.terminate()
-            sub_proc.wait(timeout=5)
-        except Exception as err:
-            print(f"Warning during legacy capture: {err}")
-
-    # Step 2: Stop Legacy Service
-    print("\n--- Phase 2: Stopping Legacy Service ---")
-    was_systemd_running = False
-    res = subprocess.run(["systemctl", "is-active", "udmi_discovery"], stdout=subprocess.PIPE, text=True)
-    if res.stdout.strip() == "active":
-        was_systemd_running = True
-        print("Stopping systemd service 'udmi_discovery'...")
-        subprocess.run(["sudo", "systemctl", "stop", "udmi_discovery"], check=False)
-        time.sleep(2)
-
-    # Step 3: Run Spotter Container
-    print(f"\n--- Phase 3: Launching Spotter Node ({spotter_image}) ---")
-    config_dir = os.path.dirname(os.path.abspath(config_file))
-    config_basename = os.path.basename(config_file)
-    docker_cmd = [
-        "docker", "run", "--rm", "-d",
-        "--net", "host",
-        "--cap-add", "NET_RAW",
-        "--cap-add", "NET_ADMIN",
-        "-v", f"{config_dir}:/config_dir:ro",
-        "--name", "spotter-parity-eval",
-        spotter_image,
-        "--config_file", f"/config_dir/{config_basename}"
-    ]
-
-    spotter_container_id = None
+  # Step 1: Capture Legacy Node Output
+  print(f"\n--- Phase 1: Capturing Legacy Discovery Node ({duration}s) ---")
+  with open(legacy_output, "w", encoding="utf-8") as out_f:
     try:
-        res = subprocess.run(docker_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        if res.returncode != 0:
-            print(f"ERROR launching Spotter container: {res.stderr}")
-            return False
-        spotter_container_id = res.stdout.strip()
-        print(f"Spotter container running (ID: {spotter_container_id[:12]})")
+      with subprocess.Popen(
+          sub_cmd, stdout=out_f, stderr=subprocess.DEVNULL
+      ) as sub_proc:
+        time.sleep(duration)
+        sub_proc.terminate()
+        sub_proc.wait(timeout=5)
+    except (subprocess.SubprocessError, OSError) as err:
+      print(f"Warning during legacy capture: {err}")
 
-        # Step 4: Capture Spotter Output
-        print(f"\n--- Phase 4: Capturing Spotter Discovery Events ({duration}s) ---")
-        with open(spotter_output, "w", encoding="utf-8") as out_f:
-            sub_proc = subprocess.Popen(sub_cmd, stdout=out_f, stderr=subprocess.DEVNULL)
-            time.sleep(duration)
-            sub_proc.terminate()
-            sub_proc.wait(timeout=5)
+  # Step 2: Stop Legacy Service
+  print("\n--- Phase 2: Stopping Legacy Service ---")
+  was_systemd_running = False
+  res = subprocess.run(
+      ["systemctl", "is-active", "udmi_discovery"],
+      stdout=subprocess.PIPE,
+      text=True,
+      check=False,
+  )
+  if res.stdout.strip() == "active":
+    was_systemd_running = True
+    print("Stopping systemd service 'udmi_discovery'...")
+    subprocess.run(["sudo", "systemctl", "stop", "udmi_discovery"], check=False)
+    time.sleep(2)
 
-    finally:
-        # Step 5: Clean Up Spotter
-        print("\n--- Phase 5: Cleaning up Spotter Container ---")
-        subprocess.run(["docker", "stop", "spotter-parity-eval"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+  # Step 3: Run Spotter Container
+  print(f"\n--- Phase 3: Launching Spotter Node ({spotter_image}) ---")
+  config_dir = os.path.dirname(os.path.abspath(config_file))
+  config_basename = os.path.basename(config_file)
+  docker_cmd = [
+      "docker", "run", "--rm", "-d",
+      "--net", "host",
+      "--cap-add", "NET_RAW",
+      "--cap-add", "NET_ADMIN",
+      "-v", f"{config_dir}:/config_dir:ro",
+      "--name", "spotter-parity-eval",
+      spotter_image,
+      "--config_file", f"/config_dir/{config_basename}",
+  ]
 
-        # Restore Legacy Service if it was running
-        if was_systemd_running:
-            print("Restoring legacy 'udmi_discovery' service...")
-            subprocess.run(["sudo", "systemctl", "start", "udmi_discovery"], check=False)
+  try:
+    res = subprocess.run(
+        docker_cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if res.returncode != 0:
+      print(f"ERROR launching Spotter container: {res.stderr}")
+      return False
+    spotter_container_id = res.stdout.strip()
+    print(f"Spotter container running (ID: {spotter_container_id[:12]})")
 
-    # Step 6: Evaluate Parity
-    print("\n--- Phase 6: Analyzing & Comparing Collected Events ---")
-    legacy_events = load_events_from_file(legacy_output)
-    spotter_events = load_events_from_file(spotter_output)
-    return compare_events(legacy_events, spotter_events, verbose=verbose)
+    # Step 4: Capture Spotter Output
+    print(
+        f"\n--- Phase 4: Capturing Spotter Discovery Events ({duration}s) ---"
+    )
+    with open(spotter_output, "w", encoding="utf-8") as out_f:
+      with subprocess.Popen(
+          sub_cmd, stdout=out_f, stderr=subprocess.DEVNULL
+      ) as sub_proc:
+        time.sleep(duration)
+        sub_proc.terminate()
+        sub_proc.wait(timeout=5)
+
+  finally:
+    # Step 5: Clean Up Spotter
+    print("\n--- Phase 5: Cleaning up Spotter Container ---")
+    subprocess.run(
+        ["docker", "stop", "spotter-parity-eval"],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+
+    # Restore Legacy Service if it was running
+    if was_systemd_running:
+      print("Restoring legacy 'udmi_discovery' service...")
+      subprocess.run(
+          ["sudo", "systemctl", "start", "udmi_discovery"], check=False
+      )
+
+  # Step 6: Evaluate Parity
+  print("\n--- Phase 6: Analyzing & Comparing Collected Events ---")
+  legacy_events = load_events_from_file(legacy_output)
+  spotter_events = load_events_from_file(spotter_output)
+  return compare_events(legacy_events, spotter_events, verbose=verbose)
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Verify BACnet discovery parity between legacy discoverynode and Spotter."
+  """Main CLI entrypoint for field parity comparison."""
+  parser = argparse.ArgumentParser(
+      description=(
+          "Verify BACnet discovery parity between legacy discoverynode and"
+          " Spotter."
+      )
+  )
+  parser.add_argument(
+      "--diff",
+      nargs=2,
+      metavar=("LEGACY_FILE", "SPOTTER_FILE"),
+      help="Compare two pre-captured discovery event files (offline mode).",
+  )
+  parser.add_argument(
+      "--config",
+      default="/etc/udmi_discovery/config.json",
+      help=(
+          "Path to discovery configuration file (default:"
+          " /etc/udmi_discovery/config.json)."
+      ),
+  )
+  parser.add_argument(
+      "--duration",
+      type=int,
+      default=20,
+      help="Scan collection window duration in seconds (default: 20).",
+  )
+  parser.add_argument(
+      "--spotter-image",
+      default="ghcr.io/faucetsdn/udmi/spotter:latest",
+      help=(
+          "Spotter Docker container image to evaluate (default:"
+          " ghcr.io/faucetsdn/udmi/spotter:latest)."
+      ),
+  )
+  parser.add_argument(
+      "--output-dir",
+      default="/tmp/spotter_parity",
+      help="Directory to store captured event logs.",
+  )
+  parser.add_argument(
+      "-v",
+      "--verbose",
+      action="store_true",
+      help="Display detailed unified diffs for any mismatched attributes.",
+  )
+
+  args = parser.parse_args()
+
+  if args.diff:
+    legacy_events = load_events_from_file(args.diff[0])
+    spotter_events = load_events_from_file(args.diff[1])
+    success = compare_events(
+        legacy_events, spotter_events, verbose=args.verbose
     )
-    parser.add_argument(
-        "--diff", nargs=2, metavar=("LEGACY_FILE", "SPOTTER_FILE"),
-        help="Compare two pre-captured discovery event files (offline mode)."
-    )
-    parser.add_argument(
-        "--config", default="/etc/udmi_discovery/config.json",
-        help="Path to discovery configuration file (default: /etc/udmi_discovery/config.json)."
-    )
-    parser.add_argument(
-        "--duration", type=int, default=20,
-        help="Scan collection window duration in seconds (default: 20)."
-    )
-    parser.add_argument(
-        "--spotter-image", default="ghcr.io/faucetsdn/udmi/spotter:latest",
-        help="Spotter Docker container image to evaluate (default: ghcr.io/faucetsdn/udmi/spotter:latest)."
-    )
-    parser.add_argument(
-        "--output-dir", default="/tmp/spotter_parity",
-        help="Directory to store captured event logs (default: /tmp/spotter_parity)."
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true",
-        help="Display detailed unified diffs for any mismatched attributes."
+  else:
+    success = run_live_parity(
+        config_file=args.config,
+        duration=args.duration,
+        spotter_image=args.spotter_image,
+        output_dir=args.output_dir,
+        verbose=args.verbose,
     )
 
-    args = parser.parse_args()
-
-    if args.diff:
-        legacy_events = load_events_from_file(args.diff[0])
-        spotter_events = load_events_from_file(args.diff[1])
-        success = compare_events(legacy_events, spotter_events, verbose=args.verbose)
-    else:
-        success = run_live_parity(
-            config_file=args.config,
-            duration=args.duration,
-            spotter_image=args.spotter_image,
-            output_dir=args.output_dir,
-            verbose=args.verbose,
-        )
-
-    sys.exit(0 if success else 1)
+  sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
-    main()
+  main()
+

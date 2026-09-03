@@ -105,7 +105,7 @@ else
     CSR_FILE="$TEST_DIR/client.csr"
     TARGET_PEM="$TEST_DIR/rsa_private.pem"
     
-    openssl req -new -key "$TARGET_PEM" -out "$CSR_FILE" -subj "/CN=DN-1" >/dev/null 2>&1
+    openssl req -new -key "$TARGET_PEM" -out "$CSR_FILE" -subj "/CN=DSN-1" >/dev/null 2>&1
     openssl x509 -req -in "$CSR_FILE" -CA "$CA_SRC" -CAkey "$REFLECTOR_KEY" \
         -CAcreateserial -out "$TARGET_CRT" -days 3650 >/dev/null 2>&1
 fi
@@ -146,7 +146,7 @@ cat <<EOF > "$TEST_DIR/spotter_config.json"
     "metrics_rate_sec": 10
   },
   "mqtt": {
-    "device_id": "DN-1",
+    "device_id": "DSN-1",
     "registry_id": "ZZ-TRI-FECTA",
     "host": "192.168.12.254",
     "port": 18883,
@@ -165,8 +165,8 @@ echo "Setting up MQTT subscriber on port 1883 for state and stream event message
 MQTT_OUT="$TEST_DIR/mqtt.out"
 touch "$MQTT_OUT"
 mosquitto_sub -h 127.0.0.1 -p 1883 \
-    -t "/r/ZZ-TRI-FECTA/d/DN-1/state" \
-    -t "/r/ZZ-TRI-FECTA/d/DN-1/events/stream" \
+    -t "/r/ZZ-TRI-FECTA/d/DSN-1/state" \
+    -t "/r/ZZ-TRI-FECTA/d/DSN-1/events/stream" \
     -F "%t %p" > "$MQTT_OUT" &
 MOSQ_SUB_PID=$!
 
@@ -233,7 +233,7 @@ echo "Starting dummy UDP traffic thread"
 TRAFFIC_PID=$!
 
 echo "Publishing discovery TRACE config to trigger packet capture over MQTT..."
-mosquitto_pub -h 127.0.0.1 -p 1883 -t "/r/ZZ-TRI-FECTA/d/DN-1/config" -f "$TEST_DIR/config_payload.json" -q 1
+mosquitto_pub -h 127.0.0.1 -p 1883 -t "/r/ZZ-TRI-FECTA/d/DSN-1/config" -f "$TEST_DIR/config_payload.json" -q 1
 
 echo "Waiting for discovery state 'stopped' and stream transfers"
 END_TIME=$((SECONDS + 25))

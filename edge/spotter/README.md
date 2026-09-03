@@ -16,14 +16,14 @@ Spotter runs as a single unified process using the UDMI Python Client Library (`
    - Manages scheduled and on-demand discovery sweeps.
    - Streams live remote packet capture traces (`events/stream`) safely buffered in RAM.
 3. **`SystemManager`**:
-   - Collects host metrics (CPU load, memory, OS distribution) without SSH.
-   - Handles ephemeral secrets over non-persisted MQTT command channels (`commands/secret`).
+   - Collects host metrics (CPU load, memory, OS distribution).
+   - Emits system state and periodic telemetry events (`events/system`).
 
 ```mermaid
 graph TD
     subgraph "Spotter Edge Process"
         AGENT["Spotter Core Agent (agent.py)"]
-        SYS["SystemManager (Host Telemetry & Ephemeral Secrets)"]
+        SYS["SystemManager (Host Telemetry & Health)"]
         DISC["SpotterDiscoveryManager (PCAP & Scheduling)"]
         LOC["LocalnetManager (Pluggable Providers)"]
         
@@ -45,7 +45,7 @@ graph TD
         DEV["Field OT Devices / BACnet Controllers"]
     end
 
-    SYS -->|"state.system / commands/secret"| MB
+    SYS -->|"state.system / events/system"| MB
     DISC -->|"events/discovery & events/stream"| MB
     LOC -->|"Scans & Probes"| DEV
 ```
@@ -82,7 +82,7 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 | **[bin/compare_field_parity](bin/compare_field_parity)** | Automated CLI tool to verify functional parity between legacy node and Spotter |
 | **[src/agent.py](src/agent.py)** | Main Spotter agent entry point, manager wiring, and command dispatcher |
 | **[src/providers/](src/providers/)** | Modular protocol discovery providers (BACnet, Ether, Passive) |
-| **[src/host_telemetry.py](src/host_telemetry.py)** | Zero-SSH host OS and performance telemetry probes |
+| **[src/host_telemetry.py](src/host_telemetry.py)** | Host OS and performance telemetry probes |
 | **[src/pcap.py](src/pcap.py)** | Safe `tcpdump` wrapper yielding binary streams with duration and size caps |
 | **[container/Dockerfile](container/Dockerfile)** | Multi-stage Docker image build specification |
 | **[spotter_config.json](spotter_config.json)** | Sample configuration file for endpoint and BACnet parameters |
@@ -96,16 +96,26 @@ Use the unified orchestrator script [bin/spotter](../../bin/spotter) located in 
 
 ### 1. Launch Spotter
 
-* **Local Development (from Site Model)**:
+* **Local Development (against UDMI Local Orchestrator)**:
   ```bash
-  ./bin/spotter sites/udmi_site_model //mqtt/localhost AHU-1
+  # 1. Start local UDMI infrastructure (Barbican & Butler services)
+  bin/udmi start sites/udmi_site_model //mqtt/localhost:46432
+
+  # 2. Launch Spotter targeting the local broker
+  ./bin/spotter sites/udmi_site_model //mqtt/localhost:46432 AHU-1
   ```
 * **Container Mode (using Configuration File)**:
   ```bash
   ./bin/spotter edge/spotter/spotter_config.json 1234 --mode container
   ```
 
-### 2. Stop Running Instances
+### 2. Connection Resilience & Startup Probing
+
+Spotter incorporates built-in broker readiness probing and connection retry loops:
+* Probes target MQTT broker reachability via TCP socket probing for up to 30 seconds (`mqtt.connect_timeout_sec`).
+* Automatically performs retry backoff upon transient disconnects during broker TLS initialization (`mqtt.connect_retries` and `mqtt.connect_retry_delay_sec`).
+
+### 3. Stop Running Instances
 
 ```bash
 # Stop all background Spotter processes
@@ -151,6 +161,6 @@ sudo ./edge/spotter/bin/compare_field_parity --config /etc/udmi_discovery/config
 The following capabilities are tracked as future milestones:
 
 1. **UDMIS Native PCAP Ingestion Pipeline**: Native service-side ingestion and reassembly in UDMIS to automatically collect and persist `events/stream` PCAP chunks directly into Cloud Storage (GCS) or BigQuery blob storage.
-2. **Heterogeneous Secret Delivery**: Extensible mechanism for securely injecting multi-tenant operational credentials (e.g., vendor device credentials, BACnet network encryption keys) via encrypted/ephemeral payloads.
+2. **Ephemeral Secret Delivery**: Architectural mechanism for delivering transient, authenticated operational credentials (e.g., vendor device credentials, BACnet network encryption keys, or REST API bearer tokens) strictly in volatile RAM without disk persistence. A dedicated architectural discussion will finalize the delivery transport (such as non-persisted command channels e.g. `commands/secret` vs encrypted `config.blobset`), memory scrubbing lifecycles, and cryptographic envelope validation before implementation.
 3. **Key Rotation & Lifecycle**: End-to-end device private/public key rotation with automated cloud IoT registry coordination, backup verification, and zero-downtime reconnection.
 4. **Expanded Host Observability Metrics**: Network adapter error/drop counters, hardware temperature, storage/inode thresholds, and edge-to-cloud roundtrip latency.

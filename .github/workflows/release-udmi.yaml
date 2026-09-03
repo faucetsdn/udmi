@@ -82,7 +82,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: build and push image
         run: |
-          IMAGE_REF="$PUSH_REGISTRY/$GITHUB_REPOSITORY_OWNER/udmi/discoverynode"
+          IMAGE_REF="$PUSH_REGISTRY/${GITHUB_REPOSITORY_OWNER,,}/udmi/discoverynode"
           IMAGE_TAG=${REF_NAME//\//-}
           [[ $REF_NAME == master ]] && IMAGE_TAG=latest
           ./misc/discoverynode/bin/build_container_and_push $IMAGE_REF:$IMAGE_TAG
@@ -113,7 +113,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: build and push image
         run: |
-          IMAGE_REF="$PUSH_REGISTRY/$GITHUB_REPOSITORY_OWNER/udmi/spotter"
+          IMAGE_REF="$PUSH_REGISTRY/${GITHUB_REPOSITORY_OWNER,,}/udmi/spotter"
           IMAGE_TAG=${REF_NAME//\//-}
           [[ $REF_NAME == master ]] && IMAGE_TAG=latest
           docker build -t $IMAGE_REF:$IMAGE_TAG -f edge/spotter/container/Dockerfile .

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ad-hoc utility to reassemble UDMI events/stream chunks into a valid PCAP file.
+"""Utility to reassemble UDMI events/stream chunks into a valid PCAP file.
 
 Usage:
     bin/reassemble_pcap <input_file_or_stdin> <output_pcap_path>
@@ -26,113 +26,125 @@ PCAP_MAGIC_NUMBERS = [
 
 
 def parse_stream_events(raw_text: str):
-    """Parse StreamEvent objects from JSON array, JSONL, or mosquitto_sub output."""
-    raw_text = raw_text.strip()
-    if not raw_text:
-        return []
+  """Parse StreamEvent objects from JSON array, JSONL, or mosquitto_sub."""
+  raw_text = raw_text.strip()
+  if not raw_text:
+    return []
 
-    # Case 1: Standard JSON array or single object
-    if raw_text.startswith("[") or raw_text.startswith("{"):
-        try:
-            data = json.loads(raw_text)
-            if isinstance(data, list):
-                return data
-            elif isinstance(data, dict):
-                return [data]
-        except json.JSONDecodeError:
-            pass
+  # Case 1: Standard JSON array or single object
+  if raw_text.startswith("[") or raw_text.startswith("{"):
+    try:
+      data = json.loads(raw_text)
+      if isinstance(data, list):
+        return data
+      if isinstance(data, dict):
+        return [data]
+    except json.JSONDecodeError:
+      pass
 
-    # Case 2: Line by line (JSONL or mosquitto_sub format: "<topic> <payload>")
-    events = []
-    for line in raw_text.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        # Strip topic prefix if present
-        if " " in line and not line.startswith("{"):
-            _, _, payload = line.partition(" ")
-        else:
-            payload = line
+  # Case 2: Line by line (JSONL or mosquitto_sub format: "<topic> <payload>")
+  events = []
+  for line in raw_text.splitlines():
+    line = line.strip()
+    if not line:
+      continue
+    # Strip topic prefix if present
+    if " " in line and not line.startswith("{"):
+      _, _, payload = line.partition(" ")
+    else:
+      payload = line
 
-        try:
-            obj = json.loads(payload)
-            if isinstance(obj, dict) and "data" in obj:
-                events.append(obj)
-        except json.JSONDecodeError:
-            continue
+    try:
+      obj = json.loads(payload)
+      if isinstance(obj, dict) and "data" in obj:
+        events.append(obj)
+    except json.JSONDecodeError:
+      continue
 
-    return events
+  return events
 
 
 def reassemble_pcap(input_source: str, output_path: str) -> None:
-    if input_source == "-":
-        raw_content = sys.stdin.read()
-    else:
-        if not os.path.exists(input_source):
-            sys.exit(f"Error: Input file '{input_source}' does not exist.")
-        with open(input_source, "r", encoding="utf-8", errors="replace") as f:
-            raw_content = f.read()
+  """Reassembles chunked events into a binary pcap capture file."""
+  if input_source == "-":
+    raw_content = sys.stdin.read()
+  else:
+    if not os.path.exists(input_source):
+      sys.exit(f"Error: Input file '{input_source}' does not exist.")
+    with open(input_source, "r", encoding="utf-8", errors="replace") as f:
+      raw_content = f.read()
 
-    events = parse_stream_events(raw_content)
-    if not events:
-        sys.exit("Error: No valid StreamEvent records with 'data' found in input.")
+  events = parse_stream_events(raw_content)
+  if not events:
+    sys.exit("Error: No valid StreamEvent records with 'data' found in input.")
 
-    # Filter out records missing data
-    valid_events = [e for e in events if e.get("data")]
-    if not valid_events:
-        sys.exit("Error: Found stream records but none contained base64 'data'.")
+  # Filter out records missing data
+  valid_events = [e for e in events if e.get("data")]
+  if not valid_events:
+    sys.exit("Error: Found stream records but none contained base64 'data'.")
 
-    # Sort primarily by chunk_index, fallback to event_no
-    def sort_key(e):
-        return (
-            e.get("chunk_index", 0) if e.get("chunk_index") is not None
-            else e.get("event_no", 0)
-        )
+  # Sort primarily by chunk_index, fallback to event_no
+  def sort_key(e):
+    return (
+        e.get("chunk_index", 0)
+        if e.get("chunk_index") is not None
+        else e.get("event_no", 0)
+    )
 
-    sorted_events = sorted(valid_events, key=sort_key)
-    session_id = sorted_events[0].get("session_id", "unknown")
-    total_chunks = len(sorted_events)
+  sorted_events = sorted(valid_events, key=sort_key)
+  session_id = sorted_events[0].get("session_id", "unknown")
+  total_chunks = len(sorted_events)
 
-    # Reconstruct binary payload
-    pcap_data = bytearray()
-    for idx, evt in enumerate(sorted_events):
-        b64_str = evt["data"]
-        try:
-            chunk_bytes = base64.b64decode(b64_str)
-            pcap_data.extend(chunk_bytes)
-        except Exception as err:
-            sys.exit(f"Error: Failed to decode base64 chunk at index {idx}: {err}")
+  # Reconstruct binary payload
+  pcap_data = bytearray()
+  for idx, evt in enumerate(sorted_events):
+    b64_str = evt["data"]
+    try:
+      chunk_bytes = base64.b64decode(b64_str)
+      pcap_data.extend(chunk_bytes)
+    except Exception as err:  # pylint: disable=broad-exception-caught
+      sys.exit(f"Error: Failed to decode base64 chunk at index {idx}: {err}")
 
-    # Validate output
-    if len(pcap_data) == 0:
-        sys.exit("Error: Reassembled PCAP payload is empty (0 bytes).")
+  # Validate output
+  if not pcap_data:
+    sys.exit("Error: Reassembled PCAP payload is empty (0 bytes).")
 
-    magic = bytes(pcap_data[:4])
-    is_valid_magic = any(magic == m for m in PCAP_MAGIC_NUMBERS)
+  magic = bytes(pcap_data[:4])
+  is_valid_magic = any(magic == m for m in PCAP_MAGIC_NUMBERS)
 
-    # Write to destination file
-    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-    with open(output_path, "wb") as f:
-        f.write(pcap_data)
+  # Write to destination file
+  os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+  with open(output_path, "wb") as f:
+    f.write(pcap_data)
 
-    print("========================================")
-    print("PCAP Reassembly Completed Successfully")
-    print("========================================")
-    print(f"Session ID     : {session_id}")
-    print(f"Chunks Decoded : {total_chunks}")
-    print(f"Total Bytes    : {len(pcap_data)}")
-    print(f"Magic Bytes    : {magic.hex()} ({'VALID' if is_valid_magic else 'WARNING: Unexpected header'})")
-    print(f"Output File    : {output_path}")
+  magic_status = "VALID" if is_valid_magic else "WARNING: Unexpected header"
+  print("========================================")
+  print("PCAP Reassembly Completed Successfully")
+  print("========================================")
+  print(f"Session ID     : {session_id}")
+  print(f"Chunks Decoded : {total_chunks}")
+  print(f"Total Bytes    : {len(pcap_data)}")
+  print(f"Magic Bytes    : {magic.hex()} ({magic_status})")
+  print(f"Output File    : {output_path}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Reassemble UDMI stream events into PCAP file")
-    parser.add_argument("input", help="Input file containing stream event data (or '-' for stdin)")
-    parser.add_argument("output", help="Destination file path for reassembled .pcap")
-    args = parser.parse_args()
+  """CLI entry point for PCAP reassembly."""
+  parser = argparse.ArgumentParser(
+      description="Reassemble UDMI stream events into PCAP file"
+  )
+  parser.add_argument(
+      "input",
+      help="Input file containing stream event data (or '-' for stdin)",
+  )
+  parser.add_argument(
+      "output", help="Destination file path for reassembled .pcap"
+  )
+  args = parser.parse_args()
 
-    reassemble_pcap(args.input, args.output)
+  reassemble_pcap(args.input, args.output)
 
 
 if __name__ == "__main__":
-    main()
+  main()
+

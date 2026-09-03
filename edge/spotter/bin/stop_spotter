@@ -28,17 +28,19 @@ stop_container() {
 stop_local() {
     echo "Searching for local Spotter processes..."
 
-    local agent_pattern="agent.py"
+    local agent_pattern="(edge/spotter/src/agent\.py|spotter/agent\.py)"
     if [[ -n "${SERIAL_NO}" && "${SERIAL_NO}" != "NA" ]]; then
-        agent_pattern="agent.py .*--serial_no ${SERIAL_NO}"
+        agent_pattern="(edge/spotter/src/agent\.py|spotter/agent\.py).*--serial_no[ =]+${SERIAL_NO}([ \t]|$)"
     fi
     local agent_pids
-    agent_pids=$(pgrep -f "${agent_pattern}" || true)
+    agent_pids=$(pgrep -A -f "${agent_pattern}" 2>/dev/null || pgrep -f "${agent_pattern}" || true)
     if [[ -n "${agent_pids}" ]]; then
         echo "Found Spotter Agent process(es) with PID(s): ${agent_pids}"
         for pid in ${agent_pids}; do
-            echo "Sending SIGTERM to agent process ${pid}..."
-            kill -TERM "${pid}" 2>/dev/null || true
+            if [[ "${pid}" != "$$" && "${pid}" != "$PPID" ]]; then
+                echo "Sending SIGTERM to agent process ${pid}..."
+                kill -TERM "${pid}" 2>/dev/null || true
+            fi
         done
         echo "Local services stopped."
     else

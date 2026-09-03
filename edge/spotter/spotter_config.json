@@ -4,7 +4,7 @@
     "metrics_rate_sec": 300
   },
   "mqtt": {
-    "device_id": "DN-1",
+    "device_id": "DSN-1",
     "registry_id": "ZZ-TRI-FECTA",
     "host": "localhost",
     "port": 18883,
