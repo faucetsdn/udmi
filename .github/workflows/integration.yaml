@@ -135,7 +135,7 @@ jobs:
             ghcr.io/$IMAGE_NAME:pubber-$REF_NAME bin/pubber site_model/cloud_iot_config.json
           for count in `seq 0 30`; do
             (docker ps | fgrep -q pubber) || break
-            (docker logs pubber 2>&1 | fgrep -q -v "Connection complete") || break
+            (docker logs pubber 2>&1 | fgrep -q "Connection complete") && break
             echo Waiting for pubber startup $((30 - count))...
             sleep 1
           done
