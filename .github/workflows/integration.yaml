@@ -211,7 +211,7 @@ jobs:
             -v $(realpath site_model):/var/site_model \
             --name discoverynode \
             $IMAGE_TAG \
-            bin/run /var/site_model //mqtt/udmis AHU-1 vendor.range=1:28179023,3:20231,,,,,,,,,,,,,,,,
+            bin/run /var/site_model //mqtt/udmis AHU-1 vendor.range=1:28179023,3:20231,22:0x65,3:171
       - name: Sequencer run
         run: |
           docker run --net udminet --name sequencer -v $(realpath site_model):/root/site_model \
