@@ -81,6 +81,8 @@ dockerized
 downlink
 dropdown
 DUT
+Dynsec
+dynsec
 enablement
 encoding
 encodings
@@ -147,6 +149,7 @@ IPv
 ipv
 JDK
 JS
+JARs
 JSON
 json
 JUnit
@@ -154,6 +157,7 @@ JVM
 JWT
 JWTs
 keygen
+keystore
 KNX
 kube
 kubectl
@@ -361,3 +365,5 @@ writeable
 Writeback
 writeback
 yaml
+Zanzara
+zanzara

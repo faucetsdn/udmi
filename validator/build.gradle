@@ -34,13 +34,12 @@ compileJava {
 sourceSets {
     main {
         java {
-            srcDirs '../gencode/java'
-            srcDirs '../common/src/main/java'
+            srcDirs = ['src/main/java', '../gencode/java', '../common/src/main/java']
         }
     }
     test {
         java {
-            srcDirs '../common/src/test/java'
+            srcDirs = ['src/test/java', '../common/src/test/java']
         }
     }
 }

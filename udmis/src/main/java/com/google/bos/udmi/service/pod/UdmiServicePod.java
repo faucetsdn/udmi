@@ -177,7 +177,8 @@ public class UdmiServicePod extends ContainerBase {
   private static void adaptImplicitToZanzara(PodConfiguration config) {
     if (config.iot_access != null && config.iot_access.containsKey("implicit")) {
       System.err.println(
-          "WARNING: Temporary migration employed - adapting legacy 'implicit' iot_access configuration to 'zanzara'");
+          "WARNING: Temporary migration employed - adapting legacy 'implicit' iot_access "
+              + "configuration to 'zanzara'");
       IotAccess implicitAccess = config.iot_access.remove("implicit");
       IotAccess zanzaraAccess = config.iot_access.get("zanzara");
       if (zanzaraAccess != null) {

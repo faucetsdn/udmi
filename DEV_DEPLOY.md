@@ -119,3 +119,5 @@ FROM gcr.io/distroless/java21-debian12
 WORKDIR /app
 COPY udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar /app/bridge.jar
 ENTRYPOINT ["java", "-cp", "/app/bridge.jar", "com.google.bos.udmi.service.bridge.MqttToPubSubBridge"]
+EOF
+```
