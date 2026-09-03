@@ -1,0 +1,184 @@
+#!/bin/bash -e
+#
+# Integration test verifying the n = 3 distributed election (groot) system across multiple UDMIS instances.
+#
+
+UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
+cd "$UDMI_ROOT"
+
+source etc/shell_common.sh
+
+TARGET_PROJECT=${1:-//mqtt/localhost:18833}
+
+echo "=========================================================================="
+echo "Starting n = 3 Groot Distributed Election Integration Test"
+echo "Target Project: $TARGET_PROJECT"
+echo "=========================================================================="
+
+cleanup() {
+    echo "Cleaning up UDMIS test instances..."
+    for i in 1 2 3; do
+        UDMIS_PID_FILE=var/udmis_$i.pid bin/start_udmis stop >/dev/null 2>&1 || true
+        if [[ -f var/udmis_$i.pid ]]; then
+            kill -9 $(cat var/udmis_$i.pid) >/dev/null 2>&1 || true
+            rm -f var/udmis_$i.pid
+        fi
+        rm -f var/pod_ready_$i.txt
+    done
+}
+
+trap cleanup EXIT
+
+# 1. Start local infrastructure (MQTT broker, certs, etc.)
+echo "Setting up base infrastructure..."
+bin/setup_base
+bin/container udmis prep --no-check || true
+bin/start_local sites/udmi_site_model $TARGET_PROJECT
+
+# Stop the default single-instance UDMIS started by start_local
+bin/start_udmis stop || true
+
+# 2. Generate 3 pod configurations with active distributor and rapid heartbeat/sendgroot intervals
+echo "Generating pod configurations for 3 instances..."
+[[ -f var/local_pod.json ]] || fail "var/local_pod.json not found"
+
+for i in 1 2 3; do
+    jq '.base.log_level = "DEBUG" |
+        .flows.distributor.enabled = "true" |
+        .flows.distributor.protocol = "mqtt" |
+        .flows.distributor.transport = "ssl" |
+        .flows.distributor.hostname = "localhost" |
+        .flows.distributor.port = '"${MQTT_PORT:-8883}"' |
+        .flows.distributor.recv_id = "#" |
+        .flows.distributor.send_id = "distribute" |
+        .flows.control.recv_id = "c/control/#" |
+        .flows.control.send_id = "events/groot" |
+        .crons.heartbeat.periodic_sec = 2 |
+        .crons.sendgroot.periodic_sec = 5 |
+        .crons.sendgroot.send_id = "c/control"' var/local_pod.json > var/groot_pod_$i.json
+    rm -f out/udmis_$i.log var/udmis_$i.pid var/pod_ready_$i.txt
+done
+
+# 3. Start 3 independent UDMIS instances
+for i in 1 2 3; do
+    echo "Starting UDMIS instance $i..."
+    UDMIS_SKIP_PREP=true \
+    UDMIS_PID_FILE=var/udmis_$i.pid \
+    UDMI_POD_READY=var/pod_ready_$i.txt \
+    UDMIS_LOG=out/udmis_$i.log \
+    UDMIS_CONFIG=var/groot_pod_$i.json \
+    bin/start_udmis
+    echo "Instance $i is running with PID $(cat var/udmis_$i.pid)"
+done
+
+# 4. Allow initial cluster formation
+echo "Allowing initial cluster formation (4s)..."
+sleep 4
+
+# Mark start of steady state evaluation
+for i in 1 2 3; do
+    echo "=== STEADY_STATE_START ===" >> out/udmis_$i.log
+done
+
+echo "Observing steady state for 12 seconds (heartbeat=2s, sendgroot=5s)..."
+sleep 12
+
+for i in 1 2 3; do
+    echo "=== STEADY_STATE_END ===" >> out/udmis_$i.log
+done
+
+echo ""
+echo "=== Checking Cluster State (Phase 1: 3-Node Cluster Steady State) ==="
+LEADER_COUNT=0
+LEADER_IDX=0
+
+for i in 1 2 3; do
+    echo "--- Evaluation for Instance $i ---"
+    # Extract steady state log slice
+    SLICE=$(sed -n '/=== STEADY_STATE_START ===/,/=== STEADY_STATE_END ===/p' out/udmis_$i.log)
+
+    # Check peer recognition in slice
+    PEER_COUNT=$(echo "$SLICE" | grep "Received values:" | tail -n 1 | sed -n 's/.*Received values: \([0-9]*\).*/\1/p')
+    echo "Instance $i recognized active peers: ${PEER_COUNT:-unknown}"
+    if [[ "$PEER_COUNT" == "3" ]]; then
+        echo "PASS: Instance $i tracked all 3 cluster instances."
+    else
+        echo "WARN: Instance $i tracked ${PEER_COUNT:-<3} peers."
+    fi
+
+    # Check sendgroot publication count in slice
+    PUB_COUNT=$(echo "$SLICE" | grep -c "Publishing as .*~sendgroot" || true)
+    echo "Instance $i published sendgroot count in steady window: $PUB_COUNT"
+    if [[ $PUB_COUNT -gt 0 ]]; then
+        echo "FOUND: Instance $i is the active leader (groot)."
+        LEADER_COUNT=$((LEADER_COUNT + 1))
+        LEADER_IDX=$i
+    fi
+done
+
+echo ""
+echo "Total active leaders in 3-node cluster: $LEADER_COUNT"
+if [[ $LEADER_COUNT -ne 1 ]]; then
+    fail "Expected exactly 1 active leader in steady state, but found $LEADER_COUNT!"
+fi
+echo "PASS: Exactly 1 leader (Instance $LEADER_IDX) processed and published sendgroot."
+
+# 5. Failover Test: Kill the leader instance and verify a new leader takes over
+echo ""
+echo "=== Testing Failover (Phase 2: Killing Leader Instance $LEADER_IDX) ==="
+LEADER_PID=$(cat var/udmis_$LEADER_IDX.pid)
+echo "Terminating leader instance $LEADER_IDX (PID $LEADER_PID)..."
+kill -9 $LEADER_PID || true
+rm -f var/udmis_$LEADER_IDX.pid var/pod_ready_$LEADER_IDX.txt
+
+SURVIVOR_1=
+SURVIVOR_2=
+for i in 1 2 3; do
+    if [[ $i -ne $LEADER_IDX ]]; then
+        if [[ -z $SURVIVOR_1 ]]; then
+            SURVIVOR_1=$i
+        else
+            SURVIVOR_2=$i
+        fi
+        echo "=== FAILOVER_START ===" >> out/udmis_$i.log
+    fi
+done
+
+echo "Waiting 14 seconds for dead leader timeout (cutoff=6s) and new leader election..."
+sleep 14
+
+for i in $SURVIVOR_1 $SURVIVOR_2; do
+    echo "=== FAILOVER_END ===" >> out/udmis_$i.log
+done
+
+NEW_LEADER_COUNT=0
+NEW_LEADER_IDX=0
+
+for i in $SURVIVOR_1 $SURVIVOR_2; do
+    echo "--- Evaluation for Survivor Instance $i ---"
+    POST_SLICE=$(sed -n '/=== FAILOVER_START ===/,/=== FAILOVER_END ===/p' out/udmis_$i.log)
+
+    PEER_COUNT=$(echo "$POST_SLICE" | grep "Received values:" | tail -n 1 | sed -n 's/.*Received values: \([0-9]*\).*/\1/p')
+    echo "Instance $i recognized active peers after failover: ${PEER_COUNT:-unknown}"
+
+    PUB_COUNT=$(echo "$POST_SLICE" | grep -c "Publishing as .*~sendgroot" || true)
+    echo "Instance $i published sendgroot count in post-failover window: $PUB_COUNT"
+    if [[ $PUB_COUNT -gt 0 ]]; then
+        echo "FOUND: Instance $i took over as the new leader."
+        NEW_LEADER_COUNT=$((NEW_LEADER_COUNT + 1))
+        NEW_LEADER_IDX=$i
+    fi
+done
+
+echo ""
+echo "Total new leaders after failover: $NEW_LEADER_COUNT"
+if [[ $NEW_LEADER_COUNT -ne 1 ]]; then
+    fail "Expected exactly 1 survivor to become the new leader, but found $NEW_LEADER_COUNT!"
+fi
+
+echo "PASS: Failover successful. Instance $NEW_LEADER_IDX took over leadership seamlessly."
+
+echo ""
+echo "=========================================================================="
+echo "SUCCESS: All n = 3 Groot Distributed Election tests passed!"
+echo "=========================================================================="

@@ -690,3 +690,42 @@ jobs:
           name: gummi-logs
           path: |
             out/
+
+  groot:
+    name: Groot Distribution Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      TARGET_PROJECT: //mqtt/localhost:18833
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      - name: base setup
+        run: sudo bin/setup_base
+      - name: Run Groot Distribution Test
+        run: |
+          bin/test_groot ${{ env.TARGET_PROJECT }}
+      - name: Base UDMIS Log
+        if: ${{ !cancelled() }}
+        run: cat out/udmis.log || true
+      - name: Instance 1 Log
+        if: ${{ !cancelled() }}
+        run: cat out/udmis_1.log || true
+      - name: Instance 2 Log
+        if: ${{ !cancelled() }}
+        run: cat out/udmis_2.log || true
+      - name: Instance 3 Log
+        if: ${{ !cancelled() }}
+        run: cat out/udmis_3.log || true
+      - name: Upload logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: groot-logs
+          path: |
+            out/udmis*.log
+

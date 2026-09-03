@@ -38,11 +38,19 @@ public class CronProcessor extends ProcessorBase {
   private static final SortedMap<String, Instant> TRACKER = new ConcurrentSkipListMap<>();
   private static final String HEARTBEAT_NAME = "heartbeat";
   private static final String HEARTBEAT_SUFFIX = ID_SEPARATOR + HEARTBEAT_NAME;
-  private static Integer HEARTBEAT_SEC;
+  private static Integer HEARTBEAT_SEC = 10;
   private final Envelope srcEnvelope;
   private final Mustache template;
   private final Class<?> messageClass;
   private final MessageTemplateData dataModel = new MessageTemplateData();
+
+  /**
+   * Reset static state for testing.
+   */
+  public static void resetForTest() {
+    TRACKER.clear();
+    HEARTBEAT_SEC = 10;
+  }
 
   /**
    * Create an instance with the given config.
@@ -63,8 +71,8 @@ public class CronProcessor extends ProcessorBase {
       srcEnvelope = new Envelope();
       srcEnvelope.subType = SubType.fromValue(parts[0]);
       srcEnvelope.subFolder = SubFolder.fromValue(parts[1]);
-      srcEnvelope.deviceRegistryId = ifTrueGet(parts.length >= 3, () -> parts[3]);
-      srcEnvelope.deviceId = ifTrueGet(parts.length >= 4, () -> parts[4]);
+      srcEnvelope.deviceRegistryId = ifTrueGet(parts.length >= 3, () -> parts[2]);
+      srcEnvelope.deviceId = ifTrueGet(parts.length >= 4, () -> parts[3]);
 
       messageClass = MessageDispatcherImpl.getMessageClassFor(srcEnvelope, false);
       String payload = ifTrueGet(targetMessage.length > 1, () -> targetMessage[1], EMPTY_JSON);
@@ -101,7 +109,7 @@ public class CronProcessor extends ProcessorBase {
       Object message = fromStringStrict(messageClass, stringWriter.toString());
 
       ifTrueThen(isAmGroot(), () -> processGroot(message));
-      ifTrueThen(distributor.isEnabled(),
+      ifTrueThen(distributor != null && distributor.isEnabled(),
           () -> distributor.publish(srcEnvelope, message, containerId));
     } catch (Exception e) {
       throw new RuntimeException("While executing cron task", e);
@@ -137,7 +145,8 @@ public class CronProcessor extends ProcessorBase {
   @Override
   public void activate() {
     super.activate();
-    srcEnvelope.gatewayId = distributor.getRouteId(containerId);
+    srcEnvelope.gatewayId = distributor != null ? distributor.getRouteId(containerId)
+        : DistributorPipe.clientId + ID_SEPARATOR + containerId;
     info("Activated cron as %s", stringifyTerse(srcEnvelope));
   }
 }

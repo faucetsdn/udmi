@@ -44,6 +44,10 @@ public class DistributorPipe extends ProcessorBase {
     Envelope envelope = getContinuation(message).getEnvelope();
     debug("Handling distribution from " + stringifyTerse(envelope));
     try {
+      if (envelope.gatewayId == null || !envelope.gatewayId.contains(ROUTE_SEPARATOR)) {
+        debug("Ignoring message without route separator in gatewayId: %s", envelope.gatewayId);
+        return;
+      }
       String[] routeId = envelope.gatewayId.split(ROUTE_SEPARATOR, 2);
       if (clientId.equals(routeId[0])) {
         debug("Rejecting loopback client " + clientId);
