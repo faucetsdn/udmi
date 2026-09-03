@@ -161,7 +161,7 @@ class SessionManager:
 
         filter_str = (" " + " ".join(filter_flags)) if filter_flags else ""
 
-        # Build start_local command
+        # Build udmi start command
         start_cmd = (
             f"export UDMI_ROOT='{self.udmi_root}' && "
             f"export UDMI_RUN_DIR='{run_dir}' && "
@@ -170,7 +170,7 @@ class SessionManager:
             f"export INFLUX_PORT='{influx_port}' && "
             f"export POSTGRES_PORT='{postgres_port}' && "
             f"cd '{self.udmi_root}' && "
-            f"bin/start_local block '{site_model_path}' '{project_spec}'{filter_str}"
+            f"bin/udmi start block '{site_model_path}' '{project_spec}'{filter_str}"
         )
 
         # Launch in background tmux session

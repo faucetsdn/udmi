@@ -32,6 +32,8 @@ class DiscoveryHandler(BaseHandler):
         postgres_manager: PostgresManager,
         influx_manager: InfluxManager,
     ) -> Dict[str, Any]:
+        if isinstance(payload, dict) and "payload" in payload and isinstance(payload.get("payload"), dict):
+            payload = payload["payload"]
         family = payload.get("family")
         ports: List[Dict[str, Any]] = []
         if family == "ether" and (refs := payload.get("refs")):

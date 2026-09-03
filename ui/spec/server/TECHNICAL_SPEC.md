@@ -9,7 +9,7 @@ This document defines the technical architecture, HTTP REST endpoint contracts, 
 The UDMI Workbench backend server (`ui/v2/server.py`) is a lightweight Python HTTP server that bridges the web interface with local UDMI command-line utilities and subprocesses. Its core responsibilities are:
 
 1. **Frontend Asset Serving**: Serves static HTML, JavaScript, CSS, and media assets for the Host Shell and micro-frontend plugins.
-2. **Subprocess Execution Routing**: Translates frontend HTTP REST requests into validated local tool invocations (`bin/start_local`, `bin/sequencer`, `util/mantis/bin/triage`, `bin/test_validator`).
+2. **Subprocess Execution Routing**: Translates frontend HTTP REST requests into validated local tool invocations (`bin/udmi start`, `bin/sequencer`, `util/mantis/bin/triage`, `bin/test_validator`).
 3. **Real-Time SSE Log Streaming**: Streams process `stdout`/`stderr` and log outputs continuously to the frontend via Server-Sent Events (SSE).
 4. **Session Management & Isolation**: Allocates unique session IDs, isolates logs/reports under `out/sessions/<session_id>/`, manages process groups (`os.setsid`), and prunes historical session folders.
 5. **Feature & Security Policy Enforcement**: Evaluates system policies (`--features=...`) to expose allowed tools and restrict unpermitted capabilities.
@@ -36,7 +36,7 @@ The UDMI Workbench backend server (`ui/v2/server.py`) is a lightweight Python HT
 
 ---
 
-### 2.2 Workspace & File System Navigation
+## 2.2 Workspace & File System Navigation
 
 #### `GET /api/list`
 - **Description**: Browses subdirectories and files for selecting site model folders.
@@ -163,7 +163,7 @@ The UDMI Workbench backend server (`ui/v2/server.py`) is a lightweight Python HT
 - **Local Tool Translation**:
   - Spawns background process group:
     ```bash
-    bin/start_local sites/udmi_site_model //mqtt/localhost
+    bin/udmi start sites/udmi_site_model //mqtt/localhost
     ```
   - Redirects logs to `out/sessions/<session_id>/testbed_start.log`.
 

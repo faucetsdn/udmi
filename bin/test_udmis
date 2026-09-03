@@ -5,12 +5,12 @@ ROOT=$(dirname $0)/..
 
 source $ROOT/etc/shell_common.sh
 
-if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
+if [[ $(id -u) == 0 && -f /etc/mosquitto/dynamic_security.json ]]; then
     echo Checking for properly configured mosquitto...
-    sudo fgrep -q scrumptious /etc/mosquitto/dynamic_security.json || (echo mosquitto dynamic security not configured; false)
+    fgrep -q scrumptious /etc/mosquitto/dynamic_security.json || (echo mosquitto dynamic security not configured; false)
 
     echo Checking that mqtt broker is running
-    BROKER=$(sudo netstat -nlpa | fgrep :1883) || true
+    BROKER=$(netstat -nlpa 2>/dev/null | fgrep :1883) || true
 
     if [[ -n $BROKER ]]; then
         # This is the local address of the previously configured MQTT broker

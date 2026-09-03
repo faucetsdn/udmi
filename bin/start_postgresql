@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+UDMI_ROOT=$(dirname "$0")/..
+source "$UDMI_ROOT/etc/shell_common.sh"
+
 function find_postgres_bin {
     # Check standard system paths first
     for dir in \
@@ -45,16 +48,6 @@ if [[ -f $POSTGRES_PID_FILE ]]; then
         echo Killing existing local postgresql pid $old_pid...
         kill $old_pid || true
         sleep 1
-    fi
-else
-    # Fallback to check for any local postgres process belonging to this user
-    if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
-        old_pid=$(ps ax | fgrep "$BINDIR/postgres" | fgrep -v grep | awk '{print $1}') || true
-        if [[ -n $old_pid ]]; then
-            echo Killing existing postgres pid $old_pid...
-            kill $old_pid || true
-            sleep 1
-        fi
     fi
 fi
 
@@ -114,5 +107,8 @@ if ! kill -0 $POSTGRES_PID >/dev/null 2>&1; then
     echo "error starting postgresql"
     exit 1
 fi
+
+echo "Initializing default PostgreSQL tables..."
+PYTHONPATH="$UDMI_ROOT/common/src/main/python:$UDMI_ROOT" python3 -c "from udmi.common.db.postgres import PostgresManager; PostgresManager(port='${postgres_port}').init_default_tables()"
 
 echo Completed postgresql startup.

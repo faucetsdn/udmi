@@ -24,7 +24,7 @@ while [[ (! -f $CA_CERT || ! -s $CA_CERT) && $TIMEOUT -gt 0 ]]; do
 done
 
 if [[ ! -s $CA_CERT ]]; then
-    echo "Valid CA certificate $CA_CERT not found. Ensure local environment is running (bin/start_local)."
+    echo "Valid CA certificate $CA_CERT not found. Ensure local environment is running (bin/udmi start)."
     exit 1
 fi
 

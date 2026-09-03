@@ -26,11 +26,32 @@ else
     JDWP=
 fi
 
-if [[ $# -ge 2 && "$util_name" == "registrar" && "$2" != -* ]]; then
-    site_path=$1
-    project_spec=$(normalize_conn_spec "$2")
-    shift 2
-    set -- "$site_path" "$project_spec" "$@"
+if [[ $# -ge 1 && "$1" != -* ]]; then
+    target=$1
+    if [[ -d "$target" ]]; then
+        if [[ $# -ge 2 && "$2" != -* ]]; then
+            site_path=$1
+            project_spec=$(normalize_conn_spec "$2")
+            shift 2
+            set -- "$site_path" "$project_spec" "$@"
+        fi
+    elif [[ -f "$target" ]]; then
+        # File argument is solo
+        true
+    else
+        fail "Argument '$target' is neither a file nor a directory"
+    fi
+fi
+
+if [[ -n "${project_spec:-}" && "$project_spec" =~ localhost: ]]; then
+    if [[ -d "${ETC_DIR:-var/mosquitto}" ]]; then
+        for i in {1..50}; do
+            if [[ -f "${ETC_DIR:-var/mosquitto}/mosquitto.ready" ]]; then
+                break
+            fi
+            sleep 0.2
+        done
+    fi
 fi
 
 cmd="java -cp $UDMI_JAR $JDWP $JAVA_CLASS $util_name $@"

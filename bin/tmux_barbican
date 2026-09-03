@@ -12,10 +12,23 @@ tmux_validate_services "Barbican" "${ALLOWED_SERVICES[@]}"
 
 case "$TMUX_ACTION" in
     stop)
+        $UDMI_ROOT/bin/start_udmis stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_etcd stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_mosquitto stop >/dev/null 2>&1 || true
+        if [[ -f $UDMI_ROOT/out/pubsub.pid ]]; then
+            kill $(cat $UDMI_ROOT/out/pubsub.pid) 2>/dev/null || true
+            rm -f $UDMI_ROOT/out/pubsub.pid
+        fi
+        ps ax | fgrep cloud-pubsub-emulator | fgrep -v grep | awk '{print $1}' | xargs -r kill 2>/dev/null || true
         tmux_stop_session "$SESSION_NAME"
         ;;
+    clean)
+        echo "Purging Barbican runtime state..."
+        rm -rf "$UDMI_ROOT/var/etcd/member" "$UDMI_ROOT/var/pod_ready.txt" "$UDMI_ROOT/var/udmis.pid"
+        rm -f "$UDMI_ROOT/out/udmis.log" "$UDMI_ROOT/out/etcd.log" "$UDMI_ROOT/out/mosquitto.log"
+        ;;
     status)
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
         ;;
     logs)
         tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
@@ -23,7 +36,23 @@ case "$TMUX_ACTION" in
     attach)
         tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
         ;;
+    restart)
+        $UDMI_ROOT/bin/start_udmis stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_etcd stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_mosquitto stop >/dev/null 2>&1 || true
+        if [[ -f $UDMI_ROOT/out/pubsub.pid ]]; then
+            kill $(cat $UDMI_ROOT/out/pubsub.pid) 2>/dev/null || true
+            rm -f $UDMI_ROOT/out/pubsub.pid
+        fi
+        ps ax | fgrep cloud-pubsub-emulator | fgrep -v grep | awk '{print $1}' | xargs -r kill 2>/dev/null || true
+        tmux_stop_session "$SESSION_NAME"
+        echo "Purging Barbican runtime state..."
+        rm -rf "$UDMI_ROOT/var/etcd/member" "$UDMI_ROOT/var/pod_ready.txt" "$UDMI_ROOT/var/udmis.pid"
+        rm -f "$UDMI_ROOT/out/udmis.log" "$UDMI_ROOT/out/etcd.log" "$UDMI_ROOT/out/mosquitto.log"
+        ;&
     start)
+        tmux_stop_session "$SESSION_NAME"
+
         echo "=== Starting Barbican in tmux session '$SESSION_NAME' ==="
         echo "Site Model:   $TMUX_SITE_MODEL"
         echo "Project Spec: $TMUX_PROJECT_SPEC"
@@ -32,29 +61,33 @@ case "$TMUX_ACTION" in
 
         # 1. etcd
         if tmux_should_run_service "etcd"; then
-            tmux_init_or_add_window "$SESSION_NAME" "etcd" "bin/start_etcd"
+            tmux_init_or_add_window "$SESSION_NAME" "etcd" "bin/start_etcd '$TMUX_PROJECT_SPEC'"
         fi
 
         # 2. Mosquitto
         if tmux_should_run_service "mosquitto"; then
-            tmux_init_or_add_window "$SESSION_NAME" "mosquitto" "bin/start_mosquitto"
+            tmux_init_or_add_window "$SESSION_NAME" "mosquitto" "bin/start_mosquitto '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
         fi
 
         # 3. UDMIS
         if tmux_should_run_service "udmis"; then
-            tmux_init_or_add_window "$SESSION_NAME" "udmis" "bin/start_udmis"
+            tmux_init_or_add_window "$SESSION_NAME" "udmis" "bin/start_udmis '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
         fi
 
         # 4. PubSub Emulator (optional: ++pubsub)
         if tmux_should_run_service "pubsub" "true"; then
-            tmux_init_or_add_window "$SESSION_NAME" "pubsub" "bin/start_pubsub"
+            tmux_init_or_add_window "$SESSION_NAME" "pubsub" "bin/start_pubsub '$TMUX_PROJECT_SPEC'"
         fi
 
         echo "Barbican session '$SESSION_NAME' initialized."
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
+        ;;
+    help|"")
+        tmux_show_help "Barbican" "${ALLOWED_SERVICES[@]}"
+        exit 0
         ;;
     *)
-        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [site_model] [project_spec] [+only | !exclude | ++optional]"
+        tmux_show_help "Barbican" "${ALLOWED_SERVICES[@]}"
         exit 1
         ;;
 esac
