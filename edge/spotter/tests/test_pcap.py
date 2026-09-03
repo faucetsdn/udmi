@@ -5,6 +5,8 @@ from unittest.mock import patch, MagicMock, call
 
 from edge.spotter.src.pcap import capture_packets
 
+_REAL_POPEN = subprocess.Popen
+
 class TestPcapCapture(unittest.TestCase):
 
     @patch("subprocess.Popen")
@@ -114,6 +116,48 @@ class TestPcapCapture(unittest.TestCase):
         mock_proc.terminate.assert_called_once()
         mock_proc.kill.assert_called_once()
         self.assertEqual(mock_proc.wait.call_count, 2)
+
+    def test_capture_packets_idle_timeout_nonblocking(self):
+        # Test with real OS pipes running an idle process (sleep)
+        with patch("subprocess.Popen", side_effect=lambda *args, **kwargs: _REAL_POPEN(
+            ["python3", "-c", "import time; time.sleep(10)"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=0
+        )):
+            t0 = time.time()
+            gen = capture_packets(
+                interface="any",
+                filter_str="",
+                max_duration_sec=1,
+                max_bytes=1000
+            )
+            chunks = list(gen)
+            elapsed = time.time() - t0
+            self.assertEqual(chunks, [])
+            self.assertLess(elapsed, 2.5, "Idle capture did not terminate within bounded duration limit")
+
+    def test_capture_packets_drains_large_stderr_no_deadlock(self):
+        # Spawns a process writing >128KB of stderr and stdout
+        script = (
+            "import sys, time; "
+            "sys.stderr.write('E' * 131072); sys.stderr.flush(); "
+            "sys.stdout.write('PACKET_DATA'); sys.stdout.flush()"
+        )
+        with patch("subprocess.Popen", side_effect=lambda *args, **kwargs: _REAL_POPEN(
+            ["python3", "-c", script],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            bufsize=0
+        )):
+            gen = capture_packets(
+                interface="any",
+                filter_str="",
+                max_duration_sec=5,
+                max_bytes=1000
+            )
+            chunks = list(gen)
+            self.assertEqual(chunks, [b"PACKET_DATA"])
 
 if __name__ == "__main__":
     unittest.main()
