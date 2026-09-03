@@ -21,4 +21,16 @@ source $UDMI_ROOT/etc/shell_common.sh
 
 echo pubber/gradlew -p pubber $task
 echo $UDMI_VERSION
-$UDMI_ROOT/pubber/gradlew -p pubber $task
+
+out=$(mktemp)
+if ! $UDMI_ROOT/pubber/gradlew -p pubber $task 2>&1 | tee $out; then
+    if grep -q "409.*Conflict" $out; then
+        echo "Package version $UDMI_VERSION is already published to registry (HTTP 409 Conflict). Skipping."
+        rm -f $out
+    else
+        rm -f $out
+        exit 1
+    fi
+else
+    rm -f $out
+fi
