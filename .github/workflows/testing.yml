@@ -88,7 +88,7 @@ jobs:
         run: sudo bin/setup_base
       - name: local setup
         run: |
-          bin/start_local sites/udmi_site_model $TARGET_PROJECT
+          bin/udmi start sites/udmi_site_model $TARGET_PROJECT
           bin/pull_messages ${TARGET_PROJECT}%ZZ-TRI-FECTA > /tmp/message_capture.log 2>&1 &
       - name: bin/test_automapper
         run: bin/test_automapper $TARGET_PROJECT
@@ -119,9 +119,9 @@ jobs:
           path: '*_udmi-support_*.tgz'
 
   baseline:
-    name: Baseline Tests
+    name: Baseline Sequences
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 15
     needs: automapping
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
@@ -136,7 +136,7 @@ jobs:
       - name: base setup
         run: sudo bin/setup_base
       - name: local setup
-        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
+        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
       - name: special sequences
@@ -191,7 +191,7 @@ jobs:
       - name: base setup
         run: sudo bin/setup_base
       - name: local setup
-        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
+        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
@@ -252,7 +252,7 @@ jobs:
           bin/registrar sites/udmi_site_model
       - name: local setup
         run: |
-          bin/start_local sites/udmi_site_model $TARGET_PROJECT
+          bin/udmi start sites/udmi_site_model $TARGET_PROJECT
           bin/pull_messages $TARGET_PROJECT > out/message_capture.log 2>&1 &
       - name: bin/test_etcd_prerun
         run: bin/test_etcd_prerun
@@ -305,7 +305,7 @@ jobs:
           $MOSQUITTO_CTRL listRoles || true
       - name: mosquitto logs
         if: ${{ !cancelled() }}
-        run: cat /var/log/mosquitto/mosquitto.log || true
+        run: cat var/mosquitto/log/mosquitto.log /var/log/mosquitto/mosquitto.log 2>/dev/null || true
       - name: support bundle
         if: ${{ !cancelled() }}
         run: bin/support ${{ github.repository_owner }}_${{ github.job }}_
@@ -333,7 +333,7 @@ jobs:
       - name: base setup
         run: sudo bin/setup_base
       - name: local setup
-        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
+        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
         run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_proxy
@@ -373,7 +373,7 @@ jobs:
       - name: base setup
         run: sudo bin/setup_base
       - name: local setup
-        run: bin/start_local sites/udmi_site_model $TARGET_PROJECT
+        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
         run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_blob_updates
@@ -473,7 +473,7 @@ jobs:
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
             -v $PWD/out:/root/udmi/out \
-            udmis udmi/bin/start_local block site_model/cloud_iot_config.json
+            udmis udmi/bin/udmi start block site_model //mqtt/localhost:8883
           for count in `seq 0 60`; do
             echo Waiting for UDMIS startup $((30 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
@@ -622,7 +622,7 @@ jobs:
         run: sudo bin/setup_base
       - name: Start Local Services
         run: |
-          bin/start_local sites/udmi_site_model ${{ env.TARGET_PROJECT }}
+          bin/udmi start sites/udmi_site_model ${{ env.TARGET_PROJECT }}
       - name: Run Openbridge Test
         run: |
           bin/test_openbridge

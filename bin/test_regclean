@@ -188,6 +188,9 @@ jq ".udmi_namespace = $quoted_namespace" $full_config | sponge $full_config
 jq '.iot_provider = "dynamic"' $iot_config | sponge $iot_config
 jq '.project_id = "this-is-not-right"' $iot_config | sponge $iot_config
 jq '.udmi_namespace = "bunny"' $iot_config | sponge $iot_config
+if [[ $iot_provider == "\"mqtt\"" ]]; then
+    $UDMI_ROOT/bin/mosquctl_site $site_path
+fi
 
 echo Clean out the registry to make sure devices get removed...
 echo $UDMI_ROOT/bin/registrar $site_args -d -x
@@ -256,6 +259,9 @@ timeout 120s $UDMI_ROOT/bin/pubber $pubber_config 2> $pubber_log || result=$?
 
 echo Successful pubber check passed on clean registry.
 
+echo Restoring site config before final registration...
+(cd $site_path; git checkout cloud_iot_config.json)
+
 echo Registering everything to end up with everything in place
 echo $UDMI_ROOT/bin/registrar $site_args -u
 $UDMI_ROOT/bin/registrar $site_args -u
@@ -287,6 +293,9 @@ fi
 
 if [[ -n ${UDMI_ALT_REGISTRY:-} ]]; then
     echo Registering alt registry $UDMI_ALT_REGISTRY...
+    if [[ $iot_provider == "\"mqtt\"" ]]; then
+        $UDMI_ROOT/bin/mosquctl_site $site_path $UDMI_ALT_REGISTRY
+    fi
     echo $UDMI_ROOT/bin/registrar $site_args -a $UDMI_ALT_REGISTRY
     $UDMI_ROOT/bin/registrar $site_args -a $UDMI_ALT_REGISTRY
 fi

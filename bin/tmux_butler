@@ -12,10 +12,17 @@ tmux_validate_services "Butler" "${ALLOWED_SERVICES[@]}"
 
 case "$TMUX_ACTION" in
     stop)
+        $UDMI_ROOT/bin/start_butler stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_influx stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_postgresql stop >/dev/null 2>&1 || true
         tmux_stop_session "$SESSION_NAME"
         ;;
+    clean)
+        echo "Purging Butler runtime state..."
+        rm -f "$UDMI_ROOT/var/butler.pid" "$UDMI_ROOT/out/butler.log" "$UDMI_ROOT/out/influx.log" "$UDMI_ROOT/out/postgres.log"
+        ;;
     status)
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
         ;;
     logs)
         tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
@@ -23,7 +30,17 @@ case "$TMUX_ACTION" in
     attach)
         tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
         ;;
+    restart)
+        $UDMI_ROOT/bin/start_butler stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_influx stop >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/start_postgresql stop >/dev/null 2>&1 || true
+        tmux_stop_session "$SESSION_NAME"
+        echo "Purging Butler runtime state..."
+        rm -f "$UDMI_ROOT/var/butler.pid" "$UDMI_ROOT/out/butler.log" "$UDMI_ROOT/out/influx.log" "$UDMI_ROOT/out/postgres.log"
+        ;&
     start)
+        tmux_stop_session "$SESSION_NAME"
+
         echo "=== Starting Butler in tmux session '$SESSION_NAME' ==="
         echo "Site Model:   $TMUX_SITE_MODEL"
         echo "Project Spec: $TMUX_PROJECT_SPEC"
@@ -32,12 +49,12 @@ case "$TMUX_ACTION" in
 
         # 1. postgres (default: enabled)
         if tmux_should_run_service "postgres"; then
-            tmux_init_or_add_window "$SESSION_NAME" "postgres" "bin/start_postgresql"
+            tmux_init_or_add_window "$SESSION_NAME" "postgres" "bin/start_postgresql '$TMUX_PROJECT_SPEC'"
         fi
 
         # 2. influxdb (default: enabled)
         if tmux_should_run_service "influxdb"; then
-            tmux_init_or_add_window "$SESSION_NAME" "influxdb" "bin/start_influx"
+            tmux_init_or_add_window "$SESSION_NAME" "influxdb" "bin/start_influx '$TMUX_PROJECT_SPEC'"
         fi
 
         # 3. butler (default: enabled)
@@ -45,21 +62,25 @@ case "$TMUX_ACTION" in
             tmux_init_or_add_window "$SESSION_NAME" "butler" "bin/start_butler '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
         fi
 
-        # 4. validator (optional: ++validator)
+        # 4. registrar (default: enabled)
+        if tmux_should_run_service "registrar"; then
+            tmux_init_or_add_window "$SESSION_NAME" "registrar" "bin/registrar '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
+        fi
+
+        # 5. validator (optional: ++validator)
         if tmux_should_run_service "validator" "true"; then
             tmux_init_or_add_window "$SESSION_NAME" "validator" "echo Starting validator service...; tail -f /dev/null"
         fi
 
-        # 5. registrar (optional: ++registrar)
-        if tmux_should_run_service "registrar" "true"; then
-            tmux_init_or_add_window "$SESSION_NAME" "registrar" "bin/registrar '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
-        fi
-
         echo "Butler session '$SESSION_NAME' initialized."
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
+        ;;
+    help|"")
+        tmux_show_help "Butler" "${ALLOWED_SERVICES[@]}"
+        exit 0
         ;;
     *)
-        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [site_model] [project_spec] [+only | !exclude | ++optional]"
+        tmux_show_help "Butler" "${ALLOWED_SERVICES[@]}"
         exit 1
         ;;
 esac

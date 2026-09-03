@@ -15,7 +15,7 @@ case "$TMUX_ACTION" in
         tmux_stop_session "$SESSION_NAME"
         ;;
     status)
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
         ;;
     logs)
         tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
@@ -23,28 +23,67 @@ case "$TMUX_ACTION" in
     attach)
         tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
         ;;
+    clean)
+        if [[ "$TMUX_SITE_MODEL" =~ sites/udmi~[a-zA-Z0-9_-]+$ ]]; then
+            echo "Purging namespaced site model '$TMUX_SITE_MODEL'..."
+            rm -rf "$TMUX_SITE_MODEL"
+        elif [[ -d "$TMUX_SITE_MODEL/reflector" ]]; then
+            echo "Purging reflector certs in '$TMUX_SITE_MODEL/reflector'..."
+            rm -rf "$TMUX_SITE_MODEL/reflector"
+        fi
+        ;;
+    restart)
+        tmux_stop_session "$SESSION_NAME"
+        if [[ "$TMUX_SITE_MODEL" =~ sites/udmi~[a-zA-Z0-9_-]+$ ]]; then
+            echo "Purging namespaced site model '$TMUX_SITE_MODEL'..."
+            rm -rf "$TMUX_SITE_MODEL"
+        elif [[ -d "$TMUX_SITE_MODEL/reflector" ]]; then
+            echo "Purging reflector certs in '$TMUX_SITE_MODEL/reflector'..."
+            rm -rf "$TMUX_SITE_MODEL/reflector"
+        fi
+        ;&
     start)
+        tmux_stop_session "$SESSION_NAME"
+
         echo "=== Initializing Base in tmux session '$SESSION_NAME' ==="
         echo "Site Model:   $TMUX_SITE_MODEL"
         echo "Project Spec: $TMUX_PROJECT_SPEC"
 
         cd "$UDMI_ROOT"
 
-        # 1. Clone (optional / setup: ++clone)
-        if tmux_should_run_service "clone" "true"; then
+        project_target="localhost"
+        if [[ -n "$TMUX_PROJECT_SPEC" ]]; then
+            no_prefix=${TMUX_PROJECT_SPEC#//}
+            no_provider=${no_prefix#*/}
+            project_target=${no_provider%%/*}
+            project_target=${project_target%@*}
+            project_target=${project_target%:*}
+            [[ -n "$project_target" ]] || project_target="localhost"
+        fi
+
+        # 1. Clone (default: enabled, idempotent)
+        if tmux_should_run_service "clone"; then
             tmux_init_or_add_window "$SESSION_NAME" "clone" "bin/clone_model '$TMUX_SITE_MODEL'"
         fi
 
-        # 2. Certs / Keygen (default: enabled)
+        # 2. Certs / Keygen (default: enabled, waits for clone if clone is active)
         if tmux_should_run_service "certs"; then
-            tmux_init_or_add_window "$SESSION_NAME" "certs" "bin/setup_ca '$TMUX_SITE_MODEL' localhost"
+            if tmux_should_run_service "clone"; then
+                tmux_init_or_add_window "$SESSION_NAME" "certs" "while [[ ! -f '$TMUX_SITE_MODEL/cloud_iot_config.json' ]]; do sleep 0.5; done; bin/setup_ca '$TMUX_SITE_MODEL' '$project_target'"
+            else
+                tmux_init_or_add_window "$SESSION_NAME" "certs" "bin/setup_ca '$TMUX_SITE_MODEL' '$project_target'"
+            fi
         fi
 
         echo "Base session '$SESSION_NAME' initialized."
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
+        ;;
+    help|"")
+        tmux_show_help "Base" "${ALLOWED_SERVICES[@]}"
+        exit 0
         ;;
     *)
-        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [site_model] [project_spec] [+only | !exclude | ++optional]"
+        tmux_show_help "Base" "${ALLOWED_SERVICES[@]}"
         exit 1
         ;;
 esac

@@ -14,8 +14,12 @@ case "$TMUX_ACTION" in
     stop)
         tmux_stop_session "$SESSION_NAME"
         ;;
+    clean)
+        echo "Purging MCP runtime state..."
+        rm -f "$UDMI_ROOT/out/mcp.log"
+        ;;
     status)
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
         ;;
     logs)
         tmux_capture_logs "$SESSION_NAME" "$TMUX_TARGET_ID" "${TMUX_EXTRA_ARGS[0]:-50}"
@@ -23,21 +27,32 @@ case "$TMUX_ACTION" in
     attach)
         tmux_attach_session "$SESSION_NAME" "$TMUX_TARGET_ID"
         ;;
+    restart)
+        tmux_stop_session "$SESSION_NAME"
+        echo "Purging MCP runtime state..."
+        rm -f "$UDMI_ROOT/out/mcp.log"
+        ;&
     start)
+        tmux_stop_session "$SESSION_NAME"
+
         echo "=== Starting MCP Server in tmux session '$SESSION_NAME' ==="
 
         cd "$UDMI_ROOT"
 
         # 1. MCP Server Daemon (default: enabled)
         if tmux_should_run_service "server"; then
-            tmux_init_or_add_window "$SESSION_NAME" "server" "python3 mcp/server.py mcp"
+            tmux_init_or_add_window "$SESSION_NAME" "server" "PYTHONPATH=\"$UDMI_ROOT:\${PYTHONPATH:-}\" python3 mcp/server.py mcp"
         fi
 
         echo "MCP Server session '$SESSION_NAME' initialized."
-        tmux_session_status "$SESSION_NAME"
+        tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
+        ;;
+    help|"")
+        tmux_show_help "MCP" "${ALLOWED_SERVICES[@]}"
+        exit 0
         ;;
     *)
-        echo "Unknown action '$TMUX_ACTION'. Usage: $0 [start|stop|status|logs|attach] [+only | !exclude | ++optional]"
+        tmux_show_help "MCP" "${ALLOWED_SERVICES[@]}"
         exit 1
         ;;
 esac

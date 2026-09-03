@@ -267,7 +267,7 @@ def run_local_sandbox(args, iterations, output_dir):
             print(
                 "Please run local services first before starting the local loop:")
             print(
-                f"  bin/start_local sites/udmi_site_model {args.target}\n",
+                f"  bin/udmi start sites/udmi_site_model {args.target}\n",
                 file=sys.stderr)
             sys.exit(1)
 

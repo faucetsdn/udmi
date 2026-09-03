@@ -25,7 +25,7 @@ rm -rf out $sites_out
 mkdir -p out $sites_out
 
 if [[ ${archive}\$ =~ '.tgz$' ]]; then
-    tar -xzvf "$archive"
+    tar --no-same-owner --no-same-permissions --no-overwrite-dir -xzvf "$archive"
     echo Extracted singular archive $archive
     exit 0
 fi
@@ -41,7 +41,7 @@ fi
 
 ls -l $archive_dir/
 echo Extracting test archives...
-ls $archive_dir/*udmi-support_*.tgz | xargs -n 1 tar -xzf
+ls $archive_dir/*udmi-support_*.tgz | xargs -n 1 tar --no-same-owner --no-same-permissions --no-overwrite-dir -xzf
 
 echo Consolidating device tests...
 devices=$(ls -d $sites_in/out-seq/devices) || true

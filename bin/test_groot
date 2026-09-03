@@ -25,6 +25,7 @@ cleanup() {
         fi
         rm -f var/pod_ready_$i.txt
     done
+    bin/udmi stop >/dev/null 2>&1 || true
 }
 
 trap cleanup EXIT
@@ -33,7 +34,7 @@ trap cleanup EXIT
 echo "Setting up base infrastructure..."
 bin/setup_base
 bin/container udmis prep --no-check || true
-bin/start_local sites/udmi_site_model $TARGET_PROJECT
+bin/udmi start sites/udmi_site_model $TARGET_PROJECT
 
 # Stop the default single-instance UDMIS started by start_local
 bin/start_udmis stop || true

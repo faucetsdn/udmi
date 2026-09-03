@@ -3,28 +3,40 @@
 ROOT_DIR=$(realpath $(dirname $0)/..)
 SITE_DIR=$ROOT_DIR/sites
 mkdir -p $SITE_DIR
-cd $SITE_DIR
 
-MODEL_LINK=site_model
-MODEL_DIR=udmi_site_model
-MODEL_VER=1.24
-TEST_SITE_GIT=https://github.com/faucetsdn/$MODEL_DIR.git
-MODEL_REPO=origin
-
-echo Cloning model as $PWD/$MODEL_DIR
-if [[ -d $MODEL_DIR ]]; then
-    echo Model directory already exists, skipping clone.
+target="${1:-udmi_site_model}"
+if [[ "$target" == "$SITE_DIR"/* ]]; then
+    MODEL_DIR="${target#$SITE_DIR/}"
+elif [[ "$target" == sites/* ]]; then
+    MODEL_DIR="${target#sites/}"
+elif [[ "$target" =~ ^udmi~[a-zA-Z0-9_-]+$ || "$target" == "udmi_site_model" || "$target" == */* ]]; then
+    MODEL_DIR="$target"
 else
-    git clone $TEST_SITE_GIT
+    MODEL_DIR="udmi~${target}"
 fi
 
-cd $MODEL_DIR
+MODEL_LINK=site_model
+MODEL_VER=1.24
+TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git
+MODEL_REPO=origin
 
-git fetch $MODEL_REPO $MODEL_VER
-git checkout -q $MODEL_VER
-git log -n 1
+cd "$SITE_DIR"
+echo "Provisioning site model in $PWD/$MODEL_DIR"
+if [[ -d "$MODEL_DIR" ]]; then
+    echo "Model directory already exists ($PWD/$MODEL_DIR), skipping clone."
+else
+    git clone $TEST_SITE_GIT "$MODEL_DIR"
+fi
 
-cd $ROOT_DIR
+cd "$MODEL_DIR"
 
-REL_SITE=$(realpath --relative-to=$PWD $SITE_DIR/$MODEL_DIR)
-[[ -e $MODEL_LINK ]] || ln -s $REL_SITE $MODEL_LINK
+if [[ -d .git ]]; then
+    git fetch $MODEL_REPO $MODEL_VER 2>/dev/null || true
+    git checkout -q $MODEL_VER 2>/dev/null || true
+    git log -n 1 2>/dev/null || true
+fi
+
+cd "$ROOT_DIR"
+
+REL_SITE=$(realpath --relative-to="$PWD" "$SITE_DIR/$MODEL_DIR")
+[[ -e "$MODEL_LINK" ]] || ln -s "$REL_SITE" "$MODEL_LINK"

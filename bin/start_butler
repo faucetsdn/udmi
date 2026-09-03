@@ -17,13 +17,6 @@ if [[ -f $BUTLER_PID_FILE ]]; then
     fi
     rm -f $BUTLER_PID_FILE
 fi
-if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
-    old_pid=$(ps ax | fgrep python | fgrep butler | fgrep -v grep | awk '{print $1}') || true
-    if [[ -n $old_pid ]]; then
-        echo "Killing existing butler pid $old_pid..."
-        kill $old_pid 2>/dev/null || true
-    fi
-fi
 
 
 if [[ ${1:-} == stop ]]; then
@@ -34,8 +27,44 @@ site_model="${1:-sites/udmi_site_model}"
 target_project="${2:-${TARGET_PROJECT:-//mqtt/localhost:${MQTT_PORT:-8883}}}"
 
 export PYTHONUNBUFFERED=1
+if [[ $target_project =~ localhost:([0-9]+) ]]; then
+    local_mqtt_port="${BASH_REMATCH[1]}"
+    if [[ $local_mqtt_port != 8883 ]]; then
+        export MQTT_PORT="$local_mqtt_port"
+        export ETCD_PORT=$((MQTT_PORT + 1))
+        export INFLUX_PORT=$((MQTT_PORT + 2))
+        export POSTGRES_PORT=$((MQTT_PORT + 3))
+    fi
+fi
 export POSTGRES_PORT=${POSTGRES_PORT:-5432}
 export INFLUX_PORT=${INFLUX_PORT:-8086}
+
+# Wait for local broker and database services if running locally
+if [[ -d "${ETC_DIR:-var/mosquitto}" ]]; then
+    for i in {1..50}; do
+        if [[ -f "${ETC_DIR:-var/mosquitto}/mosquitto.ready" ]]; then
+            break
+        fi
+        sleep 0.2
+    done
+elif [[ $target_project =~ localhost:([0-9]+) ]]; then
+    local_mqtt_port="${BASH_REMATCH[1]}"
+    for i in {1..30}; do
+        if timeout 1 bash -c "</dev/tcp/127.0.0.1/$local_mqtt_port" 2>/dev/null; then
+            break
+        fi
+        sleep 0.5
+    done
+fi
+
+if command -v psql >/dev/null 2>&1; then
+    for i in {1..30}; do
+        if psql -h 127.0.0.1 -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -c "SELECT 1;" >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.5
+    done
+fi
 
 echo "Starting butler on $target_project with model $site_model..."
 nohup $UDMI_ROOT/bin/butler "$site_model" "$target_project" >> $BUTLER_LOG 2>&1 &
@@ -44,3 +73,10 @@ echo $BUTLER_PID > $BUTLER_PID_FILE
 disown $BUTLER_PID 2>/dev/null || true
 
 echo "Started butler daemon (PID $BUTLER_PID)"
+
+sleep 1
+if ! kill -0 $BUTLER_PID >/dev/null 2>&1; then
+    cat $BUTLER_LOG
+    echo "error starting butler"
+    exit 1
+fi

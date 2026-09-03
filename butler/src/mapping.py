@@ -1,37 +1,56 @@
-import psycopg2
+import copy
+from datetime import datetime, timezone
 import json
 import os
 import sys
 import uuid
+import psycopg2
 
 try:
     from src.connection import ButlerConnection
 except (ImportError, ModuleNotFoundError):
     from butler.src.connection import ButlerConnection
 
-def get_postgres_connection():
-    return psycopg2.connect(
-        host=os.environ.get("POSTGRES_HOST", "127.0.0.1"),
-        port=os.environ.get("POSTGRES_PORT", "5432"),
-        user=os.environ.get("POSTGRES_USER", "postgres"),
-        dbname=os.environ.get("POSTGRES_DB", "postgres")
-    )
+try:
+    from udmi.common.db.postgres import PostgresManager
+    from udmi.common.project_spec import parse_project_spec
+except (ImportError, ModuleNotFoundError):
+    PostgresManager = None
+    parse_project_spec = None
 
-import sys
+
 def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
-    try:
-        conn = get_postgres_connection()
-    except psycopg2.Error as e:
-        print(f"Error connecting to DB: {e}")
-        return
-        
+    pg_port = os.environ.get("POSTGRES_PORT")
+    if not pg_port and conn_spec and parse_project_spec:
+        spec_info = parse_project_spec(conn_spec)
+        port = spec_info.get("port")
+        if port and str(port) != "8883":
+            pg_port = str(int(port) + 3)
+
+    if PostgresManager:
+        pg_mgr = PostgresManager(port=pg_port)
+        try:
+            conn = pg_mgr.get_connection()
+        except psycopg2.Error as e:
+            print(f"Error connecting to DB: {e}", file=sys.stderr)
+            return
+    else:
+        try:
+            conn = psycopg2.connect(
+                host=os.environ.get("POSTGRES_HOST", "127.0.0.1"),
+                port=pg_port or "5432",
+                user=os.environ.get("POSTGRES_USER", "postgres"),
+                dbname=os.environ.get("POSTGRES_DB", "postgres"),
+            )
+        except psycopg2.Error as e:
+            print(f"Error connecting to DB: {e}", file=sys.stderr)
+            return
+
     cursor = conn.cursor()
-    
+
     # 1. Get most recent model for each device_id in this registry
     models = []
     if site_model:
-        import os
-        import json
         devices_dir = os.path.join(site_model, "devices")
         if os.path.exists(devices_dir):
             for device_id in os.listdir(devices_dir):
@@ -41,14 +60,15 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                         with open(meta_path, "r") as mf:
                             models.append((device_id, json.load(mf)))
                     except Exception as e:
-                        print(f"err: {e}")
+                        print(f"err: {e}", file=sys.stderr)
     print(f"Found {len(models)} models", file=sys.stderr)
-    
-    # 2. Get all discovery events for this registry
+
+    # 2. Get all discovery events for this registry ordered chronologically
     cursor.execute("""
         SELECT payload, device_id
         FROM udmi_messages
         WHERE registry_id = %s AND sub_folder = 'discovery' AND sub_type = 'events'
+        ORDER BY id ASC
     """, (registry_id,))
     
     discovery_events = cursor.fetchall()
@@ -64,6 +84,9 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                 payload = json.loads(payload)
             except:
                 continue
+
+        if isinstance(payload, dict) and "payload" in payload and isinstance(payload.get("payload"), dict):
+            payload = payload["payload"]
         
         # Check root level primary family
         bacnet_addr = None
@@ -172,28 +195,26 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
     # 3. Generate Model Proposal Messages
     outputs = []
     unknown_counter = 1
-    
-    from datetime import datetime, timezone
+
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    
+
     for ent in entities:
         dev_id = ent['device_id']
-        
+
         b_addr = sorted(ent['bacnet'])[0] if ent['bacnet'] else None
         i_addr = sorted(ent['ipv4'])[0] if ent['ipv4'] else None
         v_addr = sorted(ent['vendor'])[0] if ent['vendor'] else None
-        
+
         if dev_id:
-            import copy
             orig = copy.deepcopy(original_models.get(dev_id, {}))
             orig['version'] = '1.5.7'
             orig['timestamp'] = now
-            
+
             orig_localnet = orig.get('localnet', {}).get('families', {})
             orig_b = orig_localnet.get('bacnet', {}).get('addr') if 'bacnet' in orig_localnet else None
             orig_i = orig_localnet.get('ipv4', {}).get('addr') if 'ipv4' in orig_localnet else None
             orig_v = orig_localnet.get('vendor', {}).get('addr') if 'vendor' in orig_localnet else None
-            
+
             diff_families = {}
             if b_addr and b_addr != orig_b:
                 diff_families['bacnet'] = {'addr': b_addr}
@@ -201,7 +222,7 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                 diff_families['ipv4'] = {'addr': i_addr}
             if v_addr and v_addr != orig_v:
                 diff_families['vendor'] = {'addr': v_addr}
-                
+
             if diff_families:
                 if 'localnet' not in orig:
                     orig['localnet'] = {}
@@ -211,29 +232,27 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
 
             # Check for extra metadata with new refs
             if site_model:
-                import os
-                import json
                 for family in ['vendor', 'bacnet', 'ipv4']:
                     addr = None
                     if family == 'vendor' and v_addr: addr = v_addr
                     if family == 'bacnet' and b_addr: addr = b_addr
                     if family == 'ipv4' and i_addr: addr = i_addr
-                    
+
                     if not addr: continue
-                    
+
                     extra_meta_path = os.path.join(site_model, "extras", f"discovered_{family}-{addr}", "cloud_metadata", "udmi_discovered_with.json")
                     if os.path.exists(extra_meta_path):
                         try:
                             with open(extra_meta_path, "r") as emf:
                                 extra_meta = json.load(emf)
-                                
+
                             refs = extra_meta.get("refs", {})
                             if refs:
                                 if "pointset" not in orig:
                                     orig["pointset"] = {}
                                 if "points" not in orig["pointset"]:
                                     orig["pointset"]["points"] = {}
-                                    
+
                                 points = orig["pointset"]["points"]
                                 for ref_key, ref_val in refs.items():
                                     pt_name = ref_val.get("point", ref_key)
@@ -241,7 +260,7 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                                         points[pt_name] = {}
                                     points[pt_name]["ref"] = ref_key
                         except Exception as e:
-                            print(f"Error merging refs: {e}")
+                            print(f"Error merging refs: {e}", file=sys.stderr)
 
             orig_timestamp = original_models.get(dev_id, {}).get("timestamp", "")
             if diff_families or site_model:
@@ -250,12 +269,12 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
             # New device: create complete proposed model
             dev_id = f"UNK-{unknown_counter}"
             unknown_counter += 1
-            
+
             new_families = {}
             if b_addr: new_families['bacnet'] = {'addr': b_addr}
             if i_addr: new_families['ipv4'] = {'addr': i_addr}
             if v_addr: new_families['vendor'] = {'addr': v_addr}
-            
+
             proposed = {
                 'version': '1.5.7',
                 'timestamp': now,
@@ -264,9 +283,6 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
             outputs.append({'deviceId': dev_id, 'model': proposed, 'updateFrom': ''})
 
     if site_model:
-        import os
-        import json
-        
         # Write discovery extras
         extras_dir = os.path.join(site_model, "extras")
         os.makedirs(extras_dir, exist_ok=True)
