@@ -309,7 +309,13 @@ public interface DiscoveryManager extends SubBlockManager {
     config.depth = Optional.ofNullable(config.depth)
         .orElse(config.addrs != null ? Depth.DETAILS : Depth.ENTRIES);
 
-    discoveryProvider(family).startScan(config, (deviceId, discoveryEvent) ->
+    FamilyProvider provider = discoveryProvider(family);
+    if (provider == null) {
+      info(format("Discovered %s has no provider, skipping provider scan", family));
+      return;
+    }
+
+    provider.startScan(config, (deviceId, discoveryEvent) ->
         ifNotNullThen(discoveryEvent.addr, addr -> {
           if (ifNotNullGet(targets, t -> !t.contains(addr), false)) {
             info(format("Discovered %s device %s for %s skipped", family, addr, generation));
@@ -346,7 +352,10 @@ public interface DiscoveryManager extends SubBlockManager {
       info(format("Discovered %s stopping %s (=? %s)", family, isoConvert(scanGeneration),
           isoConvert(familyDiscoveryState.generation)));
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation), () -> {
-        discoveryProvider(family).stopScan();
+        FamilyProvider provider = discoveryProvider(family);
+        if (provider != null) {
+          provider.stopScan();
+        }
         sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
         familyDiscoveryState.phase = STOPPED;
         updateState();

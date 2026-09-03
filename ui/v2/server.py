@@ -1193,7 +1193,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
         os.makedirs(session_dir, exist_ok=True)
         prune_old_sessions(10)
 
-        cmd = ["bin/start_local", site_model_resolved, project_spec]
+        cmd = ["bin/udmi", "start", site_model_resolved, project_spec]
         log_path = os.path.join(session_dir, 'testbed_start.log')
 
         env = os.environ.copy()

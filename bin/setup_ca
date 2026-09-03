@@ -4,13 +4,8 @@ UDMI_ROOT=$(dirname $0)/..
 source $UDMI_ROOT/etc/shell_common.sh
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
-SUDO=sudo
-if [[ ${UDMI_NO_SUDO:-false} == true || $(id -u) == 0 ]]; then
-    SUDO=""
-fi
-
-$SUDO mkdir -p $CERT_DIR
-$SUDO rm -f $CERT_DIR/*
+mkdir -p $CERT_DIR
+rm -f $CERT_DIR/*
 
 [[ $# != 2 ]] && fail $0 site_model hostname
 
@@ -28,13 +23,13 @@ $UDMI_ROOT/bin/keygen CA/$target $site_model/reflector
 $UDMI_ROOT/bin/keygen CERT/$target $site_model/reflector
 
 echo Importing server certs from $site_model...
-$SUDO cp $site_model/reflector/ca.* $CERT_DIR/
-$SUDO cp $site_model/reflector/rsa_private.* $CERT_DIR/
-$SUDO chmod 0755 $CERT_DIR
-$SUDO chmod 0644 $CERT_DIR/*
-if [[ -n $SUDO ]]; then
-    $SUDO chgrp -R mosquitto $CERT_DIR 2>/dev/null || true
-else
+cp $site_model/reflector/ca.* $CERT_DIR/
+cp $site_model/reflector/rsa_private.* $CERT_DIR/
+chmod 0755 $CERT_DIR
+chmod 0644 $CERT_DIR/*
+if [[ $(id -u) == 0 ]]; then
     chown -R mosquitto:mosquitto $CERT_DIR 2>/dev/null || chgrp -R mosquitto $CERT_DIR 2>/dev/null || true
+else
+    chgrp -R mosquitto $CERT_DIR 2>/dev/null || true
 fi
 ls -l $CERT_DIR

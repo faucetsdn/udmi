@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Utility to generate a histogram of content in InfluxDB and PostgreSQL instances
-# as started by start_local.
+# as started by udmi start.
 
 ROOT=$(dirname $0)/..
 

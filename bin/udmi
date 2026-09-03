@@ -1,0 +1,292 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $(realpath $0))/..
+source $UDMI_ROOT/etc/shell_common.sh
+source $UDMI_ROOT/etc/tmux_common.sh
+
+show_help() {
+    echo "UDMI Local Orchestrator (udmi)"
+    echo ""
+    echo "Usage: bin/udmi <command> [site_model] [project_spec] [target_id] [block] [+only | !exclude | ++optional]"
+    echo ""
+    echo "Commands:"
+    echo "  start   : Start local UDMI infrastructure services (Barbican & Butler)"
+    echo "  stop    : Stop all local UDMI infrastructure services across tmux sessions"
+    echo "  clean   : Purge runtime state, cached certificates, databases, and logs"
+    echo "  restart : Sequence { stop, clean, start } (clean-slate fresh restart)"
+    echo "  status  : Show status and diagnostic probes for all local UDMI services"
+    echo "  logs    : View logs from tmux windows (usage: bin/udmi logs [session[:window]] [num_lines])"
+    echo "  attach  : Attach to a tmux session (usage: bin/udmi attach [session])"
+    echo "  help    : Show this help message"
+    echo ""
+    echo "Services managed by udmi:"
+    echo "  Barbican: mosquitto udmis etcd pubsub"
+    echo "  Butler:   butler validator registrar postgres influxdb"
+    echo ""
+    echo "Service filters:"
+    echo "  +service   : Include only the specified service"
+    echo "  !service   : Exclude the specified service"
+    echo "  ++service  : Enable an optional service (e.g. ++pubsub, ++validator)"
+}
+
+CMD="${1:-}"
+if [[ -z "$CMD" || "$CMD" == "-h" || "$CMD" == "--help" || "$CMD" == "help" ]]; then
+    show_help
+    [[ "$CMD" == "-h" || "$CMD" == "--help" || "$CMD" == "help" ]] && exit 0 || exit 1
+fi
+
+case "$CMD" in
+    start|stop|restart|clean|status|logs|attach)
+        ;;
+    *)
+        echo "ERROR: Unrecognized command '$CMD'. First parameter must be a valid command (start, stop, restart, clean, status, logs, attach, help)." >&2
+        show_help >&2
+        exit 1
+        ;;
+esac
+
+# 1. Stop or Clean commands
+if [[ "$CMD" == "stop" || "$CMD" == "clean" ]]; then
+    action="$CMD"
+    shift
+    parse_tmux_args "$@"
+    ns_arg="${TMUX_NAMESPACE:-}"
+    [[ -n "$ns_arg" ]] || ns_arg="${TMUX_PROJECT_SPEC:-}"
+    if [[ "$action" == "stop" ]]; then
+        echo "Stopping local UDMI infrastructure${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)} via tmux sessions..."
+        $UDMI_ROOT/bin/tmux_barbican stop $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_butler stop $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_bridgehead stop $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_base stop $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_model stop $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_mcp stop $ns_arg >/dev/null 2>&1 || true
+        echo "Local UDMI infrastructure stopped cleanly."
+    elif [[ "$action" == "clean" ]]; then
+        echo "Cleaning local UDMI infrastructure state${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)}..."
+        $UDMI_ROOT/bin/tmux_barbican clean $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_butler clean $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_bridgehead clean $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_base clean $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_model clean $ns_arg >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_mcp clean $ns_arg >/dev/null 2>&1 || true
+        echo "Local UDMI infrastructure state cleaned."
+    fi
+    exit 0
+fi
+
+# 2. Status command
+if [[ "$CMD" == "status" ]]; then
+    shift
+    parse_tmux_args "$@"
+    ns_arg="${TMUX_NAMESPACE:-}"
+    [[ -n "$ns_arg" ]] || ns_arg="${TMUX_PROJECT_SPEC:-}"
+    echo "=== UDMI Infrastructure Status${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)} ==="
+    $UDMI_ROOT/bin/tmux_barbican status $ns_arg
+    echo ""
+    $UDMI_ROOT/bin/tmux_butler status $ns_arg
+    echo ""
+    $UDMI_ROOT/bin/tmux_bridgehead status $ns_arg
+    echo ""
+    $UDMI_ROOT/bin/tmux_base status $ns_arg
+    echo ""
+    $UDMI_ROOT/bin/tmux_mcp status $ns_arg
+    exit 0
+fi
+
+# 3. Logs command
+if [[ "$CMD" == "logs" ]]; then
+    shift
+    session="${1:-}"
+    lines="${2:-50}"
+    if [[ "$session" =~ ^[0-9]+$ && -z "${2:-}" ]]; then
+        lines="$session"
+        session=""
+    fi
+    tmux_capture_logs "$session" "" "$lines"
+    exit 0
+fi
+
+# 4. Attach command
+if [[ "$CMD" == "attach" ]]; then
+    shift
+    session="${1:-barbican}"
+    tmux_attach_session "$session" "${2:-}"
+    exit 0
+fi
+
+# 5. Start and Restart commands
+LOCAL_ACTION="$CMD"
+shift
+
+block=
+FILTER_ARGS=()
+POSITIONAL_ARGS=()
+
+for arg in "$@"; do
+    case "$arg" in
+        block)
+            block="block"
+            ;;
+        \+\+*|\+*|\!*)
+            FILTER_ARGS+=("$arg")
+            ;;
+        *)
+            POSITIONAL_ARGS+=("$arg")
+            ;;
+    esac
+done
+
+ALLOWED_SERVICES=(mosquitto udmis etcd postgres influxdb butler validator registrar pubsub)
+
+# Parse and strictly validate arguments via parse_tmux_args
+parse_tmux_args "${POSITIONAL_ARGS[@]}" "${FILTER_ARGS[@]}"
+tmux_validate_services "udmi" "${ALLOWED_SERVICES[@]}"
+
+site_model="$TMUX_SITE_MODEL"
+project_spec="$TMUX_PROJECT_SPEC"
+
+site_config="$site_model"
+if [[ -d "$site_config" ]]; then
+    site_config="$site_config/cloud_iot_config.json"
+elif [[ -f "$site_config" ]]; then
+    site_config=$(realpath "$site_config")
+elif [[ "$site_config" == sites/* || "$site_config" == */* ]]; then
+    site_config="$site_config/cloud_iot_config.json"
+fi
+
+if [[ ! -f "$site_config" && "$site_model" =~ /sites/udmi~ ]]; then
+    $UDMI_ROOT/bin/clone_model "$site_model"
+fi
+
+if [[ ! -f "$site_config" ]]; then
+    fail "local startup requires explicit site path file ($site_config not found)."
+fi
+site_model=$(dirname "$site_config")
+
+# Check for missing etc/ dir for docker execution.
+if [[ -d var/ && ! -d etc/ ]]; then
+    ln -s var etc
+fi
+
+cd "$UDMI_ROOT"
+UDMIS_LOG=${UDMIS_LOG:-out/udmis.log}
+mkdir -p $(dirname "$UDMIS_LOG")
+echo Starting local services at $(date -u -Is) | tee $UDMIS_LOG
+
+iot_provider=$(jq -r .iot_provider $site_config)
+if [[ -n ${project_spec:-} ]]; then
+    project_spec=$(normalize_conn_spec "$project_spec")
+    no_prefix=${project_spec#//}
+    iot_provider=${no_prefix%%/*}
+    no_provider=${no_prefix#*/}
+    project_target=${no_provider%%/*}
+    if [[ $project_target == *@* ]]; then
+        project_target=${project_target%@*}
+    fi
+    if [[ $project_target == *:* ]]; then
+        project_target=${project_target%:*}
+    fi
+fi
+
+if [[ $iot_provider != mqtt ]]; then
+    echo Provider type $iot_provider is not a local setup, doing nothing | tee -a $UDMIS_LOG
+    exit 0
+fi
+
+[[ -n ${project_target:-} ]] || project_target=$(jq -r .project_id $site_config)
+if [[ $project_target == *:* ]]; then
+    project_target=${project_target%:*}
+fi
+registry_id=$(jq -r .registry_id $site_config)${UDMI_REGISTRY_SUFFIX:-}
+
+BARBICAN_SERVICES=(mosquitto udmis etcd pubsub)
+BUTLER_SERVICES=(butler validator registrar postgres influxdb)
+
+BARBICAN_FILTERS=()
+BUTLER_FILTERS=()
+
+for f in "${FILTER_ARGS[@]}"; do
+    svc="${f#\+\+}"
+    svc="${svc#\+}"
+    svc="${svc#\!}"
+    for b in "${BARBICAN_SERVICES[@]}"; do
+        if [[ "$svc" == "$b" ]]; then
+            BARBICAN_FILTERS+=("$f")
+            break
+        fi
+    done
+    for u in "${BUTLER_SERVICES[@]}"; do
+        if [[ "$svc" == "$u" ]]; then
+            BUTLER_FILTERS+=("$f")
+            break
+        fi
+    done
+done
+
+should_run_barbican=false
+for s in "${BARBICAN_SERVICES[@]}"; do
+    if tmux_should_run_service "$s" "$([[ "$s" == "pubsub" ]] && echo true || echo false)"; then
+        should_run_barbican=true
+        break
+    fi
+done
+
+should_run_butler=false
+for s in "${BUTLER_SERVICES[@]}"; do
+    if tmux_should_run_service "$s" "$([[ "$s" == "validator" ]] && echo true || echo false)"; then
+        should_run_butler=true
+        break
+    fi
+done
+
+# 1. Barbican session (etcd, mosquitto, udmis, pubsub)
+if [[ "$should_run_barbican" == true ]]; then
+    echo "Starting Barbican in tmux session ($LOCAL_ACTION)..." | tee -a $UDMIS_LOG
+    $UDMI_ROOT/bin/tmux_barbican "$LOCAL_ACTION" "$site_model" "${project_spec:-//mqtt/localhost:${MQTT_PORT:-8883}}" "${BARBICAN_FILTERS[@]}"
+else
+    echo "Skipping Barbican tmux session (filtered)" | tee -a $UDMIS_LOG
+fi
+
+# 2. Butler session (postgres, influxdb, butler, validator, registrar)
+if [[ "$should_run_butler" == true ]]; then
+    echo "Starting Butler in tmux session ($LOCAL_ACTION)..." | tee -a $UDMIS_LOG
+    $UDMI_ROOT/bin/tmux_butler "$LOCAL_ACTION" "$site_model" "${project_spec:-//mqtt/localhost:${MQTT_PORT:-8883}}" "${BUTLER_FILTERS[@]}"
+else
+    echo "Skipping Butler tmux session (filtered)" | tee -a $UDMIS_LOG
+fi
+
+# 3. If UDMIS was started, wait for its readiness sentinel
+if tmux_should_run_service "udmis"; then
+    if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
+        POD_READY=${UDMI_POD_READY:-/tmp/pod_ready.txt}
+    else
+        POD_READY=${UDMI_POD_READY:-var/pod_ready.txt}
+    fi
+    echo "Waiting for UDMIS readiness sentinel ($POD_READY)..."
+    WAITING=90
+    for i in $(seq 1 $WAITING); do
+        if [[ -f $POD_READY ]]; then
+            break
+        fi
+        sleep 1
+    done
+    if [[ ! -f $POD_READY ]]; then
+        echo "=== UDMIS failed to become ready within ${WAITING}s ==="
+        fail "pod_ready.txt not found."
+    fi
+fi
+
+echo Done with local server setup.
+
+echo ""
+echo "################################################################"
+echo "UUFI Service is READY"
+echo "################################################################"
+echo "Connection String: mqtt://rocket:monkey@localhost:${MQTT_PORT:-8883}"
+echo "CA Certificate:    $site_model/reflector/ca.crt"
+echo "Client Cert:       $site_model/reflector/rsa_private.crt"
+echo "Client Key:        $site_model/reflector/rsa_private.pem"
+echo "################################################################"
+echo ""
+
+[[ -z $block ]] || (echo Blocking until termination. && tail -f /dev/null)

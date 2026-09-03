@@ -5,41 +5,71 @@ source $UDMI_ROOT/etc/shell_common.sh
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
-SUDO=sudo
-if [[ ${UDMI_NO_SUDO:-false} == true || $(id -u) == 0 ]]; then
-    SUDO=""
-fi
-
-if [[ -f $ETC_DIR/mosquitto.pid ]]; then
-    OLD_PID=$(cat $ETC_DIR/mosquitto.pid)
-    if ps -p $OLD_PID > /dev/null 2>&1; then
-        echo "Killing existing local mosquitto process with PID $OLD_PID..."
-        $SUDO kill $OLD_PID 2>/dev/null || kill $OLD_PID || true
-        sleep 1
+for pid_path in "$ETC_DIR/mosquitto.pid" "var/mosquitto/mosquitto.pid" "/var/mosquitto/mosquitto.pid"; do
+    if [[ -f "$pid_path" ]]; then
+        OLD_PID=$(cat "$pid_path" 2>/dev/null || true)
+        if [[ -n "$OLD_PID" ]] && ps -p "$OLD_PID" > /dev/null 2>&1; then
+            echo "Killing existing local mosquitto process with PID $OLD_PID..."
+            kill "$OLD_PID" 2>/dev/null || true
+            sleep 1
+        fi
     fi
-fi
+done
 
 if [[ ${1:-} == stop ]]; then
-    if [[ ${UDMI_NO_SUDO:-false} != true ]] && command -v systemctl >/dev/null 2>&1; then
+    rm -f "$ETC_DIR/mosquitto.ready" "$UDMI_ROOT/var/mosquitto/mosquitto.ready" "/var/mosquitto/mosquitto.ready" 2>/dev/null || true
+    if [[ $(id -u) == 0 ]] && command -v systemctl >/dev/null 2>&1; then
         echo "Stopping mosquitto systemd service..."
-        sudo systemctl stop mosquitto || true
+        systemctl stop mosquitto 2>/dev/null || true
     fi
     exit 0
 fi
 
-if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-    MOSQUITTO_LOG=$ETC_DIR/log/mosquitto.log
-else
-    MOSQUITTO_LOG=/var/log/mosquitto/mosquitto.log
+site_model="${1:-}"
+project_spec="${2:-}"
+site_config=""
+
+if [[ -n "$site_model" ]]; then
+    if [[ -d "$site_model" ]]; then
+        site_config="$site_model/cloud_iot_config.json"
+    else
+        site_config="$site_model"
+        site_model=$(dirname "$site_config")
+    fi
+
+    if [[ -f "$site_config" ]]; then
+        if [[ -n "$project_spec" ]]; then
+            project_spec=$(normalize_conn_spec "$project_spec")
+            no_prefix=${project_spec#//}
+            iot_provider=${no_prefix%%/*}
+            no_provider=${no_prefix#*/}
+            project_target=${no_provider%%/*}
+            if [[ $project_target == *@* ]]; then
+                project_target=${project_target%@*}
+            fi
+            if [[ $project_target == *:* ]]; then
+                project_target=${project_target%:*}
+            fi
+        fi
+        [[ -n ${project_target:-} ]] || project_target=$(jq -r .project_id $site_config 2>/dev/null || echo "localhost")
+        if [[ $project_target == *:* ]]; then
+            project_target=${project_target%:*}
+        fi
+        registry_id=$(jq -r .registry_id $site_config 2>/dev/null || true)${UDMI_REGISTRY_SUFFIX:-}
+
+        mkdir -p $CERT_DIR
+        echo "Setting up CA certificates for site model $site_model on server $project_target..."
+        $UDMI_ROOT/bin/setup_ca "$site_model" "$project_target"
+    fi
 fi
+
+MOSQUITTO_LOG=$ETC_DIR/log/mosquitto.log
 
 # This is not already set-up when running inside of docker...
 if [[ ! -f $ETC_DIR/mosquitto.conf ]]; then
     echo Installing base mosquitto.conf...
-    $SUDO mkdir -p $ETC_DIR
-    if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-        $SUDO mkdir -p $ETC_DIR/log $ETC_DIR/data $ETC_DIR/conf.d
-        cat <<EOF > $ETC_DIR/mosquitto.conf
+    mkdir -p $ETC_DIR/log $ETC_DIR/data $ETC_DIR/conf.d
+    cat <<EOF > $ETC_DIR/mosquitto.conf
 pid_file $ETC_DIR/mosquitto.pid
 persistence true
 persistence_location $ETC_DIR/data/
@@ -48,87 +78,62 @@ log_dest file $MOSQUITTO_LOG
 
 include_dir $ETC_DIR/conf.d
 EOF
-    else
-        $SUDO cp $UDMI_ROOT/var/mosquitto.conf $ETC_DIR/ ||
-            $SUDO cp $UDMI_ROOT/etc/mosquitto.conf $ETC_DIR/ ||
-            fail fallback mosquitto.conf file not found.
-    fi
 fi
 
 if [[ -f $ETC_DIR/mosquitto.conf ]]; then
-    $SUDO sed -i "s|/etc/mosquitto|$ETC_DIR|g" $ETC_DIR/mosquitto.conf
+    sed -i "s|/etc/mosquitto|$ETC_DIR|g" $ETC_DIR/mosquitto.conf
 fi
 
 GROUP=mosquitto
 UDMI_FILE=$ETC_DIR/conf.d/udmi.conf
-PASS_FILE=$ETC_DIR/mosquitto.passwd
 DYN_FILE=$ETC_DIR/dynamic_security.json
 
-$SUDO mkdir -p $(dirname $MOSQUITTO_LOG)
-if [[ -z $SUDO ]]; then
-    $SUDO mkdir -p $ETC_DIR/data
-else
-    $SUDO chown mosquitto:mosquitto $(dirname $MOSQUITTO_LOG) || true
-    $SUDO mkdir -p /var/lib/mosquitto
-    $SUDO chown -R mosquitto:mosquitto /var/lib/mosquitto || true
+mkdir -p $(dirname $MOSQUITTO_LOG) $ETC_DIR/data
+if [[ $(id -u) == 0 ]]; then
+    chown mosquitto:mosquitto $(dirname $MOSQUITTO_LOG) || true
+    mkdir -p /var/lib/mosquitto
+    chown -R mosquitto:mosquitto /var/lib/mosquitto || true
 fi
 
-    PLUGIN_FILE=/usr/lib/mosquitto_dynamic_security.so
-    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/mosquitto/mosquitto_dynamic_security.so
-    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/x86_64-linux-gnu/mosquitto_dynamic_security.so
-    [[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=$(find /usr -name mosquitto_dynamic_security.so 2>/dev/null | head -1)
-    [[ -n $PLUGIN_FILE ]] || fail "mosquitto_dynamic_security.so not found."
+PLUGIN_FILE=/usr/lib/mosquitto_dynamic_security.so
+[[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/mosquitto/mosquitto_dynamic_security.so
+[[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=/usr/lib/x86_64-linux-gnu/mosquitto_dynamic_security.so
+[[ -f $PLUGIN_FILE ]] || PLUGIN_FILE=$(find /usr -name mosquitto_dynamic_security.so 2>/dev/null | head -1)
+[[ -n $PLUGIN_FILE ]] || fail "mosquitto_dynamic_security.so not found."
 
 if [[ ! -f $UDMI_FILE ]]; then
     echo Creating new $UDMI_FILE from template...
-    $SUDO mkdir -p $(dirname $UDMI_FILE)
-    $SUDO cp $UDMI_ROOT/etc/mosquitto_udmi.conf $UDMI_FILE
-    if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-        # Replace hardcoded listener in local mode
-        $SUDO sed -i "s%listener 8883%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
-    fi
-    # Always normalize password file, dynamic security file, and certificate paths
-    $SUDO sed -i "s%/etc/mosquitto/mosquitto.passwd%$PASS_FILE%" $UDMI_FILE
-    $SUDO sed -i "s%plugin_opt_config_file dynsec%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
-    $SUDO sed -i "s%/etc/mosquitto/certs/%$CERT_DIR/%" $UDMI_FILE
+    mkdir -p $(dirname $UDMI_FILE)
+    cp $UDMI_ROOT/etc/mosquitto_udmi.conf $UDMI_FILE
+    sed -i "s%listener 8883%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
+    # Always normalize dynamic security file and certificate paths
+    sed -i "s%plugin_opt_config_file dynsec%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
+    sed -i "s%/etc/mosquitto/certs/%$CERT_DIR/%" $UDMI_FILE
 fi
 
-# Always ensure correct dynamic security plugin, password file, and config file paths are set
+# Always ensure correct dynamic security plugin, dynamic security file, and config file paths are set
 echo Configuring dynamic security plugin $PLUGIN_FILE
-$SUDO sed -i "s%plugin .*%plugin $PLUGIN_FILE%" $UDMI_FILE
-$SUDO sed -i "s%plugin_opt_config_file .*%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
-$SUDO sed -i "s%password_file .*%password_file $PASS_FILE%" $UDMI_FILE
-$SUDO sed -i "s%listener [0-9]*%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
+sed -i "s%plugin .*%plugin $PLUGIN_FILE%" $UDMI_FILE
+sed -i "s%plugin_opt_config_file .*%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
+sed -i "/password_file/d" $UDMI_FILE
+sed -i "s%listener [0-9]*%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
 [[ $(whoami) == root ]] && ! grep -q "^user root" $UDMI_FILE && echo "user root" >> $UDMI_FILE
 
-# Ensure the mosquitto group can write to the config directory (required for atomic configuration saves)
-if [[ -n $SUDO ]]; then
-    $SUDO chgrp $GROUP $ETC_DIR || true
-    $SUDO chmod 775 $ETC_DIR || true
+# Ensure the mosquitto group can write to the config directory if root
+if [[ $(id -u) == 0 ]]; then
+    chgrp $GROUP $ETC_DIR 2>/dev/null || true
+    chmod 775 $ETC_DIR 2>/dev/null || true
 fi
 
 if [[ ! -f $DYN_FILE ]]; then
     echo Creating new $DYN_FILE
     echo Configuring MQTT user: $AUTH_USER
-    $SUDO mosquitto_ctrl dynsec init $DYN_FILE $AUTH_USER $AUTH_PASS
+    mosquitto_ctrl dynsec init $DYN_FILE $AUTH_USER $AUTH_PASS
 fi
 
-# Ensure the dynamic security file is owned by the mosquitto group and is group-writable (restricted to owner and group only)
-if [[ -n $SUDO ]]; then
-    $SUDO chgrp $GROUP $DYN_FILE || true
-    $SUDO chmod 0660 $DYN_FILE || true
-fi
-
-if [[ ! -f $PASS_FILE ]]; then
-    echo Creating $PASS_FILE
-    $SUDO touch $PASS_FILE
-    $SUDO mosquitto_passwd -b ${PASS_FILE} ${AUTH_USER} ${AUTH_PASS}
-fi
-
-# Ensure the passwd file is owned by the mosquitto user and is strictly private (0600)
-if [[ -n $SUDO ]]; then
-    $SUDO chown mosquitto:mosquitto $PASS_FILE || true
-    $SUDO chmod 0600 $PASS_FILE || true
+if [[ $(id -u) == 0 ]]; then
+    chgrp $GROUP $DYN_FILE 2>/dev/null || true
+    chmod 0660 $DYN_FILE 2>/dev/null || true
 fi
 
 function mosquitto_diag {
@@ -151,23 +156,23 @@ function mosquitto_diag {
     echo "=== END MOSQUITTO DIAGNOSTICS ==="
 }
 
-if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-    # Raw mode for running without sudo
+if [[ $(id -u) == 0 && $ETC_DIR == /etc/mosquitto ]] && command -v systemctl >/dev/null 2>&1; then
+    systemctl restart mosquitto
+else
+    # Raw mode for running without root
     nohup mosquitto -c $ETC_DIR/mosquitto.conf > $MOSQUITTO_LOG 2>&1 &
     MOSQUITTO_PID=$!
     disown $MOSQUITTO_PID 2>/dev/null || true
-    echo Waiting 10s for background mosquitto to start...
-    sleep 10
-    [[ -d /proc/$MOSQUITTO_PID ]] || (mosquitto_diag && cat $MOSQUITTO_LOG && fail starting mosquitto)
-    echo Completed mosquitto startup.
-elif command -v systemctl >/dev/null 2>&1; then
-    sudo systemctl restart mosquitto
-else
-    # Raw mode for running (e.g.) in a docker container
-    (cd / && mosquitto -c $ETC_DIR/mosquitto.conf) > $MOSQUITTO_LOG 2>&1 &
-    MOSQUITTO_PID=$!
-    echo Waiting 10s for background mosquitto to start...
-    sleep 10
+    echo Waiting for background mosquitto on port ${MQTT_PORT:-8883}...
+    for i in $(seq 1 50); do
+        if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT:-8883}" 2>/dev/null; then
+            break
+        fi
+        if ! ps -p $MOSQUITTO_PID >/dev/null 2>&1; then
+            break
+        fi
+        sleep 0.2
+    done
     [[ -d /proc/$MOSQUITTO_PID ]] || (mosquitto_diag && cat $MOSQUITTO_LOG && fail starting mosquitto)
     echo Completed mosquitto startup.
 fi
@@ -177,11 +182,25 @@ $MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/r/+/d/+/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern '/uufi/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/uufi/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern 'events/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service publishClientSend 'events/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern 'state/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service publishClientSend 'state/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern 'state' allow || true
+$MOSQUITTO_CTRL addRoleACL service publishClientSend 'state' allow || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern 'c/control/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service publishClientSend 'c/control/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern 'reflect' allow || true
+$MOSQUITTO_CTRL addRoleACL service publishClientSend 'reflect' allow || true
 $MOSQUITTO_CTRL addClientRole $AUTH_USER service || true
 
 $MOSQUITTO_CTRL createRole uufi || true
 $MOSQUITTO_CTRL addRoleACL uufi subscribePattern '/uufi/#' allow || true
 $MOSQUITTO_CTRL addRoleACL uufi publishClientSend '/uufi/#' allow || true
+
+$MOSQUITTO_CTRL createClient rocket -p monkey 2>/dev/null || true
+$MOSQUITTO_CTRL addClientRole rocket service 2>/dev/null || true
+$MOSQUITTO_CTRL addClientRole rocket uufi 2>/dev/null || true
 
 clients=$($MOSQUITTO_CTRL listClients)
 if [[ $clients =~ ${AUTH_USER} ]]; then
@@ -189,3 +208,11 @@ if [[ $clients =~ ${AUTH_USER} ]]; then
 else
     fail Improper client: $clients
 fi
+
+if [[ -n "${site_model:-}" && -f "${site_config:-}" ]]; then
+    $UDMI_ROOT/bin/mosquctl_site "$site_model" 2>/dev/null || true
+fi
+
+mkdir -p "$ETC_DIR"
+touch "$ETC_DIR/mosquitto.ready"
+echo "Mosquitto is ready and fully provisioned."

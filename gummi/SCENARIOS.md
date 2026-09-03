@@ -14,7 +14,7 @@ This runbook outlines the standard testing scenarios, verification workflows, an
 | **2** | **End-to-End Playwright Testing** | Headless Chromium | Automated browser validation of DOM transitions, zero console errors, inspect flows, and inputs | `venv/bin/pytest gummi/tests/test_ui_playwright.py`<br>`bin/test_gummi` |
 | **3** | **Device Discovery & Proposal Lifecycle** | Mock / Live Butler DB | Multi-stage verification of Base Model (`subType: model`) → Discovery (`events/discovery`) → Proposal (`propose` with `updateFrom`) | `POST /api/mapping/run`<br>`gummi/tests/test_mapping.py` |
 | **4** | **Managed Rollout Simulation** | Local Broker / Mock | Staged configuration rollout across fleet subsets, batching intervals, pause/cancel controls, and convergence monitoring | `POST /api/rollouts`<br>`POST /api/rollouts/{id}/pause` |
-| **5** | **Hermetic Bridgehead Integration** | Mosquitto + Postgres + UUFI | Full pipeline testing connecting GUMMI to a local bridgehead MQTT broker and PostgreSQL `udmi_messages` table | `bin/start_local sites/udmi_site_model //mqtt/localhost:46432`<br>`bin/gummi --mqtt-host localhost --mqtt-port 46432` |
+| **5** | **Hermetic Bridgehead Integration** | Mosquitto + Postgres + UUFI | Full pipeline testing connecting GUMMI to a local bridgehead MQTT broker and PostgreSQL `udmi_messages` table | `bin/udmi start sites/udmi_site_model //mqtt/localhost:46432`<br>`bin/gummi --mqtt-host localhost --mqtt-port 46432` |
 | **6** | **Live Hardware / Pubber Telemetry** | Pubber DUT + Validator | Real-time telemetry point streaming and pointset validation | `bin/test_validator //mqtt/localhost:46432`<br>`bin/test_automapper` |
 
 ---
@@ -93,7 +93,7 @@ This runbook outlines the standard testing scenarios, verification workflows, an
 * **Execution**:
   ```bash
   # 1. Start local services on unprivileged port 46432
-  bin/start_local sites/udmi_site_model //mqtt/localhost:46432
+  bin/udmi start sites/udmi_site_model //mqtt/localhost:46432
 
   # 2. Run GUMMI pointing to local services
   bin/gummi --port 8088 --mqtt-host localhost --mqtt-port 46432 --pg-host 127.0.0.1 --pg-port 5432

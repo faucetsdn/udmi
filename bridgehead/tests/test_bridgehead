@@ -151,7 +151,7 @@ echo "Step 4: Discovery script executed."
 
 # 5. Run registrar to check results
 echo "Waiting for messages to flush before registrar..."
-sleep 15
+sleep 30
 docker exec validator bin/registrar site_model/ //mqtt/mosquitto > out/registrar_output.txt 2>&1 || true
 echo "Step 5: Ran Registrar to check results."
 

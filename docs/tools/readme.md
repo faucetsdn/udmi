@@ -21,7 +21,8 @@ Many tools take a [project spec](project_spec.md) as the second argument.
 - [bambi workflow](bambi_flow.md) - a step-by-step breakdown and sequence diagram of the BAMBI site model update process
 - [reconciler_service](reconciler_service.md) - a service to automatically open pull requests from proposal branches in the source repository
 - [mantis](mantis.md) - an automated diagnostic tool that triages UDMI test failures using AI
-- [workbench](workbench.md) - a modern, unified visual workspace for UDMI development, compliance testing, and debugging
+- [udmi local orchestrator](udmi_tools.md) - unified CLI for managing local UDMI infrastructure services and namespaced environments
+- [tmux controllers](tmux.md) - modular tmux controllers for individual local service domains (barbican, butler, bridgehead, base, mcp)
 
 
 ## Setup

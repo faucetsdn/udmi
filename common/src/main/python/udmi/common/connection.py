@@ -3,8 +3,10 @@
 import hashlib
 import json
 import os
+import socket
 import ssl
 import sys
+import time
 import uuid
 from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
@@ -128,7 +130,8 @@ class MessageConnection:
                 self.password = env_pass or "monkey"
             elif self.key_bytes:
                 derived_pass = hashlib.sha256(self.key_bytes).hexdigest()[:HASH_PASSWORD_LENGTH]
-                self.username = f"/r/UDMI-REFLECT/d/{self.actual_registry}"
+                ns_prefix = f"{self.prefix}~" if self.prefix else ""
+                self.username = f"/r/{ns_prefix}UDMI-REFLECT/d/{self.actual_registry}"
                 self.password = derived_pass
 
     def create_mqtt_client(self) -> mqtt.Client:
@@ -195,7 +198,22 @@ class MessageConnection:
             f"Connecting to MQTT provider '{self.provider}' at {self.host}:{self.port} with client_id '{self.client_id}'...",
             file=sys.stderr,
         )
-        client.connect(self.host, self.port, keepalive=60)
+        connected = False
+        connect_err = None
+        for attempt in range(30):
+            try:
+                client.connect(self.host, self.port, keepalive=60)
+                connected = True
+                break
+            except (ConnectionRefusedError, OSError, socket.error) as e:
+                connect_err = e
+                time.sleep(1)
+
+        if not connected:
+            if connect_err:
+                raise connect_err
+            client.connect(self.host, self.port, keepalive=60)
+
         self._mqtt_client = client
         return client
 
