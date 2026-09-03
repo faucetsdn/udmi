@@ -82,6 +82,7 @@ public class IotAccess {
         LOCAL("local"),
         DYNAMIC("dynamic"),
         IMPLICIT("implicit"),
+        ZANZARA("zanzara"),
         PUBSUB("pubsub"),
         MQTT("mqtt"),
         GBOS("gbos"),

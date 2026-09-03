@@ -25,6 +25,13 @@ jartmp=/tmp/$jarbase
 jardir=build/libs
 jarfile=$jardir/$jarbase
 
+newer_files=$([[ -f $jarfile ]] && find src/ $BASE/gencode/java $BASE/common/src -type f -newer $jarfile 2>/dev/null || echo missing)
+if [[ -z ${check:-} && -z ${covg:-} && -z $newer_files ]]; then
+    ls -l $jarfile
+    echo $jarfile up-to-date, skipping build.
+    exit 0
+fi
+
 rm -f $jartmp
 echo Stashing $jartmp
 [[ ! -f $jarfile ]] || cp -a $jarfile $jartmp
@@ -42,14 +49,7 @@ cp -a ../schema build/schema/
 cp -a ../butler build/butler/
 cp -a ../common build/common/
 cp -a ../gencode build/gencode/
-
-
-newer_files=$([[ -f $jarfile ]] && find src/ $BASE/gencode/java -type f -newer $jarfile || echo missing)
-if [[ -z $check && -z $covg && -z $newer_files ]]; then
-    ls -l $jarfile
-    echo $jarfile up-to-date, skipping build.
-    exit 0
-fi
+mkdir -p var && cp -a etc/*.json var/
 
 echo Building udmis in $PWD
 

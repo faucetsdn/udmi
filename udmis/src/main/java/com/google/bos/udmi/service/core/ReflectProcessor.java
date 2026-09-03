@@ -1,6 +1,6 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.bos.udmi.service.access.ImplicitIotAccessProvider.hashedDeviceId;
+import static com.google.bos.udmi.service.access.ZanzaraIotAccessProvider.hashedDeviceId;
 import static com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl.getMessageClassFor;
 import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.CleanDateFormat.cleanDate;

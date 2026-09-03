@@ -98,4 +98,29 @@ class DynamicIotAccessProviderTest extends MessageTestCore {
     verify(mockImplicitProvider).modifyConfig(eq(envelope), any());
     verify(mockPubSubProvider, never()).modifyConfig(any(), any());
   }
+
+  @Test
+  void testZanzaraProviderAffinity() {
+    IotAccessProvider mockZanzaraProvider = mock(IotAccessProvider.class);
+    when(mockZanzaraProvider.isEnabled()).thenReturn(true);
+    when(mockZanzaraProvider.supportsRegistryOperations()).thenReturn(true);
+    when(mockZanzaraProvider.fetchRegistryMetadata(TEST_REGISTRY, "udmi_provisioned"))
+        .thenReturn("2026-01-01T00:00:00Z");
+    UdmiServicePod.putComponent("zanzara", () -> mockZanzaraProvider);
+
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.project_id = "zanzara,pubsub";
+    DynamicIotAccessProvider provider = new DynamicIotAccessProvider(iotAccess);
+    provider.activate();
+
+    provider.setProviderAffinity(TEST_REGISTRY, TEST_DEVICE, "pubsub/zanzara");
+
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    envelope.deviceId = TEST_DEVICE;
+
+    provider.modifyConfig(envelope, pair -> "{}");
+
+    verify(mockZanzaraProvider).modifyConfig(eq(envelope), any());
+  }
 }

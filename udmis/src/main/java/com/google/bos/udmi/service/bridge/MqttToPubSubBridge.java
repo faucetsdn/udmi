@@ -393,7 +393,7 @@ public class MqttToPubSubBridge {
     String etcdTarget = commandLine.getOptionValue("etcd_target");
     String etcdOptions = getEtcdOptions(commandLine);
 
-    String sourceAttribute = commandLine.getOptionValue("source_attribute", "bridge");
+    String sourceAttribute = commandLine.getOptionValue("source_attribute", "zanzara");
     String sharedSubscription = commandLine.getOptionValue("shared_subscription");
 
     if (gcpProjectId == null || pubsubTopicId == null || mqttClientId == null) {
@@ -597,7 +597,7 @@ public class MqttToPubSubBridge {
    */
   public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider) throws MqttException {
-    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, "bridge", null);
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, "zanzara", null);
   }
 
   /**
@@ -752,9 +752,12 @@ public class MqttToPubSubBridge {
                     attributes.put("deviceNumId", numId);
                   }
 
-                  if (topicSuffix != null && topicSuffix.startsWith("events/")) {
+                  if (topicSuffix != null && !topicSuffix.isEmpty()) {
                     List<String> parts = Splitter.on('/').splitToList(topicSuffix);
-                    if (parts.size() >= 2) {
+                    if (!parts.isEmpty() && !parts.get(0).isEmpty()) {
+                      attributes.put("subType", parts.get(0));
+                    }
+                    if (parts.size() >= 2 && !parts.get(1).isEmpty()) {
                       attributes.put("subFolder", parts.get(1));
                     }
                   }
