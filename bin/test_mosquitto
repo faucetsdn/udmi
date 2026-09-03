@@ -29,11 +29,7 @@ CLNT_USER=kiwi
 CLNT_PASS=possum
 CLNT_ID=/uufi/$registry_id/client
 
-SUDO=sudo
-if [[ ${UDMI_NO_SUDO:-false} == true ]]; then
-    SUDO=""
-fi
-$SUDO chmod a+r $CERT_DIR/rsa_private.* || true
+chmod a+r $CERT_DIR/rsa_private.* 2>/dev/null || true
 $UDMI_ROOT/bin/keygen CERT $CLIENT_DIR
 
 CLIENT_OPTS="-h $MQTT_HOST -p $MQTT_PORT -i $CLNT_ID -u $CLNT_USER -P $CLNT_PASS --cafile $CA_CERT --cert $CLIENT_DIR/rsa_private.crt --key $CLIENT_DIR/rsa_private.pem"

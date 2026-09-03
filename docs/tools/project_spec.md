@@ -92,3 +92,9 @@ While this document aims to be an authoritative specification, developers should
 * `//pubsub/bos-platform-dev/faucetsdn+username`
   * PubSub subscription: `projects/bos-platform-dev/subscriptions/faucetsdn~udmi_target+username`
   * PubSub topic: `projects/bos-platform-dev/topics/faucetsdn~udmi_target`
+* `btesting` (Semantic Local Namespace)
+  * Normalized spec: `//mqtt/localhost:35300/btesting`
+  * Automatically sets isolated user-space ports (MQTT 35300, etcd 35301, influx 35302, postgres 35303) and runs in zero-sudo mode.
+* `default` (Default Local Namespace)
+  * Normalized spec: `//mqtt/localhost:35950/default`
+

@@ -21,6 +21,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.isNullOrTruthy;
 import static com.google.udmi.util.JsonUtil.asMap;
 import static com.google.udmi.util.JsonUtil.getDate;
@@ -310,7 +311,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       mungeConfigDebug(attributes, "undefined", (String) extraField);
       return BROKEN_CONFIG_JSON;
     } else if (newLastStart != null) {
-      payload = asMap(ofNullable(previous.getValue()).orElse(EMPTY_JSON));
+      String prevVal = previous != null ? previous.getValue() : null;
+      payload = asMap(isNotEmpty(prevVal) ? prevVal : EMPTY_JSON);
       augmentPayload(payload, attributes.transactionId, previous.getKey());
       String update = updateWithLastStart(payload, newLastStart);
       ifNotNullThen(update,
@@ -323,7 +325,8 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
       ifNotNullThen(extraField,
           field -> warn(format("Ignoring unknown %s value %s", EXTRA_FIELD_KEY, extraField)));
       try {
-        payload = asMap(ofNullable(previous.getValue()).orElse(EMPTY_JSON));
+        String prevVal = previous != null ? previous.getValue() : null;
+        payload = asMap(isNotEmpty(prevVal) ? prevVal : EMPTY_JSON);
         reason = ifNotNullGet(attributes.subFolder, SubFolder::value, null);
       } catch (Exception e) {
         throw new PreviousParseException("parsing previous config", e);

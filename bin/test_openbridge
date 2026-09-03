@@ -23,7 +23,6 @@ for cmd in java nc base64 openssl curl tar jq gcloud mosquitto; do
   fi
 done
 
-export UDMI_NO_SUDO=true
 export HOST_IP="127.0.0.1"
 export MOSQUITTO_LOG_PATH="$(pwd)/var/mosquitto/log/mosquitto.log"
 
@@ -97,13 +96,13 @@ export registry_id="$REGISTRY_ID"
 echo "Checking base infrastructure services..."
 ETCD_PORT=${ETCD_PORT:-2379}
 if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
-  echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
+  echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/udmi start $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
 
 MQTT_PORT=${MQTT_PORT:-8883}
 if ! nc -z 127.0.0.1 "$MQTT_PORT" &>/dev/null; then
-  echo "Error: Mosquitto is not running on 127.0.0.1:$MQTT_PORT. Please run 'bin/start_local $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
+  echo "Error: Mosquitto is not running on 127.0.0.1:$MQTT_PORT. Please run 'bin/udmi start $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
 
