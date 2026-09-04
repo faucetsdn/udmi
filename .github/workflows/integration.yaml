@@ -35,8 +35,6 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
           cache: 'gradle'
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
       - name: Log in to the github registry
         uses: docker/login-action@v3
         with:
@@ -135,7 +133,7 @@ jobs:
             ghcr.io/$IMAGE_NAME:pubber-$REF_NAME bin/pubber site_model/cloud_iot_config.json
           for count in `seq 0 30`; do
             (docker ps | fgrep -q pubber) || break
-            (docker logs pubber 2>&1 | fgrep -q -v "Connection complete") || break
+            (docker logs pubber 2>&1 | fgrep -q "Connection complete") && break
             echo Waiting for pubber startup $((30 - count))...
             sleep 1
           done
@@ -188,6 +186,7 @@ jobs:
           (cd site_model; git log -n 1)
           jq ".device_id = \"$DEVICE_ID\"" site_model/cloud_iot_config.json | sponge site_model/cloud_iot_config.json
           jq . site_model/cloud_iot_config.json
+          jq 'del(.discovery.families.bacnet)' site_model/devices/$DEVICE_ID/metadata.json | sponge site_model/devices/$DEVICE_ID/metadata.json
           docker network create udminet --subnet 192.168.99.0/24
       - name: Convert repository name to lowercase
         run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
@@ -207,13 +206,12 @@ jobs:
       - name: Start discoverynode
         run: |
           export IMAGE_TAG=ghcr.io/$IMAGE_NAME:misc-$REF_NAME
-          # This currently fails (no config), but just check that it actually runs.
-            docker run -d \
-              --net udminet \
-              -v $(realpath site_model):/var/site_model \
-              --name discoverynode \
-              $IMAGE_TAG \
-              bin/run /var/site_model //mqtt/udmis AHU-1 vendor.range=0x65,28179023,20231,,,,,,,,,,,,,,,,
+          docker run -d \
+            --net udminet \
+            -v $(realpath site_model):/var/site_model \
+            --name discoverynode \
+            $IMAGE_TAG \
+            bin/run /var/site_model //mqtt/udmis AHU-1 vendor.range=1:28179023,3:20231,22:0x65,3:171
       - name: Sequencer run
         run: |
           docker run --net udminet --name sequencer -v $(realpath site_model):/root/site_model \

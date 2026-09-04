@@ -43,8 +43,12 @@ class NumberDiscovery(discovery.DiscoveryController):
       if self.cancelled:
         return
       if i:
+        addr = str(i)
+        network = None
+        if ":" in addr:
+          network, addr = addr.split(":", 1)
         result = DiscoveryEvent(
-            generation=self.generation, family=self.family, addr=str(i)
+            generation=self.generation, family=self.family, addr=addr, network=network
         )
         self.publish(result)
       time.sleep(1)
