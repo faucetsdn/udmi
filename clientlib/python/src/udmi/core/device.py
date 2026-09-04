@@ -218,7 +218,7 @@ class Device:
             except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error in connection handler: %s", e)
 
-        self._publish_state()
+        self._publish_state(bypass_throttle=True, blocking=False)
 
     def on_disconnect(self, rc: int) -> None:
         """
@@ -408,6 +408,10 @@ class Device:
                 if not self.dispatcher:
                     self._initialize_connection_robustly()
                     just_connected = True
+                elif not self.dispatcher.is_connected():
+                    self.dispatcher.connect()
+                    self.dispatcher.start_loop()
+                    just_connected = True
 
                 LOGGER.info(
                     "Waiting for initial configuration (Timeout: %ss)...",
@@ -498,7 +502,7 @@ class Device:
             raise ConnectionResetException("Triggering Fallback Reset")
         raise error
 
-    def _publish_state(self, force: bool = False) -> None:
+    def _publish_state(self, bypass_throttle: bool = False, blocking: Optional[bool] = None) -> None:
         """
         Orchestration method to build and publish the State message.
         Gathers contributions from all managers.
@@ -507,7 +511,7 @@ class Device:
             now = time.time()
             time_since_last = now - self._loop_state.last_state_publish_time
 
-            if not force and time_since_last < STATE_THROTTLE_SEC:
+            if not bypass_throttle and time_since_last < STATE_THROTTLE_SEC:
                 self._loop_state.state_dirty = True
                 LOGGER.debug("State update throttled (coalescing). Dirty=True")
                 return
@@ -524,7 +528,8 @@ class Device:
                 except (AttributeError, TypeError, KeyError, ValueError) as e:
                     LOGGER.error("Error in %s.update_state: %s",
                                  manager.__class__.__name__, e)
-            self.dispatcher.publish_state(self.state, wait=force)
+            should_block = bypass_throttle if blocking is None else blocking
+            self.dispatcher.publish_state(self.state, wait=should_block)
             self._loop_state.last_state_publish_time = time.time()
             self._loop_state.state_dirty = False
             LOGGER.debug("State message published.")
@@ -568,7 +573,7 @@ class Device:
             if self._loop_state.state_dirty:
                 if (now - self._loop_state.last_state_publish_time) >= STATE_THROTTLE_SEC:
                     LOGGER.debug("Throttle window passed. Flushing dirty state.")
-                    self._publish_state(force=True)
+                    self._publish_state(bypass_throttle=True, blocking=False)
 
             # check for auth token refresh
             if (now - self._loop_state.last_auth_check >
@@ -622,7 +627,7 @@ class Device:
         if immediate:
             LOGGER.debug("Manager requested IMMEDIATE state update.")
             with self._state_lock:
-                self._publish_state(force=True)
+                self._publish_state(bypass_throttle=True, blocking=True)
         else:
             LOGGER.debug("Manager requested scheduled state update.")
             with self._state_lock:

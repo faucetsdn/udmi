@@ -35,6 +35,7 @@ class TlsConfig:
     cert_file: Optional[str] = None
     key_file: Optional[str] = None
     enable_tls: Optional[bool] = None
+    insecure: Optional[bool] = None
 
 
 @dataclass
@@ -225,6 +226,9 @@ class MqttMessagingClient(AbstractMessagingClient):
                 certfile=self._tls_config.cert_file,
                 keyfile=self._tls_config.key_file
             )
+            if self._tls_config.insecure:
+                LOGGER.warning("Disabling TLS hostname verification (insecure mode).")
+                self._mqtt_client.tls_insecure_set(True)
         except Exception as e:
             LOGGER.error("Failed to set TLS: %s", e)
             raise
@@ -249,7 +253,7 @@ class MqttMessagingClient(AbstractMessagingClient):
     # --- Paho Callbacks ---
 
     def _on_connect(self, client: Any, _userdata: Any, _flags: Any,
-        rc: int) -> None:
+        rc: int = 0, _properties: Any = None) -> None:
         if rc == 0:
             LOGGER.info("Connected to MQTT broker. Subscribing...")
             for device_id, channel in self._subscribed_channels:
@@ -281,7 +285,10 @@ class MqttMessagingClient(AbstractMessagingClient):
         else:
             LOGGER.warning("Unexpected topic format: %s", topic)
 
-    def _on_disconnect(self, _client: Any, _userdata: Any, rc: int) -> None:
+    def _on_disconnect(
+        self, _client: Any, _userdata: Any, *args: Any, _properties: Any = None
+    ) -> None:
+        rc = next((a for a in reversed(args) if isinstance(a, int)), 0)
         if rc != 0:
             LOGGER.warning("Unexpected disconnect (rc=%s). Reconnecting...", rc)
         else:

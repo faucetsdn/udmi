@@ -216,6 +216,6 @@ def test_on_disconnect_calls_callback(mqtt_client):
     mock_disconnect_handler = MagicMock()
     mqtt_client.set_on_disconnect_handler(mock_disconnect_handler)
 
-    mqtt_client._on_disconnect(None, None, 5)
+    mqtt_client._on_disconnect(None, None, None, 5)
 
     mock_disconnect_handler.assert_called_once_with(5)

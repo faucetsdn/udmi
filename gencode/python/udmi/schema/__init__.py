@@ -14,6 +14,7 @@ from .config_blobset import *
 from .config_blobset_blob import *
 from .config_discovery import *
 from .config_discovery_family import *
+from .config_discovery_trace import *
 from .config_gateway import *
 from .config_localnet import *
 from .config_localnet_family import *
@@ -42,6 +43,7 @@ from .events_alarmset_alarm import *
 from .events_discovery import *
 from .events_pointset import *
 from .events_pointset_point import *
+from .events_stream import *
 from .events_system import *
 from .events_udmi import *
 from .events_validation import *

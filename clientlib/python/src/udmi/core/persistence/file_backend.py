@@ -5,6 +5,7 @@ This module provides a robust JSON-based storage mechanism that uses atomic
 writes to ensure data integrity and handles file corruption by backing up
 malformed files.
 """
+from enum import Enum
 import json
 import logging
 import os
@@ -18,6 +19,14 @@ from udmi.core.persistence.backend import PersistenceBackend
 from udmi.core.utils.file_ops import atomic_write
 
 LOGGER = logging.getLogger(__name__)
+
+
+class EnumEncoder(json.JSONEncoder):
+    """Custom JSON encoder that translates Enum objects to their string values."""
+    def default(self, o: Any) -> Any:
+        if isinstance(o, Enum):
+            return o.value
+        return super().default(o)
 
 
 class FilePersistenceBackend(PersistenceBackend):
@@ -82,7 +91,7 @@ class FilePersistenceBackend(PersistenceBackend):
         """Serializes cache and writes atomically to disk."""
         with self._lock:
             try:
-                data = json.dumps(self._cache, indent=2)
+                data = json.dumps(self._cache, indent=2, cls=EnumEncoder)
                 atomic_write(self.file_path, data)
             except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.critical("FATAL: Failed to save persistence file: %s", e)

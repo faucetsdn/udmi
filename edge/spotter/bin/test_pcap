@@ -1,0 +1,305 @@
+#!/usr/bin/env bash
+set -e
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)
+WORKSPACE_DIR=$(realpath "$SCRIPT_DIR/../../../")
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: ./test_pcap"
+    echo ""
+    echo "Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming:"
+    echo "1. Starts Mosquitto broker and udmi-spotter container."
+    echo "2. Generates dummy traffic and publishes a Discovery TRACE configuration (depth: 'trace')."
+    echo "3. Asserts sequential StreamEvents chunks over events/stream and parses PCAP magic headers."
+    echo "4. Verifies Level 200 status reports in the container's discovery state."
+    echo ""
+    echo "Prerequisites:"
+    echo "- Requires local Docker daemon running."
+    echo "- Requires udmi-spotter:latest image built."
+    echo "- Requires jq, openssl, and mosquitto-clients."
+    exit 0
+fi
+
+TEST_DIR=$(mktemp -d)
+mkdir -p "$TEST_DIR/logs"
+
+# Global PIDs for cleanup
+MOSQ_PID=""
+MOSQ_SUB_PID=""
+TRAFFIC_PID=""
+
+cleanup() {
+    local exit_code=$?
+    echo ""
+    echo "--- CLEANUP ---"
+    
+    # Stop dummy traffic
+    if [[ -n "$TRAFFIC_PID" ]]; then kill "$TRAFFIC_PID" 2>/dev/null || true; fi
+    # Stop MQTT subscriber
+    if [[ -n "$MOSQ_SUB_PID" ]]; then kill "$MOSQ_SUB_PID" 2>/dev/null || true; fi
+    
+    # Print Spotter agent logs
+    if [[ -f "$TEST_DIR/logs/agent.log" ]]; then
+        echo -e "\n[SPOTTER AGENT LOGS (agent.log)]:"
+        cat "$TEST_DIR/logs/agent.log"
+    fi
+
+    if [[ $exit_code -ne 0 ]]; then
+        if docker ps -q --filter name=test-diagnostics-spotter | grep -q .; then
+            echo -e "\n[CONTAINER STDOUT / STDERR]:"
+            docker logs test-diagnostics-spotter 2>&1 || true
+        fi
+
+        if [[ -f "$TEST_DIR/mosquitto.log" ]]; then
+             echo -e "\n--- BROKER LOGS ---"
+             cat "$TEST_DIR/mosquitto.log"
+        fi
+        echo -e "\nTEST FAILED (Exit Code: $exit_code)"
+    else
+        echo -e "\nTEST PASSED"
+    fi
+
+    # Stop Container
+    docker stop test-diagnostics-spotter >/dev/null 2>&1 || true
+
+    # Stop Mosquitto
+    if [[ -n "$MOSQ_PID" ]]; then kill "$MOSQ_PID" 2>/dev/null || true; fi
+    
+    # Network cleanup
+    docker network rm spotter-parity-net >/dev/null 2>&1 || true
+    
+    # Temp dir cleanup
+    rm -rf "$TEST_DIR"
+    exit $exit_code
+}
+
+trap cleanup EXIT
+
+echo "Preparing Docker network"
+docker ps -q --filter network=spotter-parity-net | xargs -r docker stop >/dev/null 2>&1 || true
+if ! docker network inspect spotter-parity-net >/dev/null 2>&1; then
+    docker network create \
+        --subnet=192.168.12.0/24 \
+        --gateway=192.168.12.254 \
+        spotter-parity-net >/dev/null
+fi
+
+echo "Preparing certificates"
+CA_SRC="$WORKSPACE_DIR/sites/udmi_site_model/reflector/ca.crt"
+SERVER_CRT_SRC="$WORKSPACE_DIR/sites/udmi_site_model/reflector/server.crt"
+SERVER_KEY_SRC="$WORKSPACE_DIR/sites/udmi_site_model/reflector/server.key"
+
+AHU_KEY_SRC="$WORKSPACE_DIR/sites/udmi_site_model/devices/AHU-1/rsa_private.pem"
+AHU_CRT_SRC="$WORKSPACE_DIR/sites/udmi_site_model/devices/AHU-1/rsa_private.crt"
+AHU_PKCS8_SRC="$WORKSPACE_DIR/sites/udmi_site_model/devices/AHU-1/rsa_private.pkcs8"
+
+cp "$CA_SRC" "$TEST_DIR/ca.crt"
+cp "$AHU_KEY_SRC" "$TEST_DIR/rsa_private.pem"
+cp "$AHU_PKCS8_SRC" "$TEST_DIR/rsa_private.pkcs8"
+
+TARGET_CRT="$TEST_DIR/rsa_private.crt"
+if [[ -f "$AHU_CRT_SRC" ]]; then
+    cp "$AHU_CRT_SRC" "$TARGET_CRT"
+else
+    REFLECTOR_KEY="$WORKSPACE_DIR/sites/udmi_site_model/reflector/rsa_private.pem"
+    CSR_FILE="$TEST_DIR/client.csr"
+    TARGET_PEM="$TEST_DIR/rsa_private.pem"
+    
+    openssl req -new -key "$TARGET_PEM" -out "$CSR_FILE" -subj "/CN=DSN-1" >/dev/null 2>&1
+    openssl x509 -req -in "$CSR_FILE" -CA "$CA_SRC" -CAkey "$REFLECTOR_KEY" \
+        -CAcreateserial -out "$TARGET_CRT" -days 3650 >/dev/null 2>&1
+fi
+
+echo "Starting mosquitto broker with dual listeners"
+MOSQ_CONF="$TEST_DIR/mosquitto.conf"
+cat <<EOF > "$MOSQ_CONF"
+listener 1883 0.0.0.0
+allow_anonymous true
+
+listener 18883 0.0.0.0
+cafile $CA_SRC
+certfile $SERVER_CRT_SRC
+keyfile $SERVER_KEY_SRC
+require_certificate true
+allow_anonymous true
+EOF
+
+sudo systemctl stop mosquitto >/dev/null 2>&1 || true
+pkill -9 mosquitto >/dev/null 2>&1 || true
+sleep 0.5
+
+mosquitto -c "$MOSQ_CONF" -v > "$TEST_DIR/mosquitto.log" 2>&1 &
+MOSQ_PID=$!
+sleep 2
+
+if ! kill -0 "$MOSQ_PID" 2>/dev/null; then
+    echo "Mosquitto failed to start:"
+    cat "$TEST_DIR/mosquitto.log"
+    exit 1
+fi
+
+echo "Preparing spotter config"
+cat <<EOF > "$TEST_DIR/spotter_config.json"
+{
+  "log_level": "DEBUG",
+  "system": {
+    "metrics_rate_sec": 10
+  },
+  "mqtt": {
+    "device_id": "DSN-1",
+    "registry_id": "ZZ-TRI-FECTA",
+    "host": "192.168.12.254",
+    "port": 18883,
+    "region": "us-central1",
+    "project_id": "my-project",
+    "authentication_mechanism": "udmi_local",
+    "key_file": "/config_dir/rsa_private.pem",
+    "cert_file": "/config_dir/rsa_private.crt",
+    "ca_file": "/config_dir/ca.crt",
+    "algorithm": "RS256"
+  }
+}
+EOF
+
+echo "Setting up MQTT subscriber on port 1883 for state and stream event messages"
+MQTT_OUT="$TEST_DIR/mqtt.out"
+touch "$MQTT_OUT"
+mosquitto_sub -h 127.0.0.1 -p 1883 \
+    -t "/r/ZZ-TRI-FECTA/d/DSN-1/state" \
+    -t "/r/ZZ-TRI-FECTA/d/DSN-1/events/stream" \
+    -F "%t %p" > "$MQTT_OUT" &
+MOSQ_SUB_PID=$!
+
+echo "Starting spotter agent container"
+docker run -d --rm \
+    --cap-add=NET_RAW --cap-add=NET_ADMIN \
+    --network=spotter-parity-net \
+    --ip=192.168.12.2 \
+    --name test-diagnostics-spotter \
+    -v "${TEST_DIR}:/config_dir" \
+    -v "${TEST_DIR}/logs:/var/log/spotter" \
+    udmi-spotter:latest \
+    --config_file /config_dir/spotter_config.json >/dev/null
+
+echo "Waiting for Spotter Agent container to connect and publish state..."
+END_TIME=$((SECONDS + 15))
+DEVICE_ONLINE=0
+while [[ $SECONDS -lt $END_TIME ]]; do
+    if grep -q '/state' "$MQTT_OUT"; then
+        DEVICE_ONLINE=1
+        break
+    fi
+    sleep 0.5
+done
+
+if [[ $DEVICE_ONLINE -eq 0 ]]; then
+    echo "ERROR: Test timed out waiting for Spotter Agent container to connect and publish state"
+    exit 1
+fi
+
+echo "Preparing discovery TRACE trigger config"
+TIMESTAMP="2026-07-08T14:35:00Z"
+
+cat <<EOF > "$TEST_DIR/config_payload.json"
+{
+  "timestamp": "$TIMESTAMP",
+  "version": "1.5.7",
+  "discovery": {
+    "families": {
+      "ether": {
+        "generation": "$TIMESTAMP",
+        "depth": "trace",
+        "scan_duration_sec": 4,
+        "trace": {
+          "interface": "any",
+          "filter": "udp port 47808",
+          "max_bytes": 100000
+        }
+      }
+    }
+  }
+}
+EOF
+echo "Config payload:"
+cat $TEST_DIR/config_payload.json
+
+echo "Starting dummy UDP traffic thread"
+(
+  while true; do
+      echo -n "DUMMY PCAP PACKET payload data" > /dev/udp/192.168.12.2/47808 2>/dev/null || true
+      sleep 0.5
+  done
+) &
+TRAFFIC_PID=$!
+
+echo "Publishing discovery TRACE config to trigger packet capture over MQTT..."
+mosquitto_pub -h 127.0.0.1 -p 1883 -t "/r/ZZ-TRI-FECTA/d/DSN-1/config" -f "$TEST_DIR/config_payload.json" -q 1
+
+echo "Waiting for discovery state 'stopped' and stream transfers"
+END_TIME=$((SECONDS + 25))
+STATE_STOPPED=0
+PCAP_DONE=0
+
+while [[ $SECONDS -lt $END_TIME ]]; do
+    if grep -q '/state' "$MQTT_OUT"; then
+        if grep '/state' "$MQTT_OUT" | tail -n 1 | grep -q '"phase": *"stopped"'; then
+            STATE_STOPPED=1
+        fi
+    fi
+    
+    if grep -q '/events/stream' "$MQTT_OUT"; then
+        TOTAL=$(grep '/events/stream' "$MQTT_OUT" | head -n 1 | sed 's|^[^ ]* ||' | jq -r '.total_chunks')
+        COUNT=$(grep '/events/stream' "$MQTT_OUT" | wc -l)
+        if [[ -n "$TOTAL" && "$TOTAL" != "null" && $COUNT -ge $TOTAL ]]; then
+            PCAP_DONE=1
+        fi
+    fi
+    
+    if [[ $STATE_STOPPED -eq 1 && $PCAP_DONE -eq 1 ]]; then
+        break
+    fi
+    sleep 1
+done
+
+echo "Stopping dummy UDP traffic thread"
+kill "$TRAFFIC_PID" && unset TRAFFIC_PID
+
+if [[ $STATE_STOPPED -eq 0 ]]; then
+    echo "ERROR: Test timed out waiting for discovery TRACE family state transition to stopped"
+    exit 1
+fi
+if [[ $PCAP_DONE -eq 0 ]]; then
+    echo "ERROR: Test timed out waiting for PCAP streaming chunks over MQTT events/stream"
+    exit 1
+fi
+
+echo "Validating state and payload"
+if grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -e '.discovery.families.ether.status.level != 200' >/dev/null 2>&1; then
+    STATUS_VAL=$(grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -r '.discovery.families.ether.status')
+    echo "ERROR: Discovery family state reported non-200 level: $STATUS_VAL"
+    exit 1
+fi
+
+echo "Reassembling pcap payload using reassemble_pcap utility"
+grep '/events/stream' "$MQTT_OUT" | sed 's|^[^ ]* ||' > "$TEST_DIR/stream_events.json"
+"${SCRIPT_DIR}/reassemble_pcap" "$TEST_DIR/stream_events.json" "$TEST_DIR/assembled.pcap"
+
+echo "Validating pcap payload size"
+SIZE=$(stat -c%s "$TEST_DIR/assembled.pcap")
+if [[ $SIZE -eq 0 ]]; then
+    echo "ERROR: Reassembled PCAP payload is empty"
+    exit 1
+fi
+
+MAGIC=$(hexdump -n 4 -e '4/1 "%02x"' "$TEST_DIR/assembled.pcap")
+case "$MAGIC" in
+    a1b2c3d4|d4c3b2a1|a1b23c4d|4d3cb2a1)
+        echo "-- SUCCESS: MQTT PCAP streaming transmission verified! Reassembled size: $SIZE bytes."
+        ;;
+    *)
+        echo "ERROR: Reassembled data is not a valid PCAP. Magic was: $MAGIC"
+        exit 1
+        ;;
+esac
+
+exit 0

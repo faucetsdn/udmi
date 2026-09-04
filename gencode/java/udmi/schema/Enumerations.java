@@ -55,7 +55,8 @@ public class Enumerations {
         DETAILS("details"),
         PARTS("parts"),
         SYSTEM("system"),
-        REFS("refs");
+        REFS("refs"),
+        TRACE("trace");
         private final String value;
         private final static Map<String, Enumerations.Depth> CONSTANTS = new HashMap<String, Enumerations.Depth>();
 

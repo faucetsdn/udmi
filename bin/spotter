@@ -1,0 +1,251 @@
+#!/bin/bash -e
+# Start/Stop script for UDMI Spotter Agent
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+WORKSPACE_DIR=$(realpath "${SCRIPT_DIR}/..")
+source "${WORKSPACE_DIR}/etc/shell_common.sh"
+
+# Default configuration values
+MODE=""
+CONFIG_PATH=""
+CONFIG_DIR=""
+SERIAL_NO=""
+SITE_PATH=""
+PROJECT_SPEC=""
+DEVICE_ID=""
+ACTION="start"
+BACNET_IP=""
+
+function show_help() {
+    echo "Usage:"
+    echo "  1. From Site Model (Local Dev / Sequencer):"
+    echo "     $0 SITE_PATH PROJECT_SPEC DEVICE_ID [SERIAL_NO] [options]"
+    echo ""
+    echo "  2. From Configuration File (Production / Deployed Device):"
+    echo "     $0 CONFIG_FILE [SERIAL_NO] [options]"
+    echo ""
+    echo "  3. Stop Running Instances:"
+    echo "     $0 stop [SERIAL_NO] [options]"
+    echo ""
+    echo "Examples:"
+    echo "  $0 sites/udmi_site_model //mqtt/localhost AHU-1"
+    echo "  $0 sites/udmi_site_model //mqtt/localhost AHU-1 1234"
+    echo "  $0 edge/spotter/spotter_config.json 1234 --mode container"
+    echo "  $0 stop"
+    echo ""
+    echo "Arguments:"
+    echo "  SITE_PATH                  Path to site model directory"
+    echo "  PROJECT_SPEC               Project specification string (e.g. //mqtt/localhost:18883)"
+    echo "  DEVICE_ID                  Target device ID (e.g. AHU-1 or SPOTTER-1)"
+    echo "  CONFIG_FILE                Path to spotter_config.json file"
+    echo "  SERIAL_NO                  Serial number for this Spotter instance (default: NA)"
+    echo ""
+    echo "Options:"
+    echo "  --mode <container|local|all> Specify execution environment (default: local for start, all for stop)"
+    echo "  --device_id <id>           Target device ID (optional flag override)"
+    echo "  --config_dir <path>        Directory containing config and certificates (optional)"
+    echo "  --bacnet_ip <ip>           BACnet interface IP address or CIDR (optional, e.g. bacnet.ip=192.168.1.10)"
+    echo "  -h, --help                 Show this help message"
+    exit 0
+}
+
+parse_flags() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --mode)
+                MODE="$2"
+                shift 2
+                ;;
+            --device_id)
+                DEVICE_ID="$2"
+                shift 2
+                ;;
+            --config)
+                CONFIG_PATH="$2"
+                shift 2
+                ;;
+            --config_dir)
+                CONFIG_DIR="$2"
+                shift 2
+                ;;
+            --bacnet_ip)
+                BACNET_IP="$2"
+                shift 2
+                ;;
+            bacnet.ip=*)
+                BACNET_IP="${1#bacnet.ip=}"
+                shift
+                ;;
+            -h|--help)
+                show_help
+                ;;
+            *)
+                echo "Error: Unknown option $1"
+                show_help
+                exit 1
+                ;;
+        esac
+    done
+}
+
+# Parse target command / positional arguments
+if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+    if [[ "$1" == "stop" ]]; then
+        ACTION="stop"
+        MODE="all"
+        shift
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            SERIAL_NO="$1"
+            shift
+        fi
+        parse_flags "$@"
+    elif [[ -f "$1" ]]; then
+        CONFIG_PATH=$(realpath "$1")
+        shift
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            SERIAL_NO="$1"
+            shift
+        fi
+        parse_flags "$@"
+    elif [[ -d "$1" ]]; then
+        if [[ $# -lt 3 ]]; then
+            echo "Error: Site model directory target requires SITE_PATH, PROJECT_SPEC, and DEVICE_ID."
+            show_help
+            exit 1
+        fi
+        SITE_PATH=$(realpath "$1")
+        PROJECT_SPEC="$2"
+        DEVICE_ID="$3"
+        shift 3
+
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            SERIAL_NO="$1"
+            shift
+        fi
+        parse_flags "$@"
+    else
+        echo "Error: Specified target '$1' is neither 'stop' nor a valid file/directory."
+        show_help
+        exit 1
+    fi
+else
+    parse_flags "$@"
+fi
+
+# Execute stop action if requested
+if [[ "${ACTION}" == "stop" ]]; then
+    exec "${WORKSPACE_DIR}/edge/spotter/bin/stop_spotter" "${SERIAL_NO:-NA}" "${MODE:-all}"
+fi
+
+# Default mode for start operations
+MODE="${MODE:-local}"
+SERIAL_NO="${SERIAL_NO:-NA}"
+
+# Generate dynamic configuration if SITE_PATH was specified
+if [[ -n "${SITE_PATH}" ]]; then
+    CONFIG_PATH="${WORKSPACE_DIR}/out/spotter_runtime_config.json"
+    echo "Constructing configuration dynamically from site model..."
+    BACNET_ARGS=()
+    if [[ -n "${BACNET_IP}" ]]; then
+        BACNET_ARGS=(--bacnet_ip "${BACNET_IP}")
+    fi
+    PYTHONPATH="${WORKSPACE_DIR}/clientlib/python/src:${WORKSPACE_DIR}" python3 \
+        "${WORKSPACE_DIR}/edge/spotter/src/config_generator.py" \
+        --site_path "${SITE_PATH}" \
+        --project_spec "${PROJECT_SPEC}" \
+        --device_id "${DEVICE_ID}" \
+        "${BACNET_ARGS[@]}" \
+        --out "${CONFIG_PATH}"
+fi
+
+# Resolve fallback CONFIG_PATH if still empty
+if [[ -z "${CONFIG_PATH}" ]]; then
+    if [[ -f "${WORKSPACE_DIR}/edge/spotter/spotter_config.json" ]]; then
+        CONFIG_PATH="${WORKSPACE_DIR}/edge/spotter/spotter_config.json"
+    elif [[ -f "spotter_config.json" ]]; then
+        CONFIG_PATH="spotter_config.json"
+    else
+        echo "Error: Target configuration file or site path not specified, and default spotter_config.json not found."
+        show_help
+        exit 1
+    fi
+fi
+
+CONFIG_PATH=$(realpath "${CONFIG_PATH}")
+if [[ ! -f "${CONFIG_PATH}" ]]; then
+    echo "Error: Config file not found at ${CONFIG_PATH}"
+    exit 1
+fi
+
+if [[ -z "${CONFIG_DIR}" ]]; then
+    CONFIG_DIR=$(dirname "${CONFIG_PATH}")
+fi
+CONFIG_DIR=$(realpath "${CONFIG_DIR}")
+
+# Change working directory to config directory
+cd "${CONFIG_DIR}"
+
+if [[ "${MODE}" == "container" ]]; then
+    CONTAINER_NAME="udmi-spotter-agent-${SERIAL_NO}"
+    echo "=== Running Spotter Agent (${SERIAL_NO}) in CONTAINER mode ==="
+
+    CONTAINER_ENGINE="docker"
+    if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then
+        CONTAINER_ENGINE="podman"
+    fi
+
+    echo "Building udmi-spotter:latest image with ${CONTAINER_ENGINE}..."
+    ${CONTAINER_ENGINE} build -t udmi-spotter:latest -f "${WORKSPACE_DIR}/edge/spotter/container/Dockerfile" "${WORKSPACE_DIR}"
+
+    mkdir -p "${WORKSPACE_DIR}/out/spotter"
+
+    OS_RELEASE_MOUNT=()
+    if [[ -f /etc/os-release ]]; then
+        OS_RELEASE_MOUNT=(-v /etc/os-release:/host/etc/os-release:ro)
+    fi
+
+    CONTAINER_CONFIG_PATH="/config_dir/$(basename "${CONFIG_PATH}")"
+    CONTAINER_WORKDIR="/config_dir"
+    if [[ "${CONFIG_PATH}" == "${WORKSPACE_DIR}"* ]]; then
+        CONTAINER_CONFIG_PATH="${CONFIG_PATH}"
+        CONTAINER_WORKDIR="${CONFIG_DIR}"
+    fi
+
+    INTERACTIVE_FLAGS=(-i)
+    if [[ -t 0 ]]; then
+        INTERACTIVE_FLAGS=(-it)
+    fi
+
+    echo "Starting Spotter Agent container '${CONTAINER_NAME}'..."
+    ${CONTAINER_ENGINE} rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+    exec ${CONTAINER_ENGINE} run "${INTERACTIVE_FLAGS[@]}" --rm \
+        --name "${CONTAINER_NAME}" \
+        --network host \
+        --cap-add=NET_RAW --cap-add=NET_ADMIN \
+        "${OS_RELEASE_MOUNT[@]}" \
+        -v "${WORKSPACE_DIR}:${WORKSPACE_DIR}:ro" \
+        -v "${CONFIG_DIR}:/config_dir" \
+        -v "${WORKSPACE_DIR}/out/spotter:/var/log/spotter" \
+        -w "${CONTAINER_WORKDIR}" \
+        udmi-spotter:latest \
+        --config_file "${CONTAINER_CONFIG_PATH}" \
+        --serial_no "${SERIAL_NO}"
+
+elif [[ "${MODE}" == "local" ]]; then
+    echo "=== Running Spotter Agent (${SERIAL_NO}) in LOCAL mode ==="
+
+    "${WORKSPACE_DIR}/edge/spotter/bin/setup_env"
+
+    VENV_DIR="${WORKSPACE_DIR}/edge/spotter/venv"
+    export PYTHONPATH="${WORKSPACE_DIR}/clientlib/python/src:${WORKSPACE_DIR}/edge/spotter/src:${WORKSPACE_DIR}"
+
+    mkdir -p "${WORKSPACE_DIR}/out/spotter"
+
+    echo "Starting local Spotter agent for Serial No '${SERIAL_NO}'..."
+    exec "${VENV_DIR}/bin/python3" "${WORKSPACE_DIR}/edge/spotter/src/agent.py" --config_file "${CONFIG_PATH}" --serial_no "${SERIAL_NO}"
+
+else
+    echo "Error: Invalid mode '${MODE}'. Allowed modes: container, local."
+    show_help
+    exit 1
+fi

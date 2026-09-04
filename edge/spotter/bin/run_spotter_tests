@@ -1,0 +1,81 @@
+#!/bin/bash -e
+# Unified Spotter Verification Test Orchestrator
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+WORKSPACE_DIR=$(realpath "${SCRIPT_DIR}/../../..")
+source "${WORKSPACE_DIR}/etc/shell_common.sh"
+
+MODE="unit"
+if [[ "${1:-}" == "--all" || "${1:-}" == "all" ]]; then
+    MODE="all"
+elif [[ "${1:-}" == "--integration" || "${1:-}" == "integration" ]]; then
+    MODE="integration"
+elif [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: $0 [unit|integration|all]"
+    echo "  unit        : Run logical unit test suites (default)"
+    echo "  integration : Run container lifecycle, PCAP streaming, and parity integration tests"
+    echo "  all         : Run both unit and integration test suites"
+    exit 0
+fi
+
+echo "=== Spotter Test Orchestrator (Mode: $MODE) ==="
+
+if [[ "$MODE" == "unit" || "$MODE" == "all" ]]; then
+    echo "--- Step 1: Ensuring environment setup ---"
+    "${SCRIPT_DIR}/setup_env" >/dev/null
+
+    SPOTTER_PYTHON="${WORKSPACE_DIR}/edge/spotter/venv/bin/python3"
+    echo "--- Step 2: Running Unit & Sandbox Self-Test Suites ---"
+    (
+        cd "${WORKSPACE_DIR}"
+        PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" -m unittest discover -s edge/spotter/tests -v
+        PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" edge/spotter/tests/self_test.py -v
+    )
+    echo "-- Unit Tests: PASSED!"
+fi
+
+if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
+    SPOTTER_PYTHON="${WORKSPACE_DIR}/edge/spotter/venv/bin/python3"
+    echo "--- Step 3: Building udmi-spotter:latest Container Image ---"
+    CONTAINER_ENGINE="docker"
+    if ! command -v docker >/dev/null 2>&1 && command -v podman >/dev/null 2>&1; then
+        CONTAINER_ENGINE="podman"
+    fi
+    ${CONTAINER_ENGINE} build -t udmi-spotter:latest -f "${WORKSPACE_DIR}/edge/spotter/container/Dockerfile" "${WORKSPACE_DIR}" >/dev/null
+
+    echo "--- Step 4: Running Container Lifecycle Integration Tests (test_container) ---"
+    (
+        cd "${WORKSPACE_DIR}"
+        PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" "${SCRIPT_DIR}/test_container"
+    )
+    echo "-- Container Lifecycle Integration: PASSED!"
+
+    echo "--- Step 5: Running PCAP Streaming Integration Tests (test_pcap) ---"
+    "${SCRIPT_DIR}/test_pcap"
+    echo "-- PCAP Streaming Integration: PASSED!"
+
+    echo "--- Step 6: Running Resource Contention Integration Tests (test_resource_contention) ---"
+    "${SCRIPT_DIR}/test_resource_contention"
+    echo "-- Resource Contention Integration: PASSED!"
+
+    echo "--- Step 7: Running Network Resilience Integration Tests (test_fault_injection) ---"
+    "${SCRIPT_DIR}/test_fault_injection"
+    echo "-- Network Resilience Integration: PASSED!"
+
+    if ${CONTAINER_ENGINE} network inspect spotter-parity-net >/dev/null 2>&1 || ${CONTAINER_ENGINE} network create --subnet=192.168.12.0/24 spotter-parity-net >/dev/null 2>&1; then
+        echo "--- Step 8: Running Discovery Parity Tests (test_parity) ---"
+        echo "Building legacy discovery node container and simulated BACnet device image..."
+        "${WORKSPACE_DIR}/misc/discoverynode/bin/build_container" test-discovery_node >/dev/null
+        bash "${WORKSPACE_DIR}/misc/discoverynode/testing/docker/bacnet_device/build.sh" >/dev/null
+        (
+            cd "${WORKSPACE_DIR}"
+            PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" "${SCRIPT_DIR}/test_parity"
+        )
+        echo "-- Discovery Parity: PASSED!"
+    else
+        echo "WARNING: Skipping test_parity due to inability to initialize spotter-parity-net bridge network."
+    fi
+fi
+
+echo "=== ALL SPOTTER TESTS SUCCESSFULLY VERIFIED ==="
+exit 0

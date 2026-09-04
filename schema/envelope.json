@@ -68,7 +68,8 @@
         "pointset",
         "validation",
         "blobset",
-        "monitoring"
+        "monitoring",
+        "stream"
       ]
     },
     "subType": {

@@ -1,0 +1,66 @@
+#!/bin/bash
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+WORKSPACE_DIR=$(realpath "${SCRIPT_DIR}/../../..")
+source "${WORKSPACE_DIR}/etc/shell_common.sh"
+
+SERIAL_NO="${1:-NA}"
+MODE="${2:-all}"
+
+stop_container() {
+    local search_filter="udmi-spotter-agent"
+    if [[ -n "${SERIAL_NO}" && "${SERIAL_NO}" != "NA" ]]; then
+        search_filter="udmi-spotter-agent-${SERIAL_NO}"
+    fi
+
+    local matching_containers
+    matching_containers=$(docker ps -q --filter "name=${search_filter}" 2>/dev/null || podman ps -q --filter "name=${search_filter}" 2>/dev/null || true)
+
+    if [[ -n "${matching_containers}" ]]; then
+        echo "Stopping matching Spotter Agent container(s) (${search_filter})..."
+        docker stop ${matching_containers} 2>/dev/null || podman stop ${matching_containers} 2>/dev/null || true
+        echo "Container(s) stopped successfully."
+    else
+        echo "No running Spotter Agent container found matching '${search_filter}'."
+    fi
+}
+
+stop_local() {
+    echo "Searching for local Spotter processes..."
+
+    local agent_pattern="(edge/spotter/src/agent\.py|spotter/agent\.py)"
+    if [[ -n "${SERIAL_NO}" && "${SERIAL_NO}" != "NA" ]]; then
+        agent_pattern="(edge/spotter/src/agent\.py|spotter/agent\.py).*--serial_no[ =]+${SERIAL_NO}([ \t]|$)"
+    fi
+    local agent_pids
+    agent_pids=$(pgrep -A -f "${agent_pattern}" 2>/dev/null || pgrep -f "${agent_pattern}" || true)
+    if [[ -n "${agent_pids}" ]]; then
+        echo "Found Spotter Agent process(es) with PID(s): ${agent_pids}"
+        for pid in ${agent_pids}; do
+            if [[ "${pid}" != "$$" && "${pid}" != "$PPID" ]]; then
+                echo "Sending SIGTERM to agent process ${pid}..."
+                kill -TERM "${pid}" 2>/dev/null || true
+            fi
+        done
+        echo "Local services stopped."
+    else
+        echo "No active local Spotter processes found matching '${SERIAL_NO:-all}'."
+    fi
+}
+
+case "${MODE}" in
+    container)
+        stop_container
+        ;;
+    local)
+        stop_local
+        ;;
+    all)
+        stop_container
+        echo ""
+        stop_local
+        ;;
+    *)
+        fail "Invalid mode '${MODE}' for stop action."
+        ;;
+esac
