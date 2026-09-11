@@ -425,5 +425,42 @@ class TestGummiServer:
         diag = console.get_diagnostics()
         assert diag["button_state"] == "green"
 
+    def test_server_endpoint_configuration(self):
+        """Verifies remote MCP service endpoints propagate to GummiDB and GummiUUFIClient."""
+        server = GummiServer(
+            host="127.0.0.1",
+            port=9099,
+            mock_mode=True,
+            barbican_endpoint="http://barbican-mcp:8085",
+            butler_endpoint="http://butler-mcp:8088",
+            uufi_endpoint="http://uufi-mcp:8087",
+        )
+        assert server.barbican_endpoint == "http://barbican-mcp:8085"
+        assert server.butler_endpoint == "http://butler-mcp:8088"
+        assert server.uufi_endpoint == "http://uufi-mcp:8087"
+        assert server.db.barbican_endpoint == "http://barbican-mcp:8085"
+        assert server.db.butler_endpoint == "http://butler-mcp:8088"
+        assert server.db.uufi_endpoint == "http://uufi-mcp:8087"
+        assert server.uufi.uufi_endpoint == "http://uufi-mcp:8087"
 
+    def test_console_start_session_error_handling(self, gummi_server):
+        """Verifies that errors starting jetski session return red button_state and are reflected in status."""
+        from gummi.src.console import GummiConsoleManager
+        import unittest.mock as mock
 
+        # 1. Test console start error via mock
+        console = GummiConsoleManager(mock_mode=False)
+        with mock.patch("subprocess.run", side_effect=FileNotFoundError("No such file: tmux")):
+            res = console.start_jetski()
+            assert res["status"] == "error"
+            assert res["button_state"] == "red"
+            diag = console.get_diagnostics()
+            assert diag["button_state"] == "red"
+            assert diag["state"] == "error"
+            assert "tmux" in diag["alert"]
+
+            # Killing clears the error
+            console.kill()
+            assert console.last_error is None
+            diag_after = console.get_diagnostics()
+            assert diag_after["button_state"] == "blue"

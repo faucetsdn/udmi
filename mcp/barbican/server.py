@@ -455,6 +455,9 @@ def main() -> None:
     mcp_parser = subparsers.add_parser("mcp", help="Run in stdio MCP server mode")
     mcp_parser.add_argument("--etcd-port", type=int, default=None, help="Target backend port")
     mcp_parser.add_argument("--etcd-target", default=None, help="Target backend URL")
+    mcp_parser.add_argument("--ca-file", default=None, help="Path to CA certificate")
+    mcp_parser.add_argument("--cert-file", default=None, help="Path to client certificate")
+    mcp_parser.add_argument("--key-file", default=None, help="Path to client private key")
 
     # serve subcommand
     serve_parser = subparsers.add_parser("serve", help="Run HTTP JSON-RPC & Explorer REST server")
@@ -462,6 +465,9 @@ def main() -> None:
     serve_parser.add_argument("--host", default="0.0.0.0", help="HTTP server listen host (default: 0.0.0.0)")
     serve_parser.add_argument("--etcd-port", type=int, default=None, help="Target backend port")
     serve_parser.add_argument("--etcd-target", default=None, help="Target backend URL")
+    serve_parser.add_argument("--ca-file", default=None, help="Path to CA certificate")
+    serve_parser.add_argument("--cert-file", default=None, help="Path to client certificate")
+    serve_parser.add_argument("--key-file", default=None, help="Path to client private key")
 
     # CLI query subcommands
     reg_parser = subparsers.add_parser("registries", help="List registries")
@@ -498,7 +504,16 @@ def main() -> None:
     elif hasattr(args, "etcd_port") and args.etcd_port:
         target = f"http://127.0.0.1:{args.etcd_port}"
 
-    provider = BarbicanProvider(target)
+    ca_file = getattr(args, "ca_file", None)
+    cert_file = getattr(args, "cert_file", None)
+    key_file = getattr(args, "key_file", None)
+
+    provider = BarbicanProvider(
+        target=target,
+        ca_file=ca_file,
+        cert_file=cert_file,
+        key_file=key_file,
+    )
     server_instance = BarbicanMcpServer(provider)
 
     if args.command == "serve":

@@ -1,0 +1,322 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-sql
+  namespace: udmis
+  labels:
+    app: postgres
+data:
+  init_udmi.sql: |
+    CREATE TABLE IF NOT EXISTS udmi_messages (
+        id SERIAL PRIMARY KEY,
+        project_id VARCHAR(255),
+        registry_id VARCHAR(255),
+        device_id VARCHAR(255),
+        sub_folder VARCHAR(50),
+        sub_type VARCHAR(50),
+        publish_time TIMESTAMP,
+        payload JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS udmi_point_state (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMP,
+        device_id VARCHAR(255),
+        device_registry_id VARCHAR(255),
+        message_id VARCHAR(255),
+        point_name VARCHAR(255),
+        value_state VARCHAR(50),
+        units VARCHAR(50),
+        status_timestamp TIMESTAMP,
+        level INTEGER,
+        category VARCHAR(100),
+        message TEXT,
+        detail TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS udmi_system_state (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMP,
+        publish_timestamp TIMESTAMP,
+        device_registry_id VARCHAR(255),
+        device_id VARCHAR(255),
+        device_num_id VARCHAR(255),
+        gateway_id VARCHAR(255),
+        make VARCHAR(255),
+        model VARCHAR(255),
+        serial_no VARCHAR(255),
+        rev VARCHAR(255),
+        sku VARCHAR(255),
+        software JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS udmi_discovery (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMP,
+        generation TIMESTAMP,
+        device_registry_id VARCHAR(255),
+        device_id VARCHAR(255),
+        message_id VARCHAR(255),
+        scan_family VARCHAR(50),
+        ether_addr VARCHAR(255),
+        ipv4_addr VARCHAR(255),
+        bacnet_addr VARCHAR(255),
+        hostname VARCHAR(255),
+        fqdn VARCHAR(255),
+        hardware_make VARCHAR(255),
+        hardware_model VARCHAR(255),
+        firmware_version VARCHAR(255),
+        serial_no VARCHAR(255),
+        status_level INTEGER,
+        status_category VARCHAR(100),
+        status_message TEXT,
+        ports JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS udmi_validation (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMP,
+        device_registry_id VARCHAR(255),
+        device_id VARCHAR(255),
+        message_type VARCHAR(100),
+        message TEXT,
+        detail TEXT,
+        category VARCHAR(100),
+        level INTEGER,
+        errors JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS udmi_alarms (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMP,
+        device_registry_id VARCHAR(255),
+        device_id VARCHAR(255),
+        alarm_category VARCHAR(100),
+        alarm_priority VARCHAR(50),
+        alarm_type VARCHAR(100),
+        controller VARCHAR(255),
+        equipment VARCHAR(255),
+        fault BOOLEAN,
+        from_state VARCHAR(50),
+        to_state VARCHAR(50),
+        generation_time TIMESTAMP,
+        in_alarm BOOLEAN,
+        location_path VARCHAR(255),
+        message_text TEXT,
+        out_of_service BOOLEAN,
+        overridden BOOLEAN,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS udmi_metadata (
+        id SERIAL PRIMARY KEY,
+        timestamp TIMESTAMP,
+        device_id VARCHAR(255),
+        device_registry_id VARCHAR(255),
+        system_hardware_make VARCHAR(255),
+        system_hardware_model VARCHAR(255),
+        system_hardware_sku VARCHAR(255),
+        system_hardware_rev VARCHAR(255),
+        system_location_room VARCHAR(255),
+        system_location_floor VARCHAR(255),
+        localnet_families_ipv4_addr VARCHAR(255),
+        localnet_families_ether_addr VARCHAR(255),
+        cloud_connection_type VARCHAR(50),
+        metadata JSONB,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS udmi_rollouts (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        target_filter JSONB DEFAULT '{}'::jsonb,
+        target_subfolder VARCHAR(50) DEFAULT 'system',
+        target_payload JSONB NOT NULL,
+        status VARCHAR(50) DEFAULT 'RUNNING',
+        batch_size INTEGER DEFAULT 10,
+        batch_interval_sec INTEGER DEFAULT 60,
+        total_devices INTEGER DEFAULT 0,
+        converged_devices INTEGER DEFAULT 0,
+        failed_devices INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    );
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: udmis
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+  ports:
+  - name: postgres
+    port: 5432
+    protocol: TCP
+    targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: udmis
+  labels:
+    app: postgres
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16-alpine
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POSTGRES_DB
+          value: postgres
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        ports:
+        - containerPort: 5432
+          protocol: TCP
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        readinessProbe:
+          exec:
+            command: ["pg_isready", "-U", "postgres", "-d", "postgres"]
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          exec:
+            command: ["pg_isready", "-U", "postgres", "-d", "postgres"]
+          initialDelaySeconds: 15
+          periodSeconds: 15
+      volumes:
+      - name: init-script
+        configMap:
+          name: postgres-init-sql
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: dynamic-rwo
+      resources:
+        requests:
+          storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: influxdb
+  namespace: udmis
+  labels:
+    app: influxdb
+spec:
+  type: ClusterIP
+  selector:
+    app: influxdb
+  ports:
+  - name: http
+    port: 8086
+    protocol: TCP
+    targetPort: 8086
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: influxdb
+  namespace: udmis
+  labels:
+    app: influxdb
+spec:
+  serviceName: influxdb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: influxdb
+  template:
+    metadata:
+      labels:
+        app: influxdb
+    spec:
+      containers:
+      - name: influxdb
+        image: influxdb:2.7-alpine
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DOCKER_INFLUXDB_INIT_MODE
+          value: setup
+        - name: DOCKER_INFLUXDB_INIT_USERNAME
+          value: bridgehead
+        - name: DOCKER_INFLUXDB_INIT_PASSWORD
+          value: password
+        - name: DOCKER_INFLUXDB_INIT_ORG
+          value: bridgehead
+        - name: DOCKER_INFLUXDB_INIT_BUCKET
+          value: home
+        - name: DOCKER_INFLUXDB_INIT_ADMIN_TOKEN
+          value: test-influx-token-12345
+        ports:
+        - containerPort: 8086
+          protocol: TCP
+        volumeMounts:
+        - name: influxdb-data
+          mountPath: /var/lib/influxdb2
+        resources:
+          requests:
+            cpu: 250m
+            memory: 256Mi
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8086
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8086
+          initialDelaySeconds: 15
+          periodSeconds: 15
+  volumeClaimTemplates:
+  - metadata:
+      name: influxdb-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: dynamic-rwo
+      resources:
+        requests:
+          storage: 10Gi

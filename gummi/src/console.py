@@ -40,18 +40,32 @@ class GummiConsoleManager:
         self.conv_file = os.path.join(self.runtime_dir, ".jetski_conv_id")
         self.last_cols = 120
         self.last_rows = 30
+        self.last_error: Optional[str] = None
         self._mock_log = "GUMMI Task Console [gummi~agent]\r\nWelcome to Jetski interactive session.\r\n> "
         self._mock_running: bool = False
         self._mock_active: bool = False
         self._mock_error: bool = False
         self._mock_exit_code: int = 0
 
+    def _record_error_log(self, msg: str) -> None:
+        """Appends error message to the session log file."""
+        try:
+            with open(self.log_file, "a", encoding="utf-8") as f:
+                f.write(f"\r\n[ERROR] {msg}\r\n")
+        except Exception:
+            pass
+
     def is_running(self) -> bool:
         """Returns True if the tmux session is active."""
         if self.mock_mode:
             return self._mock_running
-        res = subprocess.run(["tmux", "has-session", "-t", self.session_name], capture_output=True)
-        return res.returncode == 0
+        try:
+            res = subprocess.run(["tmux", "has-session", "-t", self.session_name], capture_output=True)
+            return res.returncode == 0
+        except FileNotFoundError:
+            return False
+        except Exception:
+            return False
 
     def get_conv_id(self) -> Optional[str]:
         """Reads cached conversation ID if available."""
@@ -74,6 +88,8 @@ class GummiConsoleManager:
         r = int(rows) if rows else self.last_rows
         self.last_cols = c
         self.last_rows = r
+
+        self.last_error = None
 
         if self.mock_mode:
             self._mock_running = True
@@ -150,48 +166,90 @@ class GummiConsoleManager:
         )
         wrapped_command = f"( {diag_cmd} {cmd_str} ) ; echo $? > {self.exit_file}"
 
-        subprocess.run(
-            [
-                "tmux",
-                "new-session",
-                "-d",
-                "-s",
-                self.session_name,
-                "-x",
-                str(c),
-                "-y",
-                str(r),
-                "-c",
-                self.repo_root,
-                wrapped_command,
-            ],
-            capture_output=True,
-        )
-        subprocess.run(
-            ["tmux", "pipe-pane", "-t", self.session_name, "-o", f"cat > {self.log_file}"],
-            capture_output=True,
-        )
+        try:
+            res = subprocess.run(
+                [
+                    "tmux",
+                    "new-session",
+                    "-d",
+                    "-s",
+                    self.session_name,
+                    "-x",
+                    str(c),
+                    "-y",
+                    str(r),
+                    "-c",
+                    self.repo_root,
+                    wrapped_command,
+                ],
+                capture_output=True,
+                text=True,
+            )
+            if res.returncode != 0:
+                err_detail = res.stderr.strip() or f"tmux new-session exited with code {res.returncode}"
+                self.last_error = err_detail
+                self._record_error_log(err_detail)
+                return {
+                    "status": "error",
+                    "error": "Error starting session",
+                    "message": err_detail,
+                    "button_state": "red",
+                    "session": self.session_name,
+                }
+        except FileNotFoundError as e:
+            err_detail = f"tmux executable not found: {e}"
+            self.last_error = err_detail
+            self._record_error_log(err_detail)
+            return {
+                "status": "error",
+                "error": "Error starting session",
+                "message": err_detail,
+                "button_state": "red",
+                "session": self.session_name,
+            }
+        except Exception as e:
+            err_detail = f"Failed to start session: {e}"
+            self.last_error = err_detail
+            self._record_error_log(err_detail)
+            return {
+                "status": "error",
+                "error": "Error starting session",
+                "message": err_detail,
+                "button_state": "red",
+                "session": self.session_name,
+            }
 
-        return {"status": "started", "session": self.session_name, "conv_id": conv_id}
+        try:
+            subprocess.run(
+                ["tmux", "pipe-pane", "-t", self.session_name, "-o", f"cat > {self.log_file}"],
+                capture_output=True,
+            )
+        except Exception:
+            pass
+
+        return {"status": "started", "session": self.session_name, "conv_id": conv_id, "button_state": "green"}
 
     def get_pane_child_pids(self) -> List[str]:
         """Returns child process PIDs running in the tmux session pane."""
         if self.mock_mode:
             return []
-        res = subprocess.run(
-            ["tmux", "list-panes", "-t", self.session_name, "-F", "#{pane_pid}"],
-            capture_output=True,
-            text=True,
-        )
-        if res.returncode != 0:
+        try:
+            res = subprocess.run(
+                ["tmux", "list-panes", "-t", self.session_name, "-F", "#{pane_pid}"],
+                capture_output=True,
+                text=True,
+            )
+            if res.returncode != 0:
+                return []
+            parent_pids = [p.strip() for p in res.stdout.strip().splitlines() if p.strip()]
+            child_pids: List[str] = []
+            for p in parent_pids:
+                c_res = subprocess.run(["pgrep", "-P", p], capture_output=True, text=True)
+                if c_res.returncode == 0:
+                    child_pids.extend([c.strip() for c in c_res.stdout.strip().splitlines() if c.strip()])
+            return child_pids
+        except Exception:
             return []
-        parent_pids = [p.strip() for p in res.stdout.strip().splitlines() if p.strip()]
-        child_pids: List[str] = []
-        for p in parent_pids:
-            c_res = subprocess.run(["pgrep", "-P", p], capture_output=True, text=True)
-            if c_res.returncode == 0:
-                child_pids.extend([c.strip() for c in c_res.stdout.strip().splitlines() if c.strip()])
-        return child_pids
 
     def is_active(self) -> bool:
         """Determines if the running session is actively performing work vs idle."""
@@ -213,21 +271,22 @@ class GummiConsoleManager:
         """Analyzes session state and exit code."""
         running = self.is_running()
         if self.mock_mode:
-            has_error = getattr(self, "_mock_error", False)
+            has_error = getattr(self, "_mock_error", False) or bool(self.last_error)
             exit_code = getattr(self, "_mock_exit_code", 0)
             is_active = getattr(self, "_mock_active", False)
             if not running:
                 if has_error or exit_code != 0:
                     code = exit_code or 1
+                    err_msg = self.last_error or f"Agent process exited with code {code}."
                     return {
                         "state": "error",
-                        "status_text": f"Exited (code {code})",
+                        "status_text": "Error starting session" if self.last_error else f"Exited (code {code})",
                         "severity": "error",
                         "button_state": "red",
                         "running": False,
                         "active": False,
                         "exit_code": code,
-                        "alert": f"Agent process exited with code {code}.",
+                        "alert": err_msg,
                     }
                 return {
                     "state": "not_running",
@@ -260,6 +319,17 @@ class GummiConsoleManager:
                 }
 
         if not running:
+            if self.last_error:
+                return {
+                    "state": "error",
+                    "status_text": "Error starting session",
+                    "severity": "error",
+                    "button_state": "red",
+                    "running": False,
+                    "active": False,
+                    "alert": self.last_error,
+                    "exit_code": 1,
+                }
             if os.path.exists(self.exit_file):
                 code = 1
                 try:
@@ -428,10 +498,13 @@ class GummiConsoleManager:
         if not self.is_running():
             return False, f"Session {self.session_name} does not exist"
         args = build_tmux_keys(self.session_name, hex_keys)
-        res = subprocess.run(args, capture_output=True, text=True)
-        if res.returncode != 0:
-            return False, res.stderr
-        return True, "ok"
+        try:
+            res = subprocess.run(args, capture_output=True, text=True)
+            if res.returncode != 0:
+                return False, res.stderr
+            return True, "ok"
+        except Exception as e:
+            return False, str(e)
 
     def resize(self, cols: int, rows: int) -> bool:
         """Resizes the tmux session window."""
@@ -439,16 +512,24 @@ class GummiConsoleManager:
         self.last_rows = rows
         if self.mock_mode or not self.is_running():
             return True
-        res = subprocess.run(
-            ["tmux", "resize-window", "-t", self.session_name, "-x", str(cols), "-y", str(rows)],
-            capture_output=True,
-        )
-        return res.returncode == 0
+        try:
+            res = subprocess.run(
+                ["tmux", "resize-window", "-t", self.session_name, "-x", str(cols), "-y", str(rows)],
+                capture_output=True,
+            )
+            return res.returncode == 0
+        except Exception:
+            return False
 
     def kill(self) -> bool:
         """Terminates the tmux session."""
+        self.last_error = None
         if self.mock_mode:
             self._mock_running = False
+            self._mock_error = False
             return True
-        res = subprocess.run(["tmux", "kill-session", "-t", self.session_name], capture_output=True)
-        return res.returncode == 0
+        try:
+            res = subprocess.run(["tmux", "kill-session", "-t", self.session_name], capture_output=True)
+            return res.returncode == 0
+        except Exception:
+            return False

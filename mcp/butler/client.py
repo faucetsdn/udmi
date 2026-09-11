@@ -26,6 +26,8 @@ class ButlerClient:
         elif endpoint:
             if not endpoint.startswith("http://") and not endpoint.startswith("https://"):
                 endpoint = f"http://{endpoint}"
+            if not endpoint.rstrip("/").endswith("/rpc"):
+                endpoint = f"{endpoint.rstrip('/')}/rpc"
             self.endpoint = endpoint
         else:
             self.endpoint = "http://127.0.0.1:8088/rpc"

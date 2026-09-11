@@ -656,8 +656,17 @@ async function checkJetskiStatus() {
       } else {
         updateJetskiButtonState("blue");
       }
+    } else {
+      let errMsg = "Status check failed";
+      try {
+        const errData = await res.json();
+        errMsg = errData.message || errData.error || errMsg;
+      } catch (_) {}
+      updateJetskiButtonState("red", `Jetski Agent: ${errMsg}`);
     }
-  } catch (e) {}
+  } catch (e) {
+    updateJetskiButtonState("red", "Jetski Agent: Disconnected");
+  }
 }
 
 function setupConsole() {
@@ -924,20 +933,54 @@ async function setConsoleVisible(visible) {
       statusText.className = "console-status-text status-info";
     }
 
+    let startOk = true;
     try {
       const res = await fetch(`${API_BASE}/api/project/jetski`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ projectName: CONSOLE_PROJECT }),
       });
-      if (!res.ok && statusText) {
-        statusText.textContent = "Error starting session";
-        statusText.className = "console-status-text status-error";
+      if (!res.ok) {
+        startOk = false;
+        let errMsg = "Error starting session";
+        try {
+          const errData = await res.json();
+          errMsg = errData.message || errData.error || errMsg;
+        } catch (_) {}
+
+        if (statusText) {
+          statusText.textContent = "Error starting session";
+          statusText.className = "console-status-text status-error";
+        }
+        updateJetskiButtonState("red", `Jetski Agent: ${errMsg}`);
+        const alertBanner = document.getElementById("console-alert-banner");
+        const alertMsg = document.getElementById("console-alert-msg");
+        if (alertBanner && alertMsg) {
+          alertBanner.style.display = "flex";
+          alertBanner.className = "console-alert-banner alert-error";
+          alertMsg.textContent = errMsg;
+        }
+        if (term) {
+          term.write(`\r\n\x1b[1;31m[Jetski Session Error]\x1b[0m ${errMsg}\r\n`);
+        }
       }
     } catch (e) {
+      startOk = false;
+      const errMsg = e.message || "Disconnected";
       if (statusText) {
         statusText.textContent = "Disconnected";
         statusText.className = "console-status-text status-error";
+      }
+      updateJetskiButtonState("red", `Jetski Agent: ${errMsg}`);
+      const alertBanner = document.getElementById("console-alert-banner");
+      const alertMsg = document.getElementById("console-alert-msg");
+      if (alertBanner && alertMsg) {
+        alertBanner.style.display = "flex";
+        alertBanner.className = "console-alert-banner alert-error";
+        alertMsg.textContent = errMsg;
+      }
+      if (term) {
+        term.write(`\r\n\x1b[1;31m[Jetski Session Error]\x1b[0m ${errMsg}\r\n`);
       }
     }
 
@@ -948,6 +991,8 @@ async function setConsoleVisible(visible) {
         if (stData.diagnostics) {
           updateDiagnosticsUI(stData.diagnostics);
         }
+      } else if (!startOk) {
+        updateJetskiButtonState("red", "Jetski Agent: Error starting session");
       }
     } catch (e) {}
 
@@ -1036,12 +1081,40 @@ async function killAndRestartConsole() {
     statusText.className = "console-status-text status-info";
   }
   try {
-    await fetch(`${API_BASE}/api/project/jetski`, {
+    const res = await fetch(`${API_BASE}/api/project/jetski`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ projectName: CONSOLE_PROJECT }),
     });
-  } catch (e) {}
+    if (!res.ok) {
+      let errMsg = "Error starting session";
+      try {
+        const errData = await res.json();
+        errMsg = errData.message || errData.error || errMsg;
+      } catch (_) {}
+      if (statusText) {
+        statusText.textContent = "Error starting session";
+        statusText.className = "console-status-text status-error";
+      }
+      updateJetskiButtonState("red", `Jetski Agent: ${errMsg}`);
+      const alertBanner = document.getElementById("console-alert-banner");
+      const alertMsg = document.getElementById("console-alert-msg");
+      if (alertBanner && alertMsg) {
+        alertBanner.style.display = "flex";
+        alertBanner.className = "console-alert-banner alert-error";
+        alertMsg.textContent = errMsg;
+      }
+      if (term) {
+        term.write(`\r\n\x1b[1;31m[Jetski Session Error]\x1b[0m ${errMsg}\r\n`);
+      }
+    }
+  } catch (e) {
+    if (statusText) {
+      statusText.textContent = "Disconnected";
+      statusText.className = "console-status-text status-error";
+    }
+    updateJetskiButtonState("red", `Jetski Agent: ${e.message || "Disconnected"}`);
+  }
   pollConsoleLog();
 }
 

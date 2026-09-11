@@ -246,6 +246,18 @@ class TestBarbicanMcpServerAndClient(unittest.TestCase):
         except urllib.error.HTTPError as e:
             self.assertEqual(e.code, 404)
 
+    def test_client_endpoint_formatting(self):
+        c1 = BarbicanClient(endpoint="http://remote-barbican:8085")
+        self.assertEqual(c1.endpoint, "http://remote-barbican:8085/rpc")
+        c2 = BarbicanClient(endpoint="http://remote-barbican:8085/rpc")
+        self.assertEqual(c2.endpoint, "http://remote-barbican:8085/rpc")
+
+    def test_provider_ssl_context_setup(self):
+        provider = BarbicanProvider(target="https://etcd:2379")
+        self.assertEqual(provider.target, "https://etcd:2379")
+        self.assertIsNotNone(provider.ssl_context)
+
+
 
 class TestBarbicanMcpStdioRunner(unittest.TestCase):
     """Test running bin/mcp_barbican in stdio mode via subprocess."""

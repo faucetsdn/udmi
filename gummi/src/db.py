@@ -21,6 +21,9 @@ class GummiDB:
         butler_port: Optional[int] = None,
         barbican_port: Optional[int] = None,
         uufi_port: Optional[int] = None,
+        butler_endpoint: Optional[str] = None,
+        barbican_endpoint: Optional[str] = None,
+        uufi_endpoint: Optional[str] = None,
         mock_mode: bool = False,
         **kwargs,
     ):
@@ -28,6 +31,9 @@ class GummiDB:
         self.butler_port = butler_port or 8088
         self.barbican_port = barbican_port or 8085
         self.uufi_port = uufi_port or 8087
+        self.butler_endpoint = butler_endpoint
+        self.barbican_endpoint = barbican_endpoint
+        self.uufi_endpoint = uufi_endpoint
 
         if mock_mode:
             self.butler = None
@@ -38,9 +44,18 @@ class GummiDB:
             self._mock_rollouts = self._generate_mock_rollouts()
             self._mock_rollout_id_counter = len(self._mock_rollouts) + 1
         else:
-            self.butler = butler_client or ButlerClient(port=self.butler_port)
-            self.barbican = barbican_client or BarbicanClient(port=self.barbican_port)
-            self.uufi = uufi_client or UUFIClient(port=self.uufi_port)
+            self.butler = butler_client or ButlerClient(
+                endpoint=self.butler_endpoint,
+                port=self.butler_port if not self.butler_endpoint else None,
+            )
+            self.barbican = barbican_client or BarbicanClient(
+                endpoint=self.barbican_endpoint,
+                port=self.barbican_port if not self.barbican_endpoint else None,
+            )
+            self.uufi = uufi_client or UUFIClient(
+                endpoint=self.uufi_endpoint,
+                port=self.uufi_port if not self.uufi_endpoint else None,
+            )
             self._mock_fleet = []
             self._mock_messages = {}
             self._mock_rollouts = {}

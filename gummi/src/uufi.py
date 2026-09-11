@@ -25,6 +25,7 @@ class GummiUUFIClient:
         project_spec: Optional[str] = None,
         site_model: Optional[str] = None,
         uufi_port: Optional[int] = None,
+        uufi_endpoint: Optional[str] = None,
         uufi_client: Optional[Any] = None,
         mock_mode: bool = False,
         db: Optional[Any] = None,
@@ -33,6 +34,7 @@ class GummiUUFIClient:
         self.project_spec = project_spec
         self.site_model = site_model
         self.uufi_port = uufi_port or 8087
+        self.uufi_endpoint = uufi_endpoint
         self.client_id = f"gummi_{uuid.uuid4().hex[:8]}"
         self.db = db
 
@@ -42,7 +44,10 @@ class GummiUUFIClient:
         elif uufi_client is not None:
             self.uufi = uufi_client
         else:
-            self.uufi = UUFIClient(port=self.uufi_port)
+            self.uufi = UUFIClient(
+                endpoint=self.uufi_endpoint,
+                port=self.uufi_port if not self.uufi_endpoint else None,
+            )
 
         self.event_subscribers: List[queue.Queue] = []
         self._active_rollouts_cache: List[Dict[str, Any]] = []

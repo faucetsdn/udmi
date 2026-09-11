@@ -589,11 +589,10 @@ class ButlerMcpHttpHandler(BaseHTTPRequestHandler):
         parsed_url = urllib.parse.urlparse(self.path)
         path = parsed_url.path
 
-        if path == "/health":
+        if path in ("/health", "/livez", "/readyz"):
             health_data = self.server_instance.provider.health()
             content = json.dumps(health_data).encode("utf-8")
-            status = 200 if health_data.get("connected") else 503
-            self.send_response(status)
+            self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(content)))
             self.send_cors_headers()

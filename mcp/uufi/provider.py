@@ -24,6 +24,7 @@ if os.path.exists(common_py) and common_py not in sys.path:
 
 import paho.mqtt.client as mqtt
 from udmi.common.project_spec import parse_project_spec
+from udmi.common.site_model import find_ca_file, find_cert_file
 class UUFIProvider:
     """Provider encapsulating UUFI messaging, handshakes, queries, and event streams."""
 
@@ -167,25 +168,28 @@ class UUFIProvider:
             client = mqtt.Client(client_id=self.client_id)
             user = os.environ.get("MQTT_USER", "rocket")
             pwd = os.environ.get("MQTT_PASS", "monkey")
-            client.username_pw_set(user, pwd)
+            if user:
+                client.username_pw_set(user, pwd)
 
-            # Check for TLS certificates in site model
-            if self.site_model:
-                ca_cert = os.path.join(self.site_model, "reflector", "ca.crt")
-                client_cert = os.path.join(self.site_model, "reflector", "rsa_private.crt")
-                client_key = os.path.join(self.site_model, "reflector", "rsa_private.pem")
-                if os.path.exists(ca_cert):
-                    import ssl
-                    if os.path.exists(client_cert) and os.path.exists(client_key):
-                        client.tls_set(
-                            ca_certs=ca_cert,
-                            certfile=client_cert,
-                            keyfile=client_key,
-                            cert_reqs=ssl.CERT_NONE,
-                        )
-                    else:
-                        client.tls_set(ca_certs=ca_cert, cert_reqs=ssl.CERT_NONE)
-                    client.tls_insecure_set(True)
+            # Check for TLS certificates in site model or SSL_SECRETS_DIR
+            ca_cert = find_ca_file(self.site_model)
+            cert_pair = find_cert_file(self.site_model)
+            if ca_cert and os.path.exists(ca_cert):
+                import ssl
+                if cert_pair:
+                    client.tls_set(
+                        ca_certs=ca_cert,
+                        certfile=cert_pair[0],
+                        keyfile=cert_pair[1],
+                        cert_reqs=ssl.CERT_NONE,
+                    )
+                else:
+                    client.tls_set(ca_certs=ca_cert, cert_reqs=ssl.CERT_NONE)
+                client.tls_insecure_set(True)
+            elif self.port == 8883 or str(os.environ.get("MQTT_PORT")) == "8883":
+                import ssl
+                client.tls_set(cert_reqs=ssl.CERT_NONE)
+                client.tls_insecure_set(True)
 
             def _on_connect(c, userdata, flags, rc):
                 if rc == 0:

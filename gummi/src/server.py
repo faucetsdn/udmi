@@ -187,30 +187,47 @@ class GummiRequestHandler(SimpleHTTPRequestHandler):
                 return self._send_json(res)
 
             if path == "/api/project/status":
-                running = self.console.is_running() if self.console else False
-                session_name = self.console.session_name if self.console else "gummi~agent"
-                diag = self.console.get_diagnostics() if self.console else {
-                    "state": "not_running",
-                    "status_text": "Not Running",
-                    "severity": "neutral",
-                    "button_state": "blue",
-                    "running": False,
-                    "active": False,
-                    "alert": None,
-                }
-                button_state = diag.get("button_state", "blue" if not running else "green")
-                return self._send_json({
-                    "active_task": {
-                        "name": "Jetski (GUMMI)",
+                try:
+                    running = self.console.is_running() if self.console else False
+                    session_name = self.console.session_name if self.console else "gummi~agent"
+                    diag = self.console.get_diagnostics() if self.console else {
+                        "state": "not_running",
+                        "status_text": "Not Running",
+                        "severity": "neutral",
+                        "button_state": "blue",
+                        "running": False,
+                        "active": False,
+                        "alert": None,
+                    }
+                    button_state = diag.get("button_state", "blue" if not running else "green")
+                    return self._send_json({
+                        "active_task": {
+                            "name": "Jetski (GUMMI)",
+                            "session": session_name,
+                            "command": "jetski --repl_mode",
+                            "start_time": time.time(),
+                        } if running else None,
+                        "running": running,
                         "session": session_name,
-                        "command": "jetski --repl_mode",
-                        "start_time": time.time(),
-                    } if running else None,
-                    "running": running,
-                    "session": session_name,
-                    "diagnostics": diag,
-                    "button_state": button_state,
-                })
+                        "diagnostics": diag,
+                        "button_state": button_state,
+                    })
+                except Exception as e:
+                    return self._send_json({
+                        "running": False,
+                        "session": getattr(self.console, "session_name", "gummi~agent"),
+                        "diagnostics": {
+                            "state": "error",
+                            "status_text": "Error checking status",
+                            "severity": "error",
+                            "button_state": "red",
+                            "running": False,
+                            "active": False,
+                            "alert": str(e),
+                            "exit_code": 1,
+                        },
+                        "button_state": "red",
+                    })
 
         except ConnectionError as e:
             return self._send_json({"error": "Service unavailable", "message": str(e)}, status_code=503)
@@ -288,9 +305,10 @@ class GummiRequestHandler(SimpleHTTPRequestHandler):
                 cols = body.get("cols")
                 rows = body.get("rows")
                 if not self.console:
-                    return self._send_json({"error": "Console manager unavailable"}, status_code=503)
+                    return self._send_json({"error": "Console manager unavailable", "button_state": "red"}, status_code=503)
                 res = self.console.start_jetski(prompt=prompt, cols=cols, rows=rows)
-                return self._send_json(res, status_code=200)
+                status_code = 500 if res.get("status") == "error" else 200
+                return self._send_json(res, status_code=status_code)
 
             if path == "/api/project/term-input":
                 hex_keys = body.get("hexKeys") or []
@@ -363,10 +381,13 @@ class GummiServer:
         mock_mode: bool = False,
         enable_mapping_seed: bool = False,
         barbican_port: Optional[int] = None,
+        barbican_endpoint: Optional[str] = None,
         barbican_client: Optional[Any] = None,
         butler_port: Optional[int] = None,
+        butler_endpoint: Optional[str] = None,
         butler_client: Optional[Any] = None,
         uufi_port: Optional[int] = None,
+        uufi_endpoint: Optional[str] = None,
         uufi_client: Optional[Any] = None,
         **kwargs,
     ):
@@ -377,9 +398,13 @@ class GummiServer:
         self.barbican_port = barbican_port or 8085
         self.butler_port = butler_port or 8088
         self.uufi_port = uufi_port or 8087
+        self.barbican_endpoint = barbican_endpoint or os.environ.get("BARBICAN_ENDPOINT")
+        self.butler_endpoint = butler_endpoint or os.environ.get("BUTLER_ENDPOINT")
+        self.uufi_endpoint = uufi_endpoint or os.environ.get("UUFI_ENDPOINT")
 
         self.uufi = GummiUUFIClient(
             uufi_port=self.uufi_port,
+            uufi_endpoint=self.uufi_endpoint,
             uufi_client=uufi_client,
             mock_mode=mock_mode,
         )
@@ -390,6 +415,9 @@ class GummiServer:
             butler_port=self.butler_port,
             barbican_port=self.barbican_port,
             uufi_port=self.uufi_port,
+            butler_endpoint=self.butler_endpoint,
+            barbican_endpoint=self.barbican_endpoint,
+            uufi_endpoint=self.uufi_endpoint,
             mock_mode=mock_mode,
         )
         self.uufi.db = self.db
@@ -428,8 +456,15 @@ class GummiServer:
 
 def main():
     import argparse
+    raw_port = os.environ.get("GUMMI_PORT", "8080")
+    if ":" in raw_port:
+        raw_port = raw_port.split(":")[-1]
+    try:
+        default_port = int(raw_port)
+    except (ValueError, TypeError):
+        default_port = 8080
     parser = argparse.ArgumentParser(description="GUMMI Fleet Management Web Server")
-    parser.add_argument("--port", "-p", type=int, default=int(os.environ.get("GUMMI_PORT", "8080")), help="HTTP server port")
+    parser.add_argument("--port", "-p", type=int, default=default_port, help="HTTP server port")
     parser.add_argument("--host", default=os.environ.get("GUMMI_HOST", "0.0.0.0"), help="HTTP bind address")
     parser.add_argument(
         "--mock",
@@ -444,8 +479,11 @@ def main():
         help="Enable synthetic mapping lifecycle seeding button and API endpoint",
     )
     parser.add_argument("--barbican-port", type=int, default=8085, help="Barbican MCP server port (default: 8085)")
+    parser.add_argument("--barbican-endpoint", default=os.environ.get("BARBICAN_ENDPOINT"), help="Barbican MCP server endpoint URL")
     parser.add_argument("--butler-port", type=int, default=8088, help="Butler MCP server port (default: 8088)")
+    parser.add_argument("--butler-endpoint", default=os.environ.get("BUTLER_ENDPOINT"), help="Butler MCP server endpoint URL")
     parser.add_argument("--uufi-port", type=int, default=8087, help="UUFI MCP server port (default: 8087)")
+    parser.add_argument("--uufi-endpoint", default=os.environ.get("UUFI_ENDPOINT"), help="UUFI MCP server endpoint URL")
     args = parser.parse_args()
 
     server = GummiServer(
@@ -454,8 +492,11 @@ def main():
         mock_mode=args.mock,
         enable_mapping_seed=args.enable_mapping_seed,
         barbican_port=args.barbican_port,
+        barbican_endpoint=args.barbican_endpoint,
         butler_port=args.butler_port,
+        butler_endpoint=args.butler_endpoint,
         uufi_port=args.uufi_port,
+        uufi_endpoint=args.uufi_endpoint,
     )
     server.start()
 

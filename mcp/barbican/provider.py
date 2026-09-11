@@ -61,7 +61,17 @@ def prefix_range_end(prefix: str) -> bytes:
 class BarbicanProvider:
     """Encapsulates Barbican datastore communication and UDMI model querying."""
 
-    def __init__(self, target: Optional[str] = None):
+    def __init__(
+        self,
+        target: Optional[str] = None,
+        ca_file: Optional[str] = None,
+        cert_file: Optional[str] = None,
+        key_file: Optional[str] = None,
+    ):
+        if target is None:
+            target = os.environ.get("ETCD_TARGET") or os.environ.get("ETCD_URL")
+        if target is None and os.environ.get("ETCD_CLUSTER"):
+            target = f"https://{os.environ['ETCD_CLUSTER']}:2379"
         if target is None:
             target = self.discover_target()
         elif isinstance(target, int):
@@ -69,6 +79,58 @@ class BarbicanProvider:
         elif not target.startswith("http://") and not target.startswith("https://"):
             target = f"http://{target}"
         self.target = target.rstrip("/")
+
+        # Resolve SSL credentials if https
+        self.ca_file = ca_file or os.environ.get("ETCD_CA_FILE")
+        self.cert_file = cert_file or os.environ.get("ETCD_CERT_FILE")
+        self.key_file = key_file or os.environ.get("ETCD_KEY_FILE")
+
+        ssl_dir = os.environ.get("SSL_SECRETS_DIR", "/etc/udmis/certs")
+        if not self.ca_file:
+            for c in [
+                os.path.join(ssl_dir, "ca.crt"),
+                "/etc/udmis/certs/ca.crt",
+                "/etc/etcd/certs/client/ca.crt",
+            ]:
+                if os.path.exists(c):
+                    self.ca_file = c
+                    break
+
+        if not self.cert_file:
+            for c in [
+                os.path.join(ssl_dir, "tls.crt"),
+                os.path.join(ssl_dir, "rsa_private.crt"),
+                "/etc/udmis/certs/tls.crt",
+                "/etc/etcd/certs/client/tls.crt",
+            ]:
+                if os.path.exists(c):
+                    self.cert_file = c
+                    break
+
+        if not self.key_file:
+            for c in [
+                os.path.join(ssl_dir, "tls.key"),
+                os.path.join(ssl_dir, "rsa_private.key"),
+                os.path.join(ssl_dir, "rsa_private.pem"),
+                "/etc/udmis/certs/tls.key",
+                "/etc/etcd/certs/client/tls.key",
+            ]:
+                if os.path.exists(c):
+                    self.key_file = c
+                    break
+
+        self.ssl_context = None
+        if self.target.startswith("https://"):
+            import ssl
+            if self.ca_file and os.path.exists(self.ca_file):
+                self.ssl_context = ssl.create_default_context(cafile=self.ca_file)
+            else:
+                self.ssl_context = ssl.create_default_context()
+            if self.cert_file and self.key_file and os.path.exists(self.cert_file) and os.path.exists(self.key_file):
+                self.ssl_context.load_cert_chain(certfile=self.cert_file, keyfile=self.key_file)
+            if os.environ.get("ETCD_INSECURE", "").lower() in ("true", "1", "yes"):
+                self.ssl_context.check_hostname = False
+                self.ssl_context.verify_mode = ssl.CERT_NONE
 
     @classmethod
     def discover_target(cls, candidates: Optional[List[int]] = None) -> str:
@@ -112,7 +174,10 @@ class BarbicanProvider:
         headers = {"Content-Type": "application/json"}
         req = urllib.request.Request(url, data=data, headers=headers, method="POST" if data else "GET")
         try:
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
+            urlopen_kwargs = {"timeout": timeout}
+            if self.ssl_context:
+                urlopen_kwargs["context"] = self.ssl_context
+            with urllib.request.urlopen(req, **urlopen_kwargs) as resp:
                 resp_bytes = resp.read()
                 if not resp_bytes:
                     return {}
@@ -128,7 +193,10 @@ class BarbicanProvider:
         try:
             url = f"{self.target}/health"
             req = urllib.request.Request(url, method="GET")
-            with urllib.request.urlopen(req, timeout=1.0) as resp:
+            urlopen_kwargs = {"timeout": 1.0}
+            if self.ssl_context:
+                urlopen_kwargs["context"] = self.ssl_context
+            with urllib.request.urlopen(req, **urlopen_kwargs) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
                 is_up = data.get("health") in ["true", True]
                 return {
