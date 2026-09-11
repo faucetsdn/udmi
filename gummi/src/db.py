@@ -644,6 +644,62 @@ class GummiDB:
             raise ConnectionError(f"Butler MCP request failed: {e}") from e
 
     # --------------------------------------------------------------------------
+    # Barbican / ETCD Catalog Explorer Queries
+    # --------------------------------------------------------------------------
+
+    def get_registries(self, prefix: str = "/r/") -> Dict[str, Any]:
+        """Fetches unique UDMI registries and total registered devices from Barbican MCP."""
+        if self.mock_mode:
+            regs = sorted(list({d["registry_id"] for d in self._mock_fleet}))
+            if not regs:
+                regs = ["AA-LON-TEST", "AA-MSQ-TEST", "UDMI-REFLECT", "US-MTV-1758", "ZZ-TRI-FECTA"]
+            if prefix and prefix != "/r/":
+                clean_prefix = prefix[3:] if prefix.startswith("/r/") else prefix
+                regs = [r for r in regs if r.startswith(clean_prefix)]
+            total_devs = len(self._mock_fleet) if self._mock_fleet else 10
+            return {
+                "registries": regs,
+                "totalDevicesCount": total_devs,
+            }
+
+        if not self.barbican:
+            raise ConnectionError("Barbican MCP client is not configured or unavailable")
+        try:
+            return self.barbican.list_registries(prefix=prefix)
+        except Exception as e:
+            raise ConnectionError(f"Barbican MCP request failed: {e}") from e
+
+    def get_registry_devices(self, registry_id: str) -> Dict[str, Any]:
+        """Fetches list of devices for a specific registry from Barbican MCP."""
+        if self.mock_mode:
+            devs = sorted([d["device_id"] for d in self._mock_fleet if d.get("registry_id") == registry_id])
+            if not devs and registry_id == "ZZ-TRI-FECTA":
+                devs = ["AHU-1", "AHU-22", "GAT-123", "SNS-4"]
+            return {
+                "registryId": registry_id,
+                "devices": devs,
+            }
+
+        if not self.barbican:
+            raise ConnectionError("Barbican MCP client is not configured or unavailable")
+        try:
+            return self.barbican.list_devices(registry_id=registry_id)
+        except Exception as e:
+            raise ConnectionError(f"Barbican MCP request failed: {e}") from e
+
+    def get_device_etcd_properties(self, registry_id: str, device_id: str) -> Dict[str, Any]:
+        """Fetches raw key-value properties for a device in a registry from Barbican MCP."""
+        if self.mock_mode:
+            return self._mock_device_etcd_properties(registry_id, device_id)
+
+        if not self.barbican:
+            raise ConnectionError("Barbican MCP client is not configured or unavailable")
+        try:
+            return self.barbican.get_device_properties(registry_id=registry_id, device_id=device_id)
+        except Exception as e:
+            raise ConnectionError(f"Barbican MCP request failed: {e}") from e
+
+    # --------------------------------------------------------------------------
     # Mock Data Generators
     # --------------------------------------------------------------------------
 
@@ -970,6 +1026,33 @@ class GummiDB:
                     "timestamp": now,
                 }
             ],
+        }
+
+    def _mock_device_etcd_properties(self, registry_id: str, device_id: str) -> Dict[str, Any]:
+        """Generates realistic ETCD properties for a mock device."""
+        detail = self._mock_device_detail(registry_id, device_id)
+        is_gateway = "GAT" in device_id or "gateway" in device_id.lower() or device_id == "AHU-1"
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        properties: Dict[str, str] = {
+            ":attach": "GATEWAY" if is_gateway else "DIRECT",
+            ":config": json.dumps(detail.get("config", {"system": {"software": {"system": "2.4.1"}}}), indent=2),
+            ":last_config": now,
+            ":last_state": json.dumps(detail.get("state", {"system": {"operational": True}})),
+            ":last_state_time": now,
+            ":metadata_str": json.dumps(detail.get("metadata", {"system": {"make": "Acme Controls"}})),
+            ":num_id": "880803983",
+            ":resource_type": "GATEWAY" if is_gateway else "DIRECT",
+        }
+        if is_gateway:
+            properties["/c/bound_devices:AHU-2"] = ""
+            properties["/c/bound_devices:AHU-22"] = ""
+            properties["/c/bound_devices:SNS-4"] = ""
+
+        sorted_props = dict(sorted(properties.items()))
+        return {
+            "registryId": registry_id,
+            "deviceId": device_id,
+            "properties": sorted_props,
         }
 
     def _mock_telemetry(self, registry_id: str, device_id: str, point_names: List[str]) -> Dict[str, Any]:

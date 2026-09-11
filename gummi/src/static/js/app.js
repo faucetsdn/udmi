@@ -21,6 +21,15 @@ const state = {
   },
   selectedDevice: null,
   rollouts: [],
+  explorer: {
+    registries: [],
+    devices: [],
+    totalDevices: 0,
+    activeRegistry: null,
+    activeDevice: null,
+    activeProperty: null,
+    lastSetHash: null,
+  },
 };
 
 // -----------------------------------------------------------------------------
@@ -32,6 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupEventHandlers();
   setupSSE();
   setupConsole();
+  initHashRouting();
+  initExplorerTheme();
 
   // Initial load
   loadCapabilities();
@@ -39,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPortfolio();
   loadDevices();
   loadRollouts();
+  loadExplorerRegistries();
 });
 
 function setupNavigation() {
@@ -51,8 +63,9 @@ function setupNavigation() {
   });
 }
 
-function switchTab(tabId) {
+function switchTab(tabId, updateHash = true) {
   state.activeTab = tabId;
+  document.body.classList.toggle("tab-explorer", tabId === "explorer");
 
   // Update nav buttons
   document.querySelectorAll(".nav-tab").forEach((t) => {
@@ -68,11 +81,22 @@ function switchTab(tabId) {
     targetPane.classList.add("active");
   }
 
+  if (updateHash) {
+    if (tabId === "explorer") {
+      setExplorerHash(state.explorer.activeRegistry, state.explorer.activeDevice, state.explorer.activeProperty);
+    } else {
+      const h = `#${tabId}`;
+      state.explorer.lastSetHash = h;
+      window.location.hash = h;
+    }
+  }
+
   // Trigger pane-specific refreshes
   if (tabId === "portfolio") loadPortfolio();
   if (tabId === "devices") loadDevices();
   if (tabId === "admin") loadBridgeheadStatus();
   if (tabId === "rollout") loadRollouts();
+  if (tabId === "explorer") loadExplorerRegistries();
 }
 
 // -----------------------------------------------------------------------------
@@ -227,6 +251,9 @@ function renderDevicesTable() {
         <td>
           <button class="btn btn-secondary btn-sm" onclick="selectDevice('${escapeHtml(dev.registry_id)}', '${escapeHtml(dev.device_id)}')">
             Inspect
+          </button>
+          <button class="btn btn-secondary btn-sm" title="Inspect raw ETCD key-value properties" onclick="navigateToExplorer('${escapeHtml(dev.registry_id)}', '${escapeHtml(dev.device_id)}')">
+            🗄️ ETCD
           </button>
         </td>
       `;
@@ -428,6 +455,71 @@ function setupEventHandlers() {
   document.getElementById("btn-refresh-portfolio").addEventListener("click", loadPortfolio);
   document.getElementById("btn-refresh-devices").addEventListener("click", loadDevices);
   document.getElementById("btn-probe-admin").addEventListener("click", loadBridgeheadStatus);
+
+  // ETCD Explorer Controls
+  const btnRefreshAll = document.getElementById("btn-refresh-explorer-all");
+  if (btnRefreshAll) btnRefreshAll.addEventListener("click", loadExplorerRegistries);
+
+  const btnRefreshRegs = document.getElementById("btn-refresh-explorer-registries");
+  if (btnRefreshRegs) btnRefreshRegs.addEventListener("click", loadExplorerRegistries);
+
+  const btnRefreshDevs = document.getElementById("btn-refresh-explorer-devices");
+  if (btnRefreshDevs) {
+    btnRefreshDevs.addEventListener("click", () => {
+      if (state.explorer.activeRegistry) {
+        loadExplorerDevices(state.explorer.activeRegistry);
+      }
+    });
+  }
+
+  const btnRefreshProps = document.getElementById("btn-refresh-explorer-properties");
+  if (btnRefreshProps) {
+    btnRefreshProps.addEventListener("click", () => {
+      if (state.explorer.activeRegistry && state.explorer.activeDevice) {
+        loadExplorerProperties(state.explorer.activeRegistry, state.explorer.activeDevice);
+      }
+    });
+  }
+
+  const btnViewRawEtcd = document.getElementById("btn-view-raw-etcd");
+  if (btnViewRawEtcd) {
+    btnViewRawEtcd.addEventListener("click", () => {
+      if (state.selectedDevice) {
+        navigateToExplorer(state.selectedDevice.registryId, state.selectedDevice.deviceId);
+      } else {
+        switchTab("explorer");
+      }
+    });
+  }
+
+  // ETCD Explorer Search Filters
+  const searchRegInput = document.getElementById("search-explorer-registries");
+  if (searchRegInput) {
+    let debounceTimer;
+    searchRegInput.addEventListener("input", (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const query = e.target.value.toLowerCase().trim();
+        const filtered = state.explorer.registries.filter((r) => r.toLowerCase().includes(query));
+        renderExplorerRegistries(filtered, state.explorer.activeRegistry);
+        updateExplorerCounts();
+      }, 150);
+    });
+  }
+
+  const searchDevInput = document.getElementById("search-explorer-devices");
+  if (searchDevInput) {
+    let debounceTimer;
+    searchDevInput.addEventListener("input", (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        const query = e.target.value.toLowerCase().trim();
+        const filtered = state.explorer.devices.filter((d) => d.toLowerCase().includes(query));
+        renderExplorerDevices(filtered, state.explorer.activeDevice);
+        updateExplorerCounts();
+      }, 150);
+    });
+  }
 
   // Filters
   document.getElementById("btn-apply-filters").addEventListener("click", () => {
@@ -1184,3 +1276,505 @@ window.pollConsoleLog = pollConsoleLog;
 window.updateDiagnosticsUI = updateDiagnosticsUI;
 window.updateJetskiButtonState = updateJetskiButtonState;
 window.checkJetskiStatus = checkJetskiStatus;
+
+// -----------------------------------------------------------------------------
+// ETCD Visual Explorer Logic (etcd_explorer parity)
+function initExplorerTheme() {
+  const saved = localStorage.getItem("etcd_explorer_theme") || "dark-theme";
+  const pane = document.getElementById("pane-explorer");
+  if (pane) {
+    pane.classList.remove("dark-theme", "light-theme");
+    pane.classList.add(saved);
+  }
+  const btn = document.getElementById("theme-toggle-explorer");
+  if (btn) {
+    btn.addEventListener("click", () => {
+      if (pane.classList.contains("dark-theme")) {
+        pane.classList.remove("dark-theme");
+        pane.classList.add("light-theme");
+        localStorage.setItem("etcd_explorer_theme", "light-theme");
+      } else {
+        pane.classList.remove("light-theme");
+        pane.classList.add("dark-theme");
+        localStorage.setItem("etcd_explorer_theme", "dark-theme");
+      }
+    });
+  }
+}
+
+function naturalCompare(a, b) {
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  if (!toast) return;
+  toast.textContent = message;
+  toast.classList.remove("hidden");
+  setTimeout(() => {
+    toast.classList.add("hidden");
+  }, 3500);
+}
+
+function setExplorerHash(reg, dev, prop) {
+  let hash = "#explorer";
+  if (reg) {
+    hash += "/" + encodeURIComponent(reg);
+    if (dev) {
+      hash += "/" + encodeURIComponent(dev);
+      if (prop) {
+        hash += "/" + encodeURIComponent(prop);
+      }
+    }
+  }
+  state.explorer.lastSetHash = hash;
+  window.location.hash = hash;
+}
+
+function initHashRouting() {
+  window.addEventListener("hashchange", () => {
+    if (window.location.hash === state.explorer.lastSetHash) {
+      return;
+    }
+    parseHash();
+  });
+
+  if (window.location.hash) {
+    parseHash();
+  }
+}
+
+function parseHash() {
+  const rawHash = window.location.hash.replace(/^#\/?/, "");
+  if (!rawHash) return;
+
+  const parts = rawHash.split("/").map(decodeURIComponent);
+  const first = parts[0];
+
+  // Check if hash points to another GUMMI tab
+  const knownTabs = ["portfolio", "devices", "device-detail", "config", "rollout", "admin"];
+  if (knownTabs.includes(first)) {
+    switchTab(first, false);
+    if (first === "device-detail" && parts[1] && parts[2]) {
+      selectDevice(parts[1], parts[2]);
+    }
+    return;
+  }
+
+  // ETCD Explorer routing: either #explorer/... or legacy etcd_explorer pattern #/<reg>/<dev>/<prop>
+  let targetReg = null;
+  let targetDev = null;
+  let targetProp = null;
+
+  if (first === "explorer") {
+    targetReg = parts[1] || null;
+    targetDev = parts[2] || null;
+    targetProp = parts[3] || null;
+  } else {
+    // Legacy etcd_explorer pattern: #/<reg>/<dev>/<prop>
+    targetReg = parts[0] || null;
+    targetDev = parts[1] || null;
+    targetProp = parts[2] || null;
+  }
+
+  switchTab("explorer", false);
+
+  if (targetReg) {
+    const regPromise = (targetReg === state.explorer.activeRegistry && state.explorer.devices.length > 0)
+      ? Promise.resolve()
+      : selectExplorerRegistry(targetReg, false);
+
+    regPromise.then(() => {
+      if (targetDev) {
+        const devPromise = (targetDev === state.explorer.activeDevice)
+          ? Promise.resolve()
+          : selectExplorerDevice(targetDev, false);
+
+        devPromise.then(() => {
+          if (targetProp) {
+            highlightExplorerProperty(targetProp);
+          }
+        });
+      }
+    });
+  }
+}
+
+async function loadExplorerRegistries() {
+  const container = document.getElementById("explorer-registries-list");
+  if (!container) return;
+  container.innerHTML = '<div class="loading-state">Loading registries...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/registries`);
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    state.explorer.registries = (data.registries || []).sort(naturalCompare);
+    state.explorer.totalDevices = data.totalDevicesCount !== undefined ? data.totalDevicesCount : 0;
+
+    updateExplorerCounts();
+    renderExplorerRegistries(state.explorer.registries, state.explorer.activeRegistry);
+
+    // If activeRegistry is no longer present, clear
+    if (state.explorer.activeRegistry && !state.explorer.registries.includes(state.explorer.activeRegistry)) {
+      clearExplorerDeviceSelection();
+    }
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state">❌ Error: ${err.message}</div>`;
+    showToast("Failed to load registries from etcd");
+  }
+}
+
+function renderExplorerRegistries(items, activeId) {
+  const container = document.getElementById("explorer-registries-list");
+  if (!container) return;
+  container.innerHTML = "";
+
+  if (items.length === 0) {
+    container.innerHTML = '<div class="empty-state">No registries found</div>';
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  items.forEach((reg) => {
+    const div = document.createElement("div");
+    div.className = `list-item explorer-item ${reg === activeId ? "active" : ""}`;
+    div.textContent = reg;
+    div.addEventListener("click", () => {
+      selectExplorerRegistry(reg, true);
+    });
+    fragment.appendChild(div);
+  });
+  container.appendChild(fragment);
+}
+
+async function selectExplorerRegistry(reg, updateHash = true) {
+  state.explorer.activeRegistry = reg;
+  renderExplorerRegistries(state.explorer.registries, reg);
+
+  const label = document.getElementById("explorer-active-registry-label");
+  if (label) label.textContent = reg;
+
+  const btnRefDev = document.getElementById("btn-refresh-explorer-devices");
+  if (btnRefDev) btnRefDev.disabled = false;
+
+  const searchDev = document.getElementById("search-explorer-devices");
+  if (searchDev) {
+    searchDev.disabled = false;
+    searchDev.value = "";
+  }
+
+  clearExplorerDeviceSelection();
+
+  if (updateHash) {
+    setExplorerHash(reg, null, null);
+  }
+
+  await loadExplorerDevices(reg);
+}
+
+async function loadExplorerDevices(registryId) {
+  const container = document.getElementById("explorer-devices-list");
+  if (!container) return;
+  container.innerHTML = '<div class="loading-state">Loading devices...</div>';
+
+  try {
+    const res = await fetch(`${API_BASE}/api/registries/${encodeURIComponent(registryId)}/devices`);
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    state.explorer.devices = (data.devices || []).sort(naturalCompare);
+
+    updateExplorerCounts();
+    renderExplorerDevices(state.explorer.devices, state.explorer.activeDevice);
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state">❌ Error: ${err.message}</div>`;
+    showToast(`Failed to load devices for registry '${registryId}'`);
+  }
+}
+
+function renderExplorerDevices(items, activeId) {
+  const container = document.getElementById("explorer-devices-list");
+  if (!container) return;
+  container.innerHTML = "";
+
+  if (items.length === 0) {
+    container.innerHTML = '<div class="empty-state">No devices found in this registry</div>';
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  items.forEach((dev) => {
+    const div = document.createElement("div");
+    div.className = `list-item explorer-item ${dev === activeId ? "active" : ""}`;
+    div.textContent = dev;
+    div.addEventListener("click", () => {
+      selectExplorerDevice(dev, true);
+    });
+    fragment.appendChild(div);
+  });
+  container.appendChild(fragment);
+}
+
+function clearExplorerDeviceSelection() {
+  state.explorer.activeDevice = null;
+  state.explorer.activeProperty = null;
+  state.explorer.devices = [];
+  updateExplorerCounts();
+
+  const devList = document.getElementById("explorer-devices-list");
+  if (devList) devList.innerHTML = '<div class="empty-state">Select a registry to view devices</div>';
+
+  const devLabel = document.getElementById("explorer-active-device-label");
+  if (devLabel) devLabel.textContent = "No device selected";
+
+  const btnRefProp = document.getElementById("btn-refresh-explorer-properties");
+  if (btnRefProp) btnRefProp.disabled = true;
+
+  const propContent = document.getElementById("explorer-properties-content");
+  if (propContent) propContent.innerHTML = '<div class="empty-state">Select a device to view properties</div>';
+}
+
+async function selectExplorerDevice(dev, updateHash = true) {
+  state.explorer.activeDevice = dev;
+  renderExplorerDevices(state.explorer.devices, dev);
+
+  const label = document.getElementById("explorer-active-device-label");
+  if (label) label.textContent = `${state.explorer.activeRegistry} / ${dev}`;
+
+  const btnRefProp = document.getElementById("btn-refresh-explorer-properties");
+  if (btnRefProp) btnRefProp.disabled = false;
+
+  if (updateHash) {
+    setExplorerHash(state.explorer.activeRegistry, dev, null);
+  }
+
+  await loadExplorerProperties(state.explorer.activeRegistry, dev);
+}
+
+async function loadExplorerProperties(registryId, deviceId) {
+  const container = document.getElementById("explorer-properties-content");
+  if (!container) return;
+  container.innerHTML = '<div class="loading-state">Loading properties...</div>';
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/api/registries/${encodeURIComponent(registryId)}/devices/${encodeURIComponent(deviceId)}/properties`
+    );
+    if (!res.ok) throw new Error(await res.text());
+    const data = await res.json();
+    renderExplorerProperties(data.properties || {});
+  } catch (err) {
+    container.innerHTML = `<div class="empty-state">❌ Error: ${err.message}</div>`;
+    showToast(`Failed to load properties for device '${deviceId}'`);
+  }
+}
+
+function renderExplorerProperties(properties) {
+  const container = document.getElementById("explorer-properties-content");
+  if (!container) return;
+  container.innerHTML = "";
+
+  const keys = Object.keys(properties);
+  if (keys.length === 0) {
+    container.innerHTML = '<div class="empty-state">No properties found for this device</div>';
+    return;
+  }
+
+  const table = document.createElement("table");
+  table.className = "properties-table";
+
+  const colgroup = document.createElement("colgroup");
+  const colKey = document.createElement("col");
+  colKey.className = "col-property-key";
+  const colVal = document.createElement("col");
+  colVal.className = "col-property-val";
+  colgroup.appendChild(colKey);
+  colgroup.appendChild(colVal);
+  table.appendChild(colgroup);
+
+  const devProps = keys.filter((k) => !k.startsWith("/c/")).sort(naturalCompare);
+  const colProps = keys.filter((k) => k.startsWith("/c/")).sort(naturalCompare);
+
+  if (devProps.length > 0) {
+    appendExplorerGroupHeader(table, "Device Properties");
+    devProps.forEach((k) => appendExplorerPropertyRow(table, k, properties[k]));
+  }
+
+  if (colProps.length > 0) {
+    appendExplorerGroupHeader(table, `Collections (${colProps.length})`);
+    colProps.forEach((k) => appendExplorerPropertyRow(table, k, properties[k]));
+  }
+
+  container.appendChild(table);
+
+  if (state.explorer.activeProperty) {
+    highlightExplorerProperty(state.explorer.activeProperty);
+  }
+}
+
+function appendExplorerGroupHeader(table, title) {
+  const tr = document.createElement("tr");
+  const td = document.createElement("td");
+  td.colSpan = 2;
+  td.className = "property-group-title";
+  td.textContent = title;
+  tr.appendChild(td);
+  table.appendChild(tr);
+}
+
+function appendExplorerPropertyRow(table, key, value) {
+  const tr = document.createElement("tr");
+  tr.className = "property-row";
+  tr.dataset.key = key;
+  tr.addEventListener("click", (e) => {
+    if (!e.target.classList.contains("copy-btn") && !e.target.classList.contains("device-link") && e.target.tagName !== "A") {
+      state.explorer.activeProperty = key;
+      setExplorerHash(state.explorer.activeRegistry, state.explorer.activeDevice, key);
+      highlightExplorerProperty(key);
+    }
+  });
+
+  const tdKey = document.createElement("td");
+  tdKey.className = "property-key";
+
+  let targetDeviceId = null;
+  if (key.startsWith("/c/") && key.includes(":")) {
+    const colonIdx = key.indexOf(":");
+    const potentialDev = key.substring(colonIdx + 1);
+    if (key.startsWith("/c/bound_devices:") || (state.explorer.devices && state.explorer.devices.includes(potentialDev))) {
+      targetDeviceId = potentialDev;
+    }
+  }
+
+  if (targetDeviceId && state.explorer.activeRegistry) {
+    const colonIdx = key.indexOf(":");
+    const prefixSpan = document.createElement("span");
+    prefixSpan.textContent = key.substring(0, colonIdx + 1);
+
+    const link = document.createElement("a");
+    link.href = `#explorer/${encodeURIComponent(state.explorer.activeRegistry)}/${encodeURIComponent(targetDeviceId)}`;
+    link.className = "device-link";
+    link.title = `Navigate to device ${targetDeviceId}`;
+    link.textContent = targetDeviceId;
+    link.addEventListener("click", (e) => {
+      e.stopPropagation();
+      selectExplorerDevice(targetDeviceId, true);
+    });
+
+    tdKey.appendChild(prefixSpan);
+    tdKey.appendChild(link);
+  } else {
+    tdKey.textContent = key;
+  }
+
+  const tdVal = document.createElement("td");
+  tdVal.className = "property-val";
+
+  let isJson = false;
+  let formattedJson = value;
+  if (value && (value.startsWith("{") || value.startsWith("["))) {
+    try {
+      const parsed = JSON.parse(value);
+      formattedJson = JSON.stringify(parsed, null, 2);
+      isJson = true;
+    } catch (e) {
+      isJson = false;
+    }
+  }
+
+  if (isJson) {
+    const box = document.createElement("div");
+    box.className = "json-box";
+    const pre = document.createElement("pre");
+    const code = document.createElement("code");
+    code.textContent = formattedJson;
+    pre.appendChild(code);
+    box.appendChild(pre);
+
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.textContent = "📋 Copy";
+    copyBtn.addEventListener("click", () => {
+      navigator.clipboard.writeText(formattedJson).then(() => {
+        copyBtn.textContent = "✓ Copied!";
+        setTimeout(() => {
+          copyBtn.textContent = "📋 Copy";
+        }, 2000);
+      });
+    });
+    box.appendChild(copyBtn);
+    tdVal.appendChild(box);
+  } else {
+    tdVal.textContent = value;
+  }
+
+  tr.appendChild(tdKey);
+  tr.appendChild(tdVal);
+  table.appendChild(tr);
+}
+
+function highlightExplorerProperty(key) {
+  state.explorer.activeProperty = key;
+  document.querySelectorAll(".property-row").forEach((row) => {
+    if (row.dataset.key === key) {
+      row.classList.add("highlighted");
+      row.scrollIntoView({ behavior: "smooth", block: "center" });
+    } else {
+      row.classList.remove("highlighted");
+    }
+  });
+}
+
+function updateExplorerCounts() {
+  const regQuery = (document.getElementById("search-explorer-registries")?.value || "").toLowerCase().trim();
+  const filteredRegs = regQuery
+    ? state.explorer.registries.filter((r) => r.toLowerCase().includes(regQuery))
+    : state.explorer.registries;
+
+  const regCountEl = document.getElementById("explorer-registries-count");
+  const topRegEl = document.getElementById("top-registries-count");
+  if (regCountEl) {
+    regCountEl.textContent = regQuery
+      ? `${filteredRegs.length}/${state.explorer.registries.length}`
+      : state.explorer.registries.length;
+  }
+  if (topRegEl) {
+    topRegEl.textContent = `Registries: ${state.explorer.registries.length}`;
+  }
+
+  const devQuery = (document.getElementById("search-explorer-devices")?.value || "").toLowerCase().trim();
+  const filteredDevs = devQuery
+    ? state.explorer.devices.filter((d) => d.toLowerCase().includes(devQuery))
+    : state.explorer.devices;
+
+  const devCountEl = document.getElementById("explorer-devices-count");
+  const topDevEl = document.getElementById("top-devices-count");
+  if (devCountEl) {
+    devCountEl.textContent = devQuery
+      ? `${filteredDevs.length}/${state.explorer.devices.length}`
+      : state.explorer.devices.length;
+  }
+  if (topDevEl) {
+    topDevEl.textContent = `Devices: ${state.explorer.totalDevices}`;
+  }
+}
+
+window.navigateToExplorer = function (registryId, deviceId, propertyKey = null) {
+  switchTab("explorer");
+  if (registryId) {
+    selectExplorerRegistry(registryId, false).then(() => {
+      if (deviceId) {
+        selectExplorerDevice(deviceId, false).then(() => {
+          if (propertyKey) {
+            highlightExplorerProperty(propertyKey);
+            setExplorerHash(registryId, deviceId, propertyKey);
+          } else {
+            setExplorerHash(registryId, deviceId, null);
+          }
+        });
+      } else {
+        setExplorerHash(registryId, null, null);
+      }
+    });
+  }
+};

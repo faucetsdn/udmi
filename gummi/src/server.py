@@ -86,7 +86,9 @@ class GummiRequestHandler(SimpleHTTPRequestHandler):
                 enable_mapping_seed = getattr(self.server, "enable_mapping_seed", False)
                 features = [
                     "portfolio",
-                    "devices",
+                    "device_explorer",
+                    "device_detail",
+                    "etcd_explorer",
                     "config_management",
                     "managed_rollout",
                     "bridgehead_admin",
@@ -169,7 +171,33 @@ class GummiRequestHandler(SimpleHTTPRequestHandler):
                         )
                     return self._send_json(detail)
 
-            # 6. Managed Rollouts
+            # 6. Barbican / ETCD Registries & Explorer APIs (etcd_explorer parity)
+            if path in ("/api/registries", "/api/registries/"):
+                prefix = query.get("prefix", ["/r/"])[0]
+                registries = self.db.get_registries(prefix=prefix)
+                return self._send_json(registries)
+
+            etcd_devs_match = re.match(r"^/api/registries/([^/]+)/devices/?$", path)
+            if etcd_devs_match:
+                reg_id = unquote(etcd_devs_match.group(1))
+                devices = self.db.get_registry_devices(reg_id)
+                return self._send_json(devices)
+
+            etcd_props_match = re.match(r"^/api/registries/([^/]+)/devices/([^/]+)/properties/?$", path)
+            if etcd_props_match:
+                reg_id = unquote(etcd_props_match.group(1))
+                dev_id = unquote(etcd_props_match.group(2))
+                properties = self.db.get_device_etcd_properties(reg_id, dev_id)
+                return self._send_json(properties)
+
+            # 7. Legacy etcd_explorer URL redirect / compatibility
+            if path in ("/etcd_explorer", "/etcd_explorer/", "/barbican_explorer", "/barbican_explorer/"):
+                self.send_response(302)
+                self.send_header("Location", "/#explorer")
+                self.end_headers()
+                return
+
+            # 8. Managed Rollouts
             if path == "/api/rollouts":
                 rollouts = self.db.list_rollouts()
                 return self._send_json(rollouts)

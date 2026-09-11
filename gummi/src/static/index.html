@@ -49,6 +49,9 @@
       <button class="nav-tab" data-tab="device-detail">
         <span class="tab-icon">⚙️</span> Device Properties
       </button>
+      <button class="nav-tab" data-tab="explorer">
+        <span class="tab-icon">🗄️</span> ETCD Explorer
+      </button>
       <button class="nav-tab" data-tab="config">
         <span class="tab-icon">📝</span> Configuration
       </button>
@@ -196,6 +199,9 @@
             <h2>Device Properties: <span id="detail-device-title">Select a Device</span></h2>
             <span id="detail-registry-badge" class="badge badge-neutral">Registry: None</span>
           </div>
+          <div class="header-actions">
+            <button id="btn-view-raw-etcd" class="btn btn-secondary btn-sm" title="Inspect raw ETCD key-value properties in Explorer">🗄️ Raw ETCD</button>
+          </div>
         </div>
 
         <div class="detail-grid">
@@ -272,7 +278,72 @@
         </div>
       </section>
 
-      <!-- 4. Configuration Management Pane -->
+      <!-- 4. ETCD Visual Explorer Pane (etcd_explorer visual parity) -->
+      <section id="pane-explorer" class="tab-pane dark-theme">
+        <div class="explorer-toolbar">
+          <div class="toolbar-left">
+            <span class="explorer-title">UDMI ETCD Explorer</span>
+            <span id="top-registries-count" class="badge stats-badge">Registries: 0</span>
+            <span id="top-devices-count" class="badge stats-badge">Devices: 0</span>
+          </div>
+          <div class="toolbar-right">
+            <button id="btn-refresh-explorer-all" class="btn toolbar-btn" title="Reload all registries and devices from etcd">↻ Refresh</button>
+            <button id="theme-toggle-explorer" class="btn toolbar-btn" title="Toggle Dark/Light Mode">🌗 Theme</button>
+          </div>
+        </div>
+
+        <div class="explorer-grid-container grid-container">
+          <!-- Column 1: Registries -->
+          <section class="explorer-column column col-registries">
+            <div class="explorer-col-header col-header">
+              <div class="title-row">
+                <h2>Registries <span id="explorer-registries-count" class="count-badge">0</span></h2>
+                <button id="btn-refresh-explorer-registries" class="btn refresh-btn" title="Refresh Registries">↻</button>
+              </div>
+              <div class="subtitle">Namespaces</div>
+              <div class="search-row">
+                <input type="text" id="search-explorer-registries" class="search-input" placeholder="🔍 Filter registries...">
+              </div>
+            </div>
+            <div id="explorer-registries-list" class="explorer-list-container list-container">
+              <div class="loading-state">Loading registries...</div>
+            </div>
+          </section>
+
+          <!-- Column 2: Devices -->
+          <section class="explorer-column column col-devices">
+            <div class="explorer-col-header col-header">
+              <div class="title-row">
+                <h2>Devices <span id="explorer-devices-count" class="count-badge">0</span></h2>
+                <button id="btn-refresh-explorer-devices" class="btn refresh-btn" title="Refresh Devices" disabled>↻</button>
+              </div>
+              <div id="explorer-active-registry-label" class="subtitle">No registry selected</div>
+              <div class="search-row">
+                <input type="text" id="search-explorer-devices" class="search-input" placeholder="🔍 Filter devices..." disabled>
+              </div>
+            </div>
+            <div id="explorer-devices-list" class="explorer-list-container list-container">
+              <div class="empty-state">Select a registry to view devices</div>
+            </div>
+          </section>
+
+          <!-- Column 3: Properties -->
+          <section class="explorer-column column col-properties">
+            <div class="explorer-col-header col-header">
+              <div class="title-row">
+                <h2>Properties</h2>
+                <button id="btn-refresh-explorer-properties" class="btn refresh-btn" title="Refresh Properties" disabled>↻</button>
+              </div>
+              <div id="explorer-active-device-label" class="subtitle">No device selected</div>
+            </div>
+            <div id="explorer-properties-content" class="explorer-content-container content-container">
+              <div class="empty-state">Select a device to view properties</div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- 5. Configuration Management Pane -->
       <section id="pane-config" class="tab-pane">
         <div class="section-header">
           <h2>Configuration Management</h2>
@@ -418,6 +489,8 @@
       <div id="terminal-container" class="terminal-container"></div>
     </div>
   </div>
+
+  <div id="toast" class="toast hidden"></div>
 
   <script src="/js/app.js"></script>
 </body>

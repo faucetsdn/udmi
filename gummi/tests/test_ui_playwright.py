@@ -337,3 +337,121 @@ def test_gummi_console_portrait_mode_height(gummi_server_url: str, browser_conte
     page.close()
 
 
+def test_gummi_etcd_explorer_full_workflow(gummi_server_url: str, browser_context: Browser):
+    """Verifies the ETCD Explorer UI, 3-column drill-down, bound device navigation, copy button, and hash deep-linking."""
+    page: Page = browser_context.new_page()
+    page_errors: List[str] = []
+    page.on("pageerror", lambda err: page_errors.append(str(err)))
+
+    # 1. Load root page and navigate to Explorer tab
+    page.goto(gummi_server_url)
+    page.wait_for_load_state("domcontentloaded")
+    assert len(page_errors) == 0, f"JavaScript errors detected on load: {page_errors}"
+
+    btn_explorer = page.locator('.nav-tab[data-tab="explorer"]')
+    btn_explorer.click()
+
+    expect(page.locator("#pane-explorer")).to_have_class(re.compile(r"\bactive\b"))
+    expect(page.locator("#pane-portfolio")).not_to_have_class("active")
+    expect(page.locator("#pane-explorer")).to_have_class(re.compile(r"\bdark-theme\b"))
+
+    # Test Theme Toggle
+    theme_btn = page.locator("#theme-toggle-explorer")
+    theme_btn.click()
+    expect(page.locator("#pane-explorer")).to_have_class(re.compile(r"\blight-theme\b"))
+    theme_btn.click()
+    expect(page.locator("#pane-explorer")).to_have_class(re.compile(r"\bdark-theme\b"))
+
+    # 2. Assert Column 1 registries loaded
+    page.wait_for_function('document.querySelectorAll("#explorer-registries-list .explorer-item").length > 0')
+    regs = page.locator("#explorer-registries-list .explorer-item")
+    assert regs.count() >= 1
+
+    # Test registry search filter
+    search_reg = page.locator("#search-explorer-registries")
+    search_reg.fill("TRI")
+    time.sleep(0.3)
+    expect(page.locator('#explorer-registries-list .explorer-item:has-text("ZZ-TRI-FECTA")')).to_be_visible()
+    search_reg.fill("")
+    time.sleep(0.3)
+
+    # 3. Select registry 'ZZ-TRI-FECTA'
+    tri_reg = page.locator('#explorer-registries-list .explorer-item:has-text("ZZ-TRI-FECTA")')
+    tri_reg.click()
+    expect(tri_reg).to_have_class(re.compile(r"\bactive\b"))
+    expect(page.locator("#explorer-active-registry-label")).to_have_text("ZZ-TRI-FECTA")
+
+    # 4. Assert Column 2 devices loaded for ZZ-TRI-FECTA
+    page.wait_for_function('document.querySelectorAll("#explorer-devices-list .explorer-item").length > 0')
+    devs = page.locator("#explorer-devices-list .explorer-item")
+    assert devs.count() >= 2
+
+    # Test device search filter
+    search_dev = page.locator("#search-explorer-devices")
+    search_dev.fill("AHU-1")
+    time.sleep(0.3)
+    expect(page.locator('#explorer-devices-list .explorer-item:has-text("AHU-1")')).to_be_visible()
+    search_dev.fill("")
+    time.sleep(0.3)
+
+    # 5. Select device 'AHU-1'
+    ahu1_dev = page.locator('#explorer-devices-list').get_by_text("AHU-1", exact=True)
+    ahu1_dev.click()
+    expect(ahu1_dev).to_have_class(re.compile(r"\bactive\b"))
+    expect(page.locator("#explorer-active-device-label")).to_have_text("ZZ-TRI-FECTA / AHU-1")
+
+    # 6. Assert Column 3 properties loaded
+    page.wait_for_function('document.querySelectorAll("#explorer-properties-content .properties-table").length > 0')
+    expect(page.locator('.property-group-title:has-text("Device Properties")')).to_be_visible()
+    expect(page.locator('.property-group-title:has-text("Collections")')).to_be_visible()
+
+    # Check JSON container and copy button for :config
+    config_row = page.locator('.property-row[data-key=":config"]')
+    expect(config_row).to_be_visible()
+    copy_btn = config_row.locator(".copy-btn")
+    expect(copy_btn).to_have_text("📋 Copy")
+
+    # Check bound device link
+    bound_link = page.locator('.property-row[data-key="/c/bound_devices:AHU-2"] a.device-link')
+    expect(bound_link).to_have_text("AHU-2")
+
+    # 7. Click bound device link AHU-2 -> verifies 1-click cross-navigation
+    bound_link.click()
+    expect(page.locator("#explorer-active-device-label")).to_have_text("ZZ-TRI-FECTA / AHU-2")
+    ahu2_dev = page.locator('#explorer-devices-list').get_by_text("AHU-2", exact=True)
+    expect(ahu2_dev).to_have_class(re.compile(r"\bactive\b"))
+
+    # 8. Test URL Hash deep linking (#explorer/ZZ-TRI-FECTA/AHU-1/:config)
+    page.goto(f"{gummi_server_url}/#explorer/ZZ-TRI-FECTA/AHU-1/%3Aconfig")
+    page.wait_for_load_state("domcontentloaded")
+    expect(page.locator("#pane-explorer")).to_have_class(re.compile(r"\bactive\b"))
+    expect(page.locator("#explorer-active-device-label")).to_have_text("ZZ-TRI-FECTA / AHU-1")
+    expect(page.locator('.property-row[data-key=":config"]')).to_have_class(re.compile(r"\bhighlighted\b"))
+
+    # 9. Test Legacy URL Hash deep linking (#/ZZ-TRI-FECTA/AHU-2)
+    page.goto(f"{gummi_server_url}/#/ZZ-TRI-FECTA/AHU-2")
+    page.wait_for_load_state("domcontentloaded")
+    expect(page.locator("#pane-explorer")).to_have_class(re.compile(r"\bactive\b"))
+    expect(page.locator("#explorer-active-device-label")).to_have_text("ZZ-TRI-FECTA / AHU-2")
+
+    # 10. Test cross-navigation from Devices Explorer table and Device Properties pane
+    # Navigate to Devices tab
+    page.locator('.nav-tab[data-tab="devices"]').click()
+    expect(page.locator("#pane-devices")).to_have_class("tab-pane active")
+    page.wait_for_function('document.querySelectorAll("#devices-table-body tr").length > 0')
+
+    # Click ETCD button in row
+    etcd_btn = page.locator('#devices-table-body button:has-text("🗄️ ETCD")').first
+    etcd_btn.click()
+    expect(page.locator("#pane-explorer")).to_have_class(re.compile(r"\bactive\b"))
+
+    # Navigate to Device Properties tab and click Raw ETCD button
+    page.locator('.nav-tab[data-tab="device-detail"]').click()
+    expect(page.locator("#pane-device-detail")).to_have_class("tab-pane active")
+    page.locator("#btn-view-raw-etcd").click()
+    expect(page.locator("#pane-explorer")).to_have_class(re.compile(r"\bactive\b"))
+
+    assert len(page_errors) == 0, f"JavaScript errors encountered during explorer test: {page_errors}"
+    page.close()
+
+

@@ -98,8 +98,9 @@ class TestGummiServer:
         assert data.get("enable_mapping_seed") is False
         assert "mapping_seed" not in data.get("features", [])
         assert "portfolio" in data.get("features", [])
-        assert "devices" in data.get("features", [])
+        assert "device_explorer" in data.get("features", [])
         assert "managed_rollout" in data.get("features", [])
+        assert "etcd_explorer" in data.get("features", [])
 
     def test_api_bridgehead_status(self, gummi_server):
         data = http_get_json(f"{gummi_server}/api/bridgehead/status")
@@ -464,3 +465,52 @@ class TestGummiServer:
             assert console.last_error is None
             diag_after = console.get_diagnostics()
             assert diag_after["button_state"] == "blue"
+
+    def test_api_registries(self, gummi_server):
+        data = http_get_json(f"{gummi_server}/api/registries")
+        assert "registries" in data
+        assert "totalDevicesCount" in data
+        assert isinstance(data["registries"], list)
+        assert "ZZ-TRI-FECTA" in data["registries"]
+        assert data["totalDevicesCount"] > 0
+
+        # Prefix filtering
+        filtered = http_get_json(f"{gummi_server}/api/registries?prefix=ZZ-")
+        assert "ZZ-TRI-FECTA" in filtered["registries"]
+        for reg in filtered["registries"]:
+            assert reg.startswith("ZZ-")
+
+    def test_api_registry_devices(self, gummi_server):
+        data = http_get_json(f"{gummi_server}/api/registries/ZZ-TRI-FECTA/devices")
+        assert data.get("registryId") == "ZZ-TRI-FECTA"
+        assert "devices" in data
+        assert isinstance(data["devices"], list)
+        assert "AHU-1" in data["devices"]
+        assert "AHU-2" in data["devices"]
+
+    def test_api_device_etcd_properties(self, gummi_server):
+        data = http_get_json(f"{gummi_server}/api/registries/ZZ-TRI-FECTA/devices/AHU-1/properties")
+        assert data.get("registryId") == "ZZ-TRI-FECTA"
+        assert data.get("deviceId") == "AHU-1"
+        assert "properties" in data
+        props = data["properties"]
+        assert ":config" in props
+        assert ":last_state" in props
+        assert ":metadata_str" in props
+        assert "/c/bound_devices:AHU-2" in props
+        config_val = json.loads(props[":config"])
+        assert config_val.get("system", {}).get("software", {}).get("system") == "2.4.1"
+
+    def test_legacy_etcd_explorer_redirect(self, gummi_server):
+        class NoRedirect(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl):
+                return None
+
+        opener = urllib.request.build_opener(NoRedirect)
+        for path in ("/etcd_explorer", "/etcd_explorer/", "/barbican_explorer", "/barbican_explorer/"):
+            try:
+                opener.open(f"{gummi_server}{path}")
+                pytest.fail(f"Expected 302 redirect for {path}")
+            except urllib.error.HTTPError as e:
+                assert e.code == 302
+                assert e.headers.get("Location") == "/#explorer"
