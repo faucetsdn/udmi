@@ -23,7 +23,7 @@ follow the appropriate [_discovery event schema_](../../gencode/docs/events_disc
 
 The overall discovery sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
-* **Spotter**: Operative node that performs _discovery_, scanning local networks and producing observations.
+* **[Spotter](../tools/spotter.md)**: Operative node that performs _discovery_, scanning local networks and producing observations.
 * **Provisioning Engine**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
 * **Mapping Agent**: Used at the spotter to coordinate on-prem discovery.
 * **Pipeline**: Ultimate recipient of pointset information, The thing that cares about 'temperature' in a room.

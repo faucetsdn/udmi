@@ -298,3 +298,28 @@ def test_on_ready_saves_backup_and_calls_handler(test_device):
 
     assert handler_called
     assert received_endpoint == test_device.current_endpoint
+
+
+def test_publish_state_blocking_synchronization(test_device, mock_dispatcher):
+    """
+    Verifies that _publish_state and trigger_state_update respect blocking synchronization flags.
+    """
+    # 1. Immediate trigger forces publish with wait=True (blocking)
+    test_device.trigger_state_update(immediate=True)
+    assert mock_dispatcher.publish_state.call_count == 1
+    assert mock_dispatcher.publish_state.call_args[1]["wait"] is True
+
+    # 2. on_ready bypasses throttle with blocking=False (avoiding network loop deadlock)
+    mock_dispatcher.publish_state.reset_mock()
+    test_device.on_ready()
+    assert mock_dispatcher.publish_state.call_count == 1
+    assert mock_dispatcher.publish_state.call_args[1]["wait"] is False
+
+    # 3. Explicit blocking override
+    mock_dispatcher.publish_state.reset_mock()
+    test_device._publish_state(bypass_throttle=True, blocking=False)
+    assert mock_dispatcher.publish_state.call_args[1]["wait"] is False
+
+    mock_dispatcher.publish_state.reset_mock()
+    test_device._publish_state(bypass_throttle=True, blocking=True)
+    assert mock_dispatcher.publish_state.call_args[1]["wait"] is True

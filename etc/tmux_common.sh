@@ -467,9 +467,12 @@ tmux_probe_service() {
             fi
             ;;
         spotter)
-            local pids=$(pgrep -f "spotter" 2>/dev/null || true)
+            local pids=$(pgrep -f "(edge/spotter/src/agent\.py|spotter/agent\.py)" 2>/dev/null || true)
+            local cids=$(docker ps -q --filter "name=udmi-spotter-agent" 2>/dev/null || true)
             if [[ -n "$pids" ]]; then
                 echo "RUNNING (PID $(echo $pids | tr '\n' ' '))"
+            elif [[ -n "$cids" ]]; then
+                echo "RUNNING (container $(echo $cids | tr '\n' ' '))"
             else
                 echo "STOPPED"
             fi

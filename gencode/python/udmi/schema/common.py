@@ -33,6 +33,7 @@ class Depth(Enum):
     parts = 'parts'
     system = 'system'
     refs = 'refs'
+    trace = 'trace'
 
 
 class IotProvider(Enum):
