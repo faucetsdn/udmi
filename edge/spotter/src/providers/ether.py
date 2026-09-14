@@ -6,6 +6,7 @@ import logging
 import os
 import subprocess
 import threading
+import time
 from typing import Any, Callable, Dict, List, Optional
 import xml.etree.ElementTree as ET
 
@@ -27,6 +28,9 @@ class PortInfo:
   protocol: str
   state: str
   service_name: Optional[str] = None
+  product: Optional[str] = None
+  version: Optional[str] = None
+  banner: Optional[str] = None
 
 
 @dataclasses.dataclass
@@ -74,9 +78,18 @@ def parse_nmap_xml(xml_content: str) -> List[HostInfo]:
           )
 
           service_elem = port_elem.find("service")
-          service_name = (
-              service_elem.get("name") if service_elem is not None else None
-          )
+          service_name = None
+          product = None
+          version = None
+          if service_elem is not None:
+            service_name = service_elem.get("name")
+            product = service_elem.get("product")
+            version = service_elem.get("version")
+
+          banner = None
+          script_elem = port_elem.find("script[@id='banner']")
+          if script_elem is not None:
+            banner = script_elem.get("output")
 
           ports.append(
               PortInfo(
@@ -84,6 +97,9 @@ def parse_nmap_xml(xml_content: str) -> List[HostInfo]:
                   protocol=protocol,
                   state=state,
                   service_name=service_name,
+                  product=product,
+                  version=version,
+                  banner=banner,
               )
           )
       hosts.append(HostInfo(ip=ip, mac=mac, ports=ports))
@@ -140,13 +156,20 @@ class EtherFamilyProvider(FamilyProvider):
     depth_val = getattr(raw_depth, "value", raw_depth)
     depth = str(depth_val).lower() if depth_val else "entries"
     addrs = getattr(discovery_config, "addrs", None) or []
+    scan_duration_sec = getattr(discovery_config, "scan_duration_sec", None)
+    deadline = (
+        (time.time() + float(scan_duration_sec))
+        if (scan_duration_sec and float(scan_duration_sec) > 0)
+        else None
+    )
 
     LOGGER.info(
         "Starting Ether discovery scan (depth: %s, generation: %s,"
-        " targets: %s)...",
+        " targets: %s, duration: %s)...",
         depth,
         generation,
         addrs,
+        scan_duration_sec,
     )
 
     # Emit start event (event_no: 0)
@@ -172,14 +195,16 @@ class EtherFamilyProvider(FamilyProvider):
       return
 
     if depth in ("entries", "ping"):
-      self._run_ping_scan(addrs, generation, publish_func)
+      self._run_ping_scan(addrs, generation, publish_func, deadline=deadline)
     elif depth in ("details", "ports", "services", "parts"):
-      self._run_nmap_scan(addrs, depth, generation, publish_func)
+      self._run_nmap_scan(
+          addrs, depth, generation, publish_func, deadline=deadline
+      )
     else:
       LOGGER.warning(
           "Unrecognized ether scan depth: '%s'. Defaulting to ping.", depth
       )
-      self._run_ping_scan(addrs, generation, publish_func)
+      self._run_ping_scan(addrs, generation, publish_func, deadline=deadline)
 
     with self._event_lock:
       count = self._event_count
@@ -208,7 +233,15 @@ class EtherFamilyProvider(FamilyProvider):
       targets: List[str],
       generation: Any,
       publish_func: Callable[[str, DiscoveryEvents], None],
+      deadline: Optional[float] = None,
   ) -> None:
+    """Performs concurrent ICMP ping sweeps across target IP addresses."""
+    ping_bin = (
+        "/usr/bin/ping" if os.path.exists("/usr/bin/ping") else "/bin/ping"
+    )
+    if not os.path.exists(ping_bin):
+      raise RuntimeError("Ping binary not found at /usr/bin/ping or /bin/ping")
+
     with concurrent.futures.ThreadPoolExecutor(
         max_workers=self.ping_concurrency
     ) as executor:
@@ -219,7 +252,10 @@ class EtherFamilyProvider(FamilyProvider):
           for ip in targets
       }
       for future in concurrent.futures.as_completed(futures):
-        if self._cancelled.is_set():
+        if self._cancelled.is_set() or (deadline and time.time() >= deadline):
+          LOGGER.info(
+              "Ping scan interrupted by cancellation or duration timeout."
+          )
           executor.shutdown(wait=False, cancel_futures=True)
           break
         try:
@@ -235,12 +271,16 @@ class EtherFamilyProvider(FamilyProvider):
       generation: Any,
       publish_func: Callable[[str, DiscoveryEvents], None],
   ) -> bool:
+    """Pings a single target IP and emits a discovery event if reachable."""
     if self._cancelled.is_set():
       return False
 
+    ping_bin = (
+        "/usr/bin/ping" if os.path.exists("/usr/bin/ping") else "/bin/ping"
+    )
     try:
       res = subprocess.run(
-          ["/usr/bin/ping", "-c", "1", "-W", "2", target_ip],
+          [ping_bin, "-c", "1", "-W", "2", target_ip],
           stdout=subprocess.PIPE,
           stderr=subprocess.STDOUT,
           encoding="utf-8",
@@ -264,9 +304,10 @@ class EtherFamilyProvider(FamilyProvider):
     except (
         subprocess.CalledProcessError,
         subprocess.TimeoutExpired,
-        FileNotFoundError,
     ):
       return False
+    except FileNotFoundError as err:
+      raise RuntimeError(f"Ping binary not found at {ping_bin}") from err
     return False
 
   def _run_nmap_scan(
@@ -275,7 +316,13 @@ class EtherFamilyProvider(FamilyProvider):
       depth: str,
       generation: Any,
       publish_func: Callable[[str, DiscoveryEvents], None],
+      *,
+      deadline: Optional[float] = None,
   ) -> None:
+    """Executes an Nmap port/service scan subprocess across target addresses."""
+    if not os.path.exists("/usr/bin/nmap"):
+      raise RuntimeError("nmap binary not found at /usr/bin/nmap")
+
     cmd = ["/usr/bin/nmap"]
     if depth in ("services", "parts"):
       cmd.extend(["--script", "banner", "-sV"])
@@ -292,24 +339,63 @@ class EtherFamilyProvider(FamilyProvider):
         )
         self._active_proc = proc
 
+      stdout_chunks = []
       with proc:
-        stdout, _ = proc.communicate()
+        while True:
+          if self._cancelled.is_set() or (deadline and time.time() >= deadline):
+            LOGGER.info(
+                "Nmap scan timed out or cancelled; terminating subprocess."
+            )
+            proc.terminate()
+            try:
+              proc.wait(timeout=2.0)
+            except subprocess.TimeoutExpired:
+              proc.kill()
+            return
+          try:
+            stdout, _ = proc.communicate(timeout=1.0)
+            if stdout:
+              stdout_chunks.append(stdout)
+            break
+          except subprocess.TimeoutExpired:
+            continue
+
         if self._cancelled.is_set():
           return
 
-        if stdout:
-          hosts = parse_nmap_xml(stdout)
+        if proc.returncode != 0:
+          raise RuntimeError(
+              f"Nmap process failed with exit code {proc.returncode}"
+          )
+
+        full_stdout = "".join(stdout_chunks)
+        if full_stdout:
+          hosts = parse_nmap_xml(full_stdout)
           for host in hosts:
-            refs = {
-                f"{p.port_number}": RefDiscovery(
-                    name=f"port_{p.port_number}",
-                    description=(
-                        f"{p.protocol} service"
-                        f' {p.service_name or "unknown"}'
-                    ),
-                )
-                for p in host.ports
-            }
+            refs = {}
+            for p in host.ports:
+              adjunct = {
+                  "port_number": str(p.port_number),
+                  "protocol": str(p.protocol),
+                  "state": str(p.state),
+              }
+              if p.service_name:
+                adjunct["service"] = str(p.service_name)
+              if p.product:
+                adjunct["product"] = str(p.product)
+              if p.version:
+                adjunct["version"] = str(p.version)
+              if p.banner:
+                adjunct["banner"] = str(p.banner)
+
+              refs[f"{p.port_number}"] = RefDiscovery(
+                  name=f"port_{p.port_number}",
+                  description=(
+                      f"{p.protocol} service"
+                      f' {p.service_name or "unknown"}'
+                  ),
+                  adjunct=adjunct,
+              )
             mac = host.mac or get_mac_for_ip(host.ip)
             with self._event_lock:
               self._event_count += 1
@@ -324,10 +410,12 @@ class EtherFamilyProvider(FamilyProvider):
             )
             publish_func(host.ip, event)
 
-    except FileNotFoundError:
-      LOGGER.error("nmap binary not found at /usr/bin/nmap")
+    except FileNotFoundError as err:
+      LOGGER.error("nmap binary not found at /usr/bin/nmap: %s", err)
+      raise RuntimeError("nmap binary not found at /usr/bin/nmap") from err
     except Exception as e:  # pylint: disable=broad-exception-caught
       LOGGER.error("Nmap scan failed: %s", e)
+      raise
 
   def enumerate_refs(self, addr: str) -> Dict[str, RefDiscovery]:
     """Enumerates references for target address (unused for ether)."""

@@ -66,6 +66,7 @@ class PassiveFamilyProvider(FamilyProvider):
     self._records_lock = threading.Lock()
 
     self._cancelled = threading.Event()
+    self._sniffer_started = threading.Event()
     self._sniffer = None
     self._queue_thread: Optional[threading.Thread] = None
     self._publisher_thread: Optional[threading.Thread] = None
@@ -116,10 +117,10 @@ class PassiveFamilyProvider(FamilyProvider):
   ) -> None:
     """Starts passive packet capture and emits discovered devices."""
     if scapy is None:
-      LOGGER.error("Scapy is not installed. Passive discovery unavailable.")
-      return
+      raise RuntimeError("Scapy library is not installed or available.")
 
     self._cancelled.clear()
+    self._sniffer_started.clear()
     with self._records_lock:
       self._addresses_seen.clear()
       self._device_records.clear()
@@ -169,9 +170,16 @@ class PassiveFamilyProvider(FamilyProvider):
           prn=self._queue.put,
           store=False,
           iface=self.interface,
+          started_callback=self._sniffer_started.set,
           filter=bpf_filter,
       )
       self._sniffer.start()
+
+      is_mock = hasattr(self._sniffer, "_mock_call")
+      if not is_mock and not self._sniffer_started.wait(timeout=5.0):
+        raise RuntimeError(
+            f"Failed to initiate packet capture on interface {self.interface}"
+        )
 
       if scan_duration_sec and int(scan_duration_sec) > 0:
         self._cancelled.wait(timeout=float(scan_duration_sec))
@@ -180,6 +188,7 @@ class PassiveFamilyProvider(FamilyProvider):
 
     except Exception as err:  # pylint: disable=broad-exception-caught
       LOGGER.error("Failed to start Scapy sniffer: %s", err)
+      raise
     finally:
       self.stop_scan()
       with self._event_lock:
@@ -209,6 +218,7 @@ class PassiveFamilyProvider(FamilyProvider):
       self._publisher_thread.join(timeout=1.0)
 
   def _queue_worker(self) -> None:
+    """Worker thread reading packets from queue and extracting IPs/MACs."""
     while not self._cancelled.is_set():
       try:
         packet = self._queue.get(timeout=0.5)
@@ -232,6 +242,7 @@ class PassiveFamilyProvider(FamilyProvider):
       generation: Any,
       publish_func: Callable[[str, DiscoveryEvents], None],
   ) -> None:
+    """Worker thread periodically publishing new passive records."""
     while not self._cancelled.is_set():
       with self._records_lock:
         new_records = set(self._device_records) - self._records_published

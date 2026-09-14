@@ -5,8 +5,7 @@ import copy
 import logging
 import re
 import threading
-import time
-from typing import Any, Callable, Dict, Iterable, Optional, Set, Tuple
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 try:
   import BAC0
@@ -54,8 +53,12 @@ BACNET_ACRONYMS = {
 def _future_wait_and_count_outstanding(
     futures: Iterable[concurrent.futures.Future], timeout: int = 1
 ) -> int:
+  """Waits for futures up to timeout and returns incomplete count."""
   _, outstanding = concurrent.futures.wait(futures, timeout)
   return len(outstanding)
+
+
+DEFAULT_UNCHANGED_THRESHOLD_SEC = 300
 
 
 class BacnetFamilyProvider(FamilyProvider):
@@ -66,10 +69,20 @@ class BacnetFamilyProvider(FamilyProvider):
       bacnet_ip: Optional[str] = None,
       bacnet_port: Optional[int] = None,
       bacnet_device_id: int = BACNET_DEVICE_ID,
+      unchanged_threshold_sec: int = DEFAULT_UNCHANGED_THRESHOLD_SEC,
   ) -> None:
+    """Initializes BacnetFamilyProvider.
+
+    Args:
+        bacnet_ip: Local IP address to bind BAC0 client.
+        bacnet_port: Port to bind BAC0 client.
+        bacnet_device_id: BACnet device object instance ID for local client.
+        unchanged_threshold_sec: Inactivity duration before terminating scan.
+    """
     self.bacnet_ip = bacnet_ip
     self.bacnet_port = bacnet_port
     self.bacnet_device_id = bacnet_device_id
+    self.unchanged_threshold_sec = unchanged_threshold_sec
     self._bacnet = None
     self._lock = threading.Lock()
 
@@ -81,6 +94,7 @@ class BacnetFamilyProvider(FamilyProvider):
     self._event_count = 0
 
   def _ensure_bacnet_client(self) -> Any:
+    """Returns cached or new BAC0 client instance in a thread-safe manner."""
     with self._lock:
       if self._bacnet is None:
         if BAC0 is None:
@@ -113,7 +127,7 @@ class BacnetFamilyProvider(FamilyProvider):
     generation = getattr(discovery_config, "generation", None)
     depth = getattr(discovery_config, "depth", "system")
     addrs = getattr(discovery_config, "addrs", None)
-    scan_duration_sec = getattr(discovery_config, "scan_duration_sec", 5)
+    scan_duration_sec = getattr(discovery_config, "scan_duration_sec", None)
 
     LOGGER.info(
         "Starting BACnet discovery scan (generation: %s, depth: %s,"
@@ -160,8 +174,15 @@ class BacnetFamilyProvider(FamilyProvider):
     )
     self._scan_thread.start()
 
-    wait_time = float(scan_duration_sec) if scan_duration_sec else 5.0
-    self._cancelled.wait(timeout=wait_time)
+    if scan_duration_sec and float(scan_duration_sec) > 0:
+      timeout = float(scan_duration_sec)
+      if self._scan_thread:
+        self._scan_thread.join(timeout=timeout)
+    else:
+      # Match legacy discovery node: run until unchanged threshold is reached
+      if self._scan_thread:
+        self._scan_thread.join()
+
     self.stop_scan()
 
     # Emit finish event (event_no: -(event_count + 1))
@@ -183,7 +204,8 @@ class BacnetFamilyProvider(FamilyProvider):
     if self._scan_thread and self._scan_thread.is_alive():
       self._scan_thread.join(timeout=1.0)
 
-  def _resolve_targeted_ips(self, target_ips: list[str]) -> None:
+  def _resolve_targeted_ips(self, target_ips: List[str]) -> None:
+    """Resolves BACnet device IDs for targets using thread pool."""
     with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
       futures = [
           executor.submit(self._resolve_single_ip, ip) for ip in target_ips
@@ -194,27 +216,30 @@ class BacnetFamilyProvider(FamilyProvider):
           break
 
   def _resolve_single_ip(self, ip_address: str) -> None:
+    """Queries single IP address for BACnet device object identifier."""
     client = self._ensure_bacnet_client()
     try:
-      _, dev_id = client.read(
+      res = client.read(
           f"{ip_address} device 4194303 objectIdentifier", None, 0, None, 3
+      )
+      dev_id = (
+          res[1] if isinstance(res, (tuple, list)) and len(res) >= 2 else res
       )
       if dev_id:
         LOGGER.debug("Resolved BACnet device %s at %s", dev_id, ip_address)
         self._targeted_devices_found.add((ip_address, dev_id))
-    except (  # pylint: disable=broad-exception-caught
-        BAC0.core.io.IOExceptions.NoResponseFromController,
-        Exception,
-    ):
+    except Exception:  # pylint: disable=broad-exception-caught
       pass
 
   def _global_device_producer(self) -> Set[Tuple[str, Any]]:
+    """Returns newly discovered devices from global broadcast."""
     client = self._ensure_bacnet_client()
     if client.discoveredDevices is not None:
       return set(client.discoveredDevices.keys()) - self._devices_published
     return set()
 
   def _targeted_device_producer(self) -> Set[Tuple[str, Any]]:
+    """Returns newly resolved targeted devices."""
     return self._targeted_devices_found - self._devices_published
 
   def _devices_consumer(
@@ -223,13 +248,23 @@ class BacnetFamilyProvider(FamilyProvider):
       discovery_config: Any,
       publish_func: Callable[[str, DiscoveryEvents], None],
   ) -> None:
+    """Consumes new devices, polls properties, and publishes events."""
+    unchanged_seconds = 0
     while not self._cancelled.is_set():
       try:
         new_devices = producer() - self._devices_published
         if not new_devices:
-          time.sleep(0.5)
+          unchanged_seconds += 1
+          if unchanged_seconds >= self.unchanged_threshold_sec:
+            LOGGER.info(
+                "No new BACnet devices found for %d seconds. Scan complete.",
+                self.unchanged_threshold_sec,
+            )
+            return
+          self._cancelled.wait(timeout=1.0)
           continue
 
+        unchanged_seconds = 0
         for device in new_devices:
           if self._cancelled.is_set():
             return
@@ -245,6 +280,10 @@ class BacnetFamilyProvider(FamilyProvider):
             "Error during BACnet device consumption: %s", err, exc_info=True
         )
         return
+
+      if self._cancelled.is_set():
+        return
+      self._cancelled.wait(timeout=1.0)
 
   def discover_device(
       self, device_address: str, device_id: Any, discovery_config: Any
@@ -279,16 +318,7 @@ class BacnetFamilyProvider(FamilyProvider):
 
     if depth_val in ("system", "refs", "details", "parts"):
       try:
-        (
-            object_name,
-            vendor_name,
-            firmware_version,
-            model_name,
-            serial_number,
-            description,
-            location,
-            application_version,
-        ) = client.readMultiple(
+        props = client.readMultiple(
             f"{device_address} device {device_id}"
             " objectName"
             " vendorName"
@@ -299,6 +329,19 @@ class BacnetFamilyProvider(FamilyProvider):
             " location"
             " applicationSoftwareVersion"
         )
+        if not isinstance(props, (list, tuple)):
+          props = [props]
+        padded = list(props) + [None] * max(0, 8 - len(props))
+        (
+            object_name,
+            vendor_name,
+            firmware_version,
+            model_name,
+            serial_number,
+            description,
+            location,
+            application_version,
+        ) = [None if isinstance(x, Exception) else x for x in padded[:8]]
 
         ancillary_dict = {}
         if description:
@@ -313,6 +356,8 @@ class BacnetFamilyProvider(FamilyProvider):
           ancillary_dict["name"] = str(object_name)
 
         event.system = System(
+            name=str(object_name) if object_name else None,
+            description=str(description) if description else None,
             serial_no=str(serial_number) if serial_number else None,
             hardware=StateSystemHardware(
                 make=str(vendor_name) if vendor_name else "Unknown",
@@ -327,17 +372,33 @@ class BacnetFamilyProvider(FamilyProvider):
             device_id,
             err,
         )
+        err_msg = str(err).strip() or type(err).__name__
         event.status = Entry(
             category="discovery.error",
             level=500,
-            message=f"Property read failed: {err}",
+            message=f"Property read failed: {err_msg}",
         )
         return event
 
     if depth_val in ("refs", "parts"):
-      refs = self.enumerate_refs(f"{device_address} {device_id}")
-      if refs:
-        event.refs = refs
+      try:
+        refs = self.enumerate_refs(f"{device_address} {device_id}")
+        if refs:
+          event.refs = refs
+      except Exception as err:  # pylint: disable=broad-exception-caught
+        LOGGER.warning(
+            "Error enumerating points for BACnet device (%s/%s): %s",
+            device_address,
+            device_id,
+            err,
+        )
+        err_msg = str(err).strip() or type(err).__name__
+        event.status = Entry(
+            category="discovery.error",
+            level=500,
+            message=f"Point enumeration failed: {err_msg}",
+        )
+        return event
 
     return event
 
@@ -353,10 +414,16 @@ class BacnetFamilyProvider(FamilyProvider):
     try:
       dev = BAC0.device(device_address, int(device_id), client, poll=0)
       for point in dev.points:
+        present_val = getattr(point, "lastValue", None)
+        ancillary = {}
+        if present_val is not None:
+          ancillary["present_value"] = str(present_val)
+
         ref = RefDiscovery(
             name=point.properties.name,
             description=point.properties.description,
             type=point.properties.type,
+            ancillary=ancillary if ancillary else None,
         )
         if isinstance(point.properties.units_state, list):
           ref.possible_values = point.properties.units_state
@@ -368,10 +435,11 @@ class BacnetFamilyProvider(FamilyProvider):
         )
         point_id = f"{point_acronym}:{point.properties.address}"
         refs[point_id] = ref
-    except Exception as err:  # pylint: disable=broad-exception-caught
+    except Exception as err:
       LOGGER.warning(
           "Error enumerating points for BACnet device (%s): %s", addr, err
       )
+      raise
 
     return refs
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Unit tests for Spotter Agent configuration, managers, and discovery."""
 
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import os
@@ -20,6 +21,7 @@ from edge.spotter.src.manager.system import SpotterSystemManager
 from udmi.schema import Config
 from udmi.schema import Depth
 from udmi.schema import DiscoveryConfig
+from udmi.schema import DiscoveryEvents
 from udmi.schema import FamilyDiscoveryConfig
 from udmi.schema import FamilyDiscoveryState
 from udmi.schema import Protocol
@@ -558,8 +560,134 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     self.assertEqual(f_state.status.level, 400)
     self.assertIn("throttled by safety circuit breaker", f_state.status.message)
 
+  def test_handle_config_marks_new_generation_as_pending(self):
+    """Verifies new generation in discovery config marks phase as pending."""
+    fam_cfg = FamilyDiscoveryConfig(
+        generation="2026-09-14T13:00:00Z",
+        depth=Depth.system,
+    )
+    config = Config(discovery=DiscoveryConfig(families={"bacnet": fam_cfg}))
+
+    self.manager.handle_config(config)
+
+    f_state = self.manager._discovery_state.families.get("bacnet")
+    self.assertIsNotNone(f_state)
+    self.assertEqual(f_state.phase, DiscoveryPhase.pending)
+    self.assertEqual(f_state.generation, "2026-09-14T13:00:00Z")
+    self.mock_device.trigger_state_update.assert_called()
+
+  def test_update_family_state_transitions_active_and_stopped(self):
+    """Verifies that _update_family_state transitions active/stopped phases."""
+    self.manager._update_family_state("bacnet", True)
+    f_state = self.manager._discovery_state.families.get("bacnet")
+    self.assertEqual(f_state.phase, DiscoveryPhase.active)
+
+    self.manager._update_family_state("bacnet", False)
+    self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+
+  def test_future_generation_held_in_pending_phase(self):
+    """Verifies that future generation timestamps hold in pending phase."""
+    future_time = datetime.now(timezone.utc) + timedelta(hours=2)
+    future_gen_str = future_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    fam_cfg = FamilyDiscoveryConfig(
+        generation=future_gen_str,
+        depth=Depth.system,
+    )
+    self.manager._config = DiscoveryConfig(families={"bacnet": fam_cfg})
+
+    # _should_scan must return False because generation is in the future
+    self.assertFalse(self.manager._should_scan("bacnet", fam_cfg))
+    f_state = self.manager._discovery_state.families.get("bacnet")
+    self.assertIsNotNone(f_state)
+    self.assertEqual(f_state.phase, DiscoveryPhase.pending)
+    self.assertEqual(f_state.generation, future_gen_str)
+
+  def test_past_generation_triggers_when_due(self):
+    """Verifies that past/due generation timestamps trigger scanning."""
+    past_time = datetime.now(timezone.utc) - timedelta(seconds=10)
+    past_gen_str = past_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    fam_cfg = FamilyDiscoveryConfig(
+        generation=past_gen_str,
+        depth=Depth.system,
+    )
+    self.manager._config = DiscoveryConfig(families={"bacnet": fam_cfg})
+
+    self.assertTrue(self.manager._should_scan("bacnet", fam_cfg))
+
+  def test_recurring_interval_advances_generation_and_pending(self):
+    """Verifies recurring interval advances generation and marks pending."""
+    fam_cfg = FamilyDiscoveryConfig(
+        generation="2026-09-14T10:00:00Z",
+        scan_interval_sec=300,
+        depth=Depth.system,
+    )
+    self.manager._config = DiscoveryConfig(families={"bacnet": fam_cfg})
+    f_state = FamilyDiscoveryState(
+        generation="2026-09-14T10:00:00Z",
+        phase=DiscoveryPhase.active,
+    )
+    self.manager._discovery_state.families["bacnet"] = f_state
+
+    # When scan finishes, _update_family_state advances generation by 300s
+    self.manager._update_family_state("bacnet", False)
+
+    self.assertFalse(f_state.active)
+    self.assertEqual(f_state.phase, DiscoveryPhase.pending)
+    self.assertEqual(f_state.generation, "2026-09-14T10:05:00Z")
+    self.assertEqual(f_state.active_count, 0)
+
+  def test_active_count_increments_on_scan_results(self):
+    """Verifies active_count dynamically tracks discovered devices in state."""
+    f_state = FamilyDiscoveryState(
+        generation="2026-09-14T10:00:00Z",
+        phase=DiscoveryPhase.active,
+        active_count=0,
+    )
+    self.manager._discovery_state.families["bacnet"] = f_state
+
+    # Start marker (event_no: 0) should not increment active_count
+    start_evt = DiscoveryEvents(family="bacnet", event_no=0)
+    self.manager._handle_scan_result("self", start_evt)
+    self.assertEqual(f_state.active_count, 0)
+
+    evt1 = DiscoveryEvents(family="bacnet", addr="dev-1")
+    self.manager._handle_scan_result("dev-1", evt1)
+    self.assertEqual(f_state.active_count, 1)
+
+    evt2 = DiscoveryEvents(family="bacnet", addr="dev-2", event_no=2)
+    self.manager._handle_scan_result("dev-2", evt2)
+    self.assertEqual(f_state.active_count, 2)
+
+    # Finish marker (event_no: -3) should not increment active_count
+    finish_evt = DiscoveryEvents(family="bacnet", event_no=-3)
+    self.manager._handle_scan_result("self", finish_evt)
+    self.assertEqual(f_state.active_count, 2)
+
+  def test_provider_exception_propagates_status_500_and_stopped(self):
+    """Verifies provider exceptions set status level 500 and stopped phase."""
+    mock_provider = MagicMock()
+    mock_provider.start_scan.side_effect = RuntimeError("BACnet socket failure")
+    self.manager._active_providers.append(mock_provider)
+
+    fam_cfg = FamilyDiscoveryConfig(
+        generation="2026-09-14T10:00:00Z", depth=Depth.system
+    )
+    self.manager._config = DiscoveryConfig(families={"bacnet": fam_cfg})
+
+    self.manager._run_scan("bacnet", mock_provider)
+
+    f_state = self.manager._discovery_state.families.get("bacnet")
+    self.assertIsNotNone(f_state)
+    self.assertFalse(f_state.active)
+    self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+    self.assertIsNotNone(f_state.status)
+    self.assertEqual(f_state.status.level, 500)
+    self.assertEqual(f_state.status.category, "discovery.error")
+    self.assertIn("BACnet socket failure", f_state.status.message)
+
 
 if __name__ == "__main__":
   unittest.main()
+
 
 

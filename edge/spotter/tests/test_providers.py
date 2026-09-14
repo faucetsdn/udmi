@@ -46,6 +46,8 @@ class TestBacnetFamilyProvider(unittest.TestCase):
     self.assertEqual(event.addr, "1234")
     self.assertEqual(event.family, "bacnet")
     self.assertEqual(event.families["ipv4"].addr, "192.168.1.50")
+    self.assertEqual(event.system.name, "Main-AHU")
+    self.assertEqual(event.system.description, "Air Handler")
     self.assertEqual(event.system.ancillary["name"], "Main-AHU")
     self.assertEqual(event.system.ancillary["description"], "Air Handler")
     self.assertEqual(event.system.ancillary["location"], "Roof")
@@ -67,6 +69,7 @@ class TestBacnetFamilyProvider(unittest.TestCase):
     mock_point.properties.type = "analogValue"
     mock_point.properties.address = "1"
     mock_point.properties.units_state = "degC"
+    mock_point.lastValue = 22.5
     mock_dev.points = [mock_point]
     mock_bac0.device.return_value = mock_dev
 
@@ -76,10 +79,73 @@ class TestBacnetFamilyProvider(unittest.TestCase):
     self.assertIn("AV:1", refs)
     self.assertEqual(refs["AV:1"].name, "zone_temp")
     self.assertEqual(refs["AV:1"].units, "degC")
+    self.assertIsNotNone(refs["AV:1"].ancillary)
+    self.assertEqual(refs["AV:1"].ancillary["present_value"], "22.5")
+
+  @patch("edge.spotter.src.providers.bacnet.BAC0")
+  def test_bacnet_scan_unchanged_threshold(self, mock_bac0):
+    """Verifies BACnet scan terminates when no new devices appear."""
+    mock_client = MagicMock()
+    mock_bac0.lite.return_value = mock_client
+    mock_client.discoveredDevices = {("192.168.1.50", 1234): "Device"}
+    mock_client.readMultiple.return_value = [
+        "Main-AHU",
+        "Delta",
+        "v1.2.3",
+        "DSC-1212",
+        "SN-9999",
+        "Air Handler",
+        "Roof",
+        "App-4.0",
+    ]
+
+    provider = BacnetFamilyProvider(unchanged_threshold_sec=1)
+    config = FamilyDiscoveryConfig(
+        generation="2026-09-01T12:00:00Z", depth="system"
+    )
+
+    published = []
+    provider.start_scan(
+        config, lambda dev_id, evt: published.append((dev_id, evt))
+    )
+
+    self.assertEqual(len(published), 3)
+    # Start marker
+    self.assertEqual(published[0][1].event_no, 0)
+    # Discovered device
+    self.assertEqual(published[1][0], "1234")
+    self.assertEqual(published[1][1].addr, "1234")
+    self.assertEqual(published[1][1].event_no, 1)
+    # Finish marker
+    self.assertEqual(published[2][1].event_no, -2)
 
 
 class TestEtherFamilyProvider(unittest.TestCase):
   """Unit tests for EtherFamilyProvider."""
+
+  @patch("subprocess.run")
+  def test_ping_scan_duration_timeout(self, mock_subproc_run):
+    """Verifies ICMP ping sweep honors scan_duration_sec timeout."""
+    mock_res = MagicMock()
+    mock_res.returncode = 0
+    mock_subproc_run.return_value = mock_res
+
+    provider = EtherFamilyProvider(ping_concurrency=1)
+    config = FamilyDiscoveryConfig(
+        generation="2026-09-01T12:00:00Z",
+        depth="ping",
+        addrs=["10.0.0.1", "10.0.0.2", "10.0.0.3"],
+        scan_duration_sec=0.001,
+    )
+
+    published = []
+    provider.start_scan(
+        config, lambda dev_id, evt: published.append((dev_id, evt))
+    )
+
+    self.assertGreaterEqual(len(published), 2)
+    self.assertEqual(published[0][1].event_no, 0)
+    self.assertLess(published[-1][1].event_no, 0)
 
   @patch("subprocess.run")
   def test_ping_scan_success(self, mock_subproc_run):
@@ -173,7 +239,8 @@ class TestEtherFamilyProvider(unittest.TestCase):
         <ports>
           <port protocol="tcp" portid="80">
             <state state="open"/>
-            <service name="http"/>
+            <service name="http" product="Apache httpd" version="2.4.41"/>
+            <script id="banner" output="Apache/2.4.41"/>
           </port>
           <port protocol="tcp" portid="443">
             <state state="open"/>
@@ -190,6 +257,9 @@ class TestEtherFamilyProvider(unittest.TestCase):
     self.assertEqual(len(hosts[0].ports), 2)
     self.assertEqual(hosts[0].ports[0].port_number, 80)
     self.assertEqual(hosts[0].ports[0].service_name, "http")
+    self.assertEqual(hosts[0].ports[0].product, "Apache httpd")
+    self.assertEqual(hosts[0].ports[0].version, "2.4.41")
+    self.assertEqual(hosts[0].ports[0].banner, "Apache/2.4.41")
 
   def test_ping_concurrency_clamping(self):
     """Verifies ping_concurrency clamps to at least 1."""
@@ -201,6 +271,20 @@ class TestEtherFamilyProvider(unittest.TestCase):
 
     provider_custom = EtherFamilyProvider(ping_concurrency=8)
     self.assertEqual(provider_custom.ping_concurrency, 8)
+
+  @patch("os.path.exists")
+  def test_nmap_scan_fails_fast_when_binary_missing(self, mock_exists):
+    """Verifies that nmap scan raises RuntimeError if nmap binary is missing."""
+    mock_exists.return_value = False
+    provider = EtherFamilyProvider()
+    config = FamilyDiscoveryConfig(
+        generation="2026-09-01T12:00:00Z",
+        depth="ports",
+        addrs=["10.0.0.1"],
+    )
+    with self.assertRaises(RuntimeError) as ctx:
+      provider.start_scan(config, MagicMock())
+    self.assertIn("nmap binary not found", str(ctx.exception))
 
 
 class TestPassiveFamilyProvider(unittest.TestCase):
@@ -267,6 +351,15 @@ class TestPassiveFamilyProvider(unittest.TestCase):
     self.assertEqual(published[-1][0], "self")
     self.assertEqual(published[-1][1].event_no, -1)
     self.assertEqual(published[-1][1].family, "ipv4")
+
+  @patch("edge.spotter.src.providers.passive.scapy", None)
+  def test_passive_scan_fails_fast_when_scapy_missing(self):
+    """Verifies start_scan raises RuntimeError if scapy is not installed."""
+    provider = PassiveFamilyProvider(interface="eth0")
+    config = FamilyDiscoveryConfig(generation="2026-09-11T09:00:00Z")
+    with self.assertRaises(RuntimeError) as ctx:
+      provider.start_scan(config, MagicMock())
+    self.assertIn("Scapy library is not installed", str(ctx.exception))
 
 
 if __name__ == "__main__":
