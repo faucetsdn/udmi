@@ -8,6 +8,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.mergeObject;
 import static com.google.udmi.util.GeneralUtils.toJsonString;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.String.format;
 import static java.nio.file.Files.readAllBytes;
 import static java.util.Objects.requireNonNull;
@@ -25,6 +26,7 @@ import com.google.udmi.util.IotProvider;
 import com.google.udmi.util.MetadataMapKeys;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -438,6 +440,8 @@ public class CloudIotManager {
     CloudModel settings = new CloudModel();
     settings.resource_type = Resource_type.REGISTRY;
     settings.credentials = List.of(getIotProvider().getCredential());
+    settings.metadata = new HashMap<>();
+    settings.metadata.put(MetadataMapKeys.UDMI_PROVISIONED, isoConvert());
     getIotProvider().createResource(suffix, settings);
     return requireNonNull(settings.num_id, "Missing registry name in reply");
   }
@@ -452,6 +456,10 @@ public class CloudIotManager {
     registryModel.metadata = new HashMap<>();
     registryModel.metadata.put(
         MetadataMapKeys.UDMI_METADATA, toJsonString(siteMetadata)
+    );
+    registryModel.metadata.put(
+        MetadataMapKeys.UDMI_PROVISIONED,
+        isoConvert(ofNullable(siteMetadata.timestamp).orElseGet(Date::new))
     );
     getIotProvider().updateRegistry(registryModel);
   }

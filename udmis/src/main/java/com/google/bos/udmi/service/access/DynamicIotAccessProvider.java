@@ -53,7 +53,7 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     // TODO: In the future, different registries might be governed by different backends
     // using the same set of providers, so inheriting affinity from the reflector like
     // this might need to be re-evaluated.
-    // For now, we assume the only active backend is Mosquitto (ImplicitIotAccessProvider),
+    // For now, we assume the only active backend is Mosquitto (ZanzaraIotAccessProvider),
     // and inheriting the reflector's affinity is necessary to resolve the cold-start
     // deadlock where the device hasn't sent a message yet but needs its config.
     String reflectorKey = getProviderKey(ContainerBase.REFLECT_BASE, registryId);
@@ -239,14 +239,14 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
       String affinity = transport;
       if (source != null) {
-        if ("bridge".equals(source)) {
-          affinity = "implicit";
+        if ("bridge".equals(source) || "implicit".equals(source)) {
+          affinity = getProviders().containsKey("zanzara") ? "zanzara" : "implicit";
         } else if (getProviders().containsKey(source)) {
           affinity = source;
         }
       } else {
-        if ("bridge".equals(transport)) {
-          affinity = "implicit";
+        if ("bridge".equals(transport) || "implicit".equals(transport)) {
+          affinity = getProviders().containsKey("zanzara") ? "zanzara" : "implicit";
         }
       }
 

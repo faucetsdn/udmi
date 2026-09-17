@@ -324,7 +324,7 @@ public class MosquittoDynamicSecurityService implements MqttCallback {
   public CompletableFuture<udmi.schema.MosquittoClientResponse> enqueueCommand(CommandRequest req) {
     log.info("Enqueuing dynamic security command: {}", req.commandName);
     if (!commandQueue.offer(req)) {
-      // Completing exceptionally here allows callers (like ImplicitIotAccessProvider) to
+      // Completing exceptionally here allows callers (like ZanzaraIotAccessProvider) to
       // handle it in whenComplete and apply backpressure via safeSleep without crashing
       // background workers.
       req.future.completeExceptionally(new QueueFullException(

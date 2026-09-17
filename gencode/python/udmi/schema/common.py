@@ -39,6 +39,7 @@ class IotProvider(Enum):
     local = 'local'
     dynamic = 'dynamic'
     implicit = 'implicit'
+    zanzara = 'zanzara'
     pubsub = 'pubsub'
     mqtt = 'mqtt'
     gbos = 'gbos'

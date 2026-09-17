@@ -34,7 +34,7 @@ import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
 import udmi.schema.IotAccess;
 
-class ImplicitIotAccessProviderTest {
+class ZanzaraIotAccessProviderTest {
 
   private static final String TEST_REGISTRY = "test-reg";
   private static final String TEST_DEVICE = "test-dev";
@@ -42,7 +42,7 @@ class ImplicitIotAccessProviderTest {
   private static final String CLIENT_ID = "/r/test-reg/d/test-dev";
 
   private Map<String, String> store;
-  private ImplicitIotAccessProvider provider;
+  private ZanzaraIotAccessProvider provider;
   private ConnectionBroker mockBroker;
 
   @BeforeEach
@@ -58,7 +58,7 @@ class ImplicitIotAccessProviderTest {
 
     IotAccess iotAccess = new IotAccess();
     iotAccess.options = "enable, use_password=" + TEST_PASSWORD + ", disable_logging=true";
-    provider = new ImplicitIotAccessProvider(iotAccess);
+    provider = new ZanzaraIotAccessProvider(iotAccess);
     provider.activate();
 
     mockBroker = mock(ConnectionBroker.class);
@@ -66,7 +66,7 @@ class ImplicitIotAccessProviderTest {
     when(mockBroker.bindGateway(anyString(), anyString())).thenReturn(completedFuture(null));
     when(mockBroker.unbindGateway(anyString(), anyString())).thenReturn(completedFuture(null));
 
-    Field brokerField = ImplicitIotAccessProvider.class.getDeclaredField("broker");
+    Field brokerField = ZanzaraIotAccessProvider.class.getDeclaredField("broker");
     brokerField.setAccessible(true);
     brokerField.set(provider, mockBroker);
   }
@@ -233,11 +233,11 @@ class ImplicitIotAccessProviderTest {
     IotAccess iotAccess = new IotAccess();
     iotAccess.options =
         "enable, use_password=" + TEST_PASSWORD + ", disable_logging=true, broker_auth=false";
-    provider = new ImplicitIotAccessProvider(iotAccess);
+    provider = new ZanzaraIotAccessProvider(iotAccess);
     provider.activate();
 
     ConnectionBroker authDisabledBroker = mock(ConnectionBroker.class);
-    Field brokerField = ImplicitIotAccessProvider.class.getDeclaredField("broker");
+    Field brokerField = ZanzaraIotAccessProvider.class.getDeclaredField("broker");
     brokerField.setAccessible(true);
     brokerField.set(provider, authDisabledBroker);
 
@@ -293,7 +293,7 @@ class ImplicitIotAccessProviderTest {
 
     CloudModel reply = provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, cloudModel, null);
     assertEquals(ModelOperation.DELETE, reply.operation);
-    String expectedNumId = ImplicitIotAccessProvider.hashedDeviceId(TEST_REGISTRY, TEST_DEVICE);
+    String expectedNumId = ZanzaraIotAccessProvider.hashedDeviceId(TEST_REGISTRY, TEST_DEVICE);
     assertEquals(expectedNumId, reply.num_id);
   }
 
@@ -303,7 +303,7 @@ class ImplicitIotAccessProviderTest {
     iotAccess.options =
         "enable, use_password=" + TEST_PASSWORD
             + ", disable_logging=true, mosquitto_dynsec_min_interval_ms=500";
-    ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
+    ZanzaraIotAccessProvider customProvider = new ZanzaraIotAccessProvider(iotAccess);
     try {
       MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
       assertEquals(500L, customBroker.getMinPublishIntervalMs());
@@ -319,7 +319,7 @@ class ImplicitIotAccessProviderTest {
         "enable, use_password=" + TEST_PASSWORD
             + ", disable_logging=true, mosquitto_dynsec_min_interval_ms=500"
             + ", mosquitto_dynsec_jitter_ratio=0.5";
-    ImplicitIotAccessProvider customProvider = new ImplicitIotAccessProvider(iotAccess);
+    ZanzaraIotAccessProvider customProvider = new ZanzaraIotAccessProvider(iotAccess);
     try {
       MosquittoBroker customBroker = (MosquittoBroker) customProvider.getBroker();
       assertEquals(500L, customBroker.getMinPublishIntervalMs());

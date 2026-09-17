@@ -70,10 +70,46 @@ jobs:
           config_path: .spellcheck.yml
           task_name: Markdown
 
+  build_packages:
+    name: Build Java Packages
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: base setup
+        run: sudo bin/setup_base
+      - name: Build Java Packages
+        run: |
+          bin/gencode check
+          validator/bin/build
+          pubber/bin/build
+          services/bin/build
+          bin/container udmis prep --no-check
+      - name: Upload prebuilt packages
+        uses: actions/upload-artifact@v7
+        with:
+          name: udmi-prebuilt-packages
+          path: |
+            udmis/build/libs/
+            udmis/var/deployed_version.json
+            validator/build/libs/
+            pubber/build/libs/
+            services/build/libs/
+
   automapping:
     name: Automapping capability
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    needs: build_packages
     if: ${{ !cancelled() }}
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
@@ -86,6 +122,10 @@ jobs:
           cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: local setup
         run: |
           bin/udmi start sites/udmi_site_model $TARGET_PROJECT
@@ -122,7 +162,7 @@ jobs:
     name: Baseline Sequences
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    needs: automapping
+    needs: [ build_packages, automapping ]
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
@@ -135,6 +175,10 @@ jobs:
           cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: local setup
         run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
@@ -171,6 +215,7 @@ jobs:
     name: Sequencer Tests
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    needs: build_packages
     strategy:
       fail-fast: false
       matrix:
@@ -190,6 +235,10 @@ jobs:
           cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: local setup
         run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
@@ -237,6 +286,7 @@ jobs:
     name: UDMIS Local Setup
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
     steps:
@@ -250,6 +300,10 @@ jobs:
         run: |
           sudo bin/setup_base
           bin/registrar sites/udmi_site_model
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: local setup
         run: |
           bin/udmi start sites/udmi_site_model $TARGET_PROJECT
@@ -320,6 +374,7 @@ jobs:
     name: Endpoint Redirection
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    needs: build_packages
     env:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       TARGET_PROJECT: //mqtt/localhost:9001
@@ -332,6 +387,10 @@ jobs:
           cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: local setup
         run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
@@ -358,6 +417,7 @@ jobs:
     name: Blob Updates
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_REGISTRY_SUFFIX: _BU
@@ -372,6 +432,10 @@ jobs:
           cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: local setup
         run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
@@ -436,6 +500,7 @@ jobs:
     name: Discovery Tests
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    needs: build_packages
     steps:
       - uses: actions/checkout@v6
         with:
@@ -452,6 +517,10 @@ jobs:
           ln -s sites/udmi_site_model/ site_model
           (cd site_model; git log -n 1)
           docker network create udminet --subnet 192.168.99.0/24
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: Unit Tests
         run: |
           misc/discoverynode/testing/unit/unit_tests.sh
@@ -572,6 +641,7 @@ jobs:
     name: Bridgehead Test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    needs: build_packages
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -581,6 +651,10 @@ jobs:
           cache: 'gradle'
       - name: Setup Base
         run: sudo bin/setup_base
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: Run Bridgehead Test
         run: |
           bridgehead/tests/test_bridgehead
@@ -609,6 +683,7 @@ jobs:
     name: Openbridge Test
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:18833
     steps:
@@ -620,6 +695,10 @@ jobs:
           cache: 'gradle'
       - name: Setup Base
         run: sudo bin/setup_base
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: Start Local Services
         run: |
           bin/udmi start sites/udmi_site_model ${{ env.TARGET_PROJECT }}
@@ -695,6 +774,7 @@ jobs:
     name: Groot Distribution Tests
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:18833
     steps:
@@ -706,6 +786,10 @@ jobs:
           cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: Run Groot Distribution Test
         run: |
           bin/test_groot ${{ env.TARGET_PROJECT }}

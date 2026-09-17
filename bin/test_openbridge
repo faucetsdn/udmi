@@ -254,8 +254,8 @@ jq --arg auth_user "$AUTH_USER" \
     .flows.reflect.send_id = "udmi_reply" |
     .flows.distributor.enabled = "false" |
     .iot_data.database.project_id = "http://${ETCD_CLUSTER}:\($etcd_port)" |
-    .iot_access.implicit = {
-      "provider": "implicit",
+    .iot_access.zanzara = {
+      "provider": "zanzara",
       "options": "enabled=${ETCD_CLUSTER}",
       "endpoint": {
         "protocol": "mqtt",
@@ -274,7 +274,7 @@ jq --arg auth_user "$AUTH_USER" \
       }
     } |
     .iot_access."iot-access".provider = "dynamic" |
-    .iot_access."iot-access".project_id = "implicit, pubsub" |
+    .iot_access."iot-access".project_id = "zanzara, pubsub" |
     .bridges.reply_bridge = {
       "enabled": "true",
       "from": {
@@ -486,7 +486,7 @@ udmis/bin/etcdctl get --prefix ""
 echo "STATE_VAL output: $STATE_VAL"
 
 echo "=================================================================="
-echo "Verifying Registry & Device Discovery (ImplicitIotAccessProvider)"
+echo "Verifying Registry & Device Discovery (ZanzaraIotAccessProvider)"
 echo "=================================================================="
 
 # 1. Verify Registry Discovery in etcd

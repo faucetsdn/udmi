@@ -1,6 +1,5 @@
 package com.google.bos.udmi.service.access;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -45,37 +44,88 @@ class DynamicIotAccessProviderTest extends MessageTestCore {
 
   @Test
   void testProviderAffinityWithInvalidSource() {
+    IotAccessProvider mockZanzaraProvider = mock(IotAccessProvider.class);
+    when(mockZanzaraProvider.isEnabled()).thenReturn(true);
+    when(mockZanzaraProvider.supportsRegistryOperations()).thenReturn(true);
+    when(mockZanzaraProvider.fetchRegistryMetadata(TEST_REGISTRY, "udmi_provisioned"))
+        .thenReturn("2025-01-01T00:00:00Z");
+    UdmiServicePod.putComponent("zanzara", () -> mockZanzaraProvider);
+
     IotAccess iotAccess = new IotAccess();
-    iotAccess.project_id = "implicit,pubsub";
+    iotAccess.project_id = "implicit,zanzara,pubsub";
     DynamicIotAccessProvider provider = new DynamicIotAccessProvider(iotAccess);
     provider.activate();
 
-    // Pass "+debug" as providerId (omitted transport)
-    provider.setProviderAffinity("UDMI-REFLECT", "UDMI-REFLECT", "+debug");
+    // First establish valid affinity to zanzara
+    provider.setProviderAffinity(TEST_REGISTRY, TEST_DEVICE, "pubsub+zanzara");
 
-    // Modifying config for a device should not throw NPE due to empty provider key
+    // Now pass "+debug" (omitted transport) which should clear the affinity
+    provider.setProviderAffinity(TEST_REGISTRY, TEST_DEVICE, "+debug");
+
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = TEST_REGISTRY;
     envelope.deviceId = TEST_DEVICE;
 
-    assertDoesNotThrow(() -> provider.modifyConfig(envelope, pair -> "{}"));
+    provider.modifyConfig(envelope, pair -> "{}");
+
+    // Verifies that cleared affinity fell back to default implicit, NOT zanzara
+    verify(mockImplicitProvider).modifyConfig(eq(envelope), any());
+    verify(mockZanzaraProvider, never()).modifyConfig(any(), any());
   }
 
   @Test
   void testProviderAffinityWithValidSource() {
+    IotAccessProvider mockZanzaraProvider = mock(IotAccessProvider.class);
+    when(mockZanzaraProvider.isEnabled()).thenReturn(true);
+    when(mockZanzaraProvider.supportsRegistryOperations()).thenReturn(true);
+    when(mockZanzaraProvider.fetchRegistryMetadata(TEST_REGISTRY, "udmi_provisioned"))
+        .thenReturn("2025-01-01T00:00:00Z");
+    UdmiServicePod.putComponent("zanzara", () -> mockZanzaraProvider);
+
     IotAccess iotAccess = new IotAccess();
-    iotAccess.project_id = "implicit,pubsub";
+    iotAccess.project_id = "implicit,zanzara,pubsub";
     DynamicIotAccessProvider provider = new DynamicIotAccessProvider(iotAccess);
     provider.activate();
 
-    // Pass "pubsub+debug" as providerId
-    provider.setProviderAffinity("UDMI-REFLECT", "UDMI-REFLECT", "pubsub+debug");
+    // Pass "pubsub+zanzara" as providerId to bind device to zanzara
+    provider.setProviderAffinity(TEST_REGISTRY, TEST_DEVICE, "pubsub+zanzara");
 
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = TEST_REGISTRY;
     envelope.deviceId = TEST_DEVICE;
 
-    assertDoesNotThrow(() -> provider.modifyConfig(envelope, pair -> "{}"));
+    provider.modifyConfig(envelope, pair -> "{}");
+
+    verify(mockZanzaraProvider).modifyConfig(eq(envelope), any());
+    verify(mockImplicitProvider, never()).modifyConfig(any(), any());
+  }
+
+  @Test
+  void testReflectorAffinityInheritance() {
+    IotAccessProvider mockZanzaraProvider = mock(IotAccessProvider.class);
+    when(mockZanzaraProvider.isEnabled()).thenReturn(true);
+    when(mockZanzaraProvider.supportsRegistryOperations()).thenReturn(true);
+    when(mockZanzaraProvider.fetchRegistryMetadata(TEST_REGISTRY, "udmi_provisioned"))
+        .thenReturn("2025-01-01T00:00:00Z");
+    UdmiServicePod.putComponent("zanzara", () -> mockZanzaraProvider);
+
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.project_id = "implicit,zanzara,pubsub";
+    DynamicIotAccessProvider provider = new DynamicIotAccessProvider(iotAccess);
+    provider.activate();
+
+    // Set reflector affinity for registry to zanzara
+    provider.setProviderAffinity("UDMI-REFLECT", TEST_REGISTRY, "pubsub+zanzara");
+
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    envelope.deviceId = TEST_DEVICE;
+
+    provider.modifyConfig(envelope, pair -> "{}");
+
+    // Device with no direct affinity should inherit reflector's affinity to zanzara
+    verify(mockZanzaraProvider).modifyConfig(eq(envelope), any());
+    verify(mockImplicitProvider, never()).modifyConfig(any(), any());
   }
 
   @Test
@@ -86,7 +136,7 @@ class DynamicIotAccessProviderTest extends MessageTestCore {
     provider.activate();
 
     // Set reflector affinity for registry to pubsub
-    provider.setProviderAffinity("UDMI-REFLECT/" + TEST_REGISTRY, "udmi", "pubsub+user");
+    provider.setProviderAffinity("UDMI-REFLECT", TEST_REGISTRY, "pubsub+user");
 
     Envelope envelope = new Envelope();
     envelope.deviceRegistryId = TEST_REGISTRY;
@@ -97,5 +147,31 @@ class DynamicIotAccessProviderTest extends MessageTestCore {
     // Verify modifyConfig routes to implicit provider, not pubsub provider
     verify(mockImplicitProvider).modifyConfig(eq(envelope), any());
     verify(mockPubSubProvider, never()).modifyConfig(any(), any());
+  }
+
+  @Test
+  void testZanzaraProviderAffinity() {
+    IotAccessProvider mockZanzaraProvider = mock(IotAccessProvider.class);
+    when(mockZanzaraProvider.isEnabled()).thenReturn(true);
+    when(mockZanzaraProvider.supportsRegistryOperations()).thenReturn(true);
+    when(mockZanzaraProvider.fetchRegistryMetadata(TEST_REGISTRY, "udmi_provisioned"))
+        .thenReturn("2025-01-01T00:00:00Z");
+    UdmiServicePod.putComponent("zanzara", () -> mockZanzaraProvider);
+
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.project_id = "implicit,zanzara,pubsub";
+    DynamicIotAccessProvider provider = new DynamicIotAccessProvider(iotAccess);
+    provider.activate();
+
+    provider.setProviderAffinity(TEST_REGISTRY, TEST_DEVICE, "pubsub+zanzara");
+
+    Envelope envelope = new Envelope();
+    envelope.deviceRegistryId = TEST_REGISTRY;
+    envelope.deviceId = TEST_DEVICE;
+
+    provider.modifyConfig(envelope, pair -> "{}");
+
+    verify(mockZanzaraProvider).modifyConfig(eq(envelope), any());
+    verify(mockImplicitProvider, never()).modifyConfig(any(), any());
   }
 }

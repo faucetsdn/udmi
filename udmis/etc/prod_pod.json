@@ -66,11 +66,10 @@
   "iot_access": {
     "iot-access": {
       "provider": "dynamic",
-      "project_id": "clearblade-iot-core, pubsub"
+      "project_id": "zanzara, pubsub"
     },
-    "clearblade-iot-core": {
-      "provider": "clearblade",
-      "project_id": "${CLEARBLADE_PROJECT}",
+    "zanzara": {
+      "provider": "zanzara",
       "profile_sec": 10
     },
     "pubsub": {
