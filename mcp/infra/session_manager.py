@@ -17,7 +17,7 @@ class SessionManager:
     def __init__(self, udmi_root: Optional[str] = None):
         if udmi_root is None:
             # Fallback to repo root relative to this file
-            udmi_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+            udmi_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
         self.udmi_root = os.path.abspath(udmi_root)
         self.instances_dir = os.path.join(self.udmi_root, "var", "instances")
         os.makedirs(self.instances_dir, exist_ok=True)

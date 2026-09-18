@@ -7,3 +7,4 @@
 * Singular Canonical Interfaces (No Redundant Aliases or Over-Flexibility): Do not provide, accept, or promote multiple alternative ways to execute the same operation (such as adding multiple command aliases like `reset` vs `restart`, or accepting multiple conflicting syntax variants). Commit strictly to a single, canonical mechanism and reject non-canonical variants.
 
 
+

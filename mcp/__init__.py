@@ -1,1 +1,1 @@
-"""UDMI Test Infrastructure MCP Package."""
+"""UDMI Model Context Protocol (MCP) Packages."""

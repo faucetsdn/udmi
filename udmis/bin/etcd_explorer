@@ -9,7 +9,7 @@ if [[ -f "${ROOT_DIR}/etc/shell_common.sh" ]]; then
   source "${ROOT_DIR}/etc/shell_common.sh"
 fi
 
-if [[ ! -f "$UDMIS_JAR" ]] || (type up_to_date >/dev/null 2>&1 && ! up_to_date "$UDMIS_JAR" "${ROOT_DIR}/udmis/src"); then
+if [[ ! -f "$UDMIS_JAR" ]] || (type up_to_date >/dev/null 2>&1 && [[ -d "${ROOT_DIR}/udmis/src" ]] && ! up_to_date "$UDMIS_JAR" "${ROOT_DIR}/udmis/src"); then
   echo "Building $UDMIS_JAR..."
   "${ROOT_DIR}/udmis/bin/build"
 fi

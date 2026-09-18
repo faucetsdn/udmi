@@ -219,6 +219,23 @@ class PostgresManager:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         """
+        rollouts_sql = """
+        CREATE TABLE IF NOT EXISTS udmi_rollouts (
+            id SERIAL PRIMARY KEY,
+            name VARCHAR(255) NOT NULL,
+            target_filter JSONB DEFAULT '{}'::jsonb,
+            target_subfolder VARCHAR(50) DEFAULT 'system',
+            target_payload JSONB NOT NULL,
+            status VARCHAR(50) DEFAULT 'RUNNING',
+            batch_size INTEGER DEFAULT 10,
+            batch_interval_sec INTEGER DEFAULT 60,
+            total_devices INTEGER DEFAULT 0,
+            converged_devices INTEGER DEFAULT 0,
+            failed_devices INTEGER DEFAULT 0,
+            created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+        """
 
         tables = [
             raw_table_sql,
@@ -228,6 +245,7 @@ class PostgresManager:
             validation_sql,
             alarms_sql,
             metadata_sql,
+            rollouts_sql,
         ]
 
         try:

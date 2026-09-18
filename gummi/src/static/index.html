@@ -5,9 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GUMMI — Fleet Management Interface</title>
   <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/vendor/xterm/xterm.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="/vendor/xterm/xterm.js"></script>
+  <script src="/vendor/xterm/xterm-addon-fit.js"></script>
 </head>
 <body>
   <div id="app" class="app-layout">
@@ -21,6 +24,9 @@
         </div>
       </div>
       <div class="header-status">
+        <button id="btn-jetski" class="btn btn-sm btn-jetski" title="Open Jetski Task Console (gummi~agent)">
+          ⚡ jetski!
+        </button>
         <div id="system-badge" class="badge badge-neutral">
           <span class="indicator-dot"></span>
           <span id="system-status-text">Probing System...</span>
@@ -42,6 +48,9 @@
       </button>
       <button class="nav-tab" data-tab="device-detail">
         <span class="tab-icon">⚙️</span> Device Properties
+      </button>
+      <button class="nav-tab" data-tab="explorer">
+        <span class="tab-icon">🗄️</span> ETCD Explorer
       </button>
       <button class="nav-tab" data-tab="config">
         <span class="tab-icon">📝</span> Configuration
@@ -190,6 +199,9 @@
             <h2>Device Properties: <span id="detail-device-title">Select a Device</span></h2>
             <span id="detail-registry-badge" class="badge badge-neutral">Registry: None</span>
           </div>
+          <div class="header-actions">
+            <button id="btn-view-raw-etcd" class="btn btn-secondary btn-sm" title="Inspect raw ETCD key-value properties in Explorer">🗄️ Raw ETCD</button>
+          </div>
         </div>
 
         <div class="detail-grid">
@@ -256,7 +268,7 @@
         <div class="panel margin-top">
           <div class="panel-header" style="display:flex; justify-content:space-between; align-items:center;">
             <h3>🔄 Message Lifecycle (Model → Discovery → Proposal)</h3>
-            <button id="btn-seed-mapping" class="btn btn-secondary btn-sm" onclick="triggerMappingScenario()">⚡ Seed Mapping Lifecycle</button>
+            <button id="btn-seed-mapping" class="btn btn-secondary btn-sm" onclick="triggerMappingScenario()" style="display: none;">⚡ Seed Mapping Lifecycle</button>
           </div>
           <div class="panel-body">
             <div id="detail-messages-timeline">
@@ -266,7 +278,72 @@
         </div>
       </section>
 
-      <!-- 4. Configuration Management Pane -->
+      <!-- 4. ETCD Visual Explorer Pane (etcd_explorer visual parity) -->
+      <section id="pane-explorer" class="tab-pane dark-theme">
+        <div class="explorer-toolbar">
+          <div class="toolbar-left">
+            <span class="explorer-title">UDMI ETCD Explorer</span>
+            <span id="top-registries-count" class="badge stats-badge">Registries: 0</span>
+            <span id="top-devices-count" class="badge stats-badge">Devices: 0</span>
+          </div>
+          <div class="toolbar-right">
+            <button id="btn-refresh-explorer-all" class="btn toolbar-btn" title="Reload all registries and devices from etcd">↻ Refresh</button>
+            <button id="theme-toggle-explorer" class="btn toolbar-btn" title="Toggle Dark/Light Mode">🌗 Theme</button>
+          </div>
+        </div>
+
+        <div class="explorer-grid-container grid-container">
+          <!-- Column 1: Registries -->
+          <section class="explorer-column column col-registries">
+            <div class="explorer-col-header col-header">
+              <div class="title-row">
+                <h2>Registries <span id="explorer-registries-count" class="count-badge">0</span></h2>
+                <button id="btn-refresh-explorer-registries" class="btn refresh-btn" title="Refresh Registries">↻</button>
+              </div>
+              <div class="subtitle">Namespaces</div>
+              <div class="search-row">
+                <input type="text" id="search-explorer-registries" class="search-input" placeholder="🔍 Filter registries...">
+              </div>
+            </div>
+            <div id="explorer-registries-list" class="explorer-list-container list-container">
+              <div class="loading-state">Loading registries...</div>
+            </div>
+          </section>
+
+          <!-- Column 2: Devices -->
+          <section class="explorer-column column col-devices">
+            <div class="explorer-col-header col-header">
+              <div class="title-row">
+                <h2>Devices <span id="explorer-devices-count" class="count-badge">0</span></h2>
+                <button id="btn-refresh-explorer-devices" class="btn refresh-btn" title="Refresh Devices" disabled>↻</button>
+              </div>
+              <div id="explorer-active-registry-label" class="subtitle">No registry selected</div>
+              <div class="search-row">
+                <input type="text" id="search-explorer-devices" class="search-input" placeholder="🔍 Filter devices..." disabled>
+              </div>
+            </div>
+            <div id="explorer-devices-list" class="explorer-list-container list-container">
+              <div class="empty-state">Select a registry to view devices</div>
+            </div>
+          </section>
+
+          <!-- Column 3: Properties -->
+          <section class="explorer-column column col-properties">
+            <div class="explorer-col-header col-header">
+              <div class="title-row">
+                <h2>Properties</h2>
+                <button id="btn-refresh-explorer-properties" class="btn refresh-btn" title="Refresh Properties" disabled>↻</button>
+              </div>
+              <div id="explorer-active-device-label" class="subtitle">No device selected</div>
+            </div>
+            <div id="explorer-properties-content" class="explorer-content-container content-container">
+              <div class="empty-state">Select a device to view properties</div>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- 5. Configuration Management Pane -->
       <section id="pane-config" class="tab-pane">
         <div class="section-header">
           <h2>Configuration Management</h2>
@@ -347,10 +424,10 @@
         </div>
 
         <div class="metrics-grid">
-          <div class="component-card" id="card-mqtt">
-            <div class="comp-title">📡 MQTT Broker (Mosquitto)</div>
+          <div class="component-card" id="card-uufi">
+            <div class="comp-title">📡 UUFI Message Bus</div>
             <div class="comp-status status-up">UP</div>
-            <div class="comp-meta">Port: 1883 • Latency: <span class="comp-lat">2ms</span></div>
+            <div class="comp-meta">Service: UUFI • Latency: <span class="comp-lat">2ms</span></div>
           </div>
           <div class="component-card" id="card-pg">
             <div class="comp-title">🐘 PostgreSQL (Butler)</div>
@@ -385,7 +462,35 @@
         </div>
       </section>
     </main>
+
+    <!-- Embedded Task Console Pane -->
+    <div id="console-pane" class="console-pane" style="display: none;">
+      <div class="console-header">
+        <div class="console-title-area">
+          <span class="console-icon">⚡</span>
+          <h3>Jetski Task Console</h3>
+          <span id="console-session-badge" class="badge badge-success">gummi~agent</span>
+          <span id="console-status-text" class="console-status-text">Active</span>
+        </div>
+        <div class="console-controls">
+          <button id="btn-kill-console" class="btn btn-sm btn-outline-danger" title="Restart / Reset Session">Kill</button>
+          <button id="btn-clear-console" class="btn btn-sm btn-secondary" title="Clear Terminal">Clear</button>
+          <button id="btn-expand-console" class="btn btn-sm btn-secondary" title="Expand / Restore Height">Expand</button>
+          <button id="btn-close-console" class="btn btn-sm btn-secondary" title="Close Console">✕</button>
+        </div>
+      </div>
+      <div id="console-alert-banner" class="console-alert-banner" style="display: none;">
+        <span class="console-alert-icon">⚠️</span>
+        <div class="console-alert-text">
+          <span id="console-alert-msg"></span>
+        </div>
+        <button id="btn-alert-restart" class="btn btn-xs btn-alert-restart" title="Restart agent session">Restart Agent</button>
+      </div>
+      <div id="terminal-container" class="terminal-container"></div>
+    </div>
   </div>
+
+  <div id="toast" class="toast hidden"></div>
 
   <script src="/js/app.js"></script>
 </body>
