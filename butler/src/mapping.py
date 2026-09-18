@@ -4,49 +4,58 @@ import json
 import os
 import sys
 import uuid
-import psycopg2
-
 try:
     from src.connection import ButlerConnection
 except (ImportError, ModuleNotFoundError):
     from butler.src.connection import ButlerConnection
 
 try:
-    from udmi.common.db.postgres import PostgresManager
-    from udmi.common.project_spec import parse_project_spec
+    from mcp.butler.client import ButlerClient
+    from mcp.butler.provider import ButlerProvider
 except (ImportError, ModuleNotFoundError):
-    PostgresManager = None
-    parse_project_spec = None
+    try:
+        from udmi.mcp.butler.client import ButlerClient
+        from udmi.mcp.butler.provider import ButlerProvider
+    except (ImportError, ModuleNotFoundError):
+        ButlerClient = None
+        ButlerProvider = None
 
 
-def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
-    pg_port = os.environ.get("POSTGRES_PORT")
-    if not pg_port and conn_spec and parse_project_spec:
-        spec_info = parse_project_spec(conn_spec)
-        port = spec_info.get("port")
-        if port and str(port) != "8883":
-            pg_port = str(int(port) + 3)
-
-    if PostgresManager:
-        pg_mgr = PostgresManager(port=pg_port)
+def get_butler_interface(conn_spec=None, butler_port=None):
+    """Resolves an active Butler client connection or in-process provider."""
+    # 1. Check for running Butler MCP service
+    if ButlerClient is not None:
+        port = butler_port or os.environ.get("BUTLER_PORT", 8088)
         try:
-            conn = pg_mgr.get_connection()
-        except psycopg2.Error as e:
-            print(f"Error connecting to DB: {e}", file=sys.stderr)
-            return
-    else:
-        try:
-            conn = psycopg2.connect(
-                host=os.environ.get("POSTGRES_HOST", "127.0.0.1"),
-                port=pg_port or "5432",
-                user=os.environ.get("POSTGRES_USER", "postgres"),
-                dbname=os.environ.get("POSTGRES_DB", "postgres"),
-            )
-        except psycopg2.Error as e:
-            print(f"Error connecting to DB: {e}", file=sys.stderr)
-            return
+            client = ButlerClient(port=int(port))
+            health = client.health()
+            if health.get("status") in ("UP", "DEGRADED"):
+                return client
+        except Exception:
+            pass
 
-    cursor = conn.cursor()
+    # 2. In-process provider fallback
+    if ButlerProvider is not None:
+        try:
+            provider = ButlerProvider(project_spec=conn_spec)
+            health = provider.health()
+            if health.get("status") in ("UP", "DEGRADED"):
+                return provider
+        except Exception:
+            pass
+
+    return None
+
+
+def run_mapping(
+    conn_spec,
+    registry_id,
+    site_model=None,
+    target_families=None,
+    butler_client=None,
+    butler_port=None,
+):
+    butler = butler_client or get_butler_interface(conn_spec, butler_port)
 
     # 1. Get most recent model for each device_id in this registry
     models = []
@@ -57,64 +66,23 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                 meta_path = os.path.join(devices_dir, device_id, "metadata.json")
                 if os.path.exists(meta_path):
                     try:
-                        with open(meta_path, "r") as mf:
+                        with open(meta_path, "r", encoding="utf-8") as mf:
                             models.append((device_id, json.load(mf)))
                     except Exception as e:
                         print(f"err: {e}", file=sys.stderr)
     print(f"Found {len(models)} models", file=sys.stderr)
 
-    # 2. Get all discovery events for this registry ordered chronologically
-    cursor.execute("""
-        SELECT payload, device_id
-        FROM udmi_messages
-        WHERE registry_id = %s AND sub_folder = 'discovery' AND sub_type = 'events'
-        ORDER BY id ASC
-    """, (registry_id,))
-    
-    discovery_events = cursor.fetchall()
-    print(f"Found {len(discovery_events)} discovery events", file=sys.stderr)
-    
+    # 2. Get discovered devices via Butler interface
     discovered_devices = []
-    
-    for row in discovery_events:
-        payload = row[0]
-        gateway_id = row[1]
-        if isinstance(payload, str):
-            try:
-                payload = json.loads(payload)
-            except:
-                continue
-
-        if isinstance(payload, dict) and "payload" in payload and isinstance(payload.get("payload"), dict):
-            payload = payload["payload"]
-        
-        # Check root level primary family
-        bacnet_addr = None
-        ipv4_addr = None
-        vendor_addr = None
-        
-        if payload.get('family') == 'bacnet':
-            bacnet_addr = payload.get('addr')
-        elif payload.get('family') == 'vendor':
-            vendor_addr = payload.get('addr')
-
-        # Check secondary families block
-        families = payload.get('families', {})
-        if 'bacnet' in families:
-            bacnet_addr = bacnet_addr or families['bacnet'].get('addr')
-        if 'ipv4' in families:
-            ipv4_addr = families['ipv4'].get('addr')
-        if 'vendor' in families:
-            vendor_addr = vendor_addr or families['vendor'].get('addr')
-            
-        if bacnet_addr or ipv4_addr or vendor_addr:
-            discovered_devices.append({
-                'bacnet': str(bacnet_addr) if bacnet_addr else None,
-                'ipv4': str(ipv4_addr) if ipv4_addr else None,
-                'vendor': str(vendor_addr) if vendor_addr else None,
-                'generation': payload.get('generation'),
-                'gateway_id': gateway_id
-            })
+    if butler:
+        try:
+            discovered_devices = butler.get_discovered_devices(registry_id)
+            print(f"Found {len(discovered_devices)} discovered devices via Butler", file=sys.stderr)
+        except Exception as e:
+            print(f"Error querying discovered devices via Butler: {e}", file=sys.stderr)
+            discovered_devices = []
+    else:
+        print("Found 0 discovered devices (Butler service not connected)", file=sys.stderr)
                 
     modeled_devices = []
     
@@ -361,4 +329,18 @@ def run_mapping(conn_spec, registry_id, site_model=None, target_families=None):
                 topics = connection.get_propose_topics(dev_id, sub_folder)
                 for t in topics:
                     topic_msg_pairs.append((t, msg))
+
+                if butler:
+                    try:
+                        butler.record_message(
+                            registry_id=actual_registry,
+                            device_id=dev_id,
+                            sub_type="propose",
+                            sub_folder=sub_folder,
+                            payload=sub_payload,
+                            project_id=connection.project or "vibrant",
+                            timestamp=now,
+                        )
+                    except Exception:
+                        pass
         connection.publish_messages(topic_msg_pairs)

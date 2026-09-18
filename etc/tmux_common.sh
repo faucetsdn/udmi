@@ -475,7 +475,7 @@ tmux_probe_service() {
             fi
             ;;
         server)
-            local pids=$(pgrep -f "python3.*mcp/server.py" 2>/dev/null || true)
+            local pids=$(pgrep -f "python3.*mcp/(infra/)?server.py" 2>/dev/null || true)
             if [[ -n "$pids" ]]; then
                 echo "RUNNING (PID $(echo $pids | tr '\n' ' '))"
             else

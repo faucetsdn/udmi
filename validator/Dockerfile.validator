@@ -18,6 +18,7 @@ ADD build/schema/ schema/
 ADD build/butler/ butler/
 ADD build/common/ common/
 ADD build/gencode/ gencode/
+ADD build/mcp/ mcp/
 
 
 ENV NO_CACHE_DIR=true

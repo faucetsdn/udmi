@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "udmi-uufi": {
+      "command": "bin/mcp_uufi",
+      "args": ["mcp"],
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

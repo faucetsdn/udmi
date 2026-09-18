@@ -27,6 +27,7 @@ ADD build/schema/ udmi/schema/
 ADD build/butler/ udmi/butler/
 ADD build/common/ udmi/common/
 ADD build/gencode/ udmi/gencode/
+ADD build/mcp/ udmi/mcp/
 
 
 ENV NO_CACHE_DIR=true

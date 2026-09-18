@@ -1,0 +1,26 @@
+FROM python:3.11-slim
+
+WORKDIR /root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir \
+    paho-mqtt==1.6.1 \
+    psycopg2-binary==2.9.12 \
+    influxdb-client==1.36.1 \
+    cryptography==50.0.0 \
+    PyJWT==2.13.0
+
+ADD mcp /root/mcp
+ADD common /root/common
+ADD butler /root/butler
+
+ENV PYTHONPATH=/root:/root/common/src/main/python:/root/butler
+
+EXPOSE 8085 8087 8088
+
+ENTRYPOINT ["python3"]

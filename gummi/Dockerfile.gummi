@@ -1,0 +1,21 @@
+FROM python:3.11-slim
+
+WORKDIR /root
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+ADD gummi /root/gummi
+ADD mcp /root/mcp
+ADD common /root/common
+
+ENV PYTHONPATH=/root:/root/gummi:/root/common/src/main/python
+ENV GUMMI_PORT=8080
+ENV GUMMI_HOST=0.0.0.0
+
+EXPOSE 8080
+
+ENTRYPOINT ["python3", "-m", "gummi.src.server"]

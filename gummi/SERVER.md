@@ -19,7 +19,7 @@ GUMMI operates as the management-plane server bridging the browser user interfac
      Live Stream    │                                 │ & State Mutations
                     │                                 ▼
 ┌───────────────────┴─────────────────────────────────────────────────────┐
-│                       GUMMI Flask Backend Server                        │
+│                      GUMMI Web & Presentation Server                    │
 │  ┌─────────────────────────────────┐   ┌─────────────────────────────┐  │
 │  │       REST API Services         │   │       SSE Broadcaster       │  │
 │  │ (Auth / Validation / Dispatch)  │   │  (Alerts / State / Rollout) │  │
@@ -27,41 +27,47 @@ GUMMI operates as the management-plane server bridging the browser user interfac
 │                   │                                   │                 │
 │                   ▼                                   │                 │
 │  ┌────────────────────────────────────────────────────┴──────────────┐  │
-│  │                    UUFI & Management Engine                       │  │
-│  │  - UUFI Connection & Event Monitoring                             │  │
-│  │  - Live State Aggregation & Rollout Orchestration                 │  │
-│  └────────────────┬───────────────────────────────────▲──────────────┘  │
-└───────────────────┼───────────────────────────────────┼─────────────────┘
-                    │ Read / Query                      │ Publish / Subscribe
-                    ▼                                   ▼
-┌───────────────────────────────────┐   ┌─────────────────────────────────┐
-│         Butler Data Stores        │   │       UDMI Messaging (UUFI)     │
-│   (Specified in butler/)          │   │   (Specified in docs/specs/     │
-│                                   │   │    uufi.md)                     │
-└───────────────────────────────────┘   └─────────────────────────────────┘
+│  │                 MCP Client Abstraction Layer                      │  │
+│  │  - ButlerClient (relational & timeseries datastores)               │  │
+│  │  - BarbicanClient (device catalog & etcd properties)              │  │
+│  │  - UUFIClient (messaging fabric & live event streaming)           │  │
+│  └────────┬───────────────────────┬───────────────────▲──────────────┘  │
+└───────────┼───────────────────────┼───────────────────┼─────────────────┘
+            │ JSON-RPC              │ JSON-RPC          │ JSON-RPC / SSE
+            ▼                       ▼                   ▼
+┌───────────────────────┐ ┌───────────────────┐ ┌─────────────────────────┐
+│      Butler MCP       │ │   Barbican MCP    │ │        UUFI MCP         │
+│ (:8088 /rpc)          │ │ (:8085 /rpc)      │ │ (:8087 /rpc)            │
+│ Postgres / InfluxDB   │ │ Device Catalog    │ │ MQTT Broker Fabric      │
+└───────────────────────┘ └───────────────────┘ └─────────────────────────┘
 ```
 
 ### 1.1 Concurrency & Execution Model
 The backend process consists of two primary operational tiers:
-1. **Web Serving Tier (Flask / WSGI)**: Serves static assets, processes REST API queries, handles authentication (IAP / NO_AUTH), validates schema payloads, queries database backends, and dispatches configuration requests.
+1. **Web Serving Tier**: Serves static assets, processes REST API queries, validates schema payloads, and delegates 100% of data reads and configuration mutations to backend MCP servers via standard JSON-RPC 2.0 clients.
 2. **UUFI Management Tier (Background Worker)**:
-   - Maintains connection to the messaging bus and monitors device message streams.
-   - Computes rollout convergence across target devices.
+   - Polls inbound device events from the UUFI MCP server.
+   - Evaluates rollout convergence across target devices.
    - Pushes real-time updates to active Server-Sent Events (SSE) subscribers.
 
 ---
 
 ## 2. Subsystem Integrations
 
-### 2.1 Data Storage & Ingestion (Butler)
-GUMMI delegates all core telemetry, device state, metadata, and validation log ingestion to the **Butler** subsystem. GUMMI queries the storage layer directly to satisfy UI queries, while managing application-specific tables only for web session and UI-managed rollout campaigns.
+### 2.1 Relational & Timeseries Data (Butler MCP)
+GUMMI delegates all telemetry queries, device state aggregation, inventory lookups, validation alerts, and message lifecycle storage to the **Butler MCP Server** (`:8088`). GUMMI never connects directly to PostgreSQL or InfluxDB; all data operations flow through `ButlerClient`.
 
-> Specification Reference: See [**`butler/README.md`**](file:///home/peringknife/udmi/butler/README.md) and [**`butler/SCHEMAS.md`**](file:///home/peringknife/udmi/butler/SCHEMAS.md) for data schemas, database engines, and connection parameters.
+> Specification Reference: See [**`mcp/butler/`**](file:///home/peringknife/udmi/mcp/butler/) and [**`butler/README.md`**](file:///home/peringknife/udmi/butler/README.md).
 
-### 2.2 Control Plane & Messaging (UUFI)
-GUMMI integrates with the UDMI message bus as a standard client to monitor live fleet telemetry and dispatch configuration updates.
+### 2.2 Device Catalog & Properties (Barbican MCP)
+GUMMI interacts with device registries and etcd device hierarchy data via the **Barbican MCP Server** (`:8085`), utilizing `BarbicanClient` without opening raw socket connections or direct etcd database sessions.
 
-> Specification Reference: See [**`docs/specs/uufi.md`**](file:///home/peringknife/udmi/docs/specs/uufi.md) for protocol definitions, connection URL formats, Layer 1 handshake sequences, and topic taxonomies.
+> Specification Reference: See [**`mcp/barbican/`**](file:///home/peringknife/udmi/mcp/barbican/).
+
+### 2.3 Messaging Bus & Control Plane (UUFI MCP)
+GUMMI delegates configuration dispatch, live state queries, and event streaming to the **UUFI MCP Server** (`:8087`) via `UUFIClient`, removing any direct dependency on paho-mqtt or broker socket management.
+
+> Specification Reference: See [**`mcp/uufi/`**](file:///home/peringknife/udmi/mcp/uufi/) and [**`docs/specs/uufi.md`**](file:///home/peringknife/udmi/docs/specs/uufi.md).
 
 ---
 

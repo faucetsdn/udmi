@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "udmi-barbican": {
+      "command": "bin/mcp_barbican",
+      "args": ["mcp"],
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

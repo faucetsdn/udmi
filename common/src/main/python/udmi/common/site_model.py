@@ -31,6 +31,7 @@ def find_key_file(site_model: Optional[str], device_id: Optional[str] = None) ->
     candidates = []
     if os.environ.get("SSL_SECRETS_DIR"):
         candidates.extend([
+            os.path.join(os.environ["SSL_SECRETS_DIR"], "tls.key"),
             os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.pkcs8"),
             os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.pem"),
             os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.key"),
@@ -47,6 +48,10 @@ def find_key_file(site_model: Optional[str], device_id: Optional[str] = None) ->
                 os.path.join(site_model, "devices", device_id, "rsa_private.pem"),
                 os.path.join(site_model, "devices", device_id, "rsa_private.key"),
             ])
+    candidates.extend([
+        "/etc/udmis/certs/tls.key",
+        "/etc/mosquitto/certs/tls.key",
+    ])
     for cand in candidates:
         if cand and os.path.exists(cand):
             return cand
@@ -66,6 +71,7 @@ def find_ca_file(site_model: Optional[str]) -> Optional[str]:
             os.path.join(site_model, "ca.crt"),
         ])
     candidates.extend([
+        "/etc/udmis/certs/ca.crt",
         "/etc/mosquitto/certs/ca.crt",
         "/var/mosquitto/certs/ca.crt",
     ])
@@ -90,9 +96,21 @@ def find_cert_file(site_model: Optional[str], device_id: Optional[str] = None) -
         ])
     if os.environ.get("SSL_SECRETS_DIR"):
         candidates.append((
+            os.path.join(os.environ["SSL_SECRETS_DIR"], "tls.crt"),
+            os.path.join(os.environ["SSL_SECRETS_DIR"], "tls.key"),
+        ))
+        candidates.append((
             os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.crt"),
             os.path.join(os.environ["SSL_SECRETS_DIR"], "rsa_private.pem"),
         ))
+    candidates.append((
+        "/etc/udmis/certs/tls.crt",
+        "/etc/udmis/certs/tls.key",
+    ))
+    candidates.append((
+        "/etc/mosquitto/certs/tls.crt",
+        "/etc/mosquitto/certs/tls.key",
+    ))
     for cert, key in candidates:
         if cert and key and os.path.exists(cert) and os.path.exists(key):
             return cert, key

@@ -9,6 +9,7 @@ import time
 from typing import Any, Dict, List, Optional, Union
 
 from butler.src.dispatcher import MessageDispatcher
+from butler.src.rollout import RolloutManager
 from udmi.common.connection import MessageConnection
 from udmi.common.db.influx import InfluxManager
 from udmi.common.db.postgres import PostgresManager
@@ -86,6 +87,8 @@ class ButlerService:
         self.influx_manager = InfluxManager()
         self.postgres_manager.init_default_tables()
 
+        self.rollout_manager = RolloutManager(postgres_manager=self.postgres_manager)
+
         self.dispatcher = MessageDispatcher(
             postgres_manager=self.postgres_manager,
             influx_manager=self.influx_manager,
@@ -144,6 +147,14 @@ class ButlerService:
             sf = envelope.get("subFolder", "unknown")
             st = envelope.get("subType", "unknown")
             print(f"butler:db:{target}/{reg}/{dev}/{sf}/{st} (records: {count})")
+
+            if st == "state":
+                self.rollout_manager.evaluate_convergence(
+                    registry_id=reg,
+                    device_id=dev,
+                    subfolder=sf,
+                    payload=payload,
+                )
         except Exception as e:
             print(f"Error dispatching message to database: {e}", file=sys.stderr)
 

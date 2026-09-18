@@ -34,9 +34,11 @@ mantis_src = os.path.join(ROOT_DIR, "util", "mantis", "src")
 mantis_v1 = os.path.join(ROOT_DIR, "util", "mantis", "v1")
 mantis_dir = os.path.join(ROOT_DIR, "util", "mantis")
 tools_dir = os.path.join(ROOT_DIR, "tools")
-for p in [mantis_v2, mantis_src, mantis_v1, mantis_dir, tools_dir]:
+for p in [ROOT_DIR, mantis_v2, mantis_src, mantis_v1, mantis_dir, tools_dir]:
     if os.path.exists(p) and p not in sys.path:
         sys.path.insert(0, p)
+
+from mcp.barbican.client import BarbicanClient
 
 
 def to_home_relative(path_str):
@@ -102,7 +104,7 @@ def prune_old_sessions(max_sessions=10):
 
 
 def start_etcd_explorer_service(etcd_port=18834, explorer_port=8085):
-    """Ensure EtcdExplorerServer is running in background on explorer_port connected to etcd_port."""
+    """Ensure ETCD MCP Server is running in background on explorer_port connected to etcd_port."""
     try:
         with socket.create_connection(('127.0.0.1', explorer_port), timeout=0.3):
             return True
@@ -123,7 +125,7 @@ def start_etcd_explorer_service(etcd_port=18834, explorer_port=8085):
         return False
 
     try:
-        subprocess.run(['pkill', '-f', 'EtcdExplorerServer'], capture_output=True)
+        subprocess.run(['pkill', '-f', 'mcp.barbican.server'], capture_output=True)
     except Exception:
         pass
 
@@ -133,25 +135,37 @@ def start_etcd_explorer_service(etcd_port=18834, explorer_port=8085):
     os.makedirs(os.path.dirname(pid_path), exist_ok=True)
 
     cmd = [
-        "udmis/bin/etcd_explorer",
+        sys.executable,
+        "-m", "mcp.barbican.server",
+        "serve",
         f"--port={explorer_port}",
-        f"--etcd_target=http://127.0.0.1:{etcd_port}"
+        f"--etcd-port={etcd_port}"
     ]
 
     try:
+        env = os.environ.copy()
+        env['PYTHONPATH'] = f"{ROOT_DIR}:{env.get('PYTHONPATH', '')}"
         with open(log_path, 'ab', buffering=0) as log_file:
             proc = subprocess.Popen(
                 cmd,
                 cwd=ROOT_DIR,
+                env=env,
                 stdout=log_file,
                 stderr=subprocess.STDOUT,
                 preexec_fn=os.setsid
             )
             with open(pid_path, 'w', encoding='utf-8') as pf:
                 pf.write(str(proc.pid))
+
+            for _ in range(20):
+                try:
+                    with socket.create_connection(('127.0.0.1', explorer_port), timeout=0.1):
+                        return True
+                except Exception:
+                    time.sleep(0.1)
             return True
     except Exception as e:
-        print(f"Error starting etcd explorer: {e}", file=sys.stderr)
+        print(f"Error starting etcd MCP server: {e}", file=sys.stderr)
         return False
 
 
@@ -563,8 +577,35 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
             super().do_HEAD()
 
     def handle_etcd_explorer_proxy(self, req_path, query_string, is_head=False):
-        """Proxy requests for ETCD explorer static assets and API to local EtcdExplorerServer on port 8085."""
+        """Handle ETCD explorer static assets and indirect /api/registries calls through ETCD MCP server."""
         start_etcd_explorer_service()
+
+        # Handle API calls by indirecting through the Barbican MCP server via JSON-RPC
+        if req_path.startswith('/api/registries'):
+            client = BarbicanClient(port=8085)
+            try:
+                if req_path in ['/api/registries', '/api/registries/']:
+                    data = client.list_registries()
+                    self.send_json_response(data)
+                    return
+
+                dev_match = re.match(r"^/api/registries/([^/]+)/devices/?$", req_path)
+                if dev_match:
+                    data = client.list_devices(dev_match.group(1))
+                    self.send_json_response(data)
+                    return
+
+                prop_match = re.match(r"^/api/registries/([^/]+)/devices/([^/]+)/properties/?$", req_path)
+                if prop_match:
+                    data = client.get_device_properties(prop_match.group(1), prop_match.group(2))
+                    self.send_json_response(data)
+                    return
+
+                self.send_error_response(404, f"Unknown registry endpoint: {req_path}")
+                return
+            except Exception as e:
+                self.send_error_response(502, f"Barbican MCP server request failed: {str(e)}")
+                return
 
         target_path = req_path
         if target_path.startswith('/etcd_explorer'):
@@ -1012,7 +1053,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
 
         etcd_explorer_up = False
         try:
-            res = subprocess.run(['pgrep', '-f', 'EtcdExplorerServer'], capture_output=True, text=True)
+            res = subprocess.run(['pgrep', '-f', 'mcp.barbican.server'], capture_output=True, text=True)
             if res.returncode == 0 and res.stdout.strip():
                 etcd_explorer_up = True
         except Exception:
@@ -1467,7 +1508,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                         pass
                     if os.path.exists(pid_file):
                         os.remove(pid_file)
-                subprocess.run(['pkill', '-f', 'EtcdExplorerServer'], capture_output=True)
+                subprocess.run(['pkill', '-f', 'mcp.barbican.server'], capture_output=True)
             elif component == 'etcd':
                 pid_file = os.path.join(ROOT_DIR, 'var', 'etcd_explorer.pid')
                 if os.path.exists(pid_file):
@@ -1479,7 +1520,7 @@ class UDMIRequestHandler(SimpleHTTPRequestHandler):
                         pass
                     if os.path.exists(pid_file):
                         os.remove(pid_file)
-                subprocess.run(['pkill', '-f', 'EtcdExplorerServer'], capture_output=True)
+                subprocess.run(['pkill', '-f', 'mcp.barbican.server'], capture_output=True)
                 subprocess.run(['pkill', '-f', 'etcd'], capture_output=True)
             elif component == 'influx':
                 subprocess.run(['pkill', '-f', 'influxd'], capture_output=True)

@@ -1,0 +1,391 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: barbican-mcp
+  namespace: udmis
+  labels:
+    app: barbican-mcp
+spec:
+  type: ClusterIP
+  selector:
+    app: barbican-mcp
+  ports:
+  - name: rpc
+    port: 8085
+    protocol: TCP
+    targetPort: 8085
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: barbican-mcp
+  namespace: udmis
+  labels:
+    app: barbican-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: barbican-mcp
+  template:
+    metadata:
+      labels:
+        app: barbican-mcp
+    spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - etcd
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: barbican-mcp
+        image: us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/udmimcp:mcps
+        imagePullPolicy: Always
+        command:
+        - python3
+        - -m
+        - mcp.barbican.server
+        - serve
+        - --port
+        - "8085"
+        - --host
+        - 0.0.0.0
+        - --etcd-target
+        - https://etcd:2379
+        env:
+        - name: ETCD_TARGET
+          value: https://etcd:2379
+        - name: SSL_SECRETS_DIR
+          value: /etc/udmis/certs
+        ports:
+        - containerPort: 8085
+          protocol: TCP
+        volumeMounts:
+        - name: udmis-certs
+          mountPath: /etc/udmis/certs
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8085
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      volumes:
+      - name: udmis-certs
+        secret:
+          secretName: udmis-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: uufi-mcp
+  namespace: udmis
+  labels:
+    app: uufi-mcp
+spec:
+  type: ClusterIP
+  selector:
+    app: uufi-mcp
+  ports:
+  - name: rpc
+    port: 8087
+    protocol: TCP
+    targetPort: 8087
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uufi-mcp
+  namespace: udmis
+  labels:
+    app: uufi-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: uufi-mcp
+  template:
+    metadata:
+      labels:
+        app: uufi-mcp
+    spec:
+      affinity:
+        podAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - mosquitto
+              topologyKey: kubernetes.io/hostname
+      containers:
+      - name: uufi-mcp
+        image: us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/udmimcp:mcps
+        imagePullPolicy: Always
+        command:
+        - python3
+        - -m
+        - mcp.uufi.server
+        - serve
+        - --port
+        - "8087"
+        - --host
+        - 0.0.0.0
+        env:
+        - name: MQTT_HOST
+          value: mosquitto
+        - name: MQTT_PORT
+          value: "8883"
+        - name: TARGET_PROJECT
+          value: //mqtt/mosquitto:8883
+        - name: SSL_SECRETS_DIR
+          value: /etc/udmis/certs
+        ports:
+        - containerPort: 8087
+          protocol: TCP
+        volumeMounts:
+        - name: udmis-certs
+          mountPath: /etc/udmis/certs
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8087
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8087
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+      volumes:
+      - name: udmis-certs
+        secret:
+          secretName: udmis-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: butler-mcp
+  namespace: udmis
+  labels:
+    app: butler-mcp
+spec:
+  type: ClusterIP
+  selector:
+    app: butler-mcp
+  ports:
+  - name: rpc
+    port: 8088
+    protocol: TCP
+    targetPort: 8088
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: butler-mcp
+  namespace: udmis
+  labels:
+    app: butler-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: butler-mcp
+  template:
+    metadata:
+      labels:
+        app: butler-mcp
+    spec:
+      containers:
+      - name: butler-mcp
+        image: us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/udmimcp:mcps
+        imagePullPolicy: Always
+        command:
+        - python3
+        - -m
+        - mcp.butler.server
+        - serve
+        - --port
+        - "8088"
+        - --host
+        - 0.0.0.0
+        env:
+        - name: POSTGRES_HOST
+          value: postgres
+        - name: POSTGRES_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: postgres
+        - name: INFLUXDB_HOST
+          value: influxdb
+        - name: INFLUX_PORT
+          value: "8086"
+        - name: INFLUXDB_PORT
+          value: "8086"
+        - name: INFLUXDB_URL
+          value: http://influxdb:8086
+        - name: INFLUXDB_TOKEN
+          value: test-influx-token-12345
+        - name: INFLUXDB_ORG
+          value: bridgehead
+        - name: INFLUXDB_BUCKET
+          value: home
+        ports:
+        - containerPort: 8088
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8088
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8088
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: gummi-backendconfig
+  namespace: udmis
+spec:
+  healthCheck:
+    checkIntervalSec: 15
+    healthyThreshold: 1
+    port: 8080
+    requestPath: /
+    timeoutSec: 5
+    type: HTTP
+    unhealthyThreshold: 2
+  logging:
+    enable: true
+    sampleRate: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gummi
+  namespace: udmis
+  labels:
+    app: gummi
+  annotations:
+    cloud.google.com/backend-config: '{"default": "gummi-backendconfig"}'
+    cloud.google.com/neg: '{"ingress": true}'
+spec:
+  type: ClusterIP
+  selector:
+    app: gummi
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gummi-lb
+  namespace: udmis
+  labels:
+    app: gummi
+  annotations:
+    networking.gke.io/load-balancer-type: Internal
+spec:
+  type: LoadBalancer
+  selector:
+    app: gummi
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gummi
+  namespace: udmis
+  labels:
+    app: gummi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gummi
+  template:
+    metadata:
+      labels:
+        app: gummi
+    spec:
+      containers:
+      - name: gummi
+        image: us-central1-docker.pkg.dev/bos-platform-artifacts/udmi/udmigummi:mcps
+        imagePullPolicy: Always
+        command:
+        - python3
+        - -m
+        - gummi.src.server
+        - --port
+        - "8080"
+        - --barbican-endpoint
+        - http://barbican-mcp:8085
+        - --uufi-endpoint
+        - http://uufi-mcp:8087
+        - --butler-endpoint
+        - http://butler-mcp:8088
+        ports:
+        - containerPort: 8080
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /api/system/capabilities
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/system/capabilities
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
