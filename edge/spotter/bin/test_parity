@@ -82,6 +82,11 @@ def clean_events(events):
       for _, data in evt["families"].items():
         if isinstance(data, dict) and "generation" in data:
           data["generation"] = "CLEANED"
+    # Legacy discovery_node lacked DiscoverySystem name/description fields,
+    # populating them only in system.ancillary. Strip them for parity comparison.
+    if evt.get("system") and isinstance(evt["system"], dict):
+      evt["system"].pop("name", None)
+      evt["system"].pop("description", None)
     cleaned.append(evt)
   return cleaned
 
