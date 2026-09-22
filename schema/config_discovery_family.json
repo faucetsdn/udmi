@@ -43,6 +43,10 @@
     "depth": {
       "description": "Indicates implicit enumeration of discovered devices",
       "$ref": "file:common.json#/definitions/depth"
+    },
+    "trace": {
+      "description": "Trace discovery parameters (when depth is 'trace')",
+      "$ref": "file:config_discovery_trace.json"
     }
   }
 }

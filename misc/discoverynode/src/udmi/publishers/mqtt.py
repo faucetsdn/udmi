@@ -242,7 +242,7 @@ class MQTT(udmi.publishers.publisher.Publisher):
     )
 
     if self.autentication_mechanism == "jwt_gcp":
-      client.tls_set(self.ca_file, tls_version=ssl.PROTOCOL_TLSv1_2)
+      client.tls_set(ca_certs=self.ca_file if self.ca_file else None, tls_version=ssl.PROTOCOL_TLSv1_2)
     elif self.autentication_mechanism == "udmi_local":
       client.tls_set(
         self.ca_file,

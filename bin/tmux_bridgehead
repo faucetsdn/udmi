@@ -13,11 +13,12 @@ tmux_validate_services "Bridgehead" "${ALLOWED_SERVICES[@]}"
 case "$TMUX_ACTION" in
     stop)
         pkill -f "pubber.serialNo" 2>/dev/null || true
+        "$UDMI_ROOT/bin/spotter" stop 2>/dev/null || true
         tmux_stop_session "$SESSION_NAME"
         ;;
     clean)
         echo "Purging Bridgehead runtime state..."
-        rm -rf "$UDMI_ROOT/out/pubber"* "$UDMI_ROOT/out/spotter.log"
+        rm -rf "$UDMI_ROOT/out/pubber"* "$UDMI_ROOT/out/spotter"* "$UDMI_ROOT/out/spotter_runtime_config"*.json
         ;;
     status)
         tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
@@ -30,9 +31,10 @@ case "$TMUX_ACTION" in
         ;;
     restart)
         pkill -f "pubber.serialNo" 2>/dev/null || true
+        "$UDMI_ROOT/bin/spotter" stop 2>/dev/null || true
         tmux_stop_session "$SESSION_NAME"
         echo "Purging Bridgehead runtime state..."
-        rm -rf "$UDMI_ROOT/out/pubber"* "$UDMI_ROOT/out/spotter.log"
+        rm -rf "$UDMI_ROOT/out/pubber"* "$UDMI_ROOT/out/spotter"* "$UDMI_ROOT/out/spotter_runtime_config"*.json
         ;&
     start)
         tmux_stop_session "$SESSION_NAME"
@@ -45,6 +47,7 @@ case "$TMUX_ACTION" in
         cd "$UDMI_ROOT"
         DUT_ID="${TMUX_TARGET_ID:-AHU-1}"
         SERIAL_NO="dut-${DUT_ID}-$RANDOM"
+        SPOTTER_SERIAL_NO="spotter-${DUT_ID}-$RANDOM"
 
         # 1. pubber (DUT - default: enabled, can be disabled via !pubber)
         if tmux_should_run_service "pubber"; then
@@ -53,7 +56,7 @@ case "$TMUX_ACTION" in
 
         # 2. spotter (Discovery Scanner - optional: ++spotter)
         if tmux_should_run_service "spotter" "true"; then
-            tmux_init_or_add_window "$SESSION_NAME" "spotter" "echo Starting spotter discovery agent...; tail -f /dev/null"
+            tmux_init_or_add_window "$SESSION_NAME" "spotter" "bin/spotter '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC' '$DUT_ID' '$SPOTTER_SERIAL_NO' --mode local"
         fi
 
         # Ensure Bridgehead session is always running even if no devices are launched immediately

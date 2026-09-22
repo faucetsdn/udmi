@@ -1,0 +1,36 @@
+#!/bin/bash -e
+# Spotter Resource Contention & Load Stress Test Suite
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+WORKSPACE_DIR=$(realpath "${SCRIPT_DIR}/../../..")
+source "${WORKSPACE_DIR}/etc/shell_common.sh"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: $0 [--mode local|canary]"
+    echo "Validates Spotter process CPU, memory consumption, file descriptor limits, and telemetry latency under concurrent heavy workloads."
+    echo "Tests Spotter safety circuit breaker threshold throttling to protect against kernel OOM kills."
+    exit 0
+fi
+
+MODE="local"
+if [[ "${1:-}" == "--mode" && -n "${2:-}" ]]; then
+    MODE="$2"
+fi
+
+echo "=== Spotter Resource Contention Test Suite (Mode: $MODE) ==="
+
+echo "--- Step 1: Executing Host Telemetry & Circuit Breaker Unit Verifications ---"
+(
+    cd "${WORKSPACE_DIR}"
+    PYTHONPATH=clientlib/python/src:gencode/python:. "${WORKSPACE_DIR}/edge/spotter/venv/bin/python3" -m unittest edge.spotter.tests.test_host_telemetry -v
+)
+
+echo "--- Step 2: Simulating Concurrent Workloads & Verifying File Descriptor Stability ---"
+(
+    cd "${WORKSPACE_DIR}"
+    PYTHONPATH=clientlib/python/src:gencode/python:. "${WORKSPACE_DIR}/edge/spotter/venv/bin/python3" -m unittest edge.spotter.tests.test_resource_contention -v
+)
+
+echo "-- SUCCESS: Resource contention and safety circuit breaker verified under concurrent workload stress."
+
+exit 0

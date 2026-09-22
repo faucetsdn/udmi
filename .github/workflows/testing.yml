@@ -813,3 +813,33 @@ jobs:
           path: |
             out/udmis*.log
 
+  spotter:
+    name: Spotter Agent Tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'gradle'
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Base setup
+        run: |
+          sudo bin/setup_base
+          bin/setup_ca sites/udmi_site_model localhost
+          bin/keygen CERT sites/udmi_site_model/devices/AHU-1
+      - name: Run Spotter Unit Tests
+        run: edge/spotter/bin/run_spotter_tests unit
+      - name: Run Spotter Integration & Parity Tests
+        run: |
+          MIN_DEVICES=${PARITY_TEST_MIN_DEVICES:-2}
+          MAX_DEVICES=${PARITY_TEST_MAX_DEVICES:-9}
+          export PARITY_TEST_NUM_DEVICES=$(( RANDOM % (MAX_DEVICES - MIN_DEVICES + 1) + MIN_DEVICES ))
+          echo "Configured PARITY_TEST_NUM_DEVICES=${PARITY_TEST_NUM_DEVICES} (random between ${MIN_DEVICES} and ${MAX_DEVICES})"
+          edge/spotter/bin/run_spotter_tests integration
