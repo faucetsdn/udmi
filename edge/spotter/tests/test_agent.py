@@ -614,6 +614,27 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
 
     self.assertTrue(self.manager._should_scan("bacnet", fam_cfg))
 
+  def test_trace_generation_triggers_when_due(self):
+    """Verifies that trace capture triggers when due after config update."""
+    past_time = datetime.now(timezone.utc) - timedelta(seconds=10)
+    past_gen_str = past_time.strftime("%Y-%m-%dT%H:%M:%SZ")
+    fam_cfg = FamilyDiscoveryConfig(
+        generation=past_gen_str,
+        depth=Depth.trace,
+        scan_duration_sec=4,
+    )
+    config = Config(discovery=DiscoveryConfig(families={"ether": fam_cfg}))
+    self.manager.handle_config(config)
+
+    # After handle_config, the scan is pending and due, so _should_scan is True
+    self.assertTrue(self.manager._should_scan("ether", fam_cfg))
+
+    # Once the scan runs and stops, it should not trigger again
+    f_state = self.manager._discovery_state.families.get("ether")
+    self.assertIsNotNone(f_state)
+    f_state.phase = DiscoveryPhase.stopped
+    self.assertFalse(self.manager._should_scan("ether", fam_cfg))
+
   def test_recurring_interval_advances_generation_and_pending(self):
     """Verifies recurring interval advances generation and marks pending."""
     fam_cfg = FamilyDiscoveryConfig(

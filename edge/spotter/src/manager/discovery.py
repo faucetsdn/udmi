@@ -221,9 +221,6 @@ class SpotterDiscoveryManager(DiscoveryManager):
 
   def _should_scan(self, family: str, config: FamilyDiscoveryConfig) -> bool:
     """Determines whether a discovery scan is due for the given family."""
-    depth_val = getattr(config, "depth", None)
-    is_trace = depth_val in (Depth.trace, Depth.trace.value)
-
     f_state = self._discovery_state.families.get(family)
     if not f_state:
       f_state = FamilyDiscoveryState()
@@ -240,17 +237,6 @@ class SpotterDiscoveryManager(DiscoveryManager):
     gen_dt = _parse_generation(gen_str)
     state_gen = getattr(f_state, "generation", None) if f_state else None
     state_gen_dt = _parse_generation(state_gen)
-
-    # TRACE capture
-    if is_trace:
-      if not gen_str or gen_str == state_gen:
-        return False
-      if gen_dt and gen_dt > now_dt:
-        if f_state:
-          f_state.phase = DiscoveryPhase.pending
-          f_state.generation = gen_str
-        return False
-      return True
 
     # Standard Protocol sweeps (BACnet, Ether, IPv4)
     interval_sec = getattr(config, "scan_interval_sec", None)
