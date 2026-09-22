@@ -41,7 +41,7 @@ case "$TMUX_ACTION" in
 
         # 1. MCP Server Daemon (default: enabled)
         if tmux_should_run_service "server"; then
-            tmux_init_or_add_window "$SESSION_NAME" "server" "PYTHONPATH=\"$UDMI_ROOT:\${PYTHONPATH:-}\" python3 mcp/server.py mcp"
+            tmux_init_or_add_window "$SESSION_NAME" "server" "PYTHONPATH=\"$UDMI_ROOT:\${PYTHONPATH:-}\" python3 mcp/infra/server.py mcp"
         fi
 
         echo "MCP Server session '$SESSION_NAME' initialized."

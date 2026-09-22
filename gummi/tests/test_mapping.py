@@ -7,6 +7,7 @@ import tempfile
 import threading
 import time
 from typing import Any, Dict
+import urllib.error
 import urllib.request
 import pytest
 
@@ -30,10 +31,11 @@ def gummi_server():
     port = s.getsockname()[1]
     s.close()
 
-    server = GummiServer(host="127.0.0.1", port=port)
+    server = GummiServer(host="127.0.0.1", port=port, mock_mode=True, enable_mapping_seed=True)
     server_address = (server.host, server.port)
     httpd = ThreadingHTTPServer(server_address, GummiRequestHandler)
     httpd.daemon_threads = True
+    httpd.enable_mapping_seed = server.enable_mapping_seed
     httpd.db = server.db
     httpd.uufi = server.uufi
     server.httpd = httpd
@@ -71,7 +73,7 @@ class TestGummiMappingLifecycle:
 
     def test_gummi_db_populate_and_get_messages(self):
         """Validates that GummiDB can populate and query the 3-stage message lifecycle."""
-        db = GummiDB()
+        db = GummiDB(mock_mode=True)
         res = db.populate_mapping_scenario(registry_id="ZZ-TRI-FECTA")
         assert res["status"] == "SUCCESS"
         assert res["records_inserted"] == 4
@@ -121,6 +123,42 @@ class TestGummiMappingLifecycle:
         assert res["status"] == "SUCCESS"
         assert res["records_inserted"] == 4
         assert len(res["messages"]) == 4
+
+    def test_api_mapping_seed_disabled_returns_403(self):
+        """Validates that POST /api/mapping/run returns 403 Forbidden when enable_mapping_seed=False."""
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+        s.close()
+
+        server = GummiServer(host="127.0.0.1", port=port, mock_mode=True, enable_mapping_seed=False)
+        server_address = (server.host, server.port)
+        httpd = ThreadingHTTPServer(server_address, GummiRequestHandler)
+        httpd.daemon_threads = True
+        httpd.enable_mapping_seed = False
+        httpd.db = server.db
+        httpd.uufi = server.uufi
+        server.httpd = httpd
+
+        thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+        thread.start()
+        time.sleep(0.2)
+        base_url = f"http://127.0.0.1:{port}"
+
+        try:
+            url = f"{base_url}/api/mapping/run"
+            data = json.dumps({"registry_id": "ZZ-TRI-FECTA"}).encode("utf-8")
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            with pytest.raises(urllib.error.HTTPError) as exc_info:
+                urllib.request.urlopen(req)
+            assert exc_info.value.code == 403
+        finally:
+            try:
+                httpd.server_close()
+            except Exception:
+                pass
+            server.uufi.stop()
 
     def test_mapping_engine_proposal_generation(self):
         """Tests that run_mapping() generates site model updates with complete proposal metadata."""

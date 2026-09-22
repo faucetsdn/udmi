@@ -1,0 +1,29 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: etcd-explorer-ingress
+  namespace: udmis
+  annotations:
+    kubernetes.io/ingress.class: gce
+    kubernetes.io/ingress.global-static-ip-name: loadbalancer-ip
+spec:
+  defaultBackend:
+    service:
+      name: gummi
+      port:
+        number: 8080
+  rules:
+  - host: bos-platform-dev.corp.goog
+    http:
+      paths:
+      - backend:
+          service:
+            name: gummi
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - bos-platform-dev.corp.goog
+    secretName: etcd-explorer-ingress-tls

@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "udmi-butler": {
+      "command": "bin/mcp_butler",
+      "args": ["mcp"],
+      "env": {
+        "PYTHONUNBUFFERED": "1"
+      }
+    }
+  }
+}

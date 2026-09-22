@@ -4,4 +4,8 @@
 UDMI_ROOT=$(cd "$(dirname "$0")/.." && pwd)
 export PYTHONPATH="$UDMI_ROOT:${PYTHONPATH:-}"
 
-exec python3 "$UDMI_ROOT/mcp/server.py" mcp "$@"
+if [ -f "$UDMI_ROOT/venv/bin/activate" ]; then
+    source "$UDMI_ROOT/venv/bin/activate"
+fi
+
+exec python3 "$UDMI_ROOT/mcp/infra/server.py" mcp "$@"

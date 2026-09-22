@@ -12,7 +12,8 @@ import os
 import sys
 from typing import Any, Dict, List, Optional
 
-from mcp.session_manager import SessionManager
+from mcp.infra.session_manager import SessionManager
+
 
 
 MCP_TOOLS = [
