@@ -2,6 +2,8 @@
 
 # Discovery
 
+Discovery is the first phase in the overall [Onboarding](onboarding.md) flow, followed by [Mapping](mapping.md).
+
 Discovery consists of two related processes for describing the 'as built'
 state of a system: _scanning_ and _enumeration_. For devices, the overall
 [discovery sequence](sequences/discovery.md) describes the exact sequence
@@ -18,38 +20,6 @@ information intrinsic to a device and the capabilities it provides.
 Backend services will receive a streaming set of
 [_discovery enumeration messages_](../../tests/schemas/events_discovery/enumeration.json) that
 follow the appropriate [_discovery event schema_](../../gencode/docs/events_discovery.html).
-
-## Sequence Diagram
-
-The overall discovery sequence involves multiple components that work together to provide the overall flow:
-* **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
-* **Spotter**: Operative node that performs _discovery_, scanning local networks and producing observations.
-* **Provisioning Engine**: Cloud-based agent/Provisioning Engine responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
-* **Mapping Agent**: Used at the spotter to coordinate on-prem discovery.
-* **Pipeline**: Ultimate recipient of pointset information, The thing that cares about 'temperature' in a room.
-
-(The `*` prefixing a `*term` means that this id/property is being sourced/created at that step.)
-
-```mermaid
-sequenceDiagram
-  %%{wrap}%%
-  participant Devices
-  participant Spotter
-  participant Provisioning Engine
-  participant Mapping Agent
-  participant Pipeline
-  Note over Devices, Provisioning Engine: Discovery Start
-  activate Provisioning Engine
-  Mapping Agent->>Spotter: Discovery Config
-  loop
-    Devices-->Spotter: fieldbus
-    Spotter->>Provisioning Engine: Discovery Event<br/>(*scan_id)<br/><properties: *refs>
-  end
-  Note over Provisioning Engine: Provisioning<br/>& Mapping
-  Provisioning Engine ->> Pipeline: Pointset Event<br/>After Mapping
-  deactivate Provisioning Engine
-  Devices->>Pipeline: Pointset Event<br/>(device_id, device_num_id, points)<br/><pointset>
-```
 
 ## Scanning
 

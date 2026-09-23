@@ -2,7 +2,9 @@
 
 # Mapping
 
-The overall "mapping" flow is part of the broader [onboarding](onboarding.md) flow and consists of a number of separate subflows stitched together for a complete
+Mapping is the second phase in the overall [Onboarding](onboarding.md) flow, positioned between [Discovery](discovery.md) and [Provisioning](provisioning.md).
+
+The overall "mapping" flow consists of a number of separate subflows stitched together for a complete
 end-to-end process to take an "unknown" device and ensure that it's properly integrated with backend services.
 
 At a high-level, the process involves different message subgroups that handle slightly different scopes of device data:
@@ -14,9 +16,9 @@ At a high-level, the process involves different message subgroups that handle sl
 The overall mapping sequence involves multiple components that work together to provide the overall flow. The mapping process is entirely message-based, cleanly separating site model file manipulation from the mapping logic itself.
 
 * **Discovery**: Thing that runs on-prem fieldbus discovery and emits discovery messages.
-* **Mapping**: Takes model messages (from the Registrar) and discovery messages (from Devices) as input, and outputs updated model messages.
+* **Mapping**: Takes model messages (from the Registrar) and discovery messages (from Devices) as input, and outputs proposal model messages.
 * **Registrar**: Reads the existing site model from the source repository and generates base model messages for the system.
-* **Reconciler**: Receives updated model messages from the Mapping Service and performs reconciliation to update the site model files.
+* **Reconciler**: Receives proposal model messages from the Mapping Service and performs reconciliation to update the site model files.
 * **Source Repo**: Ultimate source of truth for the particular site, containing all the consolidated information.
 
 ```mermaid
@@ -32,7 +34,7 @@ sequenceDiagram
   Registrar->>Mapping: Base Model Messages
   Discovery->>Mapping: Discovery Messages
   Note over Mapping: Map Results
-  Mapping->>Reconciler: Updated Model Messages
+  Mapping->>Reconciler: Proposal Model Messages
   Reconciler->>Source Repo: Update Site Model
 ```
 
@@ -42,7 +44,7 @@ sequenceDiagram
 ### Key Workflow Steps
 * **Registrar Model Loading**: The Registrar reads the `Source Repo` and publishes the current site model as messages to the system.
 * **Device Mapping**: The Mapping Service processes the incoming discovery and model messages to resolve and compute the desired end-state mapping.
-* **Reconciliation**: The Mapping Service outputs the resulting updated model messages. The Reconciler consumes these messages and applies the necessary changes to the `Source Repo`.
+* **Reconciliation**: The Mapping Service outputs the resulting proposal model messages. The Reconciler consumes these messages and applies the necessary changes to the `Source Repo`.
 
 ### Device Mapping Component
 The "Device Mapping" step is a conceptual module that can be served by many different sub-modules, e.g.:
@@ -52,7 +54,7 @@ The "Device Mapping" step is a conceptual module that can be served by many diff
 
 ## Local Implicit Mapping 
 
-While the mapping service is strictly message-in and message-out conceptually, a concrete internal implementation may utilize an intermediary database for state management. The internal reference implementation captures incoming discovery and model messages into a local PostgreSQL database. A separate mapping executable then reads from this database, performs its mapping logic, and outputs the updated model messages.
+While the mapping service is strictly message-in and message-out conceptually, a concrete internal implementation may utilize an intermediary database for state management. The internal reference implementation captures incoming discovery and model messages into a local PostgreSQL database. A separate mapping executable then reads from this database, performs its mapping logic, and outputs the proposal model messages.
 
 This design satisfies the "message in, message out" guideline while using the database as a robust intermediary. Other external implementations may employ different storage mechanisms, provided they adhere to the same external message contracts.
 
@@ -66,7 +68,7 @@ sequenceDiagram
   MessageBus->>Postgres: Model & Discovery Messages (In)
   Logic->>Postgres: Fetch Recent Results
   Note over Logic: Execute Mapping Logic
-  Logic->>MessageBus: Updated Model Messages (Out)
+  Logic->>MessageBus: Proposal Model Messages (Out)
 ```
 
 ### Reference Mapping Logic
