@@ -102,16 +102,16 @@ At the `entries` depth, the discovery node identifies individual BACnet devices 
 
 ### 3.3 `system` — Device Object (`DO/0`) Properties
 
-At the `system` depth, the discovery node queries the BACnet **Device Object** (`object-type = device (8)`, `instance = <addr>`) of each discovered device to populate hardware and identity metadata.
+At the `system` depth, the discovery node queries the BACnet **Device Object** (`object-type = device`, `instance = <addr>`) of each discovered device to populate hardware and identity metadata.
 
 * **Relative to `entries`**:
   * The same as `entries`, **with the addition of** the `system` block populated from the BACnet Device Object's standard properties:
-    * `system.name` <- `object-name` (Property ID 77)
-    * `system.description` <- `description` (Property ID 28)
-    * `system.serial_no` <- `serial-number` (Property ID 372, if supported by device)
-    * `system.hardware.make` <- `vendor-name` (Property ID 121)
-    * `system.hardware.model` <- `model-name` (Property ID 70)
-    * `system.ancillary` <- Additional Device Object properties (`firmware-revision` [44], `application-software-version` [12], `location` [58], `vendor-identifier` [120], `protocol-version` [98], `protocol-revision` [139]).
+    * `system.name` <- `object-name`
+    * `system.description` <- `description`
+    * `system.serial_no` <- `serial-number` (if supported by device)
+    * `system.hardware.make` <- `vendor-name`
+    * `system.hardware.model` <- `model-name`
+    * `system.ancillary` <- Additional Device Object properties (`firmware-revision`, `application-software-version`, `location`, `vendor-identifier`, `protocol-version`, `protocol-revision`).
 * **BACnet Operations**:
   * Issues `ReadPropertyMultiple` against `device,<addr>` (falling back to individual `ReadProperty` requests if segmentation or `ReadPropertyMultiple` is unsupported).
 
@@ -140,24 +140,24 @@ At the `system` depth, the discovery node queries the BACnet **Device Object** (
 
 ### 3.4 `details` — BACnet Object References & Properties
 
-At the `details` depth, the discovery node enumerates the device's `object-list` (Property ID 76 on `device,<addr>`) and reads the descriptive and operational BACnet properties for each object.
+At the `details` depth, the discovery node enumerates the device's `object-list` on `device,<addr>` and reads the descriptive and operational BACnet properties for each object.
 
 * **Relative to `system`**:
   * The same as `system`, **with the addition of** the `refs` map containing each discovered BACnet object's canonical reference key (`"<OBJECT_TYPE>/<INSTANCE>"`, e.g., `"AI/2"`, `"AV/12"`, `"BO/21"`, `"MSV/1"`, matching `BacnetFamilyProvider` and [docs/specs/bacnet.md](bacnet.md)) mapped to a populated [`RefDiscovery`](../../schema/discovery_ref.json) object:
-    * `name` <- `object-name` (Property ID 77)
-    * `description` <- `description` (Property ID 28)
+    * `name` <- `object-name`
+    * `description` <- `description`
     * `type` <- Standard BACnet `object-type` name (`"analog-input"`, `"analog-output"`, `"analog-value"`, `"binary-input"`, `"binary-output"`, `"binary-value"`, `"multi-state-input"`, `"multi-state-output"`, `"multi-state-value"`, etc.)
-    * `units` <- `units` (Property ID 117, for analog objects)
-    * `possible_values` <- `[inactive-text, active-text]` (Property IDs 46, 4 for binary objects) or `state-text` array (Property ID 110 for multi-state objects)
-    * `writable` <- `true` for output objects (`AO`, `BO`, `MSO`) and commandable value objects (`AV`, `BV`, `MSV` where `priority-array` [Property ID 87] is present); `false` for input objects (`AI`, `BI`, `MSI`) and non-commandable value objects
+    * `units` <- `units` (for analog objects)
+    * `possible_values` <- `[inactive-text, active-text]` (for binary objects) or `state-text` array (for multi-state objects)
+    * `writable` <- `true` for output objects (`AO`, `BO`, `MSO`) and commandable value objects (`AV`, `BV`, `MSV` where `priority-array` is present); `false` for input objects (`AI`, `BI`, `MSI`) and non-commandable value objects
     * `ancillary` <- Operational and diagnostic BACnet object properties:
-      * `present-value` (Property ID 85)
-      * `status-flags` (Property ID 111)
-      * `event-state` (Property ID 36)
-      * `out-of-service` (Property ID 81)
-      * `reliability` (Property ID 103)
-      * `cov-increment` (Property ID 22, if applicable)
-      * `min-pres-value` / `max-pres-value` / `resolution` (Property IDs 69, 65, 106, if applicable)
+      * `present-value`
+      * `status-flags`
+      * `event-state`
+      * `out-of-service`
+      * `reliability`
+      * `cov-increment` (if applicable)
+      * `min-pres-value` / `max-pres-value` / `resolution` (if applicable)
 
 #### JSON Additions Relative to `system` (`depth: "details"`)
 ```json
