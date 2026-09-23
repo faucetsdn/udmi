@@ -318,12 +318,63 @@ public class DiscoverySequences extends SequenceBase {
         ImmutableSet.of(targetNetwork), null);
   }
 
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
+  @Summary("Check results of a single scan with buckets depth")
+  public void scan_depth_buckets() {
+    SortedSet<String> networks = expectedTargetNetworks(null);
+    ifTrueSkipTest(networks.isEmpty(), "no target networks for buckets scan");
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION,
+        Depth.BUCKETS, null, null);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
+  @Summary("Check results of a single scan with entries depth")
+  public void scan_depth_entries() {
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION,
+        Depth.ENTRIES, null, null);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
+  @Summary("Check results of a single scan with system depth")
+  public void scan_depth_system() {
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION,
+        Depth.SYSTEM, null, null);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
+  @Summary("Check results of a single scan targeting an address range")
+  public void scan_addrs_range() {
+    SortedSet<String> allAddresses = expectedTargetDevices(null);
+    List<Long> numericAddrs = allAddresses.stream()
+        .map(a -> catchToNull(() -> Long.parseLong(a)))
+        .filter(Objects::nonNull)
+        .sorted()
+        .toList();
+    ifTrueSkipTest(numericAddrs.size() <= SCAN_TARGET_COUNT,
+        "Not enough numeric targets to test address range scan");
+    long low = numericAddrs.get(0);
+    long high = numericAddrs.get((int) SCAN_TARGET_COUNT - 1);
+    String rangeSpec = format("%d-%d", low, high);
+    info("Testing against scan address range: " + rangeSpec);
+    scanAndVerify(cleanInstantDate(Instant.now().minusSeconds(1)), DEFAULT_ENUMERATION,
+        null, null, ImmutableSet.of(rangeSpec));
+  }
+
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate) {
     scanAndVerify(scanStart, shouldEnumerate, null, null);
   }
 
   private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate,
       Set<String> networks, Set<String> targets) {
+    scanAndVerify(scanStart, shouldEnumerate, null, networks, targets);
+  }
+
+  private void scanAndVerify(Date scanStart, DiscoveryScanMode shouldEnumerate,
+      Depth explicitDepth, Set<String> networks, Set<String> targets) {
     final boolean scheduledStart = scanStart.after(new Date());
 
     initializeDiscovery();
@@ -331,7 +382,7 @@ public class DiscoverySequences extends SequenceBase {
 
     scanGeneration = scanStart.toInstant();
 
-    configureScan(scanGeneration, null, shouldEnumerate, networks, targets);
+    configureScan(scanGeneration, null, shouldEnumerate, explicitDepth, networks, targets);
     final Instant scanConfigured = getNowInstant();
 
     if (shouldEnumerate == NO_SCAN) {
@@ -344,10 +395,13 @@ public class DiscoverySequences extends SequenceBase {
       return;
     }
 
-    // If targets are specified then enumeration is expected.
-    boolean targetEnum = targets != null && shouldEnumerate == DEFAULT_ENUMERATION;
+    // If targets are specified then enumeration is expected unless an explicit depth is set.
+    boolean targetEnum = targets != null && shouldEnumerate == DEFAULT_ENUMERATION
+        && explicitDepth == null;
     boolean requestedEnum = shouldEnumerate == PLEASE_ENUMERATE;
-    final boolean expectedEnumeration = requestedEnum || targetEnum;
+    final Depth effectiveDepth = ofNullable(explicitDepth)
+        .orElse((requestedEnum || targetEnum) ? Depth.DETAILS : Depth.ENTRIES);
+    final boolean expectedEnumeration = effectiveDepth == Depth.DETAILS;
 
     if (scheduledStart) {
       waitUntil("scheduled scan pending", WAITING_PERIOD, this::detailScanPending);
@@ -385,7 +439,7 @@ public class DiscoverySequences extends SequenceBase {
     checkThat("received expected number of discovery events", events.size() == expectedEvents);
 
     Function<DiscoveryEvents, List<String>> invalidator = event -> invalidReasons(event,
-        generation);
+        generation, effectiveDepth);
     List<String> reasons = events.stream().map(invalidator).flatMap(List::stream)
         .collect(Collectors.toList());
     reasons.addAll(checkEnumeration(events, expectedEnumeration));
@@ -402,18 +456,29 @@ public class DiscoverySequences extends SequenceBase {
     Set<String> discoveredAddresses = events.stream().map(x -> x.addr).filter(Objects::nonNull)
         .collect(toSet());
 
-    Set<String> duplicates = discoveredAddresses.stream()
-        .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
-        .entrySet().stream().filter(p -> p.getValue() > 1).map(Entry::getKey)
-        .collect(toSet());
-    checkThat("all scan addresses are unique", duplicates.isEmpty(),
-        "duplicates: " + CSV_JOINER.join(duplicates));
+    if (effectiveDepth == Depth.BUCKETS) {
+      checkThat("no scan addresses present in buckets scan", discoveredAddresses.isEmpty());
+      List<String> discoveredNetList = events.stream().map(x -> x.network).filter(Objects::nonNull)
+          .toList();
+      Set<String> duplicateNets = discoveredNetList.stream()
+          .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+          .entrySet().stream().filter(p -> p.getValue() > 1).map(Entry::getKey)
+          .collect(toSet());
+      checkThat("all scan networks are unique", duplicateNets.isEmpty(),
+          "duplicate networks: " + CSV_JOINER.join(duplicateNets));
+    } else {
+      Set<String> duplicates = events.stream().map(x -> x.addr).filter(Objects::nonNull)
+          .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+          .entrySet().stream().filter(p -> p.getValue() > 1).map(Entry::getKey)
+          .collect(toSet());
+      checkThat("all scan addresses are unique", duplicates.isEmpty(),
+          "duplicates: " + CSV_JOINER.join(duplicates));
 
-    Set<String> expTargets = Optional.ofNullable(targets)
-        .orElseGet(() -> expectedTargetDevices(networks));
-    SetView<String> diffTargets = symmetricDifference(discoveredAddresses, expTargets);
-    checkThat("all expected addresses were found", diffTargets.isEmpty(),
-        format("expected %s, found %s", expTargets, discoveredAddresses));
+      Set<String> expTargets = expectedTargetDevices(networks, targets);
+      SetView<String> diffTargets = symmetricDifference(discoveredAddresses, expTargets);
+      checkThat("all expected addresses were found", diffTargets.isEmpty(),
+          format("expected %s, found %s", expTargets, discoveredAddresses));
+    }
 
     Set<String> discoveredNetworks = events.stream().map(x -> x.network).filter(Objects::nonNull)
         .collect(toSet());
@@ -432,11 +497,42 @@ public class DiscoverySequences extends SequenceBase {
   }
 
   private SortedSet<String> expectedTargetDevices(Set<String> networks) {
+    return expectedTargetDevices(networks, null);
+  }
+
+  private SortedSet<String> expectedTargetDevices(Set<String> networks, Set<String> targets) {
     initializeFamilies();
     return siteModel.metadataStream()
         .filter(entry -> onExpectedNetwork(entry, networks))
         .map(this::scanFamilyAddr)
-        .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
+        .filter(Objects::nonNull)
+        .filter(addr -> matchesTarget(targets, addr))
+        .collect(Collectors.toCollection(TreeSet::new));
+  }
+
+  private boolean matchesTarget(Set<String> targets, String addr) {
+    if (targets == null) {
+      return true;
+    }
+    if (addr == null) {
+      return false;
+    }
+    if (targets.contains(addr)) {
+      return true;
+    }
+    Long addrVal = catchToNull(() -> Long.parseLong(addr));
+    if (addrVal == null) {
+      return false;
+    }
+    return targets.stream().anyMatch(target -> {
+      String[] parts = target.split("-", 2);
+      if (parts.length == 2) {
+        Long low = catchToNull(() -> Long.parseLong(parts[0]));
+        Long high = catchToNull(() -> Long.parseLong(parts[1]));
+        return low != null && high != null && addrVal >= low && addrVal <= high;
+      }
+      return false;
+    });
   }
 
   private boolean onExpectedNetwork(Entry<String, Metadata> entry, Set<String> networks) {
@@ -448,7 +544,7 @@ public class DiscoverySequences extends SequenceBase {
   private SortedSet<String> expectedTargetNetworks(Set<String> targets) {
     initializeFamilies();
     return siteModel.metadataStream()
-        .filter(entry -> targets == null || targets.contains(getLocalnetAddr(entry)))
+        .filter(entry -> matchesTarget(targets, getLocalnetAddr(entry)))
         .map(this::scanFamilyNetwork)
         .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
   }
@@ -472,17 +568,33 @@ public class DiscoverySequences extends SequenceBase {
         format("Expected stopped %s but %s", isoConvert(scanGeneration), describedFamilyState()));
   }
 
-  private List<String> invalidReasons(DiscoveryEvents discoveryEvent, Date scanGeneration) {
+  private List<String> invalidReasons(DiscoveryEvents discoveryEvent, Date scanGeneration,
+      Depth effectiveDepth) {
     List<String> exceptions = new ArrayList<>();
     addIfCaught(exceptions,
         () -> assertEquals("bad scan family", scanFamily, discoveryEvent.family));
     addIfCaught(exceptions,
         () -> assertEquals("bad generation", scanGeneration, discoveryEvent.generation));
-    ifTrueThen(discoveryEvent.event_no > 0, () -> validateEvent(discoveryEvent, exceptions));
+    ifTrueThen(discoveryEvent.event_no > 0,
+        () -> validateEvent(discoveryEvent, effectiveDepth, exceptions));
     return exceptions;
   }
 
-  private void validateEvent(DiscoveryEvents discoveryEvent, List<String> exceptions) {
+  private void validateEvent(DiscoveryEvents discoveryEvent, Depth effectiveDepth,
+      List<String> exceptions) {
+    if (effectiveDepth == Depth.BUCKETS) {
+      addIfCaught(exceptions, () -> assertNotNull("empty scan network", discoveryEvent.network));
+      addIfCaught(exceptions, () -> ifNotNullThen(discoveryEvent.network,
+          network -> providerFamily.validateNetwork(network)));
+      if ("bacnet".equals(scanFamily)) {
+        addIfCaught(exceptions, () -> assertEquals("bad bacnet ipv4 port",
+            Integer.valueOf(47808), catchToNull(() -> discoveryEvent.families.get("ipv4").port)));
+      }
+      addIfFalse(exceptions, discoveryEvent.addr == null, "unexpected addr in buckets scan");
+      addIfFalse(exceptions, discoveryEvent.system == null, "unexpected system in buckets scan");
+      return;
+    }
+
     String addr = discoveryEvent.addr;
     addIfCaught(exceptions, () -> assertNotNull("empty scan address", addr));
     addIfCaught(exceptions, () -> providerFamily.validateAddr(addr));
@@ -494,6 +606,31 @@ public class DiscoverySequences extends SequenceBase {
         "discovered addr does not match");
     addIfFalse(exceptions, Objects.equals(localnetModel.network, discoveryEvent.network),
         "discovered network does not match");
+
+    if (effectiveDepth == Depth.ENTRIES) {
+      addIfFalse(exceptions, discoveryEvent.system == null, "unexpected system in entries scan");
+    } else if (effectiveDepth.ordinal() >= Depth.SYSTEM.ordinal()) {
+      addIfCaught(exceptions,
+          () -> assertNotNull("missing system discovery block", discoveryEvent.system));
+      if (discoveryEvent.system != null) {
+        addIfFalse(exceptions,
+            Objects.equals(catchToNull(() -> metadata.system.physical_tag.asset.name),
+                discoveryEvent.system.name),
+            "discovered system.name does not match");
+        addIfFalse(exceptions,
+            Objects.equals(catchToNull(() -> metadata.system.serial_no),
+                discoveryEvent.system.serial_no),
+            "discovered system.serial_no does not match");
+        addIfFalse(exceptions,
+            Objects.equals(catchToNull(() -> metadata.system.hardware.make),
+                catchToNull(() -> discoveryEvent.system.hardware.make)),
+            "discovered system.hardware.make does not match");
+        addIfFalse(exceptions,
+            Objects.equals(catchToNull(() -> metadata.system.hardware.model),
+                catchToNull(() -> discoveryEvent.system.hardware.model)),
+            "discovered system.hardware.model does not match");
+      }
+    }
   }
 
   private void addIfCaught(List<String> exceptions, Runnable checker) {
@@ -546,10 +683,12 @@ public class DiscoverySequences extends SequenceBase {
       return format("Device %s is missing discovered refs", deviceEntry.getKey());
     }
 
+    Set<String> discoveredRefs = discoveryEvents.refs.keySet();
+    discoveredRefs.forEach(providerFamily::validatePoint);
+
     HashMap<String, PointPointsetModel> devicePoints = deviceEntry.getValue().pointset.points;
     Set<String> metadataRefs = devicePoints.values().stream()
         .map(x -> x.ref).filter(Objects::nonNull).collect(toSet());
-    Set<String> discoveredRefs = discoveryEvents.refs.keySet();
     SetView<String> extraMetadata = Sets.difference(metadataRefs, discoveredRefs);
     SetView<String> extraDiscovered = Sets.difference(discoveredRefs, metadataRefs);
     return extraMetadata.isEmpty() && extraDiscovered.isEmpty() ? null
@@ -625,6 +764,12 @@ public class DiscoverySequences extends SequenceBase {
 
   private void configureScan(Instant startTime, Duration scanInterval,
       DiscoveryScanMode shouldEnumerate, Set<String> networks, Set<String> targets) {
+    configureScan(startTime, scanInterval, shouldEnumerate, null, networks, targets);
+  }
+
+  private void configureScan(Instant startTime, Duration scanInterval,
+      DiscoveryScanMode shouldEnumerate, Depth explicitDepth, Set<String> networks,
+      Set<String> targets) {
     requireNonNull(scanFamily, "scan family not defined");
     Integer intervalSec = ofNullable(scanInterval).map(Duration::getSeconds).map(Long::intValue)
         .orElse(null);
@@ -633,7 +778,8 @@ public class DiscoverySequences extends SequenceBase {
         isoConvert(startTime), intervalSec));
     FamilyDiscoveryConfig configFamily = getConfigFamily(scanFamily);
     configFamily.generation = SemanticDate.describe("family generation", startTime);
-    configFamily.depth = enumerationDepthIf(shouldEnumerate);
+    configFamily.depth = ofNullable(explicitDepth)
+        .orElseGet(() -> enumerationDepthIf(shouldEnumerate));
     configFamily.scan_interval_sec = intervalSec;
     configFamily.scan_duration_sec = ofNullable(intervalSec).orElse(SCAN_DURATION_SEC);
     configFamily.addrs = ifNotNullGet(targets,

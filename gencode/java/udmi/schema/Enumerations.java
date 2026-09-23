@@ -52,10 +52,10 @@ public class Enumerations {
 
         BUCKETS("buckets"),
         ENTRIES("entries"),
-        DETAILS("details"),
         PARTS("parts"),
         SYSTEM("system"),
-        REFS("refs");
+        REFS("refs"),
+        DETAILS("details");
         private final String value;
         private final static Map<String, Enumerations.Depth> CONSTANTS = new HashMap<String, Enumerations.Depth>();
 

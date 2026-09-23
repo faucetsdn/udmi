@@ -89,7 +89,7 @@
       "additionalProperties": false,
       "existingJavaType": "java.util.Map<String, RefDiscovery>",
       "patternProperties": {
-        "^[-_.:/a-zA-Z0-9]+$": {
+        "^[-_.:/#a-zA-Z0-9]+$": {
           "$ref": "file:discovery_ref.json#"
         }
       }
