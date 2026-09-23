@@ -80,7 +80,7 @@ At the `entries` depth, the discovery node identifies individual BACnet devices 
     * `families.ipv4.addr`: The specific device's IPv4 address paired with its BACnet/IP UDP `port` (`47808`).
     * `families.ethmac` (or `mstp`): Lower-layer MAC address observed in the `I-Am` NPDU/APDU source header.
 * **BACnet Operations**:
-  * Issues `Who-Is` (unconstrained, bounded by `networks`, or targeted by `addrs`) and records each responder's `I-Am` `iAmDeviceIdentifier` instance number (`addr`), source network (`network`), and source IP/UDP/MAC endpoint (`families`).
+  * Issues `Who-Is` (unconstrained, bounded by `networks`, or targeted by `addrs`) and records each responding device's `I-Am` `iAmDeviceIdentifier` instance number (`addr`), source network (`network`), and source IP/UDP/MAC endpoint (`families`).
 
 #### JSON Additions Relative to `buckets` (`depth: "entries"`)
 ```json
