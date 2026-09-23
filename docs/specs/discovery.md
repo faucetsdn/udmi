@@ -47,6 +47,28 @@ trigger discovered device enumeration.
 
 For details on how the `generation` field operates during different scan types, see the [Discovery Generation](discovery/generation.md) documentation. For protocol-specific details on active BACnet discovery and scan depths, see the [BACnet Discovery](discovery_bacnet.md) specification.
 
+## Discovery Depth
+
+The `depth` setting (`config.discovery.families.<family>.depth` for network scans, or `config.discovery.depth` for self-enumeration) controls the granularity of information collected and reported in [`events_discovery`](../../schema/events_discovery.json) messages.
+
+The active discovery depths are ordered cumulatively from coarse network topology to full point or service enumeration:
+
+* **`buckets`**: Identifies high-level network segments, subnets, or device registries (`network`) without enumerating individual devices.
+* **`entries`**: Discovers individual device addresses (`addr`) within each bucket and correlates cross-family transport addresses (`families`, such as IPv4 endpoints and Ethernet MAC addresses).
+* **`system`**: Queries each discovered device for its system identity and hardware metadata (`system.name`, `system.description`, `system.serial_no`, `system.hardware.make`, `system.hardware.model`, and `system.ancillary`).
+* **`details`**: Enumerates the full set of data points, objects, or services exposed by each device (`refs`), including names, data types, units, writable flags, and operational values.
+
+### Depth Across Core Discovery Providers
+
+The table below summarizes what each `depth` level includes across the core discovery families (`bacnet`, `iot`, and `ipv4`):
+
+| `depth` | General Scope | `bacnet` ([Spec](discovery_bacnet.md)) | `iot` | `ipv4` |
+| :--- | :--- | :--- | :--- | :--- |
+| **`buckets`** | Network segments or logical containers (`network`) | Available BACnet network numbers (`network`) and BACnet/IP UDP ports (`families.ipv4.port`) discovered via `Who-Is-Router-To-Network` | Cloud or broker device registries and logical IoT site groups (`network`) | Configured or routed IPv4 subnets and local network segments (`network`) |
+| **`entries`** | Individual device addresses (`addr`) and transport bindings (`families`) | Discovered BACnet Device Instance numbers (`addr`) correlated with source IP/UDP port and MAC (`families.ipv4`, `families.ethmac`) via `Who-Is` / `I-Am` | Individual IoT device IDs (`addr`) and associated gateway or localnet addresses (`families`) | Active IPv4 host addresses (`addr`) correlated with neighbor Ethernet MAC and DNS hostname bindings (`families.ethmac`, `families.host`) |
+| **`system`** | Device identity and hardware metadata (`system`) | BACnet Device Object (`DO/0`) identity (`object-name`, `vendor-name`, `model-name`, `serial-number`, `firmware-revision`) | Reported UDMI `state.system` identity (`hardware.make`, `hardware.model`, `serial_no`, `software`) | Host operating system, banner identity, and hardware fingerprint (`system.name`, `system.hardware`, `system.ancillary`) |
+| **`details`** | Point, object, or service enumeration (`refs`) | Enumerated BACnet `object-list` (`AI/2`, `AV/12`, `BO/21`, etc.) with `name`, `type`, `units`, `writable`, and `present-value` | Self-enumerated or configured UDMI telemetry points (`refs` with `name`, `units`, `type`, `writable`) | Open `TCP`/`UDP` ports and exposed network services (`refs` indexed by port/service with protocol metadata) |
+
 ## Enumeration
 
 _Enumeration_ is the process for listing  _all_ the parameters available from a device
