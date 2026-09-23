@@ -49,25 +49,19 @@ For details on how the `generation` field operates during different scan types, 
 
 ## Discovery Depth
 
-The `depth` setting (`config.discovery.families.<family>.depth` for network scans, or `config.discovery.depth` for self-enumeration) controls the granularity of information collected and reported in [`events_discovery`](../../schema/events_discovery.json) messages.
+Discovery `depth` controls the level of detail collected during a scan. Each depth level is cumulative, building upon the preceding level:
 
-The active discovery depths are ordered cumulatively from coarse network topology to full point or service enumeration:
+* **`buckets`**: High-level network segments or device groupings.
+* **`entries`**: Individual discovered devices and cross-family address associations.
+* **`system`**: Device identity and hardware information.
+* **`details`**: Enumerated device points, objects, or services.
 
-* **`buckets`**: Identifies high-level network segments, subnets, or device registries (`network`) without enumerating individual devices.
-* **`entries`**: Discovers individual device addresses (`addr`) within each bucket and correlates cross-family transport addresses (`families`, such as IPv4 endpoints and Ethernet MAC addresses).
-* **`system`**: Queries each discovered device for its system identity and hardware metadata (`system.name`, `system.description`, `system.serial_no`, `system.hardware.make`, `system.hardware.model`, and `system.ancillary`).
-* **`details`**: Enumerates the full set of data points, objects, or services exposed by each device (`refs`), including names, data types, units, writable flags, and operational values.
-
-### Depth Across Core Discovery Providers
-
-The table below summarizes what each `depth` level includes across the core discovery families (`bacnet`, `iot`, and `ipv4`):
-
-| `depth` | General Scope | `bacnet` ([Spec](discovery_bacnet.md)) | `iot` | `ipv4` |
+| `depth` | Description | `bacnet` ([Spec](discovery_bacnet.md)) | `iot` | `ipv4` |
 | :--- | :--- | :--- | :--- | :--- |
-| **`buckets`** | Network segments or logical containers (`network`) | Available BACnet network numbers (`network`) and BACnet/IP UDP ports (`families.ipv4.port`) discovered via `Who-Is-Router-To-Network` | Cloud or broker device registries and logical IoT site groups (`network`) | Configured or routed IPv4 subnets and local network segments (`network`) |
-| **`entries`** | Individual device addresses (`addr`) and transport bindings (`families`) | Discovered BACnet Device Instance numbers (`addr`) correlated with source IP/UDP port and MAC (`families.ipv4`, `families.ethmac`) via `Who-Is` / `I-Am` | Individual IoT device IDs (`addr`) and associated gateway or localnet addresses (`families`) | Active IPv4 host addresses (`addr`) correlated with neighbor Ethernet MAC and DNS hostname bindings (`families.ethmac`, `families.host`) |
-| **`system`** | Device identity and hardware metadata (`system`) | BACnet Device Object (`DO/0`) identity (`object-name`, `vendor-name`, `model-name`, `serial-number`, `firmware-revision`) | Reported UDMI `state.system` identity (`hardware.make`, `hardware.model`, `serial_no`, `software`) | Host operating system, banner identity, and hardware fingerprint (`system.name`, `system.hardware`, `system.ancillary`) |
-| **`details`** | Point, object, or service enumeration (`refs`) | Enumerated BACnet `object-list` (`AI/2`, `AV/12`, `BO/21`, etc.) with `name`, `type`, `units`, `writable`, and `present-value` | Self-enumerated or configured UDMI telemetry points (`refs` with `name`, `units`, `type`, `writable`) | Open `TCP`/`UDP` ports and exposed network services (`refs` indexed by port/service with protocol metadata) |
+| **`buckets`** | Network or logical groupings | BACnet networks and UDP ports | Cloud registries or site groups | IPv4 subnets |
+| **`entries`** | Device addresses and bindings | Device instances and IP/MAC bindings | IoT device IDs and gateway bindings | Host IP, MAC, and hostname bindings |
+| **`system`** | Device identity and hardware | Device object identity and vendor info | Reported system hardware and software | Host OS and hardware fingerprint |
+| **`details`** | Exposed points or services | BACnet objects and properties | Configured or self-enumerated points | Open ports and network services |
 
 ## Enumeration
 
