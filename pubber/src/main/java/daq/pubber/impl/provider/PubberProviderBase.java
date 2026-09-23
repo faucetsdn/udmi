@@ -104,31 +104,30 @@ public class PubberProviderBase extends ManagerBase {
   }
 
   private Map<String, FamilyDiscovery> getDiscoveredFamilies(String deviceId) {
-    if (config.depth == Depth.BUCKETS) {
-      if (BACNET.equals(family)) {
-        FamilyDiscovery ipv4 = new FamilyDiscovery();
-        ipv4.port = BACNET_IPV4_PORT;
-        return Map.of("ipv4", ipv4);
-      }
+    if (!BACNET.equals(family)) {
       return null;
+    }
+    if (config.depth == Depth.BUCKETS) {
+      FamilyDiscovery ipv4 = new FamilyDiscovery();
+      ipv4.port = BACNET_IPV4_PORT;
+      return Map.of("ipv4", ipv4);
     }
     Map<String, FamilyLocalnetModel> localnetFamilies =
         catchToNull(() -> siteModel.getMetadata(deviceId).localnet.families);
     Map<String, FamilyDiscovery> discovered = new HashMap<>();
     if (localnetFamilies != null) {
       localnetFamilies.forEach((famKey, famModel) -> {
-        if (!famKey.equals(family) && nonNull(famModel) && nonNull(famModel.addr)) {
+        if (("ipv4".equals(famKey) || "ether".equals(famKey))
+            && nonNull(famModel) && nonNull(famModel.addr)) {
           FamilyDiscovery fd = new FamilyDiscovery();
           fd.addr = famModel.addr;
           discovered.put(famKey, fd);
         }
       });
     }
-    if (BACNET.equals(family)) {
-      FamilyDiscovery ipv4 = discovered.computeIfAbsent("ipv4", k -> new FamilyDiscovery());
-      ipv4.port = BACNET_IPV4_PORT;
-    }
-    return discovered.isEmpty() ? null : discovered;
+    FamilyDiscovery ipv4 = discovered.computeIfAbsent("ipv4", k -> new FamilyDiscovery());
+    ipv4.port = BACNET_IPV4_PORT;
+    return discovered;
   }
 
   private SystemDiscoveryData getDiscoveredSystem(String deviceId) {

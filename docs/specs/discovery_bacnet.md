@@ -106,12 +106,12 @@ At the `system` depth, the discovery node queries the BACnet **Device Object** (
 
 * **Relative to `entries`**:
   * The same as `entries`, **with the addition of** the `system` block populated from the BACnet Device Object's standard properties:
-    * `system.name` $\leftarrow$ `object-name` (Property ID 77)
-    * `system.description` $\leftarrow$ `description` (Property ID 28)
-    * `system.serial_no` $\leftarrow$ `serial-number` (Property ID 372, if supported by device)
-    * `system.hardware.make` $\leftarrow$ `vendor-name` (Property ID 121)
-    * `system.hardware.model` $\leftarrow$ `model-name` (Property ID 70)
-    * `system.ancillary` $\leftarrow$ Additional Device Object properties (`firmware-revision` [44], `application-software-version` [12], `location` [58], `vendor-identifier` [120], `protocol-version` [98], `protocol-revision` [139]).
+    * `system.name` <- `object-name` (Property ID 77)
+    * `system.description` <- `description` (Property ID 28)
+    * `system.serial_no` <- `serial-number` (Property ID 372, if supported by device)
+    * `system.hardware.make` <- `vendor-name` (Property ID 121)
+    * `system.hardware.model` <- `model-name` (Property ID 70)
+    * `system.ancillary` <- Additional Device Object properties (`firmware-revision` [44], `application-software-version` [12], `location` [58], `vendor-identifier` [120], `protocol-version` [98], `protocol-revision` [139]).
 * **BACnet Operations**:
   * Issues `ReadPropertyMultiple` against `device,<addr>` (falling back to individual `ReadProperty` requests if segmentation or `ReadPropertyMultiple` is unsupported).
 
@@ -144,13 +144,13 @@ At the `details` depth, the discovery node enumerates the device's `object-list`
 
 * **Relative to `system`**:
   * The same as `system`, **with the addition of** the `refs` map containing each discovered BACnet object's canonical reference key (`"<OBJECT_TYPE>/<INSTANCE>"`, e.g., `"AI/2"`, `"AV/12"`, `"BO/21"`, `"MSV/1"`, matching `BacnetFamilyProvider` and [docs/specs/bacnet.md](bacnet.md)) mapped to a populated [`RefDiscovery`](../../schema/discovery_ref.json) object:
-    * `name` $\leftarrow$ `object-name` (Property ID 77)
-    * `description` $\leftarrow$ `description` (Property ID 28)
-    * `type` $\leftarrow$ Standard BACnet `object-type` name (`"analog-input"`, `"analog-output"`, `"analog-value"`, `"binary-input"`, `"binary-output"`, `"binary-value"`, `"multi-state-input"`, `"multi-state-output"`, `"multi-state-value"`, etc.)
-    * `units` $\leftarrow$ `units` (Property ID 117, for analog objects)
-    * `possible_values` $\leftarrow$ `[inactive-text, active-text]` (Property IDs 46, 4 for binary objects) or `state-text` array (Property ID 110 for multi-state objects)
-    * `writable` $\leftarrow$ `true` for output objects (`AO`, `BO`, `MSO`) and commandable value objects (`AV`, `BV`, `MSV` where `priority-array` [Property ID 87] is present); `false` for input objects (`AI`, `BI`, `MSI`) and non-commandable value objects
-    * `ancillary` $\leftarrow$ Operational and diagnostic BACnet object properties:
+    * `name` <- `object-name` (Property ID 77)
+    * `description` <- `description` (Property ID 28)
+    * `type` <- Standard BACnet `object-type` name (`"analog-input"`, `"analog-output"`, `"analog-value"`, `"binary-input"`, `"binary-output"`, `"binary-value"`, `"multi-state-input"`, `"multi-state-output"`, `"multi-state-value"`, etc.)
+    * `units` <- `units` (Property ID 117, for analog objects)
+    * `possible_values` <- `[inactive-text, active-text]` (Property IDs 46, 4 for binary objects) or `state-text` array (Property ID 110 for multi-state objects)
+    * `writable` <- `true` for output objects (`AO`, `BO`, `MSO`) and commandable value objects (`AV`, `BV`, `MSV` where `priority-array` [Property ID 87] is present); `false` for input objects (`AI`, `BI`, `MSI`) and non-commandable value objects
+    * `ancillary` <- Operational and diagnostic BACnet object properties:
       * `present-value` (Property ID 85)
       * `status-flags` (Property ID 111)
       * `event-state` (Property ID 36)

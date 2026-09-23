@@ -8,6 +8,7 @@ Alarmset
 alarmset
 anagement
 analytics
+APDU
 api
 APIs
 ARP
@@ -52,7 +53,12 @@ CoAP
 Codebase
 codebase
 cognisant
+commandable
 comms
+NPDU
+responder
+UDP
+unicast
 Config
 ConfigMaps
 config
