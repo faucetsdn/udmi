@@ -75,7 +75,7 @@ can be done automatically by a device itself (e.g. on a predefined interval). De
 on device capabilities and system configuration, the scanning process may also
 trigger discovered device enumeration.
 
-For details on how the `generation` field operates during different scan types, see the [Discovery Generation](discovery/generation.md) documentation.
+For details on how the `generation` field operates during different scan types, see the [Discovery Generation](discovery/generation.md) documentation. For protocol-specific details on active BACnet discovery and scan depths, see the [BACnet Discovery](discovery_bacnet.md) specification.
 
 ## Enumeration
 
