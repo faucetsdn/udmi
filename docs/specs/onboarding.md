@@ -47,7 +47,7 @@ again _somebody_ to go around and manually do things to make it all work.
 
 The overall onboarding sequence involves multiple components that work together to provide the overall flow:
 * **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
-* **Spotter**: Operative node that performs _discovery_, scanning local networks and producing observations.
+* **[Spotter](../tools/spotter.md)**: Operative node that performs _discovery_, scanning local networks and producing observations.
 * **Butler**: Cloud-based agent/service responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
 * **Model**: Central repository / source of truth containing device configurations and metadata.
 * **Mapper**: Used at the spotter to coordinate on-prem discovery.

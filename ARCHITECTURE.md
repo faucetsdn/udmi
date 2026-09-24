@@ -37,7 +37,7 @@ graph TB
     %% 3. Bridgehead - Device Emulation & Edge Plane
     subgraph BRIDGEHEAD ["🌉 Bridgehead (Edge & Device Plane)"]
         PUBBER["pubber<br/>(Device Emulator / Reference Client)"]
-        SPOTTER["spotter<br/>(BACnet / IPv4 Discovery Agent)"]
+        SPOTTER["spotter<br/>(Discovery, PCAP & Telemetry Agent)"]
     end
 
     %% 4. BAMBI - Management & Operator Interfaces
@@ -87,7 +87,7 @@ The UDMI ecosystem is structured around the following core subsystems, ordered b
     *   **`registrar`** *(Optional: `++registrar`)*: Utility for synchronizing site model configurations and registering devices and gateway bindings into the broker.
 *   **4. Bridgehead** (Tool: `bin/tmux_bridgehead`, Session: `udmi_bridgehead`): Edge-facing device emulation and on-premise network discovery plane.
     *   **`pubber`** *(Default: Enabled, disable with `!pubber`)*: Reference client-side IoT device implementation simulating telemetry, state, and configuration handling as a Device Under Test (DUT).
-    *   **`spotter`** *(Optional: `++spotter`)*: On-premise network discovery agent scanning BACnet and IPv4 fieldbuses and reporting raw discovery observations.
+    *   **`spotter`** *(Optional: `++spotter`)*: Reference edge agent scanning BACnet and Ethernet fieldbuses, streaming remote PCAP traces, and reporting host telemetry.
 *   **5. BAMBI**: Site model management, workflow automation, and operator interfaces.
     *   **`sheets`**: Backend service automating site model synchronization, spreadsheet ingestion, and change proposals.
     *   **`gummi`**: Web management interface and API server for visual device onboarding, topology inspection, and mapping reconciliation.

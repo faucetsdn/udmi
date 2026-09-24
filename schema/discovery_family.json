@@ -11,6 +11,10 @@
       "pattern": "^[-_.:0-9A-Z]+$",
       "description": "Device addr in the namespace of the given family"
     },
+    "port": {
+      "type": "integer",
+      "description": "Port number for the family connection (e.g. UDP port for BACnet/IP)"
+    },
     "ref": {
       "type": "string",
       "pattern": "^[-_.:/0-9A-Z]+$",

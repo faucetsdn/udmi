@@ -54,13 +54,25 @@ class DiscoveryManager(BaseManager):
 
         LOGGER.info("DiscoveryManager initialized.")
 
+    def _get_check_interval(self) -> float:
+        """Calculates interval for discovery checks based on configured scan_interval_sec."""
+        if self._config and self._config.families:
+            intervals = [
+                fam.scan_interval_sec
+                for fam in self._config.families.values()
+                if fam and fam.scan_interval_sec and fam.scan_interval_sec > 0
+            ]
+            if intervals:
+                return max(1.0, float(min(intervals)))
+        return 60.0
+
     def start(self) -> None:
-        """Starts the periodic scheduler for discovery scans."""
-        LOGGER.info("Starting Discovery scheduler...")
+        """Starts the background watcher for recurring discovery scans."""
+        LOGGER.debug("Starting Discovery interval watcher...")
         self._scan_wake_event = self.start_periodic_task(
-            interval_getter=lambda: SCHEDULER_INTERVAL_SEC,
+            interval_getter=self._get_check_interval,
             task=self._check_scheduled_scans,
-            name="DiscoveryScheduler"
+            name="DiscoveryIntervalWatcher",
         )
 
     def handle_config(self, config: Config) -> None:
