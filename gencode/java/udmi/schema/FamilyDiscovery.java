@@ -24,11 +24,11 @@ public class FamilyDiscovery {
     @JsonPropertyDescription("Device addr in the namespace of the given family")
     public String addr;
     /**
-     * Network port in the namespace of the given family
+     * Port number for the family connection (e.g. UDP port for BACnet/IP)
      * 
      */
     @JsonProperty("port")
-    @JsonPropertyDescription("Network port in the namespace of the given family")
+    @JsonPropertyDescription("Port number for the family connection (e.g. UDP port for BACnet/IP)")
     public Integer port;
     /**
      * Point reference in the namespace of the given family

@@ -32,7 +32,8 @@
         "parts",
         "system",
         "refs",
-        "details"
+        "details",
+        "trace"
       ]
     },
     "iot_provider": {

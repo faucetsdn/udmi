@@ -8,6 +8,7 @@ from typing import List, Optional
 
 from ._base import DataModel
 from .common import Depth
+from .config_discovery_trace import TraceDiscoveryConfig
 
 
 @dataclass
@@ -23,3 +24,4 @@ class FamilyDiscoveryConfig(DataModel):
     networks: Optional[List[str]] = None
     passive_sec: Optional[int] = None
     depth: Optional[Depth] = None
+    trace: Optional[TraceDiscoveryConfig] = None

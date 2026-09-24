@@ -13,7 +13,7 @@
     },
     "port": {
       "type": "integer",
-      "description": "Network port in the namespace of the given family"
+      "description": "Port number for the family connection (e.g. UDP port for BACnet/IP)"
     },
     "ref": {
       "type": "string",
