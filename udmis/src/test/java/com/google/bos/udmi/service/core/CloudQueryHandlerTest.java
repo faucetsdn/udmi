@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
 import com.google.bos.udmi.service.messaging.MessageContinuation;
@@ -51,6 +53,8 @@ class CloudQueryHandlerTest implements MessageContinuation {
   public void queryAllRegistries() {
     queryHandler.process();
 
+    verify(controlProcessor.iotAccess).syncRegistries();
+
     List<Object> targetMessages = targetCapture.getAllValues();
     assertEquals(1, targetMessages.size(), "published messages");
     DiscoveryEvents registryDiscovery = (DiscoveryEvents) targetMessages.get(0);
@@ -68,6 +72,15 @@ class CloudQueryHandlerTest implements MessageContinuation {
     assertEquals(1, targetEnvelope.size(), "control envelopes");
     Envelope controlEnvelope = targetEnvelope.get(0);
     assertEquals(TEST_REGISTRY, controlEnvelope.deviceRegistryId, "control message registry");
+  }
+
+  @Test
+  public void queryAllRegistriesBucketsSkipsSync() {
+    query.depth = Depth.BUCKETS;
+    queryHandler = new CloudQueryHandler(controlProcessor, query);
+    queryHandler.process();
+
+    verify(controlProcessor.iotAccess, never()).syncRegistries();
   }
 
   @BeforeEach
