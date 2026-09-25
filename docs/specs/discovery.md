@@ -45,7 +45,23 @@ can be done automatically by a device itself (e.g. on a predefined interval). De
 on device capabilities and system configuration, the scanning process may also
 trigger discovered device enumeration.
 
-For details on how the `generation` field operates during different scan types, see the [Discovery Generation](discovery/generation.md) documentation.
+For details on how the `generation` field operates during different scan types, see the [Discovery Generation](discovery/generation.md) documentation. For protocol-specific details on active BACnet discovery and scan depths, see the [BACnet Discovery](discovery_bacnet.md) specification.
+
+## Discovery Depth
+
+Discovery `depth` controls the level of detail collected during a scan. Each depth level is cumulative, building upon the preceding level:
+
+* **`buckets`**: High-level network segments or device groupings.
+* **`entries`**: Individual discovered devices and cross-family address associations.
+* **`system`**: Device identity and hardware information.
+* **`details`**: Enumerated device points, objects, or services.
+
+| `depth` | Description | `bacnet` ([Spec](discovery_bacnet.md)) | `iot` | `ipv4` |
+| :--- | :--- | :--- | :--- | :--- |
+| **`buckets`** | Network or logical groupings | BACnet networks and UDP ports | Cloud registries or site groups | IPv4 subnets |
+| **`entries`** | Device addresses and bindings | Device instances and IP/MAC bindings | IoT device IDs and gateway bindings | Host IP, MAC, and hostname bindings |
+| **`system`** | Device identity and hardware | Device object identity and vendor info | Reported system hardware and software | Host OS and hardware fingerprint |
+| **`details`** | Exposed points or services | BACnet objects and properties | Configured or self-enumerated points | Open ports and network services |
 
 ## Enumeration
 

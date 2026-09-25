@@ -31,6 +31,7 @@
 - [Topology](topology.md)
 - [Onboarding](onboarding.md)
   - [Discovery](discovery.md)
+    - [BACnet Discovery](discovery_bacnet.md)
   - [Mapping](mapping.md)
   - [Provisioning](provisioning.md)
 

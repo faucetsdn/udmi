@@ -29,10 +29,10 @@
       "enum": [
         "buckets",
         "entries",
-        "details",
         "parts",
         "system",
         "refs",
+        "details",
         "trace"
       ]
     },
