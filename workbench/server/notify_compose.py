@@ -172,8 +172,25 @@ def run_verdict(exit_code: Optional[int], stopped: bool, counts: Dict[str, int],
 
 
 def summarize_results(events: List[Dict[str, Any]], tests: List[str]) -> Dict[str, Any]:
-    """Counts results. Any verdict other than pass/skip (fail, errr, ...) counts as a failure."""
-    results = [event for event in events if event["type"] == "result"]
+    """Counts one result per test, the way the run summary badge does.
+
+    Mirrors `store.computeMetrics` in the browser: the latest result reported
+    for a test replaces any earlier one, and when tests were selected only
+    those are counted. `bin/sequencer` prints its RESULT lines several times
+    over and appends `schemas` pseudo-results nobody selected, so counting raw
+    lines reported "pass 14" for a run of one test.
+
+    Any verdict other than pass/skip (fail, errr, ...) counts as a failure.
+    """
+    latest: Dict[str, Dict[str, Any]] = {}
+    for event in events:
+        if event["type"] == "result":
+            latest.pop(event["test"], None)
+            latest[event["test"]] = event
+    if tests:
+        results = [latest[test] for test in tests if test in latest]
+    else:
+        results = list(latest.values())
     counts = {"pass": 0, "fail": 0, "skip": 0}
     failing = []
     for event in results:
@@ -182,8 +199,7 @@ def summarize_results(events: List[Dict[str, Any]], tests: List[str]) -> Dict[st
         else:
             counts["fail"] += 1
             failing.append(event)
-    reported = {event["test"] for event in results}
-    pending = [test for test in tests if test not in reported]
+    pending = [test for test in tests if test not in latest]
     return {"counts": counts, "failing": failing, "pending": pending, "results": results}
 
 

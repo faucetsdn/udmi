@@ -217,6 +217,59 @@ def test_a_stale_results_file_is_not_passed_off_as_this_runs(tmp_path):
     assert composed.attachments == [] and "older than the run" in composed.html
 
 
+#: The tail of a real `bin/sequencer ... AHU-1 valid_serial_no` log. The
+#: sequencer prints its RESULT lines several times over (the result summary,
+#: then RESULT.log, then schema.out) and appends `schemas` pseudo-results that
+#: were never selected. Parsed line by line that is 14 `pass` events for a run
+#: of one test.
+ONE_TEST_LOG_TAIL = """\
+Sequencer result count PASS = 1
+RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
+Found 0 test failures, exit code 0
+Extracting sequence results:
+RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
+RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
+RESULT pass system valid_serial_no STABLE 10/10 Sequence complete
+SCHEMA pass system valid_serial_no STABLE events_system No schema violations found
+RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas device_state_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas events_system_stable STABLE 10/10 Schema validation passed
+RESULT pass schemas state_update_stable STABLE 10/10 Schema validation passed
+"""
+
+
+def test_email_counts_one_result_per_selected_test_like_the_run_summary(tmp_path):
+    events = SequencerRunner.parse_events(ONE_TEST_LOG_TAIL)
+    assert len([e for e in events if e["type"] == "result"]) == 14  # the raw signature
+    composed = notify_compose.compose_sequencer(
+        _session(tmp_path, datetime.now(timezone.utc).isoformat(), tests=("valid_serial_no",)),
+        ONE_TEST_LOG_TAIL, events,
+    )
+    assert composed.subject == "Sequencer Compliant: AHU-1 (1 selected test)"
+    assert "pass 1 · fail 0 · skip 0" in composed.html
+    assert "pass 1  fail 0  skip 0" in composed.text
+
+
+def test_a_later_result_for_the_same_test_replaces_the_earlier_one(tmp_path):
+    summary = notify_compose.summarize_results(
+        [_result("a", "fail", "first attempt"), _result("a", "pass"), _result("b", "skip")], ["a", "b"])
+    assert summary["counts"] == {"pass": 1, "fail": 0, "skip": 1}
+    assert summary["failing"] == [] and summary["pending"] == []
+
+
+def test_an_all_tests_run_counts_each_reported_test_once(tmp_path):
+    summary = notify_compose.summarize_results(
+        [_result("a", "pass"), _result("a", "pass"), _result("b", "errr", "boom")], [])
+    assert summary["counts"] == {"pass": 1, "fail": 1, "skip": 0}
+    assert [e["test"] for e in summary["failing"]] == ["b"]
+
+
 # ------------------------------------------------------ sequencer path ---
 def _repo_with_stub(tmp_path, script):
     root = tmp_path / "udmi"
