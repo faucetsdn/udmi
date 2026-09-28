@@ -29,12 +29,11 @@ specific failure modes:
 ```mermaid
 flowchart LR
   D[Devices]
-  A[Agent]
+  M[Mapping]
   P[Pipeline]
-  D -- Pointset --> P
-  D -- Discovery --> A
-  A -- Provisioning --> P
-  A -- Mapping --> A
+  D -. "Pointset\n(Telemetry)" .-> P
+  D -- Discovery --> M
+  M -- Provisioning --> P
 ```
 
 * Without _discovery_, the backend system might not actually reflect reality. The on-prem
@@ -43,3 +42,42 @@ devices and capabilities might be different than what is expected to be there!
 to be. This means at some point, _somebody_ needs to type in exactly what everything is.
 * Without _provisioning_, nothing can change in the system, and essentially requires
 again _somebody_ to go around and manually do things to make it all work.
+
+## Sequence Diagram
+
+The overall onboarding sequence involves multiple components that work together to provide the overall flow:
+* **Devices**: The target things that need to be discovered, configured, and ultimately communicate point data.
+* **[Spotter](../tools/spotter.md)**: Operative node that performs _discovery_, scanning local networks and producing observations.
+* **Butler**: Cloud-based agent/service responsible for managing the overall _discovery_ and _mapping_ process (how often, what color, etc...).
+* **Model**: Central repository / source of truth containing device configurations and metadata.
+* **Mapper**: Used at the spotter to coordinate on-prem discovery.
+* **Pipeline**: Ultimate recipient of pointset information, The thing that cares about 'temperature' in a room.
+
+(The `*` prefixing a `*term` means that this id/property is being sourced/created at that step.)
+
+```mermaid
+sequenceDiagram
+  %%{wrap}%%
+  participant Devices
+  participant Spotter
+  participant Butler
+  participant Model
+  participant Mapper
+  participant Pipeline
+  Note over Devices, Butler: Discovery
+  Butler->>Spotter: Discovery Config
+  Devices<<-->>Spotter: fieldbus scan
+  Spotter->>Butler: Discovery Events
+  Note over Butler, Mapper: Mapping
+  Butler->>Mapper: Discovery Scan
+  Model->>Mapper: Current Model
+  Mapper->>Mapper: Map
+  Mapper->>Butler: Proposed Model
+  Note over Butler, Pipeline: Provisioning
+  Butler->>Butler: Approve
+  Butler->>Model: Update Model
+  Model->>Pipeline: Provision Pipeline
+  Note over Devices, Pipeline: Operational
+  Devices-->>Pipeline: Pointset (Telemetry)
+```
+

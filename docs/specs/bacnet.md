@@ -4,7 +4,7 @@ THIS IS A PROVISIONAL SPEC THAT IS SUBJECT TO CHANGE.
 
 # BACnet Specification
 
-UDMI supports reading BACnet points by specifying them via a `bacnet://` URL schema.
+UDMI supports reading BACnet points by specifying them via a `bacnet://` URL schema. For active BACnet network discovery (`config.discovery.families.bacnet`) and `events_discovery` payload structure across scan depths, see the [BACnet Discovery Specification](discovery_bacnet.md).
 
 ## URI Schema
 

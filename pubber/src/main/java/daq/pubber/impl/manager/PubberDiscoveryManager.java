@@ -15,7 +15,6 @@ import udmi.schema.DiscoveryState;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
-import udmi.schema.SystemDiscoveryData;
 
 /**
  * Manager wrapper for discovery functionality in pubber.
@@ -75,8 +74,11 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
 
   @Override
   public void postDiscoveryProcess(String deviceId, DiscoveryEvents discoveryEvent) {
-    discoveryEvent.system = new SystemDiscoveryData();
-    discoveryEvent.system.ancillary = new HashMap<>();
-    discoveryEvent.system.ancillary.put("device-name", deviceId);
+    if (discoveryEvent.system != null && deviceId != null) {
+      if (discoveryEvent.system.ancillary == null) {
+        discoveryEvent.system.ancillary = new HashMap<>();
+      }
+      discoveryEvent.system.ancillary.put("device-name", deviceId);
+    }
   }
 }
