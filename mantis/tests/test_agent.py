@@ -1820,7 +1820,11 @@ def test_informational_critic_sees_source_reads_in_full():
     """
     read_call = MockFunctionCall(
         name="read_udmi_file",
-        args={"file_path": "validator/src/main/java/com/google/daq/mqtt/sequencer/sequences/DiscoverySequences.java"},
+        args={
+            "file_path": "validator/src/main/java/com/google/daq/mqtt/sequencer/sequences/DiscoverySequences.java",
+            "start_line": 100,
+            "end_line": 500,
+        },
     )
     mock_client = MockGenAIClient([
         MockResponse(text=INFORMATIONAL_SCOPING_PLAN, function_calls=[]),
