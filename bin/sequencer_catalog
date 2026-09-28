@@ -24,7 +24,7 @@ if [[ ! -f $JARFILE ]]; then
 fi
 
 # Same staleness rule as validator/bin/build uses to decide whether to rebuild.
-stale=$(find $UDMI_ROOT/validator/src/main $UDMI_ROOT/gencode/java $UDMI_ROOT/common/src \
+stale=$(find $UDMI_ROOT/validator/src/main $UDMI_ROOT/gencode/java $UDMI_ROOT/common/src/main/java \
             -type f -newer $JARFILE | head -5)
 if [[ -n $stale ]]; then
     echo "ERROR: validator jar $JARFILE is stale (older than sources, e.g.:" >&2
