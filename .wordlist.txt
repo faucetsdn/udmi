@@ -126,8 +126,10 @@ GitOps
 gittools
 GKE
 GlobalId
+Gmail
 googlegroups
 GraphQL
+Graphviz
 hardcoded
 hoc
 hostname
@@ -175,6 +177,7 @@ localhost
 localnet
 logentry
 loglevel
+lookups
 loopback
 lsb
 LWT
@@ -337,6 +340,8 @@ transpile
 transpiles
 triaged
 triages
+Triaging
+triaging
 txt
 UCUM
 UDMI

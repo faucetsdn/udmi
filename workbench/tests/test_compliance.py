@@ -83,6 +83,44 @@ RECORDED_RESULT_LOG = (
 )
 
 
+#: An aborted `bin/sequencer` run against AHU-22, captured verbatim from
+#: `sites/udmi_site_model/out/sequencer_AHU-22.json`.
+RECORDED_ABORTED_RUN = {
+    "features": {
+        "system": {
+            "sequences": {
+                "broken_config": {
+                    "capabilities": {},
+                    "result": "errr",
+                    "scoring": {"total": 8, "value": 0},
+                    "stage": "stable",
+                    "status": {
+                        "category": "validation.feature.sequence",
+                        "level": 500,
+                        "message": "Reflector is not currently active",
+                        "timestamp": "2026-09-21T15:40:16Z",
+                    },
+                    "summary": (
+                        "Check that the device correctly handles a broken "
+                        "(non-json) config message."
+                    ),
+                }
+            }
+        }
+    },
+    "schemas": {},
+    "start_time": "2026-09-21T15:35:16Z",
+    "status": {
+        "category": "validation.feature.sequence",
+        "level": 500,
+        "message": "Reflector is not currently active",
+        "timestamp": "2026-09-21T15:40:16Z",
+    },
+    "timestamp": "2026-09-21T15:40:16Z",
+    "udmi_version": "1.5.5-176-g1be0eb2ca-dirty",
+}
+
+
 @pytest.fixture(scope="module")
 def site_report():
     return compliance.site_compliance(UDMI_ROOT, SITE_MODEL)
@@ -113,10 +151,13 @@ def _make_site_model(root, device_ids):
 
 @pytest.fixture
 def recorded_site(tmp_path):
-    """A site model holding `RECORDED_RUN` exactly as the sequencer wrote it."""
-    root = _make_site_model(tmp_path / "recorded_site", ["AHU-1"])
+    """A site model holding `RECORDED_RUN` and `RECORDED_ABORTED_RUN`."""
+    root = _make_site_model(tmp_path / "recorded_site", ["AHU-1", "AHU-22"])
     (root / "out" / "sequencer_AHU-1.json").write_text(
         json.dumps(RECORDED_RUN, indent=2), encoding="utf-8"
+    )
+    (root / "out" / "sequencer_AHU-22.json").write_text(
+        json.dumps(RECORDED_ABORTED_RUN, indent=2), encoding="utf-8"
     )
     device_out = root / "out" / "devices" / "AHU-1"
     device_out.mkdir(parents=True)
@@ -125,6 +166,11 @@ def recorded_site(tmp_path):
         "| Device | AHU-1 |\n| Result | fail |\n", encoding="utf-8"
     )
     return root
+
+
+@pytest.fixture
+def recorded_report(recorded_site):
+    return compliance.site_compliance(str(recorded_site.parent), recorded_site.name)
 
 
 # ------------------------------------------------------------- site scope ---
@@ -138,9 +184,8 @@ def test_every_discovered_device_appears_in_the_matrix(site_report):
     assert site_report["site_model"] == SITE_MODEL
 
 
-def test_broken_config_is_reported_exactly_as_recorded(recorded_site):
-    report = compliance.site_compliance(str(recorded_site.parent), recorded_site.name)
-    device = next(d for d in report["devices"] if d["device_id"] == "AHU-1")
+def test_broken_config_is_reported_exactly_as_recorded(recorded_report):
+    device = next(d for d in recorded_report["devices"] if d["device_id"] == "AHU-1")
 
     assert device["has_results"] is True
     assert device["reason"] is None
@@ -175,7 +220,7 @@ def test_broken_config_is_reported_exactly_as_recorded(recorded_site):
     )
 
 
-def test_unexpected_verdicts_are_not_bucketed_as_pass_or_fail(site_report):
+def test_unexpected_verdicts_are_not_bucketed_as_pass_or_fail(recorded_report):
     """`errr` runs must stay visible instead of being folded into a bucket.
 
     The site model really does contain aborted runs recorded as `errr`. Counting
@@ -184,7 +229,7 @@ def test_unexpected_verdicts_are_not_bucketed_as_pass_or_fail(site_report):
     number of sequences carrying that verdict.
     """
     verdicts = set()
-    for device in site_report["devices"]:
+    for device in recorded_report["devices"]:
         counts = device["counts"]
         results = [s["result"] for s in device["sequences"]]
         verdicts.update(results)
@@ -205,9 +250,9 @@ def test_unexpected_verdicts_are_not_bucketed_as_pass_or_fail(site_report):
     )
 
 
-def test_aborted_runs_are_excluded_from_every_bucket(site_report):
+def test_aborted_runs_are_excluded_from_every_bucket(recorded_report):
     """AHU-22's run never reached the device; nothing may be scored pass/fail/skip."""
-    device = next(d for d in site_report["devices"] if d["device_id"] == "AHU-22")
+    device = next(d for d in recorded_report["devices"] if d["device_id"] == "AHU-22")
 
     assert device["has_results"] is True
     assert device["counts"]["total"] > 0
@@ -218,9 +263,9 @@ def test_aborted_runs_are_excluded_from_every_bucket(site_report):
     assert device["sequences"][0]["message"] == "Reflector is not currently active"
 
 
-def test_totals_aggregate_the_per_device_counts(site_report):
-    totals = site_report["totals"]
-    devices = site_report["devices"]
+def test_totals_aggregate_the_per_device_counts(recorded_report):
+    totals = recorded_report["totals"]
+    devices = recorded_report["devices"]
 
     assert totals["devices"] == len(devices)
     assert totals["devices_with_results"] == sum(
@@ -228,13 +273,13 @@ def test_totals_aggregate_the_per_device_counts(site_report):
     )
     for bucket in ("pass", "fail", "skip", "total"):
         assert totals[bucket] == sum(d["counts"][bucket] for d in devices)
-    assert totals["total"] > 0, "The real site model has recorded sequences"
+    assert totals["total"] > 0, "The recorded site model has recorded sequences"
 
 
-def test_reports_list_only_files_that_exist(site_report):
-    site_dir = discovery.resolve_site_model(UDMI_ROOT, SITE_MODEL)
+def test_reports_list_only_files_that_exist(recorded_site, recorded_report):
+    site_dir = str(recorded_site)
 
-    for device in site_report["devices"]:
+    for device in recorded_report["devices"]:
         assert set(device["reports"]) <= set(compliance.REPORT_KINDS)
         for kind in compliance.REPORT_KINDS:
             path = compliance._report_path(site_dir, device["device_id"], kind)
@@ -242,7 +287,7 @@ def test_reports_list_only_files_that_exist(site_report):
                 f"{device['device_id']}/{kind} presence must match disk"
             )
 
-    ahu1 = next(d for d in site_report["devices"] if d["device_id"] == "AHU-1")
+    ahu1 = next(d for d in recorded_report["devices"] if d["device_id"] == "AHU-1")
     assert set(ahu1["reports"]) == {"results_md", "result_log", "sequencer_json"}
 
 
@@ -338,15 +383,17 @@ def test_unknown_site_model_fails_fast():
         ("sequencer_json", "application/json", "sequencer.json"),
     ],
 )
-def test_device_report_returns_real_bytes(kind, content_type, suffix):
-    report = compliance.device_report(UDMI_ROOT, SITE_MODEL, "AHU-1", kind)
+def test_device_report_returns_real_bytes(recorded_site, kind, content_type, suffix):
+    report = compliance.device_report(
+        str(recorded_site.parent), recorded_site.name, "AHU-1", kind
+    )
 
     assert report["content_type"] == content_type
     assert report["filename"] == f"AHU-1_{suffix}"
     assert "AHU-1" in report["filename"]
     assert isinstance(report["content"], bytes)
     assert report["size"] == len(report["content"]) > 0
-    assert report["path"].startswith(SITE_MODEL)
+    assert report["path"].startswith(recorded_site.name)
     assert not os.path.isabs(report["path"]), "In-repo paths are repo-relative"
 
 

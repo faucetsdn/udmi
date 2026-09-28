@@ -5,7 +5,7 @@
 Mantis is an AI agent for UDMI. It answers questions about the UDMI specification, schemas,
 and sequencer tests, and it diagnoses sequencer test failures from the recorded run
 artifacts. It works from the repository itself: it reads the schemas under `schema/`, the
-documents under `docs/`, the sequencer's Java source, and the logs a run left on disk, and
+documents under `docs/`, the sequencer Java source, and the logs a run left on disk, and
 cites what it read. It can also bring up a local test stack, run sequencer tests, and
 inspect the local database and MQTT traffic.
 
@@ -20,7 +20,7 @@ Mantis needs a Gemini model provider. It picks one from the environment, in this
 | Provider | Setup |
 |---|---|
 | Offline (no model; deterministic tools only) | `export MANTIS_OFFLINE=true` or pass `--offline` |
-| Google AI Studio | `export GEMINI_API_KEY=<key>` (or `GOOGLE_API_KEY`); create a key at https://aistudio.google.com/apikey |
+| Google AI Studio | `export GEMINI_API_KEY=<key>` (or `GOOGLE_API_KEY`); create a key at `https://aistudio.google.com/apikey` |
 | Vertex AI (default) | One-time setup: `gcloud auth application-default login`, then `bin/mantis setup --vertex=<project>[/<region>]`. Or, for one shell, `export GOOGLE_CLOUD_PROJECT=<project>` (or let the credentials name the project). |
 
 For Vertex AI the region defaults to `global`; set `GOOGLE_CLOUD_REGION` to change it, or

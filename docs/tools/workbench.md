@@ -156,7 +156,7 @@ failed.
 
 Every finished sequencer run and Mantis answer also raises a desktop notification,
 whether or not **Email me when done** is ticked. It appears only while the Workbench tab
-is not in front (hidden, minimised, or behind another window), and clicking it brings
+is not in front (hidden, minimized, or behind another window), and clicking it brings
 the tab forward. The browser asks for permission the first time you press **Run
 selected**, **Send** or **Diagnose**. If you block it, the app bar shows **Desktop
 notifications blocked** until you allow notifications for this site in the browser's
