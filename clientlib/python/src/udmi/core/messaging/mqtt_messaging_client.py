@@ -196,8 +196,9 @@ class MqttMessagingClient(AbstractMessagingClient):
                 topic = "/" + topic
 
             LOGGER.info("Dynamic subscription to: %s", topic)
+            qos = 0 if channel.startswith("download") else 1
             try:
-                self._mqtt_client.subscribe(topic, qos=1)
+                self._mqtt_client.subscribe(topic, qos=qos)
             except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Subscribe failed for %s: %s", topic, e)
 
@@ -260,8 +261,9 @@ class MqttMessagingClient(AbstractMessagingClient):
                 topic = f"{self._topic_prefix_str}/{device_id}/{channel}"
                 if not topic.startswith("/"):
                     topic = "/" + topic
+                qos = 0 if channel.startswith("download") else 1
                 try:
-                    client.subscribe(topic, qos=1)
+                    client.subscribe(topic, qos=qos)
                 except Exception as e: # pylint: disable=broad-exception-caught
                     LOGGER.error("Subscribe failed for %s: %s", topic, e)
 

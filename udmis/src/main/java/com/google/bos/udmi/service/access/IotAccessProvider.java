@@ -74,6 +74,21 @@ public interface IotAccessProvider extends UdmiComponent {
 
   void sendCommandBase(Envelope envelope, SubFolder folder, String message);
 
+  default void sendDownloadBase(Envelope envelope, SubFolder folder, String message) {
+  }
+
+  default void provisionDownloadBlob(String registryId, String deviceId, String blobKey,
+      udmi.schema.EndpointConfiguration endpoint) {
+  }
+
+  default udmi.schema.EndpointConfiguration fetchDownloadBlob(String registryId, String deviceId,
+      String blobKey) {
+    return null;
+  }
+
+  default void handleBlobsetState(Envelope envelope, udmi.schema.BlobsetState blobsetState) {
+  }
+
   /**
    * Returns true if this provider supports registry and device management operations.
    */

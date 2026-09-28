@@ -20,6 +20,8 @@ public class MqttDevice {
   public static final String ERRORS_TOPIC = "errors";
   public static final String EVENTS_TOPIC = "events";
   public static final String STATE_TOPIC = "state";
+  public static final String DOWNLOAD_TOPIC = "download/blobset";
+  public static final String UPLOAD_TOPIC = "upload";
 
   private final String deviceId;
   private final Publisher publisher;

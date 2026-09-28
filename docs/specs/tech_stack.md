@@ -16,12 +16,14 @@ technology stack for compliant IoT devices.
 
 # MQTT Topic Suffix Table
 
-| Type     | Category | subFolder | MQTT Topic Suffix                | Schema File   |
-| -------- | -------- | --------- | -------------------------------- | ------------- |
-| state    | state    | _n/a_     | `{topic_prefix}/state`           | state.json    |
-| config   | config   | _n/a_     | `{topic_prefix}/config`          | config.json   |
-| pointset | event    | pointset  | `{topic_prefix}/events/pointset` | pointset.json |
-| system   | event    | system    | `{topic_prefix}/events/system`   | system.json   |
+| Type      | Category | subFolder | MQTT Topic Suffix                 | Schema File           |
+| --------- | -------- | --------- | --------------------------------- | --------------------- |
+| state     | state    | _n/a_     | `{topic_prefix}/state`            | state.json            |
+| config    | config   | _n/a_     | `{topic_prefix}/config`           | config.json           |
+| pointset  | event    | pointset  | `{topic_prefix}/events/pointset`  | events_pointset.json  |
+| system    | event    | system    | `{topic_prefix}/events/system`    | events_system.json    |
+| discovery | upload   | discovery | `{topic_prefix}/upload/discovery` | upload_discovery.json |
+| blobset   | download | blobset   | `{topic_prefix}/download/blobset` | download_blobset.json |
 
 For many implementations the full topic would be `/devices/{device_id}/{suffix}`
 

@@ -349,10 +349,11 @@ public class SimpleMqttPipe extends MessageBase {
     return format(BROKER_URL_FORMAT, transport, endpoint.hostname, port);
   }
 
-  private MqttMessage makeMqttMessage(Bundle bundle) {
+  static MqttMessage makeMqttMessage(Bundle bundle) {
     MqttMessage message = new MqttMessage();
     message.setPayload(bundle.sendBytes());
     message.setRetained(shouldRetainMessage(bundle));
+    message.setQos(getMessageQos(bundle));
     return message;
   }
 
@@ -404,8 +405,12 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
-  private boolean shouldRetainMessage(Bundle bundle) {
-    return bundle.envelope.subType == SubType.CONFIG;
+  static int getMessageQos(Bundle bundle) {
+    return (bundle.envelope != null && bundle.envelope.subType == SubType.DOWNLOAD) ? 0 : 1;
+  }
+
+  static boolean shouldRetainMessage(Bundle bundle) {
+    return bundle.envelope != null && bundle.envelope.subType == SubType.CONFIG;
   }
 
   private void subscribeToMessages() {
@@ -419,7 +424,8 @@ public class SimpleMqttPipe extends MessageBase {
         boolean connected = mqttClient.isConnected();
         trace("Subscribing %s, active=%s connected=%s", clientId, isActive(), connected);
         if (isActive() && connected) {
-          mqttClient.subscribe(subscribeTopic);
+          int qos = recvId.startsWith("download") || subscribeTopic.contains("/download") ? 0 : 1;
+          mqttClient.subscribe(subscribeTopic, qos);
           info("Subscribed %s to topic %s", clientId, subscribeTopic);
         }
       }

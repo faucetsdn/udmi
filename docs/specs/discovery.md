@@ -63,3 +63,16 @@ be reported:
   * `blobs`: A listing of all the data blobs that a device knows how to handle. This could
   be components like firmware updates, key rotation, etc... Some blobs will be standardized
   across the system, while others will be device-specific.
+
+## Discovery Uploads (`upload/discovery`)
+
+When a discovery scan produces bulk binary or text capture artifacts—such as network packet captures (`pcap` / `pcapng`) triggered via `config.discovery.families.<family>`—the device streams the capture in chunks over `{topic_prefix}/upload/discovery` using the [`DiscoveryUpload`](../../schema/upload_discovery.json) ([_🧬schema_](../../gencode/docs/upload_discovery.html)) format rather than sending individual telemetry events.
+
+### Chunk Framing & Sequence (`event_no`)
+Each `upload/discovery` message is correlated with the active scan via `generation` and sequenced using `event_no`:
+* **`event_no = 0` (Start Marker)**: Announces the start of the upload stream (`format`, `generation`).
+* **`event_no = 1 .. N` (Data Chunks)**: Sequential 1-based chunks carrying Base64-encoded binary data in `data`.
+* **`event_no = -(N + 1)` (Terminal EOF Marker)**: Mandatory final message where the negative value indicates the total chunk count `N` (`N = (-event_no) - 1`) and `sha256` provides the 64-character lowercase hex SHA-256 digest of the complete reassembled artifact.
+
+In UDMIS, `UploadProcessor` stages incoming chunks in shared storage so out-of-order chunks distributed across multiple stateless pods are reassembled and cryptographically verified against `sha256` once all `1..N` chunks and the terminal `-(N + 1)` marker have arrived.
+

@@ -68,8 +68,7 @@
         "pointset",
         "validation",
         "blobset",
-        "monitoring",
-        "streams"
+        "monitoring"
       ]
     },
     "subType": {
@@ -85,7 +84,9 @@
         "query",
         "reply",
         "model",
-        "propose"
+        "propose",
+        "upload",
+        "download"
       ]
     }
   },

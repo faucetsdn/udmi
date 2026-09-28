@@ -184,6 +184,10 @@ $MOSQUITTO_CTRL addRoleACL service subscribePattern '/uufi/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/uufi/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern 'events/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend 'events/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern 'upload/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service publishClientSend 'upload/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern 'download/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service publishClientSend 'download/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern 'state/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend 'state/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern 'state' allow || true

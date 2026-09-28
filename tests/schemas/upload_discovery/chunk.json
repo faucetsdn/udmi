@@ -1,0 +1,15 @@
+//
+// Sent on MQTT topic: /devices/{device_id}/upload/discovery
+// Sequential binary chunk upload for a discovery PCAP trace.
+//
+{
+  "version": "1.5.7",
+  "timestamp": "2019-01-17T14:02:29.364Z",
+  "family": "bacnet",
+  "generation": "2019-01-17T14:02:00.000Z",
+  "session_id": "trace-bacnet-2019-01-17T14-02-00Z",
+  "event_no": 1,
+  "chunk_index": 0,
+  "total_chunks": 2,
+  "data": "dWRtaS1wY2FwLWNodW5rLWRhdGE="
+}

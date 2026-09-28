@@ -219,6 +219,44 @@
                 "display": "show",
                 "style": "bold"
               }
+            },
+            "token": {
+              "description": "Pre-signed JWT token or credential string",
+              "type": "string",
+              "$presentation": {
+                "display": "show",
+                "style": "bold"
+              }
+            }
+          }
+        },
+        "mtls": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "private_key": {
+              "description": "PEM-encoded private key material for mTLS authentication",
+              "type": "string",
+              "$presentation": {
+                "display": "show",
+                "style": "bold"
+              }
+            },
+            "certificate": {
+              "description": "PEM-encoded client certificate for mTLS authentication",
+              "type": "string",
+              "$presentation": {
+                "display": "show",
+                "style": "bold"
+              }
+            },
+            "ca_certificate": {
+              "description": "PEM-encoded CA certificate bundle for peer verification",
+              "type": "string",
+              "$presentation": {
+                "display": "show",
+                "style": "bold"
+              }
             }
           }
         }
@@ -250,6 +288,16 @@
     },
     "generation": {
       "description": "The timestamp of the endpoint generation",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"],
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
+    "expiry": {
+      "description": "Timestamp when the provisioned credential or endpoint expires",
       "type": "string",
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"],

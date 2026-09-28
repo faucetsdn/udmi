@@ -354,6 +354,43 @@ class ZanzaraIotAccessProviderTest {
     assertTrue(registries.contains(TEST_REGISTRY));
   }
 
+  @Test
+  void testHandleBlobsetStatePushesDownload() throws Exception {
+    com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe mockPipe =
+        mock(com.google.bos.udmi.service.messaging.impl.SimpleMqttPipe.class);
+    Field pipeField = ZanzaraIotAccessProvider.class.getDeclaredField("mqttPipe");
+    pipeField.setAccessible(true);
+    pipeField.set(provider, mockPipe);
+
+    udmi.schema.EndpointConfiguration provisionedEndpoint = new udmi.schema.EndpointConfiguration();
+    provisionedEndpoint.protocol = udmi.schema.EndpointConfiguration.Protocol.MQTT;
+    provisionedEndpoint.hostname = "mqtt.example.com";
+    provisionedEndpoint.client_id = TEST_DEVICE;
+    provider.provisionDownloadBlob(
+        TEST_REGISTRY, TEST_DEVICE, "_iot_endpoint_config", provisionedEndpoint);
+
+    udmi.schema.BlobsetState blobsetState = new udmi.schema.BlobsetState();
+    blobsetState.blobs = new HashMap<>();
+    udmi.schema.BlobBlobsetState blobState = new udmi.schema.BlobBlobsetState();
+    blobState.phase = udmi.schema.BlobBlobsetConfig.BlobPhase.APPLY;
+    blobsetState.blobs.put("_iot_endpoint_config", blobState);
+
+    udmi.schema.Envelope env = new udmi.schema.Envelope();
+    env.deviceRegistryId = TEST_REGISTRY;
+    env.deviceId = TEST_DEVICE;
+
+    provider.handleBlobsetState(env, blobsetState);
+
+    org.mockito.ArgumentCaptor<com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle>
+        bundleCaptor = org.mockito.ArgumentCaptor.forClass(
+            com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle.class);
+    verify(mockPipe, times(1)).publish(bundleCaptor.capture());
+    com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle published =
+        bundleCaptor.getValue();
+    assertEquals(udmi.schema.Envelope.SubType.DOWNLOAD, published.envelope.subType);
+    assertEquals(udmi.schema.Envelope.SubFolder.BLOBSET, published.envelope.subFolder);
+  }
+
 
   class FakeDataRef extends DataRef {
     private final Map<String, String> data;

@@ -2,11 +2,12 @@
 
 Extends standard DiscoveryManager to natively handle both active protocol sweeps
 (BACnet, Ether, Passive) and TRACE-level packet streaming (PCAP) over
-events/streams.
+upload/discovery.
 """
 
 import base64
 from datetime import datetime, timedelta, timezone
+import hashlib
 import logging
 import time
 from typing import Any, Dict, Optional
@@ -16,10 +17,10 @@ from udmi.core.managers import DiscoveryManager
 from udmi.schema import (
     Config,
     DiscoveryEvents,
+    DiscoveryUpload,
     Entry,
     FamilyDiscoveryConfig,
     FamilyDiscoveryState,
-    StreamsEvents,
 )
 from udmi.schema.common import Depth
 from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
@@ -61,7 +62,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
   """Unified Discovery Manager for Spotter.
 
   Extends standard DiscoveryManager to handle active protocol sweeps and
-  TRACE packet streaming over events/streams with safety circuit breaker checks
+  TRACE packet streaming over upload/discovery with safety circuit breaker checks
   and UDMI discovery phase lifecycle tracking (pending/active/stopped).
   """
 
@@ -364,7 +365,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
       self.trigger_state_update()
 
   def _run_trace_capture(self, family: str, fam_config: Any) -> None:
-    """Executes PCAP capture and streams chunks over events/streams."""
+    """Executes PCAP capture and streams chunks over upload/discovery."""
     f_state = self._discovery_state.families.get(family)
     if not f_state:
       f_state = FamilyDiscoveryState()
@@ -483,7 +484,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
       full_data = b"".join(captured_chunks)
 
       LOGGER.info(
-          "Capture complete (%d bytes). Emitting StreamsEvents...",
+          "Capture complete (%d bytes). Emitting DiscoveryUpload chunks...",
           len(full_data),
       )
       chunk_size = 128 * 1024  # 128KB chunks
@@ -492,30 +493,59 @@ class SpotterDiscoveryManager(DiscoveryManager):
           (total_bytes + chunk_size - 1) // chunk_size if total_bytes > 0 else 1
       )
       session_id = f"trace-{family}-{int(time.time())}"
+      gen_str = f_state.generation or _format_generation(
+          datetime.now(timezone.utc)
+      )
+
+      start_upload = DiscoveryUpload(
+          timestamp=datetime.now(timezone.utc).isoformat(),
+          version=UDMI_VERSION,
+          family=family,
+          generation=gen_str,
+          session_id=session_id,
+          event_no=0,
+          total_chunks=total_chunks,
+      )
+      self.publish_upload(start_upload, "discovery")
 
       for idx in range(total_chunks):
         start = idx * chunk_size
         end = min(start + chunk_size, total_bytes)
         chunk_data = full_data[start:end]
         b64_data = base64.b64encode(chunk_data).decode()
+        event_no = idx + 1
 
-        chunk_event = StreamsEvents(
+        chunk_upload = DiscoveryUpload(
             timestamp=datetime.now(timezone.utc).isoformat(),
             version=UDMI_VERSION,
+            family=family,
+            generation=gen_str,
             session_id=session_id,
-            event_no=idx,
+            event_no=event_no,
             chunk_index=idx,
             total_chunks=total_chunks,
             data=b64_data,
         )
-        self.publish_event(chunk_event, "streams")
+        self.publish_upload(chunk_upload, "discovery")
         LOGGER.info(
-            "Published stream chunk %d/%d (event_no: %d, %d bytes)",
+            "Published upload chunk %d/%d (event_no: %d, %d bytes)",
             idx + 1,
             total_chunks,
-            idx,
+            event_no,
             len(chunk_data),
         )
+
+      eof_upload = DiscoveryUpload(
+          timestamp=datetime.now(timezone.utc).isoformat(),
+          version=UDMI_VERSION,
+          family=family,
+          generation=gen_str,
+          session_id=session_id,
+          event_no=-(total_chunks + 1),
+          total_chunks=total_chunks,
+          sha256=hashlib.sha256(full_data).hexdigest(),
+      )
+      self.publish_upload(eof_upload, "discovery")
 
       f_state.phase = DiscoveryPhase.stopped
       f_state.active_count = total_chunks
@@ -523,7 +553,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
           category="discovery.family",
           level=200,
           message=(
-              f"Trace capture complete. {total_chunks} stream chunks emitted."
+              f"Trace capture complete. {total_chunks} upload chunks emitted."
           ),
       )
 

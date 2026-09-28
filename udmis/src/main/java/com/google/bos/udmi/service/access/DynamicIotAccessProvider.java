@@ -215,6 +215,25 @@ public class DynamicIotAccessProvider extends IotAccessBase {
     getProviderFor(envelope).sendCommandBase(envelope, folder, message);
   }
 
+  @Override
+  public void sendDownloadBase(Envelope envelope, SubFolder folder, String message) {
+    getProviderFor(envelope).sendDownloadBase(envelope, folder, message);
+  }
+
+  @Override
+  public void provisionDownloadBlob(String registryId, String deviceId, String blobKey,
+      udmi.schema.EndpointConfiguration endpoint) {
+    getRegistryProvider(registryId, deviceId)
+        .provisionDownloadBlob(registryId, deviceId, blobKey, endpoint);
+  }
+
+  @Override
+  public udmi.schema.EndpointConfiguration fetchDownloadBlob(String registryId, String deviceId,
+      String blobKey) {
+    return getRegistryProvider(registryId, deviceId)
+        .fetchDownloadBlob(registryId, deviceId, blobKey);
+  }
+
   /**
    * Sets the provider affinity for a given registry and device.
    *

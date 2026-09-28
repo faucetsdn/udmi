@@ -14,7 +14,7 @@ Spotter runs as a single unified process using the UDMI Python Client Library (`
    - **`PassiveFamilyProvider`**: Listens for passive broadcast network traffic and extracts discovered device metadata.
 2. **`SpotterDiscoveryManager`**:
    - Manages scheduled and on-demand discovery sweeps.
-   - Streams live remote packet capture traces (`events/streams`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
+   - Streams live remote packet capture traces (`upload/discovery`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
 3. **`SpotterSystemManager`**:
    - Collects host metrics (CPU load, memory, OS distribution) and emits periodic telemetry (`events/system`).
    - Evaluates memory usage against safety thresholds (`check_safety_circuit_breaker`), throttling active discovery and packet captures to protect edge devices from kernel OOM termination.
@@ -46,7 +46,7 @@ graph TD
     end
 
     SYS -->|"state.system / events/system"| MB
-    DISC -->|"events/discovery & events/streams"| MB
+    DISC -->|"events/discovery & upload/discovery"| MB
     LOC -->|"Scans & Probes"| DEV
 ```
 
@@ -78,16 +78,16 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 
 1. **Capture Worker ([pcap.py](src/pcap.py))**: Spawns `tcpdump` with configurable interface filters, enforcing strict execution bounds (maximum duration and byte quotas).
 2. **Streaming MQTT Egress Transport**:
-   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`StreamsEvents`) over the universal streaming MQTT event topic (`events/streams`).
+   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`DiscoveryUpload`) over the streaming MQTT upload topic (`upload/discovery`), terminated by a SHA-256 EOF marker.
    - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding external network credentials or outbound HTTP rules at the edge.
 3. **Ad-hoc PCAP Reassembly ([bin/reassemble_pcap](bin/reassemble_pcap))**:
-   Reassembles chunked `events/streams` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
+   Reassembles chunked `upload/discovery` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
    ```bash
-   # Reassemble stream events file into a pcap file:
+   # Reassemble upload chunks file into a pcap file:
    ./edge/spotter/bin/reassemble_pcap stream_events.json capture.pcap
 
    # Or stream directly from mosquitto subscriber:
-   mosquitto_sub -h $BROKER -t '/r/+/d/+/events/streams' | ./edge/spotter/bin/reassemble_pcap - live.pcap
+   mosquitto_sub -h $BROKER -t '/r/+/d/+/upload/discovery' | ./edge/spotter/bin/reassemble_pcap - live.pcap
    ```
 
 ---
@@ -98,7 +98,7 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 | :--- | :--- |
 | **[bin/spotter](../../bin/spotter)** | Unified CLI orchestrator for starting (local/container) and stopping instances |
 | **[bin/run_spotter_tests](bin/run_spotter_tests)** | Unified verification test runner for unit and integration suites |
-| **[bin/reassemble_pcap](bin/reassemble_pcap)** | Ad-hoc CLI utility to reassemble `events/streams` chunks into `.pcap` files |
+| **[bin/reassemble_pcap](bin/reassemble_pcap)** | Ad-hoc CLI utility to reassemble `upload/discovery` chunks into `.pcap` files |
 | **[bin/compare_field_parity](bin/compare_field_parity)** | Automated CLI tool to verify functional parity between legacy node and Spotter |
 | **[src/agent.py](src/agent.py)** | Main Spotter agent entry point, manager wiring, and command dispatcher |
 | **[src/providers/](src/providers/)** | Modular protocol discovery providers (BACnet, Ether, Passive) |
@@ -189,7 +189,7 @@ sudo ./edge/spotter/bin/compare_field_parity --config /etc/udmi_discovery/config
 
 The following capabilities are tracked as future milestones:
 
-1. **UDMIS Native PCAP Ingestion Pipeline**: Native service-side ingestion and reassembly in UDMIS to automatically collect and persist `events/streams` PCAP chunks directly into Cloud Storage (GCS) or BigQuery blob storage.
-2. **Ephemeral Secret Delivery**: Architectural mechanism for delivering transient, authenticated operational credentials (e.g., vendor device credentials, BACnet network encryption keys, or REST API bearer tokens) strictly in volatile RAM without disk persistence. A dedicated architectural discussion will finalize the delivery transport (such as non-persisted command channels e.g. `commands/secret` vs encrypted `config.blobset`), memory scrubbing lifecycles, and cryptographic envelope validation before implementation.
+1. **UDMIS Native PCAP Ingestion Pipeline**: Native service-side ingestion and reassembly in UDMIS (`UploadProcessor`) to automatically collect and persist `upload/discovery` PCAP chunks directly into Cloud Storage (GCS) or `IotDataProvider`.
+2. **Ephemeral Secret Delivery**: Architectural mechanism for delivering transient, authenticated operational credentials (e.g., vendor device credentials, BACnet network encryption keys, or REST API bearer tokens) strictly in volatile RAM without disk persistence via `download/blobset`.
 3. **Key Rotation & Lifecycle**: End-to-end device private/public key rotation with automated cloud IoT registry coordination, backup verification, and zero-downtime reconnection.
 4. **Expanded Host Observability Metrics**: Network adapter error/drop counters, hardware temperature, storage/inode thresholds, and edge-to-cloud roundtrip latency.

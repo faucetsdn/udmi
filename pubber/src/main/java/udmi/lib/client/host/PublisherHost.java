@@ -23,6 +23,7 @@ import static java.util.Optional.ofNullable;
 import static udmi.lib.base.ManagerBase.INITIAL_THRESHOLD_SEC;
 import static udmi.lib.base.ManagerBase.updateStateHolder;
 import static udmi.lib.base.MqttDevice.CONFIG_TOPIC;
+import static udmi.lib.base.MqttDevice.DOWNLOAD_TOPIC;
 import static udmi.lib.base.MqttDevice.ERRORS_TOPIC;
 import static udmi.lib.base.MqttDevice.STATE_TOPIC;
 import static udmi.lib.base.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
@@ -75,11 +76,13 @@ import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.BlobsetDownload;
 import udmi.schema.BlobsetState;
 import udmi.schema.Category;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.DiscoveryUpload;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -100,6 +103,7 @@ public interface PublisherHost extends ManagerHost {
   String UDMI_VERSION = SchemaVersion.CURRENT.key();
   String BROKEN_VERSION = "1.4.";
   String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
+  String DOWNLOAD_URL_PREFIX = "download://";
   int STATE_THROTTLE_MS = 2000;
   int DEFAULT_REPORT_SEC = 10;
   int FORCED_STATE_TIME_MS = 10000;
@@ -122,6 +126,7 @@ public interface PublisherHost extends ManagerHost {
           .put(MqttPublisher.FakeTopic.class, getEventsSuffix("racoon"))
           .put(MqttPublisher.InjectedState.class, STATE_TOPIC)
           .put(DiscoveryEvents.class, getEventsSuffix("discovery"))
+          .put(DiscoveryUpload.class, getUploadSuffix("discovery"))
           .build();
   Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
       "events/blobset", "\"\"",
@@ -258,6 +263,17 @@ public interface PublisherHost extends ManagerHost {
       }
       BlobBlobsetConfig blobBlobsetConfig = blobs.get(blobName);
       if (blobBlobsetConfig != null && FINAL.equals(blobBlobsetConfig.phase)) {
+        if (blobBlobsetConfig.url != null
+            && blobBlobsetConfig.url.startsWith(DOWNLOAD_URL_PREFIX)) {
+          BlobBlobsetState blobState = ensureBlobsetState(blobName);
+          if (!Objects.equals(blobState.generation, blobBlobsetConfig.generation)
+              || !BlobPhase.FINAL.equals(blobState.phase)) {
+            blobState.phase = BlobPhase.APPLY;
+            blobState.generation = blobBlobsetConfig.generation;
+            markStateDirty();
+          }
+          return null;
+        }
         return acquireBlobData(blobBlobsetConfig.url, blobBlobsetConfig.sha256);
       }
       return null;
@@ -437,6 +453,10 @@ public interface PublisherHost extends ManagerHost {
     return format("%s/%s", MqttDevice.EVENTS_TOPIC, suffixSuffix);
   }
 
+  static String getUploadSuffix(String suffixSuffix) {
+    return format("%s/%s", MqttDevice.UPLOAD_TOPIC, suffixSuffix);
+  }
+
   /**
    * Augments a given {@code message} object with the current timestamp and version information.
    */
@@ -559,6 +579,7 @@ public interface PublisherHost extends ManagerHost {
    */
   default void registerMessageHandlers() {
     getDeviceTarget().registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
+    getDeviceTarget().registerHandler(DOWNLOAD_TOPIC, this::downloadHandler, BlobsetDownload.class);
     String gatewayId = getGatewayId(getDeviceId());
     if (isGatewayDevice()) {
       // In this case, this is the gateway so register the appropriate error handler directly.
@@ -569,6 +590,26 @@ public interface PublisherHost extends ManagerHost {
       gatewayTarget.registerHandler(CONFIG_TOPIC, this::gatewayHandler, Config.class);
       gatewayTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
     }
+  }
+
+  /**
+   * Handles incoming ephemeral {@link BlobsetDownload} payloads on {@code download/blobset}.
+   */
+  default void downloadHandler(BlobsetDownload download) {
+    if (download == null || download.blobs == null) {
+      return;
+    }
+    withStateLock(() -> {
+      EndpointConfiguration endpoint = download.blobs.get(IOT_ENDPOINT_CONFIG.value());
+      if (endpoint != null) {
+        BlobBlobsetConfig blobConfig =
+            catchToNull(() -> getDeviceConfig().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()));
+        if (blobConfig != null && blobConfig.generation != null) {
+          endpoint.generation = blobConfig.generation;
+        }
+        setExtractedEndpoint(endpoint);
+      }
+    });
   }
 
   /**
@@ -942,6 +983,12 @@ public interface PublisherHost extends ManagerHost {
         : redirectedEndpoint(redirectRegistry);
 
     if (extractedSignature == null) {
+      BlobBlobsetConfig pendingBlob =
+          catchToNull(() -> getDeviceConfig().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()));
+      if (pendingBlob != null && pendingBlob.url != null
+          && pendingBlob.url.startsWith(DOWNLOAD_URL_PREFIX)) {
+        return;
+      }
       setAttemptedEndpoint(null);
       removeBlobsetBlobState(IOT_ENDPOINT_CONFIG);
       return;

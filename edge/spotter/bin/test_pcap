@@ -10,7 +10,7 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming:"
     echo "1. Starts Mosquitto broker and udmi-spotter container."
     echo "2. Generates dummy traffic and publishes a Discovery TRACE configuration (depth: 'trace')."
-    echo "3. Asserts sequential StreamsEvents chunks over events/streams and parses PCAP magic headers."
+    echo "3. Asserts sequential DiscoveryUpload chunks over upload/discovery and parses PCAP magic headers."
     echo "4. Verifies Level 200 status reports in the container's discovery state."
     echo ""
     echo "Prerequisites:"
@@ -157,12 +157,12 @@ cat <<EOF > "$TEST_DIR/spotter_config.json"
 }
 EOF
 
-echo "Setting up MQTT subscriber on port 1883 for state and stream event messages"
+echo "Setting up MQTT subscriber on port 1883 for state and upload/discovery messages"
 MQTT_OUT="$TEST_DIR/mqtt.out"
 touch "$MQTT_OUT"
 mosquitto_sub -h 127.0.0.1 -p 1883 \
     -t "/r/ZZ-TRI-FECTA/d/DSN-1/state" \
-    -t "/r/ZZ-TRI-FECTA/d/DSN-1/events/streams" \
+    -t "/r/ZZ-TRI-FECTA/d/DSN-1/upload/discovery" \
     -F "%t %p" > "$MQTT_OUT" &
 MOSQ_SUB_PID=$!
 
@@ -231,7 +231,7 @@ TRAFFIC_PID=$!
 echo "Publishing discovery TRACE config to trigger packet capture over MQTT..."
 mosquitto_pub -h 127.0.0.1 -p 1883 -t "/r/ZZ-TRI-FECTA/d/DSN-1/config" -f "$TEST_DIR/config_payload.json" -q 1
 
-echo "Waiting for discovery state 'stopped' and stream transfers"
+echo "Waiting for discovery state 'stopped' and upload transfers"
 END_TIME=$((SECONDS + 25))
 STATE_STOPPED=0
 PCAP_DONE=0
@@ -243,9 +243,9 @@ while [[ $SECONDS -lt $END_TIME ]]; do
         fi
     fi
     
-    if grep -q '/events/streams' "$MQTT_OUT"; then
-        TOTAL=$(grep '/events/streams' "$MQTT_OUT" | head -n 1 | sed 's|^[^ ]* ||' | jq -r '.total_chunks')
-        COUNT=$(grep '/events/streams' "$MQTT_OUT" | wc -l)
+    if grep -q '/upload/discovery' "$MQTT_OUT"; then
+        TOTAL=$(grep '/upload/discovery' "$MQTT_OUT" | head -n 1 | sed 's|^[^ ]* ||' | jq -r '.total_chunks')
+        COUNT=$(grep '/upload/discovery' "$MQTT_OUT" | wc -l)
         if [[ -n "$TOTAL" && "$TOTAL" != "null" && $COUNT -ge $TOTAL ]]; then
             PCAP_DONE=1
         fi
@@ -265,7 +265,7 @@ if [[ $STATE_STOPPED -eq 0 ]]; then
     exit 1
 fi
 if [[ $PCAP_DONE -eq 0 ]]; then
-    echo "ERROR: Test timed out waiting for PCAP streaming chunks over MQTT events/streams"
+    echo "ERROR: Test timed out waiting for PCAP streaming chunks over MQTT upload/discovery"
     exit 1
 fi
 
@@ -277,7 +277,7 @@ if grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -e '.discovery
 fi
 
 echo "Reassembling pcap payload using reassemble_pcap utility"
-grep '/events/streams' "$MQTT_OUT" | sed 's|^[^ ]* ||' > "$TEST_DIR/stream_events.json"
+grep '/upload/discovery' "$MQTT_OUT" | sed 's|^[^ ]* ||' > "$TEST_DIR/stream_events.json"
 "${SCRIPT_DIR}/reassemble_pcap" "$TEST_DIR/stream_events.json" "$TEST_DIR/assembled.pcap"
 
 echo "Validating pcap payload size"

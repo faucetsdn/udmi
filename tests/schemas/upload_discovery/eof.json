@@ -1,0 +1,13 @@
+//
+// Terminal EOF boundary marker on /devices/{device_id}/upload/discovery
+//
+{
+  "version": "1.5.7",
+  "timestamp": "2019-01-17T14:02:31.364Z",
+  "family": "bacnet",
+  "generation": "2019-01-17T14:02:00.000Z",
+  "session_id": "trace-bacnet-2019-01-17T14-02-00Z",
+  "event_no": -3,
+  "total_chunks": 2,
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -440,6 +440,27 @@
       "section": "cloud_iot_config",
       "type": "string"
     },
+    "reflector_endpoint.auth_provider.mtls.private_key": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "PEM-encoded private key material for mTLS authentication"
+    },
+    "reflector_endpoint.auth_provider.mtls.certificate": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "PEM-encoded client certificate for mTLS authentication"
+    },
+    "reflector_endpoint.auth_provider.mtls.ca_certificate": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "PEM-encoded CA certificate bundle for peer verification"
+    },
     "reflector_endpoint.ca_file": {
       "display": "show",
       "style": "bold",
@@ -467,6 +488,16 @@
       "section": "cloud_iot_config",
       "type": "string",
       "description": "The timestamp of the endpoint generation",
+      "examples": [
+        "2019-01-17T14:02:29.364Z"
+      ]
+    },
+    "reflector_endpoint.expiry": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Timestamp when the provisioned credential or endpoint expires",
       "examples": [
         "2019-01-17T14:02:29.364Z"
       ]
@@ -613,6 +644,27 @@
       "section": "cloud_iot_config",
       "type": "string"
     },
+    "device_endpoint.auth_provider.mtls.private_key": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "PEM-encoded private key material for mTLS authentication"
+    },
+    "device_endpoint.auth_provider.mtls.certificate": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "PEM-encoded client certificate for mTLS authentication"
+    },
+    "device_endpoint.auth_provider.mtls.ca_certificate": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "PEM-encoded CA certificate bundle for peer verification"
+    },
     "device_endpoint.ca_file": {
       "display": "show",
       "style": "bold",
@@ -640,6 +692,16 @@
       "section": "cloud_iot_config",
       "type": "string",
       "description": "The timestamp of the endpoint generation",
+      "examples": [
+        "2019-01-17T14:02:29.364Z"
+      ]
+    },
+    "device_endpoint.expiry": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Timestamp when the provisioned credential or endpoint expires",
       "examples": [
         "2019-01-17T14:02:29.364Z"
       ]

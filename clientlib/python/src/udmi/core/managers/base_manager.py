@@ -102,6 +102,24 @@ class BaseManager(abc.ABC):
         self._dispatcher.publish_event(f"events/{subfolder}", event_model,
                                        device_id)
 
+    def publish_upload(self, upload_model: DataModel, subfolder: str,
+        device_id: Optional[str] = None) -> None:
+        """
+        Helper method for managers to publish upload stream messages.
+
+        Args:
+            upload_model: The UDMI data model to publish.
+            subfolder: The upload subfolder (e.g., 'discovery').
+            device_id: (Optional) The device ID to publish for.
+        """
+        if not self._dispatcher:
+            LOGGER.error("Manager %s cannot publish upload: dispatcher not set.",
+                         self.__class__.__name__)
+            return
+
+        self._dispatcher.publish_event(f"upload/{subfolder}", upload_model,
+                                       device_id)
+
     def trigger_state_update(self, immediate: bool = False) -> None:
         """
         Requests the device to publish its state.
@@ -195,6 +213,12 @@ class BaseManager(abc.ABC):
         Handle a newly received command.
         """
         raise NotImplementedError
+
+    def handle_download(self, download_name: str, payload: dict) -> None:
+        """
+        Handle a newly received download message.
+        Optional to implement.
+        """
 
     @abc.abstractmethod
     def update_state(self, state: State) -> None:

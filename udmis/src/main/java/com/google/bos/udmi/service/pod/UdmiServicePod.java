@@ -24,6 +24,7 @@ import com.google.bos.udmi.service.core.ProcessorBase;
 import com.google.bos.udmi.service.core.ReflectProcessor;
 import com.google.bos.udmi.service.core.StateProcessor;
 import com.google.bos.udmi.service.core.TargetProcessor;
+import com.google.bos.udmi.service.core.UploadProcessor;
 import com.google.bos.udmi.service.core.UufiProcessor;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.common.collect.ImmutableSet;
@@ -61,7 +62,7 @@ public class UdmiServicePod extends ContainerBase {
   private static final Map<String, UdmiComponent> COMPONENT_MAP = new ConcurrentHashMap<>();
   private static final Set<Class<? extends ProcessorBase>> PROCESSOR_CLASSES = ImmutableSet.of(
       TargetProcessor.class, ReflectProcessor.class, StateProcessor.class, ControlProcessor.class,
-      BitboxAdapter.class, DistributorPipe.class, UufiProcessor.class);
+      BitboxAdapter.class, DistributorPipe.class, UufiProcessor.class, UploadProcessor.class);
   private static final Map<String, Class<? extends ProcessorBase>> PROCESSORS = new HashMap<>();
 
   static {

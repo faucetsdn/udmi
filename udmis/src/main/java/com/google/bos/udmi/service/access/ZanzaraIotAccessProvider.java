@@ -923,6 +923,48 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public void sendDownloadBase(Envelope baseEnvelope, SubFolder folder, String message) {
+    if (mqttPipe == null) {
+      warn("MQTT pipe not initialized, unable to send download");
+      return;
+    }
+    try {
+      Envelope envelope = deepCopy(baseEnvelope);
+      envelope.subFolder = folder;
+      envelope.subType = SubType.DOWNLOAD;
+      envelope.source = IotProvider.ZANZARA.value();
+
+      Bundle bundle = new Bundle(envelope, MessageDispatcher.rawString(message));
+      mqttPipe.publish(bundle);
+      debug("Published download to pipe for %s/%s/%s",
+          baseEnvelope.deviceRegistryId, baseEnvelope.deviceId, folder);
+    } catch (Exception e) {
+      error("Failed to send download for %s/%s: %s",
+          baseEnvelope.deviceRegistryId, baseEnvelope.deviceId, friendlyStackTrace(e));
+      throw new RuntimeException("While sending download for "
+          + baseEnvelope.deviceRegistryId + "/" + baseEnvelope.deviceId, e);
+    }
+  }
+
+  @Override
+  public void provisionDownloadBlob(String registryId, String deviceId, String blobKey,
+      EndpointConfiguration endpoint) {
+    requireNonNull(registryId, "registryId not defined");
+    requireNonNull(deviceId, "deviceId not defined");
+    requireNonNull(blobKey, "blobKey not defined");
+    requireNonNull(endpoint, "endpoint not defined");
+    registryDeviceRef(registryId, deviceId)
+        .put("download_blob_" + blobKey, stringifyTerse(endpoint));
+  }
+
+  @Override
+  public EndpointConfiguration fetchDownloadBlob(String registryId, String deviceId,
+      String blobKey) {
+    String json = registryDeviceRef(registryId, deviceId).get("download_blob_" + blobKey);
+    return json == null ? null : JsonUtil.fromString(EndpointConfiguration.class, json);
+  }
+
+  @Override
   public void shutdown() {
     ifNotNullThen(mqttPipe, pipe -> {
       try {

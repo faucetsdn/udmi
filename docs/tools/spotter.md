@@ -16,7 +16,7 @@ Spotter runs as a single unified process using the UDMI Python Client Library (`
    - **`PassiveFamilyProvider`**: Listens for passive broadcast network traffic and extracts discovered device metadata.
 2. **`SpotterDiscoveryManager`**:
    - Manages scheduled and on-demand discovery sweeps.
-   - Streams live remote packet capture traces (`events/streams`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
+   - Streams live remote packet capture traces (`upload/discovery`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
 3. **`SpotterSystemManager`**:
    - Collects host metrics (CPU load, memory, OS distribution) and emits periodic telemetry (`events/system`).
    - Evaluates memory usage against safety thresholds (`check_safety_circuit_breaker`), throttling active discovery and packet captures to protect edge devices from kernel OOM termination.
@@ -48,7 +48,7 @@ graph TD
     end
 
     SYS -->|"state.system / events/system"| MB
-    DISC -->|"events/discovery & events/streams"| MB
+    DISC -->|"events/discovery & upload/discovery"| MB
     LOC -->|"Scans & Probes"| DEV
 ```
 
@@ -60,16 +60,16 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 
 1. **Capture Worker ([pcap.py](../../edge/spotter/src/pcap.py))**: Spawns `tcpdump` with configurable interface filters, enforcing strict execution bounds (maximum duration and byte quotas).
 2. **Streaming MQTT Egress Transport**:
-   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`StreamsEvents`) over the universal streaming MQTT event topic (`events/streams`).
+   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`DiscoveryUpload`) over the streaming MQTT upload topic (`upload/discovery`), terminated by a SHA-256 EOF marker.
    - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding external network credentials or outbound HTTP rules at the edge.
 3. **Ad-hoc PCAP Reassembly ([bin/reassemble_pcap](../../edge/spotter/bin/reassemble_pcap))**:
-   Reassembles chunked `events/streams` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
+   Reassembles chunked `upload/discovery` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
    ```bash
-   # Reassemble stream events file into a pcap file:
+   # Reassemble upload chunks file into a pcap file:
    ./edge/spotter/bin/reassemble_pcap stream_events.json capture.pcap
 
    # Or stream directly from mosquitto subscriber:
-   mosquitto_sub -h $BROKER -t '/r/+/d/+/events/streams' | ./edge/spotter/bin/reassemble_pcap - live.pcap
+   mosquitto_sub -h $BROKER -t '/r/+/d/+/upload/discovery' | ./edge/spotter/bin/reassemble_pcap - live.pcap
    ```
 
 ---
