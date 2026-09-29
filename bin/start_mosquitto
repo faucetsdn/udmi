@@ -117,6 +117,7 @@ sed -i "s%plugin .*%plugin $PLUGIN_FILE%" $UDMI_FILE
 sed -i "s%plugin_opt_config_file .*%plugin_opt_config_file $DYN_FILE%" $UDMI_FILE
 sed -i "/password_file/d" $UDMI_FILE
 sed -i "s%listener [0-9]*%listener ${MQTT_PORT:-8883}%" $UDMI_FILE
+sed -i "s%allow_anonymous .*%allow_anonymous true%" $UDMI_FILE
 [[ $(whoami) == root ]] && ! grep -q "^user root" $UDMI_FILE && echo "user root" >> $UDMI_FILE
 
 # Ensure the mosquitto group can write to the config directory if root
@@ -179,6 +180,7 @@ fi
 
 $MOSQUITTO_CTRL createRole service || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow || true
+$MOSQUITTO_CTRL addRoleACL service subscribePattern '$share/+//r/+/d/+/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/r/+/d/+/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern '/uufi/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend '/uufi/#' allow || true
@@ -193,6 +195,10 @@ $MOSQUITTO_CTRL addRoleACL service publishClientSend 'c/control/#' allow || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern 'reflect' allow || true
 $MOSQUITTO_CTRL addRoleACL service publishClientSend 'reflect' allow || true
 $MOSQUITTO_CTRL addClientRole $AUTH_USER service || true
+
+$MOSQUITTO_CTRL createGroup anonymous 2>/dev/null || true
+$MOSQUITTO_CTRL addGroupRole anonymous service 2>/dev/null || true
+$MOSQUITTO_CTRL setAnonymousGroup anonymous 2>/dev/null || true
 
 $MOSQUITTO_CTRL createRole uufi || true
 $MOSQUITTO_CTRL addRoleACL uufi subscribePattern '/uufi/#' allow || true
