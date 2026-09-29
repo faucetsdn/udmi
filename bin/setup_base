@@ -35,7 +35,7 @@ if [[ $(id -u) == 0 ]]; then
         update_cmd="apk add"
         extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc py3-grpcio py3-cryptography py3-cffi"
     fi
-    $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux
+    $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux lsof graphviz
 else
     echo "Skipping system package installation in non-root mode (run 'sudo bin/setup_base' to install system packages)."
 fi
@@ -62,6 +62,11 @@ java -version
 
 echo "Initializing base site model..."
 $ROOT_DIR/bin/clone_model
+
+# Written after every install step succeeded, and before the ownership fix below
+# so a later non-root run can rewrite it. Read by bin/ensure_venv to tell
+# whether venv/ matches etc/requirements.txt.
+sha256sum etc/requirements.txt | cut -d' ' -f1 > venv/.requirements.sha256
 
 if [[ $(id -u) == 0 ]]; then
     if [[ -n ${SUDO_UID:-} && -n ${SUDO_GID:-} ]]; then

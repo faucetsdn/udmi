@@ -1,0 +1,394 @@
+/*
+ * Design tokens, reset, application shell, and layout primitives.
+ *
+ * Every custom property referenced anywhere in the Workbench is declared here.
+ * v1 referenced --text-disabled, --shadow-lg, and --color-primary-dark without
+ * ever defining them, so those rules silently did nothing.
+ */
+
+:root {
+  /* Surfaces (Google Material 3 Light Theme) */
+  --bg-base: #f8fafd;
+  --bg-surface: #ffffff;
+  --bg-surface-container: #f0f4f9;
+  --bg-surface-raised: #e9eef6;
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+
+  /* Terminal / Code Surfaces (developer dark console) */
+  --bg-terminal: #1e1e1e;
+  --bg-terminal-header: #2d2d2d;
+  --border-terminal: #3c3c3c;
+  --text-terminal: #f1f1f1;
+
+  /* Text Colors (M3 Light Theme) */
+  --text-primary: #1f1f1f;
+  --text-secondary: #3c4043;
+  --text-muted: #5f6368;
+  --text-disabled: #9aa0a6;
+  --text-inverse: #ffffff;
+
+  /* Accents (Google Material 3 Light Theme) */
+  --color-primary: #0b57d0;         /* Google Blue */
+  --color-primary-dark: #0842a0;    /* Primary hover */
+  --color-secondary: #00639b;       /* Slate Steel Blue */
+  --color-tertiary: #146c2e;        /* Google Green */
+  --color-success: #146c2e;         /* Google Green */
+  --color-warning: #e86e00;         /* Google Orange */
+  --color-error: #b3261e;           /* Google Red */
+  --color-info: #0b57d0;            /* Google Blue */
+
+  /* Lines & Borders */
+  --border-subtle: #e0e3e7;
+  --border-strong: #c4c7c5;
+  --focus-ring: #0b57d0;
+
+  /* Typography */
+  --font-sans: 'Google Sans', 'Google Sans Text', 'Roboto', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* Space and shape */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  --shadow-sm: 0 1px 2px rgba(60, 64, 67, 0.08);
+  --shadow-md: 0 1px 3px rgba(60, 64, 67, 0.12), 0 4px 8px rgba(60, 64, 67, 0.08);
+  --shadow-lg: 0 8px 24px rgba(60, 64, 67, 0.15);
+
+  --app-bar-height: 56px;
+
+  /*
+   * Panel geometry. The Log Console and the Local Test Setup drawer are both
+   * drag-resizable, so these are overridden at runtime on the document element
+   * from the persisted store; the values here are the defaults for a fresh
+   * profile and must match DEFAULT_STATE in core/store.js.
+   */
+  --log-panel-height: 220px;
+  --local-setup-drawer-width: 440px;
+  --resize-handle-size: 6px;
+
+  --config-panel-width: 340px;
+}
+
+/* --------------------------------------------------------------- reset --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow: hidden;
+}
+
+h1, h2, h3, p {
+  margin: 0;
+}
+
+/*
+ * The hidden attribute must win over component display rules. Without this,
+ * any element styled `display: flex` (buttons, the options popover) stays
+ * visible while marked hidden.
+ */
+[hidden] {
+  display: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip-link {
+  position: absolute;
+  left: -999px;
+  z-index: 100;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  border-radius: var(--radius-sm);
+}
+
+.skip-link:focus {
+  left: var(--space-3);
+  top: var(--space-2);
+}
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined', system-ui, sans-serif;
+  font-weight: normal;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ------------------------------------------------------------ app bar --- */
+.app-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  flex: 0 0 var(--app-bar-height);
+  padding: 0 var(--space-4);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  box-shadow: 0 1px 2px rgba(60, 64, 67, 0.06);
+}
+
+.brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.brand-mark {
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--color-primary);
+}
+
+.brand-name {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.nav {
+  display: flex;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.nav-link {
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.nav-link:hover {
+  background: var(--bg-surface-container);
+  color: var(--text-primary);
+}
+
+.nav-link.is-active {
+  background: rgba(11, 87, 208, 0.1);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.server-status {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.server-status.is-ok {
+  color: var(--color-primary);
+}
+
+.server-status.is-error {
+  color: var(--color-error);
+}
+
+/* ------------------------------------------------------------- layout --- */
+.outlet {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/*
+ * The three-zone grid. `min-height: 0` on the grid and on every scrollable
+ * descendant is what pins the workspace to the viewport and forces panels to
+ * scroll internally instead of growing the page.
+ */
+.workspace {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  grid-template-columns: var(--config-panel-width) 1fr;
+  grid-template-rows: 1fr var(--log-panel-height);
+  grid-template-areas:
+    "config tests"
+    "logs   logs";
+}
+
+.panel-config { grid-area: config; }
+.panel-tests  { grid-area: tests; }
+.panel-logs   { grid-area: logs; }
+
+.workspace-split {
+  grid-template-rows: 1fr;
+  grid-template-areas: "config tests";
+}
+
+.workspace-single,
+.workspace-chat {
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
+  grid-template-areas: "tests";
+}
+
+.workspace-single > .panel,
+.workspace-chat > .panel,
+.workspace-split > .panel:not(.panel-config) {
+  grid-area: tests;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.panel-config {
+  padding: var(--space-4);
+  gap: var(--space-3);
+  overflow-y: auto;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.panel-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 0 0 auto;
+  padding: var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.panel-toolbar .panel-title {
+  flex: 0 0 auto;
+}
+
+.panel-toolbar input[type="search"] {
+  flex: 0 1 180px;
+  min-width: 60px;
+  max-width: 180px;
+}
+
+.panel-toolbar select {
+  flex: 0 1 130px;
+  min-width: 60px;
+  max-width: 130px;
+}
+
+.panel-toolbar .btn {
+  flex: 0 0 auto;
+}
+
+.count {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  text-transform: none;
+  color: var(--text-secondary);
+}
+
+.empty-note {
+  padding: var(--space-4);
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.empty-note.is-error {
+  color: var(--color-error);
+}
+
+@media (max-width: 1100px) {
+  .workspace,
+  .workspace-split {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr var(--log-panel-height);
+    grid-template-areas:
+      "config"
+      "tests"
+      "logs";
+  }
+
+  .panel-config {
+    max-height: 45vh;
+  }
+}
+
+/* Persistent notice: desktop notifications blocked or unsupported. */
+.desktop-notify-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 4px 10px;
+  border-radius: var(--radius-md);
+  background: var(--bg-surface-container);
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: help;
+}
+
+.desktop-notify-notice[hidden] {
+  display: none;
+}
+
+.desktop-notify-notice .material-symbols-outlined {
+  font-size: 16px;
+}

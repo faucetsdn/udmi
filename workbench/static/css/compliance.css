@@ -1,0 +1,584 @@
+/*
+ * Layer 4 — Compliance grid and commit dialog.
+ *
+ * Owned entirely by the Devices view and the commit dialog. Structural tokens
+ * (colour, spacing, radius) come from theme.css; nothing here redefines a
+ * shared component class, so this file can be loaded alongside components.css
+ * without overriding it.
+ *
+ * The verdict palette is the one point of substance: `other` (sequences whose
+ * verdict is outside pass/fail/skip, such as an aborted `errr` run) is given a
+ * neutral amber of its own rather than sharing the failure red. A run that
+ * never reached the device did not fail, and the grid must not look as though
+ * it did.
+ */
+
+/* ------------------------------------------------------- site rollup ---- */
+.compliance-totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--space-1) var(--space-3);
+  margin: 0;
+  font-size: 13px;
+}
+
+.compliance-totals > div {
+  display: contents;
+}
+
+.compliance-totals dt {
+  color: var(--text-muted);
+}
+
+.compliance-totals dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  text-align: right;
+}
+
+/* ------------------------------------------------- per-device records ---- */
+.compliance-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+
+.compliance-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+}
+
+.compliance-row.is-untested {
+  background: var(--bg-surface-container);
+}
+
+.compliance-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.compliance-head .device-name {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.compliance-head .device-tags {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.compliance-reason {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.compliance-facts {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------- verdict bar ---- */
+.verdict-bar {
+  display: flex;
+  height: 8px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--bg-surface-raised);
+}
+
+.verdict-segment {
+  height: 100%;
+}
+
+.verdict-segment.verdict-pass  { background: var(--color-success); }
+.verdict-segment.verdict-fail  { background: var(--color-error); }
+.verdict-segment.verdict-skip  { background: var(--text-disabled); }
+.verdict-segment.verdict-other { background: var(--color-warning); }
+
+.verdict-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: 0;
+}
+
+.verdict-count {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.verdict-count dt {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.verdict-count dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-primary);
+}
+
+.verdict-count.verdict-pass dd  { color: var(--color-success); }
+.verdict-count.verdict-fail dd  { color: var(--color-error); }
+.verdict-count.verdict-skip dd  { color: var(--text-muted); }
+.verdict-count.verdict-other dd { color: var(--color-warning); }
+
+/* ---------------------------------------------------------- actions ----- */
+.compliance-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.compliance-actions .report-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.compliance-no-reports {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ----------------------------------------------------- commit dialog ---- */
+.commit-modal {
+  width: min(720px, 92vw);
+}
+
+.commit-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/*
+ * The blocking reason is server-authored prose that can run to several lines
+ * (the UDMI checkout block is a full paragraph), so it is laid out to be read
+ * rather than clipped to a single line.
+ */
+.commit-block {
+  margin: 0;
+  padding: var(--space-3);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+  background: rgba(232, 110, 0, 0.08);
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.commit-block.is-udmi-repo {
+  border-left-color: var(--color-error);
+  background: rgba(179, 38, 30, 0.08);
+  color: var(--color-error);
+  font-weight: 500;
+}
+
+.commit-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  font-size: 13px;
+}
+
+.commit-facts > div {
+  display: contents;
+}
+
+.commit-facts dt {
+  color: var(--text-muted);
+}
+
+.commit-facts dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.commit-section-title {
+  margin: 0 0 var(--space-2);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+/*
+ * The per-device impact block. It is the first thing in the dialog because a
+ * site-level commit rewrites recorded results for devices the operator did not
+ * individually select, and "3 devices, 35 files" is the fact they can judge.
+ * Styled as an informational panel rather than a warning: the commit is the
+ * intended action, not a hazard, so it must not be confused with
+ * .commit-block, which only ever carries a blocking reason.
+ */
+.commit-impact {
+  padding: var(--space-3);
+  border-left: 3px solid var(--color-info);
+  border-radius: var(--radius-sm);
+  background: rgba(11, 87, 208, 0.06);
+}
+
+.commit-impact-lead {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.commit-device-list {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  /* A site-wide run can touch every device in the model (77 in the staging
+     lab), so the list scrolls instead of pushing the commit controls out of
+     reach. */
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.commit-device {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
+  font-size: 13px;
+}
+
+.commit-device-name {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.commit-device-count {
+  color: var(--text-secondary);
+}
+
+.commit-device-unknown {
+  font-size: 12px;
+  color: var(--color-warning);
+}
+
+.commit-impact-site {
+  margin: var(--space-2) 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/*
+ * The flat file list is now secondary to the device summary, so it collapses.
+ * `display: list-item` is restored because .commit-section-title sets a block
+ * layout that would otherwise remove the disclosure triangle and leave no
+ * visible affordance that the section opens.
+ */
+.commit-changes > summary {
+  display: list-item;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+.commit-changes[open] > summary {
+  margin-bottom: var(--space-2);
+}
+
+.commit-change-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-2);
+  max-height: 140px;
+  overflow-y: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface-container);
+}
+
+.commit-change {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.commit-change.is-empty {
+  font-family: var(--font-sans);
+  color: var(--text-muted);
+}
+
+.commit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.commit-form textarea {
+  width: 100%;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: var(--space-2);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  resize: vertical;
+}
+
+.commit-form textarea:disabled,
+.commit-form input:disabled,
+.commit-form select:disabled {
+  background: var(--bg-surface-container);
+  color: var(--text-disabled);
+  cursor: not-allowed;
+}
+
+.commit-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.commit-check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.commit-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.commit-status {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.commit-status.is-error { color: var(--color-error); }
+.commit-status.is-ok    { color: var(--color-success); }
+.commit-status.is-busy  { color: var(--color-info); }
+.commit-status.is-info  { color: var(--text-muted); }
+
+/* ============================================== feature score matrix === */
+/*
+   One row per feature bucket, one column per stage the device exercised.
+   This is the same table `bin/sequencer_report` writes into results.md; the
+   two must stay legible as the same artifact, so the glyph column, bucket
+   column and score cells keep that file's ordering.
+*/
+.matrix-wrapper {
+  margin: var(--space-3) 0;
+  overflow-x: auto;
+}
+
+.compliance-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.compliance-matrix th,
+.compliance-matrix td {
+  padding: var(--space-1) var(--space-2);
+  text-align: left;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.compliance-matrix thead th {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-strong);
+  white-space: nowrap;
+}
+
+/* A stage that counts towards the verdict is marked, because the difference
+   between a scored stage and an informational one is invisible otherwise and
+   explains why a full-marks bucket can still read as not assessed. */
+.compliance-matrix thead th.stage-col.is-releasable {
+  color: var(--text-primary);
+}
+
+.compliance-matrix thead th.stage-col:not(.is-releasable)::after {
+  content: ' (info)';
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.compliance-matrix tbody tr:last-child th,
+.compliance-matrix tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.matrix-verdict {
+  width: 1.75rem;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.matrix-verdict.verdict-pass { color: var(--color-success); }
+.matrix-verdict.verdict-fail { color: var(--color-error); }
+.matrix-verdict.verdict-none { color: var(--text-disabled); }
+
+.matrix-bucket {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.matrix-score {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.matrix-score.is-full    { color: var(--color-success); }
+.matrix-score.is-partial { color: var(--color-error); font-weight: 600; }
+
+/* Not exercised. Muted so it reads as absent rather than as a zero score. */
+.matrix-score.is-na { color: var(--text-disabled); }
+
+.matrix-note {
+  margin: var(--space-2) 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------- unscored sequences --- */
+.compliance-unscored {
+  margin: var(--space-2) 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.compliance-unscored summary {
+  cursor: pointer;
+  color: var(--color-warning);
+}
+
+.compliance-unscored ul {
+  margin: var(--space-2) 0 0;
+  padding-left: var(--space-4);
+}
+
+.compliance-unscored li {
+  margin-bottom: var(--space-1);
+}
+
+/* -------------------------------------------------- run targets --- */
+/*
+   The target is per run, not per site model, so it is shown on the device and
+   read back from the envelopes the run captured. More than one chip means
+   different sequences went to different projects, which changes how the scores
+   above should be read; it is called out rather than flattened.
+*/
+.compliance-targets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+  font-size: 12px;
+}
+
+.compliance-targets.is-unknown {
+  color: var(--text-disabled);
+  font-style: italic;
+}
+
+.compliance-targets .targets-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.compliance-targets .target-chip {
+  padding: 2px var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-primary);
+  background: var(--bg-surface-container);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  cursor: help;
+}
+
+.compliance-targets.is-mixed .target-chip {
+  border-color: var(--color-warning);
+}
+
+/* ------------------------------------------------ report drift --- */
+/*
+   results.md is only rewritten by bin/sequencer_report, the json by every run,
+   so a downloadable report can describe a different run from the matrix it sits
+   under. Styled as a warning because acting on the wrong report is the failure
+   mode this prevents.
+*/
+.compliance-drift {
+  margin: var(--space-2) 0;
+  padding: var(--space-2);
+  font-size: 12px;
+  color: var(--color-warning);
+  background: var(--bg-surface-container);
+  border-left: 3px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+}
+
+/* ------------------------------------------------- site commit --- */
+.site-commit {
+  margin-top: var(--space-4);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.site-commit .btn {
+  width: 100%;
+}
+
+.site-commit .field-hint {
+  margin-top: var(--space-2);
+}

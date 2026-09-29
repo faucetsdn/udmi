@@ -218,7 +218,9 @@ gencode
 ghcr
 github
 gittools
+Gmail
 googlegroups
+Graphviz
 hardcoded
 hoc
 hostname
@@ -246,6 +248,7 @@ localhost
 localnet
 logentry
 loglevel
+lookups
 loopback
 lsb
 mTLS
@@ -359,6 +362,8 @@ transpile
 transpiles
 triaged
 triages
+Triaging
+triaging
 txt
 udmi
 udmif

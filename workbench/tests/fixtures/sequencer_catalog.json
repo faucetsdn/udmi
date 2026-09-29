@@ -1,0 +1,53 @@
+{
+  "catalog_version": 1,
+  "sequences": [
+    {
+      "bucket": "system",
+      "capabilities": [],
+      "declaring_class": "com.google.daq.mqtt.sequencer.sequences.ConfigSequences",
+      "ignored": false,
+      "name": "broken_config",
+      "nostate": false,
+      "score": 10,
+      "stage": "STABLE",
+      "summary": "Check that the device correctly handles a broken (non-json) config message.",
+      "timeout_ms": 0
+    },
+    {
+      "bucket": "writeback",
+      "capabilities": [],
+      "declaring_class": "com.google.daq.mqtt.sequencer.sequences.WritebackSequences",
+      "ignored": false,
+      "name": "writeback_success",
+      "nostate": false,
+      "score": 10,
+      "stage": "ALPHA",
+      "summary": "Implements UDMI writeback and can successfully writeback to a point",
+      "timeout_ms": 120000
+    },
+    {
+      "bucket": "discovery.scan",
+      "capabilities": [{"name": "Enumerate", "stage": "ALPHA"}],
+      "declaring_class": "com.google.daq.mqtt.sequencer.sequences.DiscoverySequences",
+      "facets": "discovery",
+      "ignored": false,
+      "name": "scan_single_targeted",
+      "nostate": false,
+      "score": 10,
+      "stage": "ALPHA",
+      "summary": "Check results of a single scan targeting specific devices",
+      "timeout_ms": 0
+    },
+    {
+      "bucket": "writeback",
+      "capabilities": [],
+      "declaring_class": "com.google.daq.mqtt.sequencer.sequences.WritebackSequences",
+      "ignored": false,
+      "name": "writeback_invalid",
+      "nostate": true,
+      "score": 10,
+      "stage": "ALPHA",
+      "timeout_ms": 120000
+    }
+  ]
+}

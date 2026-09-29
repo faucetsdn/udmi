@@ -1,6 +1,6 @@
 """Barbican MCP JSON-RPC Client.
 
-Allows Python components (such as ui/v2/server.py) to interact with the
+Allows Python components to interact with the
 Barbican service via JSON-RPC 2.0 without making any direct database calls
 or depending on internal datastore implementation details.
 """

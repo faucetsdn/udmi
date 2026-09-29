@@ -1,0 +1,36 @@
+#!/bin/bash -e
+#
+# Emit the authoritative sequencer test catalog as JSON on stdout.
+#
+# The catalog is read from the compiled validator (annotations on every @Test
+# method in the sequence classes), so it includes new and ALPHA-stage tests
+# that are absent from docs/specs/sequences/generated.md and etc/sequencer.out.
+#
+# Requires an up-to-date validator jar: run validator/bin/build first. The reader
+# itself, workbench/tools/SequenceCatalog.java, runs as a single-file Java program
+# against that jar, so no validator sources are modified.
+#
+
+UDMI_ROOT=$(realpath $(dirname $0)/..)
+source $UDMI_ROOT/etc/shell_common.sh
+
+[[ $# == 0 ]] || usage
+
+JARFILE=$UDMI_ROOT/validator/build/libs/validator-1.0-SNAPSHOT-all.jar
+
+if [[ ! -f $JARFILE ]]; then
+    echo "ERROR: validator jar $JARFILE is missing; run validator/bin/build first." >&2
+    exit 1
+fi
+
+# Same staleness rule as validator/bin/build uses to decide whether to rebuild.
+stale=$(find $UDMI_ROOT/validator/src/main $UDMI_ROOT/gencode/java $UDMI_ROOT/common/src/main/java \
+            -type f -newer $JARFILE | head -5)
+if [[ -n $stale ]]; then
+    echo "ERROR: validator jar $JARFILE is stale (older than sources, e.g.:" >&2
+    echo "$stale" | sed 's/^/  /' >&2
+    echo "); run validator/bin/build first." >&2
+    exit 1
+fi
+
+exec java -cp $JARFILE $UDMI_ROOT/workbench/tools/SequenceCatalog.java
