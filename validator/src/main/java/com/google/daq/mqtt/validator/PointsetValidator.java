@@ -129,7 +129,12 @@ public class PointsetValidator {
 
   private MetadataDiff validateMessage(Set<String> strings) {
     Set<String> deliveredPoints = new TreeSet<>(strings);
-    Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
+    Set<String> expectedPoints = new TreeSet<>();
+    getPoints(metadata).forEach((name, point) -> {
+      if (point == null || !PointPointsetModel.Type.MISSING.equals(point.type)) {
+        expectedPoints.add(name);
+      }
+    });
     MetadataDiff metadataDiff = new MetadataDiff();
     metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
     metadataDiff.extraPoints.removeAll(expectedPoints);

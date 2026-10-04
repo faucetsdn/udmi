@@ -2,15 +2,23 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
+    "guid": "00623524-7855-48b4-93ca-581332384a24",
     "location": {
       "site": "US-MTV-RLS1"
     }
   },
   "externals": {
     "dbo": {
-      "ext_id": "00623524-7855-48b4-93ca-581332384a24",
-      "type": "METERS/EM_PWM_AVCM_PLPM_PVCM",
-      "label": "power-meter-EM-61_Lighting_BH2A"
+      "type": [
+        "METERS/EM_PWM_AVCM_PLPM_PVCM"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "power-meter-EM-61_Lighting_BH2A"
+      }
     }
   },
   "cloud": {

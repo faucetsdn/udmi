@@ -146,6 +146,11 @@ public class MqttToPubSubBridge {
       .maximumSize(10000)
       .build();
 
+  private static final Cache<String, String> guidCache = CacheBuilder.newBuilder()
+      .expireAfterWrite(1, TimeUnit.MINUTES)
+      .maximumSize(10000)
+      .build();
+
   private final ThreadPoolExecutor executor;
   private final ScheduledExecutorService retryScheduler;
   private volatile boolean tripped = false;
@@ -197,6 +202,7 @@ public class MqttToPubSubBridge {
 
   static void clearCacheForTest() {
     numIdCache.invalidateAll();
+    guidCache.invalidateAll();
   }
 
   /**
@@ -752,6 +758,11 @@ public class MqttToPubSubBridge {
                     attributes.put("deviceNumId", numId);
                   }
 
+                  String guid = getDeviceGuid(etcdProvider, registryId, deviceId);
+                  if (guid != null) {
+                    attributes.put("deviceGuid", guid);
+                  }
+
                   if (topicSuffix != null && !topicSuffix.isEmpty()) {
                     List<String> parts = Splitter.on('/').splitToList(topicSuffix);
                     if (!parts.isEmpty() && !parts.get(0).isEmpty()) {
@@ -1034,6 +1045,39 @@ public class MqttToPubSubBridge {
       logger.debug("No numId value or error reading from etcd for device {}/{}",
           registryId, deviceId);
       numIdCache.put(cacheKey, ""); // Cache empty string for negative lookups
+      return null;
+    }
+  }
+
+  private static String getDeviceGuid(EtcdDataProvider etcdProvider, String registryId,
+      String deviceId) {
+    if (etcdProvider == null || "unknown".equals(registryId) || "unknown".equals(deviceId)) {
+      return null;
+    }
+
+    String cacheKey = registryId + "/" + deviceId;
+    String cachedGuid = guidCache.getIfPresent(cacheKey);
+    if (cachedGuid != null) {
+      return cachedGuid.isEmpty() ? null : cachedGuid;
+    }
+
+    try {
+      String guid = etcdProvider.ref()
+          .registry(registryId)
+          .device(deviceId)
+          .getAsSerializable("guid");
+      if (guid != null) {
+        logger.debug("Found guid {} in etcd for device {}/{}", guid, registryId, deviceId);
+        guidCache.put(cacheKey, guid);
+      } else {
+        logger.debug("guid not found in etcd for device {}/{}", registryId, deviceId);
+        guidCache.put(cacheKey, ""); // Cache empty string for negative lookups
+      }
+      return guid;
+    } catch (Exception e) {
+      logger.debug("No guid value or error reading from etcd for device {}/{}",
+          registryId, deviceId);
+      guidCache.put(cacheKey, ""); // Cache empty string for negative lookups
       return null;
     }
   }

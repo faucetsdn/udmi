@@ -354,6 +354,28 @@ class ZanzaraIotAccessProviderTest {
     assertTrue(registries.contains(TEST_REGISTRY));
   }
 
+  @Test
+  void testModelDeviceExtractsGuidFromUdmiMetadata() {
+    String testGuid = "043c2f7c-d542-4be2-a847-c73f0ac4fb95";
+    CloudModel createModel = new CloudModel();
+    createModel.operation = ModelOperation.CREATE;
+    createModel.metadata = Map.of(
+        "udmi_metadata", "{\"system\":{\"guid\":\"" + testGuid + "\"}}");
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, createModel, null);
+    assertEquals(testGuid, store.get("r/test-reg/d/test-dev:guid"));
+
+    String updatedGuid = "11111111-2222-3333-4444-555555555555";
+    CloudModel updateModel = new CloudModel();
+    updateModel.operation = ModelOperation.UPDATE;
+    updateModel.metadata = Map.of(
+        "udmi_metadata", "{\"system\":{\"guid\":\"" + updatedGuid + "\"}}");
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, updateModel, null);
+    assertEquals(updatedGuid, store.get("r/test-reg/d/test-dev:guid"));
+  }
+
+
 
   class FakeDataRef extends DataRef {
     private final Map<String, String> data;

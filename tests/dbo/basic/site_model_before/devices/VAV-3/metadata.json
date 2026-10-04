@@ -1,12 +1,21 @@
 {
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
-  "system": {},
+  "system": {
+    "guid": "547a33c5-0ce4-4dfb-9924-5169a3475c89"
+  },
   "externals": {
     "dbo": {
-      "ext_id": "547a33c5-0ce4-4dfb-9924-5169a3475c89",
-      "type": "HVAC/VAV_SD_DSP",
-      "label": "VAV-3"
+      "type": [
+        "HVAC/VAV_SD_DSP"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "VAV-3"
+      }
     }
   },
   "cloud": {

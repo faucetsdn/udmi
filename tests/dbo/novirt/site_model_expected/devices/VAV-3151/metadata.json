@@ -2,6 +2,7 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
+    "guid": "03dc4244-6d0c-4530-a612-6adef00024f7",
     "name": "VAVRH S3-1-51 CO2",
     "location": {
       "site": "US-MTV-RLS1"
@@ -9,9 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "ext_id": "03dc4244-6d0c-4530-a612-6adef00024f7",
-      "type": "HVAC/VAV_SD_DSP_HWDC_CO2M",
-      "label": "VAVRH S3-1-51 CO2"
+      "type": [
+        "HVAC/VAV_SD_DSP_HWDC_CO2M"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "VAVRH S3-1-51 CO2"
+      }
     }
   },
   "cloud": {

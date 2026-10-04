@@ -2,6 +2,7 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
+    "guid": "107959bc-29f3-464a-848f-9e5985d45a5a",
     "name": "CRAC 1 UPS",
     "location": {
       "site": "US-MTV-40",
@@ -10,9 +11,16 @@
   },
   "externals": {
     "dbo": {
-      "ext_id": "107959bc-29f3-464a-848f-9e5985d45a5a",
-      "type": "HVAC/FCU_DFSS_ZTC_ZHDHC_DXZTC",
-      "label": "US-MTV-40:FCU:CRAC 1 UPS"
+      "type": [
+        "HVAC/FCU_DFSS_ZTC_ZHDHC_DXZTC"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "US-MTV-40:FCU:CRAC 1 UPS"
+      }
     }
   },
   "cloud": {
