@@ -2,6 +2,7 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
+    "guid": "026203a0-976f-4581-8f0f-b608186f37ad",
     "name": "TF S-11",
     "location": {
       "site": "US-MTV-RLS1"
@@ -9,9 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "ext_id": "026203a0-976f-4581-8f0f-b608186f37ad",
-      "type": "HVAC/FAN_SS_DSP",
-      "label": "TF S-11 Elevator Closet Rm 31345"
+      "type": [
+        "HVAC/FAN_SS_DSP"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "TF S-11 Elevator Closet Rm 31345"
+      }
     }
   },
   "cloud": {

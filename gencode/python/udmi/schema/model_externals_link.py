@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from ._base import DataModel
 
@@ -16,6 +16,6 @@ class LinkExternalsModel(DataModel):
     """
 
     ext_id: Optional[str] = None
-    type: Optional[str] = None
+    type: Optional[List[str]] = None
     etag: Optional[str] = None
     label: Optional[str] = None

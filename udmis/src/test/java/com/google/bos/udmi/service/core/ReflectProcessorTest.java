@@ -164,12 +164,18 @@ public class ReflectProcessorTest extends ProcessorTestBase {
     returnModel.resource_type = Resource_type.DIRECT;
     when(provider.modelDevice(anyString(), anyString(), notNull(), any())).thenReturn(returnModel);
 
+    String testGuid = "043c2f7c-d542-4be2-a847-c73f0ac4fb95";
     CloudModel requestModel = new CloudModel();
     requestModel.operation = ModelOperation.BIND;
     requestModel.resource_type = Resource_type.DIRECT;
+    requestModel.metadata = Map.of(
+        "udmi_metadata", "{\"version\":\"1.5.2\",\"system\":{\"guid\":\"" + testGuid + "\"}}");
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
     verify(provider, times(1)).modelDevice(eq(TEST_REGISTRY), eq(TEST_DEVICE),
         eq(requestModel), any());
+
+    assertEquals(1, capturedEnvelopes.size());
+    assertEquals(testGuid, capturedEnvelopes.get(0).deviceGuid);
 
     ArgumentCaptor<String> commandCaptor = ArgumentCaptor.forClass(String.class);
     verify(provider, times(1)).sendCommand(

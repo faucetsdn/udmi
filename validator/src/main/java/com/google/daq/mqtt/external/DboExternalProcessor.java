@@ -1,5 +1,6 @@
 package com.google.daq.mqtt.external;
 
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static java.util.Objects.requireNonNull;
 
 import com.google.udmi.util.JsonUtil;
@@ -29,14 +30,15 @@ public class DboExternalProcessor implements ExternalProcessor {
   @Override
   public void process(SiteDevice device) {
     LinkExternalsModel linkExternalsModel = device.getMetadata().externals.get(getName());
-    String entityId = requireNonNull(linkExternalsModel.ext_id, "missing external id");
+    String entityId = requireNonNull(catchToNull(() -> device.getMetadata().system.guid),
+        "missing system.guid");
 
     BuildingConfig buildingConfig = new BuildingConfig();
     BuildingConfigEntity buildingConfigEntity = buildingConfig.computeIfAbsent(entityId,
         id -> new BuildingConfigEntity());
 
     buildingConfigEntity.code = linkExternalsModel.label;
-    buildingConfigEntity.type = linkExternalsModel.type;
+    buildingConfigEntity.type = catchToNull(() -> linkExternalsModel.type.get(0));
 
     File dboOut = new File(device.getOutDir(), DBO_OUT_FILE);
     JsonUtil.writeFile(buildingConfig, dboOut);

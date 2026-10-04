@@ -255,7 +255,8 @@ public class PointPointsetModel {
 
         STRING("string"),
         BOOLEAN("boolean"),
-        NUMBER("number");
+        NUMBER("number"),
+        MISSING("missing");
         private final java.lang.String value;
         private final static Map<java.lang.String, PointPointsetModel.Type> CONSTANTS = new HashMap<java.lang.String, PointPointsetModel.Type>();
 

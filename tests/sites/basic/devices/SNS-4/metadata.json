@@ -21,6 +21,7 @@
     }
   },
   "system": {
+    "guid": "0060917f-8c21-47c4-b011-52521085fdc3",
     "location": {
       "section": "2-3N8C"
     },
@@ -34,18 +35,23 @@
   },
   "externals": {
     "dbo": {
-      "ext_id": "0060917f-8c21-47c4-b011-52521085fdc3",
-      "type": "HVAC/VAV_SD_DSP",
+      "type": [
+        "HVAC/VAV_SD_DSP"
+      ],
       "label": "VAV CO 1-2-37"
     },
     "ifc": {
       "ext_id": "a87a9b4b-e9e5-424b-9a4e-22378987dddd",
       "etag": "98bac980",
-      "type": "IfcDoor"
+      "type": [
+        "IfcDoor"
+      ]
     },
     "json_ld": {
       "ext_id": "https://dbpedia.org/page/John_Lennon",
-      "type": "person"
+      "type": [
+        "person"
+      ]
     }
   },
   "gateway": {

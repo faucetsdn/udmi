@@ -2,6 +2,7 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
+    "guid": "08ec4c1b-7055-4366-a6fa-db56b2c5fa2b",
     "name": "CH M1",
     "location": {
       "site": "US-MTV-RLS1"
@@ -9,9 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "ext_id": "08ec4c1b-7055-4366-a6fa-db56b2c5fa2b",
-      "type": "HVAC/CH_VSC_CHWDT_CWDT_CHDXSC_CHWSWISOVPM_CWSWISOVPM_REFPM_REFSM_OTPM_IGM",
-      "label": "Chiller M-1 Integration / 100 Mayfield, Chiller M-2 Integration / 100 Mayfield, Chiller Plant / 100 Mayfield"
+      "type": [
+        "HVAC/CH_VSC_CHWDT_CWDT_CHDXSC_CHWSWISOVPM_CWSWISOVPM_REFPM_REFSM_OTPM_IGM"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "Chiller M-1 Integration / 100 Mayfield, Chiller M-2 Integration / 100 Mayfield, Chiller Plant / 100 Mayfield"
+      }
     }
   },
   "cloud": {

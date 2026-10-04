@@ -63,7 +63,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     if not dbo_external:
       continue
 
-    guid = dbo_external.get("ext_id")
+    guid = metadata.get("system", {}).get("guid")
     if not guid:
       continue
 
@@ -78,7 +78,13 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
     device_entry = {}
 
-    device_entry["code"] = dbo_external.get("label", device_id)
+    bacnet_name = (
+        metadata.get("localnet", {})
+        .get("families", {})
+        .get("bacnet", {})
+        .get("name")
+    )
+    device_entry["code"] = bacnet_name if bacnet_name is not None else device_id
 
     if "cloud" in metadata and "num_id" in metadata["cloud"]:
       device_entry["cloud_device_id"] = str(metadata["cloud"]["num_id"])
@@ -114,6 +120,10 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     translations = {}
     links_dbo = {}
     for point_name, point_info in pointset.items():
+      if point_info.get("type") == "missing":
+        translations[point_name] = "MISSING"
+        continue
+
       # Reconstruct DBO translation from standard UDMI fields or use stored one
       pt_dbo = point_info.get("translation", {}).copy()
 
@@ -189,7 +199,11 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
       device_entry["display_name"] = metadata["system"]["name"]
 
     if "type" in dbo_external:
-      device_entry["type"] = dbo_external["type"]
+      dbo_type = dbo_external["type"]
+      if isinstance(dbo_type, list):
+        device_entry["type"] = dbo_type[0] if len(dbo_type) == 1 else dbo_type
+      else:
+        device_entry["type"] = dbo_type
 
     building_config[guid] = device_entry
 

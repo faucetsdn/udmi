@@ -717,6 +717,7 @@ class LocalDevice implements SiteDevice {
       // Create a fake envelope just to validate registryId and siteName fields.
       Envelope envelope = new Envelope();
       envelope.deviceId = deviceId;
+      envelope.deviceGuid = getDeviceGuid();
       envelope.deviceRegistryId = registryId;
       envelope.subFolder = SubFolder.POINTSET;
       envelope.subType = SubType.EVENTS;
@@ -893,6 +894,10 @@ class LocalDevice implements SiteDevice {
 
   public String getDeviceId() {
     return deviceId;
+  }
+
+  public String getDeviceGuid() {
+    return catchToNull(() -> metadata.system.guid);
   }
 
   public String getDeviceNumId() {

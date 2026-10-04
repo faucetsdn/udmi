@@ -225,6 +225,9 @@ public class UufiProcessor extends ProcessorBase {
       if (systemModel == null) {
         systemModel = new SystemModel();
       }
+      if (envelope.deviceGuid == null && systemModel.guid != null) {
+        envelope.deviceGuid = systemModel.guid;
+      }
       Map<String, Object> payloadMap = toMap(systemModel);
       payloadMap.put("timestamp", envelope.publishTime);
       payloadMap.put("version", Optional.ofNullable(cloudModel.version).orElse("1.5.2"));
@@ -246,6 +249,7 @@ public class UufiProcessor extends ProcessorBase {
     uufiEnvelope.subFolder = envelope.subFolder;
     uufiEnvelope.deviceRegistryId = envelope.deviceRegistryId;
     uufiEnvelope.deviceId = envelope.deviceId;
+    uufiEnvelope.deviceGuid = envelope.deviceGuid;
     uufiEnvelope.source = "udmis"; // Set udmis source
     uufiEnvelope.principal = envelope.principal;
     uufiEnvelope.gatewayId = "uufi";

@@ -9,6 +9,10 @@
       "type": "string",
       "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
     },
+    "deviceGuid": {
+      "description": "Globally unique identifier for the device",
+      "type": "string"
+    },
     "deviceNumId": {
       "type": "string",
       "pattern": "^[0-9]+$"
