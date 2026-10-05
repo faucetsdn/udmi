@@ -6,6 +6,7 @@ import static java.lang.String.format;
 import com.google.bos.udmi.service.pod.UdmiComponent;
 import com.google.common.collect.ImmutableMap;
 import java.util.Map;
+import java.util.Set;
 import udmi.schema.IotAccess;
 import udmi.schema.IotAccess.IotProvider;
 
@@ -30,6 +31,10 @@ public interface IotDataProvider extends UdmiComponent {
       throw new RuntimeException(
           format("While instantiating data provider type %s", iotAccess.provider), e);
     }
+  }
+
+  default Set<String> listRegistries() {
+    return Set.of();
   }
 
   DataRef ref();

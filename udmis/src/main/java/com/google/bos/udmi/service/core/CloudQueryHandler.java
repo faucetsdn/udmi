@@ -100,6 +100,7 @@ public class CloudQueryHandler {
   private void queryAllRegistries() {
     requireNull(envelope.deviceRegistryId, "registry id");
     requireNull(envelope.deviceId, "device id");
+    ifTrueThen(shouldTraverseRegistries(), iotAccess::syncRegistries);
     Set<String> registries = iotAccess.getRegistries();
     DiscoveryEvents discoveryEvent = new DiscoveryEvents();
     discoveryEvent.family = ProtocolFamily.IOT;

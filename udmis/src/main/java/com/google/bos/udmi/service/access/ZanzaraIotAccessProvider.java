@@ -49,12 +49,12 @@ import java.util.Arrays;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
@@ -533,12 +533,16 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
     return properties;
   }
 
+  private boolean isReflectRegistry(String regId) {
+    return ofNullable(reflectRegistry).orElse(REFLECT_BASE).equals(regId);
+  }
+
   private void addRegistryToDatabase(String registryId) {
     if (registryId == null || registryId.trim().isEmpty()) {
       return;
     }
     String regId = registryId.trim();
-    if (knownRegistries.contains(regId)) {
+    if (isReflectRegistry(regId) || knownRegistries.contains(regId)) {
       return;
     }
 
@@ -550,9 +554,7 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
         DataRef rootRef = database.ref();
         while (true) {
           String current = rootRef.get(REGISTRIES_KEY);
-          Set<String> registrySet = current == null || current.trim().isEmpty()
-              ? new HashSet<>()
-              : new HashSet<>(Arrays.asList(current.split(",")));
+          Set<String> registrySet = parseRegistries(current);
           if (!registrySet.add(regId)) {
             knownRegistries.add(regId);
             break;
@@ -566,10 +568,20 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
           }
         }
       } catch (Exception e) {
-        warn("Failed updating database registry tracking for %s: %s",
-            regId, friendlyStackTrace(e));
+        throw new RuntimeException("While updating database registry tracking for " + regId, e);
       }
     }
+  }
+
+  private Set<String> parseRegistries(String registriesCsv) {
+    if (registriesCsv == null || registriesCsv.trim().isEmpty()) {
+      return new TreeSet<>();
+    }
+    return Arrays.stream(registriesCsv.split(","))
+        .map(String::trim)
+        .filter(GeneralUtils::isNotEmpty)
+        .filter(not(this::isReflectRegistry))
+        .collect(Collectors.toCollection(TreeSet::new));
   }
 
   private String touchDeviceEntry(String registryId, String deviceId) {
@@ -732,9 +744,7 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
     if (!region.equals(DEFAULT_REGION)) {
       return ImmutableSet.of();
     }
-    String regionsString = ofNullable(database.ref().get(REGISTRIES_KEY)).orElse("");
-    return Arrays.stream(regionsString.split(",")).map(String::trim)
-        .filter(GeneralUtils::isNotEmpty).collect(Collectors.toSet());
+    return parseRegistries(database.ref().get(REGISTRIES_KEY));
   }
 
   @Override
@@ -853,8 +863,9 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
     try {
       if (operation == ModelOperation.CREATE || operation == ModelOperation.UPDATE) {
         addRegistryToDatabase(targetRegistry);
+        DataRef regRef = database.ref().registry(targetRegistry);
+        regRef.put(CREATED_AT_PROPERTY, isoConvert());
         if (cloudModel.metadata != null) {
-          DataRef regRef = database.ref().registry(targetRegistry);
           cloudModel.metadata.forEach(regRef::put);
         }
       }
@@ -876,6 +887,7 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
   public void saveState(String registryId, String deviceId, String stateBlob) {
     DataRef dataRef = registryDeviceRef(registryId, deviceId);
     try {
+      addRegistryToDatabase(registryId);
       StateUpdate incoming = JsonUtil.fromString(StateUpdate.class, stateBlob);
       Date incomingTime = cleanDate(incoming.timestamp);
       String existingTimeStr = dataRef.get(LAST_STATE_TIME_KEY);
@@ -937,11 +949,49 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public void syncRegistries() {
+    if (!isEnabled() || database == null) {
+      return;
+    }
+    try {
+      Set<String> discovered = database.listRegistries();
+      if (discovered == null || discovered.isEmpty()) {
+        return;
+      }
+      synchronized (knownRegistries) {
+        DataRef rootRef = database.ref();
+        while (true) {
+          String current = rootRef.get(REGISTRIES_KEY);
+          Set<String> registrySet = parseRegistries(current);
+          Set<String> added = new TreeSet<>(discovered);
+          added.removeAll(registrySet);
+          if (added.isEmpty()) {
+            knownRegistries.addAll(registrySet);
+            break;
+          }
+          registrySet.addAll(added);
+          String updated = String.join(",", registrySet);
+          if (rootRef.updateIfMatch(REGISTRIES_KEY, current, Map.of(REGISTRIES_KEY, updated),
+              null)) {
+            info("Synchronized %d registries in database registry tracking (added %d: %s)",
+                registrySet.size(), added.size(), CSV_JOINER.join(added));
+            knownRegistries.addAll(registrySet);
+            break;
+          }
+        }
+      }
+    } catch (Exception e) {
+      throw new RuntimeException("While synchronizing database registry tracking", e);
+    }
+  }
+
+  @Override
   public String updateConfig(Envelope envelope, String config, Long prevVersion) {
     String registryId = envelope.deviceRegistryId;
     String deviceId = envelope.deviceId;
     DataRef dataRef = registryDeviceRef(registryId, deviceId);
     try {
+      addRegistryToDatabase(registryId);
       String prev = prevVersion != null ? prevVersion.toString() : dataRef.get(CONFIG_VER_KEY);
       String update = ofNullable(prevVersion).map(v -> v + 1)
           .orElseGet(() -> ofNullable(prev).map(Long::parseLong).orElse(0L) + 1L).toString();
