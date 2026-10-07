@@ -1,7 +1,9 @@
 package com.google.daq.mqtt.sequencer;
 
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static java.util.Optional.ofNullable;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.SiteModel;
 import java.util.Set;
 import udmi.lib.ProtocolFamily;
@@ -15,7 +17,9 @@ public class DiscoveryFacetResolver implements FacetResolver {
 
   @Override
   public Set<String> resolve(SiteModel siteModel, String deviceId) {
-    return catchToNull(() -> siteModel.getMetadata(deviceId).discovery.families.keySet());
+    Set<String> families = catchToNull(
+        () -> siteModel.getMetadata(deviceId).discovery.families.keySet());
+    return ofNullable(families).orElseGet(ImmutableSet::of);
   }
 
   @Override
