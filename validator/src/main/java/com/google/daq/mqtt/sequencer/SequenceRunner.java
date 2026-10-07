@@ -16,6 +16,7 @@ import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.daq.mqtt.sequencer.sequences.ConfigSequences;
 import com.google.daq.mqtt.util.ConfigUtil;
@@ -343,7 +344,7 @@ public class SequenceRunner {
     }
     Set<String> resolved = FACET_RESOLVERS.get(facetKind).resolve(siteModel, getDeviceId());
     System.err.printf("Resolved facet %s to %s%n", facetKind, resolved);
-    return resolved;
+    return ofNullable(resolved).orElseGet(ImmutableSet::of);
   }
 
   private static String getTargetPrimary(Entry<Class<?>, String> target) {
