@@ -96,13 +96,13 @@ export registry_id="$REGISTRY_ID"
 
 # 2. Check Base Infrastructure Services (Etcd & Mosquitto)
 echo "Checking base infrastructure services..."
+export MQTT_PORT=${MQTT_PORT:-8883}
 export ETCD_PORT=${ETCD_PORT:-2379}
 if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
   echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/udmi start $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
 
-export MQTT_PORT=${MQTT_PORT:-8883}
 if ! nc -z 127.0.0.1 "$MQTT_PORT" &>/dev/null; then
   echo "Error: Mosquitto is not running on 127.0.0.1:$MQTT_PORT. Please run 'bin/udmi start $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
@@ -329,10 +329,11 @@ if [ $timeout -le 0 ]; then
 fi
 
 # 14. Start Bridges (Pure mTLS Certificate Auth - No MQTT Username/Password, Redundant Event Bridges with $share/)
-echo "Starting Bridges (Pure mTLS Mode + Shared Subscriptions)..."
+export BRIDGE_MQTT_PORT=${BRIDGE_MQTT_PORT:-$((MQTT_PORT + 100))}
+echo "Starting Bridges on mTLS listener port $BRIDGE_MQTT_PORT (Pure mTLS Mode + Shared Subscriptions)..."
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
+  --mqtt_broker_url=ssl://127.0.0.1:$BRIDGE_MQTT_PORT \
   --mqtt_subscription_topic="/r/+/d/+/events/#" \
   --shared_subscription=events_group \
   --gcp_project_id=udmis \
@@ -350,7 +351,7 @@ BRIDGE_EVENTS_1_PID=$!
 
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
+  --mqtt_broker_url=ssl://127.0.0.1:$BRIDGE_MQTT_PORT \
   --mqtt_subscription_topic="/r/+/d/+/events/#" \
   --shared_subscription=events_group \
   --gcp_project_id=udmis \
@@ -368,7 +369,7 @@ BRIDGE_EVENTS_2_PID=$!
 
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
+  --mqtt_broker_url=ssl://127.0.0.1:$BRIDGE_MQTT_PORT \
   --mqtt_subscription_topic="/r/+/d/+/state" \
   --shared_subscription=state_group \
   --gcp_project_id=udmis \
@@ -386,7 +387,7 @@ BRIDGE_STATE_PID=$!
 
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
+  --mqtt_broker_url=ssl://127.0.0.1:$BRIDGE_MQTT_PORT \
   --mqtt_subscription_topic="/r/UDMI-REFLECT/d/+/reflect" \
   --gcp_project_id=udmis \
   --pubsub_topic_id=udmi_reflect \
