@@ -48,6 +48,7 @@ BRIDGE_STATE_PID=""
 BRIDGE_REFLECT_PID=""
 UDMIS_PID=""
 PUBSUB_PID=""
+ETCD_TLS_PID=""
 
 kill_process() {
   local pid=$1
@@ -80,6 +81,7 @@ cleanup() {
   kill_process "$BRIDGE_STATE_PID"
   kill_process "$BRIDGE_REFLECT_PID"
   kill_process "$UDMIS_PID"
+  kill_process "$ETCD_TLS_PID"
   if [ -n "$PUBSUB_PID" ]; then
     kill_process "$PUBSUB_PID"
   fi
@@ -107,6 +109,81 @@ if ! nc -z 127.0.0.1 "$MQTT_PORT" &>/dev/null; then
   echo "Error: Mosquitto is not running on 127.0.0.1:$MQTT_PORT. Please run 'bin/udmi start $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
+
+# Start dedicated production-parity mTLS Etcd instance (--client-cert-auth & --peer-client-cert-auth)
+export ETCD_TLS_PORT=${ETCD_TLS_PORT:-$((ETCD_PORT + 100))}
+ETCD_TLS_PEER_PORT=$((ETCD_TLS_PORT + 1000))
+ETCD_TLS_DIR="var/etcd_tls"
+ETCD_TLS_LOG="out/etcd_tls.log"
+rm -rf "$ETCD_TLS_DIR"
+mkdir -p "$ETCD_TLS_DIR/member" "$(dirname "$ETCD_TLS_LOG")"
+
+ETCD_BIN=""
+for cand in "udmis/bin/etcd_bin/etcd" "bin/etcd_bin/etcd" "/root/bin/etcd_bin/etcd" "/root/udmi/bin/etcd_bin/etcd" "/tmp/etcd/etcd"; do
+  if [ -x "$cand" ]; then
+    ETCD_BIN="$cand"
+    break
+  fi
+done
+if [ -z "$ETCD_BIN" ]; then
+  udmis/bin/etcdctl version >/dev/null 2>&1 || true
+  if [ -x "udmis/bin/etcd_bin/etcd" ]; then
+    ETCD_BIN="udmis/bin/etcd_bin/etcd"
+  else
+    echo "Error: etcd binary not found for mTLS cluster startup." >&2
+    exit 1
+  fi
+fi
+
+echo "Starting dedicated mTLS etcd instance on https://127.0.0.1:$ETCD_TLS_PORT (--client-cert-auth)..."
+nohup "$ETCD_BIN" \
+  --listen-client-urls="https://127.0.0.1:${ETCD_TLS_PORT}" \
+  --advertise-client-urls="https://127.0.0.1:${ETCD_TLS_PORT}" \
+  --listen-peer-urls="https://127.0.0.1:${ETCD_TLS_PEER_PORT}" \
+  --initial-advertise-peer-urls="https://127.0.0.1:${ETCD_TLS_PEER_PORT}" \
+  --initial-cluster="default=https://127.0.0.1:${ETCD_TLS_PEER_PORT}" \
+  --client-cert-auth \
+  --trusted-ca-file="$SITE_MODEL/reflector/ca.crt" \
+  --cert-file="$SITE_MODEL/reflector/rsa_private.crt" \
+  --key-file="$SITE_MODEL/reflector/rsa_private.pem" \
+  --peer-client-cert-auth \
+  --peer-trusted-ca-file="$SITE_MODEL/reflector/ca.crt" \
+  --peer-cert-file="$SITE_MODEL/reflector/rsa_private.crt" \
+  --peer-key-file="$SITE_MODEL/reflector/rsa_private.pem" \
+  --data-dir="$ETCD_TLS_DIR" \
+  > "$ETCD_TLS_LOG" 2>&1 &
+ETCD_TLS_PID=$!
+
+echo "Waiting for mTLS etcd to be ready on https://127.0.0.1:${ETCD_TLS_PORT}..."
+etcd_tls_ready=false
+for i in {1..30}; do
+  if curl -sf --cacert "$SITE_MODEL/reflector/ca.crt" \
+       --cert "$SITE_MODEL/reflector/rsa_private.crt" \
+       --key "$SITE_MODEL/reflector/rsa_private.pem" \
+       "https://127.0.0.1:${ETCD_TLS_PORT}/health" >/dev/null 2>&1; then
+    etcd_tls_ready=true
+    break
+  fi
+  sleep 0.5
+done
+if [ "$etcd_tls_ready" != "true" ]; then
+  echo "Error: mTLS etcd failed to become healthy on https://127.0.0.1:${ETCD_TLS_PORT}. Log:" >&2
+  cat "$ETCD_TLS_LOG" >&2 || true
+  exit 1
+fi
+
+# Verify that unauthenticated (no client cert) connections to mTLS etcd are rejected
+if curl -sf --cacert "$SITE_MODEL/reflector/ca.crt" "https://127.0.0.1:${ETCD_TLS_PORT}/health" >/dev/null 2>&1; then
+  echo "Error: mTLS etcd accepted connection without client certificate!" >&2
+  exit 1
+fi
+echo "mTLS etcd ready on https://127.0.0.1:${ETCD_TLS_PORT} (client-cert-auth verified; unauthenticated TLS rejected)."
+
+ETCDCTL_BIN="$(dirname "$ETCD_BIN")/etcdctl"
+export ETCDCTL_ENDPOINTS="https://127.0.0.1:${ETCD_TLS_PORT}"
+export ETCDCTL_CACERT="$SITE_MODEL/reflector/ca.crt"
+export ETCDCTL_CERT="$SITE_MODEL/reflector/rsa_private.crt"
+export ETCDCTL_KEY="$SITE_MODEL/reflector/rsa_private.pem"
 
 echo "Ensuring device certificates exist for all devices in site model..."
 for device_dir in "$SITE_MODEL"/devices/*; do
@@ -251,11 +328,12 @@ jq --arg auth_user "$AUTH_USER" \
    --arg serv_user "$SERV_USER" \
    --arg serv_pass "$SERV_PASS" \
    --argjson mqtt_port "${MQTT_PORT:-8883}" \
-   --arg etcd_port "${ETCD_PORT:-2379}" \
+   --arg etcd_tls_port "$ETCD_TLS_PORT" \
    '.base.log_level = "DEBUG" |
     .flows.reflect.send_id = "udmi_reply" |
     .flows.distributor.enabled = "false" |
-    .iot_data.database.project_id = "http://${ETCD_CLUSTER}:\($etcd_port)" |
+    .iot_data.database.project_id = "https://${ETCD_CLUSTER}:\($etcd_tls_port)" |
+    .iot_data.database.options = "enabled=${ETCD_CLUSTER},ca_file='$(pwd)'/var/mosquitto/certs/ca.crt,cert_file='$(pwd)'/var/mosquitto/certs/rsa_private.crt,key_file='$(pwd)'/var/mosquitto/certs/rsa_private.pem" |
     .iot_access.zanzara = {
       "provider": "zanzara",
       "options": "enabled=${ETCD_CLUSTER}",
@@ -328,9 +406,9 @@ if [ $timeout -le 0 ]; then
   exit 1
 fi
 
-# 14. Start Bridges (Pure mTLS Certificate Auth - No MQTT Username/Password, Redundant Event Bridges with $share/)
+# 14. Start Bridges (Pure mTLS Certificate Auth - No MQTT Username/Password, Redundant Event Bridges with $share/, mTLS Etcd)
 export BRIDGE_MQTT_PORT=${BRIDGE_MQTT_PORT:-$((MQTT_PORT + 100))}
-echo "Starting Bridges on mTLS listener port $BRIDGE_MQTT_PORT (Pure mTLS Mode + Shared Subscriptions)..."
+echo "Starting Bridges on mTLS listener port $BRIDGE_MQTT_PORT (Pure mTLS Mode + Shared Subscriptions + mTLS Etcd https://127.0.0.1:$ETCD_TLS_PORT)..."
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
   --mqtt_broker_url=ssl://127.0.0.1:$BRIDGE_MQTT_PORT \
@@ -343,7 +421,10 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
   --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
-  --etcd_target=http://127.0.0.1:$ETCD_PORT \
+  --etcd_target=https://127.0.0.1:$ETCD_TLS_PORT \
+  --etcd_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --etcd_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --etcd_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_events_1.log 2>&1 &
@@ -361,7 +442,10 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
   --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
-  --etcd_target=http://127.0.0.1:$ETCD_PORT \
+  --etcd_target=https://127.0.0.1:$ETCD_TLS_PORT \
+  --etcd_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --etcd_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --etcd_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_events_2.log 2>&1 &
@@ -379,7 +463,10 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
   --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
-  --etcd_target=http://127.0.0.1:$ETCD_PORT \
+  --etcd_target=https://127.0.0.1:$ETCD_TLS_PORT \
+  --etcd_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --etcd_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --etcd_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_state.log 2>&1 &
@@ -396,7 +483,10 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
   --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
-  --etcd_target=http://127.0.0.1:$ETCD_PORT \
+  --etcd_target=https://127.0.0.1:$ETCD_TLS_PORT \
+  --etcd_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --etcd_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --etcd_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_reflect.log 2>&1 &
@@ -491,7 +581,7 @@ poll_timeout=45
 STATE_VAL=""
 
 for i in $(seq 1 $poll_timeout); do
-  STATE_VAL=$(udmis/bin/etcdctl get --print-value-only "/r/$REGISTRY_ID/d/$DEVICE_ID:last_state" 2>/dev/null) || STATE_VAL=""
+  STATE_VAL=$("$ETCDCTL_BIN" get --print-value-only "/r/$REGISTRY_ID/d/$DEVICE_ID:last_state" 2>/dev/null) || STATE_VAL=""
   if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
     break
   fi
@@ -499,10 +589,10 @@ for i in $(seq 1 $poll_timeout); do
 done
 
 echo "Verifying etcd state..."
-udmis/bin/etcdctl version
+"$ETCDCTL_BIN" version
 
 echo "All keys in etcd:"
-udmis/bin/etcdctl get --prefix ""
+"$ETCDCTL_BIN" get --prefix ""
 
 echo "STATE_VAL output: $STATE_VAL"
 
@@ -512,7 +602,7 @@ echo "=================================================================="
 
 # 1. Verify Registry Discovery in etcd
 echo "Querying etcd key ':registries' for registry discovery..."
-REGISTRIES_VAL=$(udmis/bin/etcdctl get --print-value-only ":registries")
+REGISTRIES_VAL=$("$ETCDCTL_BIN" get --print-value-only ":registries")
 echo "Discovered Registries in etcd: $REGISTRIES_VAL"
 
 if [[ "$REGISTRIES_VAL" != *"$REGISTRY_ID"* ]]; then
@@ -523,7 +613,7 @@ echo "Registry discovery PASSED for registry: $REGISTRY_ID"
 
 # 2. Verify Device Discovery in etcd
 echo "Querying etcd for devices discovered under registry '$REGISTRY_ID'..."
-DEVICES_VAL=$(udmis/bin/etcdctl get --prefix "/r/$REGISTRY_ID/d/")
+DEVICES_VAL=$("$ETCDCTL_BIN" get --prefix "/r/$REGISTRY_ID/d/")
 echo "Discovered Devices in etcd under $REGISTRY_ID:"
 echo "$DEVICES_VAL"
 
@@ -637,6 +727,21 @@ if [ "$EVENTS_1_COUNT" -le 0 ] || [ "$EVENTS_2_COUNT" -le 0 ]; then
   exit 1
 fi
 echo "Redundant bridges and shared subscription verification PASSED."
+
+echo "=================================================================="
+echo "Verifying Etcd Mutual TLS (mTLS) Connections Across UDMIS & Bridges"
+echo "=================================================================="
+if ! grep -q "Connecting to etcd target https://127.0.0.1:${ETCD_TLS_PORT} to glean client list" out/udmis_host.log 2>/dev/null; then
+  echo "Error: Host UDMIS did not log mTLS connection to https://127.0.0.1:${ETCD_TLS_PORT}!" >&2
+  exit 1
+fi
+for blog in out/bridge_events_1.log out/bridge_events_2.log out/bridge_state.log out/bridge_reflect.log; do
+  if ! grep -q "Connecting to etcd target https://127.0.0.1:${ETCD_TLS_PORT} to glean client list" "$blog" 2>/dev/null; then
+    echo "Error: Bridge log $blog did not log mTLS connection to https://127.0.0.1:${ETCD_TLS_PORT}!" >&2
+    exit 1
+  fi
+done
+echo "Etcd mTLS verification PASSED across Host UDMIS and all 4 MqttToPubSubBridge replicas (https://127.0.0.1:${ETCD_TLS_PORT})."
 
 if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
   echo "Integration Test PASSED"
