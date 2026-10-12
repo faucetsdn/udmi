@@ -119,22 +119,8 @@ ETCD_TLS_LOG="out/etcd_tls.log"
 rm -rf "$ETCD_TLS_DIR"
 mkdir -p "$ETCD_TLS_DIR/member" "$(dirname "$ETCD_TLS_LOG")"
 
-ETCD_BIN=""
-for cand in "udmis/bin/etcd_bin/etcd" "bin/etcd_bin/etcd" "/root/bin/etcd_bin/etcd" "/root/udmi/bin/etcd_bin/etcd" "/tmp/etcd/etcd"; do
-  if [ -x "$cand" ]; then
-    ETCD_BIN="$cand"
-    break
-  fi
-done
-if [ -z "$ETCD_BIN" ]; then
-  udmis/bin/etcdctl version >/dev/null 2>&1 || true
-  if [ -x "udmis/bin/etcd_bin/etcd" ]; then
-    ETCD_BIN="udmis/bin/etcd_bin/etcd"
-  else
-    echo "Error: etcd binary not found for mTLS cluster startup." >&2
-    exit 1
-  fi
-fi
+ETCD_BIN="udmis/bin/etcd_bin/etcd"
+[ -x "$ETCD_BIN" ] || udmis/bin/etcdctl version >/dev/null 2>&1
 
 echo "Starting mTLS etcd instance on https://127.0.0.1:$ETCD_PORT (--client-cert-auth)..."
 nohup "$ETCD_BIN" \
