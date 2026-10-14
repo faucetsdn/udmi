@@ -8,33 +8,33 @@ This specification defines how UDMI classifies telemetry and control points into
 
 ## 1. Overview and Classification Rules
 
-Every point declared under `pointset.points.<point_name>` in a device's `metadata.json` is deterministically classified into one of three mutually exclusive point types—**Numeric**, **Multi-state**, or **Binary**—based on the presence of the `units` and `states` fields:
+Every point declared under `pointset.points.<point_name>` in a device's `metadata.json` is deterministically classified into one of three mutually exclusive point types—**Numeric**, **Multi-state**, or **Binary**—based on the presence of the `units` and `values` fields:
 
 | Point Type | Site Model Condition (`pointset.points.<point_name>`) | Wire JSON Type (`present_value` & `set_value`) | Valid Payload Examples | Invalid Payload Examples |
 | :--- | :--- | :--- | :--- | :--- |
-| **Numeric** | `units` is defined; `states` is omitted | `number` (integer or floating-point) | `21.5`, `100`, `0`, `-4.2` | `"21.5"`, `true`, `"HIGH"` |
-| **Multi-state** | `states` is defined; `units` is omitted | `string` (canonical key in `states`) | `"OFF"`, `"ON"`, `"OCCUPIED"`, `"AUTO"` | `0`, `1.0`, `true`, `"UNKNOWN"` |
-| **Binary** | Neither `units` nor `states` is defined | `boolean` (`true` or `false`) | `true`, `false` | `0`, `1`, `"true"`, `"ON"` |
-| *Invalid* | Both `units` and `states` are defined | *Validation Error* | N/A | N/A |
+| **Numeric** | `units` is defined; `values` is omitted | `number` (integer or floating-point) | `21.5`, `100`, `0`, `-4.2` | `"21.5"`, `true`, `"HIGH"` |
+| **Multi-state** | `values` is defined; `units` is omitted | `string` (canonical state in `values`) | `"OFF"`, `"ON"`, `"OCCUPIED"`, `"AUTO"` | `0`, `1.0`, `true`, `"0.0"` |
+| **Binary** | Neither `units` nor `values` is defined | `boolean` (`true` or `false`) | `true`, `false` | `0`, `1`, `"true"`, `"ON"` |
+| *Invalid* | Both `units` and `values` are defined | *Validation Error* | N/A | N/A |
 
 ```mermaid
 flowchart TD
-    A["Point definition in metadata.json<br/>pointset.points.&lt;point_name&gt;"] --> B{"Are both 'units' and<br/>'states' defined?"}
-    B -- Yes --> ERR["Validation Error:<br/>'units' and 'states' are mutually exclusive"]
+    A["Point definition in metadata.json<br/>pointset.points.&lt;point_name&gt;"] --> B{"Are both 'units' and<br/>'values' defined?"}
+    B -- Yes --> ERR["Validation Error:<br/>'units' and 'values' are mutually exclusive"]
     B -- No --> C{"Is 'units' defined?"}
     C -- Yes --> NUM["Type: NUMERIC<br/>Wire Payload: JSON number"]
-    C -- No --> D{"Is 'states' defined?"}
-    D -- Yes --> MS["Type: MULTI-STATE<br/>Wire Payload: JSON string (state key)"]
+    C -- No --> D{"Is 'values' defined?"}
+    D -- Yes --> MS["Type: MULTI-STATE<br/>Wire Payload: JSON string (mapped state)"]
     D -- No --> BIN["Type: BINARY<br/>Wire Payload: JSON boolean (true / false)"]
 ```
 
 ### Mutual Exclusivity and Model Constraints
 
-1. **Mutual Exclusivity**: A point definition in `metadata.json` MUST NOT specify both `units` and `states`. Specifying both is a site model validation error.
+1. **Mutual Exclusivity**: A point definition in `metadata.json` MUST NOT specify both `units` and `values`. Specifying both is a site model validation error.
 2. **Non-Empty Definitions**:
    * When `units` is present, it MUST be a non-empty string designating the unit of measure (or an explicit dimensionless unit designator such as `"no-units"`).
-   * When `states` is present, it MUST be a non-empty object containing at least two canonical state entries.
-3. **Default to Binary**: When a point definition omits both `units` and `states`, the point is unconditionally typed as **Binary**.
+   * When `values` is present, it MUST be a non-empty object mapping at least two raw device values to canonical state strings.
+3. **Default to Binary**: When a point definition omits both `units` and `values`, the point is unconditionally typed as **Binary**.
 
 ---
 
@@ -42,7 +42,7 @@ flowchart TD
 
 ### 2.1 Numeric Points (`units` Defined)
 
-A point is **Numeric** when `pointset.points.<point_name>.units` is present and `states` is absent.
+A point is **Numeric** when `pointset.points.<point_name>.units` is present and `values` is absent.
 
 #### Site Model (`metadata.json`)
 * **`units`** *(required for Numeric)*: Specifies the canonical unit of measure expected for the point (e.g., `"degrees-celsius"`, `"percent"`, `"kilowatts"`, `"liters_per_second"`).
@@ -61,47 +61,48 @@ A point is **Numeric** when `pointset.points.<point_name>.units` is present and 
 
 ---
 
-### 2.2 Multi-state Points (`states` Defined)
+### 2.2 Multi-state Points (`values` Defined)
 
-A point is **Multi-state** when `pointset.points.<point_name>.states` is present and `units` is absent.
+A point is **Multi-state** when `pointset.points.<point_name>.values` is present and `units` is absent.
 
 #### Site Model (`metadata.json`)
-* **`states`** *(required for Multi-state)*: A JSON object mapping each canonical ontology state label (the object key, formatted as an uppercase string such as `"OFF"`, `"ON"`, `"ACTIVE"`, `"INACTIVE"`, `"OCCUPIED"`, `"UNOCCUPIED"`, `"STANDBY"`) to the underlying raw device value (or list of raw values) associated with that state:
+* **`values`** *(required for Multi-state)*: A JSON object mapping each underlying raw device value (the object key, formatted as a string such as `"0.0"`, `"1.0"`, `"1"`, `"2"`) to its canonical ontology state label (the string value, formatted as an uppercase string such as `"OFF"`, `"ON"`, `"ACTIVE"`, `"INACTIVE"`, `"OCCUPIED"`, `"UNOCCUPIED"`, `"STANDBY"`):
   ```json
-  "states": {
-    "OCCUPIED": "1",
-    "UNOCCUPIED": "2",
-    "STANDBY": "3"
+  "values": {
+    "1": "OCCUPIED",
+    "2": "UNOCCUPIED",
+    "3": "STANDBY"
   }
   ```
-  If multiple raw device values map to a single canonical state, the map value may be an array of raw values:
+  If multiple raw device values correspond to the same canonical state, each raw value is listed as its own key mapping to that canonical state string:
   ```json
-  "states": {
-    "OFF": "0",
-    "ON": ["1", "2"]
+  "values": {
+    "0.0": "OFF",
+    "1.0": "ON",
+    "2.0": "ON"
   }
   ```
-* **Two-State Enumerations**: Any point that defines `states` is classified as **Multi-state**, even when `states` has exactly two entries (for example, `{"OFF": "0.0", "ON": "1.0"}` or `{"INACTIVE": "0.0", "ACTIVE": "1.0"}`). Because explicit state labels are declared in `states`, the point's wire representation is a JSON `string` using those canonical labels, not a JSON `boolean`.
-* **Constraints**: `baseline_value`, when present on a Multi-state point, MUST be a JSON `string` matching one of the keys in `states`. Numeric-only fields (`units`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`) MUST NOT be set on a Multi-state point.
+* **Two-State Enumerations**: Any point that defines `values` is classified as **Multi-state**, even when `values` has only two entries (for example, `{"0.0": "OFF", "1.0": "ON"}` or `{"1.0": "ACTIVE", "0.0": "INACTIVE"}`). Because explicit state labels are declared in `values`, the point's wire representation is a JSON `string` using those canonical state labels (`"OFF"`, `"ON"`), not a JSON `boolean`.
+* **Constraints**: `baseline_value`, when present on a Multi-state point, MUST be a JSON `string` matching one of the canonical state values in `values`. Numeric-only fields (`units`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`) MUST NOT be set on a Multi-state point.
 
 #### Wire Payloads and Client Translation
 * **Telemetry (`events_pointset`)**:
-  * `points.<point_name>.present_value` MUST be serialized as a JSON `string` that exactly matches one of the canonical state keys defined in `states` (e.g., `"OCCUPIED"`, `"ON"`).
-  * When a client reads a raw ordinal or native value from its underlying hardware/protocol interface, it MUST translate that raw value to the corresponding canonical state key before publishing `events_pointset`. Raw ordinals (e.g., `1`, `"1.0"`) MUST NOT be emitted as `present_value`.
-  * If the underlying hardware reports a raw value that does not match any entry in `states`, the client MUST omit `present_value` for that point (or mark the point invalid) and populate `state.pointset.points.<point_name>.status` with an error entry.
+  * `points.<point_name>.present_value` MUST be serialized as a JSON `string` that matches one of the canonical state strings (map values) defined in `values` (e.g., `"OCCUPIED"`, `"ON"`).
+  * When a client reads a raw ordinal or native value from its underlying hardware/protocol interface, it MUST look up that raw key in `values` and publish the mapped canonical state string in `present_value`. Raw ordinals (e.g., `1`, `"1.0"`, `"0.0"`) MUST NOT be emitted as `present_value`.
+  * If the underlying hardware reports a raw value that does not match any key in `values`, the client MUST omit `present_value` for that point (or mark the point invalid) and populate `state.pointset.points.<point_name>.status` with an error entry.
 * **Configuration & Writeback (`config_pointset`)**:
-  * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `string` matching a canonical key in `states`.
-  * The client translates the canonical state key in `set_value` to the corresponding raw device value to actuate the point. If multiple raw values are mapped to the target state key, the first listed raw value is used as the canonical writeback target.
-  * If `set_value` is not a string or does not match a defined key in `states`, the client MUST reject the writeback and set `state.pointset.points.<point_name>.value_state` to `"invalid"`.
+  * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `string` matching a canonical state value in `values`.
+  * The client performs a reverse lookup in `values` to translate the canonical state string in `set_value` to the corresponding raw device key to actuate the point.
+  * If `set_value` is not a string or does not match any canonical state value in `values`, the client MUST reject the writeback and set `state.pointset.points.<point_name>.value_state` to `"invalid"`.
 
 ---
 
-### 2.3 Binary Points (Neither `units` Nor `states` Defined)
+### 2.3 Binary Points (Neither `units` Nor `values` Defined)
 
-A point is **Binary** when `pointset.points.<point_name>` defines neither `units` nor `states`.
+A point is **Binary** when `pointset.points.<point_name>` defines neither `units` nor `values`.
 
 #### Site Model (`metadata.json`)
-* Both `units` and `states` are omitted from `pointset.points.<point_name>`.
+* Both `units` and `values` are omitted from `pointset.points.<point_name>`.
 * Standard non-typing metadata properties (`ref`, `writable`, `baseline_value`, `baseline_state`, `description`, `tags`, `expr`) may still be present.
 * **Constraints**: If `baseline_value` is specified for a Binary point, it MUST be a JSON `boolean` (`true` or `false`). Numeric-only fields (`units`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`) MUST NOT be set.
 
@@ -140,20 +141,20 @@ The following `pointset` block in `metadata.json` illustrates all three point ty
       "supply_fan_run_command": {
         "writable": true,
         "ref": "digital_output_2",
-        "states": {
-          "OFF": "0.0",
-          "ON": "1.0"
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
         },
         "baseline_value": "ON"
       },
       "occupancy_mode": {
         "writable": true,
         "ref": "multistate_value_1",
-        "states": {
-          "OCCUPIED": "1",
-          "UNOCCUPIED": "2",
-          "STANDBY": "3",
-          "BYPASS": "4"
+        "values": {
+          "1": "OCCUPIED",
+          "2": "UNOCCUPIED",
+          "3": "STANDBY",
+          "4": "BYPASS"
         },
         "baseline_value": "OCCUPIED"
       },
