@@ -276,6 +276,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public void syncRegistries() {
+    getProviders().values().forEach(provider -> provider.syncRegistries());
+  }
+
+  @Override
   public String updateConfig(Envelope envelope, String config, Long version) {
     throw new RuntimeException("Shouldn't be called for dynamic provider");
   }
