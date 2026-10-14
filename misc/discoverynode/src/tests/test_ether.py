@@ -175,3 +175,33 @@ def test_ping_completes_with_stopped_state():
         "discovery to stop",
         5,
     )
+
+
+def test_ping_netblock_expansion():
+  mock_state = udmi.schema.state.State()
+  mock_publisher = mock.MagicMock()
+  ether = udmi.discovery.ether.EtherDiscovery(mock_state, mock_publisher)
+
+  with mock.patch.object(
+      ether, "ping_task", return_value=True
+  ) as mock_ping_task:
+    ether.controller({
+        "discovery": {
+            "families": {
+                "ether": {
+                    "generation": make_timestamp(),
+                    "depth": "ping",
+                    "addrs": ["192.168.1.0/30", "10.0.0.1"],
+                }
+            }
+        }
+    })
+    until_true(
+        lambda: ether.state.phase == udmi.schema.state.Phase.stopped,
+        "discovery to stop",
+        5,
+    )
+
+    pinged_ips = {call.args[0] for call in mock_ping_task.call_args_list}
+    assert pinged_ips == {"192.168.1.1", "192.168.1.2", "10.0.0.1"}
+

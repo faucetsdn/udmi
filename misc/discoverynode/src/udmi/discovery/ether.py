@@ -1,6 +1,7 @@
 import collections
 import concurrent.futures
 import dataclasses
+import ipaddress
 import logging
 import os
 import shlex
@@ -73,8 +74,13 @@ class EtherDiscovery(discovery.DiscoveryController):
     if not target_ips:
       logging.warning("no targets given for ping scan")
       return
+    expanded_ips = [
+        str(host)
+        for target in target_ips
+        for host in ipaddress.ip_network(target, strict=False).hosts()
+    ]
     with concurrent.futures.ThreadPoolExecutor(max_workers=self.ping_concurrency) as executor:
-      futures = [executor.submit(self.ping_task, ip) for ip in target_ips]
+      futures = [executor.submit(self.ping_task, ip) for ip in expanded_ips]
       while (
           future_wait_and_count_outstanding(futures, 1) > 0
       ):
@@ -153,7 +159,7 @@ class EtherDiscovery(discovery.DiscoveryController):
       cmd.extend(["--script", "banner", "-A"])
     cmd.extend(["-p-", "-T3"])
     cmd.extend(self.config.addrs)
-    cmd.extend(["-oX", OUTPUT_FILE, "--stats-every", "5s"])
+    cmd.extend(["-oX", OUTPUT_FILE, "--stats-every", "60s"])
 
     with subprocess.Popen(
         cmd,
@@ -163,15 +169,22 @@ class EtherDiscovery(discovery.DiscoveryController):
         preexec_fn=os.setsid,
     ) as proc:
       logging.info("nmap scan started")
+      os.set_blocking(proc.stdout.fileno(), False)
       while True:
-        try:
-          out, err = proc.communicate(timeout=1)
+        if output := proc.stdout.read():
+          for line in output.strip().splitlines():
+            if "Stats:" in line or "Timing:" in line:
+              logging.info("nmap: %s", line)
+        if proc.poll() is not None:
+          if output := proc.stdout.read():
+            for line in output.strip().splitlines():
+              if "Stats:" in line or "Timing:" in line:
+                logging.info("nmap: %s", line)
           break
-        except subprocess.TimeoutExpired as e:
-          if self.cancel_threads.is_set():
-            logging.error("terminating nmap because stop signal received")
-            proc.terminate()
-            return
+        if self.cancel_threads.wait(timeout=1):
+          logging.error("terminating nmap because stop signal received")
+          proc.terminate()
+          return
 
     logging.info("nmap scan complete, parsing results")
 
@@ -185,4 +198,6 @@ class EtherDiscovery(discovery.DiscoveryController):
               for p in host.ports
           },
       )
+      if host.os:
+        event.system.ancillary["os"] = host.os
       self.publish(event)

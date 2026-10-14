@@ -1,14 +1,14 @@
-"""Sample for triggering passive scan directly."""
+"""Sample for triggering ports scan directly."""
 
-import udmi.discovery.ether
-from unittest import mock
-import time
-import udmi.schema.util
-import sys
-import logging
-import datetime
 import argparse
+import datetime
 import json
+import logging
+import sys
+import time
+from unittest import mock
+import udmi.discovery.ether
+import udmi.schema.util
 
 state = mock.MagicMock()
 
@@ -19,7 +19,7 @@ stderr = logging.StreamHandler(sys.stderr)
 stderr.setLevel(logging.WARNING)
 logging.root.setLevel(logging.INFO)
 
-parser = argparse.ArgumentParser(description="ping targets")
+parser = argparse.ArgumentParser(description="ports scan targets")
 parser.add_argument("targets", help="nmap target", type=str)
 args = parser.parse_args()
 
