@@ -13,7 +13,7 @@ Every point declared under `pointset.points.<point_name>` in a device's `metadat
 | Point Type | Site Model Condition (`pointset.points.<point_name>`) | Wire JSON Type (`present_value` & `set_value`) | Valid Payload Examples | Invalid Payload Examples |
 | :--- | :--- | :--- | :--- | :--- |
 | **Numeric** | `units` is defined; `values` is omitted | `number` (integer or floating-point) | `21.5`, `100`, `0`, `-4.2` | `"21.5"`, `true`, `"HIGH"` |
-| **Multi-state** | `values` is defined; `units` is omitted | `string` (canonical state in `values`) | `"OFF"`, `"ON"`, `"OCCUPIED"`, `"AUTO"` | `0`, `1.0`, `true`, `"0.0"` |
+| **Multi-state** | `values` is defined; `units` is omitted | `string` (raw value key in `values`) | `"0.0"`, `"1.0"`, `"1"`, `"2"` | `0`, `1.0`, `true`, `"OFF"`, `"OCCUPIED"` |
 | **Binary** | Neither `units` nor `values` is defined | `boolean` (`true` or `false`) | `true`, `false` | `0`, `1`, `"true"`, `"ON"` |
 | *Invalid* | Both `units` and `values` are defined | *Validation Error* | N/A | N/A |
 
@@ -24,7 +24,7 @@ flowchart TD
     B -- No --> C{"Is 'units' defined?"}
     C -- Yes --> NUM["Type: NUMERIC<br/>Wire Payload: JSON number"]
     C -- No --> D{"Is 'values' defined?"}
-    D -- Yes --> MS["Type: MULTI-STATE<br/>Wire Payload: JSON string (mapped state)"]
+    D -- Yes --> MS["Type: MULTI-STATE<br/>Wire Payload: JSON string (key in 'values')"]
     D -- No --> BIN["Type: BINARY<br/>Wire Payload: JSON boolean (true / false)"]
 ```
 
@@ -82,18 +82,17 @@ A point is **Multi-state** when `pointset.points.<point_name>.values` is present
     "2.0": "ON"
   }
   ```
-* **Two-State Enumerations**: Any point that defines `values` is classified as **Multi-state**, even when `values` has only two entries (for example, `{"0.0": "OFF", "1.0": "ON"}` or `{"1.0": "ACTIVE", "0.0": "INACTIVE"}`). Because explicit state labels are declared in `values`, the point's wire representation is a JSON `string` using those canonical state labels (`"OFF"`, `"ON"`), not a JSON `boolean`.
-* **Constraints**: `baseline_value`, when present on a Multi-state point, MUST be a JSON `string` matching one of the canonical state values in `values`. Numeric-only fields (`units`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`) MUST NOT be set on a Multi-state point.
+* **Two-State Enumerations**: Any point that defines `values` is classified as **Multi-state**, even when `values` has only two entries (for example, `{"0.0": "OFF", "1.0": "ON"}` or `{"1.0": "ACTIVE", "0.0": "INACTIVE"}`). Because a `values` map is declared, the point's wire representation is a JSON `string` matching one of the raw value keys (left side) in `values` (e.g., `"0.0"`, `"1.0"`), not a JSON `boolean` (`true`, `false`) or the translated state label (`"OFF"`, `"ON"`).
+* **Constraints**: `baseline_value`, when present on a Multi-state point, MUST be a JSON `string` matching one of the raw value keys (left side) in `values`. Numeric-only fields (`units`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`) MUST NOT be set on a Multi-state point.
 
-#### Wire Payloads and Client Translation
+#### Wire Payloads
 * **Telemetry (`events_pointset`)**:
-  * `points.<point_name>.present_value` MUST be serialized as a JSON `string` that matches one of the canonical state strings (map values) defined in `values` (e.g., `"OCCUPIED"`, `"ON"`).
-  * When a client reads a raw ordinal or native value from its underlying hardware/protocol interface, it MUST look up that raw key in `values` and publish the mapped canonical state string in `present_value`. Raw ordinals (e.g., `1`, `"1.0"`, `"0.0"`) MUST NOT be emitted as `present_value`.
+  * `points.<point_name>.present_value` MUST be serialized as a JSON `string` that matches one of the raw value keys (left side) defined in `values` (e.g., `"1"`, `"1.0"`).
+  * Unquoted numbers (e.g., `1`, `1.0`), booleans (`true`, `false`), or the translated canonical state labels from the right side of `values` (e.g., `"OCCUPIED"`, `"ON"`) MUST NOT be emitted as `present_value`.
   * If the underlying hardware reports a raw value that does not match any key in `values`, the client MUST omit `present_value` for that point (or mark the point invalid) and populate `state.pointset.points.<point_name>.status` with an error entry.
 * **Configuration & Writeback (`config_pointset`)**:
-  * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `string` matching a canonical state value in `values`.
-  * The client performs a reverse lookup in `values` to translate the canonical state string in `set_value` to the corresponding raw device key to actuate the point.
-  * If `set_value` is not a string or does not match any canonical state value in `values`, the client MUST reject the writeback and set `state.pointset.points.<point_name>.value_state` to `"invalid"`.
+  * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `string` matching one of the raw value keys (left side) in `values` (e.g., `"1.0"`, `"1"`).
+  * If `set_value` is not a string or does not match any raw value key in `values`, the client MUST reject the writeback and set `state.pointset.points.<point_name>.value_state` to `"invalid"`.
 
 ---
 
@@ -145,7 +144,7 @@ The following `pointset` block in `metadata.json` illustrates all three point ty
           "0.0": "OFF",
           "1.0": "ON"
         },
-        "baseline_value": "ON"
+        "baseline_value": "1.0"
       },
       "occupancy_mode": {
         "writable": true,
@@ -156,7 +155,7 @@ The following `pointset` block in `metadata.json` illustrates all three point ty
           "3": "STANDBY",
           "4": "BYPASS"
         },
-        "baseline_value": "OCCUPIED"
+        "baseline_value": "1"
       },
       "filter_alarm_pressure_status": {
         "ref": "binary_input_11",
@@ -190,11 +189,11 @@ When the cloud configures the device (including writeback `set_value` entries de
     },
     "supply_fan_run_command": {
       "ref": "digital_output_2",
-      "set_value": "ON"
+      "set_value": "1.0"
     },
     "occupancy_mode": {
       "ref": "multistate_value_1",
-      "set_value": "OCCUPIED"
+      "set_value": "1"
     },
     "filter_alarm_pressure_status": {
       "ref": "binary_input_11"
@@ -223,10 +222,10 @@ The client publishes the corresponding `events/pointset` telemetry message with 
       "present_value": 3
     },
     "supply_fan_run_command": {
-      "present_value": "ON"
+      "present_value": "1.0"
     },
     "occupancy_mode": {
-      "present_value": "OCCUPIED"
+      "present_value": "1"
     },
     "filter_alarm_pressure_status": {
       "present_value": false
