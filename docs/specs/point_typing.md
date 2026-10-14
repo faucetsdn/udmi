@@ -2,39 +2,43 @@
 
 # Point Typing Specification
 
-This specification defines how UDMI classifies telemetry and control points into **Numeric**, **Multi-state**, and **Binary** types based on the device's site model ([`metadata.json`](metadata.md)), and how that classification governs the JSON payload structure of [`pointset`](../messages/pointset.md) messages (`events`, `config`, and `state`).
+This specification defines how UDMI classifies telemetry and control points into **Numeric**, **String**, **Multi-state**, and **Binary** types based on the device's site model ([`metadata.json`](metadata.md)), and how that classification governs the JSON payload structure of [`pointset`](../messages/pointset.md) messages (`events`, `config`, and `state`).
 
 ---
 
 ## 1. Overview and Classification Rules
 
-Every point declared under `pointset.points.<point_name>` in a device's `metadata.json` is deterministically classified into one of three mutually exclusive point types—**Numeric**, **Multi-state**, or **Binary**—based on the presence of the `units` and `values` fields:
+Every point declared under `pointset.points.<point_name>` in a device's `metadata.json` is deterministically classified into one of four mutually exclusive point types—**Numeric**, **String**, **Multi-state**, or **Binary**—based on the presence of the `units`, `regex`, and `values` fields:
 
 | Point Type | Site Model Condition (`pointset.points.<point_name>`) | Wire JSON Type (`present_value` & `set_value`) | Valid Payload Examples | Invalid Payload Examples |
 | :--- | :--- | :--- | :--- | :--- |
-| **Numeric** | `units` is defined; `values` is omitted | `number` (integer or floating-point) | `21.5`, `100`, `0`, `-4.2` | `"21.5"`, `true`, `"HIGH"` |
-| **Multi-state** | `values` is defined; `units` is omitted | `string` (raw value key in `values`) | `"0.0"`, `"1.0"`, `"1"`, `"2"` | `0`, `1.0`, `true`, `"OFF"`, `"OCCUPIED"` |
-| **Binary** | Neither `units` nor `values` is defined | `boolean` (`true` or `false`) | `true`, `false` | `0`, `1`, `"true"`, `"ON"` |
-| *Invalid* | Both `units` and `values` are defined | *Validation Error* | N/A | N/A |
+| **Numeric** | `units` is defined; `regex` and `values` are omitted | `number` (integer or floating-point) | `21.5`, `100`, `0`, `-4.2` | `"21.5"`, `true`, `"HIGH"` |
+| **String** | `regex` is defined; `units` and `values` are omitted | `string` (conforming to `regex`, or any string if `""`) | `"v2.4.1"`, `"NONE"`, `"A1-04"` | `21.5`, `100`, `true`, `false` |
+| **Multi-state** | `values` is defined; `units` and `regex` are omitted | `string` (raw value key in `values`) | `"0.0"`, `"1.0"`, `"1"`, `"2"` | `0`, `1.0`, `true`, `"OFF"`, `"OCCUPIED"` |
+| **Binary** | `units`, `regex`, and `values` are all omitted | `boolean` (`true` or `false`) | `true`, `false` | `0`, `1`, `"true"`, `"ON"` |
+| *Invalid* | Two or more of `units`, `regex`, and `values` are defined | *Validation Error* | N/A | N/A |
 
 ```mermaid
 flowchart TD
-    A["Point definition in metadata.json<br/>pointset.points.&lt;point_name&gt;"] --> B{"Are both 'units' and<br/>'values' defined?"}
-    B -- Yes --> ERR["Validation Error:<br/>'units' and 'values' are mutually exclusive"]
+    A["Point definition in metadata.json<br/>pointset.points.&lt;point_name&gt;"] --> B{"Are two or more of 'units',<br/>'regex', and 'values' defined?"}
+    B -- Yes --> ERR["Validation Error:<br/>'units', 'regex', and 'values' are mutually exclusive"]
     B -- No --> C{"Is 'units' defined?"}
     C -- Yes --> NUM["Type: NUMERIC<br/>Wire Payload: JSON number"]
-    C -- No --> D{"Is 'values' defined?"}
+    C -- No --> S{"Is 'regex' defined?"}
+    S -- Yes --> STR["Type: STRING<br/>Wire Payload: JSON string (matching 'regex')"]
+    S -- No --> D{"Is 'values' defined?"}
     D -- Yes --> MS["Type: MULTI-STATE<br/>Wire Payload: JSON string (key in 'values')"]
     D -- No --> BIN["Type: BINARY<br/>Wire Payload: JSON boolean (true / false)"]
 ```
 
 ### Mutual Exclusivity and Model Constraints
 
-1. **Mutual Exclusivity**: A point definition in `metadata.json` MUST NOT specify both `units` and `values`. Specifying both is a site model validation error.
-2. **Non-Empty Definitions**:
+1. **Mutual Exclusivity**: A point definition in `metadata.json` MUST NOT specify more than one of `units`, `regex`, and `values`. Specifying any two (or all three) of these fields on the same point is a site model validation error.
+2. **Field Definitions**:
    * When `units` is present, it MUST be a non-empty string designating the unit of measure (or an explicit dimensionless unit designator such as `"no-units"`).
+   * When `regex` is present, it MUST be a string containing a valid regular expression describing what the string value must conform to, or `""` (empty string) if any string is allowed.
    * When `values` is present, it MUST be a non-empty object mapping at least two raw device values to canonical state strings.
-3. **Default to Binary**: When a point definition omits both `units` and `values`, the point is unconditionally typed as **Binary**.
+3. **Default to Binary**: When a point definition omits `units`, `regex`, and `values`, the point is unconditionally typed as **Binary**.
 
 ---
 
@@ -42,7 +46,7 @@ flowchart TD
 
 ### 2.1 Numeric Points (`units` Defined)
 
-A point is **Numeric** when `pointset.points.<point_name>.units` is present and `values` is absent.
+A point is **Numeric** when `pointset.points.<point_name>.units` is present and both `regex` and `values` are absent.
 
 #### Site Model (`metadata.json`)
 * **`units`** *(required for Numeric)*: Specifies the canonical unit of measure expected for the point (e.g., `"degrees-celsius"`, `"percent"`, `"kilowatts"`, `"liters_per_second"`).
@@ -61,9 +65,38 @@ A point is **Numeric** when `pointset.points.<point_name>.units` is present and 
 
 ---
 
-### 2.2 Multi-state Points (`values` Defined)
+### 2.2 String Points (`regex` Defined)
 
-A point is **Multi-state** when `pointset.points.<point_name>.values` is present and `units` is absent.
+A point is **String** when `pointset.points.<point_name>.regex` is present and both `units` and `values` are absent.
+
+#### Site Model (`metadata.json`)
+* **`regex`** *(required for String)*: A JSON `string` specifying the regular expression that the point's string value must conform to, or `""` (empty string) if any string value is allowed:
+  ```json
+  "active_fault_code": {
+    "regex": "^[A-Z0-9_-]+$",
+    "ref": "characterstring_value_1"
+  },
+  "operator_note": {
+    "regex": "",
+    "ref": "characterstring_value_2"
+  }
+  ```
+* **Constraints**: If `baseline_value` is specified for a String point, it MUST be a JSON `string` (and MUST match `regex` when `regex` is non-empty). Numeric-only fields (`units`, `units_reported`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`) and `values` MUST NOT be set on a String point.
+
+#### Wire Payloads
+* **Telemetry (`events_pointset`)**:
+  * `points.<point_name>.present_value` MUST be serialized as a JSON `string` literal (e.g., `"NONE"`, `"v2.4.1"`).
+  * When `regex` is non-empty, `present_value` MUST conform to the regular expression in `regex`; when `regex` is `""`, any JSON `string` is valid.
+  * Unquoted numbers (e.g., `21.5`, `100`) and booleans (`true`, `false`) MUST NOT be emitted as `present_value`.
+* **Configuration & Writeback (`config_pointset`)**:
+  * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `string` conforming to `regex` (when `regex` is non-empty).
+  * If `set_value` is not a `string` or fails to match a non-empty `regex`, the client MUST reject the writeback and report `value_state: "invalid"` in `state.pointset.points.<point_name>`.
+
+---
+
+### 2.3 Multi-state Points (`values` Defined)
+
+A point is **Multi-state** when `pointset.points.<point_name>.values` is present and both `units` and `regex` are absent.
 
 #### Site Model (`metadata.json`)
 * **`values`** *(required for Multi-state)*: A JSON object mapping each underlying raw device value (the object key, formatted as a string such as `"0.0"`, `"1.0"`, `"1"`, `"2"`) to its canonical ontology state label (the string value, formatted as an uppercase string such as `"OFF"`, `"ON"`, `"ACTIVE"`, `"INACTIVE"`, `"OCCUPIED"`, `"UNOCCUPIED"`, `"STANDBY"`):
@@ -83,7 +116,7 @@ A point is **Multi-state** when `pointset.points.<point_name>.values` is present
   }
   ```
 * **Two-State Enumerations**: Any point that defines `values` is classified as **Multi-state**, even when `values` has only two entries (for example, `{"0.0": "OFF", "1.0": "ON"}` or `{"1.0": "ACTIVE", "0.0": "INACTIVE"}`). Because a `values` map is declared, the point's wire representation is a JSON `string` matching one of the raw value keys (left side) in `values` (e.g., `"0.0"`, `"1.0"`), not a JSON `boolean` (`true`, `false`) or the translated state label (`"OFF"`, `"ON"`).
-* **Constraints**: `baseline_value`, when present on a Multi-state point, MUST be a JSON `string` matching one of the raw value keys (left side) in `values`. Numeric-only fields (`units`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`) MUST NOT be set on a Multi-state point.
+* **Constraints**: `baseline_value`, when present on a Multi-state point, MUST be a JSON `string` matching one of the raw value keys (left side) in `values`. Numeric-only fields (`units`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`) and `regex` MUST NOT be set on a Multi-state point.
 
 #### Wire Payloads
 * **Telemetry (`events_pointset`)**:
@@ -96,14 +129,14 @@ A point is **Multi-state** when `pointset.points.<point_name>.values` is present
 
 ---
 
-### 2.3 Binary Points (Neither `units` Nor `values` Defined)
+### 2.4 Binary Points (`units`, `regex`, and `values` All Omitted)
 
-A point is **Binary** when `pointset.points.<point_name>` defines neither `units` nor `values`.
+A point is **Binary** when `pointset.points.<point_name>` defines none of `units`, `regex`, or `values`.
 
 #### Site Model (`metadata.json`)
-* Both `units` and `values` are omitted from `pointset.points.<point_name>`.
+* `units`, `regex`, and `values` are all omitted from `pointset.points.<point_name>`.
 * Standard non-typing metadata properties (`ref`, `writable`, `baseline_value`, `baseline_state`, `description`, `tags`, `expr`) may still be present.
-* **Constraints**: If `baseline_value` is specified for a Binary point, it MUST be a JSON `boolean` (`true` or `false`). Numeric-only fields (`units`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`) MUST NOT be set.
+* **Constraints**: If `baseline_value` is specified for a Binary point, it MUST be a JSON `boolean` (`true` or `false`). Numeric-only fields (`units`, `range_min`, `range_max`, `baseline_tolerance`, `cov_increment`), `regex`, and `values` MUST NOT be set.
 
 #### Wire Payloads
 * **Telemetry (`events_pointset`)**:
@@ -119,7 +152,7 @@ A point is **Binary** when `pointset.points.<point_name>` defines neither `units
 
 ### 3.1 Site Model Definition (`devices/AHU-1/metadata.json`)
 
-The following `pointset` block in `metadata.json` illustrates all three point types—including a continuous Numeric sensor, a dimensionless Numeric counter, a two-state Multi-state command, a four-state Multi-state mode, and a Binary status/command point:
+The following `pointset` block in `metadata.json` illustrates all four point types—including a continuous Numeric sensor, a dimensionless Numeric counter, a String point constrained by `regex`, a two-state Multi-state command, a four-state Multi-state mode, and a Binary status/command point:
 
 ```json
 {
@@ -136,6 +169,11 @@ The following `pointset` block in `metadata.json` illustrates all three point ty
       "cooling_request_count": {
         "units": "no-units",
         "ref": "analog_value_4"
+      },
+      "active_fault_code": {
+        "regex": "^[A-Z0-9_-]+$",
+        "ref": "characterstring_value_1",
+        "baseline_value": "NONE"
       },
       "supply_fan_run_command": {
         "writable": true,
@@ -187,6 +225,9 @@ When the cloud configures the device (including writeback `set_value` entries de
       "ref": "analog_value_4",
       "units": "no-units"
     },
+    "active_fault_code": {
+      "ref": "characterstring_value_1"
+    },
     "supply_fan_run_command": {
       "ref": "digital_output_2",
       "set_value": "1.0"
@@ -220,6 +261,9 @@ The client publishes the corresponding `events/pointset` telemetry message with 
     },
     "cooling_request_count": {
       "present_value": 3
+    },
+    "active_fault_code": {
+      "present_value": "NONE"
     },
     "supply_fan_run_command": {
       "present_value": "1.0"

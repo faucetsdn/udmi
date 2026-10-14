@@ -30,10 +30,11 @@ The general structure of a `pointset` block exists inside of a complete metadata
 * `pointset`: Top level block designator.
   * `points`: Collection of point names.
     * _{`point_name`}_: Point name.
-      * `units`: Expected units designation for this point.
+      * `units`: Expected units designation for numeric points.
+      * `regex`: Expected regular expression pattern for string points (or `""` if any string is allowed).
       * `values`: Expected state value mapping for multi-state points (e.g., `"0.0": "OFF"`).
 
-For the complete specification on how `units` and `values` in `metadata.json` classify a point as **Numeric**, **Multi-state**, or **Binary** and determine its wire payload type, see the [Point Typing Specification](../specs/point_typing.md).
+For the complete specification on how `units`, `regex`, and `values` in `metadata.json` classify a point as **Numeric**, **String**, **Multi-state**, or **Binary** and determine its wire payload type, see the [Point Typing Specification](../specs/point_typing.md).
 
 ## Event
 
