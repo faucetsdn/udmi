@@ -6,6 +6,7 @@ import logging
 import os
 import shlex
 import subprocess
+import tempfile
 import threading
 import udmi.discovery.discovery as discovery
 import udmi.discovery.utils.nmap as nmap
@@ -35,26 +36,26 @@ class EtherDiscovery(discovery.DiscoveryController):
 
   family = "ether"
 
-  def __init__(self, state, publisher, *, ping_concurrency: int | None = None):
+  def __init__(self, state_entry, publisher, *, scan_id, ping_concurrency: int | None = None):
     self.cancel_threads = threading.Event()
     self.nmap_thread = None
     self.ping_thread = None
     self.last_bathometer_reading = None
     self.ping_concurrency = ping_concurrency or 4
-    super().__init__(state, publisher)
+    super().__init__(state_entry, publisher, scan_id=scan_id)
 
   def start_discovery(self) -> None:
     prefix = self.magic_bathometer(self.config.depth)
-    logging.info(f"magic bathometer read {prefix}")
+    self.log.info(f"magic bathometer read {prefix}")
     self.last_bathometer_reading = prefix
     getattr(self, f"{prefix}_start_discovery")()
 
   def stop_discovery(self) -> None:
     if not self.last_bathometer_reading:
-      logging.info("not stopping because no known bathometer reading")
+      self.log.info("not stopping because no known bathometer reading")
       return
 
-    logging.info("calling stop for %s", self.last_bathometer_reading)
+    self.log.info("calling stop for %s", self.last_bathometer_reading)
     getattr(self, f"{self.last_bathometer_reading}_stop_discovery")()
 
   def magic_bathometer(self, depth: str) -> str:
@@ -72,7 +73,7 @@ class EtherDiscovery(discovery.DiscoveryController):
   def ping_dispatcher(self, target_ips: list[str]):
     """Dispatches ping tasks across simulateous workers"""
     if not target_ips:
-      logging.warning("no targets given for ping scan")
+      self.log.warning("no targets given for ping scan")
       return
     expanded_ips = [
         str(host)
@@ -90,7 +91,7 @@ class EtherDiscovery(discovery.DiscoveryController):
 
   def ping_task(self, target_ip: str) -> bool:
     """Sends a single ping to the target IP. Returns True if successful."""
-    logging.debug("ping task %s", target_ip)
+    self.log.debug("ping task %s", target_ip)
     try:
       # -c 1: expect 1 packet
       # -w 2: wait 2 seconds for a response
@@ -116,10 +117,10 @@ class EtherDiscovery(discovery.DiscoveryController):
       self.publish(event)
 
     except subprocess.CalledProcessError as e:
-      logging.debug(f"Ping failed for %s: %s", target_ip, e.output)
+      self.log.debug(f"Ping failed for %s: %s", target_ip, e.output)
       return False
     except Exception as e:
-      logging.exception(f"Ping exception for %s", target_ip)
+      self.log.exception(f"Ping exception for %s", target_ip)
       return False
 
   def ping_start_discovery(self):
@@ -144,7 +145,7 @@ class EtherDiscovery(discovery.DiscoveryController):
     self.nmap_thread.start()
 
   def nmap_stop_discovery(self):
-    logging.info("stopping")
+    self.log.info("stopping")
     self.cancel_threads.set()
     if self.nmap_thread and self.nmap_thread.is_alive():
       self.nmap_thread.join()
@@ -152,52 +153,62 @@ class EtherDiscovery(discovery.DiscoveryController):
   @discovery.catch_exceptions_to_state
   @discovery.main_task
   def nmap_runner(self):
-    OUTPUT_FILE = "nmaplocalhost.xml"
+    # Unique per scan instance so concurrent ether scans (e.g. ping + ports)
+    # do not clobber each other's results.
+    with tempfile.NamedTemporaryFile(
+        prefix=f"nmap_{self.scan_id.replace('/', '_')}_", suffix=".xml", delete=False
+    ) as f:
+      output_file = f.name
 
     cmd = ["/usr/bin/nmap"]
     if self.config.depth == "services":
       cmd.extend(["--script", "banner", "-A"])
     cmd.extend(["-p-", "-T3"])
     cmd.extend(self.config.addrs)
-    cmd.extend(["-oX", OUTPUT_FILE, "--stats-every", "60s"])
+    cmd.extend(["-oX", output_file, "--stats-every", "60s"])
 
+    # Binary pipe: a non-blocking read on a text-mode pipe returns None to the
+    # decoder and raises TypeError when no output is pending.
     with subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
-        encoding="utf-8",
         preexec_fn=os.setsid,
     ) as proc:
-      logging.info("nmap scan started")
+      self.log.info("nmap scan started")
       os.set_blocking(proc.stdout.fileno(), False)
       while True:
         if output := proc.stdout.read():
-          for line in output.strip().splitlines():
+          for line in output.decode("utf-8", errors="replace").strip().splitlines():
             if "Stats:" in line or "Timing:" in line:
-              logging.info("nmap: %s", line)
+              self.log.info("nmap: %s", line)
         if proc.poll() is not None:
           if output := proc.stdout.read():
-            for line in output.strip().splitlines():
+            for line in output.decode("utf-8", errors="replace").strip().splitlines():
               if "Stats:" in line or "Timing:" in line:
-                logging.info("nmap: %s", line)
+                self.log.info("nmap: %s", line)
           break
         if self.cancel_threads.wait(timeout=1):
-          logging.error("terminating nmap because stop signal received")
+          self.log.error("terminating nmap because stop signal received")
           proc.terminate()
+          os.unlink(output_file)
           return
 
-    logging.info("nmap scan complete, parsing results")
+    self.log.info("nmap scan complete, parsing results")
 
-    for host in nmap.results_reader(OUTPUT_FILE):
-      event = udmi.schema.discovery_event.DiscoveryEvent(
-          generation=self.generation,
-          family=self.family,
-          addr=host.ip,
-          refs={
-              f"{p.port_number}": {"adjunct": dataclasses.asdict(p)}
-              for p in host.ports
-          },
-      )
-      if host.os:
-        event.system.ancillary["os"] = host.os
-      self.publish(event)
+    try:
+      for host in nmap.results_reader(output_file):
+        event = udmi.schema.discovery_event.DiscoveryEvent(
+            generation=self.generation,
+            family=self.family,
+            addr=host.ip,
+            refs={
+                f"{p.port_number}": {"adjunct": dataclasses.asdict(p)}
+                for p in host.ports
+            },
+        )
+        if host.os:
+          event.system.ancillary["os"] = host.os
+        self.publish(event)
+    finally:
+      os.unlink(output_file)
