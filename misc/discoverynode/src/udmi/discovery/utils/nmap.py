@@ -31,6 +31,7 @@ class NmapPort:
 class NmapHost:
   ip: str | None = None
   hostname: str | None = None
+  os: str | None = None
   ports: list[NmapPort] = dataclasses.field(default_factory=list)
 
 
@@ -52,6 +53,9 @@ def results_reader(nmap_file: str) -> Generator[NmapHost, None, None]:
 
     if (ipaddr := _host.find('address')) is not None:
       host.ip = ipaddr.attrib['addr']
+
+    if (osmatch := _host.find('os/osmatch')) is not None:
+      host.os = osmatch.attrib.get('name')
 
     for _port in _host.iter('port'):
       port = NmapPort(port_number=_port.attrib['portid'])
