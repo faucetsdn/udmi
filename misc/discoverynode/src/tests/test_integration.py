@@ -374,4 +374,12 @@ def test_bacnet_legacy_and_named_are_exclusive():
     assert list(manager.scans.values()) == [rejected[0]]
     assert _wait_until(lambda: {m.addr for m in messages if m.family == "bacnet" and m.addr} == {"1"}, timeout=30)
     assert rejected[0].state.status is None
+    assert manager._bacnet_stack is not None
+
+    # Removing the remaining bacnet scan from config disconnects the BAC0 stack
+    udmi_client.config_handler(json.dumps({
+        "timestamp": timestamp_now(),
+        "discovery": {},
+    }))
+    assert manager._bacnet_stack is None
     manager.shutdown()
