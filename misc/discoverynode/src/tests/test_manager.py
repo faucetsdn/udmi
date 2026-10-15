@@ -482,57 +482,6 @@ def test_invalid_config_fields_rejected(block, expected):
   assert expected in entry["status"]["message"]
 
 
-def test_lazy_bacnet_stack_lifecycle():
-  fake_stack_1 = mock.MagicMock()
-  fake_stack_1.discoveredDevices = {"old": "device"}
-  fake_stack_2 = mock.MagicMock()
-  with mock.patch("udmi.discovery.bacnet.create_bacnet_stack",
-                  side_effect=[fake_stack_1, fake_stack_2]) as create_stack:
-    top, m = make_manager(
-        enabled_families={"bacnet"},
-        family_kwargs={"bacnet": {"ip": "127.0.0.1", "port": 47808}},
-    )
-    assert create_stack.call_count == 0
-
-    with mock.patch.object(udmi.discovery.bacnet.GlobalBacnetDiscovery, "start_discovery"):
-      # Empty legacy block must not start the BAC0 stack
-      m.apply_config({"discovery": {"families": {"bacnet": {}}}})
-      assert create_stack.call_count == 0
-      assert m._bacnet_stack is None
-
-      # Configuring two bacnet scans creates one shared stack
-      m.apply_config({"discovery": {
-          "families": {"bacnet": {"generation": ts()}},
-          "scans": {"b2": {"family": "bacnet", "generation": ts(60)}},
-      }})
-      assert create_stack.call_count == 1
-      assert m.scans[("families", "bacnet")].bacnet is fake_stack_1
-      assert m.scans[("scans", "b2")].bacnet is fake_stack_1
-      fake_stack_1.disconnect.assert_not_called()
-
-      # Removing one bacnet scan while another remains keeps the stack connected
-      m.apply_config({"discovery": {
-          "scans": {"b2": {"family": "bacnet", "generation": ts(60)}},
-      }})
-      fake_stack_1.disconnect.assert_not_called()
-      assert m._bacnet_stack is fake_stack_1
-
-      # Removing the last bacnet scan from config disconnects the stack
-      m.apply_config({"discovery": {}})
-      fake_stack_1.disconnect.assert_called_once()
-      assert m._bacnet_stack is None
-
-      # Re-adding a bacnet scan creates a fresh stack, and clearing it to {} disconnects again
-      m.apply_config({"discovery": {"families": {"bacnet": {"generation": ts(120)}}}})
-      assert create_stack.call_count == 2
-      assert m.scans[("families", "bacnet")].bacnet is fake_stack_2
-      fake_stack_2.disconnect.assert_not_called()
-
-      m.apply_config({"discovery": {"families": {"bacnet": {}}}})
-      fake_stack_2.disconnect.assert_called_once()
-      assert m._bacnet_stack is None
-
-
 def test_bacnet_exception_in_consumer_sets_error_state():
   publisher = mock.MagicMock()
   fake_stack = mock.MagicMock()

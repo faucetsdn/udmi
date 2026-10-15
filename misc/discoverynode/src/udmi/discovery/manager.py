@@ -85,7 +85,6 @@ class DiscoveryManager:
     self.enabled_families = frozenset(enabled_families)
     self.family_kwargs = family_kwargs
     self.scans: dict[ScanKey, udmi.discovery.discovery.DiscoveryController] = {}
-    self._bacnet_stack = None
     self.lock = threading.Lock()
     self.log = logging.getLogger(__name__)
     atexit.register(self.shutdown)
@@ -195,39 +194,7 @@ class DiscoveryManager:
           continue
         if key not in self.scans:
           self.scans[key] = self._create(spec)
-        elif spec.family == "bacnet" and "bacnet" not in self.family_kwargs.get("bacnet", {}):
-          self.scans[key].bacnet = self._ensure_bacnet_stack()
         self.scans[key].apply_config(spec.config)
-
-      if not any(
-          c.family == "bacnet" and c.config is not None
-          for c in self.scans.values()
-      ):
-        self._disconnect_bacnet_stack()
-
-  def _ensure_bacnet_stack(self):
-    if self._bacnet_stack is None:
-      bacnet_cfg = self.family_kwargs.get("bacnet", {})
-      self._bacnet_stack = udmi.discovery.bacnet.create_bacnet_stack(
-          ip=bacnet_cfg.get("ip"),
-          port=bacnet_cfg.get("port"),
-      )
-      self.log.info("connected shared bacnet stack")
-    return self._bacnet_stack
-
-  def _disconnect_bacnet_stack(self) -> None:
-    if self._bacnet_stack is None:
-      return
-    try:
-      self._bacnet_stack.disconnect()
-      self.log.info("disconnected shared bacnet stack")
-    except Exception:
-      self.log.exception("error disconnecting shared bacnet stack")
-    finally:
-      self._bacnet_stack = None
-      for controller in self.scans.values():
-        if controller.family == "bacnet":
-          controller.bacnet = None
 
   def _create(self, spec: ScanSpec) -> udmi.discovery.discovery.DiscoveryController:
     cls = FAMILY_CONTROLLERS[spec.family]
@@ -235,17 +202,12 @@ class DiscoveryManager:
     entry = self._state_entry(spec.key)
     for field in dataclasses.fields(entry):
       setattr(entry, field.name, None)
-    kwargs = dict(self.family_kwargs.get(spec.family, {}))
-    if spec.family == "bacnet" and "bacnet" not in kwargs:
-      kwargs.pop("ip", None)
-      kwargs.pop("port", None)
-      kwargs["bacnet"] = self._ensure_bacnet_stack()
     self.log.info("[%s] created (family=%s)", scan_id, spec.family)
     return cls(
         entry,
         self.publisher,
         scan_id=scan_id,
-        **kwargs,
+        **self.family_kwargs.get(spec.family, {}),
     )
 
   def _state_entry(self, key: ScanKey) -> udmi.schema.state.Discovery:
@@ -286,4 +248,3 @@ class DiscoveryManager:
         self.log.info("discovery shutdown: stopping %d scan(s)", len(self.scans))
         for key in list(self.scans):
           self._remove(key, reason="shutdown")
-      self._disconnect_bacnet_stack()

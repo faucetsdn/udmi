@@ -178,11 +178,17 @@ class UDMICore:
         "vendor": dict(range=self.config.get("vendor", {}).get("range")),
         "ipv4": dict(subnet_filter=self.config.get("ip", {}).get("subnet_filter")),
         "ether": dict(ping_concurrency=self.config.get("ether", {}).get("ping_concurrency")),
-        "bacnet": dict(
-            ip=self.config.get("bacnet", {}).get("ip"),
-            port=self.config.get("bacnet", {}).get("port"),
-        ),
     }
+
+    if "bacnet" in enabled:
+      # BAC0 binds a UDP port: exactly one stack per process, shared by all
+      # bacnet scan instances (which are mutually exclusive, see bacnet.py).
+      family_kwargs["bacnet"] = dict(
+          bacnet=udmi.discovery.bacnet.create_bacnet_stack(
+              ip=self.config.get("bacnet", {}).get("ip"),
+              port=self.config.get("bacnet", {}).get("port"),
+          )
+      )
 
     self.discovery_manager = udmi.discovery.manager.DiscoveryManager(
         self.state,

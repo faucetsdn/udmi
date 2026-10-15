@@ -326,7 +326,7 @@ def test_bacnet_legacy_and_named_are_exclusive():
                         wraps=udmi.discovery.bacnet.create_bacnet_stack) as create_stack,
   ):
     udmi_client = udmi.core.UDMICore(publisher=mock.MagicMock(), topic_prefix="notneeded", config=test_config)
-    assert create_stack.call_count == 0
+    assert create_stack.call_count == 1
     manager = udmi_client.discovery_manager
 
     g = timestamp_now()
@@ -374,12 +374,4 @@ def test_bacnet_legacy_and_named_are_exclusive():
     assert list(manager.scans.values()) == [rejected[0]]
     assert _wait_until(lambda: {m.addr for m in messages if m.family == "bacnet" and m.addr} == {"1"}, timeout=30)
     assert rejected[0].state.status is None
-    assert manager._bacnet_stack is not None
-
-    # Removing the remaining bacnet scan from config disconnects the BAC0 stack
-    udmi_client.config_handler(json.dumps({
-        "timestamp": timestamp_now(),
-        "discovery": {},
-    }))
-    assert manager._bacnet_stack is None
     manager.shutdown()
