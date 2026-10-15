@@ -429,3 +429,126 @@ def test_stop_logs_only_when_running(caplog):
   stopped = [r.getMessage() for r in caplog.records if "] stopped (was" in r.getMessage()]
   assert stopping == ["[scans/running] stopping discovery (was started)"]
   assert len(stopped) == 1 and stopped[0].startswith("[scans/running] stopped (was started) in ")
+
+
+# --------------------------------------------------- regression / review fixes
+
+def test_changing_named_scan_family_replaces_controller():
+  top, m = make_manager(
+      enabled_families={"vendor", "ether"},
+      family_kwargs={"vendor": {"range": None}, "ether": {}},
+  )
+  with mock.patch.object(udmi.discovery.numbers.NumberDiscovery, "start_discovery"), \
+       mock.patch.object(udmi.discovery.ether.EtherDiscovery, "start_discovery"):
+    g = ts()
+    m.apply_config({"discovery": {"scans": {"x": {"family": "vendor", "generation": g}}}})
+    first = m.scans[("scans", "x")]
+    assert isinstance(first, udmi.discovery.numbers.NumberDiscovery)
+
+    m.apply_config({"discovery": {"scans": {"x": {
+        "family": "ether", "generation": g, "depth": "ping", "addrs": ["127.0.0.1"]
+    }}}})
+    second = m.scans[("scans", "x")]
+    assert isinstance(second, udmi.discovery.ether.EtherDiscovery)
+    assert first.config is None
+
+
+def test_error_legacy_family_cleared_by_empty_block():
+  top, m = make_manager()
+  m.apply_config({"discovery": {"families": {"vendor": {"depth": "ping"}}}})
+  assert state_json(top)["discovery"]["families"]["vendor"]["status"]["level"] == 500
+
+  m.apply_config({"discovery": {"families": {"vendor": {}}}})
+  assert state_json(top).get("discovery", {}).get("families", {}) == {}
+
+
+@pytest.mark.parametrize("block, expected", [
+    ({"family": "vendor", "generation": "not-a-timestamp"}, "invalid generation"),
+    ({"family": "vendor", "generation": 123}, "generation is required and must be a string"),
+    ({"family": "vendor", "generation": "2026-01-01T00:00:00Z", "scan_interval_sec": -1}, "scan_interval_sec must be a non-negative integer"),
+    ({"family": "vendor", "generation": "2026-01-01T00:00:00Z", "scan_duration_sec": -5}, "scan_duration_sec must be a non-negative integer"),
+    ({"family": "vendor", "generation": "2026-01-01T00:00:00Z", "scan_interval_sec": True}, "scan_interval_sec must be a non-negative integer"),
+    ({"family": "vendor", "generation": "2026-01-01T00:00:00Z", "scan_interval_sec": 10, "scan_duration_sec": 20}, "cannot exceed scan_interval_sec"),
+    ({"family": "vendor", "generation": "2026-01-01T00:00:00Z", "addrs": "10.0.0.1"}, "addrs must be a list of strings"),
+    ({"family": "vendor", "generation": "2026-01-01T00:00:00Z", "addrs": [123]}, "addrs must be a list of strings"),
+])
+def test_invalid_config_fields_rejected(block, expected):
+  top, m = make_manager()
+  m.apply_config({"discovery": {"scans": {"x": block}}})
+  assert m.scans == {}
+  entry = state_json(top)["discovery"]["scans"]["x"]
+  assert entry["phase"] == "stopped"
+  assert entry["status"]["level"] == 500
+  assert expected in entry["status"]["message"]
+
+
+def test_lazy_bacnet_stack_lifecycle():
+  fake_stack = mock.MagicMock()
+  fake_stack.discoveredDevices = {"old": "device"}
+  with mock.patch("udmi.discovery.bacnet.create_bacnet_stack", return_value=fake_stack) as create_stack:
+    top, m = make_manager(
+        enabled_families={"bacnet"},
+        family_kwargs={"bacnet": {"ip": "127.0.0.1", "port": 47808}},
+    )
+    assert create_stack.call_count == 0
+
+    with mock.patch.object(udmi.discovery.bacnet.GlobalBacnetDiscovery, "start_discovery"):
+      m.apply_config({"discovery": {
+          "families": {"bacnet": {"generation": ts()}},
+          "scans": {"b2": {"family": "bacnet", "generation": ts(60)}},
+      }})
+      assert create_stack.call_count == 1
+      assert m.scans[("families", "bacnet")].bacnet is fake_stack
+      assert m.scans[("scans", "b2")].bacnet is fake_stack
+
+    m.shutdown()
+    fake_stack.disconnect.assert_called_once()
+
+
+def test_bacnet_exception_in_consumer_sets_error_state():
+  publisher = mock.MagicMock()
+  fake_stack = mock.MagicMock()
+  b = udmi.discovery.bacnet.GlobalBacnetDiscovery(
+      state.Discovery(), publisher, scan_id="scans/b", bacnet=fake_stack
+  )
+  b.config = DiscoveryFamily(generation=ts())
+  b.generation = udmi.schema.util.current_time_utc()
+  b.count_events = 0
+  b.cancelled = False
+
+  def boom():
+    raise RuntimeError("bacnet boom")
+
+  b.devices_consumer(boom)
+  assert b.internal_state == discovery.states.ERROR
+  assert b.state.phase == state.Phase.stopped
+  assert b.state.status.level == 500
+  assert "bacnet boom" in b.state.status.message
+  assert publisher.call_count == 0
+
+
+def test_passive_scan_emits_end_marker_and_datetime_generation():
+  publisher = mock.MagicMock()
+  p = udmi.discovery.passive.PassiveNetworkDiscovery(
+      state.Discovery(), publisher, scan_id="scans/passive"
+  )
+  p.publish_interval = 0.05
+  gen_dt = udmi.schema.util.current_time_utc()
+  p.config = DiscoveryFamily(generation=udmi.schema.util.datetime_serializer(gen_dt))
+  p.generation = gen_dt
+  p.count_events = 0
+  p.device_records.add(udmi.discovery.passive.PassiveScanRecord(addr="10.0.0.5", mac="aa:bb:cc:dd:ee:ff"))
+  p.cancel_threads.set()
+
+  p.discovery_service()
+  events = [c.args[0] for c in publisher.call_args_list]
+  assert len(events) == 2
+  assert events[0].addr == "10.0.0.5"
+  assert events[0].event_no == 1
+  assert events[0].generation == gen_dt
+  assert events[1].addr is None
+  assert events[1].event_no == -2
+  assert events[1].generation == gen_dt
+  assert p.state.phase == state.Phase.stopped
+
+

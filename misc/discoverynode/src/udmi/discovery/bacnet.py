@@ -39,7 +39,7 @@ def future_wait_and_count_outstanding(futures: Iterable[concurrent.futures.Futur
   Returns:
     count of outstanding futures
   """
-  _, outstanding = concurrent.futures.wait(futures, 1)
+  _, outstanding = concurrent.futures.wait(futures, timeout)
   return len(outstanding)
 
 class BacnetObjectAcronyms(enum.StrEnum):
@@ -134,6 +134,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.cancelled = False
 
     if not self.config.addrs:
+      if self.bacnet.discoveredDevices:
+        self.bacnet.discoveredDevices.clear()
       self.bacnet.discover(global_broadcast=True)
       device_list_function = self.discovery_device_list_producer
     else:
@@ -157,9 +159,10 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
   def stop_discovery(self):
     self.cancelled = True
-    if self.resolver_dispatcher_thread:
+    if self.resolver_dispatcher_thread and self.resolver_dispatcher_thread.is_alive():
       self.resolver_dispatcher_thread.join()
-    self.result_producer_thread.join()
+    if self.result_producer_thread and self.result_producer_thread.is_alive():
+      self.result_producer_thread.join()
 
 
   def discover_device(self, device_address, device_id) -> DiscoveryEvent:
@@ -167,7 +170,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     ### Existence of a device
     ###################################################################
     event = udmi.schema.discovery_event.DiscoveryEvent(
-        generation=self.config.generation,
+        generation=self.generation,
         family=self.family,
         addr=str(device_id),
     )
@@ -261,8 +264,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     return set()
 
 
-  @discovery.main_task
   @discovery.catch_exceptions_to_state
+  @discovery.main_task
   def devices_consumer(self, producer = Callable[[], set[tuple[str, str]]]) -> None:
     # used to determine when a scan is complete
     # in reality to a who/is scan devices will respond very quickly (seconds)
@@ -271,36 +274,41 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     # when to determine done
     UNCHANGED_COUNT_THRESHOLD:int = 300
 
-    while not self.cancelled:
-      try:
-        new_devices = (
-            producer() - self.devices_published
-        )
-        
-        if not new_devices:
-          unchanged_device_count_seconds += 1
-          continue
-        unchanged_device_count_seconds = 0
+    try:
+      while not self.cancelled:
+        try:
+          new_devices = (
+              producer() - self.devices_published
+          )
+          
+          if not new_devices:
+            unchanged_device_count_seconds += 1
+            continue
+          unchanged_device_count_seconds = 0
 
-        for device in new_devices:
-          # Check that it is not cancelled in the inner loop too because this
-          # can take a long time to enumerate through all found devices.
+          for device in new_devices:
+            # Check that it is not cancelled in the inner loop too because this
+            # can take a long time to enumerate through all found devices.
+            if self.cancelled:
+              return
+            
+            address, id = device
+            start = time.monotonic()
+            event = self.discover_device(address, id)
+            end = time.monotonic() 
+            self.log.debug("discovery for %s completed in %s seconds", device, str(end - start))
+
+            self.publish(event)
+            self.devices_published.add(device)
+        except AttributeError as err:
+          self.log.exception(err)
+        finally:
           if self.cancelled:
             return
-          
-          address, id = device
-          start = time.monotonic()
-          event = self.discover_device(address, id)
-          end = time.monotonic() 
-          self.log.debug("discovery for %s completed in %s seconds", device, str(end - start))
-
-          self.publish(event)
-          self.devices_published.add(device)
-      except AttributeError as err:
-        self.log.exception(err)
-      finally:
-        if self.cancelled:
-          return
-        if unchanged_device_count_seconds > UNCHANGED_COUNT_THRESHOLD:
-          return
-        time.sleep(1)
+          if unchanged_device_count_seconds > UNCHANGED_COUNT_THRESHOLD:
+            return
+          time.sleep(1)
+    finally:
+      if self.resolver_dispatcher_thread and self.resolver_dispatcher_thread.is_alive():
+        self.cancelled = True
+        self.resolver_dispatcher_thread.join()

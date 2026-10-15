@@ -78,7 +78,7 @@ def test_chain():
     mock_nmap_stop_discovery.assert_not_called()
     mock_ping_stop_discovery.assert_called_once()
     mock_ping_start_discovery.assert_called_once()
-    mock_ping_start_discovery.assert_called_once()
+    mock_namp_start_discovery.assert_called_once()
 
     ether.apply_config(None)
     time.sleep(1)
@@ -114,14 +114,18 @@ def test_ping_early_cancel():
   ether = udmi.discovery.ether.EtherDiscovery(udmi.schema.state.Discovery(), mock_publisher, scan_id="families/ether")
 
   with mock.patch.object(
-      ether, "ping_task", side_effect=lambda: time.sleep(1)
+      ether, "ping_task", side_effect=lambda _ip: time.sleep(1)
   ) as mock_ping_task:
     ether.apply_config(DiscoveryFamily(**{
                     "generation": make_timestamp(),
                     "depth": "ping",
-                    "addrs": list(range(1, 100)),
+                    "addrs": ["192.168.1.0/25"],
                 }))
-    time.sleep(1)
+    until_true(
+        lambda: mock_ping_task.call_count >= 1,
+        "ping task to start",
+        5,
+    )
 
     ether._stop()
 
@@ -130,6 +134,7 @@ def test_ping_early_cancel():
         "discovery to stop",
         5,
     )
+    assert mock_ping_task.call_count < 50
 
 
 def test_ping_completes_with_stopped_state():
@@ -143,7 +148,7 @@ def test_ping_completes_with_stopped_state():
     ether.apply_config(DiscoveryFamily(**{
                     "generation": make_timestamp(),
                     "depth": "ping",
-                    "addrs": list(range(1, 10)),
+                    "addrs": [f"192.168.1.{i}" for i in range(1, 10)],
                 }))
     time.sleep(1)
 
@@ -152,6 +157,7 @@ def test_ping_completes_with_stopped_state():
         "discovery to stop",
         5,
     )
+    assert mock_ping_task.call_count == 9
 
 
 def test_ping_netblock_expansion():
@@ -175,4 +181,36 @@ def test_ping_netblock_expansion():
 
     pinged_ips = {call.args[0] for call in mock_ping_task.call_args_list}
     assert pinged_ips == {"192.168.1.1", "192.168.1.2", "10.0.0.1"}
+
+
+def test_nmap_adjunct_excludes_sort_index():
+  mock_publisher = mock.MagicMock()
+  ether = udmi.discovery.ether.EtherDiscovery(
+      udmi.schema.state.Discovery(), mock_publisher, scan_id="families/ether"
+  )
+  ether.config = DiscoveryFamily(
+      generation=make_timestamp(), depth="ports", addrs=["127.0.0.1"]
+  )
+  ether.generation = udmi.schema.util.current_time_utc()
+  ether.count_events = 0
+
+  fake_host = udmi.discovery.utils.nmap.NmapHost(
+      ip="127.0.0.1",
+      ports=[udmi.discovery.utils.nmap.NmapPort(port_number="22", state="open", protocol="tcp")],
+  )
+  fake_proc = mock.MagicMock()
+  fake_proc.__enter__.return_value = fake_proc
+  fake_proc.stdout.read.return_value = b""
+  fake_proc.stdout.fileno.return_value = 0
+  fake_proc.poll.return_value = 0
+
+  with mock.patch("subprocess.Popen", return_value=fake_proc), \
+       mock.patch("os.set_blocking"), \
+       mock.patch("udmi.discovery.utils.nmap.results_reader", return_value=iter([fake_host])):
+    ether.nmap_runner()
+
+  host_events = [c.args[0] for c in mock_publisher.call_args_list if c.args[0].addr == "127.0.0.1"]
+  assert len(host_events) == 1
+  assert "sort_index" not in host_events[0].refs["22"]["adjunct"]
+
 

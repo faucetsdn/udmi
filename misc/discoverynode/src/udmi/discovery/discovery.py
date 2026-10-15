@@ -68,13 +68,18 @@ def main_task(method: Callable):
 
   @functools.wraps(method)
   def _impl(self, *args, **kwargs):
+    failed = False
     try:
       method(self, *args, **kwargs)
+      self._publish_marker()
+    except Exception:
+      failed = True
+      raise
     finally:
-      self._set_internal_state(states.FINISHED)
+      if not failed and self.internal_state not in (states.CANCELLING, states.CANCELLED):
+        self._set_internal_state(states.FINISHED)
       self.state.phase = udmi.schema.state.Phase.stopped
       self._release_exclusive()
-    self._publish_marker()
 
   return _impl
 
@@ -211,6 +216,7 @@ class DiscoveryController(abc.ABC):
   def _handle_exception(self, err: Exception) -> None:
     """Helper function which updates the status when an exception is caught."""
     self._set_internal_state(states.ERROR)
+    self.state.phase = udmi.schema.state.Phase.stopped
     self.state.status = udmi.schema.state.Status(
         category="discovery.error", level=500, message=str(err)
     )
@@ -264,6 +270,10 @@ class DiscoveryController(abc.ABC):
       self._publish_marker()
       self.start_discovery()
     except Exception as err:
+      try:
+        self.stop_discovery()
+      except Exception:
+        self.log.exception("error cleaning up after failed start_discovery")
       self._release_exclusive()
       self._handle_exception(err)
     else:
@@ -307,18 +317,6 @@ class DiscoveryController(abc.ABC):
     event.event_no = event_number
     self.log.debug("publishing discovery for %s:%s #%d", event.family, event.addr, event_number)
     self.publisher(event)
-
-  def _validate_config(config: udmi.schema.config.DiscoveryFamily):
-    """ Validates that the given discovery family config is valid.
-
-      Throws:
-        RuntimeError: If the provided config is invalid
-    """
-    if config.scan_duration_sec > config.scan_interval_sec:
-      raise RuntimeError("scan duration cannot be greater than interval")
-    
-    if config.scan_duration_sec < 0 or config.scan_interval_sec < 0:
-      raise RuntimeError("scan duration or interval cannot be negative")
 
   @catch_exceptions_to_state
   def _scheduler(self, start_time:int, config: udmi.schema.config.DiscoveryFamily, initial_generation: datetime.datetime) -> None:
@@ -423,7 +421,7 @@ class DiscoveryController(abc.ABC):
 
       # config has changed
       # Stop any running discovery and scheduled discovery
-      self.config = config
+      self.config = None
       self._stop_scan_and_scheduler()
       
       # Discovery config empty
@@ -459,6 +457,7 @@ class DiscoveryController(abc.ABC):
       elif seconds_from_now < MAX_THRESHOLD_GENERATION:
         raise RuntimeError(f"generation start time ({seconds_from_now} from now exceeds allowable threshold {MAX_THRESHOLD_GENERATION})")
       
+      self.config = config
       self.log.info("discovery starts in %.1f seconds", scheduled_start - time.time())
 
       # Discovery is go

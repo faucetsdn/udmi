@@ -85,6 +85,7 @@ class DiscoveryManager:
     self.enabled_families = frozenset(enabled_families)
     self.family_kwargs = family_kwargs
     self.scans: dict[ScanKey, udmi.discovery.discovery.DiscoveryController] = {}
+    self._bacnet_stack = None
     self.lock = threading.Lock()
     self.log = logging.getLogger(__name__)
     atexit.register(self.shutdown)
@@ -182,6 +183,8 @@ class DiscoveryManager:
 
       # Valid keys: create lazily (same path for legacy and named), then apply
       for key, spec in specs.items():
+        if key in self.scans and self.scans[key].family != spec.family:
+          self._remove(key, reason="family changed")
         if key not in self.scans:
           self.scans[key] = self._create(spec)
         self.scans[key].apply_config(spec.config)
@@ -189,12 +192,25 @@ class DiscoveryManager:
   def _create(self, spec: ScanSpec) -> udmi.discovery.discovery.DiscoveryController:
     cls = FAMILY_CONTROLLERS[spec.family]
     scan_id = scan_id_for(spec.key)
+    entry = self._state_entry(spec.key)
+    for field in dataclasses.fields(entry):
+      setattr(entry, field.name, None)
+    kwargs = dict(self.family_kwargs.get(spec.family, {}))
+    if spec.family == "bacnet" and "bacnet" not in kwargs:
+      ip = kwargs.pop("ip", None)
+      port = kwargs.pop("port", None)
+      if self._bacnet_stack is None:
+        self._bacnet_stack = udmi.discovery.bacnet.create_bacnet_stack(
+            ip=ip,
+            port=port,
+        )
+      kwargs["bacnet"] = self._bacnet_stack
     self.log.info("[%s] created (family=%s)", scan_id, spec.family)
     return cls(
-        self._state_entry(spec.key),
+        entry,
         self.publisher,
         scan_id=scan_id,
-        **self.family_kwargs.get(spec.family, {}),
+        **kwargs,
     )
 
   def _state_entry(self, key: ScanKey) -> udmi.schema.state.Discovery:
@@ -231,8 +247,14 @@ class DiscoveryManager:
   def shutdown(self) -> None:
     """Stops every live scan. Safe to call repeatedly."""
     with self.lock:
-      if not self.scans:
-        return
-      self.log.info("discovery shutdown: stopping %d scan(s)", len(self.scans))
-      for key in list(self.scans):
-        self._remove(key, reason="shutdown")
+      if self.scans:
+        self.log.info("discovery shutdown: stopping %d scan(s)", len(self.scans))
+        for key in list(self.scans):
+          self._remove(key, reason="shutdown")
+      if self._bacnet_stack is not None:
+        try:
+          self._bacnet_stack.disconnect()
+        except Exception:
+          self.log.exception("error disconnecting shared bacnet stack")
+        finally:
+          self._bacnet_stack = None

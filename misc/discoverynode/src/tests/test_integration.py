@@ -63,6 +63,7 @@ def test_bacnet_system():
     assert expected_bacnet_ids == seen_bacnet_ids_toplevel 
     assert len(messages[1].refs) == 0
     # no points
+    udmi_client.discovery_manager.shutdown()
     
 
 def test_bacnet_refs():
@@ -107,6 +108,7 @@ def test_bacnet_refs():
 
     assert expected_bacnet_ids == seen_bacnet_ids_toplevel 
     assert len(messages[1].refs) > 0
+    udmi_client.discovery_manager.shutdown()
 
 
 def test_nmap():
@@ -157,6 +159,8 @@ def test_nmap():
     #1 because 0 is the publish marker
     assert len(messages) >= 2, "Discovery message not received"
     assert messages[1].refs["22"]["adjunct"]["product"] == "OpenSSH"
+    assert "sort_index" not in messages[1].refs["22"]["adjunct"]
+    udmi_client.discovery_manager.shutdown()
 
 
 
@@ -322,7 +326,7 @@ def test_bacnet_legacy_and_named_are_exclusive():
                         wraps=udmi.discovery.bacnet.create_bacnet_stack) as create_stack,
   ):
     udmi_client = udmi.core.UDMICore(publisher=mock.MagicMock(), topic_prefix="notneeded", config=test_config)
-    assert create_stack.call_count == 1
+    assert create_stack.call_count == 0
     manager = udmi_client.discovery_manager
 
     g = timestamp_now()

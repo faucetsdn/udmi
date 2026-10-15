@@ -5,6 +5,7 @@ import ipaddress
 import logging
 import os
 import shlex
+import signal
 import subprocess
 import tempfile
 import threading
@@ -27,7 +28,7 @@ def future_wait_and_count_outstanding(futures: Iterable[concurrent.futures.Futur
   Returns:
     count of outstanding futures
   """
-  _, outstanding = concurrent.futures.wait(futures, 1)
+  _, outstanding = concurrent.futures.wait(futures, timeout)
   return len(outstanding)
 
 
@@ -75,19 +76,38 @@ class EtherDiscovery(discovery.DiscoveryController):
     if not target_ips:
       self.log.warning("no targets given for ping scan")
       return
-    expanded_ips = [
+    hosts_iter = (
         str(host)
         for target in target_ips
         for host in ipaddress.ip_network(target, strict=False).hosts()
-    ]
+    )
+    max_in_flight = max(self.ping_concurrency * 2, 1)
     with concurrent.futures.ThreadPoolExecutor(max_workers=self.ping_concurrency) as executor:
-      futures = [executor.submit(self.ping_task, ip) for ip in expanded_ips]
-      while (
-          future_wait_and_count_outstanding(futures, 1) > 0
-      ):
+      in_flight: set[concurrent.futures.Future] = set()
+      exhausted = False
+      while not exhausted or in_flight:
         if self.cancel_threads.is_set():
           executor.shutdown(True, cancel_futures=True)
           break
+        while not exhausted and len(in_flight) < max_in_flight:
+          if self.cancel_threads.is_set():
+            break
+          try:
+            ip = next(hosts_iter)
+          except StopIteration:
+            exhausted = True
+            break
+          in_flight.add(executor.submit(self.ping_task, ip))
+        if not in_flight:
+          break
+        return_when = (
+            concurrent.futures.ALL_COMPLETED
+            if exhausted
+            else concurrent.futures.FIRST_COMPLETED
+        )
+        _, in_flight = concurrent.futures.wait(
+            in_flight, timeout=1, return_when=return_when
+        )
 
   def ping_task(self, target_ip: str) -> bool:
     """Sends a single ping to the target IP. Returns True if successful."""
@@ -153,6 +173,9 @@ class EtherDiscovery(discovery.DiscoveryController):
   @discovery.catch_exceptions_to_state
   @discovery.main_task
   def nmap_runner(self):
+    if not self.config.addrs:
+      raise RuntimeError("no targets given for nmap scan")
+
     # Unique per scan instance so concurrent ether scans (e.g. ping + ports)
     # do not clobber each other's results.
     with tempfile.NamedTemporaryFile(
@@ -160,50 +183,69 @@ class EtherDiscovery(discovery.DiscoveryController):
     ) as f:
       output_file = f.name
 
-    cmd = ["/usr/bin/nmap"]
-    if self.config.depth == "services":
-      cmd.extend(["--script", "banner", "-A"])
-    cmd.extend(["-p-", "-T3"])
-    cmd.extend(self.config.addrs)
-    cmd.extend(["-oX", output_file, "--stats-every", "60s"])
-
-    # Binary pipe: a non-blocking read on a text-mode pipe returns None to the
-    # decoder and raises TypeError when no output is pending.
-    with subprocess.Popen(
-        cmd,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        preexec_fn=os.setsid,
-    ) as proc:
-      self.log.info("nmap scan started")
-      os.set_blocking(proc.stdout.fileno(), False)
-      while True:
-        if output := proc.stdout.read():
-          for line in output.decode("utf-8", errors="replace").strip().splitlines():
-            if "Stats:" in line or "Timing:" in line:
-              self.log.info("nmap: %s", line)
-        if proc.poll() is not None:
-          if output := proc.stdout.read():
-            for line in output.decode("utf-8", errors="replace").strip().splitlines():
-              if "Stats:" in line or "Timing:" in line:
-                self.log.info("nmap: %s", line)
-          break
-        if self.cancel_threads.wait(timeout=1):
-          self.log.error("terminating nmap because stop signal received")
-          proc.terminate()
-          os.unlink(output_file)
-          return
-
-    self.log.info("nmap scan complete, parsing results")
+    def _log_progress(raw_bytes: bytes) -> None:
+      for line in raw_bytes.decode("utf-8", errors="replace").splitlines():
+        if "Stats:" in line or "Timing:" in line:
+          self.log.info("nmap: %s", line)
 
     try:
+      cmd = ["/usr/bin/nmap"]
+      if self.config.depth == "services":
+        cmd.extend(["--script", "banner", "-A"])
+      cmd.extend(["-p-", "-T3"])
+      cmd.extend(self.config.addrs)
+      cmd.extend(["-oX", output_file, "--stats-every", "60s"])
+
+      # Binary pipe: a non-blocking read on a text-mode pipe returns None to the
+      # decoder and raises TypeError when no output is pending.
+      with subprocess.Popen(
+          cmd,
+          stdout=subprocess.PIPE,
+          stderr=subprocess.STDOUT,
+          preexec_fn=os.setsid,
+      ) as proc:
+        self.log.info("nmap scan started")
+        os.set_blocking(proc.stdout.fileno(), False)
+        buf = b""
+        while True:
+          if output := proc.stdout.read():
+            buf += output
+            *complete_lines, buf = buf.split(b"\n")
+            if complete_lines:
+              _log_progress(b"\n".join(complete_lines))
+          if proc.poll() is not None:
+            if output := proc.stdout.read():
+              buf += output
+            if buf:
+              _log_progress(buf)
+            break
+          if self.cancel_threads.wait(timeout=1):
+            self.log.error("terminating nmap because stop signal received")
+            try:
+              os.killpg(proc.pid, signal.SIGTERM)
+            except (ProcessLookupError, PermissionError, OSError, TypeError):
+              proc.terminate()
+            try:
+              proc.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+              proc.kill()
+            return
+
+      self.log.info("nmap scan complete, parsing results")
+
       for host in nmap.results_reader(output_file):
         event = udmi.schema.discovery_event.DiscoveryEvent(
             generation=self.generation,
             family=self.family,
             addr=host.ip,
             refs={
-                f"{p.port_number}": {"adjunct": dataclasses.asdict(p)}
+                f"{p.port_number}": {
+                    "adjunct": {
+                        k: v
+                        for k, v in dataclasses.asdict(p).items()
+                        if k != "sort_index"
+                    }
+                }
                 for p in host.ports
             },
         )
@@ -211,4 +253,5 @@ class EtherDiscovery(discovery.DiscoveryController):
           event.system.ancillary["os"] = host.os
         self.publish(event)
     finally:
-      os.unlink(output_file)
+      if os.path.exists(output_file):
+        os.unlink(output_file)

@@ -51,6 +51,10 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     self.publish_interval = 5
     self.cancel_threads = threading.Event()
     self.scapy_is_go_signal = threading.Event()
+    self.sniffer = None
+    self.queue_thread = None
+    self.service_thread = None
+    self.packet_count_start = None
 
     # Configure Scapy
     scapy.all.conf.layers.filter([
@@ -140,16 +144,25 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     self.packet_count_start = self._get_packet_counter_total()
 
   def stop_discovery(self):
-    self.sniffer.stop()
-    self.sniffer.join()
+    if self.sniffer and getattr(self.sniffer, "running", False):
+      self.sniffer.stop()
+      self.sniffer.join()
+    elif self.sniffer:
+      try:
+        self.sniffer.stop()
+        self.sniffer.join()
+      except Exception:
+        pass
 
     packet_count_end = self._get_packet_counter_total()
     
     self.cancel_threads.set()
-    self.queue_thread.join()
-    self.service_thread.join()
+    if self.queue_thread and self.queue_thread.is_alive():
+      self.queue_thread.join()
+    if self.service_thread and self.service_thread.is_alive():
+      self.service_thread.join()
 
-    if self.interface:
+    if self.interface and packet_count_end is not None and self.packet_count_start is not None:
       self.log.info(
           f"packets seen by scapy: %d, packets seen by interface: %d",
           self.packets_seen,
@@ -157,6 +170,8 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
       )
     self.log.info("devices seen: %d ", len(self.addresses_seen))
 
+  @discovery.catch_exceptions_to_state
+  @discovery.main_task
   def discovery_service(self):
     while True:
       new_device_records = self.device_records - self.devices_records_published
@@ -164,7 +179,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
       for device_record in new_device_records:
         self.publish(
             udmi.schema.discovery_event.DiscoveryEvent(
-                generation=self.config.generation,
+                generation=self.generation,
                 addr=device_record.addr,
                 family=self.family,
                 families=dict(

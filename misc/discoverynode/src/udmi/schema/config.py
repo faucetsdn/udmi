@@ -37,13 +37,36 @@ def discovery_family_from_dict(source: str, raw: dict) -> DiscoveryFamily:
     raw: the raw JSON block (already stripped of `family` for named scans)
 
   Raises:
-    ValueError: if `generation` is missing
+    ValueError: if `generation` is missing or any scan field is invalid
   """
   ignored = sorted(set(raw) - _DISCOVERY_FAMILY_FIELDS)
   if ignored:
     logging.warning("[%s] ignoring unsupported scan field(s) %s", source, ignored)
-  if "generation" not in raw:
-    raise ValueError(f"{source}: generation is required")
+  if "generation" not in raw or not isinstance(raw["generation"], str):
+    raise ValueError(f"{source}: generation is required and must be a string")
+  try:
+    udmi.schema.util.datetime_from_iso_timestamp(raw["generation"])
+  except ValueError as err:
+    raise ValueError(f"{source}: invalid generation {raw['generation']!r}: {err}") from err
+
+  for field_name in ("scan_interval_sec", "scan_duration_sec"):
+    val = raw.get(field_name)
+    if val is not None:
+      if isinstance(val, bool) or not isinstance(val, int) or val < 0:
+        raise ValueError(f"{source}: {field_name} must be a non-negative integer")
+
+  duration = raw.get("scan_duration_sec")
+  interval = raw.get("scan_interval_sec")
+  if duration is not None and interval is not None and duration > interval:
+    raise ValueError(
+        f"{source}: scan_duration_sec ({duration}) cannot exceed scan_interval_sec ({interval})"
+    )
+
+  addrs = raw.get("addrs")
+  if addrs is not None:
+    if not isinstance(addrs, list) or not all(isinstance(a, str) for a in addrs):
+      raise ValueError(f"{source}: addrs must be a list of strings")
+
   return DiscoveryFamily(
       **{k: v for k, v in raw.items() if k in _DISCOVERY_FAMILY_FIELDS}
   )

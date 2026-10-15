@@ -126,13 +126,13 @@ class UDMICore:
   def state_monitor(self):
     self._last_state_hash = None
     while True:
-      current_hash = self.state.get_hash()
-      if self._last_state_hash != current_hash:
+      lock = self.discovery_manager.lock if self.discovery_manager else contextlib.nullcontext()
+      with lock:
         self.execute_state_hooks()
-        self.publish_state()
-        
-        # Regenerate hash because the "state" may been modified by the hooks
-        self._last_state_hash = self.state.get_hash()
+        current_hash = self.state.get_hash()
+        if self._last_state_hash != current_hash:
+          self.publish_state()
+          self._last_state_hash = current_hash
       time.sleep(self._STATE_MONITOR_INTERVAL)
 
   def publish_state(self):
@@ -156,17 +156,11 @@ class UDMICore:
         "vendor": dict(range=self.config.get("vendor", {}).get("range")),
         "ipv4": dict(subnet_filter=self.config.get("ip", {}).get("subnet_filter")),
         "ether": dict(ping_concurrency=self.config.get("ether", {}).get("ping_concurrency")),
+        "bacnet": dict(
+            ip=self.config.get("bacnet", {}).get("ip"),
+            port=self.config.get("bacnet", {}).get("port"),
+        ),
     }
-
-    if "bacnet" in enabled:
-      # BAC0 binds a UDP port: exactly one stack per process, shared by all
-      # bacnet scan instances (which are mutually exclusive, see bacnet.py).
-      family_kwargs["bacnet"] = dict(
-          bacnet=udmi.discovery.bacnet.create_bacnet_stack(
-              ip=self.config.get("bacnet", {}).get("ip"),
-              port=self.config.get("bacnet", {}).get("port"),
-          )
-      )
 
     self.discovery_manager = udmi.discovery.manager.DiscoveryManager(
         self.state,
