@@ -25,6 +25,7 @@ class UDMICore:
   EVENT_DISCOVERY_TOPIC_TEMPLATE = "{}/events/discovery"
   EVENT_SYSTEM_TOPIC_TEMPLATE = "{}/events/system"
   _STATE_MONITOR_INTERVAL = 1  # [s]
+  DEFAULT_STATE_INTERVAL_SEC = 600  # [s] (10 minutes)
   
   INSTALLED_VERSION_FILE = "installed_version.txt"
 
@@ -80,7 +81,21 @@ class UDMICore:
         topic_prefix
     )
 
-    self.enable_discovery(**config.get("udmi",{}).get("discovery", {}))
+    udmi_cfg = config.get("udmi", {}) or {}
+    state_interval = udmi_cfg.get(
+        "state_interval_sec", self.DEFAULT_STATE_INTERVAL_SEC
+    )
+    if (
+        isinstance(state_interval, bool)
+        or not isinstance(state_interval, (int, float))
+        or state_interval <= 0
+    ):
+      raise ValueError(
+          f"udmi.state_interval_sec must be a positive number, got {state_interval!r}"
+      )
+    self.state_interval_sec = state_interval
+
+    self.enable_discovery(**udmi_cfg.get("discovery", {}))
 
     # Note, this depends on topic_state being set
     threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
@@ -125,14 +140,21 @@ class UDMICore:
 
   def state_monitor(self):
     self._last_state_hash = None
+    self._last_state_publish_mono = None
     while True:
       lock = self.discovery_manager.lock if self.discovery_manager else contextlib.nullcontext()
       with lock:
         self.execute_state_hooks()
         current_hash = self.state.get_hash()
-        if self._last_state_hash != current_hash:
+        now = time.monotonic()
+        interval_elapsed = (
+            self._last_state_publish_mono is None
+            or (now - self._last_state_publish_mono) >= self.state_interval_sec
+        )
+        if self._last_state_hash != current_hash or interval_elapsed:
           self.publish_state()
           self._last_state_hash = current_hash
+          self._last_state_publish_mono = now
       time.sleep(self._STATE_MONITOR_INTERVAL)
 
   def publish_state(self):

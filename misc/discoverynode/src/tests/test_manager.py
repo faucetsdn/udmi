@@ -580,3 +580,42 @@ def test_passive_scan_emits_end_marker_and_datetime_generation():
   assert p.state.phase == state.Phase.stopped
 
 
+def test_state_published_periodically_and_on_change():
+  import udmi.core
+
+  publisher = mock.MagicMock()
+  cfg = {
+      "udmi": {
+          "discovery": {"bacnet": False, "ipv4": False, "ether": False, "vendor": True},
+          "state_interval_sec": 0.25,
+      }
+  }
+  with mock.patch.object(udmi.core.UDMICore, "_STATE_MONITOR_INTERVAL", 0.05):
+    core = udmi.core.UDMICore(publisher=publisher, topic_prefix="/devices/DEV-1", config=cfg)
+    assert core.state_interval_sec == 0.25
+    # Periodic publish happens multiple times even without any state change
+    assert wait_until(lambda: publisher.publish_message.call_count >= 3, timeout=3, step=0.05)
+    count_before_change = publisher.publish_message.call_count
+    # State change triggers an immediate publish before the next 0.25s interval
+    core.state.system.last_config = "2026-01-01T00:00:00Z"
+    assert wait_until(
+        lambda: publisher.publish_message.call_count > count_before_change,
+        timeout=0.2,
+        step=0.02,
+    )
+    core.discovery_manager.shutdown()
+
+
+@pytest.mark.parametrize("bad_interval", [0, -10, False, "600"])
+def test_invalid_state_interval_sec_rejected(bad_interval):
+  import udmi.core
+
+  with pytest.raises(ValueError, match="state_interval_sec"):
+    udmi.core.UDMICore(
+        publisher=mock.MagicMock(),
+        topic_prefix="/devices/DEV-1",
+        config={"udmi": {"state_interval_sec": bad_interval}},
+    )
+
+
+
