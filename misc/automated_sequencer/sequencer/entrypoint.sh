@@ -30,7 +30,7 @@ DEVICE_PATH=$PROJECT_ID/$SITE_NAME_REPO/$DEVICE_ID
 GCS_PATH_SUMMARY=gs://$GCS_BUCKET/$GCS_SUMMARY_SUBDIR/$DEVICE_PATH/$TIMESTAMP
 GCS_PATH_RESULTS=gs://$GCS_BUCKET/$GCS_RESULTS_SUBDIR/$DEVICE_PATH
 
-gsutil cp $VERSION_OUT_FILE $GCS_PATH_SUMMARY/$VERSION_FILE_NAME
+gcloud storage cp $VERSION_OUT_FILE $GCS_PATH_SUMMARY/$VERSION_FILE_NAME
 
 ## Checkout Site Model
 gcloud source repos clone $SITE_NAME_REPO --project=$PROJECT_ID
@@ -64,13 +64,13 @@ sudo bin/setup_base
 # Run with timeout because sequencer might not exit on error
 timeout 3600 bin/sequencer $SITE_MODEL_PATH $SEQUENCER_PROJECT_ID $DEVICE_ID 2>&1 | tee $RUNLOG
 
-gsutil cp $SITE_MODEL_PATH/out/devices/$DEVICE_ID/RESULT.log $GCS_PATH_SUMMARY/RESULT.log
-gsutil cp $SITE_MODEL_PATH/out/devices/$DEVICE_ID/results.md $GCS_PATH_SUMMARY/results.md
+gcloud storage cp $SITE_MODEL_PATH/out/devices/$DEVICE_ID/RESULT.log $GCS_PATH_SUMMARY/RESULT.log
+gcloud storage cp $SITE_MODEL_PATH/out/devices/$DEVICE_ID/results.md $GCS_PATH_SUMMARY/results.md
 
 cp $RUNLOG $SITE_MODEL_PATH/out/devices/$DEVICE_ID/run.log
 tar -C $SITE_MODEL_PATH/out/devices/$DEVICE_ID/ -zcvf output.tar.gz .
 
-gsutil cp output.tar.gz $GCS_PATH_RESULTS/$TIMESTAMP.tar.gz
+gcloud storage cp output.tar.gz $GCS_PATH_RESULTS/$TIMESTAMP.tar.gz
 
 PUBSUB_PAYLOAD=$(jq -n ".device_path+=\"$DEVICE_PATH\" | .complete+=true" )
 gcloud pubsub topics publish $PUBSUB --message="$PUBSUB_PAYLOAD" --attribute="deviceId=ads" --attribute="deviceRegistryId=blah" --project=$PUBSUB_PROJECT
