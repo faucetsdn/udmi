@@ -1,0 +1,36 @@
+#!/bin/bash -e
+#
+# Brings venv/ up to date with etc/requirements.txt before a launcher uses it.
+#
+# bin/setup_base records the sha256 of the requirements it installed in
+# venv/.requirements.sha256. When venv/ is missing, has no record, or was built
+# from different requirements, this runs bin/setup_base. The launchers
+# (bin/workbench, bin/mantis) call it so a stale virtualenv is rebuilt rather
+# than failing later on a missing module.
+
+ROOT_DIR=$(realpath "$(dirname "$0")/..")
+cd "$ROOT_DIR"
+
+STAMP=venv/.requirements.sha256
+wanted=$(sha256sum etc/requirements.txt | cut -d' ' -f1)
+
+reason=""
+if [[ ! -x venv/bin/python3 ]]; then
+  reason="venv/ is missing"
+elif [[ ! -f $STAMP ]]; then
+  reason="venv/ has no record of the requirements it was built from"
+elif [[ $(< "$STAMP") != "$wanted" ]]; then
+  reason="etc/requirements.txt changed since venv/ was built"
+fi
+
+if [[ -z $reason ]]; then
+  exit 0
+fi
+
+echo "Setting up the Python environment ($reason): running bin/setup_base..."
+bin/setup_base
+
+if [[ ! -f $STAMP || $(< "$STAMP") != "$wanted" ]]; then
+  echo "Error: bin/setup_base finished but $STAMP does not match etc/requirements.txt." >&2
+  exit 1
+fi

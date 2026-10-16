@@ -8,7 +8,7 @@
   "properties": {
     "addr": {
       "type": "string",
-      "pattern": "^[-_.:0-9A-Z]+$",
+      "pattern": "^[-_.:0-9A-Za-z]+$",
       "description": "Device addr in the namespace of the given family"
     },
     "port": {
@@ -17,7 +17,7 @@
     },
     "ref": {
       "type": "string",
-      "pattern": "^[-_.:/0-9A-Z]+$",
+      "pattern": "^[-_.:/#0-9A-Za-z]+$",
       "description": "Point reference in the namespace of the given family"
     }
   }

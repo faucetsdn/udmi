@@ -93,16 +93,8 @@ dbo_merge.log
 # Bridgehead local environment file
 bridgehead/.env
 
-# Mantis output, bundle, and egg-info directories
-/util/mantis/.idea/
-/util/mantis/out/
-/util/mantis/test_bundles/
-/util/mantis/mantis.egg-info
+# Python egg-info directories
 *.egg-info/
-
-
-# UDMI Workbench generated files
-/ui/version.txt
 
 # Bridgehead runtime output
 /bridgehead/out

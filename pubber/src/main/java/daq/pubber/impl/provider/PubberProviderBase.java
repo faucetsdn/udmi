@@ -6,13 +6,18 @@ import static java.lang.String.format;
 import static java.util.Objects.nonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static udmi.lib.ProtocolFamily.BACNET;
 import static udmi.lib.client.manager.DiscoveryManager.shouldEnumerate;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.SiteModel;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import udmi.lib.base.ManagerBase;
@@ -20,18 +25,23 @@ import udmi.lib.client.manager.LocalnetManager;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.Enumerations.Depth;
+import udmi.schema.FamilyDiscovery;
 import udmi.schema.FamilyDiscoveryConfig;
+import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.FamilyLocalnetState;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.RefDiscovery;
+import udmi.schema.StateSystemHardware;
+import udmi.schema.SystemDiscoveryData;
 
 /**
  * Base class for functionality supporting all pubber discovery providers.
  */
 public class PubberProviderBase extends ManagerBase {
 
+  public static final int BACNET_IPV4_PORT = 47808;
   private final String family;
   private final LocalnetManager localnetHost;
   private String selfAddr;
@@ -56,15 +66,34 @@ public class PubberProviderBase extends ManagerBase {
     this.publisher = publisher;
     this.enumerate = config.addrs != null || shouldEnumerate(config.depth, Depth.DETAILS);
 
-    allDevices = siteModel.allMetadata().entrySet().stream()
-        .filter(this::isValidTargetDevice)
-        .collect(toMap(Entry::getKey, Entry::getValue));
+    if (config.depth == Depth.BUCKETS) {
+      allDevices = new LinkedHashMap<>();
+      Set<String> seenNetworks = new HashSet<>();
+      siteModel.allMetadata().entrySet().stream()
+          .filter(this::isValidTargetDevice)
+          .forEach(entry -> {
+            String network = getFamilyNetwork(entry.getKey());
+            if (nonNull(network) && seenNetworks.add(network)) {
+              allDevices.put(entry.getKey(), entry.getValue());
+            }
+          });
+    } else {
+      allDevices = siteModel.allMetadata().entrySet().stream()
+          .filter(this::isValidTargetDevice)
+          .collect(toMap(Entry::getKey, Entry::getValue));
+    }
   }
 
   private DiscoveryEvents augmentSend(String deviceId, boolean enumerate) {
     DiscoveryEvents event = new DiscoveryEvents();
-    event.addr = getFamilyAddr(deviceId);
     event.network = getFamilyNetwork(deviceId);
+    event.families = getDiscoveredFamilies(deviceId);
+    if (shouldEnumerate(config.depth, Depth.ENTRIES)) {
+      event.addr = getFamilyAddr(deviceId);
+    }
+    if (shouldEnumerate(config.depth, Depth.SYSTEM)) {
+      event.system = getDiscoveredSystem(deviceId);
+    }
     try {
       event.refs = ifTrueGet(enumerate, () -> getDiscoveredRefs(getAllDevices().get(deviceId)));
     } catch (Exception e) {
@@ -72,6 +101,46 @@ public class PubberProviderBase extends ManagerBase {
       event.status.level = Level.ERROR.value();
     }
     return event;
+  }
+
+  private Map<String, FamilyDiscovery> getDiscoveredFamilies(String deviceId) {
+    if (!BACNET.equals(family)) {
+      return null;
+    }
+    if (config.depth == Depth.BUCKETS) {
+      FamilyDiscovery ipv4 = new FamilyDiscovery();
+      ipv4.port = BACNET_IPV4_PORT;
+      return Map.of("ipv4", ipv4);
+    }
+    Map<String, FamilyLocalnetModel> localnetFamilies =
+        catchToNull(() -> siteModel.getMetadata(deviceId).localnet.families);
+    Map<String, FamilyDiscovery> discovered = new HashMap<>();
+    if (localnetFamilies != null) {
+      localnetFamilies.forEach((famKey, famModel) -> {
+        if (("ipv4".equals(famKey) || "ether".equals(famKey))
+            && nonNull(famModel) && nonNull(famModel.addr)) {
+          FamilyDiscovery fd = new FamilyDiscovery();
+          fd.addr = famModel.addr;
+          discovered.put(famKey, fd);
+        }
+      });
+    }
+    FamilyDiscovery ipv4 = discovered.computeIfAbsent("ipv4", k -> new FamilyDiscovery());
+    ipv4.port = BACNET_IPV4_PORT;
+    return discovered;
+  }
+
+  private SystemDiscoveryData getDiscoveredSystem(String deviceId) {
+    Metadata metadata = getAllDevices().get(deviceId);
+    SystemDiscoveryData system = new SystemDiscoveryData();
+    system.name = catchToNull(() -> metadata.system.physical_tag.asset.name);
+    system.serial_no = catchToNull(() -> metadata.system.serial_no);
+    if (catchToNull(() -> metadata.system.hardware) != null) {
+      system.hardware = new StateSystemHardware();
+      system.hardware.make = metadata.system.hardware.make;
+      system.hardware.model = metadata.system.hardware.model;
+    }
+    return system;
   }
 
   protected Map<String, Metadata> getAllDevices() {

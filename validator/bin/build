@@ -24,7 +24,7 @@ jartmp=/tmp/$jarbase
 jardir=build/libs
 jarfile=$jardir/$jarbase
 
-newer_files=$([[ -f $jarfile ]] && find src/ $UDMI_ROOT/gencode/java $UDMI_ROOT/common/src -type f -newer $jarfile 2>/dev/null || echo missing)
+newer_files=$([[ -f $jarfile ]] && find src/ $UDMI_ROOT/gencode/java $UDMI_ROOT/common/src/main/java $UDMI_ROOT/common/src/test/java -type f -newer $jarfile 2>/dev/null || echo missing)
 if [[ -z ${check:-} && -z ${covg:-} && -z $newer_files ]]; then
     ls -l $jarfile
     echo $jarfile up-to-date, skipping build.

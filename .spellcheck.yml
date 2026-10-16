@@ -24,5 +24,5 @@ matrix:
   sources:
   - '*.md'
   - 'docs/**/*.md'
-  - 'misc/**/*.md'
+  - 'misc/**/*.md|!misc/**/venv/**'
   - 'udmif/**/*.md'

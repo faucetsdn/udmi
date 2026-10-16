@@ -1,1 +1,0 @@
-# Project Mantis utilities package
