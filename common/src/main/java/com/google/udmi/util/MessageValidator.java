@@ -6,26 +6,27 @@ import static java.lang.String.format;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
-import com.github.fge.jsonschema.core.load.download.URIDownloader;
-import com.github.fge.jsonschema.core.report.LogLevel;
-import com.github.fge.jsonschema.core.report.ProcessingMessage;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Maps;
+import com.networknt.schema.AbsoluteIri;
+import com.networknt.schema.ExecutionContext;
+import com.networknt.schema.JsonMetaSchema;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.format.DateTimeFormat;
+import com.networknt.schema.resource.InputStreamSource;
+import com.networknt.schema.resource.SchemaLoader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.StreamSupport;
 
 /**
  * Validation wrapper for processing individual messages.
@@ -61,31 +62,23 @@ public class MessageValidator {
    * @param report Report to convert
    * @return Converted exception.
    */
-  public static ValidationException fromProcessingReport(ProcessingReport report) {
-    checkArgument(!report.isSuccess(), "Report must not be successful");
+  public static ValidationException fromProcessingReport(Set<ValidationMessage> report) {
+    checkArgument(!report.isEmpty(), "Report must not be empty");
     ImmutableList<ValidationException> causingExceptions =
-        StreamSupport.stream(report.spliterator(), false)
-            .filter(MessageValidator::errorOrWorse)
+        report.stream()
             .filter(MessageValidator::notOnIgnoreList)
             .map(MessageValidator::convertMessage).collect(toImmutableList());
     return causingExceptions.isEmpty() ? null : new ValidationException(
         format("%d schema violations found", causingExceptions.size()), causingExceptions);
   }
 
-  private static boolean notOnIgnoreList(ProcessingMessage processingMessage) {
+  private static boolean notOnIgnoreList(ValidationMessage validationMessage) {
     return IGNORE_PATTERNS.stream()
-        .noneMatch(p -> p.matcher(processingMessage.getMessage()).matches());
+        .noneMatch(p -> p.matcher(validationMessage.getMessage()).matches());
   }
 
-  private static boolean errorOrWorse(ProcessingMessage processingMessage) {
-    return processingMessage.getLogLevel().compareTo(LogLevel.ERROR) >= 0;
-  }
-
-  private static ValidationException convertMessage(ProcessingMessage processingMessage) {
-    String pointer = processingMessage.asJson().get("instance").get("pointer").asText();
-    String prefix =
-        com.google.api.client.util.Strings.isNullOrEmpty(pointer) ? "" : (pointer + ": ");
-    return new ValidationException(prefix + processingMessage.getMessage());
+  private static ValidationException convertMessage(ValidationMessage validationMessage) {
+    return new ValidationException(validationMessage.getMessage());
   }
 
   /**
@@ -98,14 +91,18 @@ public class MessageValidator {
   public List<String> validateMessage(String subFolder, String data) {
     JsonSchema schema = schemaMap.computeIfAbsent(subFolder, this::getSchema);
     try {
-      ProcessingReport report = schema.validate(OBJECT_MAPPER.readTree(data), true);
-      if (report.isSuccess()) {
+      Set<ValidationMessage> report = schema.validate(OBJECT_MAPPER.readTree(data));
+      if (report.isEmpty()) {
         return ImmutableList.of();
       }
-      throw fromProcessingReport(report);
+      ValidationException exception = fromProcessingReport(report);
+      if (exception == null) {
+        return ImmutableList.of();
+      }
+      throw exception;
     } catch (ValidationException e) {
       return e.getAllMessages();
-    } catch (IOException | ProcessingException ex) {
+    } catch (IOException ex) {
       return ImmutableList.of(ex.getMessage());
     }
   }
@@ -114,38 +111,56 @@ public class MessageValidator {
     return getSchema(new File(schemaRoot, subFolder + ".json"));
   }
 
+  /**
+   * Create a schema factory configured for UDMI Draft-07 schemas and date-time formats.
+   *
+   * @param schemaLoader loader for relative schema references
+   * @return configured JsonSchemaFactory
+   */
+  public static JsonSchemaFactory getSchemaFactory(SchemaLoader schemaLoader) {
+    JsonMetaSchema metaSchema = JsonMetaSchema.builder(
+        JsonMetaSchema.getV7().getUri(), JsonMetaSchema.getV7())
+        .addFormat(new DateTimeFormat() {
+          @Override
+          public boolean matches(ExecutionContext executionContext, String value) {
+            return super.matches(executionContext,
+                value == null ? null : value.replaceFirst("\\+0000$", "Z"));
+          }
+        })
+        .build();
+    return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7,
+        builder -> builder.addMetaSchema(metaSchema)
+            .schemaLoaders(schemaLoaders -> schemaLoaders.add(schemaLoader)));
+  }
+
   private JsonSchema getSchema(File schemaFile) {
     try (InputStream schemaStream = new FileInputStream(schemaFile)) {
       JsonNode rawSchema = OBJECT_MAPPER.readTree(schemaStream);
-      return JsonSchemaFactory.newBuilder()
-          .setLoadingConfiguration(
-              LoadingConfiguration.newBuilder()
-                  .addScheme("file", new RelativeDownloader())
-                  .freeze())
-          .freeze()
-          .getJsonSchema(rawSchema);
+      return getSchemaFactory(new RelativeDownloader()).getSchema(rawSchema);
     } catch (Exception e) {
       throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
     }
   }
 
-  class RelativeDownloader implements URIDownloader {
+  class RelativeDownloader implements SchemaLoader {
 
     public static final String FILE_URL_PREFIX = "file:";
 
     @Override
-    public InputStream fetch(URI source) {
-      String url = source.toString();
-      try {
-        if (!url.startsWith(FILE_URL_PREFIX)) {
-          throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
+    public InputStreamSource getSchema(AbsoluteIri iri) {
+      return () -> {
+        String url = iri.toString();
+        try {
+          if (!url.startsWith(FILE_URL_PREFIX)) {
+            throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
+          }
+          String newUrl =
+              FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
+          return (InputStream) (new URL(newUrl)).getContent();
+        } catch (Exception e) {
+          throw new RuntimeException("While loading URL " + url, e);
         }
-        String newUrl =
-            FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
-        return (InputStream) (new URL(newUrl)).getContent();
-      } catch (Exception e) {
-        throw new RuntimeException("While loading URL " + url, e);
-      }
+      };
     }
   }
 }

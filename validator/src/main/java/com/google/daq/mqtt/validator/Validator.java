@@ -44,11 +44,6 @@ import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
-import com.github.fge.jsonschema.core.load.download.URIDownloader;
-import com.github.fge.jsonschema.core.report.ProcessingReport;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
 import com.google.bos.iot.core.proxy.MqttPublisher;
 import com.google.bos.iot.core.proxy.NullPublisher;
@@ -76,12 +71,16 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageUpgrader;
 import com.google.udmi.util.MessageValidator;
 import com.google.udmi.util.SiteModel;
+import com.networknt.schema.AbsoluteIri;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.resource.InputStreamSource;
+import com.networknt.schema.resource.SchemaLoader;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.time.Duration;
@@ -684,8 +683,8 @@ public class Validator {
   }
 
   private void validateMessage(JsonSchema schema, Object message) throws Exception {
-    ProcessingReport report = schema.validate(OBJECT_MAPPER.valueToTree(message), true);
-    ifTrueThen(!report.isSuccess(),
+    Set<ValidationMessage> report = schema.validate(OBJECT_MAPPER.valueToTree(message));
+    ifTrueThen(!report.isEmpty(),
         () -> ifNotNullThrow(MessageValidator.fromProcessingReport(report)));
   }
 
@@ -1216,13 +1215,8 @@ public class Validator {
 
   private JsonSchema getSchema(File schemaFile) {
     try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
-      return JsonSchemaFactory.newBuilder()
-          .setLoadingConfiguration(
-              LoadingConfiguration.newBuilder()
-                  .addScheme("file", new RelativeDownloader())
-                  .freeze())
-          .freeze()
-          .getJsonSchema(OBJECT_MAPPER.readTree(schemaStream));
+      return MessageValidator.getSchemaFactory(new RelativeDownloader())
+          .getSchema(OBJECT_MAPPER.readTree(schemaStream));
     } catch (Exception e) {
       throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
     }
@@ -1371,23 +1365,25 @@ public class Validator {
     }
   }
 
-  class RelativeDownloader implements URIDownloader {
+  class RelativeDownloader implements SchemaLoader {
 
     private static final String FILE_URL_PREFIX = "file:";
 
     @Override
-    public InputStream fetch(URI source) {
-      String url = source.toString();
-      try {
-        if (!url.startsWith(FILE_URL_PREFIX)) {
-          throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
+    public InputStreamSource getSchema(AbsoluteIri iri) {
+      return () -> {
+        String url = iri.toString();
+        try {
+          if (!url.startsWith(FILE_URL_PREFIX)) {
+            throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
+          }
+          String newUrl =
+              FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
+          return (InputStream) (new URL(newUrl)).getContent();
+        } catch (Exception e) {
+          throw new RuntimeException("While loading URL " + url, e);
         }
-        String newUrl =
-            FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
-        return (InputStream) (new URL(newUrl)).getContent();
-      } catch (Exception e) {
-        throw new RuntimeException("While loading URL " + url, e);
-      }
+      };
     }
   }
 }
