@@ -32,12 +32,21 @@ class Basic(DataModel):
 @dataclass
 class Jwt(DataModel):
     audience: Optional[str] = None
+    token: Optional[str] = None
+
+
+@dataclass
+class Mtls(DataModel):
+    private_key: Optional[str] = None
+    certificate: Optional[str] = None
+    ca_certificate: Optional[str] = None
 
 
 @dataclass
 class AuthProvider(DataModel):
     basic: Optional[Basic] = None
     jwt: Optional[Jwt] = None
+    mtls: Optional[Mtls] = None
 
 
 @dataclass
@@ -73,3 +82,4 @@ class EndpointConfiguration(DataModel):
     cert_file: Optional[str] = None
     key_file: Optional[str] = None
     generation: Optional[str] = None
+    expiry: Optional[str] = None

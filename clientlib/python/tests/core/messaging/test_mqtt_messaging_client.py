@@ -192,16 +192,18 @@ def test_on_connect_subscribes_to_channels(mqtt_client,
     """
     test_on_connect_subscribes_to_channels
     Verify mock_paho_client_instance.subscribe was called with
-    the full topic.
+    the full topic and appropriate QoS (0 for download, 1 otherwise).
     """
     mqtt_client.register_channel_subscription("config")
     mqtt_client.register_channel_subscription("commands/#")
+    mqtt_client.register_channel_subscription("download/#")
 
     mqtt_client._on_connect(mock_paho_client_instance, None, None, 0)
 
     expected_calls = [
         call("/devices/d/config", qos=1),
-        call("/devices/d/commands/#", qos=1)
+        call("/devices/d/commands/#", qos=1),
+        call("/devices/d/download/#", qos=0),
     ]
     mock_paho_client_instance.subscribe.assert_has_calls(
         expected_calls,

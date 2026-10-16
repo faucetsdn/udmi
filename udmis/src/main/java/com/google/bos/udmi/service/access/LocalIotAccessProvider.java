@@ -104,6 +104,13 @@ public class LocalIotAccessProvider extends IotAccessBase {
         format("%s/%s/%s:%s", envelope.deviceRegistryId, envelope.deviceId, folder, message));
   }
 
+  @Override
+  public void sendDownloadBase(Envelope envelope, SubFolder folder, String message) {
+    sentCommands.add(
+        format("download:%s/%s/%s:%s",
+            envelope.deviceRegistryId, envelope.deviceId, folder, message));
+  }
+
   @TestOnly
   public void setFailureForTest() {
     failActivation = true;

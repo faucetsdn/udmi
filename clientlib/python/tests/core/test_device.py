@@ -233,6 +233,65 @@ def test_redirection_trigger(mock_parse_blob, test_device):
     assert test_device._loop_state.reset_event.is_set()
 
 
+def test_download_channel_redirection_flow(test_device, mock_dispatcher):
+    """
+    Verifies that a download:// endpoint blob URL transitions state to 'apply'
+    and then applies the EndpointConfiguration delivered on 'download/blobset'.
+    """
+    mock_persistence = MagicMock()
+    test_device.persistence = mock_persistence
+    mock_persistence.get_active_generation.return_value = "old-gen"
+
+    blob_config = BlobBlobsetConfig(
+        generation="new-gen",
+        url="download://blobset/_iot_endpoint_config",
+        sha256="deadbeef",
+    )
+    config = Config(
+        blobset=BlobsetConfig(
+            blobs={IOT_ENDPOINT_CONFIG_BLOB_KEY: blob_config}
+        )
+    )
+
+    with patch("src.udmi.core.device.STATE_THROTTLE_SEC", 0):
+        test_device.handle_config(
+            test_device.device_id, "config", config.to_dict()
+        )
+
+    assert not test_device._loop_state.reset_event.is_set()
+    assert (
+        test_device.state.blobset.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY].phase.value
+        == "apply"
+    )
+    mock_dispatcher.publish_state.assert_called_once()
+
+    download_payload = {
+        "timestamp": "2026-03-31T10:00:00Z",
+        "version": "1.5.7",
+        "blobs": {
+            IOT_ENDPOINT_CONFIG_BLOB_KEY: {
+                "protocol": "mqtt",
+                "hostname": "new.broker.local",
+                "port": 8883,
+                "client_id": "projects/p/locations/l/registries/r/devices/d",
+            }
+        },
+    }
+    test_device.handle_download(
+        test_device.device_id, "download/blobset", download_payload
+    )
+
+    mock_persistence.save_active_endpoint.assert_called_once()
+    saved_endpoint, saved_gen = mock_persistence.save_active_endpoint.call_args[0]
+    assert saved_endpoint.hostname == "new.broker.local"
+    assert saved_gen == "new-gen"
+    assert (
+        test_device.state.blobset.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY].phase.value
+        == "final"
+    )
+    assert test_device._loop_state.reset_event.is_set()
+
+
 # --- Resilience / Fallback Tests ---
 
 def test_connection_fallback_clears_active_endpoint(test_device):

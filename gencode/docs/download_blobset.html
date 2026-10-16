@@ -1,0 +1,2131 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Overpass:300,400,600,800">
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+	<link rel="stylesheet" type="text/css" href="schema_doc.css">
+    <script src="https://use.fontawesome.com/facf9fa52c.js"></script>
+    <script src="schema_doc.min.js"></script>
+    <meta charset="utf-8"/>
+        
+    
+    <title>Blobset Download</title>
+<script src="schema_extras.js" ></script></head>
+    <body onload="anchorOnLoad();removedHostedMDExtensions();" id="root"><nav> <ol class="breadcrumb bg-white" style="padding: 0"> <li class="breadcrumb-item"><a href="../../">UDMI</a></li> <li class="breadcrumb-item"><a href="../">Schema</a></li> <li class="breadcrumb-item"><a href="./">Schema Viewer</a></li> </ol> </nav> <div class="text-right">
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse:not(.show)" aria-expanded="false">Expand all</button>
+            <button class="btn btn-primary" type="button" data-toggle="collapse" data-target=".collapse.show" aria-expanded="false">Collapse all</button>
+        </div>
+
+    <div class="breadcrumbs"></div> <h1>Blobset Download</h1><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Direct cloud-to-device payload delivery for blobset configurations over the download/blobset channel.</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordiontimestamp">
+    <div class="card">
+        <div class="card-header" id="headingtimestamp">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#timestamp"
+                        aria-expanded="" aria-controls="timestamp" onclick="setAnchor('#timestamp')"><span class="property-name">timestamp</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="timestamp"
+             class="collapse property-definition-div" aria-labelledby="headingtimestamp"
+             data-parent="#accordiontimestamp">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#timestamp" onclick="anchorLink('timestamp')">timestamp</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>RFC 3339 UTC timestamp the download payload was generated</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="timestamp_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionversion">
+    <div class="card">
+        <div class="card-header" id="headingversion">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#version"
+                        aria-expanded="" aria-controls="version" onclick="setAnchor('#version')"><span class="property-name">version</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="version"
+             class="collapse property-definition-div" aria-labelledby="headingversion"
+             data-parent="#accordionversion">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#version" onclick="anchorLink('version')">version</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Version of the UDMI schema</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs">
+    <div class="card">
+        <div class="card-header" id="headingblobs">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs"
+                        aria-expanded="" aria-controls="blobs" onclick="setAnchor('#blobs')"><span class="property-name">blobs</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs"
+             class="collapse property-definition-div" aria-labelledby="headingblobs"
+             data-parent="#accordionblobs">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Map of system blobset keys to their provisioned endpoint configuration payloads</p>
+</span> <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionblobs_pattern1">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1"
+                        aria-expanded="" aria-controls="blobs_pattern1" onclick="setAnchor('#blobs_pattern1')"><span class="property-name">Endpoint Configuration</span> <span class="badge badge-info pattern-property">Pattern Property</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1"
+             data-parent="#accordionblobs_pattern1">
+            <div class="card-body pl-5"><h2 class="handle">
+                        <label>Pattern Property</label>
+                    </h2>
+                    <p>All properties whose name matches the following regular expression must respect the following conditions</p>
+                    <span class="pattern-value">Property name regular expression: <code>^_[a-z_]+$</code></span>
+                    <br/>
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a></div><h4>Endpoint Configuration</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Parameters to define a message endpoint</p>
+</span>
+
+     <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionblobs_pattern1_name">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_name">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_name"
+                        aria-expanded="" aria-controls="blobs_pattern1_name" onclick="setAnchor('#blobs_pattern1_name')"><span class="property-name">name</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_name"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_name"
+             data-parent="#accordionblobs_pattern1_name">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_name" onclick="anchorLink('blobs_pattern1_name')">name</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Friendly name for this flow (debugging and diagnostics)</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_protocol">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_protocol">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_protocol"
+                        aria-expanded="" aria-controls="blobs_pattern1_protocol" onclick="setAnchor('#blobs_pattern1_protocol')"><span class="property-name">protocol</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_protocol"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_protocol"
+             data-parent="#accordionblobs_pattern1_protocol">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_protocol" onclick="anchorLink('blobs_pattern1_protocol')">protocol</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<div class="enum-value" id="blobs_pattern1_protocol_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"local"</li><li class="list-group-item enum-item">"pubsub"</li><li class="list-group-item enum-item">"file"</li><li class="list-group-item enum-item">"trace"</li><li class="list-group-item enum-item">"mqtt"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_transport">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_transport">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_transport"
+                        aria-expanded="" aria-controls="blobs_pattern1_transport" onclick="setAnchor('#blobs_pattern1_transport')"><span class="property-name">transport</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_transport"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_transport"
+             data-parent="#accordionblobs_pattern1_transport">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_transport" onclick="anchorLink('blobs_pattern1_transport')">transport</a></div><span class="badge badge-dark value-type">Type: enum (of string)</span><br/>
+<div class="enum-value" id="blobs_pattern1_transport_enum">
+            <h4>Must be one of:</h4>
+            <ul class="list-group"><li class="list-group-item enum-item">"ssl"</li><li class="list-group-item enum-item">"tcp"</li></ul>
+            </div>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_hostname">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_hostname">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_hostname"
+                        aria-expanded="" aria-controls="blobs_pattern1_hostname" onclick="setAnchor('#blobs_pattern1_hostname')"><span class="property-name">hostname</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_hostname"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_hostname"
+             data-parent="#accordionblobs_pattern1_hostname">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_hostname" onclick="anchorLink('blobs_pattern1_hostname')">hostname</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_payload">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_payload">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_payload"
+                        aria-expanded="" aria-controls="blobs_pattern1_payload" onclick="setAnchor('#blobs_pattern1_payload')"><span class="property-name">payload</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_payload"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_payload"
+             data-parent="#accordionblobs_pattern1_payload">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_payload" onclick="anchorLink('blobs_pattern1_payload')">payload</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Simple payload template for simple injection use cases</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_error">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_error">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_error"
+                        aria-expanded="" aria-controls="blobs_pattern1_error" onclick="setAnchor('#blobs_pattern1_error')"><span class="property-name">error</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_error"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_error"
+             data-parent="#accordionblobs_pattern1_error">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_error" onclick="anchorLink('blobs_pattern1_error')">error</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Error message container for capturing errors during parsing/handling</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_port">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_port">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_port"
+                        aria-expanded="" aria-controls="blobs_pattern1_port" onclick="setAnchor('#blobs_pattern1_port')"><span class="property-name">port</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_port"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_port"
+             data-parent="#accordionblobs_pattern1_port">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_port" onclick="anchorLink('blobs_pattern1_port')">port</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_config_sync_sec">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_config_sync_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_config_sync_sec"
+                        aria-expanded="" aria-controls="blobs_pattern1_config_sync_sec" onclick="setAnchor('#blobs_pattern1_config_sync_sec')"><span class="property-name">config_sync_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_config_sync_sec"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_config_sync_sec"
+             data-parent="#accordionblobs_pattern1_config_sync_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_config_sync_sec" onclick="anchorLink('blobs_pattern1_config_sync_sec')">config_sync_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Delay waiting for config message on start, 0 for default, &lt;0 to disable</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_client_id">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_client_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_client_id"
+                        aria-expanded="" aria-controls="blobs_pattern1_client_id" onclick="setAnchor('#blobs_pattern1_client_id')"><span class="property-name">client_id</span> <span class="badge badge-warning required-property">Required</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_client_id"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_client_id"
+             data-parent="#accordionblobs_pattern1_client_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_client_id" onclick="anchorLink('blobs_pattern1_client_id')">client_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_topic_prefix">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_topic_prefix">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_topic_prefix"
+                        aria-expanded="" aria-controls="blobs_pattern1_topic_prefix" onclick="setAnchor('#blobs_pattern1_topic_prefix')"><span class="property-name">topic_prefix</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_topic_prefix"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_topic_prefix"
+             data-parent="#accordionblobs_pattern1_topic_prefix">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_topic_prefix" onclick="anchorLink('blobs_pattern1_topic_prefix')">topic_prefix</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Prefix for message topics</p>
+</span><span class="pattern-value" id="blobs_pattern1_topic_prefix_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9]+$</code></span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_recv_id">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_recv_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_recv_id"
+                        aria-expanded="" aria-controls="blobs_pattern1_recv_id" onclick="setAnchor('#blobs_pattern1_recv_id')"><span class="property-name">recv_id</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_recv_id"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_recv_id"
+             data-parent="#accordionblobs_pattern1_recv_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_recv_id" onclick="anchorLink('blobs_pattern1_recv_id')">recv_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Id for the receiving message channel</p>
+</span><span class="pattern-value" id="blobs_pattern1_recv_id_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_send_id">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_send_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_send_id"
+                        aria-expanded="" aria-controls="blobs_pattern1_send_id" onclick="setAnchor('#blobs_pattern1_send_id')"><span class="property-name">send_id</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_send_id"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_send_id"
+             data-parent="#accordionblobs_pattern1_send_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_send_id" onclick="anchorLink('blobs_pattern1_send_id')">send_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Id for the sending messages channel</p>
+</span><span class="pattern-value" id="blobs_pattern1_send_id_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_side_id">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_side_id">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_side_id"
+                        aria-expanded="" aria-controls="blobs_pattern1_side_id" onclick="setAnchor('#blobs_pattern1_side_id')"><span class="property-name">side_id</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_side_id"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_side_id"
+             data-parent="#accordionblobs_pattern1_side_id">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_side_id" onclick="anchorLink('blobs_pattern1_side_id')">side_id</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Id for a side-car message channel</p>
+</span><span class="pattern-value" id="blobs_pattern1_side_id_pattern">Must match regular expression: <code>^[-_/a-zA-Z0-9#]+$</code></span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_gatewayId">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_gatewayId">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_gatewayId"
+                        aria-expanded="" aria-controls="blobs_pattern1_gatewayId" onclick="setAnchor('#blobs_pattern1_gatewayId')"><span class="property-name">gatewayId</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_gatewayId"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_gatewayId"
+             data-parent="#accordionblobs_pattern1_gatewayId">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_gatewayId" onclick="anchorLink('blobs_pattern1_gatewayId')">gatewayId</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_deviceId">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_deviceId">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_deviceId"
+                        aria-expanded="" aria-controls="blobs_pattern1_deviceId" onclick="setAnchor('#blobs_pattern1_deviceId')"><span class="property-name">deviceId</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_deviceId"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_deviceId"
+             data-parent="#accordionblobs_pattern1_deviceId">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_deviceId" onclick="anchorLink('blobs_pattern1_deviceId')">deviceId</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_enabled">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_enabled">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_enabled"
+                        aria-expanded="" aria-controls="blobs_pattern1_enabled" onclick="setAnchor('#blobs_pattern1_enabled')"><span class="property-name">enabled</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_enabled"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_enabled"
+             data-parent="#accordionblobs_pattern1_enabled">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_enabled" onclick="anchorLink('blobs_pattern1_enabled')">enabled</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Indicator if this endpoint should be active (null or non-empty)</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_noConfigAck">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_noConfigAck">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_noConfigAck"
+                        aria-expanded="" aria-controls="blobs_pattern1_noConfigAck" onclick="setAnchor('#blobs_pattern1_noConfigAck')"><span class="property-name">noConfigAck</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_noConfigAck"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_noConfigAck"
+             data-parent="#accordionblobs_pattern1_noConfigAck">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_noConfigAck" onclick="anchorLink('blobs_pattern1_noConfigAck')">noConfigAck</a></div><span class="badge badge-dark value-type">Type: boolean</span><br/>
+<span class="description"><p>True if config messages should not be acked (lower QOS)</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_capacity">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_capacity">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_capacity"
+                        aria-expanded="" aria-controls="blobs_pattern1_capacity" onclick="setAnchor('#blobs_pattern1_capacity')"><span class="property-name">capacity</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_capacity"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_capacity"
+             data-parent="#accordionblobs_pattern1_capacity">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_capacity" onclick="anchorLink('blobs_pattern1_capacity')">capacity</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Queue capacity for limiting pipes</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_publish_delay_sec">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_publish_delay_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_publish_delay_sec"
+                        aria-expanded="" aria-controls="blobs_pattern1_publish_delay_sec" onclick="setAnchor('#blobs_pattern1_publish_delay_sec')"><span class="property-name">publish_delay_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_publish_delay_sec"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_publish_delay_sec"
+             data-parent="#accordionblobs_pattern1_publish_delay_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_publish_delay_sec" onclick="anchorLink('blobs_pattern1_publish_delay_sec')">publish_delay_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Artifical publish delay for testing</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_periodic_sec">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_periodic_sec">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_periodic_sec"
+                        aria-expanded="" aria-controls="blobs_pattern1_periodic_sec" onclick="setAnchor('#blobs_pattern1_periodic_sec')"><span class="property-name">periodic_sec</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_periodic_sec"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_periodic_sec"
+             data-parent="#accordionblobs_pattern1_periodic_sec">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_periodic_sec" onclick="anchorLink('blobs_pattern1_periodic_sec')">periodic_sec</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Rate for periodic task execution</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_keyBytes">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_keyBytes">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_keyBytes"
+                        aria-expanded="" aria-controls="blobs_pattern1_keyBytes" onclick="setAnchor('#blobs_pattern1_keyBytes')"><span class="property-name">keyBytes</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_keyBytes"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_keyBytes"
+             data-parent="#accordionblobs_pattern1_keyBytes">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_keyBytes" onclick="anchorLink('blobs_pattern1_keyBytes')">keyBytes</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_algorithm">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_algorithm">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_algorithm"
+                        aria-expanded="" aria-controls="blobs_pattern1_algorithm" onclick="setAnchor('#blobs_pattern1_algorithm')"><span class="property-name">algorithm</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_algorithm"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_algorithm"
+             data-parent="#accordionblobs_pattern1_algorithm">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_algorithm" onclick="anchorLink('blobs_pattern1_algorithm')">algorithm</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_auth_provider">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider" onclick="setAnchor('#blobs_pattern1_auth_provider')"><span class="property-name">auth_provider</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider"
+             data-parent="#accordionblobs_pattern1_auth_provider">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+ <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_basic">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_basic">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_basic"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_basic" onclick="setAnchor('#blobs_pattern1_auth_provider_basic')"><span class="property-name">basic</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_basic"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_basic"
+             data-parent="#accordionblobs_pattern1_auth_provider_basic">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_basic" onclick="anchorLink('blobs_pattern1_auth_provider_basic')">basic</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+ <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_basic_username">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_basic_username">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_basic_username"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_basic_username" onclick="setAnchor('#blobs_pattern1_auth_provider_basic_username')"><span class="property-name">username</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_basic_username"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_basic_username"
+             data-parent="#accordionblobs_pattern1_auth_provider_basic_username">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_basic" onclick="anchorLink('blobs_pattern1_auth_provider_basic')">basic</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_basic_username" onclick="anchorLink('blobs_pattern1_auth_provider_basic_username')">username</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_basic_password">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_basic_password">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_basic_password"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_basic_password" onclick="setAnchor('#blobs_pattern1_auth_provider_basic_password')"><span class="property-name">password</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_basic_password"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_basic_password"
+             data-parent="#accordionblobs_pattern1_auth_provider_basic_password">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_basic" onclick="anchorLink('blobs_pattern1_auth_provider_basic')">basic</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_basic_password" onclick="anchorLink('blobs_pattern1_auth_provider_basic_password')">password</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_jwt">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_jwt">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_jwt"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_jwt" onclick="setAnchor('#blobs_pattern1_auth_provider_jwt')"><span class="property-name">jwt</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_jwt"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_jwt"
+             data-parent="#accordionblobs_pattern1_auth_provider_jwt">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_jwt" onclick="anchorLink('blobs_pattern1_auth_provider_jwt')">jwt</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+ <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_jwt_audience">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_jwt_audience">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_jwt_audience"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_jwt_audience" onclick="setAnchor('#blobs_pattern1_auth_provider_jwt_audience')"><span class="property-name">audience</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_jwt_audience"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_jwt_audience"
+             data-parent="#accordionblobs_pattern1_auth_provider_jwt_audience">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_jwt" onclick="anchorLink('blobs_pattern1_auth_provider_jwt')">jwt</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_jwt_audience" onclick="anchorLink('blobs_pattern1_auth_provider_jwt_audience')">audience</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_jwt_token">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_jwt_token">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_jwt_token"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_jwt_token" onclick="setAnchor('#blobs_pattern1_auth_provider_jwt_token')"><span class="property-name">token</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_jwt_token"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_jwt_token"
+             data-parent="#accordionblobs_pattern1_auth_provider_jwt_token">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_jwt" onclick="anchorLink('blobs_pattern1_auth_provider_jwt')">jwt</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_jwt_token" onclick="anchorLink('blobs_pattern1_auth_provider_jwt_token')">token</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Pre-signed JWT token or credential string</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_mtls">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_mtls">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_mtls"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_mtls" onclick="setAnchor('#blobs_pattern1_auth_provider_mtls')"><span class="property-name">mtls</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_mtls"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_mtls"
+             data-parent="#accordionblobs_pattern1_auth_provider_mtls">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_mtls" onclick="anchorLink('blobs_pattern1_auth_provider_mtls')">mtls</a></div><span class="badge badge-dark value-type">Type: object</span><br/>
+ <span class="badge badge-info no-additional">No Additional Properties</span>
+        
+
+        
+        
+
+        
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_mtls_private_key">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_mtls_private_key">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_mtls_private_key"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_mtls_private_key" onclick="setAnchor('#blobs_pattern1_auth_provider_mtls_private_key')"><span class="property-name">private_key</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_mtls_private_key"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_mtls_private_key"
+             data-parent="#accordionblobs_pattern1_auth_provider_mtls_private_key">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_mtls" onclick="anchorLink('blobs_pattern1_auth_provider_mtls')">mtls</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_mtls_private_key" onclick="anchorLink('blobs_pattern1_auth_provider_mtls_private_key')">private_key</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>PEM-encoded private key material for mTLS authentication</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_mtls_certificate">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_mtls_certificate">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_mtls_certificate"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_mtls_certificate" onclick="setAnchor('#blobs_pattern1_auth_provider_mtls_certificate')"><span class="property-name">certificate</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_mtls_certificate"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_mtls_certificate"
+             data-parent="#accordionblobs_pattern1_auth_provider_mtls_certificate">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_mtls" onclick="anchorLink('blobs_pattern1_auth_provider_mtls')">mtls</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_mtls_certificate" onclick="anchorLink('blobs_pattern1_auth_provider_mtls_certificate')">certificate</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>PEM-encoded client certificate for mTLS authentication</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_auth_provider_mtls_ca_certificate">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_auth_provider_mtls_ca_certificate">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_auth_provider_mtls_ca_certificate"
+                        aria-expanded="" aria-controls="blobs_pattern1_auth_provider_mtls_ca_certificate" onclick="setAnchor('#blobs_pattern1_auth_provider_mtls_ca_certificate')"><span class="property-name">ca_certificate</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_auth_provider_mtls_ca_certificate"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_auth_provider_mtls_ca_certificate"
+             data-parent="#accordionblobs_pattern1_auth_provider_mtls_ca_certificate">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider" onclick="anchorLink('blobs_pattern1_auth_provider')">auth_provider</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_mtls" onclick="anchorLink('blobs_pattern1_auth_provider_mtls')">mtls</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_auth_provider_mtls_ca_certificate" onclick="anchorLink('blobs_pattern1_auth_provider_mtls_ca_certificate')">ca_certificate</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>PEM-encoded CA certificate bundle for peer verification</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_ca_file">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_ca_file">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_ca_file"
+                        aria-expanded="" aria-controls="blobs_pattern1_ca_file" onclick="setAnchor('#blobs_pattern1_ca_file')"><span class="property-name">ca_file</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_ca_file"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_ca_file"
+             data-parent="#accordionblobs_pattern1_ca_file">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_ca_file" onclick="anchorLink('blobs_pattern1_ca_file')">ca_file</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Path to the CA certificate file</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_cert_file">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_cert_file">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_cert_file"
+                        aria-expanded="" aria-controls="blobs_pattern1_cert_file" onclick="setAnchor('#blobs_pattern1_cert_file')"><span class="property-name">cert_file</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_cert_file"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_cert_file"
+             data-parent="#accordionblobs_pattern1_cert_file">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_cert_file" onclick="anchorLink('blobs_pattern1_cert_file')">cert_file</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Path to the client certificate file</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_key_file">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_key_file">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_key_file"
+                        aria-expanded="" aria-controls="blobs_pattern1_key_file" onclick="setAnchor('#blobs_pattern1_key_file')"><span class="property-name">key_file</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_key_file"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_key_file"
+             data-parent="#accordionblobs_pattern1_key_file">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_key_file" onclick="anchorLink('blobs_pattern1_key_file')">key_file</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Path to the client private key file</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_generation">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_generation">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_generation"
+                        aria-expanded="" aria-controls="blobs_pattern1_generation" onclick="setAnchor('#blobs_pattern1_generation')"><span class="property-name">generation</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_generation"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_generation"
+             data-parent="#accordionblobs_pattern1_generation">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_generation" onclick="anchorLink('blobs_pattern1_generation')">generation</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>The timestamp of the endpoint generation</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="blobs_pattern1_generation_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionblobs_pattern1_expiry">
+    <div class="card">
+        <div class="card-header" id="headingblobs_pattern1_expiry">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#blobs_pattern1_expiry"
+                        aria-expanded="" aria-controls="blobs_pattern1_expiry" onclick="setAnchor('#blobs_pattern1_expiry')"><span class="property-name">expiry</span></button>
+            </h2>
+        </div>
+
+        <div id="blobs_pattern1_expiry"
+             class="collapse property-definition-div" aria-labelledby="headingblobs_pattern1_expiry"
+             data-parent="#accordionblobs_pattern1_expiry">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs" onclick="anchorLink('blobs')">blobs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1" onclick="anchorLink('blobs_pattern1')">Endpoint Configuration</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#blobs_pattern1_expiry" onclick="anchorLink('blobs_pattern1_expiry')">expiry</a></div><span class="badge badge-dark value-type">Type: string</span><span class="badge badge-info value-type">Format: date-time</span><br/>
+<span class="description"><p>Timestamp when the provisioned credential or endpoint expires</p>
+</span>
+        
+
+        
+        
+
+        <br/>
+<div class="badge badge-secondary">Example:</div>
+<br/><div id="blobs_pattern1_expiry_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;2019-01-17T14:02:29.364Z&quot;</span>
+</pre></div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <footer>
+        <p class="generated-by-footer">Generated using <a href="https://github.com/coveooss/json-schema-for-humans">json-schema-for-humans</a></p>
+    </footer></body>
+</html>

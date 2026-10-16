@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
-"""Utility to reassemble UDMI events/streams chunks into a valid PCAP file.
+"""Utility to reassemble UDMI upload/discovery chunks into a valid PCAP file.
 
 Usage:
     bin/reassemble_pcap <input_file_or_stdin> <output_pcap_path>
 
 Supported input formats:
-    - Raw JSON array of StreamsEvents: [ {"event_no": 0, "data": "..."}, ... ]
-    - JSON Lines (JSONL): One StreamsEvents JSON object per line
+    - Raw JSON array of DiscoveryUpload: [ {"event_no": 1, "data": "..."}, ... ]
+    - JSON Lines (JSONL): One DiscoveryUpload JSON object per line
     - mosquitto_sub output: "<topic> <json_payload>"
     - Standard input (specify "-" as input file)
 """
 
 import argparse
 import base64
+import hashlib
 import json
 import os
 import sys
@@ -26,7 +27,7 @@ PCAP_MAGIC_NUMBERS = [
 
 
 def parse_stream_events(raw_text: str):
-  """Parse StreamsEvents objects from JSON array, JSONL, or mosquitto_sub."""
+  """Parse DiscoveryUpload objects from JSON array, JSONL, or mosquitto_sub."""
   raw_text = raw_text.strip()
   if not raw_text:
     return []
@@ -38,7 +39,7 @@ def parse_stream_events(raw_text: str):
       if isinstance(data, list):
         return [item.get("payload", item) if (isinstance(item, dict) and "payload" in item and isinstance(item["payload"], dict)) else item for item in data]
       if isinstance(data, dict):
-        if "payload" in data and isinstance(data["payload"], dict) and "data" in data["payload"]:
+        if "payload" in data and isinstance(data["payload"], dict) and ("data" in data["payload"] or "sha256" in data["payload"]):
           return [data["payload"]]
         return [data]
     except json.JSONDecodeError:
@@ -59,8 +60,8 @@ def parse_stream_events(raw_text: str):
     try:
       obj = json.loads(payload)
       if isinstance(obj, dict):
-        inner = obj.get("payload") if (isinstance(obj.get("payload"), dict) and "data" in obj["payload"]) else obj
-        if "data" in inner:
+        inner = obj.get("payload") if (isinstance(obj.get("payload"), dict) and ("data" in obj["payload"] or "sha256" in obj["payload"])) else obj
+        if "data" in inner or "sha256" in inner:
           events.append(inner)
     except json.JSONDecodeError:
       continue
@@ -69,7 +70,7 @@ def parse_stream_events(raw_text: str):
 
 
 def reassemble_pcap(input_source: str, output_path: str) -> None:
-  """Reassembles chunked events into a binary pcap capture file."""
+  """Reassembles chunked upload records into a binary pcap capture file."""
   if input_source == "-":
     raw_content = sys.stdin.read()
   else:
@@ -80,12 +81,14 @@ def reassemble_pcap(input_source: str, output_path: str) -> None:
 
   events = parse_stream_events(raw_content)
   if not events:
-    sys.exit("Error: No valid StreamsEvents records with 'data' found in input.")
+    sys.exit("Error: No valid DiscoveryUpload records with 'data' found in input.")
 
-  # Filter out records missing data
+  # Filter out records missing data (such as start/EOF markers)
   valid_events = [e for e in events if e.get("data")]
   if not valid_events:
-    sys.exit("Error: Found stream records but none contained base64 'data'.")
+    sys.exit("Error: Found upload records but none contained base64 'data'.")
+
+  eof_events = [e for e in events if e.get("sha256")]
 
   # Sort primarily by chunk_index, fallback to event_no
   def sort_key(e):
@@ -112,6 +115,14 @@ def reassemble_pcap(input_source: str, output_path: str) -> None:
   # Validate output
   if not pcap_data:
     sys.exit("Error: Reassembled PCAP payload is empty (0 bytes).")
+
+  if eof_events:
+    expected_sha256 = str(eof_events[-1]["sha256"]).lower()
+    actual_sha256 = hashlib.sha256(pcap_data).hexdigest().lower()
+    if actual_sha256 != expected_sha256:
+      sys.exit(
+          f"Error: SHA-256 mismatch (expected {expected_sha256}, got {actual_sha256})."
+      )
 
   magic = bytes(pcap_data[:4])
   is_valid_magic = any(magic == m for m in PCAP_MAGIC_NUMBERS)

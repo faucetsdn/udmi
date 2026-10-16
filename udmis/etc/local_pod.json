@@ -22,6 +22,9 @@
     "target": {
       "recv_id": "events/#"
     },
+    "upload": {
+      "recv_id": "upload/#"
+    },
     "state": {
       "recv_id": "state"
     },

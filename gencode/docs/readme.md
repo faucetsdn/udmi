@@ -7,13 +7,14 @@
 
 ## Messages
 * [**config**](config.html) - The config block controls a device's intended behavior. [Config Documentation](../../docs/messages/config.md)
+* [**download_blobset**](download_blobset.html) - Direct cloud-to-device payload delivery for blobset configurations over the download/blobset channel.
 * [**events_alarmset**](events_alarmset.html) - A set of alarms reporting telemetry data. [Alarmset Events Documentation](../../docs/messages/alarmset.md#telemetry)
 * [**events_discovery**](events_discovery.html) - [Discovery result](../../docs/specs/discovery.md) with implicit discovery
 * [**events_pointset**](events_pointset.html) - A set of points reporting telemetry data. [Pointset Events Documentation](../../docs/messages/pointset.md#telemetry)
-* [**events_streams**](events_streams.html) - Sequential data stream chunks for reliable transport over MQTT (e.g. PCAP traces, firmware blobs, reliable alarms, logs playback).
 * [**events_system**](events_system.html) - Used for system events such as logging. [System Event Documentation](../../docs/messages/system.md#event)
 * [**events_udmi**](events_udmi.html) - Used for udmi events such as logging.
 * [**state**](state.html) - [State](../../docs/messages/state.md) message, defined by [`state.json`]
+* [**upload_discovery**](upload_discovery.html) - Sequential binary chunk upload for discovery artifacts (e.g. PCAP traces) framed by config.discovery and state.discovery.
 
 ## Site Model
 * [**metadata**](metadata.html) - [Metadata](../../docs/specs/metadata.md) is a description about the device: a specification about how the device should be configured and expectations about what the device should be doing. Defined by `metadata.json`

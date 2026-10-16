@@ -498,6 +498,8 @@ public class MqttPublisher implements Publisher {
     if (configuration.recv_id == null) {
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.CONFIG_TOPIC), configQos);
       subscribeTopic(client, getMessageTopic(deviceId, MqttDevice.ERRORS_TOPIC), QOS_AT_MOST_ONCE);
+      subscribeTopic(
+          client, getMessageTopic(deviceId, MqttDevice.DOWNLOAD_TOPIC), QOS_AT_MOST_ONCE);
     } else {
       subscribeTopic(client, configuration.recv_id, configQos);
     }

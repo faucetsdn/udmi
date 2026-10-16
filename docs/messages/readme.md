@@ -34,14 +34,17 @@ flow, but also the treatment of the message as it moves through the system:
 |---------|---------|-----------|
 | __Sticky__  | _state_ | _config_  |
 | __Stream__  | _events_ | _command_ |
+| __Out-of-Band / Ephemeral__ | _upload_ | _download_ |
 
-The properties and uses of the four types fall out from this accordingly:
+The properties and uses of the message types fall out from this accordingly:
 * _state_: Sticky to the cloud information from the device, including information such as the overall
 status of the device, and any errors or conditions from, e.g., writing points.
 * _events_: The canonical streaming telemetry messages from the device, usually containing things
 like temperature readings or system memory utilization.
 * _config_: Ability to control the behavior of a device, e.g. for key rotation, writeback, etc...
 * _command_: Direct but transitory messages to a device, e.g. to install a new auth key or perform diagnostic operations.
+* _upload_: Chunked bulk binary or text artifact transfers from the device to the cloud (e.g., `upload/discovery` for packet captures), framed by `config` and `state`.
+* _download_: Ephemeral, non-retained (`QoS 0`, `retain = false`) payload delivery from the cloud to the device (e.g., `download/blobset` for credentials and private keys), framed by `config.blobset` and `state.blobset`.
 
 Individual blocks (folders), such as _system_ or _pointset_ will have their own semantic uses for the various types.
 See the individual block folder documentation to learn more about those aspects.
@@ -55,6 +58,10 @@ See the individual block folder documentation to learn more about those aspects.
   - [Alarmset (telemetry)](alarmset.md#telemetry) ([_🧬schema_](../../gencode/docs/events_alarmset.html))
   - [System (logging, etc)](system.md) ([_🧬schema_](../../gencode/docs/events_system.html))
   - [Discovery](../specs/discovery.md) ([_🧬schema_](../../gencode/docs/events_discovery.html))
+- upload
+  - [Discovery Upload](../specs/discovery.md#discovery-uploads) ([_🧬schema_](../../gencode/docs/upload_discovery.html))
+- download
+  - [Blobset Download](../specs/blob_updates.md#ephemeral-blobset-downloads) ([_🧬schema_](../../gencode/docs/download_blobset.html))
 - [envelope](envelope.md)
 
 ## MQTT Topics

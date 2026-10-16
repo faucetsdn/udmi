@@ -1,0 +1,62 @@
+{
+  "$udmi_version": "1.5.7",
+  "title": "Discovery Upload",
+  "description": "Sequential binary chunk upload for discovery artifacts (e.g. PCAP traces) framed by config.discovery and state.discovery.",
+  "$section": "Messages",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 UTC timestamp the upload chunk was generated",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "family": {
+      "description": "Protocol family associated with the discovery trace upload",
+      "type": "string"
+    },
+    "generation": {
+      "description": "The discovery scan trigger's generation timestamp",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"]
+    },
+    "session_id": {
+      "description": "Unique session identifier for the chunked upload transmission",
+      "type": "string"
+    },
+    "event_no": {
+      "description": "Sequence number for this upload chunk: 0 for start marker, 1..N for data chunks, -(N + 1) for terminal EOF marker",
+      "type": "integer"
+    },
+    "chunk_index": {
+      "description": "0-based index of the transmitted chunk payload within the total session",
+      "type": "integer"
+    },
+    "total_chunks": {
+      "description": "Total number of chunks comprising the complete transmission binary",
+      "type": "integer"
+    },
+    "sha256": {
+      "description": "SHA-256 hex digest of the complete unencoded binary payload (included on the terminal negative event_no marker)",
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{64}$"
+    },
+    "data": {
+      "description": "Base64-encoded binary chunk payload data",
+      "type": "string"
+    }
+  },
+  "required": [
+    "timestamp",
+    "version",
+    "session_id",
+    "event_no"
+  ]
+}

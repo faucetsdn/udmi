@@ -12,11 +12,14 @@ public class Auth_provider {
     public Basic basic;
     @JsonProperty("jwt")
     public Jwt jwt;
+    @JsonProperty("mtls")
+    public Mtls mtls;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.basic == null)? 0 :this.basic.hashCode()));
+        result = ((result* 31)+((this.mtls == null)? 0 :this.mtls.hashCode()));
         result = ((result* 31)+((this.jwt == null)? 0 :this.jwt.hashCode()));
         return result;
     }
@@ -30,7 +33,7 @@ public class Auth_provider {
             return false;
         }
         Auth_provider rhs = ((Auth_provider) other);
-        return (((this.basic == rhs.basic)||((this.basic!= null)&&this.basic.equals(rhs.basic)))&&((this.jwt == rhs.jwt)||((this.jwt!= null)&&this.jwt.equals(rhs.jwt))));
+        return ((((this.basic == rhs.basic)||((this.basic!= null)&&this.basic.equals(rhs.basic)))&&((this.mtls == rhs.mtls)||((this.mtls!= null)&&this.mtls.equals(rhs.mtls))))&&((this.jwt == rhs.jwt)||((this.jwt!= null)&&this.jwt.equals(rhs.jwt))));
     }
 
 }
