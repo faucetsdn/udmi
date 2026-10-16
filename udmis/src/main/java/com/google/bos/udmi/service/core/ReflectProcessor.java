@@ -298,8 +298,13 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     CloudModel modelResult = updateModel(attributes, request);
-    ifNotNullThen(extractModel(request),
-        model -> publish(makeTargetEnvelope(attributes), model));
+    ifNotNullThen(extractModel(request), model -> {
+      Envelope target = makeTargetEnvelope(attributes);
+      if (model instanceof ModelUpdate modelUpdate && modelUpdate.system != null) {
+        target.deviceGuid = modelUpdate.system.guid;
+      }
+      publish(target, model);
+    });
     return modelResult;
   }
 

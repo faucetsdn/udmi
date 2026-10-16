@@ -15,6 +15,7 @@ class FamilyLocalnetModel(DataModel):
     The type of network
     """
 
+    name: Optional[str] = None
     addr: Optional[str] = None
     unitid: Optional[str] = None
     network: Optional[str] = None

@@ -20,6 +20,7 @@ class Type(Enum):
     string = 'string'
     boolean = 'boolean'
     number = 'number'
+    missing = 'missing'
 
 
 class BaselineState(Enum):

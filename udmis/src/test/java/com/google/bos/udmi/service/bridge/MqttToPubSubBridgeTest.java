@@ -191,12 +191,14 @@ class MqttToPubSubBridgeTest {
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
 
-    // Mock etcd provider to return a numId
+    // Mock etcd provider to return a numId and guid
     when(mockEtcdProvider.ref()).thenReturn(mockDataRef);
     when(mockDataRef.registry("my-registry")).thenReturn(mockDataRef);
     when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
     when(mockDataRef.get("num_id")).thenReturn("123456");
     when(mockDataRef.getAsSerializable("num_id")).thenReturn("123456");
+    when(mockDataRef.getAsSerializable("guid"))
+        .thenReturn("043c2f7c-d542-4be2-a847-c73f0ac4fb95");
 
     new MqttToPubSubBridge()
         .setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
@@ -215,6 +217,7 @@ class MqttToPubSubBridgeTest {
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     Map<String, String> attributes = pubsubMessage.getAttributesMap();
     assertEquals("123456", attributes.get("deviceNumId"));
+    assertEquals("043c2f7c-d542-4be2-a847-c73f0ac4fb95", attributes.get("deviceGuid"));
   }
 
   @Test
@@ -232,12 +235,13 @@ class MqttToPubSubBridgeTest {
     when(mockPublisher.publish(any(PubsubMessage.class)))
         .thenReturn(ApiFutures.immediateFuture("msg-123"));
 
-    // Mock etcd provider to return null for numId
+    // Mock etcd provider to return null for numId and guid
     when(mockEtcdProvider.ref()).thenReturn(mockDataRef);
     when(mockDataRef.registry("my-registry")).thenReturn(mockDataRef);
     when(mockDataRef.device("my-device")).thenReturn(mockDataRef);
     when(mockDataRef.get("num_id")).thenReturn(null);
     when(mockDataRef.getAsSerializable("num_id")).thenReturn(null);
+    when(mockDataRef.getAsSerializable("guid")).thenReturn(null);
 
     new MqttToPubSubBridge()
         .setupBridge(mockMqttClient, mockPublisher, testTopic, mockEtcdProvider);
@@ -256,6 +260,7 @@ class MqttToPubSubBridgeTest {
     PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
     Map<String, String> attributes = pubsubMessage.getAttributesMap();
     org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("deviceNumId"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("deviceGuid"));
   }
 
   @Test

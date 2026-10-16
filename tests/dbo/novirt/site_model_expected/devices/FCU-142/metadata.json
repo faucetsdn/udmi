@@ -2,6 +2,7 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
+    "guid": "d26c31b5-b4f8-4678-8fc5-7ad08ff9a322",
     "name": "FC S-14",
     "location": {
       "site": "US-MTV-RLS1"
@@ -9,9 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "ext_id": "d26c31b5-b4f8-4678-8fc5-7ad08ff9a322",
-      "type": "HVAC/FCU_DFVSC_DSP_GDC_HWDC_DSPZDHC",
-      "label": "FC S-14 / 15 & VAVCO S1-1-68 Clean Room"
+      "type": [
+        "HVAC/FCU_DFVSC_DSP_GDC_HWDC_DSPZDHC"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "FC S-14 / 15 & VAVCO S1-1-68 Clean Room"
+      }
     }
   },
   "cloud": {

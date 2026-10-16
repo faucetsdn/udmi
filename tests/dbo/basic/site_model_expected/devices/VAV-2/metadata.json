@@ -1,12 +1,21 @@
 {
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
-  "system": {},
+  "system": {
+    "guid": "4931e096-dea5-4b81-86ad-234c6d07b978"
+  },
   "externals": {
     "dbo": {
-      "ext_id": "4931e096-dea5-4b81-86ad-234c6d07b978",
-      "type": "HVAC/VAV_SD_CSP",
-      "label": "VAV-2"
+      "type": [
+        "HVAC/VAV_SD_CSP"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "VAV-2"
+      }
     }
   },
   "cloud": {
@@ -24,6 +33,9 @@
       "zone_air_temperature_sensor": {
         "units": "degrees_celsius",
         "units_reported": "degC"
+      },
+      "discharge_air_temperature_sensor": {
+        "type": "missing"
       }
     }
   }

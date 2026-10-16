@@ -2,15 +2,23 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
+    "guid": "11e21f30-bc86-46bd-819d-4b48180113ee",
     "location": {
       "site": "US-MTV-40"
     }
   },
   "externals": {
     "dbo": {
-      "ext_id": "11e21f30-bc86-46bd-819d-4b48180113ee",
-      "type": "GATEWAYS/PASSTHROUGH",
-      "label": "Liebert CRAC 1 / UPS"
+      "type": [
+        "GATEWAYS/PASSTHROUGH"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "Liebert CRAC 1 / UPS"
+      }
     }
   },
   "cloud": {

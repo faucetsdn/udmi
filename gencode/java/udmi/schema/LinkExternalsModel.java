@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -29,7 +30,7 @@ public class LinkExternalsModel {
      */
     @JsonProperty("type")
     @JsonPropertyDescription("Type of this device in the external model namespace")
-    public String type;
+    public List<String> type;
     /**
      * Etag for referencing this external entity
      * 

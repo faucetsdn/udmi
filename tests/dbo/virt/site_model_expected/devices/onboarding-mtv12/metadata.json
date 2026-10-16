@@ -2,6 +2,7 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
+    "guid": "05ed8d20-bbdb-4d69-a968-1075d110d025",
     "location": {
       "floor": "US-MTV-40-1",
       "site": "US-MTV-40"
@@ -9,9 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "ext_id": "05ed8d20-bbdb-4d69-a968-1075d110d025",
-      "type": "INFO_TECH/PRNTR",
-      "label": "onboarding-mtv12"
+      "type": [
+        "INFO_TECH/PRNTR"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "onboarding-mtv12"
+      }
     }
   },
   "cloud": {

@@ -55,6 +55,7 @@ public abstract class Common {
   public static final String REGISTRY_ID_PROPERTY_KEY = "deviceRegistryId";
   public static final String DEFAULT_REGION = "us-central1";
   public static final String DEVICE_ID_KEY = "deviceId";
+  public static final String DEVICE_GUID_KEY = "deviceGuid";
   public static final String DEVICE_NUM_KEY = "deviceNumId";
   public static final String GATEWAY_ID_KEY = "gatewayId";
   public static final String SOURCE_KEY = "source";

@@ -242,9 +242,12 @@ public class ConfigManager {
     if (!excludePoints) {
       pointsetConfig.points = new HashMap<>();
       metadata.pointset.points.forEach(
-          (metadataKey, value) ->
+          (metadataKey, value) -> {
+            if (value == null || !PointPointsetModel.Type.MISSING.equals(value.type)) {
               pointsetConfig.points.computeIfAbsent(
-                  metadataKey, configKey -> configFromMetadata(configKey, value, excludeUnits)));
+                  metadataKey, configKey -> configFromMetadata(configKey, value, excludeUnits));
+            }
+          });
     }
 
     // Copy selected MetadataPointset properties into PointsetConfig.

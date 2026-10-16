@@ -5,6 +5,7 @@ import static com.google.udmi.util.CleanDateFormat.cleanDate;
 import static com.google.udmi.util.Common.DEFAULT_REGION;
 import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.booleanString;
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
@@ -17,6 +18,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
+import static com.google.udmi.util.MetadataMapKeys.UDMI_METADATA;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
@@ -39,7 +41,6 @@ import com.google.bos.udmi.service.support.DataRef;
 import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.bos.udmi.service.support.MosquittoBroker;
 import com.google.bos.udmi.service.support.QueueFullException;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.udmi.util.GeneralUtils;
 import com.google.udmi.util.JsonUtil;
@@ -77,6 +78,7 @@ import udmi.schema.Envelope.SubType;
 import udmi.schema.GatewayModel;
 import udmi.schema.IotAccess;
 import udmi.schema.IotAccess.IotProvider;
+import udmi.schema.Metadata;
 
 /**
  * Iot Access Provider that uses internal components.
@@ -124,6 +126,7 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
   private static final String CREATED_AT_PROPERTY = "created_at";
   private static final String REGISTRIES_KEY = "registries";
   private static final String NUM_ID_PROPERTY = "num_id";
+  private static final String GUID_PROPERTY = "guid";
   private static final String DATABASE_COMPONENT = "database";
   private static final String CLIENT_ID_FORMAT = "/r/%s/d/%s";
   private static final String CLIENT_PREFIX = "/r";
@@ -504,6 +507,12 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
     }
   }
 
+  private String extractDeviceGuid(Map<String, String> metadata) {
+    String udmiMetadata = ifNotNullGet(metadata, m -> m.get(UDMI_METADATA));
+    return ifNotNullGet(udmiMetadata,
+        str -> catchToNull(() -> JsonUtil.fromString(Metadata.class, str).system.guid));
+  }
+
   private Map<String, String> toDeviceMap(CloudModel cloudModel, String createdAt) {
     Map<String, String> properties = new HashMap<>();
     ifNotNullThen(createdAt, x -> properties.put(CREATED_AT_PROPERTY, createdAt));
@@ -511,6 +520,9 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
         ofNullable(cloudModel.resource_type).orElse(DIRECT).toString());
     requireNull(cloudModel.metadata_str, "unexpected metadata_str content");
     properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
+    if (cloudModel.metadata != null && cloudModel.metadata.containsKey(UDMI_METADATA)) {
+      properties.put(GUID_PROPERTY, extractDeviceGuid(cloudModel.metadata));
+    }
     ifNotNullThen(ifNotNullGet(cloudModel.metadata, metadata -> metadata.get("key_bytes")),
         keyBytes -> properties.put(AUTH_KEY_PROPERTY, keyBytes));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
@@ -869,7 +881,12 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
     CloudModel fetchedModel = fetchDevice(registryId, deviceId);
     Map<String, String> metadataMap = ofNullable(fetchedModel.metadata).orElseGet(HashMap::new);
     metadataMap.putAll(cloudModel.metadata);
-    mungeDevice(registryId, deviceId, ImmutableMap.of(METADATA_STR_KEY, stringify(metadataMap)));
+    Map<String, String> updates = new HashMap<>();
+    updates.put(METADATA_STR_KEY, stringify(metadataMap));
+    if (cloudModel.metadata != null && cloudModel.metadata.containsKey(UDMI_METADATA)) {
+      updates.put(GUID_PROPERTY, extractDeviceGuid(metadataMap));
+    }
+    mungeDevice(registryId, deviceId, updates);
   }
 
   @Override

@@ -152,11 +152,13 @@ public class UufiProcessorTest extends ProcessorTestBase {
    */
   @Test
   public void outboundWrappingTest() {
+    final String testGuid = "043c2f7c-d542-4be2-a847-c73f0ac4fb95";
     Envelope systemEnvelope = new Envelope();
     systemEnvelope.subType = SubType.EVENTS;
     systemEnvelope.subFolder = SubFolder.POINTSET;
     systemEnvelope.deviceId = "dev-1";
     systemEnvelope.deviceRegistryId = "reg-1";
+    systemEnvelope.deviceGuid = testGuid;
 
     Map<String, Object> payload = Map.of("points", Map.of("temp", 25));
 
@@ -168,6 +170,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
     Map<String, Object> wrapped = toMap(captured.get(0));
     assertNotNull(wrapped.get("payload"), "wrapped payload should not be null");
     assertEquals(SubType.EVENTS.value(), wrapped.get("subType"));
+    assertEquals(testGuid, wrapped.get("deviceGuid"));
   }
 
   /**

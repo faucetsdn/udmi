@@ -16,7 +16,7 @@
     },
     "type": {
       "description": "Expected data type for the point",
-      "enum": ["string", "boolean", "number"]
+      "enum": ["string", "boolean", "number", "missing"]
     },
     "description": {
       "description": "Detailed description of this point",

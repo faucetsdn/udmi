@@ -127,17 +127,25 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
       # System
       system = metadata.setdefault("system", {})
+      system["guid"] = guid
       if "display_name" in entity:
         system["name"] = entity["display_name"]
 
       # Externals
       externals = metadata.setdefault("externals", {})
       dbo = externals.setdefault("dbo", {})
-      dbo["ext_id"] = guid
+      dbo.pop("ext_id", None)
+      dbo.pop("label", None)
       if "type" in entity:
-        dbo["type"] = entity["type"]
+        etype_val = entity["type"]
+        dbo["type"] = etype_val if isinstance(etype_val, list) else [etype_val]
+
+      # Localnet
       if "code" in entity:
-        dbo["label"] = entity["code"]
+        localnet = metadata.setdefault("localnet", {})
+        families = localnet.setdefault("families", {})
+        bacnet = families.setdefault("bacnet", {})
+        bacnet["name"] = entity["code"]
 
       # Cloud
       if "cloud_device_id" in entity:
@@ -301,8 +309,10 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
               if clean_pt_dbo:
                 pt_udmi["translation"] = clean_pt_dbo
             elif isinstance(pt_dbo, str):
-              if pt_dbo not in ("present_value",
-                                f"points.{pt_name}.present_value"):
+              if pt_dbo == "MISSING":
+                pt_udmi["type"] = "missing"
+              elif pt_dbo not in ("present_value",
+                                  f"points.{pt_name}.present_value"):
                 pt_udmi["ref"] = pt_dbo
 
         if "links" in entity and isinstance(entity["links"], dict):

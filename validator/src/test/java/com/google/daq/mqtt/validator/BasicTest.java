@@ -286,4 +286,36 @@ public class BasicTest extends TestBase {
     assertTrue("Should have precision error", hasPrecisionError);
   }
 
+  @Test
+  public void missingTypePointExcludedFromExpectedPointsAndConfig() {
+    Metadata metadata = validator.getReportingDevices().get(TestCommon.DEVICE_ID).getMetadata();
+    metadata.pointset.points.get(FILTER_ALARM_PRESSURE_STATUS).type =
+        udmi.schema.PointPointsetModel.Type.MISSING;
+
+    Config config = com.google.daq.mqtt.util.ConfigManager.configFrom(metadata).deviceConfig();
+    assertFalse("Point with type missing should be excluded from generated config",
+        config.pointset.points.containsKey(FILTER_ALARM_PRESSURE_STATUS));
+
+    PointsetEvents eventsObject = basePointsetEvents();
+    eventsObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
+    validator.validateMessage(getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, eventsObject));
+    ValidationState eventsReport = getValidationReport();
+    assertEquals("No error devices for events omitting missing-type point", 0,
+        eventsReport.summary.error_devices.size());
+    ValidationEvents eventsResult = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+        POINTSET_SUBFOLDER);
+    assertEquals("No missing points in events validation", 0, eventsResult.pointset.missing.size());
+
+    PointsetState stateObject = basePointsetState();
+    stateObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
+    validator.validateMessage(getMessageBundle(STATE_SUBTYPE, POINTSET_SUBFOLDER, stateObject));
+    ValidationState stateReport = getValidationReport();
+    assertEquals("No error devices for state omitting missing-type point", 0,
+        stateReport.summary.error_devices.size());
+    ValidationEvents stateResult = getValidationResult(TestCommon.DEVICE_ID, STATE_SUBTYPE,
+        POINTSET_SUBFOLDER);
+    assertEquals("No missing points in state validation", 0, stateResult.pointset.missing.size());
+  }
+
 }
+
