@@ -315,6 +315,9 @@ public interface PublisherHost extends ManagerHost {
         removeBlobsetBlobState(blobName);
       }
     }
+    if (getDeviceState().blobset != null && getDeviceState().blobset.blobs.isEmpty()) {
+      getDeviceState().blobset = null;
+    }
   }
 
   /**

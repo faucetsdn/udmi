@@ -301,6 +301,23 @@ public class PubberTest extends TestBase {
   }
 
   @Test
+  public void initializePersistentStoreEmptyBlobsTest() {
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<>();
+    testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, true);
+    pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
+    pubber.initialize();
+    pubber.startConnection();
+
+    testPersistentData.endpoint = getEndpointConfiguration("persistent");
+    testPersistentData.applied_blobs = new HashMap<>();
+
+    testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
+    pubber.initializePersistentStore();
+    assertNull("Empty applied_blobs should not initialize empty blobset state",
+        pubber.getDeviceState().blobset);
+  }
+
+  @Test
   public void dupeStateStatusAndModeUpdates() {
     pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO);
     pubber.getPubberConfig().options.dupeState = true;
