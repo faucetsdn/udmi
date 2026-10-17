@@ -128,6 +128,7 @@ jobs:
           name: udmi-prebuilt-packages
       - name: local setup
         run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
           bin/udmi start sites/udmi_site_model $TARGET_PROJECT
           bin/pull_messages ${TARGET_PROJECT}%ZZ-TRI-FECTA > /tmp/message_capture.log 2>&1 &
       - name: bin/test_automapper
@@ -180,7 +181,9 @@ jobs:
         with:
           name: udmi-prebuilt-packages
       - name: local setup
-        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+        run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
+          bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
       - name: special sequences
@@ -240,7 +243,9 @@ jobs:
         with:
           name: udmi-prebuilt-packages
       - name: local setup
-        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+        run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
+          bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
@@ -297,15 +302,15 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: |
-          sudo bin/setup_base
-          bin/registrar sites/udmi_site_model
+        run: sudo bin/setup_base
       - name: Download prebuilt packages
         uses: actions/download-artifact@v8
         with:
           name: udmi-prebuilt-packages
       - name: local setup
         run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
+          bin/registrar sites/udmi_site_model
           bin/udmi start sites/udmi_site_model $TARGET_PROJECT
           bin/pull_messages $TARGET_PROJECT > out/message_capture.log 2>&1 &
       - name: bin/test_etcd_prerun
@@ -392,7 +397,9 @@ jobs:
         with:
           name: udmi-prebuilt-packages
       - name: local setup
-        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+        run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
+          bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
         run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_proxy
@@ -437,7 +444,9 @@ jobs:
         with:
           name: udmi-prebuilt-packages
       - name: local setup
-        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+        run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
+          bin/udmi start sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
         run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_blob_updates
@@ -523,6 +532,7 @@ jobs:
           name: udmi-prebuilt-packages
       - name: Unit Tests
         run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
           misc/discoverynode/testing/unit/unit_tests.sh
       - name: Integration Tests
         run: |
@@ -657,6 +667,7 @@ jobs:
           name: udmi-prebuilt-packages
       - name: Run Bridgehead Test
         run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
           bridgehead/tests/test_bridgehead
       - name: udmis.log
         if: ${{ !cancelled() }}
@@ -701,6 +712,7 @@ jobs:
           name: udmi-prebuilt-packages
       - name: Start Local Services
         run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
           bin/udmi start sites/udmi_site_model ${{ env.TARGET_PROJECT }}
       - name: Run Openbridge Test
         run: |
@@ -792,6 +804,7 @@ jobs:
           name: udmi-prebuilt-packages
       - name: Run Groot Distribution Test
         run: |
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
           bin/test_groot ${{ env.TARGET_PROJECT }}
       - name: Base UDMIS Log
         if: ${{ !cancelled() }}

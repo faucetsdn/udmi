@@ -54,6 +54,19 @@ if [[ -n "$ns_prefix" ]]; then
     $MOSQUITTO_CTRL addClientRole $BARE_USER service 2>/dev/null || true
 fi
 
+if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
+    UNSUFFIXED_USER=/r/${ns_prefix}UDMI-REFLECT/d/${ns_prefix}$registry_id
+    $MOSQUITTO_CTRL deleteClient $UNSUFFIXED_USER 2>/dev/null || true
+    $MOSQUITTO_CTRL createClient $UNSUFFIXED_USER -p $SERV_PASS 2>/dev/null || true
+    $MOSQUITTO_CTRL addClientRole $UNSUFFIXED_USER service 2>/dev/null || true
+    if [[ -n "$ns_prefix" ]]; then
+        BARE_UNSUFFIXED_USER=/r/UDMI-REFLECT/d/$registry_id
+        $MOSQUITTO_CTRL deleteClient $BARE_UNSUFFIXED_USER 2>/dev/null || true
+        $MOSQUITTO_CTRL createClient $BARE_UNSUFFIXED_USER -p $SERV_PASS 2>/dev/null || true
+        $MOSQUITTO_CTRL addClientRole $BARE_UNSUFFIXED_USER service 2>/dev/null || true
+    fi
+fi
+
 if [[ -n ${UDMI_ALT_REGISTRY:-} && $# -eq 0 ]]; then
     ALT_USER=/r/UDMI-REFLECT/d/$UDMI_ALT_REGISTRY${UDMI_REGISTRY_SUFFIX:-}
     echo "Configuring alternate registry $ALT_USER..."
