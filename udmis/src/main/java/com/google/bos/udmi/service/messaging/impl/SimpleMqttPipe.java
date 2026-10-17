@@ -57,7 +57,7 @@ public class SimpleMqttPipe extends MessageBase {
   private static final String IMPLICIT_CHANNEL = IotProvider.IMPLICIT.value();
   private static final String SEND_CHANNEL_DESIGNATOR = "c";
   private static final String SEND_CHANNEL_PREFIX = SEND_CHANNEL_DESIGNATOR + "/";
-  private static final int INITIALIZE_TIME_MS = 1000;
+  private static final int INITIALIZE_TIME_MS = 5000;
   private static final String BROKER_URL_FORMAT = "%s://%s:%s";
   private static final long RECONNECT_SEC = 10;
   private static final int DEFAULT_PORT = 8883;
@@ -112,9 +112,9 @@ public class SimpleMqttPipe extends MessageBase {
       certManager = null;
     }
     mqttClient = createMqttClient();
-    tryConnect(false);
+    tryConnect(true);
     scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
-        () -> SimpleMqttPipe.this.tryConnect(true), 0, RECONNECT_SEC, TimeUnit.SECONDS);
+        () -> SimpleMqttPipe.this.tryConnect(true), RECONNECT_SEC, RECONNECT_SEC, TimeUnit.SECONDS);
   }
 
   private static SubFolder convertSubFolder(String part) {
@@ -294,7 +294,7 @@ public class SimpleMqttPipe extends MessageBase {
         MqttConnectOptions options = new MqttConnectOptions();
         options.setMqttVersion(MqttConnectOptions.MQTT_VERSION_3_1_1);
         options.setMaxInflight(MAX_INFLIGHT);
-        options.setConnectionTimeout(INITIALIZE_TIME_MS);
+        options.setConnectionTimeout((int) TimeUnit.MILLISECONDS.toSeconds(INITIALIZE_TIME_MS));
 
         ifNotNullThen(endpoint.auth_provider, provider -> {
           options.setSocketFactory(getSocketFactory());
@@ -332,7 +332,7 @@ public class SimpleMqttPipe extends MessageBase {
 
   private void forceDisconnect() {
     try {
-      mqttClient.disconnectForcibly();
+      mqttClient.disconnectForcibly(0, 0, false);
     } catch (Exception e) {
       error("Exception during forced disconnect %s: %s", clientId, friendlyStackTrace(e));
     }
@@ -452,7 +452,11 @@ public class SimpleMqttPipe extends MessageBase {
   public void shutdown() {
     try {
       scheduledFuture.cancel(false);
-      mqttClient.disconnect();
+      if (mqttClient.isConnected()) {
+        mqttClient.disconnect();
+      } else {
+        forceDisconnect();
+      }
       mqttClient.close();
     } catch (Exception e) {
       throw new RuntimeException("While shutdown of mqtt pipe", e);

@@ -17,6 +17,7 @@ import udmi.lib.intf.ManagerHost;
 import udmi.lib.intf.SubBlockManager;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryState;
+import udmi.schema.Entry;
 import udmi.schema.GatewayState;
 import udmi.schema.LocalnetState;
 import udmi.schema.PointsetState;
@@ -72,6 +73,8 @@ public abstract class ManagerBase implements SubBlockManager {
     }
     if (checkTarget instanceof SystemState) {
       state.system = (SystemState) checkValue;
+    } else if (checkTarget instanceof Entry) {
+      state.system.status = (Entry) checkValue;
     } else if (checkTarget instanceof PointsetState) {
       state.pointset = (PointsetState) checkValue;
     } else if (checkTarget instanceof LocalnetState) {

@@ -15,6 +15,7 @@ import daq.pubber.impl.host.PubberPublisherHost;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.After;
 import org.junit.Test;
 import udmi.lib.TestBase;
@@ -24,7 +25,11 @@ import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Entry;
+import udmi.schema.Operation;
+import udmi.schema.Operation.SystemMode;
 import udmi.schema.State;
+import udmi.schema.SystemConfig;
 
 /**
  * Unit tests for Pubber.
@@ -289,5 +294,37 @@ public class PubberTest extends TestBase {
     pubber.initializePersistentStore();
     assertEquals(pubber.persistentData.endpoint.hostname, "persistent");
     assertEquals(pubber.getPubberConfig().endpoint.hostname, "persistent");
+  }
+
+  @Test
+  public void dupeStateStatusAndModeUpdates() {
+    pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO);
+    pubber.getPubberConfig().options.dupeState = true;
+    pubber.initialize();
+    pubber.startConnection();
+    pubber.getConfigLatch().countDown();
+
+    final int beforeCount = pubber.getMessageCounts()
+        .computeIfAbsent("state", k -> new AtomicInteger()).get();
+
+    Entry report = new Entry();
+    report.category = "system.config.receive";
+    report.message = "success";
+    pubber.getDeviceManager().setStatus(report, TEST_DEVICE);
+    assertEquals("setStatus should not send partial dupeState",
+        beforeCount, pubber.getMessageCounts().get("state").get());
+    assertEquals(report, pubber.getDeviceState().system.status);
+
+    SystemConfig systemConfig = new SystemConfig();
+    systemConfig.operation = new Operation();
+    systemConfig.operation.mode = SystemMode.ACTIVE;
+    pubber.getDeviceManager().getSystemManager().setSystemConfig(systemConfig);
+    pubber.getDeviceManager().maybeRestartSystem();
+    assertEquals("Transition to ACTIVE should send partial dupeState once",
+        beforeCount + 1, pubber.getMessageCounts().get("state").get());
+
+    pubber.getDeviceManager().maybeRestartSystem();
+    assertEquals("Repeated ACTIVE check should not send redundant partial dupeState",
+        beforeCount + 1, pubber.getMessageCounts().get("state").get());
   }
 }
