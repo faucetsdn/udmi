@@ -4,6 +4,7 @@ import static com.google.udmi.util.JsonUtil.stringify;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -11,6 +12,7 @@ import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.util.TimePeriodConstants;
 import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import java.lang.annotation.Annotation;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -18,7 +20,16 @@ import java.util.concurrent.TimeUnit;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
+import udmi.schema.Config;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Metadata;
+import udmi.schema.Operation;
+import udmi.schema.PointsetConfig;
+import udmi.schema.PointsetState;
+import udmi.schema.State;
+import udmi.schema.StateSystemOperation;
+import udmi.schema.SystemConfig;
+import udmi.schema.SystemState;
 import udmi.schema.TestingModel;
 
 /**
@@ -91,6 +102,51 @@ public class SequenceBaseTest {
         base.deviceConfig.timestamp);
     ackResponder.get(5, TimeUnit.SECONDS);
     base.testWatcher.finished(testDesc);
+  }
+
+  @Test
+  public void resetConfigWaitsForSubblockParityOnSameSecondPartialUpdates() {
+    SequenceBase base = new SequenceBase();
+    final Date sameSecondTimestamp = new Date(1760699357000L);
+    final Date startTime = new Date(1760699000000L);
+
+    base.deviceConfig = new Config();
+    base.deviceConfig.timestamp = sameSecondTimestamp;
+    base.deviceConfig.system = new SystemConfig();
+    base.deviceConfig.system.operation = new Operation();
+    base.deviceConfig.system.operation.last_start = startTime;
+    base.deviceConfig.pointset = new PointsetConfig();
+
+    base.deviceState = new State();
+    base.deviceState.timestamp = sameSecondTimestamp;
+    base.deviceState.system = new SystemState();
+    base.deviceState.system.last_config = sameSecondTimestamp;
+    base.deviceState.system.operation = new StateSystemOperation();
+    base.deviceState.system.operation.last_start = startTime;
+    base.deviceState.pointset = null;
+
+    base.doPartialUpdates = true;
+    base.allowDeviceStateChange(SequenceBase.ALL_CHANGES);
+
+    SequenceBase.sentConfig.put(SubFolder.SYSTEM, "{}");
+    assertNull("configIsPending should not block on unsent subblocks during gated partial updates",
+        base.configIsPending(false));
+
+    SequenceBase.sentConfig.put(SubFolder.POINTSET, "{}");
+    String pending = base.configIsPending(false);
+    assertNotNull("configIsPending should wait for state subblocks to match sent config",
+        pending);
+    assertTrue("pending reason should report subblock mismatch, got: " + pending,
+        pending.contains("config/state subblock mismatch: pointset"));
+
+    base.deviceState.pointset = new PointsetState();
+    assertNull("configIsPending should clear once state subblocks match config",
+        base.configIsPending(false));
+
+    base.disallowDeviceStateChange(SequenceBase.ALL_CHANGES);
+    base.deviceState.pointset = null;
+    assertNull("outside resetConfig, configIsPending should not block on subblock parity",
+        base.configIsPending(false));
   }
 
   @Test

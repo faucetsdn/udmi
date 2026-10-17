@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import daq.pubber.impl.host.PubberPublisherHost;
 import java.util.Date;
@@ -19,15 +20,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.After;
 import org.junit.Test;
 import udmi.lib.TestBase;
+import udmi.lib.client.host.ProxyHost;
 import udmi.lib.client.host.PublisherHost;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
+import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
+import udmi.schema.PointsetConfig;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
 
@@ -326,5 +330,49 @@ public class PubberTest extends TestBase {
     pubber.getDeviceManager().maybeRestartSystem();
     assertEquals("Repeated ACTIVE check should not send redundant partial dupeState",
         beforeCount + 1, pubber.getMessageCounts().get("state").get());
+  }
+
+  @Test
+  public void proxyDeviceStateAndConfigStatusHandling() {
+    pubber = makeTestPubber(TEST_DEVICE);
+    ProxyHost proxy = pubber.getDeviceManager().getGatewayManager()
+        .createProxyDevice(pubber, "SNS-4");
+    pubber.getDeviceManager().getGatewayManager()
+        .setProxyDevices(ImmutableMap.of("SNS-4", proxy));
+    try {
+      assertEquals("New proxy device should not be marked dirty before config",
+          false, proxy.getStateDirty().get());
+
+      pubber.publisherHandler("config", "receive", null, "SNS-4");
+      pubber.publisherHandler("config", "parse", null, "SNS-4");
+      assertEquals("Successful receive/parse should not mark proxy state dirty before apply",
+          false, proxy.getStateDirty().get());
+      assertNull("Successful receive/parse should not set transient system status",
+          proxy.getDeviceState().system.status);
+
+      Config proxyConfig = new Config();
+      proxyConfig.timestamp = new Date();
+      proxyConfig.system = new SystemConfig();
+      proxyConfig.pointset = new PointsetConfig();
+      proxyConfig.pointset.points = new HashMap<>();
+      proxy.configHandler(proxyConfig);
+
+      assertEquals("Config handler should mark proxy state dirty",
+          true, proxy.getStateDirty().get());
+      proxy.publishDirtyState();
+      assertEquals("Inactive proxy should retain dirty state until activated",
+          true, proxy.getStateDirty().get());
+
+      proxy.isActive().set(true);
+      proxy.publishDirtyState();
+      assertEquals("Active proxy should clear dirty state after publishing",
+          false, proxy.getStateDirty().get());
+      assertNotEquals("Published proxy state must include pointset",
+          null, proxy.getDeviceState().pointset);
+      assertEquals("Published proxy state status should be system.config.apply",
+          "system.config.apply", proxy.getDeviceState().system.status.category);
+    } finally {
+      proxy.shutdown();
+    }
   }
 }

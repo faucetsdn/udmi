@@ -632,7 +632,9 @@ public interface PublisherHost extends ManagerHost {
     Entry report = entryFromException(category, cause);
     getDeviceManager().localLog(report);
     publishLogMessage(report, targetId);
-    registerSystemStatus(report, targetId);
+    if (cause != null || "apply".equals(phase)) {
+      registerSystemStatus(report, targetId);
+    }
   }
 
   /**

@@ -196,7 +196,8 @@ public class SequenceBase {
   public static final String RECEIVED_STATE_VIOLATION = "RECEIVED_STATE";
   public static final String DEVICE_STATE_SCHEMA = "device_state";
   private static final String STATUS_MESSAGE = "system status level is n0t >= `WARNING` (400)";
-  private static final String ALL_CHANGES = "";
+  @VisibleForTesting
+  static final String ALL_CHANGES = "";
   private static final int SEQUENCER_FUNCTIONS_VERSION = Validator.TOOLS_FUNCTIONS_VERSION;
   private static final int SEQUENCER_FUNCTIONS_ALPHA = SEQUENCER_FUNCTIONS_VERSION;
   private static final Duration CONFIG_BARRIER = Duration.ofSeconds(2);
@@ -244,7 +245,8 @@ public class SequenceBase {
       CapabilityResult.PASS, Level.NOTICE,
       CapabilityResult.FAIL, Level.ERROR
   );
-  private static final Map<SubFolder, String> sentConfig = new HashMap<>();
+  @VisibleForTesting
+  static final Map<SubFolder, String> sentConfig = new HashMap<>();
   private static final ObjectDiffEngine SENT_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_CONFIG_DIFFERNATOR = new ObjectDiffEngine();
   private static final ObjectDiffEngine RECV_STATE_DIFFERNATOR = new ObjectDiffEngine();
@@ -336,7 +338,8 @@ public class SequenceBase {
   protected State deviceState;
   protected boolean configAcked;
   protected String lastSerialNo;
-  private boolean doPartialUpdates;
+  @VisibleForTesting
+  boolean doPartialUpdates;
   private boolean resetRequired = true;
   private int maxAllowedStatusLevel;
   private String extraField;
@@ -2295,7 +2298,8 @@ public class SequenceBase {
     return configIsPending(false) != null;
   }
 
-  private String configIsPending(boolean debugOut) {
+  @VisibleForTesting
+  String configIsPending(boolean debugOut) {
     Date stateLastStart = catchToNull(() -> deviceState.system.operation.last_start);
     Date configLastStart = catchToNull(() -> deviceConfig.system.operation.last_start);
     boolean lastStartSynced = stateLastStart == null || stateLastStart.equals(configLastStart);
@@ -2316,6 +2320,10 @@ public class SequenceBase {
     ifNotTrueThen(lastStartSynced, () -> failures.add("last_start not synced in config"));
     ifNotTrueThen(transactionsClean, () -> failures.add("config transactions not cleared"));
     ifNotTrueThen(configNotPending, () -> failures.add("last_config not synced in state"));
+    if (allowedDeviceStateChanges.contains(ALL_CHANGES) && doPartialUpdates
+        && deviceState != null) {
+      ifNotNullThen(stateMatchesConfig(true), failures::add);
+    }
 
     if (debugOut) {
       if (!failures.isEmpty()) {
@@ -2488,6 +2496,10 @@ public class SequenceBase {
   }
 
   protected String stateMatchesConfig() {
+    return stateMatchesConfig(false);
+  }
+
+  private String stateMatchesConfig(boolean onlySentSubblocks) {
     List<String> parity = new ArrayList<>();
     if (deviceConfig == null) {
       return "device config is null";
@@ -2495,15 +2507,28 @@ public class SequenceBase {
     if (deviceState == null) {
       return "device state is null";
     }
-    addToParity(parity, "system", deviceConfig.system, deviceState.system);
-    addToParity(parity, "pointset", deviceConfig.pointset, deviceState.pointset);
+    addToParity(parity, SubFolder.SYSTEM, deviceConfig.system, deviceState.system,
+        onlySentSubblocks);
+    addToParity(parity, SubFolder.POINTSET, deviceConfig.pointset, deviceState.pointset,
+        onlySentSubblocks);
     addToParity(parity, "alarmset", deviceConfig.alarmset, deviceState.alarmset);
-    addToParity(parity, "gateway", deviceConfig.gateway, deviceState.gateway);
-    addToParity(parity, "localnet", deviceConfig.localnet, deviceState.localnet);
-    addToParity(parity, "discovery", deviceConfig.discovery, deviceState.discovery);
-    addToParity(parity, "blobset", deviceConfig.blobset, deviceState.blobset);
+    addToParity(parity, SubFolder.GATEWAY, deviceConfig.gateway, deviceState.gateway,
+        onlySentSubblocks);
+    addToParity(parity, SubFolder.LOCALNET, deviceConfig.localnet, deviceState.localnet,
+        onlySentSubblocks);
+    addToParity(parity, SubFolder.DISCOVERY, deviceConfig.discovery, deviceState.discovery,
+        onlySentSubblocks);
+    addToParity(parity, SubFolder.BLOBSET, deviceConfig.blobset, deviceState.blobset,
+        onlySentSubblocks);
     return ifTrueGet(parity.isEmpty(), (String) null,
         () -> "config/state subblock mismatch: " + CSV_JOINER.join(parity));
+  }
+
+  private void addToParity(List<String> parity, SubFolder block, Object config, Object state,
+      boolean onlySentSubblocks) {
+    boolean subblockSent = !onlySentSubblocks || sentConfig.isEmpty()
+        || sentConfig.containsKey(UPDATE) || sentConfig.containsKey(block);
+    addToParity(parity, block.value(), subblockSent ? config : null, state);
   }
 
   private void addToParity(List<String> parity, String block, Object config, Object state) {
