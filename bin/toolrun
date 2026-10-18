@@ -43,6 +43,10 @@ if [[ $# -ge 1 && "$1" != -* ]]; then
     fi
 fi
 
+if [[ "$util_name" == "registrar" && -n "${UDMI_REGISTRY_SUFFIX:-}" && ! " $* " =~ " -e " ]]; then
+    set -- "$@" -e "$UDMI_REGISTRY_SUFFIX"
+fi
+
 if [[ -n "${project_spec:-}" && "$project_spec" =~ localhost: ]]; then
     if [[ -d "${ETC_DIR:-var/mosquitto}" ]]; then
         for i in {1..50}; do
@@ -50,6 +54,18 @@ if [[ -n "${project_spec:-}" && "$project_spec" =~ localhost: ]]; then
                 break
             fi
             sleep 0.2
+        done
+    fi
+    pod_ready="${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}"
+    if [[ -f "$pod_ready" || -f /tmp/pod_ready.txt ]] || \
+       [[ -f "${UDMIS_PID_FILE:-$UDMI_ROOT/var/udmis.pid}" ]] || \
+       pgrep -f "udmis" >/dev/null 2>&1 || \
+       tmux list-windows -a -F "#{window_name}" 2>/dev/null | grep -qx "udmis"; then
+        for i in {1..90}; do
+            if [[ -f "$pod_ready" || -f /tmp/pod_ready.txt ]]; then
+                break
+            fi
+            sleep 1
         done
     fi
 fi

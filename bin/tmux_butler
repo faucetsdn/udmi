@@ -64,17 +64,22 @@ case "$TMUX_ACTION" in
 
         # 4. registrar (default: enabled)
         if tmux_should_run_service "registrar"; then
-            barbican_session="${SESSION_NAME/udmi_butler/udmi_barbican}"
-            wait_udmis=""
-            if tmux list-windows -t "$barbican_session" -F "#{window_name}" 2>/dev/null | grep -qx "udmis"; then
-                wait_udmis="echo 'Waiting for UDMIS readiness before running registrar...'; for i in {1..90}; do [[ -f '${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}' || -f '$UDMI_ROOT/var/pod_ready.txt' || -f /tmp/pod_ready.txt ]] && break; sleep 1; done; "
-            fi
-            tmux_init_or_add_window "$SESSION_NAME" "registrar" "${wait_udmis}bin/registrar '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC' ${UDMI_REGISTRY_SUFFIX:+-e $UDMI_REGISTRY_SUFFIX}"
+            tmux_init_or_add_window "$SESSION_NAME" "registrar" "bin/registrar '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
         fi
 
         # 5. validator (optional: ++validator)
         if tmux_should_run_service "validator" "true"; then
             tmux_init_or_add_window "$SESSION_NAME" "validator" "echo Starting validator service...; tail -f /dev/null"
+        fi
+
+        if tmux_should_run_service "registrar"; then
+            echo "Waiting for initial registrar run in '$SESSION_NAME' to complete..."
+            for i in $(seq 1 90); do
+                if tmux capture-pane -t "$SESSION_NAME:registrar" -p -S -20 2>/dev/null | grep -qE "(=== \[registrar\] exited with code|Pane is dead)"; then
+                    break
+                fi
+                sleep 1
+            done
         fi
 
         echo "Butler session '$SESSION_NAME' initialized."

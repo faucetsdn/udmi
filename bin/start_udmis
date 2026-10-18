@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
+rm -f "${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}" "$UDMI_ROOT/var/pod_ready.txt" "/tmp/pod_ready.txt" 2>/dev/null || true
 source $UDMI_ROOT/etc/shell_common.sh
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 

@@ -66,13 +66,11 @@ case "$TMUX_ACTION" in
 
         # 2. Mosquitto
         if tmux_should_run_service "mosquitto"; then
-            rm -f "$UDMI_ROOT/var/mosquitto/mosquitto.ready" "/var/mosquitto/mosquitto.ready" 2>/dev/null || true
             tmux_init_or_add_window "$SESSION_NAME" "mosquitto" "bin/start_mosquitto '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
         fi
 
         # 3. UDMIS
         if tmux_should_run_service "udmis"; then
-            rm -f "${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}" "$UDMI_ROOT/var/pod_ready.txt" "/tmp/pod_ready.txt" 2>/dev/null || true
             tmux_init_or_add_window "$SESSION_NAME" "udmis" "bin/start_udmis '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
         fi
 

@@ -1,6 +1,7 @@
 #!/bin/bash -eu
 
 UDMI_ROOT=$(dirname $0)/..
+rm -f "${MOSQUITTO_ETC_DIR:-$UDMI_ROOT/var/mosquitto}/mosquitto.ready" "$UDMI_ROOT/var/mosquitto/mosquitto.ready" "/var/mosquitto/mosquitto.ready" 2>/dev/null || true
 source $UDMI_ROOT/etc/shell_common.sh
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh

@@ -288,18 +288,6 @@ if tmux_should_run_service "udmis"; then
     fi
 fi
 
-# 4. If Butler registrar was started, wait for its initial registration run to complete
-if [[ "$should_run_butler" == true ]] && tmux_should_run_service "registrar"; then
-    butler_session="udmi_butler${TMUX_NAMESPACE:+~${TMUX_NAMESPACE}}"
-    echo "Waiting for initial registrar run in $butler_session to complete..."
-    for i in $(seq 1 60); do
-        if tmux capture-pane -t "$butler_session:registrar" -p -S -20 2>/dev/null | grep -qE "(=== \[registrar\] exited with code|Pane is dead)"; then
-            break
-        fi
-        sleep 1
-    done
-fi
-
 echo Done with local server setup.
 
 echo ""
