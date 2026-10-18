@@ -7,7 +7,7 @@ source $UDMI_ROOT/etc/tmux_common.sh
 show_help() {
     echo "UDMI Local Orchestrator (udmi)"
     echo ""
-    echo "Usage: bin/udmi <command> [site_model] [project_spec] [target_id] [block] [+only | !exclude | ++optional]"
+    echo "Usage: bin/udmi <command> [-n] [site_model] [project_spec] [target_id] [block] [+only | !exclude | ++optional]"
     echo ""
     echo "Commands:"
     echo "  start   : Start local UDMI infrastructure services (Barbican & Butler)"
@@ -18,6 +18,9 @@ show_help() {
     echo "  logs    : View logs from tmux windows (usage: bin/udmi logs [session[:window]] [num_lines])"
     echo "  attach  : Attach to a tmux session (usage: bin/udmi attach [session])"
     echo "  help    : Show this help message"
+    echo ""
+    echo "Options:"
+    echo "  -n      : No build (touch existing JARs to skip rebuild checks)"
     echo ""
     echo "Services managed by udmi:"
     echo "  Barbican: mosquitto udmis etcd pubsub"
@@ -119,6 +122,7 @@ LOCAL_ACTION="$CMD"
 shift
 
 block=
+no_build=
 FILTER_ARGS=()
 POSITIONAL_ARGS=()
 
@@ -126,6 +130,9 @@ for arg in "$@"; do
     case "$arg" in
         block)
             block="block"
+            ;;
+        -n)
+            no_build=true
             ;;
         \+\+*|\+*|\!*)
             FILTER_ARGS+=("$arg")
@@ -172,6 +179,11 @@ cd "$UDMI_ROOT"
 UDMIS_LOG=${UDMIS_LOG:-out/udmis.log}
 mkdir -p $(dirname "$UDMIS_LOG")
 echo Starting local services at $(date -u -Is) | tee $UDMIS_LOG
+
+if [[ -n $no_build ]]; then
+    echo "Skipping build checks (-n): updating existing JAR timestamps..." | tee -a $UDMIS_LOG
+    touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
+fi
 
 iot_provider=$(jq -r .iot_provider $site_config)
 if [[ -n ${project_spec:-} ]]; then
