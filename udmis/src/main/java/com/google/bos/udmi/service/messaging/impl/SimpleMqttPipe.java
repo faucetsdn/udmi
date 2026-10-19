@@ -387,7 +387,9 @@ public class SimpleMqttPipe extends MessageBase {
     if (envelope.subType != null || !topic.isEmpty()) {
       topic = "/" + envelope.subType + topic;
     }
-    String channel = IMPLICIT_CHANNEL.equals(envelope.source) ? "" : sendTopicChannel;
+    boolean isTargetChannel = IMPLICIT_CHANNEL.equals(envelope.source)
+        || "model".equals(envelope.source);
+    String channel = isTargetChannel ? "" : sendTopicChannel;
     return format("/r/%s/d/%s%s%s", envelope.deviceRegistryId, envelope.deviceId, channel, topic);
   }
 

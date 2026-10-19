@@ -373,7 +373,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
     activeTestInstance(() -> getReverseDispatcher().publish(
         new Bundle(transportEnvelope, uufiWrapper)));
 
-    // 4 messages published by ModelDiscoveryHandler:
+    // 5 messages published by ModelDiscoveryHandler to udmi_target:
     // 1. DiscoveryState (active, active_count=0)
     // 2. DiscoveryEvents (event_no=0, active_count=2)
     // 3. DiscoveryEvents (event_no=1, addr=AHU-1, model=...)
@@ -381,46 +381,42 @@ public class UufiProcessorTest extends ProcessorTestBase {
     // 5. DiscoveryState (stopped, active_count=2)
     assertEquals(5, captured.size(), "Expected 5 model discovery messages");
 
-    Map<String, Object> msg0 = toMap(captured.get(0));
-    assertEquals("model", msg0.get("source"));
     udmi.schema.DiscoveryState startState =
-        convertTo(udmi.schema.DiscoveryState.class, msg0.get("payload"));
+        convertTo(udmi.schema.DiscoveryState.class, captured.get(0));
     assertEquals(udmi.schema.FamilyDiscoveryState.Phase.ACTIVE,
         startState.families.get("iot").phase);
     assertEquals(0, startState.families.get("iot").active_count);
+    assertEquals("model", startState.families.get("iot").source);
 
-    Map<String, Object> msg1 = toMap(captured.get(1));
-    assertEquals("model", msg1.get("source"));
     udmi.schema.DiscoveryEvents startEvent =
-        convertTo(udmi.schema.DiscoveryEvents.class, msg1.get("payload"));
+        convertTo(udmi.schema.DiscoveryEvents.class, captured.get(1));
     assertEquals(0, startEvent.event_no);
     assertEquals(2, startEvent.active_count);
     assertEquals("iot", startEvent.family);
+    assertEquals("model", startEvent.source);
 
-    Map<String, Object> msg2 = toMap(captured.get(2));
-    assertEquals("AHU-1", msg2.get("deviceId"));
     udmi.schema.DiscoveryEvents devEvent1 =
-        convertTo(udmi.schema.DiscoveryEvents.class, msg2.get("payload"));
+        convertTo(udmi.schema.DiscoveryEvents.class, captured.get(2));
     assertEquals(1, devEvent1.event_no);
     assertEquals("AHU-1", devEvent1.addr);
+    assertEquals("model", devEvent1.source);
     assertNotNull(devEvent1.model);
     assertEquals("SN-AHU-1", devEvent1.model.system.serial_no);
 
-    Map<String, Object> msg3 = toMap(captured.get(3));
-    assertEquals("GAT-123", msg3.get("deviceId"));
     udmi.schema.DiscoveryEvents devEvent2 =
-        convertTo(udmi.schema.DiscoveryEvents.class, msg3.get("payload"));
+        convertTo(udmi.schema.DiscoveryEvents.class, captured.get(3));
     assertEquals(2, devEvent2.event_no);
     assertEquals("GAT-123", devEvent2.addr);
+    assertEquals("model", devEvent2.source);
     assertNotNull(devEvent2.model);
     assertEquals("SN-GAT-123", devEvent2.model.system.serial_no);
 
-    Map<String, Object> msg4 = toMap(captured.get(4));
     udmi.schema.DiscoveryState stopState =
-        convertTo(udmi.schema.DiscoveryState.class, msg4.get("payload"));
+        convertTo(udmi.schema.DiscoveryState.class, captured.get(4));
     assertEquals(udmi.schema.FamilyDiscoveryState.Phase.STOPPED,
         stopState.families.get("iot").phase);
     assertEquals(2, stopState.families.get("iot").active_count);
+    assertEquals("model", stopState.families.get("iot").source);
   }
 
   /**
@@ -465,9 +461,8 @@ public class UufiProcessorTest extends ProcessorTestBase {
 
     // With depth=entries, only 3 messages: start state, event_no=0 count, stop state
     assertEquals(3, captured.size(), "Expected 3 messages for depth=entries");
-    Map<String, Object> msg1 = toMap(captured.get(1));
     udmi.schema.DiscoveryEvents startEvent =
-        convertTo(udmi.schema.DiscoveryEvents.class, msg1.get("payload"));
+        convertTo(udmi.schema.DiscoveryEvents.class, captured.get(1));
     assertEquals(0, startEvent.event_no);
     assertEquals(1, startEvent.active_count);
   }

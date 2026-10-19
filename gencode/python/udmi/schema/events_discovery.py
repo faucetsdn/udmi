@@ -37,6 +37,7 @@ class DiscoveryEvents(DataModel):
     generation: Optional[str] = None
     status: Optional[Entry] = None
     family: Optional[Any] = None
+    source: Optional[str] = None
     addr: Optional[str] = None
     network: Optional[str] = None
     event_no: Optional[int] = None

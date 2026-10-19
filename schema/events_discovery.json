@@ -29,6 +29,10 @@
     "family": {
       "existingJavaType": "String"
     },
+    "source": {
+      "description": "Optional source qualifier for the discovery scan (e.g., 'model')",
+      "type": "string"
+    },
     "addr": {
       "description": "The primary address of the device (for indicated family)",
       "type": "string"

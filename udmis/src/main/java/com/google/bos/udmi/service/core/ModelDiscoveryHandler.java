@@ -1,8 +1,8 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.isTrue;
 import static com.google.udmi.util.JsonUtil.fromString;
+import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.access.IotAccessBase;
@@ -145,6 +145,7 @@ public class ModelDiscoveryHandler {
     envelope.subType = subType;
     envelope.subFolder = SubFolder.DISCOVERY;
     envelope.source = MODEL_SOURCE;
+    envelope.transactionId = isoConvert(generation);
     return envelope;
   }
 
@@ -155,6 +156,7 @@ public class ModelDiscoveryHandler {
     event.generation = generation;
     event.event_no = eventNo;
     event.family = ProtocolFamily.IOT;
+    event.source = MODEL_SOURCE;
     return event;
   }
 
@@ -163,6 +165,7 @@ public class ModelDiscoveryHandler {
     familyState.generation = generation;
     familyState.phase = phase;
     familyState.active_count = activeCount;
+    familyState.source = MODEL_SOURCE;
 
     DiscoveryState discoveryState = new DiscoveryState();
     discoveryState.version = UdmiServicePod.UDMI_VERSION;
@@ -171,13 +174,13 @@ public class ModelDiscoveryHandler {
     discoveryState.families = new HashMap<>();
     discoveryState.families.put(ProtocolFamily.IOT, familyState);
 
-    emitMessage(createDiscoveryEnvelope(SubType.STATE, null), discoveryState);
+    processor.publish(createDiscoveryEnvelope(SubType.STATE, null), discoveryState);
   }
 
   private void publishStartEvent(int activeCount) {
     DiscoveryEvents countEvent = createDiscoveryEvent(0);
     countEvent.active_count = activeCount;
-    emitMessage(createDiscoveryEnvelope(SubType.EVENTS, null), countEvent);
+    processor.publish(createDiscoveryEnvelope(SubType.EVENTS, null), countEvent);
   }
 
   private void publishDeviceEvent(String deviceId, int eventNo) {
@@ -192,16 +195,6 @@ public class ModelDiscoveryHandler {
         ? fromString(Metadata.class, metadataStr)
         : null;
 
-    emitMessage(createDiscoveryEnvelope(SubType.EVENTS, deviceId), deviceEvent);
-  }
-
-  private void emitMessage(Envelope envelope, Object payload) {
-    if (processor instanceof UufiProcessor uufiProcessor) {
-      uufiProcessor.publishModelDiscovery(envelope, payload);
-      return;
-    }
-    ifNotNullThen(UdmiServicePod.maybeGetComponent(UufiProcessor.class),
-        uufi -> uufi.publishModelDiscovery(envelope, payload));
-    processor.publish(envelope, payload);
+    processor.publish(createDiscoveryEnvelope(SubType.EVENTS, deviceId), deviceEvent);
   }
 }

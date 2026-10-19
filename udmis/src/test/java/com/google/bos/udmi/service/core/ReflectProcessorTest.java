@@ -198,6 +198,13 @@ public class ReflectProcessorTest extends ProcessorTestBase {
         eq(requestModel));
     verify(provider, times(1)).listDevices(eq(TEST_REGISTRY), any());
     verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq("AHU-1"));
+
+    // Verify 1 SiteMetadataUpdate + 4 Model Discovery messages emitted to udmi_target:
+    // 0: SiteMetadataUpdate, 1: start state, 2: event_no=0 count, 3: AHU-1 event, 4: stop state
+    assertEquals(5, captured.size(), "Expected SiteMetadataUpdate + 4 model discovery messages");
+    udmi.schema.DiscoveryEvents devEvent = (udmi.schema.DiscoveryEvents) captured.get(3);
+    assertEquals("AHU-1", devEvent.addr);
+    assertEquals("SN-AHU-1", devEvent.model.system.serial_no);
   }
 
   @Test

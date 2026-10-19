@@ -200,17 +200,14 @@ echo "System Model Update SUCCESS: Received matching model update message on bus
 echo "Starting Site Model Discovery test..."
 DISC_LOG_FILE=$(mktemp)
 DISC_GEN=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-echo "Subscribing to /uufi/r/$REGISTRY_ID/# for Model Discovery sequence (gen: $DISC_GEN)..."
-mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_disc_sub" -t "/uufi/r/$REGISTRY_ID/#" -F "%t %p" | while read -r topic payload; do
-    if [[ "$topic" == *"/discovery" ]]; then
-        echo "$topic $payload" >> "$DISC_LOG_FILE"
-        SUB_TYPE=$(echo "$payload" | jq -r .subType 2>/dev/null)
-        PHASE=$(echo "$payload" | jq -r .payload.families.iot.phase 2>/dev/null)
-        GEN=$(echo "$payload" | jq -r .payload.families.iot.generation 2>/dev/null)
-        if [[ "$SUB_TYPE" == "state" && "$PHASE" == "stopped" && "$GEN" == "$DISC_GEN" ]]; then
-            kill -USR1 $$ 2>/dev/null || true
-            exit 0
-        fi
+echo "Subscribing to /r/$REGISTRY_ID/d/+/+/discovery for Model Discovery sequence (gen: $DISC_GEN)..."
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_disc_sub" -t "/r/$REGISTRY_ID/d/+/+/discovery" -F "%t %p" | while read -r topic payload; do
+    echo "$topic $payload" >> "$DISC_LOG_FILE"
+    PHASE=$(echo "$payload" | jq -r .families.iot.phase 2>/dev/null)
+    GEN=$(echo "$payload" | jq -r .families.iot.generation 2>/dev/null)
+    if [[ "$topic" == *"/state/discovery" && "$PHASE" == "stopped" && "$GEN" == "$DISC_GEN" ]]; then
+        kill -USR1 $$ 2>/dev/null || true
+        exit 0
     fi
 done &
 SUB_DISC_PID=$!
@@ -238,10 +235,10 @@ if [ $GOT_DISC -eq 0 ]; then
     exit 1
 fi
 
-# Verify active state, event_no=0 count, AHU-1 model event, and stopped state
+# Verify active state, event_no=0 count, AHU-1 model event, source:model, and stopped state on target stream
 grep -q '"phase":"active"' "$DISC_LOG_FILE" || { echo "ERROR: Missing active DiscoveryState in Model Discovery" >&2; cat "$DISC_LOG_FILE"; exit 1; }
 grep -q '"event_no":0' "$DISC_LOG_FILE" || { echo "ERROR: Missing event_no=0 DiscoveryEvents in Model Discovery" >&2; cat "$DISC_LOG_FILE"; exit 1; }
-grep -q "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/events/discovery" "$DISC_LOG_FILE" || { echo "ERROR: Missing $DUT_ID DiscoveryEvents in Model Discovery" >&2; cat "$DISC_LOG_FILE"; exit 1; }
+grep -q "/r/$REGISTRY_ID/d/$DUT_ID/events/discovery" "$DISC_LOG_FILE" || { echo "ERROR: Missing $DUT_ID DiscoveryEvents in Model Discovery" >&2; cat "$DISC_LOG_FILE"; exit 1; }
 grep -q '"source":"model"' "$DISC_LOG_FILE" || { echo "ERROR: Missing source:model in Model Discovery messages" >&2; cat "$DISC_LOG_FILE"; exit 1; }
 grep -q '"phase":"stopped"' "$DISC_LOG_FILE" || { echo "ERROR: Missing stopped DiscoveryState in Model Discovery" >&2; cat "$DISC_LOG_FILE"; exit 1; }
 echo "Site Model Discovery SUCCESS: Verified start state, event_no=0 count, device model events, and stop state"
