@@ -10,6 +10,9 @@ public interface FacetResolver {
 
   /**
    * Resolve a facet set for the given site model and device.
+   *
+   * @return the facet values defined for the device, or an empty set if none are defined; never
+   *     {@code null}
    */
   Set<String> resolve(SiteModel siteModel, String deviceId);
 

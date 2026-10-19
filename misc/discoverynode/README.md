@@ -3,6 +3,71 @@
 ## Notes
 
 `vendor` discovery family is actually sequential number generator at one second increments.
+When a scan config sets `addrs`, those values are emitted instead.
+
+## Scan configuration
+
+Scans are driven by the `discovery` block of the UDMI config. Two forms are
+supported and may be combined in the same config:
+
+- **Legacy** `discovery.families.<family>`: one scan per family, keyed by the
+  family name. Reported under `state.discovery.families.<family>`.
+- **Named** `discovery.scans.<name>`: any number of independently scheduled
+  scans, each declaring its `family`. Several scans may share a family (e.g. an
+  hourly `ether`/`ping` and a daily `ether`/`ports`). Reported under
+  `state.discovery.scans.<name>`.
+
+Each named scan uses the same fields as a family scan (`generation`,
+`scan_interval_sec`, `scan_duration_sec`, `depth`, `addrs`) plus `family`.
+Unsupported fields are dropped with a warning. Scan names must match
+`^[a-z][a-z0-9]*(_[a-z0-9]+)*$`.
+
+Families: `ipv4` (passive sniffer), `ether` (`depth`: `ping`, `ports`,
+`services`), `bacnet` (`depth`: `system`, `refs`), `vendor`.
+
+`bacnet` scans are **exclusive**: at most one bacnet scan (legacy or named)
+runs at a time. A bacnet scan whose start overlaps another is skipped for that
+generation and reports a `status` entry naming the running scan.
+
+Example: passive hourly, ping hourly, ports daily, bacnet daily.
+
+```json
+{
+  "discovery": {
+    "scans": {
+      "hourly_passive": {
+        "family": "ipv4",
+        "generation": "2026-09-08T00:00:00Z",
+        "scan_interval_sec": 3600,
+        "scan_duration_sec": 300
+      },
+      "hourly_ping": {
+        "family": "ether",
+        "depth": "ping",
+        "addrs": ["192.168.1.0/24"],
+        "generation": "2026-09-08T00:00:00Z",
+        "scan_interval_sec": 3600
+      },
+      "nightly_ports": {
+        "family": "ether",
+        "depth": "ports",
+        "addrs": ["192.168.1.0/24"],
+        "generation": "2026-09-08T01:00:00Z",
+        "scan_interval_sec": 86400
+      },
+      "nightly_bacnet": {
+        "family": "bacnet",
+        "depth": "refs",
+        "generation": "2026-09-08T02:00:00Z",
+        "scan_interval_sec": 86400
+      }
+    }
+  }
+}
+```
+
+Log lines from a scan are prefixed with its id, e.g. `[scans/hourly_ping]` or
+`[families/bacnet]`.
 
 ## Running
 

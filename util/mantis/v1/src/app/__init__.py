@@ -1,1 +1,0 @@
-# mantis.inspect package submodule
