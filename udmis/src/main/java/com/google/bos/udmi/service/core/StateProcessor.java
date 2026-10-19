@@ -63,6 +63,7 @@ public class StateProcessor extends ProcessorBase {
   private void processStateUpdate(MessageContinuation continuation, Envelope envelope,
       StateUpdate message) {
     iotAccess.saveState(envelope.deviceRegistryId, envelope.deviceId, stringifyTerse(message));
+    ifNotNullThen(message.blobset, blobset -> iotAccess.handleBlobsetState(envelope, blobset));
     continuation.publish(message);
     String origTxnId = envelope.transactionId;
     AtomicInteger txnSuffix = new AtomicInteger();

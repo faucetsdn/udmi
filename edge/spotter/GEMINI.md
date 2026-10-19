@@ -31,7 +31,7 @@ All verification tests are categorised into **Unit Tests** and **Integration Tes
 - **Location**: [bin/](bin) & [tests/](tests)
 - **Executables**:
   - [test_container](bin/test_container): Validates container lifecycle isolation, volume mounting of configuration files, clean signal termination, and exit code propagation inside Docker.
-  - [test_pcap](bin/test_pcap): Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming and verifies binary reassembly via [reassemble_pcap](bin/reassemble_pcap).
+  - [test_pcap](bin/test_pcap): Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming and verifies binary reassembly via [bin/mapper](../../bin/mapper).
   - [test_parity](bin/test_parity): Runs co-existence integration testing against a simulated BACnet device on an isolated network, confirming functional parity with legacy discovery nodes.
   - [compare_field_parity](bin/compare_field_parity): Automated utility to run sequential discovery parity scans or diff event logs on live field testbeds.
   - [test_resource_contention](bin/test_resource_contention): Validates Spotter process CPU, memory consumption, file descriptor limits, and telemetry latency under concurrent heavy workloads.

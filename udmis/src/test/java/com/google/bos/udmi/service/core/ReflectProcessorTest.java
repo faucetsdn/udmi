@@ -214,4 +214,29 @@ public class ReflectProcessorTest extends ProcessorTestBase {
       System.setOut(originalOut);
     }
   }
+
+  @Test
+  public void downloadBlobsetProvisionTest() {
+    udmi.schema.EndpointConfiguration endpoint = new udmi.schema.EndpointConfiguration();
+    endpoint.hostname = "localhost";
+    endpoint.client_id = "r/test-reg/d/test-dev";
+    udmi.schema.BlobsetDownload download = new udmi.schema.BlobsetDownload();
+    download.blobs = new java.util.HashMap<>(ImmutableMap.of("_iot_endpoint_config", endpoint));
+
+    Envelope reflect = makeTestEnvelope(false);
+    reflect.transactionId = transactionId;
+    reflect.subType = SubType.DOWNLOAD;
+    reflect.subFolder = SubFolder.BLOBSET;
+    reflect.payload = encodeBase64(stringify(download));
+    Bundle bundle = new Bundle(makeEnvelope(SubType.EVENTS, SubFolder.UDMI), reflect);
+
+    activeTestInstance(() -> getReverseDispatcher().publish(bundle));
+
+    ArgumentCaptor<udmi.schema.EndpointConfiguration> endpointCaptor =
+        ArgumentCaptor.forClass(udmi.schema.EndpointConfiguration.class);
+    verify(provider, times(1)).provisionDownloadBlob(
+        eq(TEST_REGISTRY), eq(TEST_DEVICE), eq("_iot_endpoint_config"), endpointCaptor.capture());
+    assertEquals("localhost", endpointCaptor.getValue().hostname);
+    assertEquals("r/test-reg/d/test-dev", endpointCaptor.getValue().client_id);
+  }
 }

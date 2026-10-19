@@ -16,7 +16,7 @@ Spotter runs as a single unified process using the UDMI Python Client Library (`
    - **`PassiveFamilyProvider`**: Listens for passive broadcast network traffic and extracts discovered device metadata.
 2. **`SpotterDiscoveryManager`**:
    - Manages scheduled and on-demand discovery sweeps.
-   - Streams live remote packet capture traces (`events/streams`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
+   - Streams live remote packet capture traces (`upload/discovery`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
 3. **`SpotterSystemManager`**:
    - Collects host metrics (CPU load, memory, OS distribution) and emits periodic telemetry (`events/system`).
    - Evaluates memory usage against safety thresholds (`check_safety_circuit_breaker`), throttling active discovery and packet captures to protect edge devices from kernel OOM termination.
@@ -48,7 +48,7 @@ graph TD
     end
 
     SYS -->|"state.system / events/system"| MB
-    DISC -->|"events/discovery & events/streams"| MB
+    DISC -->|"events/discovery & upload/discovery"| MB
     LOC -->|"Scans & Probes"| DEV
 ```
 
@@ -60,16 +60,16 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 
 1. **Capture Worker ([pcap.py](../../edge/spotter/src/pcap.py))**: Spawns `tcpdump` with configurable interface filters, enforcing strict execution bounds (maximum duration and byte quotas).
 2. **Streaming MQTT Egress Transport**:
-   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`StreamsEvents`) over the universal streaming MQTT event topic (`events/streams`).
+   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`DiscoveryUpload`) over the streaming MQTT upload topic (`upload/discovery`), terminated by a SHA-256 EOF marker.
    - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding external network credentials or outbound HTTP rules at the edge.
-3. **Ad-hoc PCAP Reassembly ([bin/reassemble_pcap](../../edge/spotter/bin/reassemble_pcap))**:
-   Reassembles chunked `events/streams` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
+3. **Ad-hoc Upload Reassembly ([bin/mapper](../../bin/mapper))**:
+   Reassembles chunked `upload/discovery` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
    ```bash
-   # Reassemble stream events file into a pcap file:
-   ./edge/spotter/bin/reassemble_pcap stream_events.json capture.pcap
+   # Reassemble upload chunks file into a pcap file:
+   bin/mapper sites/udmi_site_model //mqtt/localhost DSN-1 reassemble stream_events.json capture.pcap
 
    # Or stream directly from mosquitto subscriber:
-   mosquitto_sub -h $BROKER -t '/r/+/d/+/events/streams' | ./edge/spotter/bin/reassemble_pcap - live.pcap
+   mosquitto_sub -h $BROKER -t '/r/+/d/+/upload/discovery' | bin/mapper sites/udmi_site_model //mqtt/localhost DSN-1 reassemble - live.pcap
    ```
 
 ---
@@ -133,7 +133,7 @@ Spotter includes a comprehensive suite of unit and integration tests located in 
 ### Key Integration Tests
 
 - **`test_container`**: Validates container lifecycle isolation, volume mounting of runtime configs, clean signal termination, and exit code propagation inside Docker.
-- **`test_pcap`**: Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming and verifies binary reassembly via `reassemble_pcap`.
+- **`test_pcap`**: Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming and verifies binary reassembly via `bin/mapper`.
 - **`test_resource_contention`**: Validates process CPU, memory consumption, `/proc/PID/fd` file descriptor stability under load, and memory safety circuit breaker tripping.
 - **`test_fault_injection`**: Validates network fault tolerance, streaming MQTT backoff recovery, and socket reconnect logic under simulated broker resets.
 - **`test_parity`**: Runs co-existence integration testing against a simulated BACnet device on an isolated bridge network, confirming functional discovery parity with legacy discovery nodes.

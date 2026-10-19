@@ -172,6 +172,9 @@ public class UufiProcessor extends ProcessorBase {
         publish(innerEnvelope, com.google.udmi.util.JsonUtil.toMap(configUpdate));
       }
       return;
+    } else if (innerEnvelope.subType == SubType.DOWNLOAD) {
+      processDownloadChange(innerEnvelope, innerPayload);
+      return;
     }
 
     publish(innerEnvelope, innerPayload);

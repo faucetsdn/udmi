@@ -137,3 +137,38 @@ Granular observability relies on consistent telemetry. When tracking the lifecyc
   }
 }
 ```
+
+---
+
+## Ephemeral Blobset Downloads (`download/blobset`)
+
+When delivering sensitive credentials or ephemeral tokens (`_iot_endpoint_config`), embedding secret material inline in `config.blobset` (via `data:` URLs) is undesirable because `config` messages are retained by the MQTT broker and stored in operational databases.
+
+Instead, the cloud can specify a `download://` URL (e.g., `download://_iot_endpoint_config`) in `config.blobset.blobs.<key>.url` and deliver the sensitive payload out-of-band over the `{topic_prefix}/download/blobset` MQTT topic ([`schema/download_blobset.json`](../../schema/download_blobset.json)).
+
+### Transport & Security Guarantees
+* **QoS 0 & Non-Retained**: Both the publisher and device subscriber **must** use **MQTT QoS 0** with `retain = false` on `{topic_prefix}/download/blobset` so the broker never persists unacknowledged secret payloads to durable session disk.
+* **Direct Broker Delivery**: UDMIS pushes `download/blobset` messages directly to the MQTT broker without routing the secret payload through intermediate Pub/Sub topics.
+
+### System Blobset Keys (`schema/common.json#/definitions/blobsets`)
+Standardized UDMI system blob keys use a leading underscore:
+* `_iot_endpoint_config`: Primary MQTT broker endpoint configuration and credentials (including automated key/password rotation).
+
+### `EndpointConfiguration` Extensions (`schema/configuration_endpoint.json`)
+Each entry in `download/blobset` (`blobs.<key>`) conforms to [`EndpointConfiguration`](../../schema/configuration_endpoint.json), which supports:
+* **`expiry`** (`date-time`): Optional RFC 3339 UTC timestamp indicating when an ephemeral credential expires. Once `now >= expiry`, the device must purge the credential from memory and, if the blob is still active in `config.blobset`, transition `state.blobset.blobs.<key>.phase` back to `apply` to request a refreshed credential.
+* **`auth_provider.basic`**: `username` and `password`.
+* **`auth_provider.jwt`**: `audience`.
+
+### Handshake & Crash Recovery Flow
+1. **Config Notification**: Cloud publishes `config.blobset.blobs.<key>` with `phase: "final"`, `generation`, `sha256` of the serialized `EndpointConfiguration`, and `url: "download://<key>"`.
+2. **Download Request (`phase: "apply"`)**: Seeing a new `generation` with a `download://` URL (or recovering after a reboot/crash where the ephemeral secret is no longer in memory), the device publishes `state.blobset.blobs.<key>.phase = "apply"` with the matching `generation`.
+3. **Ephemeral Delivery**: Upon receiving `state.blobset.blobs.<key>.phase == "apply"`, UDMIS publishes a [`BlobsetDownload`](../../schema/download_blobset.json) message to `{topic_prefix}/download/blobset` containing `blobs.<key>`.
+4. **Application & Acknowledgement (`phase: "final"`)**: The device verifies that the SHA-256 digest of the received payload matches `config.blobset.blobs.<key>.sha256`, applies the `EndpointConfiguration`, and publishes `state.blobset.blobs.<key>.phase = "final"`.
+
+### Coexistence with Inline `data:` URLs
+To maintain backward compatibility with existing devices and test sequences:
+* **`data:` URLs**: Non-secret endpoint redirections (such as updating `hostname`, `port`, or `client_id` while reusing an existing on-device private key) continue to use `data:application/json;base64,...` inline in `config.blobset.blobs._iot_endpoint_config.url`. Clients decode and apply `data:` URLs immediately upon receiving `config`.
+* **`download://` URLs**: Secret-bearing blobs (`basic.password`, `_iot_endpoint_config`) use `download://...`, triggering the `state` (`phase: "apply"`) → `download/blobset` → `state` (`phase: "final"`) flow.
+
+

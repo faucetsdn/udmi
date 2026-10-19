@@ -56,6 +56,56 @@ class DispatcherTests(unittest.TestCase):
         self.assertEqual(res["target"], "postgres")
         self.assertEqual(res["table"], "udmi_messages")
 
+    def test_dispatch_upload_discovery_fallback(self):
+        envelope = {"subFolder": "discovery", "subType": "upload", "deviceId": "DEV-1"}
+        payload = {"family": "bacnet", "generation": "2026-04-06T12:00:00Z", "event_no": 0}
+
+        res = self.dispatcher.dispatch(envelope, payload)
+        self.assertEqual(res["target"], "postgres")
+        self.assertEqual(res["table"], "udmi_messages")
+
+    def test_dispatch_download_ignored(self):
+        envelope = {"subFolder": "blobset", "subType": "download", "deviceId": "DEV-1"}
+        payload = {"blobs": {"_iot_endpoint_config": {"hostname": "mqtt.example.com"}}}
+
+        res = self.dispatcher.dispatch(envelope, payload)
+        self.assertEqual(res["target"], "ignored")
+        self.assertEqual(res["count"], 0)
+        self.mock_pg.insert_raw_message.assert_not_called()
+
+    def test_reassemble_upload(self):
+        import base64
+        import hashlib
+        import json
+        import tempfile
+        from butler.src.reassemble import run_reassemble
+
+        raw_bytes = b"\xa1\xb2\xc3\xd4PCAP-PAYLOAD"
+        sha256_hex = hashlib.sha256(raw_bytes).hexdigest()
+        lines = [
+            json.dumps({"family": "ether", "generation": "2026-07-08T14:35:00Z", "event_no": 0}),
+            json.dumps({
+                "family": "ether",
+                "generation": "2026-07-08T14:35:00Z",
+                "event_no": 1,
+                "data": base64.b64encode(raw_bytes).decode(),
+            }),
+            json.dumps({
+                "family": "ether",
+                "generation": "2026-07-08T14:35:00Z",
+                "event_no": -2,
+                "sha256": sha256_hex,
+            }),
+        ]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            in_path = os.path.join(tmpdir, "stream.jsonl")
+            out_path = os.path.join(tmpdir, "out.pcap")
+            with open(in_path, "w", encoding="utf-8") as f:
+                f.write("\n".join(lines))
+            run_reassemble(in_path, out_path)
+            with open(out_path, "rb") as f:
+                self.assertEqual(f.read(), raw_bytes)
+
 
 if __name__ == "__main__":
     unittest.main()

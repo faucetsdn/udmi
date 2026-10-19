@@ -23,7 +23,7 @@ class DiscoveryHandler(BaseHandler):
     """Processes discovery events and saves rows into PostgreSQL udmi_discovery table."""
 
     def can_handle(self, sub_folder: Optional[str], sub_type: Optional[str], payload: Dict[str, Any]) -> bool:
-        return sub_folder == "discovery"
+        return sub_folder == "discovery" and sub_type in ("events", None)
 
     def process_message(
         self,

@@ -228,4 +228,20 @@ public class StateProcessorTest extends ProcessorTestBase {
       System.setOut(originalOut);
     }
   }
+
+  @Test
+  public void blobsetApplyTriggersDownload() {
+    initializeTestInstance();
+    State stateMessage = getTestStateMessage(false, false);
+    stateMessage.blobset = new udmi.schema.BlobsetState();
+    stateMessage.blobset.blobs = new java.util.HashMap<>();
+    udmi.schema.BlobBlobsetState blobState = new udmi.schema.BlobBlobsetState();
+    blobState.phase = udmi.schema.BlobBlobsetConfig.BlobPhase.APPLY;
+    stateMessage.blobset.blobs.put("_iot_endpoint_config", blobState);
+
+    getReverseDispatcher().publish(new Bundle(getTestStateEnvelope(), stateMessage));
+    terminateAndWait();
+
+    verify(provider, times(1)).handleBlobsetState(any(Envelope.class), any());
+  }
 }

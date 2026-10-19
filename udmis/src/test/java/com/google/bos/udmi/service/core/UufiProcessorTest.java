@@ -148,6 +148,43 @@ public class UufiProcessorTest extends ProcessorTestBase {
   }
 
   /**
+   * Test that inbound UUFI-wrapped download/blobset messages provision download blobs.
+   */
+  @Test
+  public void inboundDownloadRoutingTest() {
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.DOWNLOAD;
+    innerEnvelope.subFolder = SubFolder.BLOBSET;
+    innerEnvelope.deviceId = "dev-1";
+    innerEnvelope.deviceRegistryId = "reg-1";
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    Map<String, Object> innerPayload = Map.of(
+        "version", "1.5.2",
+        "timestamp", "2026-07-28T00:00:00Z",
+        "blobs", Map.of("_iot_endpoint_config",
+            Map.of("hostname", "localhost", "client_id", "r/reg-1/d/dev-1")));
+    uufiWrapper.put("payload", innerPayload);
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    ArgumentCaptor<udmi.schema.EndpointConfiguration> endpointCaptor =
+        ArgumentCaptor.forClass(udmi.schema.EndpointConfiguration.class);
+    verify(provider, times(1)).provisionDownloadBlob(
+        org.mockito.ArgumentMatchers.eq("reg-1"),
+        org.mockito.ArgumentMatchers.eq("dev-1"),
+        org.mockito.ArgumentMatchers.eq("_iot_endpoint_config"),
+        endpointCaptor.capture());
+    assertEquals("localhost", endpointCaptor.getValue().hostname);
+    assertEquals("r/reg-1/d/dev-1", endpointCaptor.getValue().client_id);
+  }
+
+  /**
    * Test that outbound system messages are correctly wrapped for UUFI clients.
    */
   @Test

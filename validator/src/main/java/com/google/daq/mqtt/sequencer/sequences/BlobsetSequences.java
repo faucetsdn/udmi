@@ -12,6 +12,7 @@ import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -23,6 +24,7 @@ import static udmi.schema.Category.BLOBSET_BLOB_APPLY;
 import static udmi.schema.Category.BLOBSET_BLOB_FETCH;
 import static udmi.schema.Category.BLOBSET_BLOB_PARSE;
 import static udmi.schema.Category.BLOBSET_BLOB_RECEIVE;
+import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.PREVIEW;
 
 import com.google.daq.mqtt.sequencer.DefaultLogLevel;
@@ -49,6 +51,7 @@ import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobUpdateTestingModel;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.BlobsetDownload;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.EndpointConfiguration.Transport;
@@ -95,7 +98,8 @@ public class BlobsetSequences extends SequenceBase {
         : format(IOT_CORE_CLIENT_ID_FMT, projectId, cloudRegion, registryId, getDeviceId());
   }
 
-  private static String endpointConfigPayload(String hostname, String registryId) {
+  private static EndpointConfiguration makeEndpointConfiguration(String hostname,
+      String registryId) {
     EndpointConfiguration endpointConfiguration = new EndpointConfiguration();
     endpointConfiguration.protocol = Protocol.MQTT;
     endpointConfiguration.hostname = hostname;
@@ -110,7 +114,11 @@ public class BlobsetSequences extends SequenceBase {
       authProvider.basic.username = endpointConfiguration.client_id;
       authProvider.basic.password = siteModel.getDevicePassword(getDeviceId());
     }
-    return stringify(endpointConfiguration);
+    return endpointConfiguration;
+  }
+
+  private static String endpointConfigPayload(String hostname, String registryId) {
+    return stringify(makeEndpointConfiguration(hostname, registryId));
   }
 
   private void untilClearedRedirect() {
@@ -221,6 +229,33 @@ public class BlobsetSequences extends SequenceBase {
   @Test(timeout = TWO_MINUTES_MS)
   public void endpoint_connection_success_reconnect() {
     setDeviceConfigEndpointBlob(getAlternateEndpointHostname(), registryId, false);
+    untilSuccessfulRedirect(BlobPhase.FINAL);
+    untilClearedRedirect();
+  }
+
+  @Feature(stage = ALPHA, bucket = ENDPOINT_CONFIG)
+  @Summary("Check endpoint redirection via download/blobset channel.")
+  @Test(timeout = TWO_MINUTES_MS)
+  public void endpoint_connection_download() {
+    EndpointConfiguration endpointConfig =
+        makeEndpointConfiguration(getAlternateEndpointHostname(), registryId);
+    BlobsetDownload download = new BlobsetDownload();
+    download.blobs = new HashMap<>();
+    download.blobs.put(IOT_BLOB_KEY, endpointConfig);
+    provisionDownload(SubFolder.BLOBSET, download);
+
+    BlobBlobsetConfig config = new BlobBlobsetConfig();
+    config.url = SemanticValue.describe("endpoint download url", "download://" + IOT_BLOB_KEY);
+    config.phase = BlobPhase.FINAL;
+    config.generation = SemanticDate.describe("blob generation", new Date());
+    config.sha256 = SemanticValue.describe("blob data hash",
+        sha256(stringifyTerse(endpointConfig)));
+    BlobsetConfig blobset = new BlobsetConfig();
+    blobset.blobs = new HashMap<>();
+    blobset.blobs.put(IOT_BLOB_KEY, config);
+    deviceConfig.blobset = blobset;
+    debug("blobset download config", stringify(deviceConfig.blobset));
+
     untilSuccessfulRedirect(BlobPhase.FINAL);
     untilClearedRedirect();
   }

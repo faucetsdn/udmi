@@ -13,7 +13,7 @@ fi
 
 echo "=== Spotter Network Resilience & Fault Injection Test Suite ==="
 
-echo "--- Step 1: Verifying StreamsEvents transport structure and sequence ordering ---"
+echo "--- Step 1: Verifying DiscoveryUpload transport structure and sequence ordering ---"
 (
     cd "${WORKSPACE_DIR}"
     PYTHONPATH=clientlib/python/src:gencode/python:. "${WORKSPACE_DIR}/edge/spotter/venv/bin/python3" -m unittest edge.spotter.tests.test_agent.TestSpotterDiscoveryManager -v

@@ -68,6 +68,36 @@ public class TargetProcessor extends ProcessorBase {
     reflectMessage(envelope, message);
   }
 
+  /**
+   * Handle chunked discovery uploads arriving on the target message channel.
+   */
+  @MessageHandler
+  public void discoveryUploadHandler(udmi.schema.DiscoveryUpload message) {
+    MessageContinuation continuation = getContinuation(message);
+    Envelope envelope = continuation.getEnvelope();
+    defaultFields(message);
+    publish(message);
+    if (envelope.deviceId == null) {
+      notice("Dropping message with no deviceId: " + stringifyTerse(envelope));
+      return;
+    }
+    if (envelope.subType == null) {
+      envelope.subType = SubType.UPLOAD;
+    }
+    if (envelope.subFolder == null) {
+      envelope.subFolder = SubFolder.DISCOVERY;
+    }
+    updateLastSeen(envelope);
+    UploadProcessor uploadProcessor =
+        com.google.bos.udmi.service.pod.UdmiServicePod.maybeGetComponent(UploadProcessor.class);
+    if (uploadProcessor != null) {
+      uploadProcessor.handleDiscoveryUpload(envelope, message);
+    } else {
+      reflectMessage(envelope, stringify(message));
+      UploadProcessor.processDiscoveryUpload(envelope, message);
+    }
+  }
+
   @Override
   protected SubType getExceptionSubType() {
     return SubType.EVENTS;

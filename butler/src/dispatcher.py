@@ -56,6 +56,9 @@ class MessageDispatcher:
         sub_folder = envelope.get("subFolder")
         sub_type = envelope.get("subType")
 
+        if sub_type == "download":
+            return {"target": "ignored", "table": None, "count": 0}
+
         matched_handler = None
         for handler in self.handlers:
             if handler.can_handle(sub_folder, sub_type, payload):

@@ -154,12 +154,14 @@ public class Validator {
   private static final String CONFIG_CATEGORY = "config";
   private static final Set<String> INTERESTING_TYPES = ImmutableSet.of(
       SubType.EVENTS.value(),
-      SubType.STATE.value());
+      SubType.STATE.value(),
+      SubType.UPLOAD.value());
   private static final Set<String> IGNORE_FOLDERS = ImmutableSet.of(
       SubFolder.ERROR.value());
   private static final Set<SubType> LAST_SEEN_SUBTYPES = ImmutableSet.of(
       SubType.EVENTS,
-      SubType.STATE);
+      SubType.STATE,
+      SubType.UPLOAD);
 
   private static final long DEFAULT_INTERVAL_SEC = 60;
   private static final long REPORTS_PER_SEC = 10;

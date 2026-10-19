@@ -310,6 +310,45 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   }
 
   /**
+   * Send an ephemeral download message directly to a device.
+   */
+  public final void sendDownload(Envelope envelope, SubFolder folder, String message) {
+    String registryId = requireNonNull(envelope.deviceRegistryId, "registry not defined");
+    String deviceId = requireNonNull(envelope.deviceId, "device not defined");
+    debug("Sending download to %s/%s/%s", registryId, deviceId, folder);
+    sendDownloadBase(envelope, folder, message);
+  }
+
+  @Override
+  public void handleBlobsetState(Envelope envelope, udmi.schema.BlobsetState blobsetState) {
+    if (blobsetState == null || blobsetState.blobs == null || blobsetState.blobs.isEmpty()) {
+      return;
+    }
+    String registryId = envelope.deviceRegistryId;
+    String deviceId = envelope.deviceId;
+    if (registryId == null || deviceId == null) {
+      return;
+    }
+    java.util.HashMap<String, udmi.schema.EndpointConfiguration> matchedBlobs =
+        new java.util.HashMap<>();
+    blobsetState.blobs.forEach((key, blobState) -> {
+      if (blobState != null && blobState.phase == udmi.schema.BlobBlobsetConfig.BlobPhase.APPLY) {
+        udmi.schema.EndpointConfiguration endpoint = fetchDownloadBlob(registryId, deviceId, key);
+        if (endpoint != null) {
+          matchedBlobs.put(key, endpoint);
+        }
+      }
+    });
+    if (!matchedBlobs.isEmpty()) {
+      udmi.schema.BlobsetDownload download = new udmi.schema.BlobsetDownload();
+      download.version = UdmiServicePod.UDMI_VERSION;
+      download.timestamp = new java.util.Date();
+      download.blobs = matchedBlobs;
+      sendDownload(envelope, SubFolder.BLOBSET, com.google.udmi.util.JsonUtil.stringify(download));
+    }
+  }
+
+  /**
    * Update the cached registry regions with any incremental updates.
    */
   @Override

@@ -112,5 +112,39 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     assertEquals("events", legacyPointset.get(SUBTYPE_PROPERTY_KEY));
     assertEquals("pointset", legacyPointset.get(SUBFOLDER_PROPERTY_KEY));
     assertEquals(3, legacyPointset.keySet().size());
+
+    Map<String, String> discoveryUpload = parseEnvelopeTopic("/r/reg/d/dev/upload/discovery");
+    assertEquals("reg", discoveryUpload.get(REGISTRY_ID_PROPERTY_KEY));
+    assertEquals("dev", discoveryUpload.get(DEVICE_ID_KEY));
+    assertEquals("upload", discoveryUpload.get(SUBTYPE_PROPERTY_KEY));
+    assertEquals("discovery", discoveryUpload.get(SUBFOLDER_PROPERTY_KEY));
+
+    Map<String, String> blobsetDownload = parseEnvelopeTopic("/r/reg/d/dev/download/blobset");
+    assertEquals("reg", blobsetDownload.get(REGISTRY_ID_PROPERTY_KEY));
+    assertEquals("dev", blobsetDownload.get(DEVICE_ID_KEY));
+    assertEquals("download", blobsetDownload.get(SUBTYPE_PROPERTY_KEY));
+    assertEquals("blobset", blobsetDownload.get(SUBFOLDER_PROPERTY_KEY));
+  }
+
+  @Test
+  public void downloadMessageQosAndRetain() {
+    MessageBase.Bundle downloadBundle = new MessageBase.Bundle();
+    downloadBundle.envelope = new udmi.schema.Envelope();
+    downloadBundle.envelope.subType = udmi.schema.Envelope.SubType.DOWNLOAD;
+    downloadBundle.envelope.subFolder = udmi.schema.Envelope.SubFolder.BLOBSET;
+    downloadBundle.payload = "{}";
+    org.eclipse.paho.client.mqttv3.MqttMessage downloadMsg =
+        SimpleMqttPipe.makeMqttMessage(downloadBundle);
+    assertEquals(0, downloadMsg.getQos());
+    assertEquals(false, downloadMsg.isRetained());
+
+    MessageBase.Bundle configBundle = new MessageBase.Bundle();
+    configBundle.envelope = new udmi.schema.Envelope();
+    configBundle.envelope.subType = udmi.schema.Envelope.SubType.CONFIG;
+    configBundle.payload = "{}";
+    org.eclipse.paho.client.mqttv3.MqttMessage configMsg =
+        SimpleMqttPipe.makeMqttMessage(configBundle);
+    assertEquals(1, configMsg.getQos());
+    assertEquals(true, configMsg.isRetained());
   }
 }

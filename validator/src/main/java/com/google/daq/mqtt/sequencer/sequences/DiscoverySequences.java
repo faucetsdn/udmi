@@ -18,6 +18,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
 import static com.google.udmi.util.GeneralUtils.ifNullElse;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.joinOrNull;
+import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -54,9 +55,11 @@ import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.semantic.SemanticDate;
 import com.google.daq.mqtt.sequencer.semantic.SemanticList;
 import com.google.daq.mqtt.util.providers.FamilyProvider;
+import java.io.ByteArrayOutputStream;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +78,7 @@ import org.junit.Test;
 import udmi.schema.Bucket;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.DiscoveryUpload;
 import udmi.schema.Enumerations;
 import udmi.schema.Enumerations.Depth;
 import udmi.schema.Envelope.SubFolder;
@@ -732,6 +736,75 @@ public class DiscoverySequences extends SequenceBase {
     List<DiscoveryEvents> lastGenerationEvents = receivedEvents.stream()
         .filter(event -> event.generation.equals(generation)).toList();
     ifNotEmptyThrow(checkEnumeration(lastGenerationEvents, true), CSV_JOINER::join);
+  }
+
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
+  @Summary("Check results of a single scan with trace depth")
+  public void scan_depth_trace() {
+    initializeDiscovery();
+    checkState(scanGeneration == null, "scanStartTime not null");
+    Date scanStart = cleanInstantDate(Instant.now().minusSeconds(1));
+    scanGeneration = scanStart.toInstant();
+    popReceivedEvents(DiscoveryUpload.class);
+    configureScan(scanGeneration, null, DEFAULT_ENUMERATION, Depth.TRACE, null, null);
+    final Instant scanConfigured = getNowInstant();
+
+    waitUntil("scheduled scan active", WAITING_PERIOD, this::detailScanActive);
+    final Instant scanStarted = getNowInstant();
+    long deltaStart = Math.abs(Duration.between(scanStarted, scanConfigured).toSeconds());
+    checkThat("scan started at time", deltaStart <= SCAN_START_JITTER_SEC,
+        format("scan start %s %ss different from expected %s", isoConvert(scanStarted), deltaStart,
+            isoConvert(scanConfigured)));
+
+    final Instant expectedFinish = scanStarted.plusSeconds(SCAN_DURATION_SEC);
+    waitUntil("scheduled scan complete", WAITING_PERIOD, this::detailScanStopped);
+    Instant scanFinished = getNowInstant();
+    long deltaFinish = Math.abs(Duration.between(scanFinished, expectedFinish).toSeconds());
+    checkThat("scan completed at time", deltaFinish <= SCAN_START_JITTER_SEC,
+        format("scan completed %ss different from expected %s", deltaFinish,
+            isoConvert(expectedFinish)));
+
+    final int actualCount = deviceState.discovery.families.get(scanFamily).active_count;
+    checkThat("trace scan reported positive active_count", actualCount > 0);
+    sleepFor("discovery uploads synchronized", EVENT_JITTER_SLEEP_TIME);
+
+    List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
+    checkThat("no discovery events emitted during trace scan", events.isEmpty());
+
+    List<DiscoveryUpload> uploads = popReceivedEvents(DiscoveryUpload.class);
+    final int expectedUploads = actualCount + EVENT_MARKERS;
+    checkThat("received expected number of discovery uploads",
+        uploads.size() == expectedUploads,
+        format("expected %d uploads, received %d", expectedUploads, uploads.size()));
+    checkThat("all discovery uploads match scan family and generation",
+        uploads.stream().allMatch(u -> scanFamily.equals(u.family)
+            && dateEquals(u.generation, Date.from(scanGeneration))));
+
+    SortedSet<Integer> eventNos = uploads.stream().map(u -> u.event_no)
+        .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
+    checkThat("received all unique upload event numbers", eventNos.size() == expectedUploads);
+    final Integer endEventNo = eventNos.removeFirst();
+    checkThat("received proper upload start marker", eventNos.getFirst() == 0);
+    checkThat("received proper last upload chunk", eventNos.getLast() == actualCount);
+    checkThat("received proper upload termination marker", endEventNo == -(actualCount + 1));
+
+    Map<Integer, DiscoveryUpload> uploadsByEventNo = uploads.stream()
+        .collect(Collectors.toMap(u -> u.event_no, Function.identity()));
+    ByteArrayOutputStream assembled = new ByteArrayOutputStream();
+    for (int chunkNo = 1; chunkNo <= actualCount; chunkNo++) {
+      DiscoveryUpload chunk = uploadsByEventNo.get(chunkNo);
+      checkThat(format("upload chunk %d data present", chunkNo),
+          chunk != null && chunk.data != null);
+      assembled.writeBytes(Base64.getDecoder().decode(chunk.data));
+    }
+
+    DiscoveryUpload eofUpload = uploadsByEventNo.get(endEventNo);
+    checkThat("upload termination marker includes sha256", eofUpload.sha256 != null);
+    String actualSha256 = sha256(assembled.toByteArray());
+    checkThat("assembled upload matches termination marker sha256",
+        eofUpload.sha256.equalsIgnoreCase(actualSha256),
+        format("expected %s, got %s", eofUpload.sha256, actualSha256));
   }
 
   private void initializeDiscovery() {

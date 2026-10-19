@@ -5,6 +5,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.sha256;
 import static com.google.udmi.util.JsonUtil.getNowInstant;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static java.lang.Math.floorMod;
@@ -15,8 +16,10 @@ import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
 import static udmi.schema.FamilyDiscoveryState.Phase.STOPPED;
 
 import com.google.common.collect.ImmutableSet;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -32,6 +35,7 @@ import udmi.lib.intf.SubBlockManager;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
+import udmi.schema.DiscoveryUpload;
 import udmi.schema.Enumerations;
 import udmi.schema.Enumerations.Depth;
 import udmi.schema.FamilyDiscoveryConfig;
@@ -278,9 +282,17 @@ public interface DiscoveryManager extends SubBlockManager {
     familyDiscoveryState.generation = scanGeneration;
     familyDiscoveryState.phase = ACTIVE;
     familyDiscoveryState.active_count = sendCount.get();
-    sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
+    if (!isTraceDepth(family)) {
+      sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
+    }
     updateState();
-    startDiscoveryForFamily(family, scanGeneration, familyDiscoveryState, sendCount);
+    if (!isTraceDepth(family)) {
+      startDiscoveryForFamily(family, scanGeneration, familyDiscoveryState, sendCount);
+    }
+  }
+
+  default boolean isTraceDepth(String family) {
+    return Depth.TRACE.equals(catchToNull(() -> getFamilyDiscoveryConfig(family).depth));
   }
 
   private void sendMarkerDiscoveryEvent(String family, Date scanGeneration,
@@ -290,6 +302,43 @@ public interface DiscoveryManager extends SubBlockManager {
     info(format("Discovered %s active %d for %s", family, discoveryEvent.event_no,
         isoConvert(scanGeneration)));
     publishDiscoveryEvent(family, scanGeneration, null, discoveryEvent);
+  }
+
+  /**
+   * Publishes a discovery upload stream for trace-depth scans.
+   */
+  default void publishTraceDiscoveryUploads(String family, Date scanGeneration,
+      FamilyDiscoveryState familyDiscoveryState) {
+    final List<byte[]> chunks = List.of(
+        "PCAP-HEADER-AND-FIRST-PACKET-".getBytes(StandardCharsets.UTF_8),
+        "SECOND-PACKET-AND-FOOTER".getBytes(StandardCharsets.UTF_8));
+    final byte[] fullPayload = "PCAP-HEADER-AND-FIRST-PACKET-SECOND-PACKET-AND-FOOTER"
+        .getBytes(StandardCharsets.UTF_8);
+    final int totalChunks = chunks.size();
+
+    DiscoveryUpload startUpload = new DiscoveryUpload();
+    startUpload.family = family;
+    startUpload.generation = scanGeneration;
+    startUpload.event_no = 0;
+    getHost().publish(startUpload);
+
+    for (int idx = 0; idx < totalChunks; idx++) {
+      DiscoveryUpload chunkUpload = new DiscoveryUpload();
+      chunkUpload.family = family;
+      chunkUpload.generation = scanGeneration;
+      chunkUpload.event_no = idx + 1;
+      chunkUpload.data = Base64.getEncoder().encodeToString(chunks.get(idx));
+      getHost().publish(chunkUpload);
+    }
+
+    DiscoveryUpload eofUpload = new DiscoveryUpload();
+    eofUpload.family = family;
+    eofUpload.generation = scanGeneration;
+    eofUpload.event_no = -(totalChunks + 1);
+    eofUpload.sha256 = sha256(fullPayload);
+    getHost().publish(eofUpload);
+
+    familyDiscoveryState.active_count = totalChunks;
   }
 
   /**
@@ -379,11 +428,15 @@ public interface DiscoveryManager extends SubBlockManager {
       info(format("Discovered %s stopping %s (=? %s)", family, isoConvert(scanGeneration),
           isoConvert(familyDiscoveryState.generation)));
       ifTrueThen(scanGeneration.equals(familyDiscoveryState.generation), () -> {
-        FamilyProvider provider = discoveryProvider(family);
-        if (provider != null) {
-          provider.stopScan();
+        if (isTraceDepth(family)) {
+          publishTraceDiscoveryUploads(family, scanGeneration, familyDiscoveryState);
+        } else {
+          FamilyProvider provider = discoveryProvider(family);
+          if (provider != null) {
+            provider.stopScan();
+          }
+          sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
         }
-        sendMarkerDiscoveryEvent(family, scanGeneration, sendCount);
         familyDiscoveryState.phase = STOPPED;
         updateState();
         scheduleDiscoveryScan(family);

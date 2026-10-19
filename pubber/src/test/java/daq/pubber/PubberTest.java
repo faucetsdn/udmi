@@ -290,4 +290,69 @@ public class PubberTest extends TestBase {
     assertEquals(pubber.persistentData.endpoint.hostname, "persistent");
     assertEquals(pubber.getPubberConfig().endpoint.hostname, "persistent");
   }
+
+  @Test
+  public void downloadEndpointFlowTest() {
+    pubber = makeTestPubber(TEST_DEVICE);
+    final EndpointConfiguration targetEndpoint = getEndpointConfiguration(TEST_REDIRECT_HOSTNAME);
+    final Date generation = new Date();
+    BlobBlobsetConfig blobConfig = new BlobBlobsetConfig();
+    blobConfig.url = "download://_iot_endpoint_config";
+    blobConfig.sha256 = sha256(JsonUtil.stringifyTerse(targetEndpoint));
+    blobConfig.phase = BlobPhase.FINAL;
+    blobConfig.generation = generation;
+    pubber.getDeviceConfig().blobset = new BlobsetConfig();
+    pubber.getDeviceConfig().blobset.blobs = new HashMap<>();
+    pubber.getDeviceConfig().blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobConfig);
+
+    assertNull(pubber.extractEndpointBlobConfig());
+    assertEquals(BlobPhase.APPLY,
+        pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
+
+    udmi.schema.BlobsetDownload download = new udmi.schema.BlobsetDownload();
+    download.blobs = new HashMap<>();
+    download.blobs.put(IOT_ENDPOINT_CONFIG.value(), targetEndpoint);
+    pubber.downloadHandler(download);
+
+    assertNotEquals(null, pubber.getExtractedEndpoint());
+    assertNull(pubber.getExtractedEndpoint().error);
+    assertEquals(generation, pubber.getExtractedEndpoint().generation);
+
+    // Subsequent config extraction with same generation must preserve downloaded endpoint
+    assertNotEquals(null, pubber.extractEndpointBlobConfig());
+
+    pubber.maybeRedirectEndpoint(pubber.getExtractedEndpoint());
+    assertEquals(BlobPhase.FINAL,
+        pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
+    assertNull(pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).status);
+  }
+
+  @Test
+  public void downloadEndpointBadHashTest() {
+    pubber = makeTestPubber(TEST_DEVICE);
+    final EndpointConfiguration targetEndpoint = getEndpointConfiguration(TEST_REDIRECT_HOSTNAME);
+    final Date generation = new Date();
+    BlobBlobsetConfig blobConfig = new BlobBlobsetConfig();
+    blobConfig.url = "download://_iot_endpoint_config";
+    blobConfig.sha256 = "0000000000000000000000000000000000000000000000000000000000000000";
+    blobConfig.phase = BlobPhase.FINAL;
+    blobConfig.generation = generation;
+    pubber.getDeviceConfig().blobset = new BlobsetConfig();
+    pubber.getDeviceConfig().blobset.blobs = new HashMap<>();
+    pubber.getDeviceConfig().blobset.blobs.put(IOT_ENDPOINT_CONFIG.value(), blobConfig);
+
+    assertNull(pubber.extractEndpointBlobConfig());
+
+    udmi.schema.BlobsetDownload download = new udmi.schema.BlobsetDownload();
+    download.blobs = new HashMap<>();
+    download.blobs.put(IOT_ENDPOINT_CONFIG.value(), targetEndpoint);
+    pubber.downloadHandler(download);
+
+    assertEquals("Blob data hash mismatch", pubber.getExtractedEndpoint().error);
+    pubber.maybeRedirectEndpoint(pubber.getExtractedEndpoint());
+    assertEquals(BlobPhase.FINAL,
+        pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).phase);
+    assertEquals(udmi.schema.Category.BLOBSET_BLOB_APPLY,
+        pubber.getDeviceState().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()).status.category);
+  }
 }

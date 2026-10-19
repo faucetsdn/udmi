@@ -6,6 +6,8 @@ application's lifecycle, state, and message handling logic.
 """
 
 import datetime
+import hashlib
+import json
 import logging
 import threading
 import time
@@ -30,13 +32,34 @@ from udmi.core.messaging.abstract_dispatcher import AbstractMessageDispatcher
 from udmi.core.persistence import DevicePersistence
 from udmi.core.persistence.file_backend import FilePersistenceBackend
 from udmi.core.utils.file_ops import mask_secrets
+from udmi.schema import BlobBlobsetConfig
+from udmi.schema import BlobBlobsetState
+from udmi.schema import BlobsetDownload
+from udmi.schema import BlobsetState
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
+from udmi.schema import Entry
 from udmi.schema import Metadata
 from udmi.schema import State
 from udmi.schema import SystemState
+from udmi.schema.common import Phase
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _canonical_json_sha256(obj: Any) -> str:
+    """Computes the SHA-256 hex digest of an object's canonical terse JSON."""
+    def _strip_nones(val: Any) -> Any:
+        if isinstance(val, dict):
+            return {k: _strip_nones(v) for k, v in val.items() if v is not None}
+        if isinstance(val, list):
+            return [_strip_nones(v) for v in val]
+        return val
+
+    canonical = json.dumps(
+        _strip_nones(obj), sort_keys=True, separators=(",", ":")
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 T = TypeVar("T", bound=BaseManager)
 MAX_CONNECTION_RETRIES = 3
@@ -139,6 +162,8 @@ class Device:
         self._state_lock = threading.RLock()
         self._redirection_handler: Optional[RedirectionHandler] = None
         self._connection_handler: Optional[ConnectionHandler] = None
+        self._pending_endpoint_blob: Optional[BlobBlobsetConfig] = None
+        self._endpoint_blob_state: Optional[BlobBlobsetState] = None
         LOGGER.info("Device initialized with %s managers.", len(self.managers))
 
     @property
@@ -193,7 +218,8 @@ class Device:
             return
         self.dispatcher.register_handler("config", self.handle_config)
         self.dispatcher.register_handler("commands/#", self.handle_command)
-        LOGGER.debug("Registered config and command handlers.")
+        self.dispatcher.register_handler("download/#", self.handle_download)
+        LOGGER.debug("Registered config, command, and download handlers.")
 
     # --- Connection Callbacks ---
 
@@ -266,8 +292,28 @@ class Device:
             return
 
         if self._has_new_endpoint_config(config_obj):
-            self._try_redirect_endpoint(config_obj)
-            return
+            blob_config = config_obj.blobset.blobs.get(
+                IOT_ENDPOINT_CONFIG_BLOB_KEY
+            )
+            if blob_config and blob_config.url and blob_config.url.startswith("download://"):
+                LOGGER.info(
+                    "Endpoint blob uses download:// scheme. Requesting download..."
+                )
+                self._pending_endpoint_blob = blob_config
+                self._endpoint_blob_state = BlobBlobsetState(
+                    phase=Phase.apply,
+                    generation=blob_config.generation,
+                )
+            else:
+                self._try_redirect_endpoint(config_obj)
+                return
+        elif not (
+            config_obj.blobset
+            and config_obj.blobset.blobs
+            and IOT_ENDPOINT_CONFIG_BLOB_KEY in config_obj.blobset.blobs
+        ):
+            self._pending_endpoint_blob = None
+            self._endpoint_blob_state = None
 
         self._loop_state.config_received_event.set()
         self.config = config_obj
@@ -304,6 +350,120 @@ class Device:
             except (AttributeError, TypeError, KeyError, ValueError) as e:
                 LOGGER.error("Error in %s.handle_command: %s",
                              manager.__class__.__name__, e)
+
+    def handle_download(
+        self, device_id: str, channel: str, payload: Dict[str, Any]
+    ) -> None:
+        """
+        Orchestration method to handle a new download payload.
+
+        Args:
+            device_id: The ID of the device this download is for.
+            channel: The full download channel (e.g., 'download/blobset').
+            payload: The pre-parsed dictionary of the JSON payload.
+        """
+        download_name = channel.split('/')[-1]
+
+        if device_id != self.device_id:
+            self._route_proxy_download(device_id, download_name, payload)
+            return
+
+        LOGGER.info(
+            "Download '%s' received for Device %s...",
+            download_name,
+            self.device_id,
+        )
+        if download_name == "blobset":
+            try:
+                blobset_download = BlobsetDownload.from_dict(payload)
+                if (
+                    blobset_download.blobs
+                    and IOT_ENDPOINT_CONFIG_BLOB_KEY in blobset_download.blobs
+                ):
+                    self._process_endpoint_download(
+                        blobset_download.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY],
+                        payload.get("blobs", {}).get(
+                            IOT_ENDPOINT_CONFIG_BLOB_KEY, {}
+                        ),
+                    )
+            except (TypeError, ValueError) as e:
+                LOGGER.error("Failed to parse download/blobset message: %s", e)
+
+        for manager in self.managers:
+            if hasattr(manager, "handle_download"):
+                try:
+                    manager.handle_download(download_name, payload)
+                except (AttributeError, TypeError, KeyError, ValueError) as e:
+                    LOGGER.error(
+                        "Error in %s.handle_download: %s",
+                        manager.__class__.__name__,
+                        e,
+                    )
+
+    def _process_endpoint_download(
+        self, new_endpoint: EndpointConfiguration, raw_blob: Dict[str, Any]
+    ) -> None:
+        """Validates and applies an EndpointConfiguration from download/blobset."""
+        if self._pending_endpoint_blob is None:
+            LOGGER.warning(
+                "Ignoring unsolicited endpoint download for %s", self.device_id
+            )
+            return
+        generation = self._pending_endpoint_blob.generation or "download"
+        expected_sha = self._pending_endpoint_blob.sha256
+        error_msg = self._validate_downloaded_endpoint(
+            new_endpoint, raw_blob, expected_sha
+        )
+        self._pending_endpoint_blob = None
+        if error_msg:
+            LOGGER.error("%s", error_msg)
+            self._endpoint_blob_state = BlobBlobsetState(
+                phase=Phase.final,
+                generation=generation,
+                status=Entry(
+                    category="blobset.blob.apply",
+                    level=500,
+                    message=error_msg,
+                    timestamp=datetime.datetime.now(
+                        datetime.timezone.utc
+                    ).isoformat(),
+                ),
+            )
+            self._publish_state(bypass_throttle=True, blocking=True)
+            return
+
+        self._endpoint_blob_state = BlobBlobsetState(
+            phase=Phase.final,
+            generation=generation,
+        )
+        self._publish_state(bypass_throttle=True, blocking=True)
+        self._apply_redirect_endpoint(new_endpoint, generation)
+
+    @staticmethod
+    def _validate_downloaded_endpoint(
+        new_endpoint: EndpointConfiguration,
+        raw_blob: Dict[str, Any],
+        expected_sha: Optional[str],
+    ) -> Optional[str]:
+        """Checks SHA-256 integrity and expiry on a downloaded endpoint blob."""
+        if not expected_sha:
+            return "Missing expected SHA-256 hash for downloaded endpoint blob"
+        actual_sha = _canonical_json_sha256(raw_blob)
+        if actual_sha.lower() != expected_sha.lower():
+            return (
+                "Downloaded endpoint blob SHA-256 mismatch: "
+                f"expected {expected_sha}, got {actual_sha}"
+            )
+        if new_endpoint.expiry:
+            expiry_dt = datetime.datetime.fromisoformat(
+                new_endpoint.expiry.replace("Z", "+00:00")
+            )
+            if expiry_dt <= datetime.datetime.now(datetime.timezone.utc):
+                return (
+                    "Downloaded endpoint configuration is expired: "
+                    f"{new_endpoint.expiry}"
+                )
+        return None
 
     # --- Proxy Routing Helpers ---
 
@@ -342,6 +502,33 @@ class Device:
         if not handled:
             LOGGER.debug("Received command for proxy '%s' but no GatewayManager found.", device_id)
 
+    def _route_proxy_download(
+        self, device_id: str, download_name: str, payload: Dict
+    ) -> None:
+        """
+        Routes a download message meant for a proxy device to the GatewayManager.
+        """
+        handled = False
+        for manager in self.managers:
+            if hasattr(manager, "handle_proxy_download"):
+                try:
+                    manager.handle_proxy_download(
+                        device_id, download_name, payload
+                    )
+                    handled = True
+                except Exception as e: # pylint: disable=broad-exception-caught
+                    LOGGER.error(
+                        "Error routing proxy download to %s: %s",
+                        manager.__class__.__name__,
+                        e,
+                    )
+
+        if not handled:
+            LOGGER.debug(
+                "Received download for proxy '%s' but no GatewayManager found.",
+                device_id,
+            )
+
     # --- Device lifecycle and endpoint management ---
 
     def _has_new_endpoint_config(self, config: Config) -> bool:
@@ -351,6 +538,12 @@ class Device:
 
         blob_config = config.blobset.blobs.get(IOT_ENDPOINT_CONFIG_BLOB_KEY)
         if not blob_config:
+            return False
+
+        if (
+            self._endpoint_blob_state
+            and self._endpoint_blob_state.generation == blob_config.generation
+        ):
             return False
 
         current_gen = self.persistence.get_active_generation()
@@ -372,25 +565,31 @@ class Device:
                 EndpointConfiguration
             )
 
-            LOGGER.info("Endpoint blob fetched. Generation: %s. Saving...",
-                        generation)
-
-            self.persistence.save_active_endpoint(new_endpoint, generation)
-            self.current_endpoint = new_endpoint
-            self.device_id = self.current_endpoint.client_id.split('/')[-1]
-
-            if self._redirection_handler:
-                try:
-                    LOGGER.info("Invoking redirection handler...")
-                    self._redirection_handler(new_endpoint)
-                except Exception as e: # pylint: disable=broad-exception-caught
-                    LOGGER.error("Error in redirection handler: %s", e)
-
-            LOGGER.info("Signaling main loop to trigger connection reset...")
-            self._loop_state.reset_event.set()
+            self._apply_redirect_endpoint(new_endpoint, generation)
 
         except Exception as e:  # pylint:disable=broad-exception-caught
             LOGGER.error("Failed to process endpoint redirect: %s", e)
+
+    def _apply_redirect_endpoint(
+        self, new_endpoint: EndpointConfiguration, generation: str
+    ) -> None:
+        """Saves and activates a new endpoint configuration."""
+        LOGGER.info("Endpoint blob fetched. Generation: %s. Saving...",
+                    generation)
+
+        self.persistence.save_active_endpoint(new_endpoint, generation)
+        self.current_endpoint = new_endpoint
+        self.device_id = self.current_endpoint.client_id.split('/')[-1]
+
+        if self._redirection_handler:
+            try:
+                LOGGER.info("Invoking redirection handler...")
+                self._redirection_handler(new_endpoint)
+            except Exception as e: # pylint: disable=broad-exception-caught
+                LOGGER.error("Error in redirection handler: %s", e)
+
+        LOGGER.info("Signaling main loop to trigger connection reset...")
+        self._loop_state.reset_event.set()
 
     # --- Main Run Loop ---
 
@@ -532,6 +731,18 @@ class Device:
                 except (AttributeError, TypeError, KeyError, ValueError) as e:
                     LOGGER.error("Error in %s.update_state: %s",
                                  manager.__class__.__name__, e)
+            if self._endpoint_blob_state is not None:
+                if self.state.blobset is None:
+                    self.state.blobset = BlobsetState(blobs={})
+                elif self.state.blobset.blobs is None:
+                    self.state.blobset.blobs = {}
+                self.state.blobset.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY] = (
+                    self._endpoint_blob_state
+                )
+            elif self.state.blobset and self.state.blobset.blobs:
+                self.state.blobset.blobs.pop(IOT_ENDPOINT_CONFIG_BLOB_KEY, None)
+                if not self.state.blobset.blobs:
+                    self.state.blobset = None
             should_block = bypass_throttle if blocking is None else blocking
             self.dispatcher.publish_state(self.state, wait=should_block)
             self._loop_state.last_state_publish_time = time.time()

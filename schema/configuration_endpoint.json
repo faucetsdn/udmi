@@ -257,6 +257,16 @@
         "display": "show",
         "style": "bold"
       }
+    },
+    "expiry": {
+      "description": "Timestamp when the provisioned credential or endpoint expires",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"],
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     }
   },
   "required": [

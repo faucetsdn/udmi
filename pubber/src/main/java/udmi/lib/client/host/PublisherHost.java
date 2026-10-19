@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.setClockSkew;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
@@ -18,11 +19,13 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.lib.base.ManagerBase.INITIAL_THRESHOLD_SEC;
 import static udmi.lib.base.ManagerBase.updateStateHolder;
 import static udmi.lib.base.MqttDevice.CONFIG_TOPIC;
+import static udmi.lib.base.MqttDevice.DOWNLOAD_TOPIC;
 import static udmi.lib.base.MqttDevice.ERRORS_TOPIC;
 import static udmi.lib.base.MqttDevice.STATE_TOPIC;
 import static udmi.lib.base.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
@@ -75,11 +78,13 @@ import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobBlobsetState;
 import udmi.schema.BlobsetConfig;
 import udmi.schema.BlobsetConfig.SystemBlobsets;
+import udmi.schema.BlobsetDownload;
 import udmi.schema.BlobsetState;
 import udmi.schema.Category;
 import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.DiscoveryUpload;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Level;
@@ -100,6 +105,7 @@ public interface PublisherHost extends ManagerHost {
   String UDMI_VERSION = SchemaVersion.CURRENT.key();
   String BROKEN_VERSION = "1.4.";
   String DATA_URL_JSON_BASE64 = "data:application/json;base64,";
+  String DOWNLOAD_URL_PREFIX = "download://";
   int STATE_THROTTLE_MS = 2000;
   int DEFAULT_REPORT_SEC = 10;
   int FORCED_STATE_TIME_MS = 10000;
@@ -122,6 +128,7 @@ public interface PublisherHost extends ManagerHost {
           .put(MqttPublisher.FakeTopic.class, getEventsSuffix("racoon"))
           .put(MqttPublisher.InjectedState.class, STATE_TOPIC)
           .put(DiscoveryEvents.class, getEventsSuffix("discovery"))
+          .put(DiscoveryUpload.class, getUploadSuffix("discovery"))
           .build();
   Map<String, String> INVALID_REPLACEMENTS = ImmutableMap.of(
       "events/blobset", "\"\"",
@@ -258,6 +265,17 @@ public interface PublisherHost extends ManagerHost {
       }
       BlobBlobsetConfig blobBlobsetConfig = blobs.get(blobName);
       if (blobBlobsetConfig != null && FINAL.equals(blobBlobsetConfig.phase)) {
+        if (blobBlobsetConfig.url != null
+            && blobBlobsetConfig.url.startsWith(DOWNLOAD_URL_PREFIX)) {
+          BlobBlobsetState blobState = ensureBlobsetState(blobName);
+          if (!Objects.equals(blobState.generation, blobBlobsetConfig.generation)
+              || !BlobPhase.FINAL.equals(blobState.phase)) {
+            blobState.phase = BlobPhase.APPLY;
+            blobState.generation = blobBlobsetConfig.generation;
+            markStateDirty();
+          }
+          return null;
+        }
         return acquireBlobData(blobBlobsetConfig.url, blobBlobsetConfig.sha256);
       }
       return null;
@@ -437,6 +455,10 @@ public interface PublisherHost extends ManagerHost {
     return format("%s/%s", MqttDevice.EVENTS_TOPIC, suffixSuffix);
   }
 
+  static String getUploadSuffix(String suffixSuffix) {
+    return format("%s/%s", MqttDevice.UPLOAD_TOPIC, suffixSuffix);
+  }
+
   /**
    * Augments a given {@code message} object with the current timestamp and version information.
    */
@@ -559,6 +581,7 @@ public interface PublisherHost extends ManagerHost {
    */
   default void registerMessageHandlers() {
     getDeviceTarget().registerHandler(CONFIG_TOPIC, this::configHandler, Config.class);
+    getDeviceTarget().registerHandler(DOWNLOAD_TOPIC, this::downloadHandler, BlobsetDownload.class);
     String gatewayId = getGatewayId(getDeviceId());
     if (isGatewayDevice()) {
       // In this case, this is the gateway so register the appropriate error handler directly.
@@ -569,6 +592,39 @@ public interface PublisherHost extends ManagerHost {
       gatewayTarget.registerHandler(CONFIG_TOPIC, this::gatewayHandler, Config.class);
       gatewayTarget.registerHandler(ERRORS_TOPIC, this::errorHandler, GatewayError.class);
     }
+  }
+
+  /**
+   * Handles incoming ephemeral {@link BlobsetDownload} payloads on {@code download/blobset}.
+   */
+  default void downloadHandler(BlobsetDownload download) {
+    if (download == null || download.blobs == null) {
+      return;
+    }
+    withStateLock(() -> {
+      EndpointConfiguration endpoint = download.blobs.get(IOT_ENDPOINT_CONFIG.value());
+      if (endpoint != null) {
+        BlobBlobsetConfig blobConfig =
+            catchToNull(() -> getDeviceConfig().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()));
+        if (blobConfig == null || blobConfig.url == null
+            || !blobConfig.url.startsWith(DOWNLOAD_URL_PREFIX)) {
+          warn("Ignoring unsolicited endpoint download");
+          return;
+        }
+        String actualSha256 = GeneralUtils.sha256(stringifyTerse(endpoint));
+        if (!isNotEmpty(blobConfig.sha256)) {
+          endpoint.error = "Missing expected blob sha256";
+        } else if (!blobConfig.sha256.equals(actualSha256)) {
+          endpoint.error = "Blob data hash mismatch";
+        } else if (endpoint.expiry != null && !endpoint.expiry.after(getNow())) {
+          endpoint.error = "Endpoint configuration expired";
+        }
+        if (blobConfig.generation != null) {
+          endpoint.generation = blobConfig.generation;
+        }
+        setExtractedEndpoint(endpoint);
+      }
+    });
   }
 
   /**
@@ -628,11 +684,15 @@ public interface PublisherHost extends ManagerHost {
     String usePhase = isBadCategory() ? "apply" : phase;
     String category = type == null
         ? UDMI_PUBLISHER_LOG_CATEGORY
-        : format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
+        : "download".equals(type)
+            ? format("blobset.blob.%s", usePhase)
+            : format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
     Entry report = entryFromException(category, cause);
     getDeviceManager().localLog(report);
     publishLogMessage(report, targetId);
-    registerSystemStatus(report, targetId);
+    if (!"download".equals(type)) {
+      registerSystemStatus(report, targetId);
+    }
   }
 
   /**
@@ -876,6 +936,14 @@ public interface PublisherHost extends ManagerHost {
    * @return The extracted {@link EndpointConfiguration}
    */
   default EndpointConfiguration extractEndpointBlobConfig() {
+    BlobBlobsetConfig blobConfig =
+        catchToNull(() -> getDeviceConfig().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()));
+    if (blobConfig != null && blobConfig.url != null
+        && blobConfig.url.startsWith(DOWNLOAD_URL_PREFIX)
+        && getExtractedEndpoint() != null
+        && Objects.equals(getExtractedEndpoint().generation, blobConfig.generation)) {
+      return getExtractedEndpoint();
+    }
     setExtractedEndpoint(null);
     if (getDeviceConfig().blobset == null) {
       return null;
@@ -942,6 +1010,12 @@ public interface PublisherHost extends ManagerHost {
         : redirectedEndpoint(redirectRegistry);
 
     if (extractedSignature == null) {
+      BlobBlobsetConfig pendingBlob =
+          catchToNull(() -> getDeviceConfig().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()));
+      if (pendingBlob != null && pendingBlob.url != null
+          && pendingBlob.url.startsWith(DOWNLOAD_URL_PREFIX)) {
+        return;
+      }
       setAttemptedEndpoint(null);
       removeBlobsetBlobState(IOT_ENDPOINT_CONFIG);
       return;
@@ -951,6 +1025,14 @@ public interface PublisherHost extends ManagerHost {
 
     if (extractedSignature.equals(currentSignature)
             || extractedSignature.equals(getAttemptedEndpoint())) {
+      if (extractedEndpoint != null && extractedEndpoint.error == null
+          && endpointState.phase == BlobBlobsetConfig.BlobPhase.APPLY) {
+        endpointState.phase = BlobBlobsetConfig.BlobPhase.FINAL;
+        endpointState.status = null;
+        endpointState.generation = extractedEndpoint.generation;
+        persistEndpoint(extractedEndpoint);
+        markStateDirty();
+      }
       return; // No need to redirect anything!
     }
 

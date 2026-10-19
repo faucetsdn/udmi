@@ -516,7 +516,7 @@ class SystemManager(BaseManager):
         state.system = self._system_state
 
         if self._blob_states:
-            state.blobset = BlobsetState(blobs=self._blob_states)
+            state.blobset = BlobsetState(blobs=dict(self._blob_states))
 
     def _publish_startup_event(self) -> None:
         """Publishes the system startup event log."""

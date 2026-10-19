@@ -73,3 +73,4 @@ class EndpointConfiguration(DataModel):
     cert_file: Optional[str] = None
     key_file: Optional[str] = None
     generation: Optional[str] = None
+    expiry: Optional[str] = None

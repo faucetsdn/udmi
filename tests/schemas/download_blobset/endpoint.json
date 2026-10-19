@@ -1,0 +1,28 @@
+//
+// Sent on MQTT topic: /devices/{device_id}/download/blobset
+// Ephemeral cloud-to-device blobset delivery.
+//
+{
+  "version": "1.5.7",
+  "timestamp": "2019-01-17T14:02:29.364Z",
+  "blobs": {
+    "_iot_endpoint_config": {
+      "protocol": "mqtt",
+      "transport": "ssl",
+      "hostname": "mqtt.example.com",
+      "port": 8883,
+      "client_id": "AHU-1",
+      "generation": "2019-01-17T14:02:00.000Z",
+      "expiry": "2019-01-18T14:02:00.000Z",
+      "auth_provider": {
+        "basic": {
+          "username": "AHU-1",
+          "password": "rotated-secret-password"
+        },
+        "jwt": {
+          "audience": "example-project"
+        }
+      }
+    }
+  }
+}
