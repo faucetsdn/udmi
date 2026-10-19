@@ -92,6 +92,8 @@ class HandlerTests(unittest.TestCase):
     def test_discovery_handler(self):
         handler = DiscoveryHandler()
         self.assertTrue(handler.can_handle("discovery", "events", {}))
+        self.assertFalse(handler.can_handle("discovery", "upload", {}))
+        self.assertFalse(handler.can_handle("discovery", "state", {}))
 
         envelope = {"deviceId": "GAT-1", "deviceRegistryId": "reg-1"}
         payload = {

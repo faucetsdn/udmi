@@ -460,20 +460,21 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     start_model = calls[0][0][1]
     self.assertEqual(start_model.event_no, 0)
     self.assertEqual(start_model.family, "ether")
-    self.assertIn("trace-ether-", start_model.session_id)
+    self.assertIsNotNone(start_model.generation)
 
-    # 2. Data chunk (event_no = 1, chunk_index = 0)
+    # 2. Data chunk (event_no = 1)
     self.assertEqual(calls[1][0][0], "upload/discovery")
     chunk_model = calls[1][0][1]
     self.assertEqual(chunk_model.event_no, 1)
-    self.assertEqual(chunk_model.chunk_index, 0)
-    self.assertEqual(chunk_model.total_chunks, 1)
-    self.assertEqual(chunk_model.session_id, start_model.session_id)
+    self.assertEqual(chunk_model.family, "ether")
+    self.assertEqual(chunk_model.generation, start_model.generation)
 
     # 3. Terminal EOF marker (event_no = -2, sha256)
     self.assertEqual(calls[2][0][0], "upload/discovery")
     eof_model = calls[2][0][1]
     self.assertEqual(eof_model.event_no, -2)
+    self.assertEqual(eof_model.family, "ether")
+    self.assertEqual(eof_model.generation, start_model.generation)
     self.assertEqual(
         eof_model.sha256,
         hashlib.sha256(b"MOCK_PACKET_HEADERMOCK_PACKET_BODY").hexdigest(),

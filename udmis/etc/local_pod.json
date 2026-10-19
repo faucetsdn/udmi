@@ -49,6 +49,10 @@
     "uufi_events": {
       "recv_id": "events/#",
       "send_id": "/uufi/#"
+    },
+    "uufi_upload": {
+      "recv_id": "upload/#",
+      "send_id": "/uufi/#"
     }
   },
   "crons": {

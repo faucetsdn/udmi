@@ -171,6 +171,28 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     return configUpdate;
   }
 
+  protected void processDownloadChange(Envelope envelope, Object payload) {
+    if (envelope.subFolder != SubFolder.BLOBSET || payload == null || iotAccess == null) {
+      return;
+    }
+    udmi.schema.BlobsetDownload download =
+        com.google.udmi.util.JsonUtil.convertTo(udmi.schema.BlobsetDownload.class, payload);
+    if (download == null || download.blobs == null) {
+      return;
+    }
+    String registryId = envelope.deviceRegistryId;
+    String deviceId = envelope.deviceId;
+    download.blobs.forEach(
+        (key, endpoint) -> iotAccess.provisionDownloadBlob(registryId, deviceId, key, endpoint));
+    String currentState = iotAccess.fetchState(registryId, deviceId);
+    if (isNotEmpty(currentState)) {
+      StateUpdate stateUpdate = fromJsonString(currentState, StateUpdate.class);
+      if (stateUpdate != null && stateUpdate.blobset != null) {
+        iotAccess.handleBlobsetState(envelope, stateUpdate.blobset);
+      }
+    }
+  }
+
   protected void reflectError(SubType subType, BundleException bundleException) {
     Bundle bundle = bundleException.bundle;
     Map<String, String> errorMap = bundle.attributesMap;

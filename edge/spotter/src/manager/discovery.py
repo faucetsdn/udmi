@@ -62,8 +62,8 @@ class SpotterDiscoveryManager(DiscoveryManager):
   """Unified Discovery Manager for Spotter.
 
   Extends standard DiscoveryManager to handle active protocol sweeps and
-  TRACE packet streaming over upload/discovery with safety circuit breaker checks
-  and UDMI discovery phase lifecycle tracking (pending/active/stopped).
+  TRACE packet streaming over upload/discovery with safety circuit breaker
+  checks and UDMI discovery phase lifecycle tracking (pending/active/stopped).
   """
 
   def __init__(self, max_mem_pct: float = 85.0) -> None:
@@ -492,7 +492,6 @@ class SpotterDiscoveryManager(DiscoveryManager):
       total_chunks = (
           (total_bytes + chunk_size - 1) // chunk_size if total_bytes > 0 else 1
       )
-      session_id = f"trace-{family}-{int(time.time())}"
       gen_str = f_state.generation or _format_generation(
           datetime.now(timezone.utc)
       )
@@ -502,9 +501,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
           version=UDMI_VERSION,
           family=family,
           generation=gen_str,
-          session_id=session_id,
           event_no=0,
-          total_chunks=total_chunks,
       )
       self.publish_upload(start_upload, "discovery")
 
@@ -520,10 +517,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
             version=UDMI_VERSION,
             family=family,
             generation=gen_str,
-            session_id=session_id,
             event_no=event_no,
-            chunk_index=idx,
-            total_chunks=total_chunks,
             data=b64_data,
         )
         self.publish_upload(chunk_upload, "discovery")
@@ -540,9 +534,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
           version=UDMI_VERSION,
           family=family,
           generation=gen_str,
-          session_id=session_id,
           event_no=-(total_chunks + 1),
-          total_chunks=total_chunks,
           sha256=hashlib.sha256(full_data).hexdigest(),
       )
       self.publish_upload(eof_upload, "discovery")

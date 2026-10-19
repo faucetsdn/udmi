@@ -363,6 +363,9 @@ public class ReflectProcessor extends ProcessorBase {
       // If there was actually a config change, then the transaction will be acknowledged that way.
       ifNotNullThen(processConfigChange(attributes, payload, null), updated ->
           attributes.transactionId = makeConfigUpdateTransaction(attributes.transactionId));
+    } else if (attributes.subType == SubType.DOWNLOAD) {
+      processDownloadChange(attributes, payload);
+      return reply;
     }
     if (payload instanceof String) {
       return reply;

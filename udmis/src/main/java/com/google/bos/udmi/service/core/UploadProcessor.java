@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.core;
 
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.JsonUtil.isoConvert;
+import static com.google.udmi.util.JsonUtil.stringify;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -20,20 +21,23 @@ import java.util.Set;
 import udmi.schema.DiscoveryUpload;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 
 /**
  * Processor for device-to-cloud chunked binary uploads over the {@code upload} channel.
  *
- * <p>Stages incoming chunks in the shared {@link IotDataProvider} (Etcd) so multiple UDMIS pods
- * can receive chunks in any order and uses an atomic Compare-And-Swap election to ensure exactly
- * one pod reassembles and verifies the complete payload once all chunks and the negative EOF
- * boundary marker have arrived.
+ * <p>Stages incoming chunks in the shared {@link IotDataProvider} (Etcd) keyed by
+ * {@code (family, generation)} so multiple UDMIS pods can receive chunks in any order and uses an
+ * atomic Compare-And-Swap election to ensure exactly one pod reassembles and verifies the complete
+ * payload once the start marker, all data chunks, and the negative EOF boundary marker have
+ * arrived.
  */
 @ComponentName("upload")
 public class UploadProcessor extends ProcessorBase {
 
   public static final String DATABASE_COMPONENT = "database";
+  public static final String STARTED_KEY = "started";
   public static final String CHUNK_KEY_PREFIX = "chunk_";
   public static final String EXPECTED_CHUNKS_KEY = "expected_chunks";
   public static final String EXPECTED_SHA256_KEY = "expected_sha256";
@@ -73,12 +77,46 @@ public class UploadProcessor extends ProcessorBase {
   @MessageHandler
   public void discoveryUploadHandler(DiscoveryUpload message) {
     MessageContinuation continuation = getContinuation(message);
-    Envelope envelope = continuation.getEnvelope();
+    handleDiscoveryUpload(continuation.getEnvelope(), message);
+  }
+
+  /**
+   * Reflect and stage a discovery upload message using this processor's configured resources.
+   */
+  public void handleDiscoveryUpload(Envelope envelope, DiscoveryUpload message) {
+    if (envelope.subType == null) {
+      envelope.subType = SubType.UPLOAD;
+    }
+    if (envelope.subFolder == null) {
+      envelope.subFolder = SubFolder.DISCOVERY;
+    }
+    reflectMessage(envelope, stringify(message));
     IotDataProvider dataProvider = database != null
         ? database
         : UdmiServicePod.maybeGetComponent(DATABASE_COMPONENT);
-    requireNonNull(dataProvider, "Missing database component for upload reassembly");
-    processDiscoveryUpload(envelope, message, dataProvider, outputDir);
+    if (dataProvider != null && envelope.deviceId != null && envelope.deviceRegistryId != null) {
+      File outputFile = processDiscoveryUpload(envelope, message, dataProvider, outputDir);
+      if (outputFile != null) {
+        info("Reassembled discovery upload for %s/%s to %s",
+            envelope.deviceRegistryId, envelope.deviceId, outputFile.getAbsolutePath());
+      }
+    }
+  }
+
+  /**
+   * Stage a discovery upload chunk or boundary marker using the active pod's database and output
+   * directory.
+   */
+  public static File processDiscoveryUpload(Envelope envelope, DiscoveryUpload message) {
+    IotDataProvider dataProvider = UdmiServicePod.maybeGetComponent(DATABASE_COMPONENT);
+    if (dataProvider == null || envelope.deviceId == null || envelope.deviceRegistryId == null) {
+      return null;
+    }
+    UploadProcessor uploadProcessor = UdmiServicePod.maybeGetComponent(UploadProcessor.class);
+    File outDir = uploadProcessor != null
+        ? uploadProcessor.getOutputDir()
+        : new File(DEFAULT_UPLOAD_DIR);
+    return processDiscoveryUpload(envelope, message, dataProvider, outDir);
   }
 
   /**
@@ -92,46 +130,40 @@ public class UploadProcessor extends ProcessorBase {
       File baseOutputDir) {
     String registryId = requireNonNull(envelope.deviceRegistryId, "missing deviceRegistryId");
     String deviceId = requireNonNull(envelope.deviceId, "missing deviceId");
-    String sessionId = requireNonNull(message.session_id, "missing session_id");
+    String family = requireNonNull(message.family, "missing family");
+    String generation = requireNonNull(isoConvert(message.generation), "missing generation");
     Integer eventNo = requireNonNull(message.event_no, "missing event_no");
 
-    String sanitizedSession = sessionId.replaceAll("[:/]", "_");
+    String uploadKey = format("%s_%s", family, generation).replaceAll("[^a-zA-Z0-9._-]", "_");
     DataRef uploadRef = dataProvider.ref()
         .registry(registryId)
         .device(deviceId)
-        .collection("upload_" + sanitizedSession);
+        .collection("upload_" + uploadKey);
 
     if (eventNo == 0) {
       Map<String, String> startPuts = new HashMap<>();
-      startPuts.put("started", "true");
-      ifNotNullThen(message.family, family -> startPuts.put("family", family));
-      if (message.total_chunks != null && message.total_chunks > 0) {
-        startPuts.put(EXPECTED_CHUNKS_KEY, String.valueOf(message.total_chunks));
-      }
+      startPuts.put(STARTED_KEY, "true");
+      startPuts.put("family", family);
+      startPuts.put("generation", generation);
       uploadRef.update(startPuts, null);
-      return null;
     } else if (eventNo > 0) {
       if (message.data == null || message.data.isEmpty()) {
         throw new IllegalArgumentException(
-            format("Upload chunk event_no %d for session %s missing data payload",
-                eventNo, sessionId));
+            format("Upload chunk event_no %d for %s missing data payload", eventNo, uploadKey));
       }
       Map<String, String> chunkPuts = new HashMap<>();
       chunkPuts.put(CHUNK_KEY_PREFIX + eventNo, message.data);
-      if (message.total_chunks != null && message.total_chunks > 0) {
-        chunkPuts.put(EXPECTED_CHUNKS_KEY, String.valueOf(message.total_chunks));
-      }
       uploadRef.update(chunkPuts, null);
     } else {
       int expectedChunks = -(eventNo + 1);
       if (expectedChunks <= 0) {
         throw new IllegalArgumentException(
-            format("Invalid terminal event_no %d for session %s", eventNo, sessionId));
+            format("Invalid terminal event_no %d for %s", eventNo, uploadKey));
       }
       if (message.sha256 == null || message.sha256.isEmpty()) {
         throw new IllegalArgumentException(
-            format("Terminal upload marker event_no %d for session %s missing sha256",
-                eventNo, sessionId));
+            format("Terminal upload marker event_no %d for %s missing sha256",
+                eventNo, uploadKey));
       }
       Map<String, String> eofPuts = new HashMap<>();
       eofPuts.put(EXPECTED_CHUNKS_KEY, String.valueOf(expectedChunks));
@@ -140,9 +172,10 @@ public class UploadProcessor extends ProcessorBase {
     }
 
     Map<String, String> entries = uploadRef.entries();
+    String started = entries.get(STARTED_KEY);
     String expectedChunksStr = entries.get(EXPECTED_CHUNKS_KEY);
     String expectedSha256 = entries.get(EXPECTED_SHA256_KEY);
-    if (expectedChunksStr == null || expectedSha256 == null) {
+    if (started == null || expectedChunksStr == null || expectedSha256 == null) {
       return null;
     }
 
@@ -169,21 +202,21 @@ public class UploadProcessor extends ProcessorBase {
       String actualSha256 = computeSha256Hex(payloadBytes);
       if (!expectedSha256.equalsIgnoreCase(actualSha256)) {
         throw new IllegalStateException(format(
-            "SHA-256 mismatch for upload session %s: expected %s, got %s",
-            sessionId, expectedSha256, actualSha256));
+            "SHA-256 mismatch for upload %s: expected %s, got %s",
+            uploadKey, expectedSha256, actualSha256));
       }
 
       File deviceOutputDir = new File(new File(baseOutputDir, registryId), deviceId);
       Files.createDirectories(deviceOutputDir.toPath());
-      File outputFile = new File(deviceOutputDir, sanitizedSession + ".pcap");
+      File outputFile = new File(deviceOutputDir, uploadKey + ".pcap");
       Files.write(outputFile.toPath(), payloadBytes);
       return outputFile;
     } catch (RuntimeException e) {
       throw e;
     } catch (Exception e) {
       throw new RuntimeException(
-          format("While reassembling upload session %s for %s/%s",
-              sessionId, registryId, deviceId), e);
+          format("While reassembling upload %s for %s/%s",
+              uploadKey, registryId, deviceId), e);
     } finally {
       uploadRef.update(null, cleanupKeys);
     }

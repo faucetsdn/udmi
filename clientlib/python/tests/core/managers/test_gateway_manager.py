@@ -94,7 +94,8 @@ def test_add_proxy_flow(manager, mock_device, mock_dispatcher):
 
     expected_subs = [
         call("config", "new-proxy"),
-        call("commands/#", "new-proxy")
+        call("commands/#", "new-proxy"),
+        call("download/#", "new-proxy"),
     ]
     client.register_channel_subscription.assert_has_calls(expected_subs,
                                                           any_order=True)
@@ -191,10 +192,14 @@ def test_proxy_message_routing(manager):
     """
     mock_config_handler = MagicMock()
     mock_command_handler = MagicMock()
+    mock_download_handler = MagicMock()
 
-    manager.add_proxy("proxy-1",
-                      config_handler=mock_config_handler,
-                      command_handler=mock_command_handler)
+    manager.add_proxy(
+        "proxy-1",
+        config_handler=mock_config_handler,
+        command_handler=mock_command_handler,
+        download_handler=mock_download_handler,
+    )
 
     config_obj = Config(timestamp="now")
     manager.handle_proxy_config("proxy-1", config_obj)
@@ -203,6 +208,12 @@ def test_proxy_message_routing(manager):
     payload = {"cmd": "reset"}
     manager.handle_proxy_command("proxy-1", "reset", payload)
     mock_command_handler.assert_called_once_with("proxy-1", "reset", payload)
+
+    download_payload = {"blobs": {}}
+    manager.handle_proxy_download("proxy-1", "blobset", download_payload)
+    mock_download_handler.assert_called_once_with(
+        "proxy-1", "blobset", download_payload
+    )
 
 
 def test_proxy_routing_exception_safety(manager, caplog):

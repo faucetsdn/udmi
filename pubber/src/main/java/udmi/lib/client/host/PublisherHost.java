@@ -10,6 +10,7 @@ import static com.google.udmi.util.GeneralUtils.getTimestamp;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.setClockSkew;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
 import static com.google.udmi.util.GeneralUtils.toJsonFile;
@@ -18,6 +19,7 @@ import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.parseJson;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.stringify;
+import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static udmi.lib.base.ManagerBase.INITIAL_THRESHOLD_SEC;
@@ -604,7 +606,20 @@ public interface PublisherHost extends ManagerHost {
       if (endpoint != null) {
         BlobBlobsetConfig blobConfig =
             catchToNull(() -> getDeviceConfig().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()));
-        if (blobConfig != null && blobConfig.generation != null) {
+        if (blobConfig == null || blobConfig.url == null
+            || !blobConfig.url.startsWith(DOWNLOAD_URL_PREFIX)) {
+          warn("Ignoring unsolicited endpoint download");
+          return;
+        }
+        String actualSha256 = GeneralUtils.sha256(stringifyTerse(endpoint));
+        if (!isNotEmpty(blobConfig.sha256)) {
+          endpoint.error = "Missing expected blob sha256";
+        } else if (!blobConfig.sha256.equals(actualSha256)) {
+          endpoint.error = "Blob data hash mismatch";
+        } else if (endpoint.expiry != null && !endpoint.expiry.after(getNow())) {
+          endpoint.error = "Endpoint configuration expired";
+        }
+        if (blobConfig.generation != null) {
           endpoint.generation = blobConfig.generation;
         }
         setExtractedEndpoint(endpoint);
@@ -669,11 +684,15 @@ public interface PublisherHost extends ManagerHost {
     String usePhase = isBadCategory() ? "apply" : phase;
     String category = type == null
         ? UDMI_PUBLISHER_LOG_CATEGORY
-        : format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
+        : "download".equals(type)
+            ? format("blobset.blob.%s", usePhase)
+            : format(SYSTEM_CATEGORY_FORMAT, type, usePhase);
     Entry report = entryFromException(category, cause);
     getDeviceManager().localLog(report);
     publishLogMessage(report, targetId);
-    registerSystemStatus(report, targetId);
+    if (!"download".equals(type)) {
+      registerSystemStatus(report, targetId);
+    }
   }
 
   /**
@@ -917,6 +936,14 @@ public interface PublisherHost extends ManagerHost {
    * @return The extracted {@link EndpointConfiguration}
    */
   default EndpointConfiguration extractEndpointBlobConfig() {
+    BlobBlobsetConfig blobConfig =
+        catchToNull(() -> getDeviceConfig().blobset.blobs.get(IOT_ENDPOINT_CONFIG.value()));
+    if (blobConfig != null && blobConfig.url != null
+        && blobConfig.url.startsWith(DOWNLOAD_URL_PREFIX)
+        && getExtractedEndpoint() != null
+        && Objects.equals(getExtractedEndpoint().generation, blobConfig.generation)) {
+      return getExtractedEndpoint();
+    }
     setExtractedEndpoint(null);
     if (getDeviceConfig().blobset == null) {
       return null;
@@ -998,6 +1025,14 @@ public interface PublisherHost extends ManagerHost {
 
     if (extractedSignature.equals(currentSignature)
             || extractedSignature.equals(getAttemptedEndpoint())) {
+      if (extractedEndpoint != null && extractedEndpoint.error == null
+          && endpointState.phase == BlobBlobsetConfig.BlobPhase.APPLY) {
+        endpointState.phase = BlobBlobsetConfig.BlobPhase.FINAL;
+        endpointState.status = null;
+        endpointState.generation = extractedEndpoint.generation;
+        persistEndpoint(extractedEndpoint);
+        markStateDirty();
+      }
       return; // No need to redirect anything!
     }
 

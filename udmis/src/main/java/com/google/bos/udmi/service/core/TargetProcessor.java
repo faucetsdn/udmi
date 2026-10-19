@@ -77,17 +77,24 @@ public class TargetProcessor extends ProcessorBase {
     Envelope envelope = continuation.getEnvelope();
     defaultFields(message);
     publish(message);
+    if (envelope.deviceId == null) {
+      notice("Dropping message with no deviceId: " + stringifyTerse(envelope));
+      return;
+    }
+    if (envelope.subType == null) {
+      envelope.subType = SubType.UPLOAD;
+    }
+    if (envelope.subFolder == null) {
+      envelope.subFolder = SubFolder.DISCOVERY;
+    }
     updateLastSeen(envelope);
-    com.google.bos.udmi.service.support.IotDataProvider dataProvider =
-        com.google.bos.udmi.service.pod.UdmiServicePod.maybeGetComponent(
-            UploadProcessor.DATABASE_COMPONENT);
-    if (dataProvider != null && envelope.deviceId != null && envelope.deviceRegistryId != null) {
-      UploadProcessor uploadProcessor =
-          com.google.bos.udmi.service.pod.UdmiServicePod.maybeGetComponent(UploadProcessor.class);
-      java.io.File outDir = uploadProcessor != null
-          ? uploadProcessor.getOutputDir()
-          : new java.io.File("/tmp/udmi_uploads");
-      UploadProcessor.processDiscoveryUpload(envelope, message, dataProvider, outDir);
+    UploadProcessor uploadProcessor =
+        com.google.bos.udmi.service.pod.UdmiServicePod.maybeGetComponent(UploadProcessor.class);
+    if (uploadProcessor != null) {
+      uploadProcessor.handleDiscoveryUpload(envelope, message);
+    } else {
+      reflectMessage(envelope, stringify(message));
+      UploadProcessor.processDiscoveryUpload(envelope, message);
     }
   }
 

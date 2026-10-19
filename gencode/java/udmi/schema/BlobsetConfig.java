@@ -61,9 +61,7 @@ public class BlobsetConfig {
      */
     public enum SystemBlobsets {
 
-        IOT_ENDPOINT_CONFIG("_iot_endpoint_config"),
-        BACNET_SC_CONFIG("_bacnet_sc_config"),
-        DISCOVERY_AUTH("_discovery_auth");
+        IOT_ENDPOINT_CONFIG("_iot_endpoint_config");
         private final java.lang.String value;
         private final static Map<java.lang.String, BlobsetConfig.SystemBlobsets> CONSTANTS = new HashMap<java.lang.String, BlobsetConfig.SystemBlobsets>();
 

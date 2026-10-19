@@ -15,14 +15,12 @@
       "generation": "2019-01-17T14:02:00.000Z",
       "expiry": "2019-01-18T14:02:00.000Z",
       "auth_provider": {
-        "jwt": {
-          "audience": "example-project",
-          "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.payload.signature"
+        "basic": {
+          "username": "AHU-1",
+          "password": "rotated-secret-password"
         },
-        "mtls": {
-          "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC\n-----END PRIVATE KEY-----",
-          "certificate": "-----BEGIN CERTIFICATE-----\nMIIDXTCCAkWgAwIBAgIJALa\n-----END CERTIFICATE-----",
-          "ca_certificate": "-----BEGIN CERTIFICATE-----\nMIIDxTCCAq2gAwIBAgIQAqxcJmoLQJuPC3nyrkYldzANBgkqhkiG9w0BAQUFADBs\n-----END CERTIFICATE-----"
+        "jwt": {
+          "audience": "example-project"
         }
       }
     }

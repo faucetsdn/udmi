@@ -244,9 +244,8 @@ while [[ $SECONDS -lt $END_TIME ]]; do
     fi
     
     if grep -q '/upload/discovery' "$MQTT_OUT"; then
-        TOTAL=$(grep '/upload/discovery' "$MQTT_OUT" | head -n 1 | sed 's|^[^ ]* ||' | jq -r '.total_chunks')
-        COUNT=$(grep '/upload/discovery' "$MQTT_OUT" | wc -l)
-        if [[ -n "$TOTAL" && "$TOTAL" != "null" && $COUNT -ge $TOTAL ]]; then
+        EOF_EVENT=$(grep '/upload/discovery' "$MQTT_OUT" | sed 's|^[^ ]* ||' | jq -r 'select(.event_no < 0) | .event_no' | tail -n 1)
+        if [[ -n "$EOF_EVENT" ]]; then
             PCAP_DONE=1
         fi
     fi
@@ -276,9 +275,9 @@ if grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -e '.discovery
     exit 1
 fi
 
-echo "Reassembling pcap payload using reassemble_pcap utility"
+echo "Reassembling pcap payload using bin/mapper reassemble"
 grep '/upload/discovery' "$MQTT_OUT" | sed 's|^[^ ]* ||' > "$TEST_DIR/stream_events.json"
-"${SCRIPT_DIR}/reassemble_pcap" "$TEST_DIR/stream_events.json" "$TEST_DIR/assembled.pcap"
+"$WORKSPACE_DIR/bin/mapper" "$WORKSPACE_DIR/sites/udmi_site_model" //mqtt/localhost DSN-1 reassemble "$TEST_DIR/stream_events.json" "$TEST_DIR/assembled.pcap"
 
 echo "Validating pcap payload size"
 SIZE=$(stat -c%s "$TEST_DIR/assembled.pcap")

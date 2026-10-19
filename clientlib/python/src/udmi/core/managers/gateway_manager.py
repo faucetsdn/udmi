@@ -31,6 +31,8 @@ LOGGER = logging.getLogger(__name__)
 ProxyConfigHandler = Callable[[str, Config], None]
 # ProxyCommandHandler: (device_id, command_name, payload) -> None
 ProxyCommandHandler = Callable[[str, str, dict], None]
+# ProxyDownloadHandler: (device_id, download_name, payload) -> None
+ProxyDownloadHandler = Callable[[str, str, dict], None]
 
 
 class GatewayManager(BaseManager):
@@ -38,6 +40,8 @@ class GatewayManager(BaseManager):
     Manages the 'gateway' functionality.
     Allows this device to act as a gateway for other 'proxy' devices.
     """
+
+    # pylint: disable=too-many-instance-attributes
 
     @property
     def model_field_name(self) -> str:
@@ -56,8 +60,10 @@ class GatewayManager(BaseManager):
         self._proxies: List[str] = []
         self._proxy_config_handlers: Dict[str, ProxyConfigHandler] = {}
         self._proxy_command_handlers: Dict[str, ProxyCommandHandler] = {}
+        self._proxy_download_handlers: Dict[str, ProxyDownloadHandler] = {}
         self._default_config_handler: Optional[ProxyConfigHandler] = None
         self._default_command_handler: Optional[ProxyCommandHandler] = None
+        self._default_download_handler: Optional[ProxyDownloadHandler] = None
         self._gateway_state = GatewayState()
 
         LOGGER.info("GatewayManager initialized.")
@@ -168,9 +174,13 @@ class GatewayManager(BaseManager):
 
     # --- Public API ---
 
-    def add_proxy(self, device_id: str,
-                  config_handler: Optional[ProxyConfigHandler] = None,
-                  command_handler: Optional[ProxyCommandHandler] = None) -> None:
+    def add_proxy(
+        self,
+        device_id: str,
+        config_handler: Optional[ProxyConfigHandler] = None,
+        command_handler: Optional[ProxyCommandHandler] = None,
+        download_handler: Optional[ProxyDownloadHandler] = None,
+    ) -> None:
         """
         Registers a proxy device, persists it, and sends the 'attach' message.
 
@@ -178,6 +188,7 @@ class GatewayManager(BaseManager):
             device_id: The unique ID of the proxy device.
             config_handler: Optional callback for this proxy's config updates.
             command_handler: Optional callback for this proxy's commands.
+            download_handler: Optional callback for this proxy's downloads.
         """
         if device_id not in self._proxies:
             self._proxies.append(device_id)
@@ -189,11 +200,15 @@ class GatewayManager(BaseManager):
                                                                       device_id)
                 self._dispatcher.client.register_channel_subscription("commands/#",
                                                                       device_id)
+                self._dispatcher.client.register_channel_subscription("download/#",
+                                                                      device_id)
 
         if config_handler:
             self._proxy_config_handlers[device_id] = config_handler
         if command_handler:
             self._proxy_command_handlers[device_id] = command_handler
+        if download_handler:
+            self._proxy_download_handlers[device_id] = download_handler
 
     def remove_proxy(self, device_id: str) -> None:
         """
@@ -206,6 +221,7 @@ class GatewayManager(BaseManager):
             self._proxies.remove(device_id)
             self._proxy_config_handlers.pop(device_id, None)
             self._proxy_command_handlers.pop(device_id, None)
+            self._proxy_download_handlers.pop(device_id, None)
             LOGGER.info("Detached proxy device: %s", device_id)
             self._save_proxies()
             if self._dispatcher:
@@ -248,6 +264,28 @@ class GatewayManager(BaseManager):
                 handler(device_id, command_name, payload)
             except Exception as e: # pylint: disable=broad-exception-caught
                 LOGGER.error("Error in proxy command handler for %s: %s", device_id, e)
+
+    def handle_proxy_download(
+        self, device_id: str, download_name: str, payload: dict
+    ) -> None:
+        """
+        Routes downloads to the specific proxy handler.
+
+        Args:
+            device_id: The ID of the proxy device receiving the download.
+            download_name: The name of the download channel (e.g., 'blobset').
+            payload: The download payload dictionary.
+        """
+        handler = self._proxy_download_handlers.get(
+            device_id, self._default_download_handler
+        )
+        if handler:
+            try:
+                handler(device_id, download_name, payload)
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                LOGGER.error(
+                    "Error in proxy download handler for %s: %s", device_id, e
+                )
 
     def _send_attach_message(self, device_id: str) -> None:
         """
@@ -292,14 +330,20 @@ class GatewayManager(BaseManager):
         if self._dispatcher:
             self._dispatcher.publish_event(f"events/{subfolder}", event_model, device_id=device_id)
 
-    def set_default_handlers(self, config_handler: Optional[ProxyConfigHandler] = None,
-                             command_handler: Optional[ProxyCommandHandler] = None) -> None:
+    def set_default_handlers(
+        self,
+        config_handler: Optional[ProxyConfigHandler] = None,
+        command_handler: Optional[ProxyCommandHandler] = None,
+        download_handler: Optional[ProxyDownloadHandler] = None,
+    ) -> None:
         """
         Sets the default handlers for proxies that don't have specific ones registered.
 
         Args:
             config_handler: The default callback for config updates.
             command_handler: The default callback for commands.
+            download_handler: The default callback for downloads.
         """
         self._default_config_handler = config_handler
         self._default_command_handler = command_handler
+        self._default_download_handler = download_handler

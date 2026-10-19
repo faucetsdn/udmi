@@ -27,26 +27,14 @@
       "format": "date-time",
       "examples": ["2019-01-17T14:02:29.364Z"]
     },
-    "session_id": {
-      "description": "Unique session identifier for the chunked upload transmission",
-      "type": "string"
-    },
     "event_no": {
       "description": "Sequence number for this upload chunk: 0 for start marker, 1..N for data chunks, -(N + 1) for terminal EOF marker",
-      "type": "integer"
-    },
-    "chunk_index": {
-      "description": "0-based index of the transmitted chunk payload within the total session",
-      "type": "integer"
-    },
-    "total_chunks": {
-      "description": "Total number of chunks comprising the complete transmission binary",
       "type": "integer"
     },
     "sha256": {
       "description": "SHA-256 hex digest of the complete unencoded binary payload (included on the terminal negative event_no marker)",
       "type": "string",
-      "pattern": "^[0-9a-fA-F]{64}$"
+      "pattern": "^[0-9a-f]{64}$"
     },
     "data": {
       "description": "Base64-encoded binary chunk payload data",
@@ -56,7 +44,8 @@
   "required": [
     "timestamp",
     "version",
-    "session_id",
+    "family",
+    "generation",
     "event_no"
   ]
 }

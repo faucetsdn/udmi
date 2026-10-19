@@ -930,6 +930,7 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
     }
     try {
       Envelope envelope = deepCopy(baseEnvelope);
+      envelope.gatewayId = null;
       envelope.subFolder = folder;
       envelope.subType = SubType.DOWNLOAD;
       envelope.source = IotProvider.ZANZARA.value();

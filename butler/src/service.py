@@ -56,7 +56,7 @@ def parse_mqtt_topic(topic: str) -> Dict[str, Optional[str]]:
                 sub_type = parts[r_idx + 2]
             if r_idx + 3 < len(parts):
                 sub_folder = parts[r_idx + 3]
-        elif len(parts) > 0 and parts[0] in ("events", "state", "commands", "config"):
+        elif len(parts) > 0 and parts[0] in ("events", "state", "commands", "config", "upload", "download"):
             sub_type = parts[0]
             if len(parts) > 1:
                 sub_folder = parts[1]

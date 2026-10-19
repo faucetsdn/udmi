@@ -378,6 +378,7 @@ class ZanzaraIotAccessProviderTest {
     udmi.schema.Envelope env = new udmi.schema.Envelope();
     env.deviceRegistryId = TEST_REGISTRY;
     env.deviceId = TEST_DEVICE;
+    env.gatewayId = "uufi";
 
     provider.handleBlobsetState(env, blobsetState);
 
@@ -389,6 +390,7 @@ class ZanzaraIotAccessProviderTest {
         bundleCaptor.getValue();
     assertEquals(udmi.schema.Envelope.SubType.DOWNLOAD, published.envelope.subType);
     assertEquals(udmi.schema.Envelope.SubFolder.BLOBSET, published.envelope.subFolder);
+    org.junit.jupiter.api.Assertions.assertNull(published.envelope.gatewayId);
   }
 
 

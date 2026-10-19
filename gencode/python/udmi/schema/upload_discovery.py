@@ -19,9 +19,6 @@ class DiscoveryUpload(DataModel):
     version: Optional[str] = None
     family: Optional[str] = None
     generation: Optional[str] = None
-    session_id: Optional[str] = None
     event_no: Optional[int] = None
-    chunk_index: Optional[int] = None
-    total_chunks: Optional[int] = None
     sha256: Optional[str] = None
     data: Optional[str] = None

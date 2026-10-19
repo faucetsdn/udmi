@@ -154,6 +154,7 @@ import udmi.schema.CapabilityValidationState;
 import udmi.schema.CapabilityValidationState.CapabilityResult;
 import udmi.schema.Config;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.DiscoveryUpload;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -215,7 +216,8 @@ public class SequenceBase {
   private static final Map<Class<?>, SubFolder> CLASS_EVENT_SUBTYPE_MAP = ImmutableMap.of(
       SystemEvents.class, SubFolder.SYSTEM,
       PointsetEvents.class, SubFolder.POINTSET,
-      DiscoveryEvents.class, SubFolder.DISCOVERY
+      DiscoveryEvents.class, SubFolder.DISCOVERY,
+      DiscoveryUpload.class, SubFolder.DISCOVERY
   );
   private static final Map<SubType, Class<?>> EXPECTED_UPDATES = ImmutableMap.of(
       SubType.CONFIG, Config.class,
@@ -548,6 +550,11 @@ public class SequenceBase {
     SubType useType = ofNullable(subType).orElse(SubType.INVALID);
     SubFolder useFolder = ofNullable(subFolder).orElse(SubFolder.INVALID);
     return format("%s_%s", useType, useFolder);
+  }
+
+  private static String messageCaptureBase(Class<?> clazz) {
+    SubType subType = clazz == DiscoveryUpload.class ? SubType.UPLOAD : SubType.EVENTS;
+    return messageCaptureBase(subType, CLASS_EVENT_SUBTYPE_MAP.get(clazz));
   }
 
   private static void emitSequenceResult(SequenceResult result, String bucket, String name,
@@ -2071,9 +2078,11 @@ public class SequenceBase {
     switch (envelope.subType) {
       // These are echos of sent partial config messages, so do nothing.
       case CONFIG -> trace("Ignoring echo configTransaction " + transactionId);
+      case DOWNLOAD -> trace("Ignoring echo downloadTransaction " + transactionId);
       // State updates are handled as a monolithic block with a state reflector update.
       case STATE -> trace("Ignoring partial state update");
       case EVENTS -> handleEventMessage(envelope, message);
+      case UPLOAD -> captureMessage(envelope, message);
       default -> info("Encountered unexpected subType " + envelope.subType);
     }
   }
@@ -2412,7 +2421,7 @@ public class SequenceBase {
    * @return Number of messages
    */
   protected int countReceivedEvents(Class<?> clazz) {
-    String messageKey = messageCaptureBase(SubType.EVENTS, CLASS_EVENT_SUBTYPE_MAP.get(clazz));
+    String messageKey = messageCaptureBase(clazz);
     List<Map<String, Object>> events = getCapturedMessagesList(getDeviceId(), messageKey);
     if (events == null) {
       return 0;
@@ -2421,13 +2430,17 @@ public class SequenceBase {
   }
 
   protected <T> List<T> popReceivedEvents(Class<T> clazz) {
-    String messageKey = messageCaptureBase(SubType.EVENTS, CLASS_EVENT_SUBTYPE_MAP.get(clazz));
+    String messageKey = messageCaptureBase(clazz);
     List<Map<String, Object>> events = getCaptureMap(getDeviceId()).remove(messageKey);
     if (events == null) {
       return ImmutableList.of();
     }
     return events.stream().map(message -> convertTo(clazz, message))
         .collect(Collectors.toList());
+  }
+
+  protected void provisionDownload(SubFolder subBlock, Object data) {
+    reflector().publish(getDeviceId(), format("%s/download", subBlock.value()), stringify(data));
   }
 
   protected void withAlternateClient(Runnable evaluator) {

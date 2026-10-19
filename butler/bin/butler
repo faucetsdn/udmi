@@ -22,6 +22,7 @@ sys.path.insert(0, REPO_ROOT)
 
 from butler.src.discovery import run_discovery
 from butler.src.mapping import run_mapping
+from butler.src.reassemble import run_reassemble
 from butler.src.service import ButlerService
 
 
@@ -40,9 +41,9 @@ def get_registry_id(site_model: str) -> str:
 def main():
     raw_args = sys.argv[1:]
 
-    # Check if this is a mapping/discovery command
-    # e.g.: butler <site_model> <project_spec> <device_id> <provision|discover|map> [targets...]
-    mapping_commands = {"provision", "discover", "map"}
+    # Check if this is a mapping/discovery/reassemble command
+    # e.g.: butler <site_model> <project_spec> <device_id> <provision|discover|map|reassemble> [targets...]
+    mapping_commands = {"provision", "discover", "map", "reassemble"}
     is_mapping_cmd = False
     for arg in raw_args:
         if arg in mapping_commands:
@@ -54,7 +55,7 @@ def main():
         parser.add_argument("site_model")
         parser.add_argument("project_spec")
         parser.add_argument("device_id")
-        parser.add_argument("command", choices=["provision", "discover", "map"])
+        parser.add_argument("command", choices=["provision", "discover", "map", "reassemble"])
         parser.add_argument("targets", nargs="*")
         parser.add_argument("--butler-port", type=int, default=None, help="Butler MCP server port")
         args = parser.parse_args()
@@ -71,6 +72,12 @@ def main():
                 args.targets,
                 butler_port=args.butler_port,
             )
+        elif args.command == "reassemble":
+            if len(args.targets) != 2:
+                raise ValueError(
+                    "reassemble requires <input_file_or_-> and <output_path> target arguments"
+                )
+            run_reassemble(args.targets[0], args.targets[1])
         elif args.command == "provision":
             pass
         return

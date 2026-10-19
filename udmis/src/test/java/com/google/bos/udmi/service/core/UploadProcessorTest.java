@@ -59,39 +59,37 @@ class UploadProcessorTest {
     final byte[] fullPayload = "PCAP-HEADER-AND-FIRST-PACKET-SECOND-PACKET-AND-FOOTER"
         .getBytes(StandardCharsets.UTF_8);
     final String expectedSha256 = UploadProcessor.computeSha256Hex(fullPayload);
-    final String sessionId = "trace-bacnet-2026-09-27T12:00:00Z";
+    final java.util.Date generation =
+        com.google.udmi.util.JsonUtil.getDate("2026-09-27T12:00:00Z");
 
     // Pod 1 receives start marker (event_no = 0)
     DiscoveryUpload startMsg = new DiscoveryUpload();
-    startMsg.session_id = sessionId;
-    startMsg.event_no = 0;
     startMsg.family = "bacnet";
-    startMsg.total_chunks = 2;
+    startMsg.generation = generation;
+    startMsg.event_no = 0;
     assertNull(UploadProcessor.processDiscoveryUpload(envelope, startMsg, dataProvider, tempDir));
 
     // Pod 2 receives chunk 2 out-of-order (event_no = 2)
     DiscoveryUpload chunk2Msg = new DiscoveryUpload();
-    chunk2Msg.session_id = sessionId;
+    chunk2Msg.family = "bacnet";
+    chunk2Msg.generation = generation;
     chunk2Msg.event_no = 2;
-    chunk2Msg.chunk_index = 1;
-    chunk2Msg.total_chunks = 2;
     chunk2Msg.data = Base64.getEncoder().encodeToString(chunk2Bytes);
     assertNull(UploadProcessor.processDiscoveryUpload(envelope, chunk2Msg, dataProvider, tempDir));
 
     // Pod 3 receives terminal EOF marker (event_no = -3) before chunk 1 arrives
     DiscoveryUpload eofMsg = new DiscoveryUpload();
-    eofMsg.session_id = sessionId;
+    eofMsg.family = "bacnet";
+    eofMsg.generation = generation;
     eofMsg.event_no = -3;
-    eofMsg.total_chunks = 2;
     eofMsg.sha256 = expectedSha256;
     assertNull(UploadProcessor.processDiscoveryUpload(envelope, eofMsg, dataProvider, tempDir));
 
     // Pod 1 receives chunk 1 (event_no = 1), completing the set and winning CAS election
     DiscoveryUpload chunk1Msg = new DiscoveryUpload();
-    chunk1Msg.session_id = sessionId;
+    chunk1Msg.family = "bacnet";
+    chunk1Msg.generation = generation;
     chunk1Msg.event_no = 1;
-    chunk1Msg.chunk_index = 0;
-    chunk1Msg.total_chunks = 2;
     chunk1Msg.data = Base64.getEncoder().encodeToString(chunk1Bytes);
     File reassembled =
         UploadProcessor.processDiscoveryUpload(envelope, chunk1Msg, dataProvider, tempDir);
@@ -104,17 +102,25 @@ class UploadProcessorTest {
 
   @Test
   void testSha256MismatchFailsFastAndCleansUp() {
-    byte[] chunk1Bytes = "corrupted-chunk".getBytes(StandardCharsets.UTF_8);
-    String sessionId = "trace-corrupted";
+    final byte[] chunk1Bytes = "corrupted-chunk".getBytes(StandardCharsets.UTF_8);
+    final java.util.Date generation = com.google.udmi.util.JsonUtil.getDate("2026-09-27T12:05:00Z");
+
+    DiscoveryUpload startMsg = new DiscoveryUpload();
+    startMsg.family = "bacnet";
+    startMsg.generation = generation;
+    startMsg.event_no = 0;
+    assertNull(UploadProcessor.processDiscoveryUpload(envelope, startMsg, dataProvider, tempDir));
 
     DiscoveryUpload chunk1Msg = new DiscoveryUpload();
-    chunk1Msg.session_id = sessionId;
+    chunk1Msg.family = "bacnet";
+    chunk1Msg.generation = generation;
     chunk1Msg.event_no = 1;
     chunk1Msg.data = Base64.getEncoder().encodeToString(chunk1Bytes);
     assertNull(UploadProcessor.processDiscoveryUpload(envelope, chunk1Msg, dataProvider, tempDir));
 
     DiscoveryUpload eofMsg = new DiscoveryUpload();
-    eofMsg.session_id = sessionId;
+    eofMsg.family = "bacnet";
+    eofMsg.generation = generation;
     eofMsg.event_no = -2;
     eofMsg.sha256 = "0000000000000000000000000000000000000000000000000000000000000000";
 

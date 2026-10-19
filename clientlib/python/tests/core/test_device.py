@@ -22,6 +22,8 @@ Key behaviors verified:
       invalid config is not passed to managers.
 """
 
+import hashlib
+import json
 import logging
 import time
 from unittest.mock import MagicMock
@@ -242,10 +244,21 @@ def test_download_channel_redirection_flow(test_device, mock_dispatcher):
     test_device.persistence = mock_persistence
     mock_persistence.get_active_generation.return_value = "old-gen"
 
+    endpoint_blob_dict = {
+        "protocol": "mqtt",
+        "hostname": "new.broker.local",
+        "port": 8883,
+        "client_id": "projects/p/locations/l/registries/r/devices/d",
+    }
+
+    valid_sha = hashlib.sha256(
+        json.dumps(endpoint_blob_dict, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
     blob_config = BlobBlobsetConfig(
         generation="new-gen",
         url="download://blobset/_iot_endpoint_config",
-        sha256="deadbeef",
+        sha256=valid_sha,
     )
     config = Config(
         blobset=BlobsetConfig(
@@ -269,12 +282,7 @@ def test_download_channel_redirection_flow(test_device, mock_dispatcher):
         "timestamp": "2026-03-31T10:00:00Z",
         "version": "1.5.7",
         "blobs": {
-            IOT_ENDPOINT_CONFIG_BLOB_KEY: {
-                "protocol": "mqtt",
-                "hostname": "new.broker.local",
-                "port": 8883,
-                "client_id": "projects/p/locations/l/registries/r/devices/d",
-            }
+            IOT_ENDPOINT_CONFIG_BLOB_KEY: endpoint_blob_dict,
         },
     }
     test_device.handle_download(
@@ -289,7 +297,205 @@ def test_download_channel_redirection_flow(test_device, mock_dispatcher):
         test_device.state.blobset.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY].phase.value
         == "final"
     )
+    assert (
+        test_device.state.blobset.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY].status
+        is None
+    )
     assert test_device._loop_state.reset_event.is_set()
+
+
+def test_download_channel_bad_sha256(test_device):
+    """
+    Verifies that a downloaded endpoint blob with a mismatched SHA-256 hash
+    is rejected and transitions state to 'final' with a level 500 error status.
+    """
+    mock_persistence = MagicMock()
+    test_device.persistence = mock_persistence
+    mock_persistence.get_active_generation.return_value = "old-gen"
+
+    blob_config = BlobBlobsetConfig(
+        generation="new-gen",
+        url="download://blobset/_iot_endpoint_config",
+        sha256="0" * 64,
+    )
+    config = Config(
+        blobset=BlobsetConfig(
+            blobs={IOT_ENDPOINT_CONFIG_BLOB_KEY: blob_config}
+        )
+    )
+
+    with patch("src.udmi.core.device.STATE_THROTTLE_SEC", 0):
+        test_device.handle_config(
+            test_device.device_id, "config", config.to_dict()
+        )
+
+    download_payload = {
+        "timestamp": "2026-03-31T10:00:00Z",
+        "version": "1.5.7",
+        "blobs": {
+            IOT_ENDPOINT_CONFIG_BLOB_KEY: {
+                "protocol": "mqtt",
+                "hostname": "new.broker.local",
+                "port": 8883,
+                "client_id": "projects/p/locations/l/registries/r/devices/d",
+            }
+        },
+    }
+    test_device.handle_download(
+        test_device.device_id, "download/blobset", download_payload
+    )
+
+    mock_persistence.save_active_endpoint.assert_not_called()
+    assert not test_device._loop_state.reset_event.is_set()
+    blob_state = test_device.state.blobset.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY]
+    assert blob_state.phase.value == "final"
+    assert blob_state.status is not None
+    assert blob_state.status.level == 500
+    assert blob_state.status.category == "blobset.blob.apply"
+
+
+def test_download_channel_expired_endpoint(test_device):
+    """
+    Verifies that an already-expired downloaded endpoint configuration is
+    rejected and transitions state to 'final' with a level 500 error status.
+    """
+
+    mock_persistence = MagicMock()
+    test_device.persistence = mock_persistence
+    mock_persistence.get_active_generation.return_value = "old-gen"
+
+    expired_blob = {
+        "protocol": "mqtt",
+        "hostname": "new.broker.local",
+        "port": 8883,
+        "client_id": "projects/p/locations/l/registries/r/devices/d",
+        "expiry": "2020-01-01T00:00:00Z",
+    }
+    valid_sha = hashlib.sha256(
+        json.dumps(
+            expired_blob, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+    ).hexdigest()
+
+    blob_config = BlobBlobsetConfig(
+        generation="new-gen",
+        url="download://blobset/_iot_endpoint_config",
+        sha256=valid_sha,
+    )
+    config = Config(
+        blobset=BlobsetConfig(
+            blobs={IOT_ENDPOINT_CONFIG_BLOB_KEY: blob_config}
+        )
+    )
+
+    with patch("src.udmi.core.device.STATE_THROTTLE_SEC", 0):
+        test_device.handle_config(
+            test_device.device_id, "config", config.to_dict()
+        )
+
+    download_payload = {
+        "timestamp": "2026-03-31T10:00:00Z",
+        "version": "1.5.7",
+        "blobs": {
+            IOT_ENDPOINT_CONFIG_BLOB_KEY: expired_blob,
+        },
+    }
+    test_device.handle_download(
+        test_device.device_id, "download/blobset", download_payload
+    )
+
+    mock_persistence.save_active_endpoint.assert_not_called()
+    assert not test_device._loop_state.reset_event.is_set()
+    blob_state = test_device.state.blobset.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY]
+    assert blob_state.phase.value == "final"
+    assert blob_state.status is not None
+    assert blob_state.status.level == 500
+    assert blob_state.status.category == "blobset.blob.apply"
+
+    # Clearing config.blobset must remove _iot_endpoint_config from state.blobset
+    with patch("src.udmi.core.device.STATE_THROTTLE_SEC", 0):
+        test_device.handle_config(
+            test_device.device_id, "config", Config().to_dict()
+        )
+    assert test_device.state.blobset is None
+
+
+def test_download_channel_unsolicited_ignored(test_device):
+    """
+    Verifies that an unsolicited download/blobset message arriving when no
+    download://blobset/_iot_endpoint_config is pending is ignored.
+    """
+    mock_persistence = MagicMock()
+    test_device.persistence = mock_persistence
+
+    download_payload = {
+        "timestamp": "2026-03-31T10:00:00Z",
+        "version": "1.5.7",
+        "blobs": {
+            IOT_ENDPOINT_CONFIG_BLOB_KEY: {
+                "protocol": "mqtt",
+                "hostname": "unsolicited.broker.local",
+                "port": 8883,
+                "client_id": "projects/p/locations/l/registries/r/devices/d",
+            }
+        },
+    }
+    test_device.handle_download(
+        test_device.device_id, "download/blobset", download_payload
+    )
+
+    mock_persistence.save_active_endpoint.assert_not_called()
+    assert not test_device._loop_state.reset_event.is_set()
+    assert test_device.state.blobset is None
+
+
+def test_download_channel_missing_sha256(test_device):
+    """
+    Verifies that a downloaded endpoint blob when config.blobset has no
+    expected sha256 is rejected with level 500 error status.
+    """
+    mock_persistence = MagicMock()
+    test_device.persistence = mock_persistence
+    mock_persistence.get_active_generation.return_value = "old-gen"
+
+    blob_config = BlobBlobsetConfig(
+        generation="new-gen",
+        url="download://blobset/_iot_endpoint_config",
+    )
+    config = Config(
+        blobset=BlobsetConfig(
+            blobs={IOT_ENDPOINT_CONFIG_BLOB_KEY: blob_config}
+        )
+    )
+
+    with patch("src.udmi.core.device.STATE_THROTTLE_SEC", 0):
+        test_device.handle_config(
+            test_device.device_id, "config", config.to_dict()
+        )
+
+    download_payload = {
+        "timestamp": "2026-03-31T10:00:00Z",
+        "version": "1.5.7",
+        "blobs": {
+            IOT_ENDPOINT_CONFIG_BLOB_KEY: {
+                "protocol": "mqtt",
+                "hostname": "new.broker.local",
+                "port": 8883,
+                "client_id": "projects/p/locations/l/registries/r/devices/d",
+            }
+        },
+    }
+    test_device.handle_download(
+        test_device.device_id, "download/blobset", download_payload
+    )
+
+    mock_persistence.save_active_endpoint.assert_not_called()
+    assert not test_device._loop_state.reset_event.is_set()
+    blob_state = test_device.state.blobset.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY]
+    assert blob_state.phase.value == "final"
+    assert blob_state.status is not None
+    assert blob_state.status.level == 500
+    assert blob_state.status.category == "blobset.blob.apply"
 
 
 # --- Resilience / Fallback Tests ---

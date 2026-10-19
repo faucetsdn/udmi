@@ -6,6 +6,8 @@ application's lifecycle, state, and message handling logic.
 """
 
 import datetime
+import hashlib
+import json
 import logging
 import threading
 import time
@@ -36,12 +38,28 @@ from udmi.schema import BlobsetDownload
 from udmi.schema import BlobsetState
 from udmi.schema import Config
 from udmi.schema import EndpointConfiguration
+from udmi.schema import Entry
 from udmi.schema import Metadata
 from udmi.schema import State
 from udmi.schema import SystemState
 from udmi.schema.common import Phase
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _canonical_json_sha256(obj: Any) -> str:
+    """Computes the SHA-256 hex digest of an object's canonical terse JSON."""
+    def _strip_nones(val: Any) -> Any:
+        if isinstance(val, dict):
+            return {k: _strip_nones(v) for k, v in val.items() if v is not None}
+        if isinstance(val, list):
+            return [_strip_nones(v) for v in val]
+        return val
+
+    canonical = json.dumps(
+        _strip_nones(obj), sort_keys=True, separators=(",", ":")
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 
 T = TypeVar("T", bound=BaseManager)
 MAX_CONNECTION_RETRIES = 3
@@ -362,21 +380,12 @@ class Device:
                     blobset_download.blobs
                     and IOT_ENDPOINT_CONFIG_BLOB_KEY in blobset_download.blobs
                 ):
-                    new_endpoint = blobset_download.blobs[
-                        IOT_ENDPOINT_CONFIG_BLOB_KEY
-                    ]
-                    generation = (
-                        self._pending_endpoint_blob.generation
-                        if self._pending_endpoint_blob
-                        else None
-                    ) or "download"
-                    self._endpoint_blob_state = BlobBlobsetState(
-                        phase=Phase.final,
-                        generation=generation,
+                    self._process_endpoint_download(
+                        blobset_download.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY],
+                        payload.get("blobs", {}).get(
+                            IOT_ENDPOINT_CONFIG_BLOB_KEY, {}
+                        ),
                     )
-                    self._pending_endpoint_blob = None
-                    self._apply_redirect_endpoint(new_endpoint, generation)
-                    self._publish_state(bypass_throttle=True, blocking=True)
             except (TypeError, ValueError) as e:
                 LOGGER.error("Failed to parse download/blobset message: %s", e)
 
@@ -390,6 +399,71 @@ class Device:
                         manager.__class__.__name__,
                         e,
                     )
+
+    def _process_endpoint_download(
+        self, new_endpoint: EndpointConfiguration, raw_blob: Dict[str, Any]
+    ) -> None:
+        """Validates and applies an EndpointConfiguration from download/blobset."""
+        if self._pending_endpoint_blob is None:
+            LOGGER.warning(
+                "Ignoring unsolicited endpoint download for %s", self.device_id
+            )
+            return
+        generation = self._pending_endpoint_blob.generation or "download"
+        expected_sha = self._pending_endpoint_blob.sha256
+        error_msg = self._validate_downloaded_endpoint(
+            new_endpoint, raw_blob, expected_sha
+        )
+        self._pending_endpoint_blob = None
+        if error_msg:
+            LOGGER.error("%s", error_msg)
+            self._endpoint_blob_state = BlobBlobsetState(
+                phase=Phase.final,
+                generation=generation,
+                status=Entry(
+                    category="blobset.blob.apply",
+                    level=500,
+                    message=error_msg,
+                    timestamp=datetime.datetime.now(
+                        datetime.timezone.utc
+                    ).isoformat(),
+                ),
+            )
+            self._publish_state(bypass_throttle=True, blocking=True)
+            return
+
+        self._endpoint_blob_state = BlobBlobsetState(
+            phase=Phase.final,
+            generation=generation,
+        )
+        self._publish_state(bypass_throttle=True, blocking=True)
+        self._apply_redirect_endpoint(new_endpoint, generation)
+
+    @staticmethod
+    def _validate_downloaded_endpoint(
+        new_endpoint: EndpointConfiguration,
+        raw_blob: Dict[str, Any],
+        expected_sha: Optional[str],
+    ) -> Optional[str]:
+        """Checks SHA-256 integrity and expiry on a downloaded endpoint blob."""
+        if not expected_sha:
+            return "Missing expected SHA-256 hash for downloaded endpoint blob"
+        actual_sha = _canonical_json_sha256(raw_blob)
+        if actual_sha.lower() != expected_sha.lower():
+            return (
+                "Downloaded endpoint blob SHA-256 mismatch: "
+                f"expected {expected_sha}, got {actual_sha}"
+            )
+        if new_endpoint.expiry:
+            expiry_dt = datetime.datetime.fromisoformat(
+                new_endpoint.expiry.replace("Z", "+00:00")
+            )
+            if expiry_dt <= datetime.datetime.now(datetime.timezone.utc):
+                return (
+                    "Downloaded endpoint configuration is expired: "
+                    f"{new_endpoint.expiry}"
+                )
+        return None
 
     # --- Proxy Routing Helpers ---
 
@@ -464,6 +538,12 @@ class Device:
 
         blob_config = config.blobset.blobs.get(IOT_ENDPOINT_CONFIG_BLOB_KEY)
         if not blob_config:
+            return False
+
+        if (
+            self._endpoint_blob_state
+            and self._endpoint_blob_state.generation == blob_config.generation
+        ):
             return False
 
         current_gen = self.persistence.get_active_generation()
@@ -659,6 +739,10 @@ class Device:
                 self.state.blobset.blobs[IOT_ENDPOINT_CONFIG_BLOB_KEY] = (
                     self._endpoint_blob_state
                 )
+            elif self.state.blobset and self.state.blobset.blobs:
+                self.state.blobset.blobs.pop(IOT_ENDPOINT_CONFIG_BLOB_KEY, None)
+                if not self.state.blobset.blobs:
+                    self.state.blobset = None
             should_block = bypass_throttle if blocking is None else blocking
             self.dispatcher.publish_state(self.state, wait=should_block)
             self._loop_state.last_state_publish_time = time.time()
