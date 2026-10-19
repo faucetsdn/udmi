@@ -21,7 +21,8 @@ IGNORE_LIST = ['events.json']
 # These are sometimes referenced (e.g. by pubber) but should be considered root
 ALWAYS_ROOT = ['configuration_endpoint.json',
                'events_system.json',
-               'events_discovery.json']
+               'events_discovery.json',
+               'metadata.json']
 
 def parse_command_line_args():
   parser = argparse.ArgumentParser()

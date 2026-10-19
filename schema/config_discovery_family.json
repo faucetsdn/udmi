@@ -44,6 +44,10 @@
       "description": "Indicates implicit enumeration of discovered devices",
       "$ref": "file:common.json#/definitions/depth"
     },
+    "source": {
+      "description": "Optional source qualifier for the discovery scan (e.g., 'model')",
+      "type": "string"
+    },
     "trace": {
       "description": "Trace discovery parameters (when depth is 'trace')",
       "$ref": "file:config_discovery_trace.json"

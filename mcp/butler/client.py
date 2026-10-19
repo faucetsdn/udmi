@@ -93,6 +93,10 @@ class ButlerClient:
         """Fetch normalized discovered devices with addresses for reconciliation mapping."""
         return self.call_rpc("get_discovered_devices", {"registry_id": registry_id})
 
+    def get_discovered_models(self, registry_id: str) -> Dict[str, Dict[str, Any]]:
+        """Fetch discovered device models (Metadata) for a registry from Model Discovery events."""
+        return self.call_rpc("get_discovered_models", {"registry_id": registry_id})
+
     def get_device_messages(self, registry_id: str, device_id: str) -> List[Dict[str, Any]]:
         """Fetch chronological lifecycle messages (models, discovery, proposals) for a device."""
         return self.call_rpc("get_device_messages", {"registry_id": registry_id, "device_id": device_id})

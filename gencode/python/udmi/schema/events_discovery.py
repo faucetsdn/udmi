@@ -40,6 +40,7 @@ class DiscoveryEvents(DataModel):
     addr: Optional[str] = None
     network: Optional[str] = None
     event_no: Optional[int] = None
+    active_count: Optional[int] = None
     families: Optional[Dict[str, FamilyDiscovery]] = None
     registries: Optional[Dict[str, CloudModel]] = None
     devices: Optional[Dict[str, CloudModel]] = None
@@ -48,3 +49,6 @@ class DiscoveryEvents(DataModel):
     features: Optional[Dict[str, FeatureDiscovery]] = None
     cloud_model: Optional[CloudModel] = None
     system: Optional[System] = None
+    model: Optional[Metadata] = None
+
+from .metadata import Metadata

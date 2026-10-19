@@ -79,3 +79,14 @@ be reported:
   * `blobs`: A listing of all the data blobs that a device knows how to handle. This could
   be components like firmware updates, key rotation, etc... Some blobs will be standardized
   across the system, while others will be device-specific.
+
+## Site Model Discovery
+
+Site Model Discovery exposes the cloud-registered device models of a registry over the standard UDMI discovery pipeline (`family: "iot"`, `source: "model"`). It is triggered automatically when a registry model update is processed by UDMIS, or on-demand by publishing a registry-scoped [`config`](../../gencode/docs/config.html) discovery message (e.g., on `/uufi/r/{deviceRegistryId}/c/config/discovery` with `families.iot.source` set to `"model"`).
+
+The Site Model Discovery sequence follows the standard discovery state and event bookends:
+
+1. **Start State (`state/discovery`):** Published at the registry level with `source: "model"`, `families.iot.phase: "active"`, and `families.iot.active_count: 0`.
+2. **Start & Count Event (`events/discovery`):** Published at the registry level with `source: "model"`, `event_no: 0`, `family: "iot"`, and `active_count` set to the total number of matching devices in the registry.
+3. **Device Model Events (`events/discovery`):** When `depth` is `details` (or `parts`, or omitted), one event per device (`event_no: 1..N`) is published with `source: "model"`, `family: "iot"`, `addr` set to the device ID, and `model` populated with the device's [`metadata`](../../gencode/docs/metadata.html) object. When `depth` is `entries`, individual device events are omitted and only the `event_no: 0` count is emitted. If `addrs` is specified in `families.iot`, only matching device IDs are included.
+4. **Stop State (`state/discovery`):** Published at the registry level with `source: "model"`, `families.iot.phase: "stopped"`, and `families.iot.active_count` set to the total number of discovered devices.

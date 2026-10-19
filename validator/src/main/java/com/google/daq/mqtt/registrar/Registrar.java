@@ -410,8 +410,8 @@ public class Registrar {
       if (createRegistries >= 0) {
         createRegistries();
       } else {
-        processSiteMetadata();
         processAllDevices(modelMunger);
+        processSiteMetadata();
       }
       writeErrors();
     } catch (ExceptionMap em) {

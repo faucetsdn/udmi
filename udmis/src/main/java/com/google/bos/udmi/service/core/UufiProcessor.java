@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import udmi.schema.CloudModel;
+import udmi.schema.DiscoveryConfig;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -54,8 +55,12 @@ public class UufiProcessor extends ProcessorBase {
         // Message from MQTT (Client or Loopback)
 
         // Loopback protection using source attribute
-        if ("udmis".equals(envelope.source) || "udmis".equals(messageMap.get("source"))) {
-          debug("Ignoring loopback of message from udmis source");
+        boolean isModelLoopback = (ModelDiscoveryHandler.MODEL_SOURCE.equals(envelope.source)
+            || ModelDiscoveryHandler.MODEL_SOURCE.equals(messageMap.get("source")))
+            && envelope.subType != SubType.CONFIG;
+        if ("udmis".equals(envelope.source) || "udmis".equals(messageMap.get("source"))
+            || isModelLoopback) {
+          debug("Ignoring loopback of message from %s source", envelope.source);
           return;
         }
 
@@ -166,6 +171,14 @@ public class UufiProcessor extends ProcessorBase {
 
     // Standard UDMI devices expect a complete config merged with previous state.
     if (innerEnvelope.subType == SubType.CONFIG) {
+      if (innerEnvelope.subFolder == SubFolder.DISCOVERY) {
+        DiscoveryConfig discoveryConfig =
+            catchToNull(() -> convertTo(DiscoveryConfig.class, innerPayload));
+        if (ModelDiscoveryHandler.isModelDiscoveryConfig(innerEnvelope, discoveryConfig)) {
+          ModelDiscoveryHandler.processDiscoveryConfig(this, innerEnvelope, discoveryConfig);
+          return;
+        }
+      }
       String configUpdate = processConfigChange(innerEnvelope, innerPayload, null);
       if (configUpdate != null) {
         innerEnvelope.subFolder = null;
@@ -175,6 +188,10 @@ public class UufiProcessor extends ProcessorBase {
     }
 
     publish(innerEnvelope, innerPayload);
+  }
+
+  void publishModelDiscovery(Envelope envelope, Object message) {
+    handleUufiOutbound(envelope, message);
   }
 
   private void handleUufiOutbound(Envelope envelope, Object message) {
@@ -231,10 +248,13 @@ public class UufiProcessor extends ProcessorBase {
       outboundMessage = payloadMap;
     }
 
+    String source = ModelDiscoveryHandler.MODEL_SOURCE.equals(envelope.source)
+        ? ModelDiscoveryHandler.MODEL_SOURCE : "udmis";
+
     // Wrap system message for UUFI clients
     Map<String, Object> uufiMessage = toMap(envelope);
     uufiMessage.put(PAYLOAD_KEY, outboundMessage);
-    uufiMessage.put("source", "udmis"); // For loopback protection
+    uufiMessage.put("source", source); // For loopback protection
     if (envelope.principal != null) {
       uufiMessage.put("principal", envelope.principal);
     } else {
@@ -246,7 +266,7 @@ public class UufiProcessor extends ProcessorBase {
     uufiEnvelope.subFolder = envelope.subFolder;
     uufiEnvelope.deviceRegistryId = envelope.deviceRegistryId;
     uufiEnvelope.deviceId = envelope.deviceId;
-    uufiEnvelope.source = "udmis"; // Set udmis source
+    uufiEnvelope.source = source;
     uufiEnvelope.principal = envelope.principal;
     uufiEnvelope.gatewayId = "uufi";
 

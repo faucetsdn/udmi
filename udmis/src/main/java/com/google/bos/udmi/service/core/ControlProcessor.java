@@ -8,6 +8,7 @@ import com.google.bos.udmi.service.pod.UdmiServicePod;
 import java.util.Map.Entry;
 import java.util.Set;
 import udmi.schema.CloudQuery;
+import udmi.schema.DiscoveryConfig;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -38,6 +39,15 @@ public class ControlProcessor extends ProcessorBase {
   @MessageHandler
   public void cloudQueryHandler(CloudQuery query) {
     CloudQueryHandler.processQuery(this, query);
+  }
+
+  /**
+   * Handle a discovery config command.
+   */
+  @MessageHandler
+  public void discoveryConfigHandler(DiscoveryConfig config) {
+    Envelope envelope = getContinuation(config).getEnvelope();
+    ModelDiscoveryHandler.processDiscoveryConfig(this, envelope, config);
   }
 
   /**

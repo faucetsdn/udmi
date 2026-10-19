@@ -323,6 +323,155 @@ public class UufiProcessorTest extends ProcessorTestBase {
     assertEquals(expectedSubFolders, subFolders, "sharded subfolders mismatch");
   }
 
+  /**
+   * Test on-demand Model Discovery via UUFI config/discovery.
+   */
+  @Test
+  public void modelDiscoveryTest() {
+    udmi.schema.CloudModel registryModel = new udmi.schema.CloudModel();
+    registryModel.device_ids = Map.of(
+        "AHU-1", new udmi.schema.CloudModel(),
+        "GAT-123", new udmi.schema.CloudModel()
+    );
+    org.mockito.Mockito.when(provider.listDevices(org.mockito.ArgumentMatchers.eq("reg-1"), any()))
+        .thenReturn(registryModel);
+
+    udmi.schema.CloudModel ahuModel = new udmi.schema.CloudModel();
+    ahuModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.2\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-AHU-1\"}}");
+    udmi.schema.CloudModel gatModel = new udmi.schema.CloudModel();
+    gatModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.2\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-GAT-123\"}}");
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "AHU-1")).thenReturn(ahuModel);
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "GAT-123")).thenReturn(gatModel);
+
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.CONFIG;
+    innerEnvelope.subFolder = SubFolder.DISCOVERY;
+    innerEnvelope.deviceRegistryId = "reg-1";
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    uufiWrapper.put("payload", Map.of(
+        "version", "1.5.2",
+        "timestamp", "2026-07-28T00:00:00Z",
+        "families", Map.of("iot", Map.of(
+            "generation", "2026-07-28T00:00:00Z",
+            "depth", "details",
+            "source", "model"
+        ))
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceRegistryId = "reg-1";
+    transportEnvelope.subType = SubType.CONFIG;
+    transportEnvelope.subFolder = SubFolder.DISCOVERY;
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    // 4 messages published by ModelDiscoveryHandler:
+    // 1. DiscoveryState (active, active_count=0)
+    // 2. DiscoveryEvents (event_no=0, active_count=2)
+    // 3. DiscoveryEvents (event_no=1, addr=AHU-1, model=...)
+    // 4. DiscoveryEvents (event_no=2, addr=GAT-123, model=...)
+    // 5. DiscoveryState (stopped, active_count=2)
+    assertEquals(5, captured.size(), "Expected 5 model discovery messages");
+
+    Map<String, Object> msg0 = toMap(captured.get(0));
+    assertEquals("model", msg0.get("source"));
+    udmi.schema.DiscoveryState startState =
+        convertTo(udmi.schema.DiscoveryState.class, msg0.get("payload"));
+    assertEquals(udmi.schema.FamilyDiscoveryState.Phase.ACTIVE,
+        startState.families.get("iot").phase);
+    assertEquals(0, startState.families.get("iot").active_count);
+
+    Map<String, Object> msg1 = toMap(captured.get(1));
+    assertEquals("model", msg1.get("source"));
+    udmi.schema.DiscoveryEvents startEvent =
+        convertTo(udmi.schema.DiscoveryEvents.class, msg1.get("payload"));
+    assertEquals(0, startEvent.event_no);
+    assertEquals(2, startEvent.active_count);
+    assertEquals("iot", startEvent.family);
+
+    Map<String, Object> msg2 = toMap(captured.get(2));
+    assertEquals("AHU-1", msg2.get("deviceId"));
+    udmi.schema.DiscoveryEvents devEvent1 =
+        convertTo(udmi.schema.DiscoveryEvents.class, msg2.get("payload"));
+    assertEquals(1, devEvent1.event_no);
+    assertEquals("AHU-1", devEvent1.addr);
+    assertNotNull(devEvent1.model);
+    assertEquals("SN-AHU-1", devEvent1.model.system.serial_no);
+
+    Map<String, Object> msg3 = toMap(captured.get(3));
+    assertEquals("GAT-123", msg3.get("deviceId"));
+    udmi.schema.DiscoveryEvents devEvent2 =
+        convertTo(udmi.schema.DiscoveryEvents.class, msg3.get("payload"));
+    assertEquals(2, devEvent2.event_no);
+    assertEquals("GAT-123", devEvent2.addr);
+    assertNotNull(devEvent2.model);
+    assertEquals("SN-GAT-123", devEvent2.model.system.serial_no);
+
+    Map<String, Object> msg4 = toMap(captured.get(4));
+    udmi.schema.DiscoveryState stopState =
+        convertTo(udmi.schema.DiscoveryState.class, msg4.get("payload"));
+    assertEquals(udmi.schema.FamilyDiscoveryState.Phase.STOPPED,
+        stopState.families.get("iot").phase);
+    assertEquals(2, stopState.families.get("iot").active_count);
+  }
+
+  /**
+   * Test Model Discovery with depth=entries (count only) and addrs filter.
+   */
+  @Test
+  public void modelDiscoveryEntriesAndAddrsTest() {
+    udmi.schema.CloudModel registryModel = new udmi.schema.CloudModel();
+    registryModel.device_ids = Map.of(
+        "AHU-1", new udmi.schema.CloudModel(),
+        "GAT-123", new udmi.schema.CloudModel()
+    );
+    org.mockito.Mockito.when(provider.listDevices(org.mockito.ArgumentMatchers.eq("reg-1"), any()))
+        .thenReturn(registryModel);
+
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.CONFIG;
+    innerEnvelope.subFolder = SubFolder.DISCOVERY;
+    innerEnvelope.deviceRegistryId = "reg-1";
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    uufiWrapper.put("payload", Map.of(
+        "version", "1.5.2",
+        "timestamp", "2026-07-28T00:00:00Z",
+        "families", Map.of("iot", Map.of(
+            "generation", "2026-07-28T00:00:00Z",
+            "depth", "entries",
+            "addrs", List.of("AHU-1"),
+            "source", "model"
+        ))
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceRegistryId = "reg-1";
+    transportEnvelope.subType = SubType.CONFIG;
+    transportEnvelope.subFolder = SubFolder.DISCOVERY;
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    // With depth=entries, only 3 messages: start state, event_no=0 count, stop state
+    assertEquals(3, captured.size(), "Expected 3 messages for depth=entries");
+    Map<String, Object> msg1 = toMap(captured.get(1));
+    udmi.schema.DiscoveryEvents startEvent =
+        convertTo(udmi.schema.DiscoveryEvents.class, msg1.get("payload"));
+    assertEquals(0, startEvent.event_no);
+    assertEquals(1, startEvent.active_count);
+  }
+
   private UufiProcessor getProcessor() {
     return (UufiProcessor) UdmiServicePod.getComponent(UufiProcessor.class);
   }

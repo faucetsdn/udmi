@@ -112,5 +112,20 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     assertEquals("events", legacyPointset.get(SUBTYPE_PROPERTY_KEY));
     assertEquals("pointset", legacyPointset.get(SUBFOLDER_PROPERTY_KEY));
     assertEquals(3, legacyPointset.keySet().size());
+
+    Map<String, String> uufiRegistry = parseEnvelopeTopic("/uufi/r/my-reg/c/config/discovery");
+    assertEquals("my-reg", uufiRegistry.get(REGISTRY_ID_PROPERTY_KEY));
+    assertNull(uufiRegistry.get(DEVICE_ID_KEY));
+    assertEquals("config", uufiRegistry.get(SUBTYPE_PROPERTY_KEY));
+    assertEquals("discovery", uufiRegistry.get(SUBFOLDER_PROPERTY_KEY));
+    assertEquals("uufi", uufiRegistry.get(GATEWAY_ID_KEY));
+
+    Map<String, String> uufiDevice =
+        parseEnvelopeTopic("/uufi/r/my-reg/d/my-dev/c/events/discovery");
+    assertEquals("my-reg", uufiDevice.get(REGISTRY_ID_PROPERTY_KEY));
+    assertEquals("my-dev", uufiDevice.get(DEVICE_ID_KEY));
+    assertEquals("events", uufiDevice.get(SUBTYPE_PROPERTY_KEY));
+    assertEquals("discovery", uufiDevice.get(SUBFOLDER_PROPERTY_KEY));
+    assertEquals("uufi", uufiDevice.get(GATEWAY_ID_KEY));
   }
 }

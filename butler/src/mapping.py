@@ -58,7 +58,7 @@ def run_mapping(
     butler = butler_client or get_butler_interface(conn_spec, butler_port)
 
     # 1. Get most recent model for each device_id in this registry
-    models = []
+    models_by_id = {}
     if site_model:
         devices_dir = os.path.join(site_model, "devices")
         if os.path.exists(devices_dir):
@@ -67,9 +67,19 @@ def run_mapping(
                 if os.path.exists(meta_path):
                     try:
                         with open(meta_path, "r", encoding="utf-8") as mf:
-                            models.append((device_id, json.load(mf)))
+                            models_by_id[device_id] = json.load(mf)
                     except Exception as e:
                         print(f"err: {e}", file=sys.stderr)
+    if butler and hasattr(butler, "get_discovered_models"):
+        try:
+            discovered_models = butler.get_discovered_models(registry_id)
+            if isinstance(discovered_models, dict):
+                for dev_id, model_payload in discovered_models.items():
+                    if isinstance(model_payload, dict) and dev_id not in models_by_id:
+                        models_by_id[dev_id] = model_payload
+        except Exception as e:
+            print(f"Error querying discovered models via Butler: {e}", file=sys.stderr)
+    models = list(models_by_id.items())
     print(f"Found {len(models)} models", file=sys.stderr)
 
     # 2. Get discovered devices via Butler interface

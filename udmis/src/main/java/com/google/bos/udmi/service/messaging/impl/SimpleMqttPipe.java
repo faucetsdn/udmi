@@ -176,13 +176,15 @@ public class SimpleMqttPipe extends MessageBase {
     int start = Strings.isNullOrEmpty(parts[0]) ? 1 : 0;
     Envelope envelope = new Envelope();
 
-    // UUFI topic: [/namespace]/uufi/[r/REG/d/DEV/]c/TYPE/FOLDER
+    // UUFI topic: [/namespace]/uufi/[r/REG/[d/DEV/]]c/TYPE/FOLDER
     int base = start + 1;
     if ("r".equals(parts[base])) {
       envelope.deviceRegistryId = nullAsNull(parts[base + 1]);
-      checkState("d".equals(parts[base + 2]), "expected devices");
-      envelope.deviceId = nullAsNull(parts[base + 3]);
-      base += 4;
+      base += 2;
+      if ("d".equals(parts[base])) {
+        envelope.deviceId = nullAsNull(parts[base + 1]);
+        base += 2;
+      }
     }
     checkState("c".equals(parts[base]), "expected commands");
     envelope.subType = convertSubType(parts[base + 1]);

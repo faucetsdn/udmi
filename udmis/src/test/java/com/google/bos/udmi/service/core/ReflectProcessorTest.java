@@ -180,12 +180,24 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
   @Test
   public void modelRegistryUpdateTest() {
+    CloudModel registryDevices = new CloudModel();
+    registryDevices.device_ids = Map.of("AHU-1", new CloudModel());
+    when(provider.listDevices(eq(TEST_REGISTRY), any())).thenReturn(registryDevices);
+
+    CloudModel deviceModel = new CloudModel();
+    deviceModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.2\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-AHU-1\"}}");
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq("AHU-1"))).thenReturn(deviceModel);
+
     CloudModel requestModel = new CloudModel();
     requestModel.operation = ModelOperation.UPDATE;
     requestModel.resource_type = Resource_type.REGISTRY;
     activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
     verify(provider, times(1)).modelRegistry(eq(TEST_REGISTRY), any(),
         eq(requestModel));
+    verify(provider, times(1)).listDevices(eq(TEST_REGISTRY), any());
+    verify(provider, times(1)).fetchDevice(eq(TEST_REGISTRY), eq("AHU-1"));
   }
 
   @Test

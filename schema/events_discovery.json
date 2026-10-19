@@ -41,6 +41,11 @@
       "description": "The active or passive series number of this result (matches reported state values)",
       "type": "integer"
     },
+    "active_count": {
+      "description": "Total number of records expected for this active scan generation",
+      "minimum": 0,
+      "type": "integer"
+    },
     "families": {
       "description": "Links to other address families (family and id)",
       "type": "object",
@@ -131,6 +136,10 @@
           "$ref": "file:state_system_hardware.json"
         }
       }
+    },
+    "model": {
+      "description": "Device metadata model (for model discovery)",
+      "$ref": "file:metadata.json"
     }
   }
 }
