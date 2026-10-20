@@ -28,12 +28,20 @@ def test_mcp_initialize(mcp_server):
 
 
 def test_mcp_ping_and_notifications(mcp_server):
-    ping_req = {"jsonrpc": "2.0", "id": 2, "method": "ping"}
+    ping_req = {"jsonrpc": "2.0", "id": 2, "method": "ping", "params": None}
     ping_resp = mcp_server.handle_request(ping_req)
     assert ping_resp == {"jsonrpc": "2.0", "id": 2, "result": {}}
 
     notif_req = {"jsonrpc": "2.0", "method": "notifications/initialized"}
     assert mcp_server.handle_request(notif_req) is None
+
+    cancel_notif = {
+        "jsonrpc": "2.0",
+        "method": "notifications/cancelled",
+        "params": {"requestId": 1, "reason": "context canceled"},
+    }
+    assert mcp_server.handle_request(cancel_notif) is None
+    assert asyncio.run(mcp_server.handle_request_async(cancel_notif)) is None
 
 
 def test_mcp_tools_list(mcp_server):
