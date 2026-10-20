@@ -43,10 +43,6 @@ if [[ $# -ge 1 && "$1" != -* ]]; then
     fi
 fi
 
-if [[ "$util_name" == "registrar" && -n "${UDMI_REGISTRY_SUFFIX:-}" && ! " $* " =~ " -e " ]]; then
-    set -- "$@" -e "$UDMI_REGISTRY_SUFFIX"
-fi
-
 if [[ -n "${project_spec:-}" && "$project_spec" =~ localhost: ]]; then
     if [[ -d "${ETC_DIR:-var/mosquitto}" ]]; then
         for i in {1..50}; do
