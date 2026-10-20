@@ -150,7 +150,7 @@ public class PointPointsetModel {
      */
     @JsonProperty("values")
     @JsonPropertyDescription("State value mapping for this point (e.g. 0.0: OFF)")
-    public Values values;
+    public Map<String, String> values;
     /**
      * Building Translation
      * <p>
@@ -254,8 +254,7 @@ public class PointPointsetModel {
     public enum Type {
 
         STRING("string"),
-        BOOLEAN("boolean"),
-        NUMBER("number");
+        BOOLEAN("boolean");
         private final java.lang.String value;
         private final static Map<java.lang.String, PointPointsetModel.Type> CONSTANTS = new HashMap<java.lang.String, PointPointsetModel.Type>();
 

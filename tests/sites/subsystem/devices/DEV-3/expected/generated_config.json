@@ -14,7 +14,8 @@
   "pointset": {
     "points": {
       "temp": {
-        "ref": "40001"
+        "ref": "40001",
+        "units": "Celsius"
       }
     },
     "sample_rate_sec": 300

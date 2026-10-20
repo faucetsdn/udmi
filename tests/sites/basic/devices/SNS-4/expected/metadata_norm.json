@@ -27,6 +27,7 @@
     "points": {
       "fan_status": {
         "ref": "1/101?type=BOOLEAN",
+        "type": "boolean",
         "url": "modbus://modbus_rtu_1/2/1/101?type=BOOLEAN"
       },
       "filter_differential_pressure": {
@@ -39,6 +40,7 @@
       },
       "test_offset_point": {
         "ref": "3/40001?type=INT16&scale=0.1&offset=100.5",
+        "units": "Degrees-Celsius",
         "url": "modbus://modbus_rtu_1/2/3/40001?type=INT16&scale=0.1&offset=100.5"
       },
       "triangulating_axis": {

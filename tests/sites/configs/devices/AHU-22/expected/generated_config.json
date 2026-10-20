@@ -13,8 +13,7 @@
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
-        "ref": "MCN8.present_value",
-        "units": "No-units"
+        "ref": "MCN8.present_value"
       },
       "filter_differential_pressure": {
         "ref": "AI2.differential",

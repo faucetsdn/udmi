@@ -169,7 +169,9 @@ public class RegistrarTest {
         registrar.execute(() -> {
           Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
           Metadata metadata = localDevices.get(DEVICE_ID).getMetadata();
-          metadata.pointset.points.put(pointName, new PointPointsetModel());
+          PointPointsetModel pointModel = new PointPointsetModel();
+          pointModel.units = "Celsius";
+          metadata.pointset.points.put(pointName, pointModel);
         });
         boolean noneMatch = registrar.getWorkingDevices().entrySet().stream()
             .noneMatch(entry -> entry.getValue().hasCategory(ExceptionCategory.settings));
@@ -182,6 +184,74 @@ public class RegistrarTest {
       }
     });
     assertEquals("set of allowed point names", ALLOWED_POINT_NAMES, okAddedNames);
+  }
+
+  @Test
+  public void pointTypeValidationTest() {
+    PointPointsetModel validNumeric = new PointPointsetModel();
+    validNumeric.units = "Degrees-Celsius";
+    validNumeric.baseline_value = 21.5;
+
+    PointPointsetModel validMultistate = new PointPointsetModel();
+    validMultistate.values = Map.of("0.0", "OFF", "1.0", "ON");
+    validMultistate.baseline_value = "1.0";
+
+    PointPointsetModel validString = new PointPointsetModel();
+    validString.type = PointPointsetModel.Type.STRING;
+    validString.baseline_value = "NORMAL";
+
+    PointPointsetModel validBinary = new PointPointsetModel();
+    validBinary.type = PointPointsetModel.Type.BOOLEAN;
+    validBinary.baseline_value = true;
+
+    assertTrue("valid numeric point", isPointModelValid(validNumeric));
+    assertTrue("valid multistate point", isPointModelValid(validMultistate));
+    assertTrue("valid string point", isPointModelValid(validString));
+    assertTrue("valid binary point", isPointModelValid(validBinary));
+
+    PointPointsetModel emptyPoint = new PointPointsetModel();
+    assertTrue("empty point rejected", !isPointModelValid(emptyPoint));
+
+    PointPointsetModel dualUnitsType = new PointPointsetModel();
+    dualUnitsType.units = "No-units";
+    dualUnitsType.type = PointPointsetModel.Type.BOOLEAN;
+    assertTrue("units + type rejected", !isPointModelValid(dualUnitsType));
+
+    PointPointsetModel dualValuesType = new PointPointsetModel();
+    dualValuesType.values = Map.of("0.0", "OFF", "1.0", "ON");
+    dualValuesType.type = PointPointsetModel.Type.STRING;
+    assertTrue("values + type rejected", !isPointModelValid(dualValuesType));
+
+    PointPointsetModel binaryWithRange = new PointPointsetModel();
+    binaryWithRange.type = PointPointsetModel.Type.BOOLEAN;
+    binaryWithRange.range_min = 0.0;
+    assertTrue("binary with range_min rejected", !isPointModelValid(binaryWithRange));
+
+    PointPointsetModel badMultistateBaseline = new PointPointsetModel();
+    badMultistateBaseline.values = Map.of("0.0", "OFF", "1.0", "ON");
+    badMultistateBaseline.baseline_value = "ON";
+    assertTrue("multistate with value instead of key baseline rejected",
+        !isPointModelValid(badMultistateBaseline));
+
+    PointPointsetModel singleValueMultistate = new PointPointsetModel();
+    singleValueMultistate.values = Map.of("1.0", "ON");
+    assertTrue("multistate with < 2 entries rejected", !isPointModelValid(singleValueMultistate));
+
+    PointPointsetModel badBinaryBaseline = new PointPointsetModel();
+    badBinaryBaseline.type = PointPointsetModel.Type.BOOLEAN;
+    badBinaryBaseline.baseline_value = "true";
+    assertTrue("binary with string baseline rejected", !isPointModelValid(badBinaryBaseline));
+  }
+
+  private boolean isPointModelValid(PointPointsetModel pointModel) {
+    Registrar registrar = getRegistrar(ImmutableList.of());
+    registrar.execute(() -> {
+      Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
+      Metadata metadata = localDevices.get(DEVICE_ID).getMetadata();
+      metadata.pointset.points.put("test_typed_point", pointModel);
+    });
+    LocalDevice device = registrar.getWorkingDevices().get(DEVICE_ID);
+    return !device.hasCategory(ExceptionCategory.settings);
   }
 
   @Test

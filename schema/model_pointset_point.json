@@ -8,7 +8,8 @@
   "properties": {
     "units": {
       "description": "Expected unit configuration for the point",
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "units_reported": {
       "description": "Actual input unit that is sent from the device",
@@ -16,7 +17,7 @@
     },
     "type": {
       "description": "Expected data type for the point",
-      "enum": ["string", "boolean", "number"]
+      "enum": ["string", "boolean"]
     },
     "description": {
       "description": "Detailed description of this point",
@@ -113,6 +114,8 @@
     "values": {
       "type": "object",
       "description": "State value mapping for this point (e.g. 0.0: OFF)",
+      "existingJavaType": "java.util.Map<String, String>",
+      "minProperties": 2,
       "additionalProperties": { "type": "string" }
     },
     "translation": {

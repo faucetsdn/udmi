@@ -42,6 +42,7 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Level;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvents;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvents;
 
@@ -201,12 +202,40 @@ public class PointsetSequences extends PointsetBase {
         continue;
       }
       for (Entry<String, PointPointsetEvents> pointEntry : event.points.entrySet()) {
-        Object presentValue = pointEntry.getValue().present_value;
-        if (presentValue instanceof String stringValue) {
-          checkThat(
-              format("Point %s present_value '%s' is reported as JSON number, not string",
-                  pointEntry.getKey(), stringValue),
-              () -> !isNumericString(stringValue));
+        String pointName = pointEntry.getKey();
+        PointPointsetEvents pointEvents = pointEntry.getValue();
+        if (pointEvents == null || pointEvents.present_value == null) {
+          continue;
+        }
+        Object presentValue = pointEvents.present_value;
+        PointPointsetModel pointModel =
+            catchToNull(() -> deviceMetadata.pointset.points.get(pointName));
+        if (pointModel != null && pointModel.values != null) {
+          quietlyCheckThat(
+              format("Multi-state point %s present_value '%s' is a valid key in values %s",
+                  pointName, presentValue, pointModel.values.keySet()),
+              () -> presentValue instanceof String s && pointModel.values.containsKey(s));
+        } else if (pointModel != null && pointModel.type == PointPointsetModel.Type.STRING) {
+          quietlyCheckThat(
+              format("String point %s present_value '%s' is reported as JSON string",
+                  pointName, presentValue),
+              () -> presentValue instanceof String);
+        } else if (pointModel != null && pointModel.type == PointPointsetModel.Type.BOOLEAN) {
+          quietlyCheckThat(
+              format("Binary point %s present_value '%s' is reported as JSON boolean",
+                  pointName, presentValue),
+              () -> presentValue instanceof Boolean);
+        } else {
+          if (presentValue instanceof String stringValue) {
+            checkThat(
+                format("Point %s present_value '%s' is reported as JSON number, not string",
+                    pointName, stringValue),
+                () -> !isNumericString(stringValue));
+          }
+          quietlyCheckThat(
+              format("Numeric point %s present_value '%s' is reported as JSON number",
+                  pointName, presentValue),
+              () -> presentValue instanceof Number);
         }
       }
     }

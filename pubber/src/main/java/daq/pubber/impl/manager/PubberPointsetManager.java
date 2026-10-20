@@ -8,8 +8,10 @@ import static java.lang.String.format;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import daq.pubber.impl.PubberManager;
+import daq.pubber.impl.point.PubberMultistatePoint;
 import daq.pubber.impl.point.PubberRandomBoolean;
 import daq.pubber.impl.point.PubberRandomPoint;
+import daq.pubber.impl.point.PubberStringPoint;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -87,8 +89,12 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   @Override
   public AbstractPoint makePoint(String name, PointPointsetModel point) {
-    if ("No-units".equals(point.units)) {
+    if (point.type == PointPointsetModel.Type.BOOLEAN) {
       return new PubberRandomBoolean(name, point);
+    } else if (point.type == PointPointsetModel.Type.STRING) {
+      return new PubberStringPoint(name, point);
+    } else if (point.values != null) {
+      return new PubberMultistatePoint(name, point);
     } else {
       return new PubberRandomPoint(name, point);
     }
@@ -123,10 +129,12 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   @Override
   public Map<String, PointPointsetModel> getTestPoints() {
+    PointPointsetModel readOnlyBoolean = new PointPointsetModel();
+    readOnlyBoolean.type = PointPointsetModel.Type.BOOLEAN;
     return ImmutableMap.of(
-    "recalcitrant_angle", makePointPointsetModel(50, 50, "Celsius"),
-    "faulty_finding", makePointPointsetModel(40, 0, "deg"),
-    "superimposition_reading", new PointPointsetModel());
+        "recalcitrant_angle", makePointPointsetModel(50, 50, "Celsius"),
+        "faulty_finding", makePointPointsetModel(40, 0, "deg"),
+        "superimposition_reading", readOnlyBoolean);
   }
 
   private static PointPointsetModel makePointPointsetModel(int value, double tolerance,
@@ -150,7 +158,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     String prevPointValue = setValueCache.put(point.getName(), newPointValue);
     boolean isUnmodified = Objects.equals(newPointValue, prevPointValue);
 
-    if (isFastWrite || isUnmodified) {
+    if (isFastWrite || isUnmodified || pointConfig == null
+        || !getPointsetState().points.containsKey(point.getName())) {
       PointsetManager.super.updatePointConfig(point, pointConfig);
     } else if (isDelayWrite) {
       debug(format("Applying delayed writeback for point %s with %ds delay", point.getName(),

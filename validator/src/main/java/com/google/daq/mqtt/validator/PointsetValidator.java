@@ -180,6 +180,35 @@ public class PointsetValidator {
         continue;
       }
 
+      if (pointModel.values != null) {
+        if (!(point.present_value instanceof String stringValue)
+            || !pointModel.values.containsKey(stringValue)) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value '%s' is not a valid state key in values %s",
+                  pointName, point.present_value, pointModel.values.keySet()));
+        }
+        continue;
+      }
+
+      if (pointModel.type == PointPointsetModel.Type.STRING) {
+        if (!(point.present_value instanceof String)) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value '%s' is not a string", pointName, point.present_value));
+        }
+        continue;
+      }
+
+      if (pointModel.type == PointPointsetModel.Type.BOOLEAN) {
+        if (!(point.present_value instanceof Boolean)) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value '%s' is not a boolean", pointName, point.present_value));
+        }
+        continue;
+      }
+
       if (point.present_value instanceof String stringValue && isNumericString(stringValue)) {
         outOfRangeErrors.add(
             String.format(

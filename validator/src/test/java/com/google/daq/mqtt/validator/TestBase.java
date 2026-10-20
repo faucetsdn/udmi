@@ -38,6 +38,10 @@ public class TestBase {
       "filter_differential_pressure_setpoint";
   static final String FILTER_DIFFERENTIAL_PRESSURE_SENSOR =
       "filter_differential_pressure_sensor";
+  static final String COOLING_REQUEST_COUNT = "cooling_request_count";
+  static final String SUPPLY_FAN_RUN_STATUS = "supply_fan_run_status";
+  static final String OCCUPANCY_MODE = "occupancy_mode";
+  static final String ACTIVE_FAULT_CODE = "active_fault_code";
   private static final File REPORT_BASE = new File(TestCommon.SITE_DIR, "/out");
   private static final File REPORT_FILE = new File(REPORT_BASE, REPORT_JSON_FILENAME);
   private final AtomicLong testTime = new AtomicLong(298374214L);
@@ -49,7 +53,11 @@ public class TestBase {
     HashMap<String, PointPointsetEvents> points = new HashMap<>();
     points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetEventsPoint(Boolean.TRUE));
     points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetEventsPoint(20));
-    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetEventsPoint("yes"));
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetEventsPoint(10));
+    points.put(COOLING_REQUEST_COUNT, pointsetEventsPoint(3));
+    points.put(SUPPLY_FAN_RUN_STATUS, pointsetEventsPoint("1.0"));
+    points.put(OCCUPANCY_MODE, pointsetEventsPoint("1"));
+    points.put(ACTIVE_FAULT_CODE, pointsetEventsPoint("NONE"));
     pointsetEvent.points = points;
     return pointsetEvent;
   }
@@ -63,6 +71,10 @@ public class TestBase {
     points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetStatePoint());
     points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetStatePoint());
     points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetStatePoint());
+    points.put(COOLING_REQUEST_COUNT, pointsetStatePoint());
+    points.put(SUPPLY_FAN_RUN_STATUS, pointsetStatePoint());
+    points.put(OCCUPANCY_MODE, pointsetStatePoint());
+    points.put(ACTIVE_FAULT_CODE, pointsetStatePoint());
     return pointsetState;
   }
 

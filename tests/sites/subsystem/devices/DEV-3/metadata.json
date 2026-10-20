@@ -26,6 +26,7 @@
   "pointset": {
     "points": {
       "temp": {
+        "units": "Celsius",
         "ref": "40001"
       }
     }

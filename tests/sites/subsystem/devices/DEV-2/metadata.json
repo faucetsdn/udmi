@@ -25,6 +25,7 @@
   "pointset": {
     "points": {
       "temp": {
+        "units": "Celsius",
         "ref": "40001",
         "url": "modbus://1/temp"
       }

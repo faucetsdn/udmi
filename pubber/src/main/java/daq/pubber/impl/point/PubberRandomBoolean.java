@@ -10,13 +10,16 @@ import udmi.schema.RefDiscovery;
  */
 public class PubberRandomBoolean extends BasicPoint implements AbstractPoint {
 
+  private final Boolean baselineValue;
+
   public PubberRandomBoolean(String name, PointPointsetModel pointModel) {
     super(name, pointModel);
+    this.baselineValue = pointModel.baseline_value instanceof Boolean b ? b : null;
   }
 
   @Override
   protected Object getValue() {
-    return Math.random() < 0.5;
+    return baselineValue != null ? baselineValue : (Math.random() < 0.5);
   }
 
   @Override
@@ -31,7 +34,6 @@ public class PubberRandomBoolean extends BasicPoint implements AbstractPoint {
 
   @Override
   protected void populateEnumeration(RefDiscovery point) {
-    point.type = "multistate";
-    point.possible_values = null; // Need multi-state values here
+    point.type = "boolean";
   }
 }

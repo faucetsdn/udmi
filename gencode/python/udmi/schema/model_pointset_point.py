@@ -19,7 +19,6 @@ class Type(Enum):
 
     string = 'string'
     boolean = 'boolean'
-    number = 'number'
 
 
 class BaselineState(Enum):
