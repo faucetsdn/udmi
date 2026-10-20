@@ -202,12 +202,16 @@ DISC_LOG_FILE=$(mktemp)
 DISC_GEN=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 echo "Subscribing to /r/$REGISTRY_ID/d/+/+/discovery for Model Discovery sequence (gen: $DISC_GEN)..."
 mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_disc_sub" -t "/r/$REGISTRY_ID/d/+/+/discovery" -F "%t %p" | while read -r topic payload; do
-    echo "$topic $payload" >> "$DISC_LOG_FILE"
-    PHASE=$(echo "$payload" | jq -r .families.iot.phase 2>/dev/null)
-    GEN=$(echo "$payload" | jq -r .families.iot.generation 2>/dev/null)
-    if [[ "$topic" == *"/state/discovery" && "$PHASE" == "stopped" && "$GEN" == "$DISC_GEN" ]]; then
-        kill -USR1 $$ 2>/dev/null || true
-        exit 0
+    GEN=$(echo "$payload" | jq -r '.generation // .families.iot.generation' 2>/dev/null)
+    if [[ "$GEN" == "$DISC_GEN" ]]; then
+        echo "$topic $payload" >> "$DISC_LOG_FILE"
+        if grep -q '"phase":"active"' "$DISC_LOG_FILE" && \
+           grep -q '"event_no":0' "$DISC_LOG_FILE" && \
+           grep -q "/r/$REGISTRY_ID/d/$DUT_ID/events/discovery" "$DISC_LOG_FILE" && \
+           grep -q '"phase":"stopped"' "$DISC_LOG_FILE"; then
+            kill -USR1 $$ 2>/dev/null || true
+            exit 0
+        fi
     fi
 done &
 SUB_DISC_PID=$!

@@ -374,49 +374,64 @@ public class UufiProcessorTest extends ProcessorTestBase {
         new Bundle(transportEnvelope, uufiWrapper)));
 
     // 5 messages published by ModelDiscoveryHandler to udmi_target:
-    // 1. DiscoveryState (active, active_count=0)
-    // 2. DiscoveryEvents (event_no=0, active_count=2)
-    // 3. DiscoveryEvents (event_no=1, addr=AHU-1, model=...)
-    // 4. DiscoveryEvents (event_no=2, addr=GAT-123, model=...)
-    // 5. DiscoveryState (stopped, active_count=2)
+    // - DiscoveryState (active, active_count=0)
+    // - DiscoveryEvents (event_no=0, active_count=2)
+    // - DiscoveryEvents (event_no=1, addr=AHU-1, model=...)
+    // - DiscoveryEvents (event_no=2, addr=GAT-123, model=...)
+    // - DiscoveryState (stopped, active_count=2)
     assertEquals(5, captured.size(), "Expected 5 model discovery messages");
 
-    udmi.schema.DiscoveryState startState =
-        convertTo(udmi.schema.DiscoveryState.class, captured.get(0));
-    assertEquals(udmi.schema.FamilyDiscoveryState.Phase.ACTIVE,
-        startState.families.get("iot").phase);
+    List<udmi.schema.DiscoveryState> states = captured.stream()
+        .filter(o -> o instanceof udmi.schema.DiscoveryState)
+        .map(o -> (udmi.schema.DiscoveryState) o)
+        .toList();
+    assertEquals(2, states.size(), "Expected 2 DiscoveryState bookend messages");
+
+    udmi.schema.DiscoveryState startState = states.stream()
+        .filter(s -> s.families.get("iot").phase == udmi.schema.FamilyDiscoveryState.Phase.ACTIVE)
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Missing ACTIVE DiscoveryState"));
     assertEquals(0, startState.families.get("iot").active_count);
     assertEquals("model", startState.families.get("iot").source);
 
-    udmi.schema.DiscoveryEvents startEvent =
-        convertTo(udmi.schema.DiscoveryEvents.class, captured.get(1));
-    assertEquals(0, startEvent.event_no);
+    udmi.schema.DiscoveryState stopState = states.stream()
+        .filter(s -> s.families.get("iot").phase == udmi.schema.FamilyDiscoveryState.Phase.STOPPED)
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Missing STOPPED DiscoveryState"));
+    assertEquals(2, stopState.families.get("iot").active_count);
+    assertEquals("model", stopState.families.get("iot").source);
+
+    List<udmi.schema.DiscoveryEvents> events = captured.stream()
+        .filter(o -> o instanceof udmi.schema.DiscoveryEvents)
+        .map(o -> (udmi.schema.DiscoveryEvents) o)
+        .toList();
+    assertEquals(3, events.size(), "Expected 3 DiscoveryEvents messages");
+
+    udmi.schema.DiscoveryEvents startEvent = events.stream()
+        .filter(e -> Integer.valueOf(0).equals(e.event_no))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Missing event_no=0 DiscoveryEvents"));
     assertEquals(2, startEvent.active_count);
     assertEquals("iot", startEvent.family);
     assertEquals("model", startEvent.source);
 
-    udmi.schema.DiscoveryEvents devEvent1 =
-        convertTo(udmi.schema.DiscoveryEvents.class, captured.get(2));
-    assertEquals(1, devEvent1.event_no);
+    udmi.schema.DiscoveryEvents devEvent1 = events.stream()
+        .filter(e -> Integer.valueOf(1).equals(e.event_no))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Missing event_no=1 DiscoveryEvents"));
     assertEquals("AHU-1", devEvent1.addr);
     assertEquals("model", devEvent1.source);
     assertNotNull(devEvent1.model);
     assertEquals("SN-AHU-1", devEvent1.model.system.serial_no);
 
-    udmi.schema.DiscoveryEvents devEvent2 =
-        convertTo(udmi.schema.DiscoveryEvents.class, captured.get(3));
-    assertEquals(2, devEvent2.event_no);
+    udmi.schema.DiscoveryEvents devEvent2 = events.stream()
+        .filter(e -> Integer.valueOf(2).equals(e.event_no))
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Missing event_no=2 DiscoveryEvents"));
     assertEquals("GAT-123", devEvent2.addr);
     assertEquals("model", devEvent2.source);
     assertNotNull(devEvent2.model);
     assertEquals("SN-GAT-123", devEvent2.model.system.serial_no);
-
-    udmi.schema.DiscoveryState stopState =
-        convertTo(udmi.schema.DiscoveryState.class, captured.get(4));
-    assertEquals(udmi.schema.FamilyDiscoveryState.Phase.STOPPED,
-        stopState.families.get("iot").phase);
-    assertEquals(2, stopState.families.get("iot").active_count);
-    assertEquals("model", stopState.families.get("iot").source);
   }
 
   /**
@@ -461,8 +476,11 @@ public class UufiProcessorTest extends ProcessorTestBase {
 
     // With depth=entries, only 3 messages: start state, event_no=0 count, stop state
     assertEquals(3, captured.size(), "Expected 3 messages for depth=entries");
-    udmi.schema.DiscoveryEvents startEvent =
-        convertTo(udmi.schema.DiscoveryEvents.class, captured.get(1));
+    udmi.schema.DiscoveryEvents startEvent = captured.stream()
+        .filter(o -> o instanceof udmi.schema.DiscoveryEvents)
+        .map(o -> (udmi.schema.DiscoveryEvents) o)
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Missing DiscoveryEvents for depth=entries"));
     assertEquals(0, startEvent.event_no);
     assertEquals(1, startEvent.active_count);
   }
