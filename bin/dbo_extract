@@ -83,19 +83,6 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     if "cloud" in metadata and "num_id" in metadata["cloud"]:
       device_entry["cloud_device_id"] = str(metadata["cloud"]["num_id"])
 
-    if "relationships" in metadata and metadata["relationships"]:
-      # Map UDMI device IDs to GUIDs
-      connections = {}
-      for target_id, relation in metadata["relationships"].items():
-        target_guid = device_id_to_guid.get(target_id, target_id)
-        if isinstance(relation, dict):
-          if relation:
-            # Match string enum format expected by schema
-            rel_type = list(relation.keys())[0]
-            connections[target_guid] = rel_type
-
-      device_entry["connections"] = connections
-
     if "system" in metadata and "location" in metadata["system"]:
       loc = metadata["system"]["location"]
       connections = device_entry.setdefault("connections", {})
@@ -192,6 +179,19 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
       device_entry["type"] = dbo_external["type"]
 
     building_config[guid] = device_entry
+
+  # Pass 3: Populate target connections from source relationships
+  for device_id, metadata in metadata_map.items():
+    source_guid = device_id_to_guid[device_id]
+    if "relationships" in metadata and metadata["relationships"]:
+      for target_id, relation in metadata["relationships"].items():
+        target_guid = device_id_to_guid.get(target_id, target_id)
+        if isinstance(relation, dict) and relation:
+          # Match string enum format expected by schema
+          rel_type = list(relation.keys())[0]
+          target_entry = building_config.setdefault(target_guid, {})
+          connections = target_entry.setdefault("connections", {})
+          connections[source_guid] = rel_type
 
   return building_config
 
