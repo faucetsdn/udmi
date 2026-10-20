@@ -2,7 +2,6 @@ package com.google.daq.mqtt.registrar;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
-import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.intersection;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
@@ -112,7 +111,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -151,7 +149,6 @@ public class Registrar {
       ".json", Summarizer.JsonSummarizer.class,
       ".csv", Summarizer.CsvSummarizer.class);
   private static final String TOOL_NAME = "registrar";
-  private static final String REGISTRY_SUFFIX_ENV = "UDMI_REGISTRY_SUFFIX";
   private static final long DELETE_FLUSH_DELAY_MS = 10 * SEC_TO_MS;
   public static final String REGISTRAR_TOOL_NAME = "registrar";
   private static final int UNBIND_SET_SIZE = 1000;
@@ -206,8 +203,6 @@ public class Registrar {
   private String lastRunTimestamp;
   private boolean optimizeRun;
   private final Map<ModelOperation, AtomicInteger> operationCounts = new ConcurrentHashMap<>();
-  private Supplier<String> envRegistrySuffix =
-      () -> emptyToNull(System.getenv(REGISTRY_SUFFIX_ENV));
 
   private void recordOperation(ModelOperation op, int count) {
     operationCounts.computeIfAbsent(op, k -> new AtomicInteger()).addAndGet(count);
@@ -383,18 +378,11 @@ public class Registrar {
 
   private void processProfile(ExecutionConfiguration config) {
     config.site_model = new File(siteModel.getSitePath()).getAbsolutePath();
-    ifNullThen(config.registry_suffix, () -> config.registry_suffix = envRegistrySuffix.get());
     setSitePath(config.site_model);
     setProjectId(config.project_id);
     if (config.project_id != null) {
       updateCloudIoT = true;
     }
-  }
-
-  @VisibleForTesting
-  Registrar setEnvRegistrySuffix(String suffix) {
-    envRegistrySuffix = () -> emptyToNull(suffix);
-    return this;
   }
 
   /**
@@ -1680,9 +1668,8 @@ public class Registrar {
     this.projectId = projectId;
   }
 
-  @VisibleForTesting
   @CommandLineOption(short_form = "-r", arg_name = "root_path", description = "Set tool root")
-  void setToolRoot(String toolRoot) {
+  private void setToolRoot(String toolRoot) {
     try {
       schemaBase = new File(toolRoot, SCHEMA_BASE_PATH);
       if (!schemaBase.isDirectory()) {

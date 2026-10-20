@@ -87,16 +87,12 @@ public class RegistrarTest {
   }
 
   private Registrar getRegistrar(boolean cleanRegistry, List<String> args) {
-    return getRegistrar(cleanRegistry, args, null);
-  }
-
-  private Registrar getRegistrar(boolean cleanRegistry, List<String> args, String envSuffix) {
     try {
       List<String> registrarArgs = new ArrayList<>();
       registrarArgs.add(MOCK_SITE);
       registrarArgs.add(cleanRegistry ? MOCK_CLEAN : MOCK_PROJECT);
       ifNotNullThen(args, () -> registrarArgs.addAll(args));
-      return new Registrar().setEnvRegistrySuffix(envSuffix).processArgs(registrarArgs);
+      return new Registrar().processArgs(registrarArgs);
     } catch (Exception e) {
       throw new RuntimeException("While getting test registrar", e);
     }
@@ -142,40 +138,6 @@ public class RegistrarTest {
         .filter(client -> !client.equals(mockClientString))
         .collect(Collectors.toList());
     assertEquals("clients not matching " + mockClientString, ImmutableList.of(), mismatchItems);
-  }
-
-  @Test
-  public void envRegistrySuffixTests() {
-    String envSuffix = "_env";
-    Registrar envRegistrar = getRegistrar(false, ImmutableList.of(DEVICE_ID), envSuffix);
-    envRegistrar.execute();
-    assertEquals("filtered working devices", ImmutableSet.of(DEVICE_ID),
-        envRegistrar.getWorkingDevices().keySet());
-    String expectedEnvClient = IotMockProvider.mockClientString(MOCK_PROJECT,
-        REGISTRY_ID + envSuffix, SITE_REGION);
-    List<Object> envMismatch = envRegistrar.getMockActions().stream().map(action -> action.client)
-        .filter(client -> !client.equals(expectedEnvClient))
-        .collect(Collectors.toList());
-    assertEquals("clients not matching " + expectedEnvClient, ImmutableList.of(), envMismatch);
-
-    Registrar cliOverrideRegistrar = getRegistrar(false,
-        ImmutableList.of("-e", REGISTRY_SUFFIX, DEVICE_ID), envSuffix);
-    cliOverrideRegistrar.execute();
-    String expectedOverrideClient = IotMockProvider.mockClientString(MOCK_PROJECT,
-        REGISTRY_ID + REGISTRY_SUFFIX, SITE_REGION);
-    List<Object> overrideMismatch = cliOverrideRegistrar.getMockActions().stream()
-        .map(action -> action.client)
-        .filter(client -> !client.equals(expectedOverrideClient))
-        .collect(Collectors.toList());
-    assertEquals("clients not matching " + expectedOverrideClient,
-        ImmutableList.of(), overrideMismatch);
-
-    Registrar localOnlyRegistrar = new Registrar().setEnvRegistrySuffix(envSuffix)
-        .processArgs(ImmutableList.of(MOCK_SITE));
-    localOnlyRegistrar.setToolRoot("..");
-    localOnlyRegistrar.execute();
-    assertTrue("local-only validation processed devices",
-        localOnlyRegistrar.getWorkingDevices().containsKey(DEVICE_ID));
   }
 
   @Test
