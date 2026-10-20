@@ -847,6 +847,11 @@ public class SequenceBase {
     assumeTrue(format("Feature bucket %s not enabled", testBucket.key()),
         isBucketEnabled(testBucket));
 
+    SubFolder facetKind = ifNotNullGet(testDescription.getAnnotation(Feature.class),
+        Feature::facets, SubFolder.INVALID);
+    ifTrueSkipTest(facetKind != SubFolder.INVALID && activeFacet == null,
+        format("No %s facets defined in metadata", facetKind.value()));
+
     assertTrue("exceptions map should be empty", capExcept.isEmpty());
     assertTrue("allowed changes map should be empty", allowedDeviceStateChanges.isEmpty());
 

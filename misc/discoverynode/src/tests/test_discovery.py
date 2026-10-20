@@ -10,7 +10,9 @@ import udmi.discovery.numbers
 import time
 import datetime
 import udmi.schema.state
-import udmi.schema.util 
+import udmi.schema.util
+import udmi.schema.config
+from udmi.schema.config import DiscoveryFamily
 import logging
 import sys
 import collections
@@ -40,10 +42,18 @@ def make_timestamp(*,seconds_from_now = 0, seconds_from_epoch = None):
     return udmi.schema.util.datetime_serializer(udmi.schema.util.current_time_utc() + datetime.timedelta(seconds=seconds_from_now))
 
 
+def _entry(top_state):
+  """Registers and returns the `vendor` state entry on a State (or MagicMock)."""
+  if isinstance(top_state, mock.MagicMock):
+    return state.Discovery()
+  top_state.discovery.families["vendor"] = state.Discovery()
+  return top_state.discovery.families["vendor"]
+
+
 def test_number_discovery_start_and_stop():
   mock_state = mock.MagicMock()
   mock_publisher = mock.MagicMock()
-  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher, range="1,2,3,4,5")
+  numbers = udmi.discovery.numbers.NumberDiscovery(state.Discovery(), mock_publisher, scan_id="families/vendor", range="1,2,3,4,5")
   numbers._start()
   assert numbers.state.phase == state.Phase.active
 
@@ -59,7 +69,7 @@ def test_number_discovery_start_and_stop():
 def test_event_counts():
   mock_state = udmi.schema.state.State()
   mock_publisher = mock.MagicMock()
-  numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher, range="1,2,3,4,5")
+  numbers = udmi.discovery.numbers.NumberDiscovery(_entry(mock_state), mock_publisher, scan_id="families/vendor", range="1,2,3,4,5")
   numbers._start()
 
   # Wait for the explicit sequence to finish processing
@@ -81,11 +91,11 @@ def test_event_counts():
 def test_add_discovery_block_triggers_discovery_start():
   mock_state = mock.MagicMock()
   mock_publisher = mock.MagicMock()
-  numbers =  udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+  numbers =  udmi.discovery.numbers.NumberDiscovery(_entry(mock_state), mock_publisher, scan_id="families/vendor")
   with (
     mock.patch.object(numbers, "start_discovery") as mock_start,
   ):
-    numbers.controller({"discovery": {"families": {"vendor" : {"generation": make_timestamp()}}}})
+    numbers.apply_config(DiscoveryFamily(generation=make_timestamp()))
     print(mock_state)
     time.sleep(1)
     mock_start.assert_called()
@@ -93,14 +103,14 @@ def test_add_discovery_block_triggers_discovery_start():
 def test_having_no_config_then_recieve_repeated_identical_configs():
   mock_state = mock.MagicMock()
   mock_publisher = mock.MagicMock()
-  numbers =  udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher, range=None)
+  numbers =  udmi.discovery.numbers.NumberDiscovery(_entry(mock_state), mock_publisher, scan_id="families/vendor", range=None)
 
   generation_timestamp = make_timestamp()
 
   with mock.patch.object(numbers, "start_discovery") as mock_start:
     
     for _ in range(5):
-      numbers.controller({"discovery": {"families": {"vendor" : {"generation": generation_timestamp}}}})
+      numbers.apply_config(DiscoveryFamily(generation=generation_timestamp))
       time.sleep(1)
     
     mock_start.assert_called_once()
@@ -111,9 +121,9 @@ def test_past_generation_within_tolerance():
   mock_state = udmi.schema.state.State()
   mock_publisher = mock.MagicMock()
 
-  numbers =  udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+  numbers =  udmi.discovery.numbers.NumberDiscovery(_entry(mock_state), mock_publisher, scan_id="families/vendor")
   generation = make_timestamp(seconds_from_now = -8)
-  numbers.controller({"discovery": {"families": {"vendor" : {"generation": generation}}}})
+  numbers.apply_config(DiscoveryFamily(generation=generation))
   time.sleep(3)
 
   # generation in state/event classes is a datetime whereas `generation` in a config is a string
@@ -136,7 +146,7 @@ def test_generation_scheduling(seconds_from_now, scan_interval, threshold, expec
     # Note: 
     mock_state = udmi.schema.state.State()
     mock_publisher = mock.MagicMock()
-    numbers = udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+    numbers = udmi.discovery.numbers.NumberDiscovery(_entry(mock_state), mock_publisher, scan_id="families/vendor")
 
     with mock.patch.object(numbers, '_scheduler') as mock_scheduler, \
          mock.patch.object(discovery, 'MAX_THRESHOLD_GENERATION', new=threshold), \
@@ -144,23 +154,17 @@ def test_generation_scheduling(seconds_from_now, scan_interval, threshold, expec
          mock.patch('datetime.datetime', MockedDateTime):
         logging.debug(f"seconds from now: {seconds_from_now}")
         generation_timestamp = make_timestamp(seconds_from_epoch=1000 + seconds_from_now) 
-        config = {
-            "discovery": {
-                "families": {
-                    "vendor": {
-                        "generation": generation_timestamp,
-                        "scan_interval_sec": scan_interval if scan_interval else None
-                    }
-                }
-            }
-        }
+        config = DiscoveryFamily(
+            generation=generation_timestamp,
+            scan_interval_sec=scan_interval if scan_interval else None,
+        )
 
         if should_raise_error:
             # doesn't work because wrapped
             assert numbers.state.phase == udmi.schema.state.Phase.stopped
             return
 
-        numbers.controller(config)
+        numbers.apply_config(config)
         mock_scheduler.assert_called()
         call_args, _ = mock_scheduler.call_args
         start_time = call_args[0]
@@ -182,7 +186,7 @@ def test_generation_scheduling(seconds_from_now, scan_interval, threshold, expec
 def test_generation_is_incremented(scan_duration, scan_interval):
   mock_state = state.State()
   mock_publisher = mock.MagicMock()
-  numbers =  udmi.discovery.numbers.NumberDiscovery(mock_state, mock_publisher)
+  numbers =  udmi.discovery.numbers.NumberDiscovery(_entry(mock_state), mock_publisher, scan_id="families/vendor")
 
   cycles = 5
   got = set()
@@ -193,16 +197,11 @@ def test_generation_is_incremented(scan_duration, scan_interval):
     mock.patch.object(numbers, "start_discovery") as mock_start,
   ):
     
-    numbers.controller({"discovery": {
-      "families": {
-        "vendor" : {
-          "generation": udmi.schema.util.datetime_serializer(initial_generation), 
-          "scan_interval_sec": scan_interval, 
-          "scan_duration_sec": scan_duration
-          }
-        }
-      }
-    })
+    numbers.apply_config(DiscoveryFamily(
+        generation=udmi.schema.util.datetime_serializer(initial_generation),
+        scan_interval_sec=scan_interval,
+        scan_duration_sec=scan_duration,
+    ))
 
     for x in range(300):
       # In Github Actions this may catch the initial uninitialized state

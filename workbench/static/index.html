@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>UDMI Workbench</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="/css/theme.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/drawers.css" />
+  <link rel="stylesheet" href="/css/compliance.css" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="app-bar">
+    <div class="brand">
+      <span class="brand-mark">UDMI</span>
+      <span class="brand-name">Workbench</span>
+    </div>
+    <nav class="nav" data-role="nav" aria-label="Primary"></nav>
+    <button
+      type="button"
+      class="app-bar-icon"
+      data-role="logs-toggle"
+      aria-label="Workbench Logs"
+      aria-expanded="false"
+      title="Workbench Logs"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">terminal</span>
+    </button>
+    <button
+      type="button"
+      class="app-bar-icon"
+      data-role="settings-toggle"
+      aria-label="Settings"
+      aria-haspopup="dialog"
+      title="Settings (email notifications)"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">settings</span>
+    </button>
+    <span class="desktop-notify-notice" data-role="desktop-notify-notice" role="status" hidden>
+      <span class="material-symbols-outlined" aria-hidden="true">notifications_off</span>
+      <span data-role="desktop-notify-text"></span>
+    </span>
+    <span class="server-status" data-role="server-status">Connecting…</span>
+  </header>
+
+  <main id="main" class="outlet" data-role="outlet"></main>
+
+  <!--
+    Both drawers live outside the routed outlet. Mantis is omnipresent so a
+    diagnosis survives navigation between the Sequencer and Devices views, and
+    the log drawer must be reachable from whichever view is currently failing.
+  -->
+  <div data-role="mantis-mount"></div>
+  <div data-role="logs-mount"></div>
+  <div data-role="settings-mount"></div>
+
+  <noscript>
+    <p class="empty-note is-error">
+      The Workbench requires JavaScript. Use <code>bin/sequencer</code> directly if scripting is unavailable.
+    </p>
+  </noscript>
+
+  <script src="/js/vendor/mermaid.min.js"></script>
+  <script type="module" src="/js/app.js?v=4.0"></script>
+</body>
+</html>

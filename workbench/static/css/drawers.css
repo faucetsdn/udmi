@@ -1,0 +1,784 @@
+/* ==========================================================================
+   Layer 2 — Overlay drawers.
+
+   Two full-height drawers overlay whichever view is routed: Mantis on the
+   right, the Workbench log console on the left. They are overlays rather than
+   tabs because both are consulted *about* the run on screen; making them tabs
+   forced the operator to navigate away from the thing being diagnosed.
+
+   Stacking order used in this file:
+     190  log drawer
+     200  Mantis drawer (above the log drawer and above .local-setup-drawer,
+          which is z-index 100 and shares the right edge)
+     300  Mantis diagram modal (must clear both drawers)
+
+   Maximising Mantis changes its geometry, never its z-index: the diagram modal
+   still has to open over it, and the right-edge contract in app.js already
+   guarantees nothing else is on screen beneath it.
+   ========================================================================== */
+
+/* ====================================================== mantis drawer === */
+/*
+ * The drawer is `position: fixed`, which makes it a containing block for its
+ * own fixed-position descendants. Anything that must cover the whole viewport
+ * (the diagram modal) is therefore mounted on <body>, not inside here.
+ *
+ * The width is a property rather than a literal so the drag handle can move it
+ * and the persisted value can seed it. The fallback is the default width for a
+ * profile that has never dragged: 520px could not hold the hypothesis matrix or
+ * a sequence diagram without scrolling in both axes, and the 96vw term is why
+ * the default stays here instead of becoming a fixed token in theme.css.
+ */
+.mantis-drawer {
+  position: fixed;
+  top: var(--app-bar-height);
+  right: 0;
+  bottom: 0;
+  width: var(--mantis-drawer-width, min(760px, 96vw));
+  z-index: 200;
+  display: flex;
+  transform: translateX(100%);
+  transition: transform 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.mantis-drawer.is-open {
+  transform: translateX(0);
+}
+
+/*
+ * Maximised. The drawer spans the viewport width but keeps `top:
+ * var(--app-bar-height)` from the rule above, so the app bar stays visible and
+ * clickable: this is an overlay over the application, not a window of its own.
+ * Nothing here touches --mantis-drawer-width, which is what makes restoring a
+ * matter of dropping one class.
+ */
+.mantis-drawer.is-maximized {
+  width: 100vw;
+}
+
+/* At full width there is no width left to negotiate. `display: none` also takes
+   the separator out of the tab order, so a keyboard operator is never handed a
+   control that cannot do anything. */
+.mantis-drawer.is-maximized .resize-handle-x {
+  display: none;
+}
+
+/* A closed drawer is parked off-screen; the pull tab is the only thing there
+   that is meant to be reachable, so the handle does not linger in the tab order
+   at a position no pointer can find. */
+.mantis-drawer:not(.is-open) .resize-handle-x {
+  display: none;
+}
+
+/* The tab hangs off the drawer's left edge, which is off-screen once the drawer
+   spans the viewport. Hiding it keeps a focusable control from living outside
+   the visible area; the header close button is the way out while maximised. */
+.mantis-drawer.is-maximized .mantis-pull-tab {
+  display: none;
+}
+
+/*
+ * Prose keeps its 76ch measure in the drawer because a long line is harder to
+ * read, not easier. Maximised is asked for when the answer carries something
+ * genuinely wide -- a hypothesis matrix with a column per stage, or a sequence
+ * diagram -- so the bubble cap is lifted only here, and only for the bubble:
+ * the paragraphs and list items inside it keep the measure they had.
+ */
+.mantis-drawer.is-maximized .chat-bubble {
+  max-width: none;
+}
+
+.mantis-drawer.is-maximized .chat-assistant p,
+.mantis-drawer.is-maximized .chat-assistant li {
+  max-width: 76ch;
+}
+
+/* The tab hangs off the drawer's left edge, so it protrudes into the viewport
+   while the drawer is parked off-screen and travels in with it when opened. */
+.mantis-pull-tab {
+  position: absolute;
+  top: 38%;
+  left: -44px;
+  width: 44px;
+  height: 124px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  background: linear-gradient(135deg, #0b57d0, #7c3aed);
+  color: var(--text-inverse);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-right: none;
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+  box-shadow: -4px 0 16px rgba(124, 58, 237, 0.35);
+  cursor: pointer;
+  user-select: none;
+  transition: left 0.2s cubic-bezier(0.2, 0, 0, 1),
+              width 0.2s cubic-bezier(0.2, 0, 0, 1),
+              box-shadow 0.2s ease;
+}
+
+.mantis-pull-tab:hover {
+  left: -48px;
+  width: 48px;
+  box-shadow: -6px 0 20px rgba(124, 58, 237, 0.45);
+}
+
+.mantis-pull-tab:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.mantis-pull-tab-icon {
+  font-size: 22px;
+}
+
+.mantis-pull-tab-label {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.mantis-drawer-shell {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-left: 1px solid var(--border-subtle);
+  box-shadow: -6px 0 28px rgba(60, 64, 67, 0.18);
+}
+
+.mantis-drawer-header {
+  flex: 0 0 auto;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-2) 0 var(--space-4);
+  background: linear-gradient(90deg, #f5f3ff, #eff6ff);
+  border-bottom: 1px solid #ddd6fe;
+}
+
+.mantis-drawer-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6d28d9;
+}
+
+.mantis-drawer-hint {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.mantis-drawer-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+/* ------------------------------------------------------- mantis panel --- */
+.mantis-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mantis-panel-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* .chat-context is right-aligned in the wide view; in the drawer it leads. */
+.mantis-panel-toolbar .chat-context {
+  margin-left: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mantis-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: 0 0 auto;
+}
+
+.mantis-panel-actions select {
+  max-width: 150px;
+}
+
+.mantis-elapsed {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary);
+}
+
+/* ------------------------------------------------- live activity region --- */
+/*
+ * A triage run is minutes long. Everything the agent does while it thinks —
+ * phases, tool calls, and its streamed prose — lands here in arrival order so
+ * the run never looks hung. It collapses the moment the answer starts, which
+ * is the whole point of the split: the answer bubble stays readable.
+ */
+.mantis-activity {
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid #7c3aed;
+  border-radius: var(--radius-md);
+  background: var(--bg-base);
+}
+
+.mantis-activity-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.mantis-activity-label {
+  font-weight: 600;
+  color: #6d28d9;
+}
+
+.mantis-activity-meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mantis-activity-body {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Raw agent prose. Monospaced and dimmed so it never reads as the answer. */
+.mantis-thought {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Disclosure affordance: chevron, hover state, and a trailing Show/Hide hint. */
+.mantis-activity-summary {
+  list-style: none;
+  border-radius: var(--radius-md);
+  transition: background 0.15s ease;
+}
+
+.mantis-activity-summary::-webkit-details-marker {
+  display: none;
+}
+
+.mantis-activity-summary:hover {
+  background: var(--bg-surface-raised);
+}
+
+.mantis-activity-summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.mantis-activity-chevron {
+  font-size: 18px;
+  color: #6d28d9;
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease;
+}
+
+.mantis-activity[open] .mantis-activity-chevron {
+  transform: rotate(0deg);
+}
+
+.mantis-activity-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.mantis-activity-hint {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.mantis-activity-summary:hover .mantis-activity-hint {
+  color: var(--text-primary);
+}
+
+/* ------------------------------------------------------- copy controls --- */
+.mantis-copy-btn {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.mantis-copy-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.mantis-copy-btn:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.mantis-copy-btn.is-copied,
+.btn-diagram-action.is-copied,
+.btn-with-icon.is-copied {
+  color: var(--color-success);
+}
+
+.btn-with-icon .material-symbols-outlined,
+.btn-diagram-action .material-symbols-outlined {
+  font-size: 15px;
+}
+
+/* Bubble copy button: revealed on hover or keyboard focus. */
+.chat-bubble {
+  position: relative;
+}
+
+.chat-bubble:has(> .chat-bubble-copy) {
+  padding-right: calc(var(--space-3) + 24px);
+}
+
+.chat-bubble-copy {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.chat-bubble:hover > .chat-bubble-copy,
+.chat-bubble:focus-within > .chat-bubble-copy,
+.chat-bubble-copy.is-copied {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .chat-bubble-copy {
+    opacity: 1;
+  }
+}
+
+/* ------------------------------------------------ diagram export actions --- */
+.mermaid-header {
+  flex-wrap: wrap;
+}
+
+.mermaid-header-actions,
+.diagram-export-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.btn-diagram-action {
+  font-size: 11px;
+  padding: 2px var(--space-2);
+  height: 24px;
+  gap: 4px;
+}
+
+/* ---------------------------------------------------- hypothesis matrix --- */
+.mantis-matrix {
+  margin: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* Collapsed by default: the answer above is the report; this is its record. */
+.mantis-matrix-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface-container);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  list-style: none;
+  cursor: pointer;
+}
+
+.mantis-matrix-summary::-webkit-details-marker {
+  display: none;
+}
+
+.mantis-matrix-summary:hover {
+  background: var(--bg-surface-raised);
+}
+
+.mantis-matrix-summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.mantis-matrix[open] > .mantis-matrix-summary {
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.mantis-matrix-chevron {
+  font-size: 18px;
+  transform: rotate(-90deg);
+  transition: transform 0.15s ease;
+}
+
+.mantis-matrix[open] .mantis-matrix-chevron {
+  transform: rotate(0deg);
+}
+
+.mantis-matrix-meta {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.mantis-matrix-audit {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border-subtle);
+  font-size: 12px;
+}
+
+/* Repository doc citations open the local spec text in a new tab. */
+.mantis-doc-link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.mantis-doc-link:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* The provisional matrix arrives at scoping time with every verdict still
+   UNRESOLVED. It is shown, but never dressed up as a result. */
+.mantis-matrix.is-provisional {
+  border-style: dashed;
+}
+
+.mantis-matrix.is-provisional .mantis-matrix-label {
+  color: var(--color-warning);
+}
+
+.mantis-matrix .hypothesis-matrix td,
+.mantis-matrix .hypothesis-matrix th {
+  padding: var(--space-2) var(--space-3);
+}
+
+.verdict-badge {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+/* Exactly one hypothesis may be PRIMARY: it is the root cause, so it carries
+   the only filled badge in the table. */
+.verdict-primary {
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: var(--text-inverse);
+}
+
+.verdict-contributing {
+  background: rgba(232, 110, 0, 0.14);
+  border-color: rgba(232, 110, 0, 0.5);
+  color: var(--color-warning);
+}
+
+.verdict-refuted {
+  background: var(--bg-surface-raised);
+  border-color: var(--border-strong);
+  color: var(--text-disabled);
+  text-decoration: line-through;
+}
+
+.verdict-unresolved {
+  background: var(--bg-surface-raised);
+  border-style: dashed;
+  border-color: var(--color-warning);
+  color: var(--text-secondary);
+}
+
+/* A verdict outside HYPOTHESIS_VERDICTS is a contract break, not a shade of
+   grey: it is shown as the unrecognised value it is. */
+.verdict-unknown {
+  background: rgba(179, 38, 30, 0.1);
+  border: 1px dashed var(--color-error);
+  color: var(--color-error);
+}
+
+.mantis-matrix .row-refuted td:first-child {
+  color: var(--text-muted);
+}
+
+.mantis-missing {
+  font-style: italic;
+  color: var(--color-error);
+}
+
+.mantis-evidence-tier {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+/* ------------------------------------------------------------- errors --- */
+/*
+ * Stream errors name the credential or service the operator has to fix. They
+ * are reproduced verbatim and are never collapsed behind a friendly summary.
+ */
+.mantis-error {
+  border: 1px solid var(--color-error);
+  border-left-width: 4px;
+  border-radius: var(--radius-md);
+  background: rgba(179, 38, 30, 0.06);
+  padding: var(--space-3);
+}
+
+.mantis-error-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-error);
+  margin-bottom: var(--space-2);
+}
+
+.mantis-error-body {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--color-error);
+  white-space: pre-wrap;
+  word-break: break-word;
+  user-select: text;
+}
+
+/* The fullscreen diagram viewer is mounted on <body> so the drawer's transform
+   does not trap it; it must still clear both drawers. */
+.mantis-diagram-backdrop {
+  z-index: 300;
+}
+
+/* ======================================================== logs drawer === */
+.logs-drawer {
+  position: fixed;
+  top: var(--app-bar-height);
+  left: 0;
+  bottom: 0;
+  width: min(900px, 94vw);
+  z-index: 190;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  box-shadow: 6px 0 28px rgba(60, 64, 67, 0.18);
+  transform: translateX(-100%);
+  transition: transform 0.28s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.logs-drawer.is-open {
+  transform: translateX(0);
+}
+
+.logs-drawer-header {
+  flex: 0 0 auto;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-2) 0 var(--space-4);
+  background: var(--bg-surface-container);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.logs-drawer-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.logs-drawer-header .count {
+  margin-left: auto;
+}
+
+.logs-drawer-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.logs-drawer-toolbar input[type='search'] {
+  flex: 1;
+  min-width: 0;
+}
+
+/* The browser ring buffer is always complete; the server half may not be.
+   Saying so keeps a partial table from reading as the full picture. */
+.logs-drawer-alert {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  background: rgba(179, 38, 30, 0.08);
+  border-bottom: 1px solid var(--color-error);
+  font-size: 12px;
+  color: var(--color-error);
+}
+
+.logs-drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* --- Local Setup drawer: drawer-owned project spec ----------------------- */
+.drawer-spec-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4) 0;
+}
+
+.drawer-spec-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.drawer-spec-input {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: var(--space-1) var(--space-2);
+  color: var(--text-primary);
+  background: var(--bg-surface-container);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+}
+
+.drawer-spec-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.drawer-spec-field .field-hint:empty {
+  display: none;
+}
+
+.drawer-spec-mismatch {
+  padding: var(--space-1) var(--space-2);
+  color: var(--color-warning);
+  background: var(--bg-surface-raised);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-sm);
+}
+
+/* --- Local Setup drawer: physical device connection card ----------------- */
+.conn-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  font-size: 12px;
+  color: var(--text-primary);
+  background: var(--bg-surface-container);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.conn-card.conn-empty {
+  color: var(--text-muted);
+}
+
+.conn-card.conn-error {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.conn-title {
+  font-weight: 600;
+  margin-bottom: var(--space-1);
+}
+
+.conn-subtitle {
+  margin-top: var(--space-2);
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.conn-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 38%) 1fr;
+  gap: var(--space-2);
+  align-items: start;
+}
+
+.conn-label {
+  color: var(--text-secondary);
+}
+
+.conn-value {
+  font-family: var(--font-mono);
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-primary);
+}
+
+.conn-unknowns,
+.conn-docs {
+  margin: 0;
+  padding-left: var(--space-4);
+  color: var(--text-secondary);
+}
+
+.conn-docs a {
+  color: var(--color-primary);
+}

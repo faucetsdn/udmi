@@ -1,64 +1,24 @@
 #!/bin/bash -e
 #
-# Mantis: AI-Powered Autonomous Diagnostics and Triage for UDMI
+# Mantis: Autonomous UDMI Agent & Diagnostic Management Control Plane
 #
 # Usage:
-#   bin/mantis                                           # Interactive Chat Mode
-#   bin/mantis chat [options]                            # Explicit Chat Mode
-#   bin/mantis sites/<site> [device] [test]              # Quick targeted diagnostics
-#   bin/mantis diagnose [options]                        # Explicit diagnosis
-#   bin/mantis "why did test X fail?"                    # One-shot query
-#   bin/mantis eval -i <test_runs>                       # Stability metric evaluation
-#   bin/mantis triage -i <bundle.zip...>                 # Full batch stability + triage
-#   bin/mantis collect [options]                         # Test loop collection
+#   bin/mantis                     # Interactive Diagnostic Session
+#   bin/mantis "<instruction>"     # Headless universal execution
+#   bin/mantis <bundle.zip>        # Support bundle triage
+#   bin/mantis --mcp               # Run stdio Model Context Protocol (MCP) server
 #
 
 ROOT_DIR=$(realpath $(dirname $0)/..)
 cd "$ROOT_DIR"
 
-# Activate virtual environment if present
-if [ -d "venv" ]; then
-    source venv/bin/activate
-fi
+# Rebuild venv/ if it is missing or etc/requirements.txt changed. The remaining
+# prerequisites (modules, tmux, model provider) are checked by mantis.cli once
+# --offline / --vertex have been applied.
+bin/ensure_venv >&2  # stdout is the MCP channel under --mcp
 
-# Parse version selection
-MANTIS_VERSION="${UDMI_MANTIS_VERSION:-v2}"
-ARGS=()
+source venv/bin/activate
 
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    --v1)
-      MANTIS_VERSION="v1"
-      shift
-      ;;
-    --v2)
-      MANTIS_VERSION="v2"
-      shift
-      ;;
-    *)
-      ARGS+=("$1")
-      shift
-      ;;
-  esac
-done
+export PYTHONPATH="$ROOT_DIR/common/src/main/python:$ROOT_DIR:${PYTHONPATH:-}"
 
-if [ "$MANTIS_VERSION" = "v1" ]; then
-  if [ -d "util/mantis/v1" ]; then
-    export PYTHONPATH="$ROOT_DIR/util/mantis/v1:$ROOT_DIR/util/mantis/v1/src:$ROOT_DIR/tools:$PYTHONPATH"
-    if [ "${#ARGS[@]}" -gt 0 ] && [ -x "util/mantis/v1/bin/${ARGS[0]}" ]; then
-      SUB_CMD="${ARGS[0]}"
-      ARGS=("${ARGS[@]:1}")
-      exec "$ROOT_DIR/util/mantis/v1/bin/$SUB_CMD" "${ARGS[@]}"
-    elif [ -f "util/mantis/v1/src/app/cli.py" ]; then
-      exec python3 -m app.cli "${ARGS[@]}"
-    else
-      exec python3 -m mantis.cli "${ARGS[@]}"
-    fi
-  else
-    echo "Error: Mantis v1 not found at util/mantis/v1"
-    exit 1
-  fi
-else
-  export PYTHONPATH="$ROOT_DIR/util/mantis:$ROOT_DIR/tools:$PYTHONPATH"
-  exec python3 -m mantis.cli "${ARGS[@]}"
-fi
+exec python3 -m mantis.cli "$@"

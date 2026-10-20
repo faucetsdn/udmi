@@ -40,7 +40,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
 
   family = "ipv4"
 
-  def __init__(self, state, publisher, *, interface=None, subnet_filter=None):
+  def __init__(self, state_entry, publisher, *, scan_id, interface=None, subnet_filter=None):
 
     self.queue = queue.SimpleQueue()
     self.interface = interface
@@ -51,6 +51,10 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     self.publish_interval = 5
     self.cancel_threads = threading.Event()
     self.scapy_is_go_signal = threading.Event()
+    self.sniffer = None
+    self.queue_thread = None
+    self.service_thread = None
+    self.packet_count_start = None
 
     # Configure Scapy
     scapy.all.conf.layers.filter([
@@ -60,7 +64,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
         scapy.layers.inet.UDP,
     ])
 
-    super().__init__(state, publisher)
+    super().__init__(state_entry, publisher, scan_id=scan_id)
 
   def _get_packet_counter_total(self):
     try:
@@ -78,7 +82,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     # Signal that packet capture has started. Callback executed by scapy
     # library on success. Necesary because exception disapears into the
     # the aether and we never no.
-    logging.debug("SCAPY is go")
+    self.log.debug("SCAPY is go")
     self.scapy_is_go_signal.set()
 
   def start_discovery(self):
@@ -119,11 +123,11 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
         if iface.ip != network.network_address:
           bpf_filter += f" and not src host {iface.ip}"
       except ValueError:
-        logging.warning("Invalid subnet filter: %s", subnet)
+        self.log.warning("Invalid subnet filter: %s", subnet)
         bpf_filter = f"ip and src net {subnet} and (dst net {subnet} or broadcast or multicast)"
     else:
       bpf_filter = PRIVATE_IP_BPF_FILTER
-    logging.info("Using BPF filter: %s", bpf_filter)
+    self.log.info("Using BPF filter: %s", bpf_filter)
 
     self.sniffer = scapy.sendrecv.AsyncSniffer(
         prn=self.queue.put,
@@ -140,23 +144,34 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
     self.packet_count_start = self._get_packet_counter_total()
 
   def stop_discovery(self):
-    self.sniffer.stop()
-    self.sniffer.join()
+    if self.sniffer and getattr(self.sniffer, "running", False):
+      self.sniffer.stop()
+      self.sniffer.join()
+    elif self.sniffer:
+      try:
+        self.sniffer.stop()
+        self.sniffer.join()
+      except Exception:
+        pass
 
     packet_count_end = self._get_packet_counter_total()
     
     self.cancel_threads.set()
-    self.queue_thread.join()
-    self.service_thread.join()
+    if self.queue_thread and self.queue_thread.is_alive():
+      self.queue_thread.join()
+    if self.service_thread and self.service_thread.is_alive():
+      self.service_thread.join()
 
-    if self.interface:
-      logging.info(
+    if self.interface and packet_count_end is not None and self.packet_count_start is not None:
+      self.log.info(
           f"packets seen by scapy: %d, packets seen by interface: %d",
           self.packets_seen,
           packet_count_end - self.packet_count_start,
       )
-    logging.info("devices seen: %d ", len(self.addresses_seen))
+    self.log.info("devices seen: %d ", len(self.addresses_seen))
 
+  @discovery.catch_exceptions_to_state
+  @discovery.main_task
   def discovery_service(self):
     while True:
       new_device_records = self.device_records - self.devices_records_published
@@ -164,7 +179,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
       for device_record in new_device_records:
         self.publish(
             udmi.schema.discovery_event.DiscoveryEvent(
-                generation=self.config.generation,
+                generation=self.generation,
                 addr=device_record.addr,
                 family=self.family,
                 families=dict(
@@ -196,7 +211,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
       try:
         item = self.queue.get(True, 1)
         if self.packets_seen % 10000 == 0:
-          logging.info("%d packets seen", self.packets_seen)
+          self.log.info("%d packets seen", self.packets_seen)
         self.packets_seen += 1
         if scapy.layers.inet.IP in item:
           self.ip_packets_seen += 1
@@ -219,7 +234,7 @@ class PassiveNetworkDiscovery(discovery.DiscoveryController):
                             payload[index + 3 : index + 3 + 4]
                         )
                         instance_number = object_identifier & 0x3FFFF
-                        logging.info(f"maybe bacnet addr {instance_number} at {getattr(item[scapy.layers.inet.IP], x)}")
+                        self.log.info(f"maybe bacnet addr {instance_number} at {getattr(item[scapy.layers.inet.IP], x)}")
             # Not all packets have IP addresses, but this scan requires an IP Address
             if (
                 (ip := getattr(item[scapy.layers.inet.IP], x))

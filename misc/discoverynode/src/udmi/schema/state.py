@@ -33,6 +33,7 @@ class Discovery:
 @dataclasses.dataclass
 class StateDiscovery:
   families: dict[str, Discovery] = dataclasses.field(default_factory=dict)
+  scans: dict[str, Discovery] = dataclasses.field(default_factory=dict)
 
 
 @dataclasses.dataclass
