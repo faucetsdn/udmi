@@ -1,3 +1,5 @@
+[**UDMI**](./) / [Fix Discovery](#)
+
 # Fix `Discovery Tests` CI Failure (`udmis` Container vs `tmux_butler`)
 
 ## Purpose of This Document
@@ -47,7 +49,7 @@ On commit `66d76fec5`, 30 of 31 CI checks passed; only **`Discovery Tests`** fai
      Error response from daemon: container ... is not running
      ```
    - `bin/registrar` and `bin/mapper` on the host fail to connect to Mosquitto (`127.0.0.1:8883`) and PostgreSQL (`127.0.0.1:18836`) with `ConnectionRefusedError: [Errno 111] Connection refused`.
-   - All 3 pytest tests in `misc/discoverynode/testing/e2e/test_local.py` fail.
+   - All 3 `pytest` tests in `misc/discoverynode/testing/e2e/test_local.py` fail.
 
 ---
 
@@ -57,11 +59,11 @@ The `Discovery Tests` CI job (`.github/workflows/testing.yml:497-598`) tests **`
 
 ### The 3 Test Stages in `Discovery Tests`
 1. **Unit Tests (`misc/discoverynode/testing/unit/unit_tests.sh`)**:
-   Runs isolated pytest unit tests inside the `test-discovery_node` container.
+   Runs isolated `pytest` unit tests inside the `test-discovery_node` container.
 2. **Integration Tests (`misc/discoverynode/testing/integration/integration_test.sh` & `misc/discoverynode/src/tests/test_integration.py`)**:
    Spins up a Docker network (`discovery-integration`, `192.168.12.0/24`) with a simulated BACnet device container (`test-bacnet-device` at `192.168.12.1`) and runs `test-discovery_node` with a mocked MQTT client to verify real BACnet UDP broadcast discovery (`Who-Is`/`I-Am`, `refs`) and `nmap` SSH discovery (`OpenSSH`).
 3. **E2E Tests (`misc/discoverynode/testing/e2e/test_local` & `test_local.py`)**:
-   Tests the full end-to-end closed-loop UDMI discovery and mapping workflow across 3 pytest cases:
+   Tests the full end-to-end closed-loop UDMI discovery and mapping workflow across 3 `pytest` cases:
    - `test_discovered_proxied_devices_are_created` (discovers and maps 9 BACnet devices behind `GAT-1`)
    - `test_discovered_devices_are_created` (discovers and maps 6 BACnet devices behind `AHU-1`)
    - `test_sequencer` (runs `bin/sequencer -v site_model //mqtt/localhost GAT-1 scan_single_future`)
@@ -109,7 +111,7 @@ The `Discovery Tests` CI job (`.github/workflows/testing.yml:497-598`) tests **`
 
 ## 3. Historical Context: Why `butler` Is Inside the `udmis` Container
 
-1. **Pre-PR #1422**:
+1. **Before PR #1422**:
    The `udmis` container was a "Barbican-in-a-box" appliance (`etcd`, `mosquitto`, `udmis`) started with `udmi/bin/start_local block site_model/cloud_iot_config.json`.
 2. **PR #1422 (`88249286e`, *"Updating mapping flow to new UUFI python utility"*)**:
    Replaced the Java `MappingAgent` with Python `bin/mapper` (`butler/bin/butler`). Because `bin/mapper ... map` queries PostgreSQL (`udmi_messages`) instead of listening to MQTT directly, PostgreSQL was added inside the `udmis` container and port-forwarded to the host (`-p 18836:5432` in `.github/workflows/testing.yml`, `POSTGRES_PORT: 18836` in `E2E Tests`, and `docker exec udmis psql ... TRUNCATE TABLE udmi_messages;` in `test_local.py:379`).
@@ -181,7 +183,7 @@ If the standalone `udmis` container is intended to remain a self-contained appli
 | `udmis/Dockerfile.udmis` | `1–39` | Builds the `udmis` image (has `udmis` JAR, `butler/`, `postgresql`, `mosquitto`, `tmux`; does **not** have `validator` JAR or `influxd`) |
 | `udmis/bin/build` | `45–54` | Mirrors `bin/`, `etc/`, `schema/`, `butler/`, `common/`, `gencode/`, `mcp/` into `udmis/build/` |
 | `misc/discoverynode/testing/e2e/test_local` | `1–25` | Wrapper script invoked by `Discovery Tests` (`E2E Tests` step) |
-| `misc/discoverynode/testing/e2e/test_local.py` | `234–380` | Pytest E2E tests (`test_discovered_proxied_devices_are_created`, `test_discovered_devices_are_created`, `test_sequencer`, and `new_site_model` fixture with `docker exec udmis psql ...`) |
+| `misc/discoverynode/testing/e2e/test_local.py` | `234–380` | `pytest` E2E tests (`test_discovered_proxied_devices_are_created`, `test_discovered_devices_are_created`, `test_sequencer`, and `new_site_model` fixture with `docker exec udmis psql ...`) |
 | `bridgehead/udmis/startup/udmis_startup.sh` | `91–92` | Starts `bin/start_butler` inside Bridgehead's `udmis` container |
 | `docs/udmis/local_docker.md` | `29–35` | Documentation for running the `udmis` container locally |
 | `udmis/bin/actualize` | `9–15` | Helper script to bootstrap the `udmis` container |
