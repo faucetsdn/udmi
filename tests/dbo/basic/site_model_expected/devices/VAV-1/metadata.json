@@ -18,6 +18,13 @@
   "cloud": {
     "num_id": "2541901344105616"
   },
+  "relationships": {
+    "VAV-2": {
+      "FEEDS": [
+        {}
+      ]
+    }
+  },
   "pointset": {
     "points": {
       "zone_air_temperature_sensor": {
