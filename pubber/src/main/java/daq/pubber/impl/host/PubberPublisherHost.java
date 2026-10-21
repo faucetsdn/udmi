@@ -145,7 +145,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
 
     persistentData.restart_count = requireNonNullElse(persistentData.restart_count, 0) + 1;
 
-    if (persistentData.applied_blobs != null) {
+    if (persistentData.applied_blobs != null && !persistentData.applied_blobs.isEmpty()) {
       if (getDeviceState().blobset == null) {
         getDeviceState().blobset = new BlobsetState();
         getDeviceState().blobset.blobs = new HashMap<>();
@@ -156,7 +156,7 @@ public class PubberPublisherHost extends PubberManager implements PublisherHost 
         bs.generation = java.util.Date.from(java.time.Instant.parse(gen));
         getDeviceState().blobset.blobs.put(key, bs);
       });
-    } else {
+    } else if (persistentData.applied_blobs == null) {
       persistentData.applied_blobs = new HashMap<>();
     }
 
