@@ -58,6 +58,13 @@ $MOSQUITTO_CTRL deleteClient $SERV_USER 2>/dev/null || true
 $MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS 2>/dev/null || true
 $MOSQUITTO_CTRL addClientRole $SERV_USER service 2>/dev/null || true
 
+if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
+    BARE_SERV_USER=/r/${ns_prefix}UDMI-REFLECT/d/${ns_prefix}$registry_id
+    $MOSQUITTO_CTRL deleteClient $BARE_SERV_USER 2>/dev/null || true
+    $MOSQUITTO_CTRL createClient $BARE_SERV_USER -p $SERV_PASS 2>/dev/null || true
+    $MOSQUITTO_CTRL addClientRole $BARE_SERV_USER service 2>/dev/null || true
+fi
+
 if [[ -n "$ns_prefix" ]]; then
     BARE_USER=/r/UDMI-REFLECT/d/$registry_id${UDMI_REGISTRY_SUFFIX:-}
     $MOSQUITTO_CTRL deleteClient $BARE_USER 2>/dev/null || true

@@ -8,7 +8,7 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 for pid_path in "$ETC_DIR/mosquitto.pid" "var/mosquitto/mosquitto.pid" "/var/mosquitto/mosquitto.pid"; do
     if [[ -f "$pid_path" ]]; then
         OLD_PID=$(cat "$pid_path" 2>/dev/null || true)
-        if [[ -n "$OLD_PID" ]] && ps -p "$OLD_PID" > /dev/null 2>&1; then
+        if [[ -n "$OLD_PID" ]] && kill -0 "$OLD_PID" > /dev/null 2>&1; then
             echo "Killing existing local mosquitto process with PID $OLD_PID..."
             kill "$OLD_PID" 2>/dev/null || true
             sleep 1
@@ -16,8 +16,9 @@ for pid_path in "$ETC_DIR/mosquitto.pid" "var/mosquitto/mosquitto.pid" "/var/mos
     fi
 done
 
+rm -f "$ETC_DIR/mosquitto.ready" "$UDMI_ROOT/var/mosquitto/mosquitto.ready" "/var/mosquitto/mosquitto.ready" 2>/dev/null || true
+
 if [[ ${1:-} == stop ]]; then
-    rm -f "$ETC_DIR/mosquitto.ready" "$UDMI_ROOT/var/mosquitto/mosquitto.ready" "/var/mosquitto/mosquitto.ready" 2>/dev/null || true
     if [[ $(id -u) == 0 ]] && command -v systemctl >/dev/null 2>&1; then
         echo "Stopping mosquitto systemd service..."
         systemctl stop mosquitto 2>/dev/null || true
@@ -190,10 +191,10 @@ else
     disown $MOSQUITTO_PID 2>/dev/null || true
     echo Waiting for background mosquitto on port ${MQTT_PORT:-8883}...
     for i in $(seq 1 50); do
-        if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT:-8883}" 2>/dev/null; then
+        if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT:-8883}" 2>/dev/null && $MOSQUITTO_CTRL listClients >/dev/null 2>&1; then
             break
         fi
-        if ! ps -p $MOSQUITTO_PID >/dev/null 2>&1; then
+        if ! kill -0 $MOSQUITTO_PID >/dev/null 2>&1; then
             break
         fi
         sleep 0.2
