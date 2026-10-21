@@ -19,8 +19,7 @@ In DBO, the `type` refers to a specific equipment class, and the entity's UUID i
 },
 "externals": {
   "dbo": {
-    "type": "HVAC/VAV_SD_DSP",
-    "label": "VAV-1"
+    "type": "HVAC/VAV_SD_DSP"
   }
 }
 ```
