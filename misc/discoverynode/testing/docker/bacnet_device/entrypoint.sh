@@ -30,4 +30,4 @@ mkdir /var/run/sshd
 chmod 0755 /var/run/sshd
 /usr/sbin/sshd
 
-/venv/bin/python3 bacnet_server.py
+exec /venv/bin/python3 bacnet_server.py

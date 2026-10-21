@@ -2,6 +2,7 @@
 # pylint: disable=wrong-import-position
 import argparse
 import logging
+import signal
 import sys
 import time
 import json
@@ -46,6 +47,7 @@ def get_arguments():
 
 
 def main():
+  signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 
   args = get_arguments()
   config = local_config.read_config(args.config_file)

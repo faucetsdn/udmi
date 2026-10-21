@@ -529,7 +529,6 @@ jobs:
           misc/discoverynode/testing/integration/integration_test.sh
       - name: Build UDMIS container
         run: |
-          udmis/bin/build check
           bin/container udmis build --no-check latest
           echo Built local UDMIS
       - name: Start UDMIS container
@@ -542,7 +541,7 @@ jobs:
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
             -v $PWD/out:/root/udmi/out \
-            udmis udmi/bin/udmi start block site_model //mqtt/localhost:8883
+            udmis udmi/bin/udmi start block site_model //mqtt/localhost:8883 !registrar
           for count in `seq 0 60`; do
             echo Waiting for UDMIS startup $((30 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break

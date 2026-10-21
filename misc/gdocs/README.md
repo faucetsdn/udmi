@@ -6,7 +6,7 @@ This directory provides a canonical Python helper module and CLI ([`doc_builder.
 
 Do **not** use `/google/bin/releases/gemini-agents-gdocs/gdocs` on roaming-client workstations:
 1. The release binary has `0444` permissions (`Permission denied` on direct execution).
-2. Its internal `ssoproxyclient` dials `blade:sso` over Stubby, which fails on `roaming-clients` LOAS2 certificates with `RPC::RPC_RESTRICTIONS_VIOLATION` / `RPC::DEADLINE_EXCEEDED`.
+2. Its internal `ssoproxyclient` dials `blade:sso` over `Stubby`, which fails on `roaming-clients` `LOAS2` certificates with `RPC::RPC_RESTRICTIONS_VIOLATION` / `RPC::DEADLINE_EXCEEDED`.
 
 Instead, run [`misc/gdocs/doc_builder.py`](doc_builder.py) using `/home/peringknife/udmi/venv/bin/python3`, which authenticates via Google Application Default Credentials (`~/.config/gcloud/application_default_credentials.json`) and works inside the standard sandbox (`BypassSandbox: false`).
 
