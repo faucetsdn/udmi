@@ -54,10 +54,6 @@ import static java.util.stream.Collectors.groupingBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
-import com.github.fge.jsonschema.core.load.download.URIDownloader;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,8 +76,13 @@ import com.google.udmi.util.ExceptionMap;
 import com.google.udmi.util.ExceptionMap.ErrorTree;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.MessageValidator;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.ValidationError;
+import com.networknt.schema.AbsoluteIri;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.resource.InputStreamSource;
+import com.networknt.schema.resource.SchemaLoader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -1707,11 +1708,7 @@ public class Registrar {
         toRemove.forEach(schemaObject::remove);
       }
       JsonSchema schema =
-          JsonSchemaFactory.newBuilder()
-              .setLoadingConfiguration(
-                  LoadingConfiguration.newBuilder()
-                      .addScheme("file", new RelativeDownloader())
-                      .freeze()).freeze().getJsonSchema(schemaTree);
+          MessageValidator.getSchemaFactory(new RelativeDownloader()).getSchema(schemaTree);
       schemas.put(key, schema);
     } catch (Exception e) {
       throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
@@ -1769,15 +1766,18 @@ public class Registrar {
     autoAltRegistry = true;
   }
 
-  class RelativeDownloader implements URIDownloader {
+  class RelativeDownloader implements SchemaLoader {
 
     @Override
-    public InputStream fetch(URI source) {
-      try {
-        return Files.newInputStream(new File(schemaBase, source.getSchemeSpecificPart()).toPath());
-      } catch (Exception e) {
-        throw new RuntimeException("While loading sub-schema " + source, e);
-      }
+    public InputStreamSource getSchema(AbsoluteIri iri) {
+      return () -> {
+        try {
+          return Files.newInputStream(
+              new File(schemaBase, URI.create(iri.toString()).getSchemeSpecificPart()).toPath());
+        } catch (Exception e) {
+          throw new RuntimeException("While loading sub-schema " + iri, e);
+        }
+      };
     }
   }
 }
