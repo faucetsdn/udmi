@@ -17,6 +17,13 @@
   "cloud": {
     "num_id": "210628044959834"
   },
+  "relationships": {
+    "VAV-3151": {
+      "FEEDS": [
+        {}
+      ]
+    }
+  },
   "pointset": {
     "points": {
       "building_air_static_pressure_sensor": {

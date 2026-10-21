@@ -100,6 +100,7 @@
   code: VAVRH S3-1-51 CO2
   connections:
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
+    d212c227-4cb9-4a18-842c-8e2748274acf: FEEDS
   display_name: VAVRH S3-1-51 CO2
   translation:
     cooling_request_count:
