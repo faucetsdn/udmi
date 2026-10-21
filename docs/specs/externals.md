@@ -11,13 +11,16 @@ Below are conceptual examples of how different external models could be linked t
 ## Digital Buildings Ontology (DBO)
 
 Google's [Digital Buildings Ontology](https://github.com/google/digitalbuildings) defines building assets.
-In DBO, the `type` refers to a specific equipment class, and `ext_id` is a UUID identifying the entity.
+In DBO, the `type` refers to a specific equipment class, and the entity's UUID is specified in `system.guid`.
 
 ```json
+"system": {
+  "guid": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e"
+},
 "externals": {
   "dbo": {
-    "ext_id": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
-    "type": "HVAC/VAV_SD_DSP"
+    "type": "HVAC/VAV_SD_DSP",
+    "label": "VAV-1"
   }
 }
 ```

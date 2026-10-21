@@ -63,7 +63,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     if not dbo_external:
       continue
 
-    guid = dbo_external.get("ext_id")
+    guid = metadata.get("system", {}).get("guid")
     if not guid:
       continue
 

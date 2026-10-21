@@ -181,13 +181,13 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
       # System
       system = metadata.setdefault("system", {})
+      system["guid"] = guid
       if "display_name" in entity:
         system["name"] = entity["display_name"]
 
       # Externals
       externals = metadata.setdefault("externals", {})
       dbo = externals.setdefault("dbo", {})
-      dbo["ext_id"] = guid
       if "type" in entity:
         dbo["type"] = entity["type"]
       if "code" in entity:
