@@ -128,7 +128,7 @@ jobs:
           name: udmi-prebuilt-packages
       - name: local setup
         run: |
-          bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+          bin/udmi start -n sites/udmi_site_model $TARGET_PROJECT
           bin/pull_messages ${TARGET_PROJECT}%ZZ-TRI-FECTA > /tmp/message_capture.log 2>&1 &
       - name: bin/test_automapper
         run: bin/test_automapper $TARGET_PROJECT
@@ -180,7 +180,7 @@ jobs:
         with:
           name: udmi-prebuilt-packages
       - name: local setup
-        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+        run: bin/udmi start -n sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean solo $TARGET_PROJECT
       - name: special sequences
@@ -240,7 +240,7 @@ jobs:
         with:
           name: udmi-prebuilt-packages
       - name: local setup
-        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+        run: bin/udmi start -n sites/udmi_site_model $TARGET_PROJECT
       - name: registrar clean
         run: bin/test_regclean $TARGET_PROJECT
       - name: sequence tests clean
@@ -297,16 +297,14 @@ jobs:
           java-version: '21'
           cache: 'gradle'
       - name: base setup
-        run: |
-          sudo bin/setup_base
-          bin/registrar sites/udmi_site_model
+        run: sudo bin/setup_base
       - name: Download prebuilt packages
         uses: actions/download-artifact@v8
         with:
           name: udmi-prebuilt-packages
       - name: local setup
         run: |
-          bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+          bin/udmi start -n sites/udmi_site_model $TARGET_PROJECT
           bin/pull_messages $TARGET_PROJECT > out/message_capture.log 2>&1 &
       - name: bin/test_etcd_prerun
         run: bin/test_etcd_prerun
@@ -392,7 +390,7 @@ jobs:
         with:
           name: udmi-prebuilt-packages
       - name: local setup
-        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+        run: bin/udmi start -n sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
         run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_proxy
@@ -437,7 +435,7 @@ jobs:
         with:
           name: udmi-prebuilt-packages
       - name: local setup
-        run: bin/udmi start sites/udmi_site_model $TARGET_PROJECT
+        run: bin/udmi start -n sites/udmi_site_model $TARGET_PROJECT
       - name: regclean
         run: bin/test_regclean $TARGET_PROJECT
       - name: bin/test_blob_updates
@@ -542,7 +540,7 @@ jobs:
             -v $PWD/var/etcd:/root/udmi/var/etcd \
             -v $PWD/var/mosquitto:/etc/mosquitto \
             -v $PWD/out:/root/udmi/out \
-            udmis udmi/bin/udmi start block site_model //mqtt/localhost:8883
+            udmis udmi/bin/udmi start block site_model //mqtt/localhost:8883 !registrar
           for count in `seq 0 60`; do
             echo Waiting for UDMIS startup $((30 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
@@ -701,7 +699,7 @@ jobs:
           name: udmi-prebuilt-packages
       - name: Start Local Services
         run: |
-          bin/udmi start sites/udmi_site_model ${{ env.TARGET_PROJECT }}
+          bin/udmi start -n sites/udmi_site_model ${{ env.TARGET_PROJECT }}
       - name: Run Openbridge Test
         run: |
           bin/test_openbridge
