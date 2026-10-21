@@ -93,4 +93,36 @@ class IotAccessBaseTest {
     assertEquals(0, casFailures.get(), "Expected zero CAS conflicts for same-device updates");
     assertEquals(1L + threadCount, storedConfig.get().getKey(), "Final config version");
   }
+
+  @Test
+  public void idleDeviceConfigLocksAreEvictedOnGc() throws Exception {
+    IotAccess access = new IotAccess();
+    LocalIotAccessProvider provider = new LocalIotAccessProvider(access) {
+      @Override
+      public Entry<Long, String> fetchConfig(String registryId, String deviceId) {
+        return new SimpleEntry<>(1L, "{}");
+      }
+
+      @Override
+      public String updateConfig(Envelope envelope, String config, Long version) {
+        return config;
+      }
+    };
+
+    for (int i = 0; i < 10; i++) {
+      Envelope env = new Envelope();
+      env.deviceRegistryId = "ZZ-TRI-FECTA";
+      env.deviceId = "EPHEMERAL-" + i;
+      provider.modifyConfig(env, prev -> prev.getValue());
+    }
+
+    for (int attempt = 0; attempt < 10
+        && provider.configLocks.values().iterator().hasNext(); attempt++) {
+      System.gc();
+      Thread.sleep(20);
+    }
+
+    assertEquals(false, provider.configLocks.values().iterator().hasNext(),
+        "Idle per-device config locks should be garbage-collected");
+  }
 }

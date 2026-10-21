@@ -74,7 +74,12 @@ public abstract class ManagerBase implements SubBlockManager {
     if (checkTarget instanceof SystemState) {
       state.system = (SystemState) checkValue;
     } else if (checkTarget instanceof Entry) {
-      state.system.status = (Entry) checkValue;
+      if (state.system == null && checkValue != null) {
+        state.system = new SystemState();
+      }
+      if (state.system != null) {
+        state.system.status = (Entry) checkValue;
+      }
     } else if (checkTarget instanceof PointsetState) {
       state.pointset = (PointsetState) checkValue;
     } else if (checkTarget instanceof LocalnetState) {

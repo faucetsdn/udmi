@@ -113,4 +113,31 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     assertEquals("pointset", legacyPointset.get(SUBFOLDER_PROPERTY_KEY));
     assertEquals(3, legacyPointset.keySet().size());
   }
+
+  @Test
+  public void shutdownTerminatesReconnectExecutor() throws Exception {
+    java.util.Set<Thread> threadsBefore = new java.util.HashSet<>(
+        Thread.getAllStackTraces().keySet());
+    EndpointConfiguration endpoint = new EndpointConfiguration();
+    endpoint.protocol = Protocol.MQTT;
+    endpoint.transport = EndpointConfiguration.Transport.TCP;
+    endpoint.hostname = "127.0.0.1";
+    endpoint.port = 1;
+    SimpleMqttPipe pipe = new SimpleMqttPipe(endpoint);
+    pipe.shutdown();
+
+    java.util.Set<Thread> leakedThreads = java.util.Set.of();
+    for (int attempt = 0; attempt < 20; attempt++) {
+      leakedThreads = Thread.getAllStackTraces().keySet().stream()
+          .filter(t -> !threadsBefore.contains(t) && t.isAlive()
+              && t.getName().startsWith("pool-"))
+          .collect(java.util.stream.Collectors.toSet());
+      if (leakedThreads.isEmpty()) {
+        break;
+      }
+      Thread.sleep(20);
+    }
+    assertEquals(java.util.Set.of(), leakedThreads,
+        "Reconnect executor thread should be terminated on shutdown");
+  }
 }

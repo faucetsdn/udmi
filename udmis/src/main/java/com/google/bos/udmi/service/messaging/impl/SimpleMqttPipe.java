@@ -29,6 +29,7 @@ import java.io.PrintWriter;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -72,6 +73,8 @@ public class SimpleMqttPipe extends MessageBase {
   private final String namespace;
   private final EndpointConfiguration endpoint;
   private final MqttClient mqttClient;
+  private final ScheduledExecutorService reconnectExecutor =
+      Executors.newSingleThreadScheduledExecutor();
   private final ScheduledFuture<?> scheduledFuture;
   private final CertManager certManager;
   private final String recvId;
@@ -113,7 +116,7 @@ public class SimpleMqttPipe extends MessageBase {
     }
     mqttClient = createMqttClient();
     tryConnect(true);
-    scheduledFuture = Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(
+    scheduledFuture = reconnectExecutor.scheduleWithFixedDelay(
         () -> SimpleMqttPipe.this.tryConnect(true), RECONNECT_SEC, RECONNECT_SEC, TimeUnit.SECONDS);
   }
 
@@ -452,6 +455,7 @@ public class SimpleMqttPipe extends MessageBase {
   public void shutdown() {
     try {
       scheduledFuture.cancel(false);
+      reconnectExecutor.shutdownNow();
       if (mqttClient.isConnected()) {
         mqttClient.disconnect();
       } else {

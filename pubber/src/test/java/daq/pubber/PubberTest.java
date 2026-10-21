@@ -336,6 +336,14 @@ public class PubberTest extends TestBase {
         beforeCount, pubber.getMessageCounts().get("state").get());
     assertEquals(report, pubber.getDeviceState().system.status);
 
+    State emptyState = new State();
+    udmi.lib.base.ManagerBase.updateStateHolder(emptyState, Entry.class);
+    assertNull("Clearing status on uninitialized system state should leave system null",
+        emptyState.system);
+    udmi.lib.base.ManagerBase.updateStateHolder(emptyState, report);
+    assertEquals("Setting status on uninitialized system state should initialize system",
+        report, emptyState.system.status);
+
     SystemConfig systemConfig = new SystemConfig();
     systemConfig.operation = new Operation();
     systemConfig.operation.mode = SystemMode.ACTIVE;

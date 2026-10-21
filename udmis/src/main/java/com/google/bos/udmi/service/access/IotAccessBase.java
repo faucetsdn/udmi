@@ -17,6 +17,7 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapMaker;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -50,7 +51,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   private static final Duration REGISTRY_REFRESH = Duration.ofMinutes(10);
   private static final Duration REGISTRY_BACKOFF = Duration.ofMinutes(1);
   final Map<String, String> options;
-  private final Map<Entry<String, String>, Object> configLocks = new ConcurrentHashMap<>();
+  final Map<Entry<String, String>, Object> configLocks = new MapMaker().weakValues().makeMap();
   private final AtomicReference<Instant> lastRegistryFetch =
       new AtomicReference<>(Instant.ofEpochSecond(0));
   private CompletableFuture<Map<String, String>> registryRegions;

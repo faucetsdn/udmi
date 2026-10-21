@@ -2533,7 +2533,9 @@ public class SequenceBase {
       boolean onlySentSubblocks) {
     boolean subblockSent = !onlySentSubblocks || sentConfig.isEmpty()
         || sentConfig.containsKey(UPDATE) || sentConfig.containsKey(block);
-    addToParity(parity, block.value(), subblockSent ? config : null, state);
+    if (subblockSent) {
+      addToParity(parity, block.value(), config, state);
+    }
   }
 
   private void addToParity(List<String> parity, String block, Object config, Object state) {

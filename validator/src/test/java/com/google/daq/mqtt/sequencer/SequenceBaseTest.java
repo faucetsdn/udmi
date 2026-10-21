@@ -132,6 +132,21 @@ public class SequenceBaseTest {
     assertNull("configIsPending should not block on unsent subblocks during gated partial updates",
         base.configIsPending(false));
 
+    // When state already has a subblock populated (e.g., before full reset or during soft reset)
+    // and only SYSTEM has been sent so far, unsent POINTSET must be skipped rather than treated as
+    // a null-config mismatch against non-null state.
+    base.deviceState.pointset = new PointsetState();
+    assertNull(
+        "configIsPending should not report mismatch when unsent subblock is non-null in state",
+        base.configIsPending(false));
+
+    base.deviceConfig.pointset = null;
+    assertNull(
+        "configIsPending should not block on unsent null subblock during gated full reset",
+        base.configIsPending(false));
+
+    base.deviceConfig.pointset = new PointsetConfig();
+    base.deviceState.pointset = null;
     SequenceBase.sentConfig.put(SubFolder.POINTSET, "{}");
     String pending = base.configIsPending(false);
     assertNotNull("configIsPending should wait for state subblocks to match sent config",

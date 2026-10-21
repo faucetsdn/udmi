@@ -374,6 +374,7 @@ public class Registrar {
   @CommandLineOption(short_form = "-e", arg_name = "suffix", description = "Set registry suffix")
   private void setRegistrySuffix(String suffix) {
     siteModel.getExecutionConfiguration().registry_suffix = suffix;
+    siteModel.writeConfigFile();
   }
 
   private void processProfile(ExecutionConfiguration config) {
