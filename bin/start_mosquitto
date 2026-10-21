@@ -1,14 +1,17 @@
 #!/bin/bash -eu
 
 UDMI_ROOT=$(dirname $0)/..
+rm -f "${MOSQUITTO_ETC_DIR:-$UDMI_ROOT/var/mosquitto}/mosquitto.ready" "$UDMI_ROOT/var/mosquitto/mosquitto.ready" "/var/mosquitto/mosquitto.ready" 2>/dev/null || true
 source $UDMI_ROOT/etc/shell_common.sh
 
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
+rm -f "$ETC_DIR/mosquitto.ready" "$UDMI_ROOT/var/mosquitto/mosquitto.ready" "/var/mosquitto/mosquitto.ready" 2>/dev/null || true
+
 for pid_path in "$ETC_DIR/mosquitto.pid" "var/mosquitto/mosquitto.pid" "/var/mosquitto/mosquitto.pid"; do
     if [[ -f "$pid_path" ]]; then
         OLD_PID=$(cat "$pid_path" 2>/dev/null || true)
-        if [[ -n "$OLD_PID" ]] && ps -p "$OLD_PID" > /dev/null 2>&1; then
+        if [[ -n "$OLD_PID" && -d "/proc/$OLD_PID" ]]; then
             echo "Killing existing local mosquitto process with PID $OLD_PID..."
             kill "$OLD_PID" 2>/dev/null || true
             sleep 1
@@ -17,7 +20,6 @@ for pid_path in "$ETC_DIR/mosquitto.pid" "var/mosquitto/mosquitto.pid" "/var/mos
 done
 
 if [[ ${1:-} == stop ]]; then
-    rm -f "$ETC_DIR/mosquitto.ready" "$UDMI_ROOT/var/mosquitto/mosquitto.ready" "/var/mosquitto/mosquitto.ready" 2>/dev/null || true
     if [[ $(id -u) == 0 ]] && command -v systemctl >/dev/null 2>&1; then
         echo "Stopping mosquitto systemd service..."
         systemctl stop mosquitto 2>/dev/null || true
@@ -193,7 +195,7 @@ else
         if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT:-8883}" 2>/dev/null; then
             break
         fi
-        if ! ps -p $MOSQUITTO_PID >/dev/null 2>&1; then
+        if [[ ! -d /proc/$MOSQUITTO_PID ]]; then
             break
         fi
         sleep 0.2
@@ -201,6 +203,13 @@ else
     [[ -d /proc/$MOSQUITTO_PID ]] || (mosquitto_diag && cat $MOSQUITTO_LOG && fail starting mosquitto)
     echo Completed mosquitto startup.
 fi
+
+for i in $(seq 1 50); do
+    if $MOSQUITTO_CTRL listClients >/dev/null 2>&1; then
+        break
+    fi
+    sleep 0.2
+done
 
 $MOSQUITTO_CTRL createRole service || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow || true

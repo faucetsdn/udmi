@@ -9,6 +9,7 @@ import static com.google.udmi.util.JsonUtil.safeSleep;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.core.DistributorPipe;
 import com.google.bos.udmi.service.core.ProcessorBase.PreviousParseException;
@@ -16,6 +17,7 @@ import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.SimpleHandler;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.MapMaker;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -49,6 +51,7 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   private static final Duration REGISTRY_REFRESH = Duration.ofMinutes(10);
   private static final Duration REGISTRY_BACKOFF = Duration.ofMinutes(1);
   final Map<String, String> options;
+  final Map<Entry<String, String>, Object> configLocks = new MapMaker().weakValues().makeMap();
   private final AtomicReference<Instant> lastRegistryFetch =
       new AtomicReference<>(Instant.ofEpochSecond(0));
   private CompletableFuture<Map<String, String>> registryRegions;
@@ -225,39 +228,44 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
     int retryCount = CONFIG_UPDATE_MAX_RETRIES;
     String registryId = envelope.deviceRegistryId;
     String deviceId = envelope.deviceId;
-    try {
-      while (true) {
-        try {
-          Entry<Long, String> currentConfig = fetchConfig(registryId, deviceId);
-          Long version = ifNotNullGet(currentConfig, Entry::getKey);
-          debug("Retrieved config %s/%s #%d", registryId, deviceId, version);
-          String updatedConfig = ifNotNullGet(safeMunge(munger, currentConfig),
-              updated -> checkedUpdate(envelope, version, updated));
-          // Preventing a spurious "applied config" message when no changes occurred.
-          if (updatedConfig != null) {
-            debug("Applied config %s/%s #%d", registryId, deviceId, version);
-          }
-          return updatedConfig;
-        } catch (AbortLoopException e) {
-          throw e;
-        } catch (Exception e) {
-          if (retryCount <= 0) {
-            error("Failed modifying config for %s/%s: %s", registryId, deviceId,
-                friendlyStackTrace(e));
+    Object configLock = configLocks.computeIfAbsent(
+        Map.entry(ofNullable(registryId).orElse(""), ofNullable(deviceId).orElse("")),
+        key -> new Object());
+    synchronized (configLock) {
+      try {
+        while (true) {
+          try {
+            Entry<Long, String> currentConfig = fetchConfig(registryId, deviceId);
+            Long version = ifNotNullGet(currentConfig, Entry::getKey);
+            debug("Retrieved config %s/%s #%d", registryId, deviceId, version);
+            String updatedConfig = ifNotNullGet(safeMunge(munger, currentConfig),
+                updated -> checkedUpdate(envelope, version, updated));
+            // Preventing a spurious "applied config" message when no changes occurred.
+            if (updatedConfig != null) {
+              debug("Applied config %s/%s #%d", registryId, deviceId, version);
+            }
+            return updatedConfig;
+          } catch (AbortLoopException e) {
             throw e;
+          } catch (Exception e) {
+            if (retryCount <= 0) {
+              error("Failed modifying config for %s/%s: %s", registryId, deviceId,
+                  friendlyStackTrace(e));
+              throw e;
+            }
+            warn(
+                format("Error modifying config for %s/%s, remaining retries %d...", registryId,
+                    deviceId, --retryCount));
+            safeSleep(CONFIG_UPDATE_BACKOFF_MS);
           }
-          warn(
-              format("Error modifying config for %s/%s, remaining retries %d...", registryId,
-                  deviceId, --retryCount));
-          safeSleep(CONFIG_UPDATE_BACKOFF_MS);
         }
+      } catch (AbortLoopException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new RuntimeException(
+            format("Maximum config retry count exceeded for %s/%s, giving up.", registryId,
+                deviceId), e);
       }
-    } catch (AbortLoopException e) {
-      throw e;
-    } catch (Exception e) {
-      throw new RuntimeException(
-          format("Maximum config retry count exceeded for %s/%s, giving up.", registryId,
-              deviceId), e);
     }
   }
 

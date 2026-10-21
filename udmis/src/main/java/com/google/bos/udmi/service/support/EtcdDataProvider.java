@@ -362,9 +362,13 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   public void shutdown() {
     try {
       if (enabled) {
-        scheduledExecutorService.shutdown();
-        scheduledExecutorService.awaitTermination(HEARTBEAT_SEC, TimeUnit.SECONDS);
-        client.close();
+        if (scheduledExecutorService != null) {
+          scheduledExecutorService.shutdown();
+          scheduledExecutorService.awaitTermination(HEARTBEAT_SEC, TimeUnit.SECONDS);
+        }
+        if (client != null) {
+          client.close();
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException("While shutting down", e);

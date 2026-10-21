@@ -72,6 +72,29 @@ case "$TMUX_ACTION" in
             tmux_init_or_add_window "$SESSION_NAME" "validator" "echo Starting validator service...; tail -f /dev/null"
         fi
 
+        if tmux_should_run_service "registrar"; then
+            echo "Waiting for initial registrar run in '$SESSION_NAME' to complete..."
+            registrar_done=false
+            for i in $(seq 1 90); do
+                pane_out=$(tmux capture-pane -t "$SESSION_NAME:registrar" -p -S -20 2>/dev/null || true)
+                if echo "$pane_out" | grep -q "=== \[registrar\] exited with code 0 ==="; then
+                    registrar_done=true
+                    break
+                fi
+                if echo "$pane_out" | grep -qE "(=== \[registrar\] exited with code [^0]|Pane is dead)"; then
+                    echo "=== Initial registrar run in '$SESSION_NAME' failed ===" >&2
+                    tmux capture-pane -t "$SESSION_NAME:registrar" -p -S -50 >&2 || true
+                    fail "Initial registrar run in '$SESSION_NAME' failed."
+                fi
+                sleep 1
+            done
+            if [[ "$registrar_done" != true ]]; then
+                echo "=== Initial registrar run in '$SESSION_NAME' timed out after 90s ===" >&2
+                tmux capture-pane -t "$SESSION_NAME:registrar" -p -S -50 >&2 || true
+                fail "Initial registrar run in '$SESSION_NAME' timed out."
+            fi
+        fi
+
         echo "Butler session '$SESSION_NAME' initialized."
         tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
         ;;

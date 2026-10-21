@@ -84,6 +84,13 @@ public class IotReflectorClient implements IotProvider {
     executor.execute(this::processReplies);
   }
 
+  IotReflectorClient(com.google.bos.iot.core.proxy.IotReflectorClient messageClient) {
+    this.messageClient = messageClient;
+    this.messageClient.activate();
+    this.sessionPrefix = messageClient.getSessionPrefix();
+    executor.execute(this::processReplies);
+  }
+
   @Override
   public Credential getCredential() {
     return messageClient.getCredential();
@@ -216,9 +223,13 @@ public class IotReflectorClient implements IotProvider {
 
   private Map<String, Object> transaction(String deviceId, String topic,
       String message, QuerySpeed speed) {
-    // TODO: Publish should return future to avoid race conditions.
-    String transactionId = messageClient.publish(deviceId, topic, message);
-    Map<String, Object> objectMap = waitForReply(transactionId, speed);
+    CompletableFuture<Map<String, Object>> replyFuture = new CompletableFuture<>();
+    String transactionId;
+    synchronized (futures) {
+      transactionId = messageClient.publish(deviceId, topic, message);
+      futures.put(transactionId, replyFuture);
+    }
+    Map<String, Object> objectMap = waitForReply(transactionId, replyFuture, speed);
     String error = (String) ofNullable(objectMap).map(x -> x.get(ERROR_KEY)).orElse(null);
     if (error != null) {
       writeErrorDetail(transactionId, error, (String) objectMap.get(DETAIL_KEY));
@@ -245,14 +256,15 @@ public class IotReflectorClient implements IotProvider {
     }
   }
 
-  private Map<String, Object> waitForReply(String sentId, QuerySpeed speed) {
+  private Map<String, Object> waitForReply(String sentId,
+      CompletableFuture<Map<String, Object>> replyFuture, QuerySpeed speed) {
     try {
-      CompletableFuture<Map<String, Object>> replyFuture = new CompletableFuture<>();
-      futures.put(sentId, replyFuture);
       return speed == QuerySpeed.DYNAMIC ? dynamicReplyFutureGet(replyFuture) :
           replyFuture.get(speed.seconds(), TimeUnit.SECONDS);
     } catch (Exception e) {
-      futures.remove(sentId);
+      synchronized (futures) {
+        futures.remove(sentId);
+      }
       throw new RuntimeException(
           format("UDMIS reflector timeout %ss for %s", speed.seconds(), sentId));
     }
@@ -285,8 +297,10 @@ public class IotReflectorClient implements IotProvider {
         if (SubFolder.UDMI.value().equals(subFolder) && SubType.EVENTS.value().equals(subType)) {
           continue;
         }
-        CompletableFuture<Map<String, Object>> future = ifNotNullGet(transactionId,
-            futures::remove);
+        CompletableFuture<Map<String, Object>> future;
+        synchronized (futures) {
+          future = ifNotNullGet(transactionId, futures::remove);
+        }
         ifNotNullThen(future, f -> f.complete(messageBundle.message));
 
         if (messageBundle.message != null) {

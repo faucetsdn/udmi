@@ -29,31 +29,71 @@ fi
 if [[ $# -ge 1 && "$1" != -* ]]; then
     target=$1
     if [[ -d "$target" ]]; then
+        site_path=$1
         if [[ $# -ge 2 && "$2" != -* ]]; then
-            site_path=$1
             project_spec=$(normalize_conn_spec "$2")
             shift 2
-            set -- "$site_path" "$project_spec" "$@"
+            extra_opts=()
+            if [[ "$util_name" == "registrar" && -n "${UDMI_REGISTRY_SUFFIX:-}" && ! " $* " =~ " -e " ]]; then
+                extra_opts=(-e "$UDMI_REGISTRY_SUFFIX")
+            fi
+            set -- "$site_path" "$project_spec" "${extra_opts[@]}" "$@"
+        else
+            shift
+            extra_opts=()
+            if [[ "$util_name" == "registrar" && -n "${UDMI_REGISTRY_SUFFIX:-}" && ! " $* " =~ " -e " ]]; then
+                extra_opts=(-e "$UDMI_REGISTRY_SUFFIX")
+            fi
+            set -- "$site_path" "${extra_opts[@]}" "$@"
         fi
     elif [[ -f "$target" ]]; then
-        # File argument is solo
-        true
+        config_file=$1
+        shift
+        extra_opts=()
+        if [[ "$util_name" == "registrar" && -n "${UDMI_REGISTRY_SUFFIX:-}" && ! " $* " =~ " -e " ]]; then
+            extra_opts=(-e "$UDMI_REGISTRY_SUFFIX")
+        fi
+        set -- "$config_file" "${extra_opts[@]}" "$@"
     else
         fail "Argument '$target' is neither a file nor a directory"
     fi
 fi
 
 if [[ -n "${project_spec:-}" && "$project_spec" =~ localhost: ]]; then
-    if [[ -d "${ETC_DIR:-var/mosquitto}" ]]; then
+    if [[ "$project_spec" =~ localhost:([0-9]+) ]]; then
+        MQTT_PORT="${BASH_REMATCH[1]}"
+    fi
+    source $UDMI_ROOT/etc/mosquitto_ctrl.sh
+    if [[ -d "$ETC_DIR" ]]; then
         for i in {1..50}; do
-            if [[ -f "${ETC_DIR:-var/mosquitto}/mosquitto.ready" ]]; then
+            if [[ -f "$ETC_DIR/mosquitto.ready" ]]; then
                 break
             fi
             sleep 0.2
         done
     fi
+    pod_ready="${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}"
+    udmis_pid_file="${UDMIS_PID_FILE:-$UDMI_ROOT/var/udmis.pid}"
+    udmis_active() {
+        if [[ -f "$udmis_pid_file" ]]; then
+            local pid
+            pid=$(cat "$udmis_pid_file" 2>/dev/null || true)
+            if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+                return 0
+            fi
+        fi
+        pgrep -f "(bin/start_udmis|udmis-1\.0-SNAPSHOT-all\.jar)" >/dev/null 2>&1
+    }
+    if [[ -f "$pod_ready" || -f /tmp/pod_ready.txt ]] || udmis_active; then
+        for i in {1..90}; do
+            if [[ -f "$pod_ready" || -f /tmp/pod_ready.txt ]] || ! udmis_active; then
+                break
+            fi
+            sleep 1
+        done
+    fi
 fi
 
-cmd="java -cp $UDMI_JAR $JDWP $JAVA_CLASS $util_name $@"
-echo $cmd
-$cmd 2>&1 | tee $OUT_DIR/$util_name.log
+cmd=(java -cp "$UDMI_JAR" ${JDWP:+$JDWP} "$JAVA_CLASS" "$util_name" "$@")
+echo "${cmd[*]}"
+"${cmd[@]}" 2>&1 | tee $OUT_DIR/$util_name.log
