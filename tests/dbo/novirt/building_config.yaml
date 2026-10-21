@@ -3,6 +3,7 @@
   connections:
     2184ff7e-76d0-4961-aca5-f3f78c24deea: CONTAINS
     6cf23efd-19bd-4564-9360-ed0033f3f18c: CONTAINS
+    d212c227-4cb9-4a18-842c-8e2748274acf: FEEDS
   type: FACILITIES/ROOM
 00623524-7855-48b4-93ca-581332384a24:
   cloud_device_id: '91885844754870'

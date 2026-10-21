@@ -356,11 +356,33 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
         f.write("\n")
 
     if facilities:
-      facilities_path = site_model_dir / "externals" / "dbo" / "facilities.json"
-      facilities_path.parent.mkdir(parents=True, exist_ok=True)
-      with open(facilities_path, "w", encoding="utf-8") as f:
-        json.dump(facilities, f, indent=2)
-        f.write("\n")
+      facilities_dir = site_model_dir / "externals" / "facilities"
+      facilities_dir.mkdir(parents=True, exist_ok=True)
+      facility_connections = {}
+      for target_guid, target_entity in facilities.items():
+        target_code = target_entity.get(
+            "code", guid_to_id.get(target_guid, str(target_guid))
+        )
+        connections = target_entity.get("connections")
+        if isinstance(connections, dict):
+          for source_guid, rel_data in connections.items():
+            if source_guid in facilities:
+              facility_connections.setdefault(source_guid, {})[
+                  target_code
+              ] = rel_data
+
+      for guid, entity in facilities.items():
+        fac_entity = entity.copy()
+        code = fac_entity.pop("code", guid_to_id.get(guid, str(guid)))
+        fac_entity.pop("connections", None)
+        fac_out = {"guid": guid}
+        if guid in facility_connections:
+          fac_out["connections"] = facility_connections[guid]
+        fac_out.update(fac_entity)
+        fac_path = facilities_dir / f"{code}.json"
+        with open(fac_path, "w", encoding="utf-8") as f:
+          json.dump(fac_out, f, indent=2)
+          f.write("\n")
 
     log_entry = (
         f"[{timestamp}] SUCCESS: Merged {yaml_file.name} into {site_model_dir} "
