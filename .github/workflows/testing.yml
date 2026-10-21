@@ -716,6 +716,7 @@ jobs:
     name: MCP Test Infrastructure
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    needs: build_packages
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -730,6 +731,10 @@ jobs:
         run: |
           sudo bin/setup_base
           bin/clone_model
+      - name: Download prebuilt packages
+        uses: actions/download-artifact@v8
+        with:
+          name: udmi-prebuilt-packages
       - name: Run MCP Infrastructure Tests
         run: |
           bin/test_mcp
@@ -740,6 +745,7 @@ jobs:
           name: mcp-logs
           path: |
             var/instances/
+            var/mosquitto/log/
             out/
 
   gummi:

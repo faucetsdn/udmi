@@ -41,7 +41,7 @@ export POSTGRES_PORT=${POSTGRES_PORT:-5432}
 export INFLUX_PORT=${INFLUX_PORT:-8086}
 
 # Wait for local broker and database services if running locally
-if [[ -d "${ETC_DIR:-var/mosquitto}" ]]; then
+if [[ "$target_project" =~ localhost && "${MQTT_HOST:-localhost}" =~ ^(localhost|127\.0\.0\.1)$ && -d "${ETC_DIR:-var/mosquitto}" ]]; then
     for i in $(seq 1 300); do
         if [[ -f "${ETC_DIR:-var/mosquitto}/mosquitto.ready" ]]; then
             break
@@ -60,7 +60,7 @@ fi
 
 if command -v psql >/dev/null 2>&1; then
     for i in {1..30}; do
-        if psql -h 127.0.0.1 -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -c "SELECT 1;" >/dev/null 2>&1; then
+        if psql -h "${POSTGRES_HOST:-127.0.0.1}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -c "SELECT 1;" >/dev/null 2>&1; then
             break
         fi
         sleep 0.5

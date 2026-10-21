@@ -78,7 +78,8 @@ if [[ ${ETCD_USE_SSL:-false} == true ]]; then
     export ETCD_KEY=${ETCD_KEY:-$(realpath $CERT_DIR/rsa_private.pem)}
 fi
 
-export SSL_SECRETS_DIR=$(realpath $CERT_DIR)
+mkdir -p "$CERT_DIR"
+export SSL_SECRETS_DIR=$(realpath "$CERT_DIR")
 mkdir -p "$ETC_DIR/log"
 touch "$ETC_DIR/log/mosquitto.log" 2>/dev/null || true
 export MOSQUITTO_LOG_PATH=$(realpath -m "$ETC_DIR/log/mosquitto.log")
@@ -94,7 +95,7 @@ if [[ -z ${UDMIS_CONFIG:-} || $UDMIS_CONFIG == var/local_pod.json || -n ${UDMI_R
         SOURCE_POD_CONFIG=$UDMIS_DIR/etc/local_pod.json
         INCLUDE_PATH="$UDMI_ROOT/udmis/etc/prod_pod.json"
     fi
-    ABS_CERT_DIR=$(realpath $CERT_DIR)
+    ABS_CERT_DIR=$(realpath "$CERT_DIR")
     udmi_prefix=""
     if [[ -n "${UDMI_NAMESPACE:-}" ]]; then
         udmi_prefix="${UDMI_NAMESPACE}~"
@@ -117,14 +118,14 @@ if [[ -z ${UDMIS_CONFIG:-} || $UDMIS_CONFIG == var/local_pod.json || -n ${UDMI_R
 fi
 
 # Wait for prerequisite services (mosquitto and etcd) if running locally
-if [[ -d "$ETC_DIR" ]]; then
+if [[ "${MQTT_HOST:-localhost}" =~ ^(localhost|127\.0\.0\.1)$ && -d "$ETC_DIR" ]]; then
     for i in $(seq 1 300); do
         if [[ -f "$ETC_DIR/mosquitto.ready" ]]; then
             break
         fi
         sleep 0.2
     done
-elif [[ -n "${MQTT_PORT:-}" ]]; then
+elif [[ "${MQTT_HOST:-localhost}" =~ ^(localhost|127\.0\.0\.1)$ && -n "${MQTT_PORT:-}" ]]; then
     for i in $(seq 1 300); do
         if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT}" 2>/dev/null; then
             break
