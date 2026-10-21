@@ -100,7 +100,7 @@ function usage {
 }
 
 function newest_file {
-    echo $(find ${1:-.} -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f 2-)
+    echo $(find ${@:-.} -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f 2-)
 }
 
 function up_to_date {
@@ -108,7 +108,7 @@ function up_to_date {
     [[ ! -f $target ]] && return 1
     newest=$(newest_file $2)
     [[ $target -ot $newest ]] && return 1
-    common=$(newest_file $UDMI_ROOT/common/src)
+    common=$(newest_file $UDMI_ROOT/common/src/main/java $UDMI_ROOT/common/src/test/java)
     [[ $target -ot $common ]] && return 1
     return 0
 }
