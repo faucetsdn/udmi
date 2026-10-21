@@ -24,8 +24,8 @@ case "$TMUX_ACTION" in
         ;;
     clean)
         echo "Purging Barbican runtime state..."
-        rm -rf "${ETCD_DIR:-$UDMI_ROOT/var/etcd}/member" "${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}" "${UDMIS_PID_FILE:-$UDMI_ROOT/var/udmis.pid}"
-        rm -f "${UDMIS_LOG:-$UDMI_ROOT/out/udmis.log}" "${ETCD_LOG:-$UDMI_ROOT/out/etcd.log}" "$UDMI_ROOT/out/mosquitto.log"
+        rm -rf "$UDMI_ROOT/var/etcd/member" "$UDMI_ROOT/var/pod_ready.txt" "$UDMI_ROOT/var/udmis.pid"
+        rm -f "$UDMI_ROOT/out/udmis.log" "$UDMI_ROOT/out/etcd.log" "$UDMI_ROOT/out/mosquitto.log"
         ;;
     status)
         tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
@@ -47,8 +47,8 @@ case "$TMUX_ACTION" in
         ps ax | fgrep cloud-pubsub-emulator | fgrep -v grep | awk '{print $1}' | xargs -r kill 2>/dev/null || true
         tmux_stop_session "$SESSION_NAME"
         echo "Purging Barbican runtime state..."
-        rm -rf "${ETCD_DIR:-$UDMI_ROOT/var/etcd}/member" "${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}" "${UDMIS_PID_FILE:-$UDMI_ROOT/var/udmis.pid}"
-        rm -f "${UDMIS_LOG:-$UDMI_ROOT/out/udmis.log}" "${ETCD_LOG:-$UDMI_ROOT/out/etcd.log}" "$UDMI_ROOT/out/mosquitto.log"
+        rm -rf "$UDMI_ROOT/var/etcd/member" "$UDMI_ROOT/var/pod_ready.txt" "$UDMI_ROOT/var/udmis.pid"
+        rm -f "$UDMI_ROOT/out/udmis.log" "$UDMI_ROOT/out/etcd.log" "$UDMI_ROOT/out/mosquitto.log"
         ;&
     start)
         tmux_stop_session "$SESSION_NAME"

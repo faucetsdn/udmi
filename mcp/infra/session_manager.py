@@ -32,24 +32,23 @@ class SessionManager:
         return clean_id
 
     def is_port_available(self, port: int) -> bool:
-        """Check if a local TCP port is free for binding on IPv4 and IPv6."""
-        for family, addr in ((socket.AF_INET, "127.0.0.1"), (socket.AF_INET6, "::1")):
+        """Check if a local TCP port is free for binding."""
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             try:
-                with socket.socket(family, socket.SOCK_STREAM) as s:
-                    s.bind((addr, port))
+                s.bind(("127.0.0.1", port))
+                return True
             except OSError:
                 return False
-        return True
 
     def is_port_block_available(self, base_port: int) -> bool:
         """Check if the required block of ports is available."""
-        # Check MQTT (P), etcd (P+1), influx (P+2), postgres (P+3), bridge (P+100), etcd-peer (P+1001)
+        # Check MQTT (P), etcd (P+1), influx (P+2), postgres (P+3), etcd-peer (P+1001)
         required_ports = [
             base_port,
             base_port + 1,
             base_port + 2,
             base_port + 3,
-            base_port + 100,
             base_port + 1001,
         ]
         return all(self.is_port_available(p) for p in required_ports)
@@ -58,7 +57,7 @@ class SessionManager:
         self,
         test_id: str,
         base_min: int = 20000,
-        base_max: int = 31000,
+        base_max: int = 55000,
         block_size: int = 10,
     ) -> int:
         """Deterministically map a test_id to an available port block."""
@@ -279,19 +278,6 @@ class SessionManager:
         run_dir = os.path.join(self.instances_dir, session_name)
 
         if self.is_session_active(session_name):
-            udmi_bin = os.path.join(self.udmi_root, "bin", "udmi")
-            if os.path.isfile(udmi_bin):
-                env = os.environ.copy()
-                env["UDMI_ROOT"] = self.udmi_root
-                env["UDMI_RUN_DIR"] = run_dir
-                subprocess.run(
-                    [udmi_bin, "stop"],
-                    cwd=self.udmi_root,
-                    env=env,
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    check=False,
-                )
             subprocess.run(
                 ["tmux", "kill-session", "-t", session_name],
                 stdout=subprocess.DEVNULL,
@@ -419,7 +405,9 @@ class SessionManager:
             tcp_ok = self._probe_tcp("127.0.0.1", port, timeout=0.5)
 
             # Check pod_ready.txt
-            pod_ok = os.path.isfile(pod_ready_file)
+            pod_ok = os.path.isfile(pod_ready_file) or os.path.isfile(
+                os.path.join(self.udmi_root, "var", "pod_ready.txt")
+            )
 
             # Check CA certificate
             ca_ok = os.path.isfile(ca_cert_file) and os.path.getsize(ca_cert_file) > 0

@@ -192,7 +192,7 @@ else
     disown $MOSQUITTO_PID 2>/dev/null || true
     echo Waiting for background mosquitto on port ${MQTT_PORT:-8883}...
     for i in $(seq 1 50); do
-        if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT:-8883}" 2>/dev/null && $MOSQUITTO_CTRL listClients >/dev/null 2>&1; then
+        if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT:-8883}" 2>/dev/null; then
             break
         fi
         if [[ ! -d /proc/$MOSQUITTO_PID ]]; then

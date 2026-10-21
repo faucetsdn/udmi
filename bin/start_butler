@@ -10,7 +10,7 @@ BUTLER_PID_FILE=${BUTLER_PID_FILE:-var/butler.pid}
 mkdir -p $(dirname "$BUTLER_PID_FILE")
 if [[ -f $BUTLER_PID_FILE ]]; then
     old_pid=$(cat $BUTLER_PID_FILE)
-    if kill -0 $old_pid > /dev/null 2>&1; then
+    if ps -p $old_pid > /dev/null 2>&1; then
         echo "Killing existing local butler pid $old_pid..."
         kill $old_pid 2>/dev/null || true
         sleep 1
@@ -41,8 +41,8 @@ export INFLUX_PORT=${INFLUX_PORT:-8086}
 source "$UDMI_ROOT/etc/mosquitto_ctrl.sh"
 
 # Wait for local broker and database services if running locally
-if [[ "$target_project" =~ localhost && "${MQTT_HOST:-localhost}" =~ ^(localhost|127\.0\.0\.1)$ && -d "$ETC_DIR" ]]; then
-    for i in $(seq 1 150); do
+if [[ -d "$ETC_DIR" ]]; then
+    for i in {1..50}; do
         if [[ -f "$ETC_DIR/mosquitto.ready" ]]; then
             break
         fi
@@ -60,7 +60,7 @@ fi
 
 if command -v psql >/dev/null 2>&1; then
     for i in {1..30}; do
-        if psql -h "${POSTGRES_HOST:-127.0.0.1}" -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -c "SELECT 1;" >/dev/null 2>&1; then
+        if psql -h 127.0.0.1 -p "${POSTGRES_PORT:-5432}" -U "${POSTGRES_USER:-postgres}" -d "${POSTGRES_DB:-postgres}" -c "SELECT 1;" >/dev/null 2>&1; then
             break
         fi
         sleep 0.5

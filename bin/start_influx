@@ -27,7 +27,7 @@ mkdir -p $(dirname "$INFLUX_LOG") "$INFLUX_DIR"
 INFLUX_PID_FILE=${INFLUX_PID_FILE:-$INFLUX_DIR/influxd.pid}
 if [[ -f $INFLUX_PID_FILE ]]; then
     old_pid=$(cat $INFLUX_PID_FILE)
-    if kill -0 $old_pid > /dev/null 2>&1; then
+    if ps -p $old_pid > /dev/null 2>&1; then
         echo Killing existing local influxd pid $old_pid...
         kill $old_pid 2>/dev/null || true
         sleep 1

@@ -23,16 +23,8 @@ jartmp=/tmp/$jarbase
 jardir=build/libs
 jarfile=$jardir/$jarbase
 
-function mirror_udmi_files {
-    echo Mirroring udmi files...
-    rm -rf build/udmi_bin build/udmi_etc
-    cp -a ../bin build/udmi_bin/
-    cp -a ../etc build/udmi_etc/
-}
-
 newer_files=$([[ -f $jarfile ]] && find src/ ../gencode/java ../common/src -type f -newer $jarfile 2>/dev/null || echo missing)
 if [[ -z ${check:-} && -z ${covg:-} && -z $newer_files ]]; then
-    [[ -d build/udmi_bin ]] || mirror_udmi_files
     ls -l $jarfile
     echo $jarfile up-to-date, skipping build.
     exit 0
@@ -48,7 +40,9 @@ mkdir -p $jardir
 
 [[ ! -f $jartmp ]] || cp -a $jartmp $jarfile
 
-mirror_udmi_files
+echo Mirroring udmi files...
+cp -a ../bin build/udmi_bin/
+cp -a ../etc build/udmi_etc/
 
 echo Building pubber in $PWD
 ./gradlew --console=plain shadow $check $covg

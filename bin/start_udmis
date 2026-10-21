@@ -22,7 +22,7 @@ rm -f $UDMI_POD_READY
 if [[ ${1:-} == stop ]]; then
     if [[ -f $UDMIS_PID_FILE ]]; then
         OLD_PID=$(cat $UDMIS_PID_FILE)
-        if kill -0 $OLD_PID > /dev/null 2>&1; then
+        if ps -p $OLD_PID > /dev/null 2>&1; then
             echo "Killing old udmis process $OLD_PID from local PID file..."
             kill $OLD_PID 2>/dev/null || true
             sleep 1
@@ -34,7 +34,7 @@ fi
 
 if [[ -f $UDMIS_PID_FILE ]]; then
     OLD_PID=$(cat $UDMIS_PID_FILE)
-    if kill -0 $OLD_PID > /dev/null 2>&1; then
+    if ps -p $OLD_PID > /dev/null 2>&1; then
         echo "Killing old udmis process $OLD_PID from local PID file..."
         kill $OLD_PID 2>/dev/null || true
         sleep 2
@@ -83,8 +83,7 @@ if [[ ${ETCD_USE_SSL:-false} == true ]]; then
     export ETCD_KEY=${ETCD_KEY:-$(realpath $CERT_DIR/rsa_private.pem)}
 fi
 
-mkdir -p "$CERT_DIR"
-export SSL_SECRETS_DIR=$(realpath "$CERT_DIR")
+export SSL_SECRETS_DIR=$(realpath $CERT_DIR)
 mkdir -p "$ETC_DIR/log"
 touch "$ETC_DIR/log/mosquitto.log" 2>/dev/null || true
 export MOSQUITTO_LOG_PATH=$(realpath -m "$ETC_DIR/log/mosquitto.log")
@@ -100,7 +99,7 @@ if [[ -z ${UDMIS_CONFIG:-} || $UDMIS_CONFIG == var/local_pod.json || -n ${UDMI_R
         SOURCE_POD_CONFIG=$UDMIS_DIR/etc/local_pod.json
         INCLUDE_PATH="$UDMI_ROOT/udmis/etc/prod_pod.json"
     fi
-    ABS_CERT_DIR=$(realpath "$CERT_DIR")
+    ABS_CERT_DIR=$(realpath $CERT_DIR)
     udmi_prefix=""
     if [[ -n "${UDMI_NAMESPACE:-}" ]]; then
         udmi_prefix="${UDMI_NAMESPACE}~"
@@ -123,14 +122,14 @@ if [[ -z ${UDMIS_CONFIG:-} || $UDMIS_CONFIG == var/local_pod.json || -n ${UDMI_R
 fi
 
 # Wait for prerequisite services (mosquitto and etcd) if running locally
-if [[ "${MQTT_HOST:-localhost}" =~ ^(localhost|127\.0\.0\.1)$ && -d "$ETC_DIR" ]]; then
+if [[ -d "$ETC_DIR" ]]; then
     for i in $(seq 1 150); do
         if [[ -f "$ETC_DIR/mosquitto.ready" ]]; then
             break
         fi
         sleep 0.2
     done
-elif [[ "${MQTT_HOST:-localhost}" =~ ^(localhost|127\.0\.0\.1)$ && -n "${MQTT_PORT:-}" ]]; then
+elif [[ -n "${MQTT_PORT:-}" ]]; then
     for i in $(seq 1 150); do
         if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT}" 2>/dev/null; then
             break
@@ -173,7 +172,7 @@ if [[ ! -f $UDMI_POD_READY ]]; then
     echo "=== DIAGNOSTIC LOGS FOR UDMIS STARTUP FAILURE ==="
     echo "Host working directory: $PWD"
     echo "Process $PID status:"
-    kill -0 $PID 2>/dev/null && echo "Process $PID is running" || echo "Process $PID not running"
+    ps -p $PID || echo "Process $PID not running"
     echo "Last 100 lines of $UDMIS_LOG:"
     tail -n 100 "$UDMIS_LOG" || true
     echo "var/ directory contents:"

@@ -1,10 +1,6 @@
-import signal
-import sys
 import time
 import BAC0
 import os
-
-signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
 
 from BAC0.core.devices.local.models import (
     analog_input,

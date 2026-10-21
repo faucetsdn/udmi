@@ -31,7 +31,7 @@ mkdir -p $(dirname "$ETCD_LOG") "$ETCD_DIR"
 ETCD_PID_FILE=${ETCD_PID_FILE:-$ETCD_DIR/etcd.pid}
 if [[ -f $ETCD_PID_FILE ]]; then
     old_pid=$(cat $ETCD_PID_FILE)
-    if kill -0 $old_pid > /dev/null 2>&1; then
+    if ps -p $old_pid > /dev/null 2>&1; then
         echo Killing existing local etcd pid $old_pid...
         kill $old_pid || true
         sleep 1
