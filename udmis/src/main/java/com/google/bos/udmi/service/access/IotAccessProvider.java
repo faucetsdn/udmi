@@ -81,6 +81,9 @@ public interface IotAccessProvider extends UdmiComponent {
     return true;
   }
 
+  default void syncRegistries() {
+  }
+
   String updateConfig(Envelope envelope, String config, Long version);
 
   void updateRegistryRegions(Map<String, String> regions);

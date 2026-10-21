@@ -2,6 +2,9 @@ package com.google.bos.udmi.service.access;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -24,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,6 +36,7 @@ import udmi.schema.CloudModel.Auth_type;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.Credential;
 import udmi.schema.Credential.Key_format;
+import udmi.schema.Envelope;
 import udmi.schema.IotAccess;
 
 class ZanzaraIotAccessProviderTest {
@@ -42,6 +47,7 @@ class ZanzaraIotAccessProviderTest {
   private static final String CLIENT_ID = "/r/test-reg/d/test-dev";
 
   private Map<String, String> store;
+  private IotDataProvider mockDatabase;
   private ZanzaraIotAccessProvider provider;
   private ConnectionBroker mockBroker;
 
@@ -49,8 +55,28 @@ class ZanzaraIotAccessProviderTest {
   void setUp() throws Exception {
     UdmiServicePod.resetForTest();
     store = new HashMap<>();
-    IotDataProvider mockDatabase = mock(IotDataProvider.class);
+    mockDatabase = mock(IotDataProvider.class);
     when(mockDatabase.ref()).thenAnswer(inv -> new FakeDataRef(store));
+    when(mockDatabase.listRegistries()).thenAnswer(inv -> {
+      Set<String> regs = new TreeSet<>();
+      for (String key : store.keySet()) {
+        if (key.startsWith("r/")) {
+          String sub = key.substring(2);
+          int slashIdx = sub.indexOf('/');
+          int colonIdx = sub.indexOf(':');
+          int endIdx = slashIdx >= 0 && colonIdx >= 0
+              ? Math.min(slashIdx, colonIdx)
+              : Math.max(slashIdx, colonIdx);
+          if (endIdx > 0) {
+            String reg = sub.substring(0, endIdx);
+            if (!"UDMI-REFLECT".equals(reg)) {
+              regs.add(reg);
+            }
+          }
+        }
+      }
+      return regs;
+    });
     UdmiServicePod.putComponent("database", () -> mockDatabase);
 
     ReflectProcessor mockReflect = mock(ReflectProcessor.class);
@@ -352,6 +378,64 @@ class ZanzaraIotAccessProviderTest {
 
     Set<String> registries = provider.getRegistries();
     assertTrue(registries.contains(TEST_REGISTRY));
+  }
+
+  @Test
+  void testEventualConsistencyDesyncAndSync() {
+    store.put(":registries", "US-MTV-1225");
+    store.put("r/UK-LON-6PS/d/dev-1:last_state", "{}");
+    store.put("r/IN-BLR-ANANTA/d/dev-2:last_state", "{}");
+    store.put("r/UDMI-REFLECT/d/UK-LON-6PS:last_config", "{}");
+
+    assertEquals(Set.of("US-MTV-1225"), provider.getRegistries());
+
+    provider.syncRegistries();
+
+    assertEquals(Set.of("IN-BLR-ANANTA", "UK-LON-6PS", "US-MTV-1225"), provider.getRegistries());
+    assertEquals("IN-BLR-ANANTA,UK-LON-6PS,US-MTV-1225", store.get(":registries"));
+  }
+
+  @Test
+  void testModelEmptyRegistryPersistsCreatedAt() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+
+    provider.modelRegistry("EMPTY-REG", null, cloudModel);
+
+    assertTrue(provider.getRegistries().contains("EMPTY-REG"));
+    assertNotNull(store.get("r/EMPTY-REG:created_at"));
+  }
+
+  @Test
+  void testSaveStateAndUpdateConfigTrackRegistryExcludingReflect() {
+    provider.saveState("STATE-REG", "dev-1", "{\"timestamp\":\"2026-08-28T05:15:00Z\"}");
+    assertTrue(provider.getRegistries().contains("STATE-REG"));
+
+    Envelope configEnv = new Envelope();
+    configEnv.deviceRegistryId = "CFG-REG";
+    configEnv.deviceId = "dev-2";
+    provider.updateConfig(configEnv, "{}", null);
+    assertTrue(provider.getRegistries().contains("CFG-REG"));
+
+    Envelope reflectEnv = new Envelope();
+    reflectEnv.deviceRegistryId = "UDMI-REFLECT";
+    reflectEnv.deviceId = "CFG-REG";
+    provider.updateConfig(reflectEnv, "{}", null);
+    assertFalse(provider.getRegistries().contains("UDMI-REFLECT"));
+  }
+
+  @Test
+  void testAddRegistryToDatabaseFailsFastOnError() {
+    when(mockDatabase.ref())
+        .thenThrow(new RuntimeException("Simulated etcd timeout"))
+        .thenAnswer(inv -> new FakeDataRef(store));
+
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+
+    assertThrows(RuntimeException.class,
+        () -> provider.modelDevice("FAIL-REG", TEST_DEVICE, cloudModel, null));
+    assertFalse(store.containsKey("r/FAIL-REG/c/active:" + TEST_DEVICE));
   }
 
 

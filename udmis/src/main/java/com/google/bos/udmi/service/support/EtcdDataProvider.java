@@ -6,6 +6,7 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isNullOrTruthy;
+import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
@@ -35,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +58,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final long QUERY_TIMEOUT_SEC = 10;
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(QUERY_TIMEOUT_SEC);
   private static final String CLIENTS = "/clients/";
+  private static final String REGISTRY_PREFIX = "/r/";
+  private static final String REGISTRY_RANGE_END = "/r0";
   private static final ByteSequence CONNECTED_KEY = bytes(CLIENTS + clientId);
   private static final int THRESHOLD_MIN = 10;
   private static final int HEARTBEAT_SEC = THRESHOLD_MIN * 60 / 4;
@@ -81,6 +85,16 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
     client = enabled ? initializeClient() : null;
     kvClient = ifNotNullGet(client, Client::getKVClient);
     lockClient = ifNotNullGet(client, Client::getLockClient);
+  }
+
+  // Visible for testing
+  EtcdDataProvider(IotAccess iotConfig, KV kvClient) {
+    options = parseOptions(iotConfig);
+    enabled = false;
+    config = iotConfig;
+    client = null;
+    this.kvClient = kvClient;
+    lockClient = null;
   }
 
   private static String asString(ByteSequence input) {
@@ -350,6 +364,52 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
           .scheduleAtFixedRate(this::periodicTask, HEARTBEAT_SEC, HEARTBEAT_SEC, TimeUnit.SECONDS);
     } else {
       info("Not enabled, not activating.");
+    }
+  }
+
+  @Override
+  public Set<String> listRegistries() {
+    if (kvClient == null) {
+      return Set.of();
+    }
+    Set<String> registries = new TreeSet<>();
+    String nextKey = REGISTRY_PREFIX;
+    GetOption option = GetOption.newBuilder()
+        .withRange(bytes(REGISTRY_RANGE_END))
+        .withKeysOnly(true)
+        .withLimit(1)
+        .build();
+    try {
+      while (nextKey.compareTo(REGISTRY_RANGE_END) < 0) {
+        GetResponse response =
+            kvClient.get(bytes(nextKey), option).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+        if (response.getKvs().isEmpty()) {
+          break;
+        }
+        String key = asString(response.getKvs().get(0).getKey());
+        if (!key.startsWith(REGISTRY_PREFIX)) {
+          break;
+        }
+        String sub = key.substring(REGISTRY_PREFIX.length());
+        int slashIdx = sub.indexOf('/');
+        int colonIdx = sub.indexOf(':');
+        int endIdx = slashIdx >= 0 && colonIdx >= 0
+            ? Math.min(slashIdx, colonIdx)
+            : Math.max(slashIdx, colonIdx);
+        if (endIdx <= 0) {
+          nextKey = key + "\0";
+          continue;
+        }
+        String reg = sub.substring(0, endIdx);
+        char delimiter = sub.charAt(endIdx);
+        if (!ofNullable(reflectRegistry).orElse(REFLECT_BASE).equals(reg)) {
+          registries.add(reg);
+        }
+        nextKey = REGISTRY_PREFIX + reg + (char) (delimiter + 1);
+      }
+      return registries;
+    } catch (Exception e) {
+      throw new RuntimeException("While listing registries from etcd", e);
     }
   }
 
