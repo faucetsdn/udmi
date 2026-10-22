@@ -100,7 +100,7 @@ typing-inspect==0.7.1
 typing-inspection==0.4.2
 typing_extensions==4.15.0
 uritemplate==4.1.1
-urllib3==2.7.0
+urllib3==2.8.0
 websockets==16.0
 wheel==0.46.3
 wrapt==1.14.1
