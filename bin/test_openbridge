@@ -126,6 +126,12 @@ bin/start_postgresql stop >/dev/null 2>&1 || true
 ETCD_PEER_PORT=$((ETCD_PORT + 1000))
 ETCD_TLS_DIR="var/etcd_tls"
 ETCD_TLS_LOG="out/etcd_tls.log"
+if [ -f "$ETCD_TLS_DIR/etcd.pid" ]; then
+  old_tls_pid=$(cat "$ETCD_TLS_DIR/etcd.pid" 2>/dev/null || true)
+  if [ -n "$old_tls_pid" ] && kill -0 "$old_tls_pid" 2>/dev/null; then
+    kill_process "$old_tls_pid"
+  fi
+fi
 rm -rf "$ETCD_TLS_DIR"
 mkdir -p "$ETCD_TLS_DIR/member" "$(dirname "$ETCD_TLS_LOG")"
 
@@ -150,10 +156,15 @@ nohup "$ETCD_BIN" \
   --data-dir="$ETCD_TLS_DIR" \
   > "$ETCD_TLS_LOG" 2>&1 &
 ETCD_TLS_PID=$!
+echo "$ETCD_TLS_PID" > "$ETCD_TLS_DIR/etcd.pid"
 
 echo "Waiting for mTLS etcd to be ready on https://127.0.0.1:${ETCD_PORT}..."
 etcd_tls_ready=false
 for i in {1..30}; do
+  if ! kill -0 "$ETCD_TLS_PID" 2>/dev/null; then
+    echo "Error: mTLS etcd process exited unexpectedly during startup." >&2
+    break
+  fi
   if curl -sf --cacert "$SITE_MODEL/reflector/ca.crt" \
        --cert "$SITE_MODEL/reflector/rsa_private.crt" \
        --key "$SITE_MODEL/reflector/rsa_private.pem" \
@@ -376,9 +387,6 @@ jq --arg auth_user "$AUTH_USER" \
         }
       }
     }' udmis/etc/prod_pod.json > out/prod_pod_host.json
-
-# Stop local MQTT-mode UDMIS (if running from bin/udmi start) so only Host UDMIS (Pub/Sub Mode) processes traffic
-bin/start_udmis stop >/dev/null 2>&1 || true
 
 rm -f /tmp/pod_ready.txt
 
@@ -656,6 +664,7 @@ echo "Device discovery PASSED for device: $DEVICE_ID under registry: $REGISTRY_I
 
 # 3. Trigger CloudQuery discovery (depth: details) and capture published DiscoveryEvents payloads
 echo "Subscribing probe to capture DiscoveryEvents from Pub/Sub topic 'udmi_target'..."
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe" >/dev/null || true
 curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null
@@ -679,27 +688,45 @@ for i in $(seq 1 30); do
   fi
   sleep 1
 done
-sleep 1
 
-# Pull discovery messages from probe subscription
-PROBE_PULL=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe:pull" \
-  -H "Content-Type: application/json" \
-  -d '{"maxMessages":30}')
+# Pull discovery messages from probe subscription (poll up to 15s until all discovery payloads arrive)
+REGISTRY_DISCOVERY_PAYLOAD=""
+DEVICE_DISCOVERY_PAYLOAD=""
+DEVICE_DETAILS_PAYLOAD=""
 
-REGISTRY_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
-  .receivedMessages[]? | .message | 
-  select(.data | @base64d | fromjson | .registries != null) | 
-  .data | @base64d | fromjson')
+for i in $(seq 1 15); do
+  PROBE_PULL=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe:pull" \
+    -H "Content-Type: application/json" \
+    -d '{"maxMessages":30}')
 
-DEVICE_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
-  .receivedMessages[]? | .message | 
-  select(.data | @base64d | fromjson | .devices != null) | 
-  .data | @base64d | fromjson')
+  if [ -z "$REGISTRY_DISCOVERY_PAYLOAD" ] || [ "$REGISTRY_DISCOVERY_PAYLOAD" = "null" ]; then
+    REGISTRY_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+      .receivedMessages[]? | .message | 
+      select(.data | @base64d | fromjson | .registries != null) | 
+      .data | @base64d | fromjson')
+  fi
 
-DEVICE_DETAILS_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
-  .receivedMessages[]? | .message | 
-  select(.attributes.deviceId == "'"$DEVICE_ID"'") | 
-  .data | @base64d | fromjson')
+  if [ -z "$DEVICE_DISCOVERY_PAYLOAD" ] || [ "$DEVICE_DISCOVERY_PAYLOAD" = "null" ]; then
+    DEVICE_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+      .receivedMessages[]? | .message | 
+      select(.data | @base64d | fromjson | .devices != null) | 
+      .data | @base64d | fromjson')
+  fi
+
+  if [ -z "$DEVICE_DETAILS_PAYLOAD" ] || [ "$DEVICE_DETAILS_PAYLOAD" = "null" ]; then
+    DEVICE_DETAILS_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+      .receivedMessages[]? | .message | 
+      select(.attributes.deviceId == "'"$DEVICE_ID"'") | 
+      .data | @base64d | fromjson')
+  fi
+
+  if [ -n "$REGISTRY_DISCOVERY_PAYLOAD" ] && [ "$REGISTRY_DISCOVERY_PAYLOAD" != "null" ] && \
+     [ -n "$DEVICE_DISCOVERY_PAYLOAD" ] && [ "$DEVICE_DISCOVERY_PAYLOAD" != "null" ] && \
+     [ -n "$DEVICE_DETAILS_PAYLOAD" ] && [ "$DEVICE_DETAILS_PAYLOAD" != "null" ]; then
+    break
+  fi
+  sleep 1
+done
 
 if [ -n "$REGISTRY_DISCOVERY_PAYLOAD" ] && [ "$REGISTRY_DISCOVERY_PAYLOAD" != "null" ]; then
   echo "=================================================================="

@@ -9,6 +9,7 @@ ALLOWED_SERVICES=(butler validator registrar postgres influxdb)
 
 parse_tmux_args "$@"
 tmux_validate_services "Butler" "${ALLOWED_SERVICES[@]}"
+cd "$UDMI_ROOT"
 
 case "$TMUX_ACTION" in
     stop)
@@ -42,12 +43,11 @@ case "$TMUX_ACTION" in
         ;&
     start)
         tmux_stop_session "$SESSION_NAME"
+        rm -f "$TMUX_SITE_MODEL"/out/devices/*/metadata_mod.json "$TMUX_SITE_MODEL"/out/devices/*/persistent_data.json
 
         echo "=== Starting Butler in tmux session '$SESSION_NAME' ==="
         echo "Site Model:   $TMUX_SITE_MODEL"
         echo "Project Spec: $TMUX_PROJECT_SPEC"
-
-        cd "$UDMI_ROOT"
 
         # 1. postgres (default: enabled)
         if tmux_should_run_service "postgres"; then
