@@ -128,10 +128,17 @@ ETCD_TLS_DIR="var/etcd_tls"
 ETCD_TLS_LOG="out/etcd_tls.log"
 if [ -f "$ETCD_TLS_DIR/etcd.pid" ]; then
   old_tls_pid=$(cat "$ETCD_TLS_DIR/etcd.pid" 2>/dev/null || true)
-  if [ -n "$old_tls_pid" ] && kill -0 "$old_tls_pid" 2>/dev/null; then
+  if [ -n "$old_tls_pid" ] && kill -0 "$old_tls_pid" 2>/dev/null && \
+     ps -p "$old_tls_pid" -o comm= 2>/dev/null | grep -q '^etcd$'; then
     kill_process "$old_tls_pid"
   fi
 fi
+for i in {1..20}; do
+  if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
+    break
+  fi
+  sleep 0.5
+done
 rm -rf "$ETCD_TLS_DIR"
 mkdir -p "$ETCD_TLS_DIR/member" "$(dirname "$ETCD_TLS_LOG")"
 
@@ -168,7 +175,8 @@ for i in {1..30}; do
   if curl -sf --cacert "$SITE_MODEL/reflector/ca.crt" \
        --cert "$SITE_MODEL/reflector/rsa_private.crt" \
        --key "$SITE_MODEL/reflector/rsa_private.pem" \
-       "https://127.0.0.1:${ETCD_PORT}/health" >/dev/null 2>&1; then
+       "https://127.0.0.1:${ETCD_PORT}/health" >/dev/null 2>&1 && \
+     kill -0 "$ETCD_TLS_PID" 2>/dev/null; then
     etcd_tls_ready=true
     break
   fi
@@ -697,27 +705,27 @@ DEVICE_DETAILS_PAYLOAD=""
 for i in $(seq 1 15); do
   PROBE_PULL=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe:pull" \
     -H "Content-Type: application/json" \
-    -d '{"maxMessages":30}')
+    -d '{"maxMessages":100}')
 
   if [ -z "$REGISTRY_DISCOVERY_PAYLOAD" ] || [ "$REGISTRY_DISCOVERY_PAYLOAD" = "null" ]; then
     REGISTRY_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
-      .receivedMessages[]? | .message | 
-      select(.data | @base64d | fromjson | .registries != null) | 
-      .data | @base64d | fromjson')
+      first(.receivedMessages[]? | .message |
+      select(.data | @base64d | fromjson | .registries != null) |
+      .data | @base64d | fromjson) // empty')
   fi
 
   if [ -z "$DEVICE_DISCOVERY_PAYLOAD" ] || [ "$DEVICE_DISCOVERY_PAYLOAD" = "null" ]; then
     DEVICE_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
-      .receivedMessages[]? | .message | 
-      select(.data | @base64d | fromjson | .devices != null) | 
-      .data | @base64d | fromjson')
+      first(.receivedMessages[]? | .message |
+      select(.data | @base64d | fromjson | .devices != null) |
+      .data | @base64d | fromjson) // empty')
   fi
 
   if [ -z "$DEVICE_DETAILS_PAYLOAD" ] || [ "$DEVICE_DETAILS_PAYLOAD" = "null" ]; then
     DEVICE_DETAILS_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
-      .receivedMessages[]? | .message | 
-      select(.attributes.deviceId == "'"$DEVICE_ID"'") | 
-      .data | @base64d | fromjson')
+      first(.receivedMessages[]? | .message |
+      select(.attributes.deviceId == "'"$DEVICE_ID"'" and (.data | @base64d | fromjson | .cloud_model != null)) |
+      .data | @base64d | fromjson) // empty')
   fi
 
   if [ -n "$REGISTRY_DISCOVERY_PAYLOAD" ] && [ "$REGISTRY_DISCOVERY_PAYLOAD" != "null" ] && \
@@ -733,6 +741,9 @@ if [ -n "$REGISTRY_DISCOVERY_PAYLOAD" ] && [ "$REGISTRY_DISCOVERY_PAYLOAD" != "n
   echo "Registry Discovery Payload (no deviceID/registryID attributes):"
   echo "=================================================================="
   echo "$REGISTRY_DISCOVERY_PAYLOAD" | jq .
+else
+  echo "Error: Failed to receive Registry Discovery payload on udmi_discovery_probe!" >&2
+  exit 1
 fi
 
 if [ -n "$DEVICE_DISCOVERY_PAYLOAD" ] && [ "$DEVICE_DISCOVERY_PAYLOAD" != "null" ]; then
@@ -740,6 +751,9 @@ if [ -n "$DEVICE_DISCOVERY_PAYLOAD" ] && [ "$DEVICE_DISCOVERY_PAYLOAD" != "null"
   echo "Device Discovery Payload (deviceRegistryId=$REGISTRY_ID):"
   echo "=================================================================="
   echo "$DEVICE_DISCOVERY_PAYLOAD" | jq .
+else
+  echo "Error: Failed to receive Device Discovery payload on udmi_discovery_probe!" >&2
+  exit 1
 fi
 
 if [ -n "$DEVICE_DETAILS_PAYLOAD" ] && [ "$DEVICE_DETAILS_PAYLOAD" != "null" ]; then
@@ -748,6 +762,9 @@ if [ -n "$DEVICE_DETAILS_PAYLOAD" ] && [ "$DEVICE_DETAILS_PAYLOAD" != "null" ]; 
   echo "=================================================================="
   echo "$DEVICE_DETAILS_PAYLOAD" | jq .
   echo "=================================================================="
+else
+  echo "Error: Failed to receive Device Details Discovery payload for $DEVICE_ID on udmi_discovery_probe!" >&2
+  exit 1
 fi
 
 if grep -q "Starting CloudQuery" out/udmis_host.log 2>/dev/null && \

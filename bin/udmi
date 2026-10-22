@@ -56,8 +56,10 @@ if [[ "$CMD" == "stop" || "$CMD" == "clean" ]]; then
     target_args=()
     if [[ -n "${TMUX_NAMESPACE:-}" ]]; then
         target_args=("$TMUX_NAMESPACE")
-    elif [[ -n "${TMUX_SITE_MODEL:-}" && ( -d "$TMUX_SITE_MODEL" || -d "$UDMI_ROOT/$TMUX_SITE_MODEL" ) && -n "${TMUX_PROJECT_SPEC:-}" ]]; then
-        target_args=("$TMUX_SITE_MODEL" "$TMUX_PROJECT_SPEC")
+    elif [[ -n "${TMUX_SITE_MODEL:-}" && -d "$TMUX_SITE_MODEL" && -n "${TMUX_PROJECT_SPEC:-}" ]]; then
+        target_args=("$(realpath "$TMUX_SITE_MODEL")" "$TMUX_PROJECT_SPEC")
+    elif [[ -n "${TMUX_SITE_MODEL:-}" && -d "$UDMI_ROOT/$TMUX_SITE_MODEL" && -n "${TMUX_PROJECT_SPEC:-}" ]]; then
+        target_args=("$(realpath "$UDMI_ROOT/$TMUX_SITE_MODEL")" "$TMUX_PROJECT_SPEC")
     elif [[ -n "${TMUX_PROJECT_SPEC:-}" ]]; then
         target_args=("$TMUX_PROJECT_SPEC")
     fi
