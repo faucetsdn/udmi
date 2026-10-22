@@ -27,6 +27,7 @@ get_requirements_file() {
 }
 
 if [[ $(id -u) == 0 ]]; then
+    packages=(moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux lsof graphviz)
     if [[ -n $(which apt-get) ]]; then
         export DEBIAN_FRONTEND=noninteractive
         rm -f /etc/apt/sources.list.d/microsoft-prod.*
@@ -38,19 +39,25 @@ if [[ $(id -u) == 0 ]]; then
             [[ $attempt -lt 3 ]] || exit 1
             sleep 2
         done
-        update_cmd="timeout 180 apt-get ${apt_opts[*]} install -y"
-        extra_packages=""
+        for attempt in 1 2 3; do
+            if timeout 90 apt-get "${apt_opts[@]}" install -y --no-upgrade --download-only "${packages[@]}"; then
+                break
+            fi
+            [[ $attempt -lt 3 ]] || exit 1
+            sleep 2
+        done
+        dpkg --configure -a
+        apt-get "${apt_opts[@]}" install -y --no-upgrade "${packages[@]}"
     else
-        update_cmd="apk add"
-        extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc py3-grpcio py3-cryptography py3-cffi"
+        extra_packages=(${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc py3-grpcio py3-cryptography py3-cffi)
+        for attempt in 1 2 3; do
+            if apk add "${extra_packages[@]}" "${packages[@]}"; then
+                break
+            fi
+            [[ $attempt -lt 3 ]] || exit 1
+            sleep 2
+        done
     fi
-    for attempt in 1 2 3; do
-        if $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux lsof graphviz; then
-            break
-        fi
-        [[ $attempt -lt 3 ]] || exit 1
-        sleep 2
-    done
 else
     echo "Skipping system package installation in non-root mode (run 'sudo bin/setup_base' to install system packages)."
 fi
