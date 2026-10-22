@@ -31,6 +31,7 @@ if [[ $(id -u) == 0 ]]; then
     if [[ -n $(which apt-get) ]]; then
         export DEBIAN_FRONTEND=noninteractive
         rm -f /etc/apt/sources.list.d/microsoft-prod.*
+        sed -i 's/azure\.archive\.ubuntu\.com/archive.ubuntu.com/g' /etc/apt/sources.list /etc/apt/sources.list.d/* /etc/apt/apt-mirrors.txt 2>/dev/null || true
         apt_opts=(-o Acquire::ForceIPv4=true -o Acquire::Retries=2 -o Acquire::http::Timeout=10 -o Acquire::https::Timeout=10 -o DPkg::Lock::Timeout=60)
         for attempt in 1 2 3; do
             if timeout 60 apt-get "${apt_opts[@]}" update -y; then
