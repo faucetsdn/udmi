@@ -97,6 +97,60 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     facilities = {}
     merged_devices = 0
 
+    # Collect outgoing relationships keyed by source_id -> target_id
+    source_relationships = {}
+    for target_guid, target_entity in config.items():
+      if target_guid == "CONFIG_METADATA" or not isinstance(
+          target_entity, dict
+      ):
+        continue
+      connections = target_entity.get("connections")
+      if not isinstance(connections, dict):
+        continue
+      target_id = guid_to_id.get(target_guid, str(target_guid))
+      target_etype = target_entity.get("type", "")
+      is_target_facility = (
+          isinstance(target_etype, str)
+          and target_etype.startswith("FACILITIES/")
+      )
+
+      for source_guid, rel_data in list(connections.items()):
+        if isinstance(source_guid, (list, tuple)):
+          continue
+        source_id = guid_to_id.get(source_guid, str(source_guid))
+        source_entity = config.get(source_guid)
+        source_type = (
+            source_entity.get("type")
+            if isinstance(source_entity, dict)
+            else None
+        )
+        if (
+            isinstance(source_type, str)
+            and source_type.startswith("FACILITIES/")
+        ):
+          continue
+
+        rel_entry = None
+        if isinstance(rel_data, str):
+          rel_entry = {rel_data: [{}]}
+        elif isinstance(rel_data, list):
+          rel_entry = {}
+          for item in rel_data:
+            if isinstance(item, str):
+              rel_entry.setdefault(item, []).append({})
+            elif isinstance(item, dict):
+              item_copy = item.copy()
+              if "type" in item_copy:
+                rel_type = item_copy.pop("type")
+                rel_entry.setdefault(rel_type, []).append(item_copy)
+
+        if rel_entry:
+          source_relationships.setdefault(source_id, {})[target_id] = rel_entry
+          if is_target_facility:
+            del connections[source_guid]
+      if is_target_facility and not connections:
+        del target_entity["connections"]
+
     # Second pass: merge data
     for guid, entity in config.items():
       if guid == "CONFIG_METADATA" or not isinstance(entity, dict):
@@ -127,13 +181,13 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
       # System
       system = metadata.setdefault("system", {})
+      system["guid"] = guid
       if "display_name" in entity:
         system["name"] = entity["display_name"]
 
       # Externals
       externals = metadata.setdefault("externals", {})
       dbo = externals.setdefault("dbo", {})
-      dbo["ext_id"] = guid
       if "type" in entity:
         dbo["type"] = entity["type"]
       if "code" in entity:
@@ -146,8 +200,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
       # Relationships & Location
       if "connections" in entity and isinstance(entity["connections"], dict):
-        rel_dict_final = {}
-        for target_guid, rel_data in entity["connections"].items():
+        for target_guid in entity["connections"]:
           if isinstance(target_guid, (list, tuple)):
             continue
           target_id = guid_to_id.get(target_guid, str(target_guid))
@@ -161,32 +214,15 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
           if target_type == "FACILITIES/BUILDING":
             loc = metadata.setdefault("system", {}).setdefault("location", {})
             loc["site"] = target_id
-            continue
-          if target_type == "FACILITIES/FLOOR":
+          elif target_type == "FACILITIES/FLOOR":
             loc = metadata.setdefault("system", {}).setdefault("location", {})
             loc["floor"] = target_id
-            continue
-          if target_type == "FACILITIES/ROOM":
+          elif target_type == "FACILITIES/ROOM":
             loc = metadata.setdefault("system", {}).setdefault("location", {})
             loc["room"] = target_id
-            continue
 
-          if isinstance(rel_data, str):
-            rel_dict_final[target_id] = {rel_data: [{}]}
-          elif isinstance(rel_data, list):
-            rel_entry = {}
-            for item in rel_data:
-              if isinstance(item, str):
-                rel_entry.setdefault(item, []).append({})
-              elif isinstance(item, dict):
-                item_copy = item.copy()
-                if "type" in item_copy:
-                  rel_type = item_copy.pop("type")
-                  rel_entry.setdefault(rel_type, []).append(item_copy)
-            rel_dict_final[target_id] = rel_entry
-
-        if rel_dict_final:
-          metadata["relationships"] = rel_dict_final
+      if device_id in source_relationships:
+        metadata["relationships"] = source_relationships[device_id]
 
       # Ensure system.location.site is set if location is present
       # If not directly connected, try to find it via floor/room connections
@@ -320,11 +356,33 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
         f.write("\n")
 
     if facilities:
-      facilities_path = site_model_dir / "externals" / "dbo" / "facilities.json"
-      facilities_path.parent.mkdir(parents=True, exist_ok=True)
-      with open(facilities_path, "w", encoding="utf-8") as f:
-        json.dump(facilities, f, indent=2)
-        f.write("\n")
+      facilities_dir = site_model_dir / "externals" / "facilities"
+      facilities_dir.mkdir(parents=True, exist_ok=True)
+      facility_connections = {}
+      for target_guid, target_entity in facilities.items():
+        target_code = target_entity.get(
+            "code", guid_to_id.get(target_guid, str(target_guid))
+        )
+        connections = target_entity.get("connections")
+        if isinstance(connections, dict):
+          for source_guid, rel_data in connections.items():
+            if source_guid in facilities:
+              facility_connections.setdefault(source_guid, {})[
+                  target_code
+              ] = rel_data
+
+      for guid, entity in facilities.items():
+        fac_entity = entity.copy()
+        code = fac_entity.pop("code", guid_to_id.get(guid, str(guid)))
+        fac_entity.pop("connections", None)
+        fac_out = {"guid": guid}
+        if guid in facility_connections:
+          fac_out["connections"] = facility_connections[guid]
+        fac_out.update(fac_entity)
+        fac_path = facilities_dir / f"{code}.json"
+        with open(fac_path, "w", encoding="utf-8") as f:
+          json.dump(fac_out, f, indent=2)
+          f.write("\n")
 
     log_entry = (
         f"[{timestamp}] SUCCESS: Merged {yaml_file.name} into {site_model_dir} "

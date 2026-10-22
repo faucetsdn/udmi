@@ -1,7 +1,6 @@
 {
   "externals": {
     "dbo": {
-      "ext_id": "0060917f-8c21-47c4-b011-52521085fdc3",
       "label": "VAV CO 1-2-37",
       "type": "HVAC/VAV_SD_DSP"
     },
@@ -48,6 +47,7 @@
     "sample_rate_sec": 30
   },
   "system": {
+    "guid": "0060917f-8c21-47c4-b011-52521085fdc3",
     "location": {
       "section": "2-3N8C",
       "site": "ZZ-TRI-FECTA"

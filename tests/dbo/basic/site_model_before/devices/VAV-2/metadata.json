@@ -1,10 +1,11 @@
 {
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
-  "system": {},
+  "system": {
+    "guid": "4931e096-dea5-4b81-86ad-234c6d07b978"
+  },
   "externals": {
     "dbo": {
-      "ext_id": "4931e096-dea5-4b81-86ad-234c6d07b978",
       "type": "HVAC/VAV_SD_CSP",
       "label": "VAV-2"
     }
@@ -13,7 +14,7 @@
     "num_id": "2541901344105617"
   },
   "relationships": {
-    "VAV-1": {
+    "US-MTV-BASIC-1-R1": {
       "FEEDS": [
         {}
       ]

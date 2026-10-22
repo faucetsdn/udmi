@@ -21,6 +21,7 @@
     }
   },
   "system": {
+    "guid": "0060917f-8c21-47c4-b011-52521085fdc3",
     "location": {
       "section": "2-3N8C"
     },
@@ -34,7 +35,6 @@
   },
   "externals": {
     "dbo": {
-      "ext_id": "0060917f-8c21-47c4-b011-52521085fdc3",
       "type": "HVAC/VAV_SD_DSP",
       "label": "VAV CO 1-2-37"
     },
