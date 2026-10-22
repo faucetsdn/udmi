@@ -1,6 +1,7 @@
 """Utils for NMAP Scans"""
 
 import dataclasses
+import os
 from typing import Generator
 import xml.etree.ElementTree
 
@@ -35,44 +36,70 @@ class NmapHost:
   ports: list[NmapPort] = dataclasses.field(default_factory=list)
 
 
-def results_reader(nmap_file: str) -> Generator[NmapHost, None, None]:
-  """Load NMAP Results Reader
+class results_reader:
+  """Incremental NMAP XML Results Reader.
 
-  Args: nmap_file  path to NMAP file output (generated with -xO argument)
-
-  Yields
-    NmapHost resu
+  Maintains a byte offset and XMLPullParser across iterations so each iteration
+  reads and parses only bytes appended to `nmap_file` since the previous read.
   """
-  hosts = []
-  root = xml.etree.ElementTree.parse(nmap_file).getroot()
-  for _host in root.iter('host'):
-    host = NmapHost()
 
-    if (hostname := _host.find('hostname')) is not None:
-      host.hostname = hostname.attrib['name']
+  def __init__(self, nmap_file: str):
+    self.nmap_file = nmap_file
+    self.offset = 0
+    self._parser = xml.etree.ElementTree.XMLPullParser(events=('start', 'end'))
+    self._root = None
 
-    if (ipaddr := _host.find('address')) is not None:
-      host.ip = ipaddr.attrib['addr']
+  def __iter__(self) -> Generator[NmapHost, None, None]:
+    try:
+      current_size = os.path.getsize(self.nmap_file)
+    except OSError:
+      return
+    if current_size <= self.offset:
+      return
+    with open(self.nmap_file, 'rb') as f:
+      f.seek(self.offset)
+      while chunk := f.read(65536):
+        self.offset += len(chunk)
+        self._parser.feed(chunk)
+        for event_type, elem in self._parser.read_events():
+          if event_type == 'start':
+            if elem.tag == 'nmaprun':
+              self._root = elem
+            continue
+          if elem.tag != 'host':
+            continue
+          host = NmapHost()
 
-    if (osmatch := _host.find('os/osmatch')) is not None:
-      host.os = osmatch.attrib.get('name')
+          if (hostname := elem.find('hostname')) is not None:
+            host.hostname = hostname.attrib['name']
 
-    for _port in _host.iter('port'):
-      port = NmapPort(port_number=_port.attrib['portid'])
-      port.protocol = _port.attrib['protocol']
-      port.state = _port.find('state').attrib['state']
+          if (ipaddr := elem.find('address')) is not None:
+            host.ip = ipaddr.attrib['addr']
 
-      if (script := _port.find('script')) is not None and script.attrib[
-          'id'
-      ] == 'banner':
-        port.banner = script.attrib['output']
+          if (osmatch := elem.find('os/osmatch')) is not None:
+            host.os = osmatch.attrib.get('name')
 
-      if (service := _port.find('service')) is not None:
-        port.product = service.attrib.get('product')
-        if service.attrib['method'] == 'probed':
-          port.service = service.attrib['name']
-          port.version = service.attrib.get('version')
+          for _port in elem.iter('port'):
+            port = NmapPort(port_number=_port.attrib['portid'])
+            port.protocol = _port.attrib['protocol']
+            port.state = _port.find('state').attrib['state']
 
-      host.ports.append(port)
+            if (script := _port.find('script')) is not None and script.attrib[
+                'id'
+            ] == 'banner':
+              port.banner = script.attrib['output']
 
-    yield host
+            if (service := _port.find('service')) is not None:
+              port.product = service.attrib.get('product')
+              if service.attrib['method'] == 'probed':
+                port.service = service.attrib['name']
+                port.version = service.attrib.get('version')
+
+            host.ports.append(port)
+
+          yield host
+          elem.clear()
+          if self._root is not None:
+            self._root.clear()
+
+
