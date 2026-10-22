@@ -28,8 +28,9 @@ get_requirements_file() {
 
 if [[ $(id -u) == 0 ]]; then
     if [[ -n $(which apt-get) ]]; then
-        apt-get update -y
-        update_cmd="apt-get install -y"
+        rm -f /etc/apt/sources.list.d/microsoft-prod.list
+        apt-get -o Acquire::Retries=3 update -y
+        update_cmd="apt-get -o Acquire::Retries=3 install -y"
         extra_packages=""
     else
         update_cmd="apk add"
