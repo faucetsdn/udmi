@@ -79,18 +79,18 @@ public class DiscoveryEvents {
     @JsonPropertyDescription("The active or passive series number of this result (matches reported state values)")
     public Integer event_no;
     /**
-     * Total number of records expected for this active scan generation
+     * Total number of records expected for this active scan generation (only populated on the event_no=0 start marker event)
      * 
      */
     @JsonProperty("active_count")
-    @JsonPropertyDescription("Total number of records expected for this active scan generation")
+    @JsonPropertyDescription("Total number of records expected for this active scan generation (only populated on the event_no=0 start marker event)")
     public Integer active_count;
     /**
-     * List of target addresses for a partial discovery scan (shard)
+     * List of target addresses for a partial discovery scan shard (only populated on the event_no=0 start marker event)
      * 
      */
     @JsonProperty("addrs")
-    @JsonPropertyDescription("List of target addresses for a partial discovery scan (shard)")
+    @JsonPropertyDescription("List of target addresses for a partial discovery scan shard (only populated on the event_no=0 start marker event)")
     public List<java.lang.String> addrs;
     /**
      * Links to other address families (family and id)

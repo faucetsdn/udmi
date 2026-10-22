@@ -46,12 +46,12 @@
       "type": "integer"
     },
     "active_count": {
-      "description": "Total number of records expected for this active scan generation",
+      "description": "Total number of records expected for this active scan generation (only populated on the event_no=0 start marker event)",
       "minimum": 0,
       "type": "integer"
     },
     "addrs": {
-      "description": "List of target addresses for a partial discovery scan (shard)",
+      "description": "List of target addresses for a partial discovery scan shard (only populated on the event_no=0 start marker event)",
       "type": "array",
       "items": {
         "type": "string"
