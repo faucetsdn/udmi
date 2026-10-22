@@ -189,12 +189,15 @@ class HandlerTests(unittest.TestCase):
         start_env = {"deviceRegistryId": "reg-1"}
         start_payload = {
             "family": "iot",
+            "source": "model",
             "generation": "2026-08-21T00:00:00Z",
             "event_no": 0,
+            "addrs": ["AHU-1", "DEL-1"],
             "active_count": 1,
         }
         start_res = handler.process_message(start_env, start_payload, self.mock_pg, self.mock_influx)
         self.assertEqual(start_res["count"], 0)
+        self.assertEqual(start_res["addrs"], ["AHU-1", "DEL-1"])
         self.mock_pg.insert_row.assert_not_called()
 
         envelope = {"deviceId": "AHU-1", "deviceRegistryId": "reg-1"}
@@ -234,6 +237,55 @@ class HandlerTests(unittest.TestCase):
         self.assertEqual(meta_table, "udmi_metadata")
         self.assertEqual(meta_row["device_id"], "AHU-1")
         self.assertEqual(meta_row["metadata"]["system"]["serial_no"], "SN-AHU-1")
+        self.mock_pg.execute_sql.assert_called_once_with(
+            "DELETE FROM udmi_metadata WHERE device_registry_id = %s AND device_id IN (%s)",
+            ("reg-1", "DEL-1"),
+        )
+
+    def test_provider_discovered_models_deletion_reconciliation(self):
+        from mcp.butler.provider import ButlerProvider
+
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+        mock_conn.cursor.return_value.__enter__.return_value = mock_cur
+        mock_cur.fetchall.side_effect = [
+            [
+                ("AHU-1", {"system": {"serial_no": "SN-OLD"}}),
+                ("DEL-1", {"system": {"serial_no": "SN-DEL"}}),
+                ("VAV-1", {"system": {"serial_no": "SN-VAV"}}),
+            ],
+            [
+                (
+                    None,
+                    "events",
+                    "discovery",
+                    {
+                        "family": "iot",
+                        "generation": "2026-08-21T01:00:00Z",
+                        "event_no": 0,
+                        "addrs": ["AHU-1", "DEL-1"],
+                        "active_count": 1,
+                    },
+                ),
+                (
+                    "AHU-1",
+                    "events",
+                    "discovery",
+                    {
+                        "family": "iot",
+                        "generation": "2026-08-21T01:00:00Z",
+                        "event_no": 1,
+                        "addr": "AHU-1",
+                        "model": {"system": {"serial_no": "SN-NEW"}},
+                    },
+                ),
+            ],
+        ]
+        self.mock_pg.get_connection.return_value = mock_conn
+        provider = ButlerProvider(pg_manager=self.mock_pg, influx_manager=self.mock_influx)
+        models = provider.get_discovered_models("reg-1")
+        self.assertEqual(set(models.keys()), {"AHU-1", "VAV-1"})
+        self.assertEqual(models["AHU-1"]["system"]["serial_no"], "SN-NEW")
 
     def test_registry_model_discovery_topics(self):
         from butler.src.connection import ButlerConnection

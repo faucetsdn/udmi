@@ -247,5 +247,63 @@ grep -q '"source":"model"' "$DISC_LOG_FILE" || { echo "ERROR: Missing source:mod
 grep -q '"phase":"stopped"' "$DISC_LOG_FILE" || { echo "ERROR: Missing stopped DiscoveryState in Model Discovery" >&2; cat "$DISC_LOG_FILE"; exit 1; }
 echo "Site Model Discovery SUCCESS: Verified start state, event_no=0 count, device model events, and stop state"
 
+# 5. Partial (Shard) Site Model Discovery & Closure Expansion Test
+echo "Starting Partial (Shard) Site Model Discovery & Closure test..."
+SHARD_LOG_FILE=$(mktemp)
+SHARD_GEN=$(date -u -d "+1 second" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)
+if [[ "$SHARD_GEN" == "$DISC_GEN" ]]; then
+    sleep 1
+    SHARD_GEN=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+fi
+echo "Subscribing to /r/$REGISTRY_ID/d/+/+/discovery for Sharded Model Discovery (gen: $SHARD_GEN, shard: [AHU-22])..."
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_shard_sub" -t "/r/$REGISTRY_ID/d/+/+/discovery" -F "%t %p" | while read -r topic payload; do
+    GEN=$(echo "$payload" | jq -r '.generation // .families.iot.generation' 2>/dev/null)
+    if [[ "$GEN" == "$SHARD_GEN" ]]; then
+        echo "$topic $payload" >> "$SHARD_LOG_FILE"
+        if grep -q '"phase":"active"' "$SHARD_LOG_FILE" && \
+           grep -q '"event_no":0' "$SHARD_LOG_FILE" && \
+           grep -q "/r/$REGISTRY_ID/d/AHU-22/events/discovery" "$SHARD_LOG_FILE" && \
+           grep -q "/r/$REGISTRY_ID/d/GAT-123/events/discovery" "$SHARD_LOG_FILE" && \
+           grep -q "/r/$REGISTRY_ID/d/SNS-4/events/discovery" "$SHARD_LOG_FILE" && \
+           grep -q '"phase":"stopped"' "$SHARD_LOG_FILE"; then
+            kill -USR1 $$ 2>/dev/null || true
+            exit 0
+        fi
+    fi
+done &
+SUB_SHARD_PID=$!
+
+GOT_SHARD=0
+trap "GOT_SHARD=1" USR1
+sleep 2
+
+SHARD_CONFIG="{\"subType\":\"config\",\"subFolder\":\"discovery\",\"deviceRegistryId\":\"$REGISTRY_ID\",\"payload\":{\"version\":\"1.5.7\",\"timestamp\":\"$SHARD_GEN\",\"generation\":\"$SHARD_GEN\",\"families\":{\"iot\":{\"generation\":\"$SHARD_GEN\",\"depth\":\"details\",\"source\":\"model\",\"addrs\":[\"AHU-22\"]}}}}"
+echo "Publishing Sharded Model Discovery config to /uufi/r/$REGISTRY_ID/c/config/discovery: $SHARD_CONFIG"
+mosquitto_pub $MQTT_ARGS -i "${CLIENT_ID}_shard_pub" -t "/uufi/r/$REGISTRY_ID/c/config/discovery" -m "$SHARD_CONFIG"
+
+TIMEOUT=30
+while [ $GOT_SHARD -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
+    echo "Waiting for Sharded Model Discovery completion... ($TIMEOUT)"
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+done
+
+kill $SUB_SHARD_PID 2>/dev/null || true
+
+if [ $GOT_SHARD -eq 0 ]; then
+    echo "ERROR: Timed out waiting for Sharded Model Discovery sequence completion" >&2
+    cat "$SHARD_LOG_FILE" || true
+    exit 1
+fi
+
+grep -q '"addrs":\["AHU-22"\]' "$SHARD_LOG_FILE" || { echo "ERROR: Missing addrs:[AHU-22] on event_no=0 in Sharded Model Discovery" >&2; cat "$SHARD_LOG_FILE"; exit 1; }
+grep -q '"active_count":3' "$SHARD_LOG_FILE" || { echo "ERROR: Expected active_count:3 (Closure of AHU-22 -> GAT-123 -> SNS-4) in Sharded Model Discovery" >&2; cat "$SHARD_LOG_FILE"; exit 1; }
+if grep -q "/r/$REGISTRY_ID/d/AHU-1/events/discovery" "$SHARD_LOG_FILE"; then
+    echo "ERROR: Unrelated device AHU-1 should not be in Closure([AHU-22])" >&2
+    cat "$SHARD_LOG_FILE"
+    exit 1
+fi
+echo "Sharded Site Model Discovery SUCCESS: Verified addrs:[AHU-22], active_count:3, and Closure expansion [AHU-22, GAT-123, SNS-4]"
+
 echo "UUFI Comprehensive Integration Test PASSED"
-rm -f "$REPLY_FILE" "$STATE_REPLY_FILE" "$MODEL_REPLY_FILE" "$DISC_LOG_FILE"
+rm -f "$REPLY_FILE" "$STATE_REPLY_FILE" "$MODEL_REPLY_FILE" "$DISC_LOG_FILE" "$SHARD_LOG_FILE"

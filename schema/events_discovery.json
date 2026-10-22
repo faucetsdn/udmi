@@ -50,6 +50,13 @@
       "minimum": 0,
       "type": "integer"
     },
+    "addrs": {
+      "description": "List of target addresses for a partial discovery scan (shard)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
     "families": {
       "description": "Links to other address families (family and id)",
       "type": "object",

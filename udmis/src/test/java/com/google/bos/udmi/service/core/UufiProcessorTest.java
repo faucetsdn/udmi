@@ -414,6 +414,7 @@ public class UufiProcessorTest extends ProcessorTestBase {
     assertEquals(2, startEvent.active_count);
     assertEquals("iot", startEvent.family);
     assertEquals("model", startEvent.source);
+    org.junit.jupiter.api.Assertions.assertNull(startEvent.addrs);
 
     udmi.schema.DiscoveryEvents devEvent1 = events.stream()
         .filter(e -> Integer.valueOf(1).equals(e.event_no))
@@ -483,6 +484,198 @@ public class UufiProcessorTest extends ProcessorTestBase {
         .orElseThrow(() -> new AssertionError("Missing DiscoveryEvents for depth=entries"));
     assertEquals(0, startEvent.event_no);
     assertEquals(1, startEvent.active_count);
+    assertEquals(List.of("AHU-1"), startEvent.addrs);
+  }
+
+  /**
+   * Test Partial (Shard) Model Discovery and Closure expansion across relationships,
+   * multi-hop inbound/outbound pointset expressions ($SELF excluded), gateway proxy_ids merging,
+   * and inbound referrers (including referrers to deleted shard devices).
+   */
+  @Test
+  public void modelDiscoveryShardAndClosureTest() {
+    udmi.schema.CloudModel registryModel = new udmi.schema.CloudModel();
+    registryModel.device_ids = Map.of(
+        "AHU-1", new udmi.schema.CloudModel(),
+        "VAV-101", new udmi.schema.CloudModel(),
+        "VAV-102", new udmi.schema.CloudModel(),
+        "CHW-1", new udmi.schema.CloudModel(),
+        "CALC-1", new udmi.schema.CloudModel(),
+        "CALC-2", new udmi.schema.CloudModel(),
+        "GAT-1", new udmi.schema.CloudModel(),
+        "FCU-99", new udmi.schema.CloudModel()
+    );
+    org.mockito.Mockito.when(provider.listDevices(org.mockito.ArgumentMatchers.eq("reg-1"), any()))
+        .thenReturn(registryModel);
+
+    // AHU-1 -> VAV-101 via relationships, plus $SELF:return_air_temp self-reference
+    udmi.schema.CloudModel ahuModel = new udmi.schema.CloudModel();
+    ahuModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-AHU-1\"},"
+            + "\"pointset\":{\"points\":{\"delta_temp\":{\"expr\":\"$SELF:return_air_temp\"}}},"
+            + "\"relationships\":{\"VAV-101\":{\"FEEDS\":[{}]}}}");
+    // VAV-101 -> VAV-102 via pointset.points.*.expr (2-hop transitive outbound), proxied by GAT-1
+    udmi.schema.CloudModel vav101Model = new udmi.schema.CloudModel();
+    vav101Model.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-VAV-101\"},"
+            + "\"gateway\":{\"gateway_id\":\"GAT-1\"},"
+            + "\"pointset\":{\"points\":{\"zone_temp\":{\"expr\":\"VAV-102:supply_air_temp\"}}}}");
+    udmi.schema.CloudModel vav102Model = new udmi.schema.CloudModel();
+    vav102Model.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-VAV-102\"}}");
+    // CHW-1 references DELETED-DEV (inbound reference to a deleted device in Shard)
+    udmi.schema.CloudModel chwModel = new udmi.schema.CloudModel();
+    chwModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-CHW-1\"},"
+            + "\"relationships\":{\"DELETED-DEV\":{\"FEEDS\":[{}]}}}");
+    // 2-hop transitive inbound expr chain: CALC-2 -> CALC-1 -> AHU-1
+    udmi.schema.CloudModel calc1Model = new udmi.schema.CloudModel();
+    calc1Model.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-CALC-1\"},"
+            + "\"pointset\":{\"points\":{\"avg_temp\":{\"expr\":\"AHU-1:supply_air_temp\"}}}}");
+    udmi.schema.CloudModel calc2Model = new udmi.schema.CloudModel();
+    calc2Model.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-CALC-2\"},"
+            + "\"pointset\":{\"points\":{\"rollup_temp\":{\"expr\":\"CALC-1:avg_temp\"}}}}");
+    // GAT-1 omits proxy_ids in static metadata, but CloudModel.gateway.proxy_ids has VAV-101
+    udmi.schema.CloudModel gatModel = new udmi.schema.CloudModel();
+    gatModel.gateway = new udmi.schema.GatewayModel();
+    gatModel.gateway.proxy_ids = List.of("VAV-101");
+    gatModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-GAT-1\"}}");
+    // FCU-99 is completely unrelated to the Shard
+    udmi.schema.CloudModel fcuModel = new udmi.schema.CloudModel();
+    fcuModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-FCU-99\"}}");
+
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "AHU-1")).thenReturn(ahuModel);
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "VAV-101")).thenReturn(vav101Model);
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "VAV-102")).thenReturn(vav102Model);
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "CHW-1")).thenReturn(chwModel);
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "CALC-1")).thenReturn(calc1Model);
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "CALC-2")).thenReturn(calc2Model);
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "GAT-1")).thenReturn(gatModel);
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "FCU-99")).thenReturn(fcuModel);
+
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.CONFIG;
+    innerEnvelope.subFolder = SubFolder.DISCOVERY;
+    innerEnvelope.deviceRegistryId = "reg-1";
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    uufiWrapper.put("payload", Map.of(
+        "version", "1.5.7",
+        "timestamp", "2026-07-28T00:00:00Z",
+        "families", Map.of("iot", Map.of(
+            "generation", "2026-07-28T00:00:00Z",
+            "depth", "details",
+            "addrs", List.of("AHU-1", "DELETED-DEV"),
+            "source", "model"
+        ))
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceRegistryId = "reg-1";
+    transportEnvelope.subType = SubType.CONFIG;
+    transportEnvelope.subFolder = SubFolder.DISCOVERY;
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    List<udmi.schema.DiscoveryEvents> events = captured.stream()
+        .filter(o -> o instanceof udmi.schema.DiscoveryEvents)
+        .map(o -> (udmi.schema.DiscoveryEvents) o)
+        .toList();
+    // event_no=0 + 7 Closure devices (AHU-1, CALC-1, CALC-2, CHW-1, GAT-1, VAV-101, VAV-102);
+    // FCU-99 is excluded.
+    assertEquals(8, events.size(), "Expected event_no=0 plus 7 Closure device events");
+
+    udmi.schema.DiscoveryEvents startEvent = events.stream()
+        .filter(e -> Integer.valueOf(0).equals(e.event_no))
+        .findFirst()
+        .orElseThrow();
+    assertEquals(List.of("AHU-1", "DELETED-DEV"), startEvent.addrs);
+    assertEquals(7, startEvent.active_count);
+
+    List<String> discoveredAddrs = events.stream()
+        .filter(e -> e.event_no > 0)
+        .sorted(java.util.Comparator.comparingInt(e -> e.event_no))
+        .map(e -> e.addr)
+        .toList();
+    assertEquals(
+        List.of("AHU-1", "CALC-1", "CALC-2", "CHW-1", "GAT-1", "VAV-101", "VAV-102"),
+        discoveredAddrs);
+
+    udmi.schema.DiscoveryEvents gatEvent = events.stream()
+        .filter(e -> "GAT-1".equals(e.addr))
+        .findFirst()
+        .orElseThrow();
+    assertNotNull(gatEvent.model.gateway);
+    assertEquals(List.of("VAV-101"), gatEvent.model.gateway.proxy_ids);
+  }
+
+  /**
+   * Test that corrupt udmi_metadata fails fast and publishes a terminal STOPPED state/discovery
+   * bookend with an error status entry.
+   */
+  @Test
+  public void modelDiscoveryFailurePublishesStoppedErrorStateTest() {
+    udmi.schema.CloudModel registryModel = new udmi.schema.CloudModel();
+    registryModel.device_ids = Map.of("AHU-BAD", new udmi.schema.CloudModel());
+    org.mockito.Mockito.when(provider.listDevices(org.mockito.ArgumentMatchers.eq("reg-1"), any()))
+        .thenReturn(registryModel);
+
+    udmi.schema.CloudModel badModel = new udmi.schema.CloudModel();
+    badModel.metadata = Map.of("udmi_metadata", "{not-valid-json");
+    org.mockito.Mockito.when(provider.fetchDevice("reg-1", "AHU-BAD")).thenReturn(badModel);
+
+    Envelope innerEnvelope = new Envelope();
+    innerEnvelope.subType = SubType.CONFIG;
+    innerEnvelope.subFolder = SubFolder.DISCOVERY;
+    innerEnvelope.deviceRegistryId = "reg-1";
+
+    Map<String, Object> uufiWrapper = toMap(innerEnvelope);
+    uufiWrapper.put("payload", Map.of(
+        "version", "1.5.7",
+        "timestamp", "2026-07-28T00:00:00Z",
+        "families", Map.of("iot", Map.of(
+            "generation", "2026-07-28T00:00:00Z",
+            "depth", "details",
+            "source", "model"
+        ))
+    ));
+
+    Envelope transportEnvelope = new Envelope();
+    transportEnvelope.source = "test-client";
+    transportEnvelope.gatewayId = "uufi";
+    transportEnvelope.deviceRegistryId = "reg-1";
+    transportEnvelope.subType = SubType.CONFIG;
+    transportEnvelope.subFolder = SubFolder.DISCOVERY;
+
+    activeTestInstance(() -> getReverseDispatcher().publish(
+        new Bundle(transportEnvelope, uufiWrapper)));
+
+    List<udmi.schema.DiscoveryState> states = captured.stream()
+        .filter(o -> o instanceof udmi.schema.DiscoveryState)
+        .map(o -> (udmi.schema.DiscoveryState) o)
+        .toList();
+    assertEquals(2, states.size(), "Expected ACTIVE and terminal STOPPED DiscoveryState on error");
+    udmi.schema.DiscoveryState stopState = states.get(1);
+    assertEquals(udmi.schema.FamilyDiscoveryState.Phase.STOPPED,
+        stopState.families.get("iot").phase);
+    assertNotNull(stopState.families.get("iot").status);
+    assertEquals(udmi.schema.Category.DISCOVERY_FAMILY_SCAN,
+        stopState.families.get("iot").status.category);
   }
 
   private UufiProcessor getProcessor() {

@@ -10,7 +10,7 @@ except (ImportError, ModuleNotFoundError):
     from butler.src.connection import ButlerConnection
 
 
-def run_discovery(conn_spec, registry_id, device_id=None, target_families=None, site_model=None):
+def run_discovery(conn_spec, registry_id, device_id=None, target_families=None, site_model=None, addrs=None):
     """Dispatches discovery configuration message over the configured project spec / broker."""
     is_registry_discovery = not device_id
     actual_device_id = None if is_registry_discovery else device_id
@@ -30,6 +30,8 @@ def run_discovery(conn_spec, registry_id, device_id=None, target_families=None, 
                     "depth": "details",
                     "source": "model",
                 }
+                if addrs:
+                    families_dict[f]["addrs"] = list(addrs)
             else:
                 families_dict[f] = {"generation": now}
     else:

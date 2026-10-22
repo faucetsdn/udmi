@@ -84,9 +84,22 @@ be reported:
 
 Site Model Discovery exposes the cloud-registered device models of a registry over the standard UDMI discovery pipeline (`family: "iot"`, `source: "model"`). It is triggered automatically when a registry model update is processed by UDMIS, or on-demand by publishing a registry-scoped [`config`](../../gencode/docs/config.html) discovery message with `families.iot.source` set to `"model"`.
 
-The Site Model Discovery sequence is published to the `udmi_target` stream with envelope attributes `source: "model"` and `transactionId` set to the `generation` timestamp, and follows the standard discovery state and event bookends:
+To support both full-site snapshots and partial/incremental updates, Site Model Discovery distinguishes three sets of devices:
+
+* **`Site` (Declared Set):** All active (non-blocked) devices registered in the building (`deviceRegistryId`).
+* **`Shard` (Declared Set):** The working set of changed or targeted device IDs (`addrs`), specified via `families.iot.addrs` in `config/discovery` (or via a targeted `registrar` update, including `-T` transitive proxy expansion and `-b` / `-d` / `-x` targeted device blocking/deletion) and echoed on the `event_no = 0` start event (`addrs`). When `addrs` is omitted/null on `event_no = 0`, the scan is a full-site scan (`Shard == Closure == Site`).
+* **`Closure` (Calculated Set):** The set of active devices emitted in `event_no = 1..N` (`active_count = |Closure|`), comprising:
+  1. All active devices in the `Shard` ($S \cap \text{Site}$),
+  2. All active devices in the `Site` that directly reference any device in the `Shard` (including deleted/blocked devices in the `Shard`) via `model.relationships` or `model.gateway` (`proxy_ids` / `gateway_id`, treated bidirectionally so gateway-proxy pairs are always kept together),
+  3. All active devices in the `Site` that transitively reference any device in the `Shard` (inbound) via `model.pointset.points.*.expr` (`<deviceId>:<point>`, excluding `$SELF` self-references), and
+  4. All active devices in the `Site` transitively referenced (outbound) from the above set across `model.relationships`, `model.pointset.points.*.expr`, and `model.gateway`.
+
+The Site Model Discovery sequence is serialized per registry and published to the `udmi_target` stream with envelope attributes `source: "model"` and `transactionId` set to the `generation` timestamp:
 
 1. **Start State (`state/discovery`):** Published at the registry level with `families.iot.source: "model"`, `families.iot.phase: "active"`, and `families.iot.active_count: 0`.
-2. **Start & Count Event (`events/discovery`):** Published at the registry level with `source: "model"`, `event_no: 0`, `family: "iot"`, and `active_count` set to the total number of matching devices in the registry.
-3. **Device Model Events (`events/discovery`):** When `depth` is `details` (or `parts`, or omitted), one event per device (`event_no: 1..N`) is published with `source: "model"`, `family: "iot"`, `addr` set to the device ID, and `model` populated with the device's [`metadata`](../../gencode/docs/metadata.html) object. When `depth` is `entries`, individual device events are omitted and only the `event_no: 0` count is emitted. If `addrs` is specified in `families.iot`, only matching device IDs are included.
-4. **Stop State (`state/discovery`):** Published at the registry level with `families.iot.source: "model"`, `families.iot.phase: "stopped"`, and `families.iot.active_count` set to the total number of discovered devices.
+2. **Start, Count & Shard Scope Event (`events/discovery`):** Published at the registry level with `source: "model"`, `event_no: 0`, `family: "iot"`, `active_count` set to the size of the `Closure`, and optional `addrs` declaring the `Shard` for partial scans.
+3. **Device Model Events (`events/discovery`):** When `depth` is `details` (or `parts`, or omitted), one event per device in the `Closure` (`event_no: 1..N`) is published with `source: "model"`, `family: "iot"`, `addr` set to the device ID, and `model` populated with the device's [`metadata`](../../gencode/docs/metadata.html) object. When `depth` is `entries`, individual device events are omitted and only the `event_no: 0` count is emitted.
+4. **Stop State (`state/discovery`):** Published at the registry level with `families.iot.source: "model"`, `families.iot.phase: "stopped"`, and `families.iot.active_count` set to the total number of discovered devices in the `Closure`. If an unrecoverable error occurs during the scan (such as malformed cloud metadata), UDMIS fails fast and publishes a terminal `phase: "stopped"` state containing a `status` error entry (`category: "discovery.family.scan"`, `level: 500`).
+
+Because `state/discovery` and `events/discovery` may traverse independent transport queues, consumers that subscribe to both streams should treat batch completion as an **unordered barrier** (`event_no = 0` received AND all `1..active_count` device events received AND, if monitoring state, `phase == "stopped"` received) rather than assuming strict message arrival order.
+

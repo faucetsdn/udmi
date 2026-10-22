@@ -201,6 +201,14 @@ public class ReflectProcessorTest extends ProcessorTestBase {
 
     // Verify 1 SiteMetadataUpdate + 4 Model Discovery messages emitted to udmi_target
     assertEquals(5, captured.size(), "Expected SiteMetadataUpdate + 4 model discovery messages");
+    udmi.schema.DiscoveryEvents startEvent = captured.stream()
+        .filter(o -> o instanceof udmi.schema.DiscoveryEvents de
+            && Integer.valueOf(0).equals(de.event_no))
+        .map(o -> (udmi.schema.DiscoveryEvents) o)
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Missing event_no=0 DiscoveryEvents"));
+    org.junit.jupiter.api.Assertions.assertNull(startEvent.addrs);
+    assertEquals(1, startEvent.active_count);
     udmi.schema.DiscoveryEvents devEvent = captured.stream()
         .filter(o -> o instanceof udmi.schema.DiscoveryEvents de && "AHU-1".equals(de.addr))
         .map(o -> (udmi.schema.DiscoveryEvents) o)
@@ -208,6 +216,49 @@ public class ReflectProcessorTest extends ProcessorTestBase {
         .orElseThrow(() -> new AssertionError("Missing AHU-1 DiscoveryEvents"));
     assertEquals("AHU-1", devEvent.addr);
     assertEquals("SN-AHU-1", devEvent.model.system.serial_no);
+  }
+
+  @Test
+  public void modelRegistryPartialShardUpdateTest() {
+    CloudModel registryDevices = new CloudModel();
+    registryDevices.device_ids = Map.of(
+        "AHU-1", new CloudModel(),
+        "VAV-101", new CloudModel(),
+        "FCU-99", new CloudModel()
+    );
+    when(provider.listDevices(eq(TEST_REGISTRY), any())).thenReturn(registryDevices);
+
+    CloudModel ahuModel = new CloudModel();
+    ahuModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-AHU-1\"},"
+            + "\"relationships\":{\"VAV-101\":{\"FEEDS\":[{}]}}}");
+    CloudModel vavModel = new CloudModel();
+    vavModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-VAV-101\"}}");
+    CloudModel fcuModel = new CloudModel();
+    fcuModel.metadata = Map.of("udmi_metadata",
+        "{\"version\":\"1.5.7\",\"timestamp\":\"2026-07-28T00:00:00Z\","
+            + "\"system\":{\"serial_no\":\"SN-FCU-99\"}}");
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq("AHU-1"))).thenReturn(ahuModel);
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq("VAV-101"))).thenReturn(vavModel);
+    when(provider.fetchDevice(eq(TEST_REGISTRY), eq("FCU-99"))).thenReturn(fcuModel);
+
+    CloudModel requestModel = new CloudModel();
+    requestModel.operation = ModelOperation.UPDATE;
+    requestModel.resource_type = Resource_type.REGISTRY;
+    requestModel.device_ids = Map.of("AHU-1", new CloudModel());
+    activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
+
+    udmi.schema.DiscoveryEvents startEvent = captured.stream()
+        .filter(o -> o instanceof udmi.schema.DiscoveryEvents de
+            && Integer.valueOf(0).equals(de.event_no))
+        .map(o -> (udmi.schema.DiscoveryEvents) o)
+        .findFirst()
+        .orElseThrow(() -> new AssertionError("Missing event_no=0 DiscoveryEvents"));
+    assertEquals(java.util.List.of("AHU-1"), startEvent.addrs);
+    assertEquals(2, startEvent.active_count);
   }
 
   @Test

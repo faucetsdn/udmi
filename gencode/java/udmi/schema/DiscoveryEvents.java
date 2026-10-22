@@ -2,6 +2,7 @@
 package udmi.schema;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -85,6 +86,13 @@ public class DiscoveryEvents {
     @JsonPropertyDescription("Total number of records expected for this active scan generation")
     public Integer active_count;
     /**
+     * List of target addresses for a partial discovery scan (shard)
+     * 
+     */
+    @JsonProperty("addrs")
+    @JsonPropertyDescription("List of target addresses for a partial discovery scan (shard)")
+    public List<java.lang.String> addrs;
+    /**
      * Links to other address families (family and id)
      * 
      */
@@ -158,6 +166,7 @@ public class DiscoveryEvents {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.devices == null)? 0 :this.devices.hashCode()));
+        result = ((result* 31)+((this.addrs == null)? 0 :this.addrs.hashCode()));
         result = ((result* 31)+((this.source == null)? 0 :this.source.hashCode()));
         result = ((result* 31)+((this.active_count == null)? 0 :this.active_count.hashCode()));
         result = ((result* 31)+((this.registries == null)? 0 :this.registries.hashCode()));
@@ -187,7 +196,7 @@ public class DiscoveryEvents {
             return false;
         }
         DiscoveryEvents rhs = ((DiscoveryEvents) other);
-        return ((((((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.active_count == rhs.active_count)||((this.active_count!= null)&&this.active_count.equals(rhs.active_count))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.network == rhs.network)||((this.network!= null)&&this.network.equals(rhs.network))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.event_no == rhs.event_no)||((this.event_no!= null)&&this.event_no.equals(rhs.event_no))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))))&&((this.model == rhs.model)||((this.model!= null)&&this.model.equals(rhs.model))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((((((((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.devices == rhs.devices)||((this.devices!= null)&&this.devices.equals(rhs.devices))))&&((this.addrs == rhs.addrs)||((this.addrs!= null)&&this.addrs.equals(rhs.addrs))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.active_count == rhs.active_count)||((this.active_count!= null)&&this.active_count.equals(rhs.active_count))))&&((this.registries == rhs.registries)||((this.registries!= null)&&this.registries.equals(rhs.registries))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.network == rhs.network)||((this.network!= null)&&this.network.equals(rhs.network))))&&((this.points == rhs.points)||((this.points!= null)&&this.points.equals(rhs.points))))&&((this.features == rhs.features)||((this.features!= null)&&this.features.equals(rhs.features))))&&((this.system == rhs.system)||((this.system!= null)&&this.system.equals(rhs.system))))&&((this.event_no == rhs.event_no)||((this.event_no!= null)&&this.event_no.equals(rhs.event_no))))&&((this.refs == rhs.refs)||((this.refs!= null)&&this.refs.equals(rhs.refs))))&&((this.model == rhs.model)||((this.model!= null)&&this.model.equals(rhs.model))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.addr == rhs.addr)||((this.addr!= null)&&this.addr.equals(rhs.addr))))&&((this.cloud_model == rhs.cloud_model)||((this.cloud_model!= null)&&this.cloud_model.equals(rhs.cloud_model))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 }

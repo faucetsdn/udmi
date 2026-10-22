@@ -68,6 +68,7 @@ import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.Level;
 import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
@@ -308,7 +309,12 @@ public class ReflectProcessor extends ProcessorBase {
       Date siteTimestamp = (extracted instanceof SiteMetadataUpdate smu)
           ? smu.timestamp : request.timestamp;
       Date generation = ofNullable(siteTimestamp).orElseGet(Date::new);
-      ModelDiscoveryHandler.processDiscovery(this, targetRegistry, null, generation);
+      FamilyDiscoveryConfig familyConfig = null;
+      if (request.device_ids != null && !request.device_ids.isEmpty()) {
+        familyConfig = new FamilyDiscoveryConfig();
+        familyConfig.addrs = request.device_ids.keySet().stream().sorted().toList();
+      }
+      ModelDiscoveryHandler.processDiscovery(this, targetRegistry, familyConfig, generation);
     }
     return modelResult;
   }

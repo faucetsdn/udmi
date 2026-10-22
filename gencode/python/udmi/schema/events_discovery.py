@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from ._base import DataModel
 from .ancillary_properties import AncillaryProperties
@@ -42,6 +42,7 @@ class DiscoveryEvents(DataModel):
     network: Optional[str] = None
     event_no: Optional[int] = None
     active_count: Optional[int] = None
+    addrs: Optional[List[str]] = None
     families: Optional[Dict[str, FamilyDiscovery]] = None
     registries: Optional[Dict[str, CloudModel]] = None
     devices: Optional[Dict[str, CloudModel]] = None
