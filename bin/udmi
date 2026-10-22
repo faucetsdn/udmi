@@ -267,19 +267,7 @@ else
     echo "Skipping Barbican tmux session (filtered)" | tee -a $UDMIS_LOG
 fi
 
-# 2. Butler session (postgres, influxdb, butler, validator, registrar)
-if [[ "$should_run_butler" == true ]]; then
-    echo "Starting Butler in tmux session ($LOCAL_ACTION)..." | tee -a $UDMIS_LOG
-    $UDMI_ROOT/bin/tmux_butler "$LOCAL_ACTION" "$site_model" "${project_spec:-//mqtt/localhost:${MQTT_PORT:-8883}}" "${BUTLER_FILTERS[@]}"
-else
-    echo "Skipping Butler tmux session (filtered)" | tee -a $UDMIS_LOG
-fi
-
-if [[ -n $no_build ]]; then
-    touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
-fi
-
-# 3. If UDMIS was started, wait for its readiness sentinel
+# 2. If UDMIS was started, wait for its readiness sentinel before starting Butler/registrar
 if tmux_should_run_service "udmis"; then
     if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
         POD_READY=${UDMI_POD_READY:-/tmp/pod_ready.txt}
@@ -298,6 +286,18 @@ if tmux_should_run_service "udmis"; then
         echo "=== UDMIS failed to become ready within ${WAITING}s ==="
         fail "pod_ready.txt not found."
     fi
+fi
+
+# 3. Butler session (postgres, influxdb, butler, validator, registrar)
+if [[ "$should_run_butler" == true ]]; then
+    echo "Starting Butler in tmux session ($LOCAL_ACTION)..." | tee -a $UDMIS_LOG
+    $UDMI_ROOT/bin/tmux_butler "$LOCAL_ACTION" "$site_model" "${project_spec:-//mqtt/localhost:${MQTT_PORT:-8883}}" "${BUTLER_FILTERS[@]}"
+else
+    echo "Skipping Butler tmux session (filtered)" | tee -a $UDMIS_LOG
+fi
+
+if [[ -n $no_build ]]; then
+    touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
 fi
 
 echo Done with local server setup.

@@ -152,6 +152,9 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
     if (isFastWrite || isUnmodified) {
       PointsetManager.super.updatePointConfig(point, pointConfig);
+      if (isFastWrite && !isUnmodified) {
+        scheduler.schedule(this::periodicUpdate, 1, TimeUnit.SECONDS);
+      }
     } else if (isDelayWrite) {
       debug(format("Applying delayed writeback for point %s with %ds delay", point.getName(),
           WRITE_DELAY_SEC));

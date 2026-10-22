@@ -73,6 +73,16 @@ case "$TMUX_ACTION" in
         fi
 
         if tmux_should_run_service "registrar"; then
+            pod_ready="${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}"
+            for _ in $(seq 1 90); do
+                if [[ -f "$pod_ready" || -f /tmp/pod_ready.txt ]]; then
+                    break
+                fi
+                if ! pgrep -f "(bin/start_udmis|udmis-1\.0-SNAPSHOT-all\.jar)" >/dev/null 2>&1; then
+                    break
+                fi
+                sleep 1
+            done
             echo "Waiting for initial registrar run in '$SESSION_NAME' to complete..."
             registrar_done=false
             for i in $(seq 1 90); do

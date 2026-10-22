@@ -527,7 +527,7 @@ jobs:
           misc/discoverynode/testing/integration/integration_test.sh
       - name: Build UDMIS container
         run: |
-          udmis/bin/build check
+          touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
           bin/container udmis build --no-check latest
           echo Built local UDMIS
       - name: Start UDMIS container
