@@ -53,33 +53,33 @@ if [[ "$CMD" == "stop" || "$CMD" == "clean" ]]; then
     action="$CMD"
     shift
     parse_tmux_args "$@"
-    target_args=()
+    target_args=
     if [[ -n "${TMUX_NAMESPACE:-}" ]]; then
-        target_args=("$TMUX_NAMESPACE")
+        target_args="$TMUX_NAMESPACE"
     elif [[ -n "${TMUX_SITE_MODEL:-}" && -d "$TMUX_SITE_MODEL" && -n "${TMUX_PROJECT_SPEC:-}" ]]; then
-        target_args=("$(realpath "$TMUX_SITE_MODEL")" "$TMUX_PROJECT_SPEC")
+        target_args="$(realpath "$TMUX_SITE_MODEL") $TMUX_PROJECT_SPEC"
     elif [[ -n "${TMUX_SITE_MODEL:-}" && -d "$UDMI_ROOT/$TMUX_SITE_MODEL" && -n "${TMUX_PROJECT_SPEC:-}" ]]; then
-        target_args=("$(realpath "$UDMI_ROOT/$TMUX_SITE_MODEL")" "$TMUX_PROJECT_SPEC")
+        target_args="$(realpath "$UDMI_ROOT/$TMUX_SITE_MODEL") $TMUX_PROJECT_SPEC"
     elif [[ -n "${TMUX_PROJECT_SPEC:-}" ]]; then
-        target_args=("$TMUX_PROJECT_SPEC")
+        target_args="$TMUX_PROJECT_SPEC"
     fi
     if [[ "$action" == "stop" ]]; then
         echo "Stopping local UDMI infrastructure${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)} via tmux sessions..."
-        $UDMI_ROOT/bin/tmux_barbican stop "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_butler stop "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_bridgehead stop "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_base stop "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_model stop "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_mcp stop "${target_args[@]}" >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_barbican stop $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_butler stop $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_bridgehead stop $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_base stop $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_model stop $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_mcp stop $target_args >/dev/null 2>&1 || true
         echo "Local UDMI infrastructure stopped cleanly."
     elif [[ "$action" == "clean" ]]; then
         echo "Cleaning local UDMI infrastructure state${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)}..."
-        $UDMI_ROOT/bin/tmux_barbican clean "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_butler clean "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_bridgehead clean "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_base clean "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_model clean "${target_args[@]}" >/dev/null 2>&1 || true
-        $UDMI_ROOT/bin/tmux_mcp clean "${target_args[@]}" >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_barbican clean $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_butler clean $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_bridgehead clean $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_base clean $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_model clean $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_mcp clean $target_args >/dev/null 2>&1 || true
         echo "Local UDMI infrastructure state cleaned."
     fi
     exit 0
@@ -294,10 +294,6 @@ if [[ "$should_run_butler" == true ]]; then
     $UDMI_ROOT/bin/tmux_butler "$LOCAL_ACTION" "$site_model" "${project_spec:-//mqtt/localhost:${MQTT_PORT:-8883}}" "${BUTLER_FILTERS[@]}"
 else
     echo "Skipping Butler tmux session (filtered)" | tee -a $UDMIS_LOG
-fi
-
-if [[ -n $no_build ]]; then
-    touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
 fi
 
 echo Done with local server setup.

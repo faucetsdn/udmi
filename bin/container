@@ -4,7 +4,7 @@ UDMI_ROOT=$(dirname $0)/..
 source ${UDMI_ROOT}/etc/shell_common.sh
 
 if [[ $# -lt 2 ]]; then
-    usage target { prep, build, push, apply } [--no-check] [repo]
+    usage target { prep, build, push, apply } [-n] [--no-check] [repo]
 fi
 
 target=$1
@@ -46,6 +46,9 @@ REPOSITORY=ghcr.io/${git_repo}
 TEMPLATES=$(cd ${template_folder}; ls k8s_*.yaml) || true
 
 echo Processing templates from ${template_folder}: ${TEMPLATES}
+
+NOBUILD=
+[[ ${1:-} == "-n" ]] && NOBUILD=1 && shift
 
 NOCHECK=
 [[ ${1:-} == "--no-check" ]] && NOCHECK=1 && shift
@@ -113,6 +116,11 @@ if [[ -z $prep ]]; then
 fi
 
 if [[ -n $prep ]]; then
+    if [[ -n $NOBUILD ]]; then
+        echo "Skipping build checks (-n): updating existing JAR timestamps..."
+        (cd $UDMI_ROOT; touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar)
+    fi
+
     rm -rf var tmp && mkdir -p var tmp build
     cp -f etc/*.json var/ || true
     rm -rf build/schema && cp -a ../schema build/schema
