@@ -60,17 +60,18 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 
 1. **Capture Worker ([pcap.py](../../edge/spotter/src/pcap.py))**: Spawns `tcpdump` with configurable interface filters, enforcing strict execution bounds (maximum duration and byte quotas).
 2. **Streaming MQTT Egress Transport**:
-   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`DiscoveryUpload`) over the streaming MQTT upload topic (`upload/discovery`), terminated by a SHA-256 EOF marker.
+   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`DiscoveryUpload`) over the streaming MQTT upload topic (`upload/discovery`), terminated by a SHA-256 end-of-file marker.
    - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding external network credentials or outbound HTTP rules at the edge.
 3. **Ad-hoc Upload Reassembly ([bin/mapper](../../bin/mapper))**:
    Reassembles chunked `upload/discovery` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
-   ```bash
-   # Reassemble upload chunks file into a pcap file:
-   bin/mapper sites/udmi_site_model //mqtt/localhost DSN-1 reassemble stream_events.json capture.pcap
 
-   # Or stream directly from mosquitto subscriber:
-   mosquitto_sub -h $BROKER -t '/r/+/d/+/upload/discovery' | bin/mapper sites/udmi_site_model //mqtt/localhost DSN-1 reassemble - live.pcap
-   ```
+```bash
+# Reassemble upload chunks file into a pcap file:
+bin/mapper sites/udmi_site_model //mqtt/localhost AHU-1 reassemble stream_events.json capture.pcap
+
+# Or stream directly from mosquitto subscriber:
+mosquitto_sub -h $BROKER -t '/r/+/d/+/upload/discovery' | bin/mapper sites/udmi_site_model //mqtt/localhost AHU-1 reassemble - live.pcap
+```
 
 ---
 

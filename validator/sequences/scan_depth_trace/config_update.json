@@ -1,0 +1,48 @@
+{
+  "discovery" : {
+    "families" : {
+      "vendor" : {
+        "depth" : "trace",
+        "generation" : "TIMESTAMP",
+        "scan_duration_sec" : 10
+      }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "bacnet" : { },
+      "ether" : { },
+      "ipv4" : { },
+      "vendor" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV11.present_value",
+        "units" : "No-units"
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV12.present_value",
+        "units" : "Degrees-Celsius"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98,
+        "units" : "Bars"
+      }
+    },
+    "sample_rate_sec" : 300
+  },
+  "system" : {
+    "metrics_rate_sec" : 10,
+    "min_loglevel" : 100,
+    "operation" : {
+      "last_start" : "TIMESTAMP"
+    },
+    "testing" : {
+      "sequence_name" : "scan_depth_trace+vendor"
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###1.5.5-183-ga8572046b"
+}

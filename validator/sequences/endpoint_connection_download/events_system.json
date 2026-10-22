@@ -1,0 +1,189 @@
+{
+  "event_no" : 5,
+  "last_config" : "TIMESTAMP",
+  "logentries" : [ {
+    "category" : "blobset.blob.receive",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "blobset.blob.parse",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.receive",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1928ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.parse",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Device AHU-1 config handler",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1927ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"_iot_endpoint_config\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.5-183-ga8572046b\"\n}",
+    "level" : 100,
+    "message" : "Config update AHU-1 (endpoint_connection_download)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.apply",
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 1921ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.receive",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 945ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.parse",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Device AHU-1 config handler",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 944ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"_iot_endpoint_config\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.5-183-ga8572046b\"\n}",
+    "level" : 100,
+    "message" : "Config update AHU-1 (endpoint_connection_download)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.apply",
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 941ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 941ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 940ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 940ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 0ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Update state TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"blobset\" : {\n    \"blobs\" : {\n      \"_iot_endpoint_config\" : {\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.7\"\n}",
+    "level" : 100,
+    "message" : "State update AHU-1 (endpoint_connection_download)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "blobset.blob.receive",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "blobset.blob.parse",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "New config blob endpoint detected:\n{\n  \"auth_provider\" : {\n    \"basic\" : {\n      \"password\" : \"38269d11\",\n      \"username\" : \"/r/ZZ-TRI-FECTA/d/AHU-1\"\n    }\n  },\n  \"client_id\" : \"/r/ZZ-TRI-FECTA/d/AHU-1\",\n  \"generation\" : \"TIMESTAMP-TRI-FECTA/d/AHU-1\",\n  \"transport\" : \"ssl\"\n}",
+    "timestamp" : "TIMESTAMP"
+  } ],
+  "metrics" : {
+    "mem_free_mb" : 76.25149536132812,
+    "mem_total_mb" : 112.0
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.7"
+}

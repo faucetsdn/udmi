@@ -88,7 +88,7 @@ When a discovery scan produces bulk binary or text capture artifacts—such as n
 Each `upload/discovery` message is correlated with the active scan via `(family, generation)` and sequenced using `event_no`:
 * **`event_no = 0` (Start Marker)**: Announces the start of the upload stream (`family`, `generation`, `event_no = 0`).
 * **`event_no = 1 .. N` (Data Chunks)**: Sequential 1-based chunks carrying Base64-encoded binary data in `data`.
-* **`event_no = -(N + 1)` (Terminal EOF Marker)**: Mandatory final message where the negative value indicates the total chunk count `N` (`N = (-event_no) - 1`) and `sha256` provides the 64-character lowercase hex SHA-256 digest of the complete reassembled artifact.
+* **`event_no = -(N + 1)` (Terminal End-of-File Marker)**: Mandatory final message where the negative value indicates the total chunk count `N` (`N = (-event_no) - 1`) and `sha256` provides the 64-character lowercase hex SHA-256 digest of the complete reassembled artifact.
 
 In UDMIS, `UploadProcessor` stages incoming chunks in shared storage keyed by `(family, generation)` so out-of-order chunks distributed across multiple stateless pods are reassembled and cryptographically verified against `sha256` once the start marker (`event_no = 0`), all `1..N` chunks, and the terminal `-(N + 1)` marker have arrived.
 

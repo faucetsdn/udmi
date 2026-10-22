@@ -1,0 +1,9 @@
+{
+  "families" : {
+    "vendor" : {
+      "depth" : "trace",
+      "generation" : "TIMESTAMP",
+      "scan_duration_sec" : 10
+    }
+  }
+}

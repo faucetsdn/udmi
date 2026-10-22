@@ -164,11 +164,11 @@ Each entry in `download/blobset` (`blobs.<key>`) conforms to [`EndpointConfigura
 1. **Config Notification**: Cloud publishes `config.blobset.blobs.<key>` with `phase: "final"`, `generation`, `sha256` of the serialized `EndpointConfiguration`, and `url: "download://<key>"`.
 2. **Download Request (`phase: "apply"`)**: Seeing a new `generation` with a `download://` URL (or recovering after a reboot/crash where the ephemeral secret is no longer in memory), the device publishes `state.blobset.blobs.<key>.phase = "apply"` with the matching `generation`.
 3. **Ephemeral Delivery**: Upon receiving `state.blobset.blobs.<key>.phase == "apply"`, UDMIS publishes a [`BlobsetDownload`](../../schema/download_blobset.json) message to `{topic_prefix}/download/blobset` containing `blobs.<key>`.
-4. **Application & Acknowledgement (`phase: "final"`)**: The device verifies that the SHA-256 digest of the received payload matches `config.blobset.blobs.<key>.sha256`, applies the `EndpointConfiguration`, and publishes `state.blobset.blobs.<key>.phase = "final"`.
+4. **Application & Acknowledgment (`phase: "final"`)**: The device verifies that the SHA-256 digest of the received payload matches `config.blobset.blobs.<key>.sha256`, applies the `EndpointConfiguration`, and publishes `state.blobset.blobs.<key>.phase = "final"`.
 
 ### Coexistence with Inline `data:` URLs
 To maintain backward compatibility with existing devices and test sequences:
-* **`data:` URLs**: Non-secret endpoint redirections (such as updating `hostname`, `port`, or `client_id` while reusing an existing on-device private key) continue to use `data:application/json;base64,...` inline in `config.blobset.blobs._iot_endpoint_config.url`. Clients decode and apply `data:` URLs immediately upon receiving `config`.
+* **`data:` URLs**: Non-secret endpoint redirection updates (such as updating `hostname`, `port`, or `client_id` while reusing an existing on-device private key) continue to use `data:application/json;base64,...` inline in `config.blobset.blobs._iot_endpoint_config.url`. Clients decode and apply `data:` URLs immediately upon receiving `config`.
 * **`download://` URLs**: Secret-bearing blobs (`basic.password`, `_iot_endpoint_config`) use `download://...`, triggering the `state` (`phase: "apply"`) → `download/blobset` → `state` (`phase: "final"`) flow.
 
 

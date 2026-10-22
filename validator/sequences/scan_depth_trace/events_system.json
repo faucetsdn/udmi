@@ -1,0 +1,32 @@
+{
+  "event_no" : 8,
+  "last_config" : "TIMESTAMP",
+  "logentries" : [ {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Discovered vendor stopping TIMESTAMP)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer -6009ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Update state TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : {\n      \"vendor\" : {\n        \"active_count\" : 2,\n        \"generation\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.7\"\n}",
+    "level" : 100,
+    "message" : "State update AHU-1 (scan_depth_trace+vendor)",
+    "timestamp" : "TIMESTAMP"
+  } ],
+  "metrics" : {
+    "mem_free_mb" : 121.9301528930664,
+    "mem_total_mb" : 160.0
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.7"
+}

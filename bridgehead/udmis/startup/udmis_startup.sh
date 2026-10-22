@@ -28,6 +28,10 @@ fi
 registry_id=$(jq -r .registry_id $site_config)
 
 sleep 25
+for i in $(seq 1 35); do
+    [[ -f /etc/mosquitto/certs/mosquitto.ready ]] && break
+    sleep 1
+done
 echo Starting udmis proper... | tee -a $UDMIS_LOG
 
 

@@ -1,0 +1,11 @@
+{
+  "families" : {
+    "vendor" : {
+      "active_count" : 2,
+      "generation" : "TIMESTAMP",
+      "phase" : "stopped"
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.7"
+}

@@ -10,7 +10,7 @@ mkdir -p $(dirname "$UDMIS_PID_FILE")
 if [[ ${1:-} == stop ]]; then
     if [[ -f $UDMIS_PID_FILE ]]; then
         OLD_PID=$(cat $UDMIS_PID_FILE)
-        if ps -p $OLD_PID > /dev/null 2>&1; then
+        if [[ -n "$OLD_PID" && -d "/proc/$OLD_PID" ]]; then
             echo "Killing old udmis process $OLD_PID from local PID file..."
             kill $OLD_PID 2>/dev/null || true
             sleep 1
@@ -21,7 +21,7 @@ fi
 
 if [[ -f $UDMIS_PID_FILE ]]; then
     OLD_PID=$(cat $UDMIS_PID_FILE)
-    if ps -p $OLD_PID > /dev/null 2>&1; then
+    if [[ -n "$OLD_PID" && -d "/proc/$OLD_PID" ]]; then
         echo "Killing old udmis process $OLD_PID from local PID file..."
         kill $OLD_PID 2>/dev/null || true
         sleep 2
@@ -118,7 +118,7 @@ fi
 
 # Wait for prerequisite services (mosquitto and etcd) if running locally
 if [[ -d "$ETC_DIR" ]]; then
-    for i in $(seq 1 50); do
+    for i in $(seq 1 300); do
         if [[ -f "$ETC_DIR/mosquitto.ready" ]]; then
             break
         fi
@@ -166,7 +166,7 @@ if [[ ! -f $UDMI_POD_READY ]]; then
     echo "=== DIAGNOSTIC LOGS FOR UDMIS STARTUP FAILURE ==="
     echo "Host working directory: $PWD"
     echo "Process $PID status:"
-    ps -p $PID || echo "Process $PID not running"
+    [[ -d "/proc/$PID" ]] && (ps -p $PID 2>/dev/null || ps | grep -E "^\s*${PID}\s" || echo "Process $PID running") || echo "Process $PID not running"
     echo "Last 100 lines of $UDMIS_LOG:"
     tail -n 100 "$UDMIS_LOG" || true
     echo "var/ directory contents:"
