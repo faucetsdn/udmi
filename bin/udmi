@@ -267,6 +267,10 @@ else
     echo "Skipping Butler tmux session (filtered)" | tee -a $UDMIS_LOG
 fi
 
+if [[ -n $no_build ]]; then
+    touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar
+fi
+
 # 3. If UDMIS was started, wait for its readiness sentinel
 if tmux_should_run_service "udmis"; then
     if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then

@@ -20,6 +20,7 @@ case "$TMUX_ACTION" in
     clean)
         echo "Purging Butler runtime state..."
         rm -f "$UDMI_ROOT/var/butler.pid" "$UDMI_ROOT/out/butler.log" "$UDMI_ROOT/out/influx.log" "$UDMI_ROOT/out/postgres.log"
+        rm -f "$TMUX_SITE_MODEL"/out/devices/*/metadata_mod.json "$TMUX_SITE_MODEL"/out/devices/*/persistent_data.json
         ;;
     status)
         tmux_session_status "$SESSION_NAME" "${ALLOWED_SERVICES[@]}"
@@ -37,6 +38,7 @@ case "$TMUX_ACTION" in
         tmux_stop_session "$SESSION_NAME"
         echo "Purging Butler runtime state..."
         rm -f "$UDMI_ROOT/var/butler.pid" "$UDMI_ROOT/out/butler.log" "$UDMI_ROOT/out/influx.log" "$UDMI_ROOT/out/postgres.log"
+        rm -f "$TMUX_SITE_MODEL"/out/devices/*/metadata_mod.json "$TMUX_SITE_MODEL"/out/devices/*/persistent_data.json
         ;&
     start)
         tmux_stop_session "$SESSION_NAME"
