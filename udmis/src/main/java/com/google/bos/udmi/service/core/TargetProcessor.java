@@ -14,7 +14,6 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import udmi.schema.DiscoveryEvents;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -47,9 +46,7 @@ public class TargetProcessor extends ProcessorBase {
 
     publish(defaultedMessage);
 
-    if (ModelDiscoveryHandler.MODEL_SOURCE.equals(envelope.source)
-        || (defaultedMessage instanceof DiscoveryEvents de
-            && ModelDiscoveryHandler.MODEL_SOURCE.equals(de.source))) {
+    if (ModelDiscoveryHandler.isModelDiscoveryMessage(envelope, defaultedMessage)) {
       debug("Skipping reflector forwarding for model discovery message");
       return;
     }

@@ -845,6 +845,10 @@ public class Registrar {
       throw new IllegalStateException("Neither delete nor expunge indicated");
     }
 
+    if (targetShardDevices == null && !(deleteDevices && expungeDevices) && !toDelete.isEmpty()) {
+      targetShardDevices = new HashSet<>(toDelete);
+    }
+
     executeDelete(toDelete, reason);
 
     if (expungeDevices) {

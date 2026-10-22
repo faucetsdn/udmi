@@ -89,6 +89,23 @@ public class ModelDiscoveryHandler {
   }
 
   /**
+   * Determine whether a target message (event or state) originated from Site Model Discovery.
+   */
+  public static boolean isModelDiscoveryMessage(Envelope envelope, Object message) {
+    if (envelope != null && MODEL_SOURCE.equals(envelope.source)) {
+      return true;
+    }
+    if (message instanceof DiscoveryEvents de) {
+      return MODEL_SOURCE.equals(de.source);
+    }
+    if (message instanceof DiscoveryState ds && ds.families != null) {
+      return ds.families.values().stream()
+          .anyMatch(family -> family != null && MODEL_SOURCE.equals(family.source));
+    }
+    return false;
+  }
+
+  /**
    * Process a DiscoveryConfig targeting model discovery.
    */
   public static void processDiscoveryConfig(ProcessorBase processor, Envelope envelope,

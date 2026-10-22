@@ -279,6 +279,17 @@ class HandlerTests(unittest.TestCase):
                         "model": {"system": {"serial_no": "SN-NEW"}},
                     },
                 ),
+                (
+                    None,
+                    "events",
+                    "discovery",
+                    {
+                        "family": "iot",
+                        "generation": "2026-08-21T02:00:00Z",
+                        "event_no": 0,
+                        "active_count": 2,
+                    },
+                ),
             ],
         ]
         self.mock_pg.get_connection.return_value = mock_conn

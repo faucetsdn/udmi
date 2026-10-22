@@ -342,7 +342,28 @@ class ButlerProvider:
                 msg_rows = cur.fetchall()
             conn.close()
 
-            gen_seen: Dict[str, set] = {}
+            gen_batches: Dict[str, Dict[str, Any]] = {}
+
+            def _reconcile_gen(gen_key: str) -> None:
+                batch = gen_batches.get(gen_key)
+                if not batch or not batch.get("has_start"):
+                    return
+                active_count = batch.get("active_count")
+                seen = batch.get("seen", set())
+                if not isinstance(active_count, int) or len(seen) < active_count:
+                    return
+                gen_batches.pop(gen_key, None)
+                addrs = batch.get("addrs")
+                if isinstance(addrs, list):
+                    for addr in addrs:
+                        addr_str = str(addr)
+                        if addr_str not in seen:
+                            models.pop(addr_str, None)
+                else:
+                    for existing_id in list(models.keys()):
+                        if existing_id not in seen:
+                            models.pop(existing_id, None)
+
             for dev_id, sub_type, sub_folder, payload in msg_rows:
                 if isinstance(payload, str):
                     try:
@@ -364,24 +385,37 @@ class ButlerProvider:
                             and not payload.get("addr")
                             and not isinstance(payload.get("model"), dict)
                         ):
-                            already_seen = gen_seen.get(gen, set()) if gen else set()
-                            addrs = payload.get("addrs")
-                            if isinstance(addrs, list):
-                                for addr in addrs:
-                                    addr_str = str(addr)
-                                    if addr_str not in already_seen:
-                                        models.pop(addr_str, None)
-                            else:
-                                for existing_id in list(models.keys()):
-                                    if existing_id not in already_seen:
-                                        models.pop(existing_id, None)
+                            if gen:
+                                batch = gen_batches.setdefault(
+                                    gen,
+                                    {
+                                        "has_start": False,
+                                        "active_count": 0,
+                                        "addrs": None,
+                                        "seen": set(),
+                                    },
+                                )
+                                batch["has_start"] = True
+                                batch["active_count"] = payload.get("active_count", 0)
+                                batch["addrs"] = payload.get("addrs")
+                                _reconcile_gen(gen)
                         elif isinstance(payload.get("model"), dict):
                             target_dev = payload.get("addr") or dev_id
                             if target_dev:
                                 target_str = str(target_dev)
                                 models[target_str] = payload["model"]
                                 if gen:
-                                    gen_seen.setdefault(gen, set()).add(target_str)
+                                    batch = gen_batches.setdefault(
+                                        gen,
+                                        {
+                                            "has_start": False,
+                                            "active_count": 0,
+                                            "addrs": None,
+                                            "seen": set(),
+                                        },
+                                    )
+                                    batch["seen"].add(target_str)
+                                    _reconcile_gen(gen)
                 elif sub_type == "model":
                     if dev_id:
                         models[str(dev_id)] = payload
