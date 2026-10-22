@@ -11,7 +11,7 @@ bash $ROOT_DIR/../../bin/build_container test-discovery_node
 
 cleanup() {
   # Deletes docker containers
-  docker ps -a | grep 'discovery-integration' | awk '{print $1}' | xargs --no-run-if-empty docker stop
+  docker ps -a | grep 'discovery-integration' | awk '{print $1}' | xargs --no-run-if-empty docker stop -t 1
 }
 # Because ctrl+c-ing this test has a tendancy to skip if thrashed
 trap cleanup INT

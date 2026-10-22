@@ -497,7 +497,7 @@ jobs:
   discovery:
     name: Discovery Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     needs: build_packages
     steps:
       - uses: actions/checkout@v6

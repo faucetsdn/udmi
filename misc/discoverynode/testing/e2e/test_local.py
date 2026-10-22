@@ -146,7 +146,7 @@ def docker_devices():
   print(result.stdout.decode("utf-8"))
   run(
       "docker ps -a | grep 'discoverynode-test-device' | awk '{print $1}' |"
-      " xargs docker stop"
+      " xargs docker stop -t 1"
   )
 
 
@@ -225,7 +225,7 @@ def discovery_node():
 
   yield _discovery_node
 
-  run("docker stop discoverynode-test-node")
+  run("docker stop -t 1 discoverynode-test-node")
   logs = run("docker logs discoverynode-test-node")
   print(logs.stdout.decode("utf-8"))
   run("docker rm discoverynode-test-node")
