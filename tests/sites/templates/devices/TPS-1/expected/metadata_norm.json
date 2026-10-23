@@ -5,17 +5,21 @@
   "pointset": {
     "points": {
       "room_co2_sensor_from_template": {
-        "range_max": 1200.0
+        "range_max": 1200.0,
+        "units": "ppm"
       },
       "room_humidity_sensor_from_template": {
         "range_max": 90.0,
-        "range_min": 0.0
+        "range_min": 0.0,
+        "units": "percent"
       },
       "room_temperature_sensor_from_device": {
-        "range_min": 0.0
+        "range_min": 0.0,
+        "units": "Celsius"
       },
       "room_temperature_sensor_from_template": {
-        "range_min": 0.0
+        "range_min": 0.0,
+        "units": "Celsius"
       }
     }
   },

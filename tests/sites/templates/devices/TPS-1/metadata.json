@@ -24,6 +24,7 @@
   "pointset": {
     "points": {
       "room_temperature_sensor_from_device": {
+        "units": "Celsius",
         "range_min": 0
       },
       "room_humidity_sensor_from_template": {

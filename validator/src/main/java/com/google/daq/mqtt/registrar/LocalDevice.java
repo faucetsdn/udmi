@@ -46,6 +46,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.providers.FamilyProvider;
+import com.google.daq.mqtt.validator.PointsetValidator;
 import com.google.udmi.util.ErrorMap;
 import com.google.udmi.util.ErrorMap.ErrorMapException;
 import com.google.udmi.util.ExceptionMap;
@@ -423,6 +424,7 @@ class LocalDevice implements SiteDevice {
       throw new ValidationError(format("Found point names not matching allowed pattern %s: %s",
           POINT_NAME_ALLOWABLE.pattern(), CSV_JOINER.join(pointNameErrors)));
     }
+    ifNotNullThen(points, this::validatePointTypes);
     if (metadataObject != null && metadataObject.localnet != null
         && metadataObject.localnet.families != null) {
       metadataObject.localnet.families.forEach((family, familyModel) -> {
@@ -431,6 +433,68 @@ class LocalDevice implements SiteDevice {
         }
       });
     }
+  }
+
+  private void validatePointTypes(Map<String, PointPointsetModel> points) {
+    points.forEach((pointName, pointModel) -> {
+      if (pointModel == null) {
+        return;
+      }
+      boolean hasUnits = pointModel.units != null;
+      boolean hasValues = pointModel.values != null;
+      boolean hasType = pointModel.type != null;
+      int typeSpecifiers = (hasUnits ? 1 : 0) + (hasValues ? 1 : 0) + (hasType ? 1 : 0);
+      if (typeSpecifiers != 1) {
+        throw new ValidationError(format(
+            "Point %s must specify exactly one of units, values, or type", pointName));
+      }
+      boolean hasNumericOnlyFields = pointModel.units_reported != null
+          || pointModel.range_min != null
+          || pointModel.range_max != null
+          || pointModel.baseline_tolerance != null
+          || pointModel.cov_increment != null;
+      if (!hasUnits && hasNumericOnlyFields) {
+        throw new ValidationError(format(
+            "Non-numeric point %s cannot specify numeric-only fields", pointName));
+      }
+      if (hasUnits) {
+        if (pointModel.units.isBlank()) {
+          throw new ValidationError(format(
+              "Numeric point %s units must not be blank", pointName));
+        }
+        if (pointModel.baseline_value != null
+            && !PointsetValidator.isValidNumericValue(pointModel.baseline_value)) {
+          throw new ValidationError(format(
+              "Numeric point %s baseline_value must be a number", pointName));
+        }
+      } else if (hasValues) {
+        if (pointModel.values.size() < 2) {
+          throw new ValidationError(format(
+              "Multi-state point %s values map must contain at least 2 entries", pointName));
+        }
+        if (pointModel.baseline_value != null
+            && !PointsetValidator.isValidMultistateValue(pointModel, pointModel.baseline_value)) {
+          throw new ValidationError(format(
+              "Multi-state point %s baseline_value must be a key in values", pointName));
+        }
+      } else if (PointsetValidator.isStringPoint(pointModel)) {
+        if (pointModel.baseline_value != null
+            && !PointsetValidator.isValidStringValue(pointModel.baseline_value)) {
+          throw new ValidationError(format(
+              "String point %s baseline_value must be a string", pointName));
+        }
+      } else if (PointsetValidator.isBooleanPoint(pointModel)) {
+        if (pointModel.baseline_value != null
+            && !PointsetValidator.isValidBooleanValue(pointModel.baseline_value)) {
+          throw new ValidationError(format(
+              "Binary point %s baseline_value must be a boolean", pointName));
+        }
+      } else {
+        throw new ValidationError(format(
+            "Point %s has invalid type %s (expected string or boolean)",
+            pointName, pointModel.type));
+      }
+    });
   }
 
   private Metadata readMetadata() {

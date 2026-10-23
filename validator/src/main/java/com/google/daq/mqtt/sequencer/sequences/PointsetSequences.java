@@ -8,7 +8,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.GeneralUtils.isNumericString;
 import static com.google.udmi.util.GeneralUtils.prefixedDifference;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -27,6 +26,7 @@ import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.util.SamplingRange;
+import com.google.daq.mqtt.validator.PointsetValidator;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,7 +34,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,6 +44,7 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Level;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetEvents;
+import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState;
 import udmi.schema.PointsetEvents;
 
@@ -53,7 +56,6 @@ public class PointsetSequences extends PointsetBase {
   private static final Duration EVENT_WAIT_DURATION = Duration.ofMinutes(1);
   private static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final String POINTS_MAP_PATH = "pointset.points";
-  private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
 
   @Before
   public void setupExpectedParameters() {
@@ -113,8 +115,6 @@ public class PointsetSequences extends PointsetBase {
   @Summary("Check error when pointset configuration contains extraneous point")
   @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_request_extraneous() {
-    deviceConfig.pointset.sample_rate_sec = DEFAULT_SAMPLE_RATE_SEC;
-
     untilPointsetSanity();
 
     mapSemanticKey(POINTS_MAP_PATH, EXTRANEOUS_POINT, "extraneous_point", "point configuration");
@@ -141,7 +141,6 @@ public class PointsetSequences extends PointsetBase {
   @Summary("Check that pointset state does not report an unconfigured point")
   @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_remove_point() {
-    deviceConfig.pointset.sample_rate_sec = 10;
     untilPointsetSanity();
 
     List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
@@ -175,9 +174,61 @@ public class PointsetSequences extends PointsetBase {
   @ValidateSchema(SubFolder.POINTSET)
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
-    deviceConfig.pointset.sample_rate_sec = 10;
     untilTrue("receive a pointset event",
         () -> (countReceivedEvents(PointsetEvents.class) > 1));
+  }
+
+  @FunctionalInterface
+  private interface PointValueValidator {
+    void validate(String pointName, PointPointsetModel pointModel, Object presentValue);
+  }
+
+  private void checkPointTypeValues(
+      String typeLabel,
+      Predicate<PointPointsetModel> typePredicate,
+      PointValueValidator valueValidator) {
+    ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
+    ifNullSkipTest(
+        catchToNull(() -> deviceMetadata.pointset.points), "no pointset points in metadata");
+    Set<String> targetPoints =
+        deviceMetadata.pointset.points.entrySet().stream()
+            .filter(entry -> entry.getValue() != null && typePredicate.test(entry.getValue()))
+            .map(Entry::getKey)
+            .filter(name -> catchToFalse(() -> deviceConfig.pointset.points.containsKey(name)))
+            .collect(Collectors.toCollection(TreeSet::new));
+    ifTrueSkipTest(targetPoints.isEmpty(), format("No %s points defined in metadata", typeLabel));
+
+    popReceivedEvents(PointsetEvents.class);
+    List<PointsetEvents> events = new ArrayList<>();
+    Set<String> remainingPoints = new TreeSet<>(targetPoints);
+    untilTrue(
+        "receive a pointset event",
+        () -> {
+          for (PointsetEvents event : popReceivedEvents(PointsetEvents.class)) {
+            if (event.points == null) {
+              continue;
+            }
+            events.add(event);
+            for (String pointName : targetPoints) {
+              PointPointsetEvents pointEvents = event.points.get(pointName);
+              if (pointEvents != null && pointEvents.present_value != null) {
+                remainingPoints.remove(pointName);
+              }
+            }
+          }
+          return remainingPoints.isEmpty();
+        },
+        () -> "missing present_value for " + remainingPoints);
+    for (PointsetEvents event : events) {
+      for (String pointName : targetPoints) {
+        PointPointsetEvents pointEvents = event.points.get(pointName);
+        if (pointEvents == null || pointEvents.present_value == null) {
+          continue;
+        }
+        PointPointsetModel pointModel = deviceMetadata.pointset.points.get(pointName);
+        valueValidator.validate(pointName, pointModel, pointEvents.present_value);
+      }
+    }
   }
 
   /**
@@ -190,26 +241,73 @@ public class PointsetSequences extends PointsetBase {
           + " strings")
   @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   @ValidateSchema(SubFolder.POINTSET)
-  public void pointset_numeric_values() {
-    ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
-    deviceConfig.pointset.sample_rate_sec = 10;
-    untilTrue("receive a pointset event",
-        () -> (countReceivedEvents(PointsetEvents.class) > 0));
-    List<PointsetEvents> events = popReceivedEvents(PointsetEvents.class);
-    for (PointsetEvents event : events) {
-      if (event.points == null) {
-        continue;
-      }
-      for (Entry<String, PointPointsetEvents> pointEntry : event.points.entrySet()) {
-        Object presentValue = pointEntry.getValue().present_value;
-        if (presentValue instanceof String stringValue) {
-          checkThat(
-              format("Point %s present_value '%s' is reported as JSON number, not string",
-                  pointEntry.getKey(), stringValue),
-              () -> !isNumericString(stringValue));
-        }
-      }
-    }
+  public void pointset_value_numeric() {
+    checkPointTypeValues(
+        "numeric",
+        PointsetValidator::isNumericPoint,
+        (pointName, pointModel, presentValue) ->
+            quietlyCheckThat(
+                format(
+                    "Numeric point %s present_value '%s' is reported as JSON number",
+                    pointName, presentValue),
+                () -> PointsetValidator.isValidNumericValue(presentValue)));
+  }
+
+  /**
+   * Check that boolean values in pointset payloads are reported as JSON booleans.
+   */
+  @Test(timeout = TWO_MINUTES_MS)
+  @Summary("Check that boolean values in pointset payloads are reported as JSON booleans")
+  @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
+  @ValidateSchema(SubFolder.POINTSET)
+  public void pointset_value_boolean() {
+    checkPointTypeValues(
+        "boolean",
+        PointsetValidator::isBooleanPoint,
+        (pointName, pointModel, presentValue) ->
+            quietlyCheckThat(
+                format(
+                    "Boolean point %s present_value '%s' is reported as JSON boolean",
+                    pointName, presentValue),
+                () -> PointsetValidator.isValidBooleanValue(presentValue)));
+  }
+
+  /**
+   * Check that multi-state values in pointset payloads match configured values keys.
+   */
+  @Test(timeout = TWO_MINUTES_MS)
+  @Summary("Check that multi-state values in pointset payloads match configured values keys")
+  @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
+  @ValidateSchema(SubFolder.POINTSET)
+  public void pointset_value_multistate() {
+    checkPointTypeValues(
+        "multi-state",
+        PointsetValidator::isMultistatePoint,
+        (pointName, pointModel, presentValue) ->
+            quietlyCheckThat(
+                format(
+                    "Multi-state point %s present_value '%s' is a valid key in values %s",
+                    pointName, presentValue, pointModel.values.keySet()),
+                () -> PointsetValidator.isValidMultistateValue(pointModel, presentValue)));
+  }
+
+  /**
+   * Check that string values in pointset payloads are reported as JSON strings.
+   */
+  @Test(timeout = TWO_MINUTES_MS)
+  @Summary("Check that string values in pointset payloads are reported as JSON strings")
+  @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
+  @ValidateSchema(SubFolder.POINTSET)
+  public void pointset_value_string() {
+    checkPointTypeValues(
+        "string",
+        PointsetValidator::isStringPoint,
+        (pointName, pointModel, presentValue) ->
+            quietlyCheckThat(
+                format(
+                    "String point %s present_value '%s' is reported as JSON string",
+                    pointName, presentValue),
+                () -> PointsetValidator.isValidStringValue(presentValue)));
   }
 
   /**

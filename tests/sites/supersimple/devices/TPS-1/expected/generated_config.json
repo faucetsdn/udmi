@@ -1,9 +1,15 @@
 {
   "pointset": {
     "points": {
-      "room_co2_sensor": {},
-      "room_humidity_sensor": {},
-      "room_temperature_sensor": {}
+      "room_co2_sensor": {
+        "units": "ppm"
+      },
+      "room_humidity_sensor": {
+        "units": "percent"
+      },
+      "room_temperature_sensor": {
+        "units": "Celsius"
+      }
     },
     "sample_rate_sec": 300
   },

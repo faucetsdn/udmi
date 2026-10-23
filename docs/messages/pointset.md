@@ -30,7 +30,11 @@ The general structure of a `pointset` block exists inside of a complete metadata
 * `pointset`: Top level block designator.
   * `points`: Collection of point names.
     * _{`point_name`}_: Point name.
-      * `units`: Expected units designation for this point.
+      * `units`: Expected units designation for numeric points.
+      * `values`: Expected state value mapping for multi-state points (e.g., `"0.0": "OFF"`).
+      * `type`: Expected data type for non-numeric, non-enumerated points (`"string"` or `"boolean"`).
+
+For the complete specification on how `units`, `values`, and `type` in `metadata.json` classify a point as **Numeric**, **Multi-state**, **String**, or **Binary** and determine its wire payload type, see the [Point Typing Specification](../specs/point_typing.md).
 
 ## Event
 
@@ -97,6 +101,8 @@ block with the following structure:e
   * `points`: Collection of point names, defining the representative point set for this device.
     * _{`point_name`}_: Point name.
       * `units`: Set as-operating units for this point.
+      * `values`: State value mapping for multi-state points (e.g., `"0.0": "OFF"`).
+      * `type`: Expected data type for non-numeric, non-enumerated points (`"string"` or `"boolean"`).
       * (`set_value`): Optional setting to control the specified device point. If the set_value represents a number, then this must be serialized as a JSON number, not a quoted string. See [writeback documentation](../specs/sequences/writeback.md).
       * (`cov_threshold`): Optional threshold for triggering a COV event update.
 

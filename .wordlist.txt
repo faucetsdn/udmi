@@ -161,6 +161,7 @@ blobset
 blobsets
 bmod
 boolean
+booleans
 breakpoint
 btesting
 buildingsiot
@@ -263,6 +264,7 @@ mortem
 mosquitto
 mqtt
 msb
+multistate
 multithreaded
 mydomain
 namespace

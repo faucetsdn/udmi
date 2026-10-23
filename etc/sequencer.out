@@ -37,11 +37,14 @@ RESULT skip gateway bad_target_family PREVIEW 0/0 Not a proxied device
 RESULT skip gateway gateway_attach_handling ALPHA 0/0 Not a gateway
 RESULT skip gateway gateway_proxy_events BETA 0/0 Not a gateway
 RESULT skip gateway gateway_proxy_state PREVIEW 0/0 Not a gateway
-RESULT pass pointset pointset_numeric_values STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_publish STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_publish_interval STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_remove_point STABLE 10/10 Sequence complete
 RESULT pass pointset pointset_request_extraneous STABLE 10/10 Sequence complete
+RESULT pass pointset pointset_value_boolean STABLE 10/10 Sequence complete
+RESULT pass pointset pointset_value_multistate STABLE 10/10 Sequence complete
+RESULT pass pointset pointset_value_numeric STABLE 10/10 Sequence complete
+RESULT pass pointset pointset_value_string STABLE 10/10 Sequence complete
 RESULT pass system broken_config STABLE 10/10 Sequence complete
 CPBLTY pass system broken_config.logging ALPHA 1/1 Capability supported
 CPBLTY pass system broken_config.status ALPHA 1/1 Capability supported

@@ -19,7 +19,7 @@
     "points": {
       "filter_alarm_pressure_status": {
         "ref": "BV/11#present_value",
-        "units": "No-units",
+        "type": "boolean",
         "url": "bacnet://582312/BV/11#present_value"
       },
       "filter_differential_pressure": {

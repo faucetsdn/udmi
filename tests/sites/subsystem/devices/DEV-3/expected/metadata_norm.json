@@ -18,6 +18,7 @@
     "points": {
       "temp": {
         "ref": "40001",
+        "units": "Celsius",
         "url": "modbus://null/1/40001"
       }
     }

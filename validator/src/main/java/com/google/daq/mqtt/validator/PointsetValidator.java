@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.validator;
 
-import static com.google.udmi.util.GeneralUtils.isNumericString;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 
@@ -12,7 +11,6 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.ValidationException;
 import java.time.Instant;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -28,6 +26,9 @@ import udmi.schema.State;
 
 /** Manage pointset validation. */
 public class PointsetValidator {
+
+  public static final String TYPE_BOOLEAN = "boolean";
+  public static final String TYPE_STRING = "string";
 
   private static final int MAX_DECIMAL_PLACES = 2;
 
@@ -150,10 +151,13 @@ public class PointsetValidator {
 
   private Set<String> validatePointValues(
       Map<String, PointPointsetModel> modelPoints, Map<String, PointPointsetEvents> points) {
-    Set<String> outOfRangeErrors = new HashSet<>();
+    Set<String> outOfRangeErrors = new TreeSet<>();
     for (Entry<String, PointPointsetEvents> entry : points.entrySet()) {
       String pointName = entry.getKey();
       PointPointsetEvents point = entry.getValue();
+      if (point == null || point.present_value == null) {
+        continue;
+      }
 
       // Check for excessive decimal precision on floating-point numbers
       if (point.present_value instanceof Number numberValue
@@ -176,24 +180,38 @@ public class PointsetValidator {
         continue;
       }
 
-      if (point == null || point.present_value == null) {
+      if (isMultistatePoint(pointModel)) {
+        if (!isValidMultistateValue(pointModel, point.present_value)) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value '%s' is not a valid state key in values %s",
+                  pointName, point.present_value, pointModel.values.keySet()));
+        }
         continue;
       }
 
-      if (point.present_value instanceof String stringValue && isNumericString(stringValue)) {
+      if (isStringPoint(pointModel)) {
+        if (!isValidStringValue(point.present_value)) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value '%s' is not a string", pointName, point.present_value));
+        }
+        continue;
+      }
+
+      if (isBooleanPoint(pointModel)) {
+        if (!isValidBooleanValue(point.present_value)) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value '%s' is not a boolean", pointName, point.present_value));
+        }
+        continue;
+      }
+
+      if (!isValidNumericValue(point.present_value)) {
         outOfRangeErrors.add(
             String.format(
-                "%s: present_value '%s' is a numerical string, expected JSON number",
-                pointName, stringValue));
-        continue;
-      }
-
-      if (pointModel.range_min == null && pointModel.range_max == null) {
-        continue;
-      }
-
-      if (!Number.class.isInstance(point.present_value)) {
-        outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
+                "%s: present_value '%s' is not a number", pointName, point.present_value));
         continue;
       }
 
@@ -247,5 +265,41 @@ public class PointsetValidator {
 
   public Set<String> getExtraPoints() {
     return extraPoints;
+  }
+
+  public static boolean isNumericPoint(PointPointsetModel model) {
+    return model != null && model.units != null && !model.units.isEmpty();
+  }
+
+  public static boolean isBooleanPoint(PointPointsetModel model) {
+    return model != null && TYPE_BOOLEAN.equals(model.type);
+  }
+
+  public static boolean isMultistatePoint(PointPointsetModel model) {
+    return model != null && model.values != null;
+  }
+
+  public static boolean isStringPoint(PointPointsetModel model) {
+    return model != null && TYPE_STRING.equals(model.type);
+  }
+
+  public static boolean isValidNumericValue(Object value) {
+    return value instanceof Number;
+  }
+
+  public static boolean isValidBooleanValue(Object value) {
+    return value instanceof Boolean;
+  }
+
+  /** Check whether a value is a valid string key in a multi-state point's values map. */
+  public static boolean isValidMultistateValue(PointPointsetModel model, Object value) {
+    return value instanceof String s
+        && model != null
+        && model.values != null
+        && model.values.containsKey(s);
+  }
+
+  public static boolean isValidStringValue(Object value) {
+    return value instanceof String;
   }
 }

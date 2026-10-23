@@ -19,10 +19,12 @@
   "pointset": {
     "points": {
       "HOLDING_REGISTER_153": {
-        "ref": "281"
+        "ref": "281",
+        "units": "no-units"
       },
       "HOLDING_REGISTER_53": {
-        "ref": "181"
+        "ref": "181",
+        "units": "no-units"
       }
     },
     "sample_rate_sec": 300

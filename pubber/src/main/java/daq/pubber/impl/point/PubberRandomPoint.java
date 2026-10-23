@@ -33,18 +33,10 @@ public class PubberRandomPoint extends BasicPoint implements AbstractPoint {
     if (baselineValue == null) {
       return defaultBaselineValue;
     }
-    if (baselineValue instanceof Double) {
-      return (double) baselineValue;
-    }
-    if (baselineValue instanceof Integer) {
-      return (double) (int) baselineValue;
+    if (baselineValue instanceof Number number) {
+      return number.doubleValue();
     }
     throw new RuntimeException(format("Unknown value type %s", baselineValue.getClass()));
-  }
-
-  @Override
-  protected Object setValue(Object setValue) {
-    return setValue;
   }
 
   @Override
@@ -54,12 +46,8 @@ public class PubberRandomPoint extends BasicPoint implements AbstractPoint {
 
   @Override
   protected boolean validateValue(Object setValue) {
-    if (setValue instanceof Integer) {
-      int value = (int) setValue;
-      return value >= min && value <= max;
-    }
-    if (setValue instanceof Double) {
-      double value = (double) setValue;
+    if (setValue instanceof Number number) {
+      double value = number.doubleValue();
       return value >= min && value <= max;
     }
     return false;

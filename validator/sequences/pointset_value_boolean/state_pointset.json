@@ -1,0 +1,20 @@
+{
+  "points" : {
+    "active_fault_code" : { },
+    "cooling_request_count" : {
+      "units" : "no-units"
+    },
+    "filter_alarm_pressure_status" : { },
+    "filter_differential_pressure_sensor" : {
+      "units" : "Degrees-Celsius"
+    },
+    "filter_differential_pressure_setpoint" : {
+      "units" : "Bars",
+      "value_state" : "applied"
+    },
+    "occupancy_mode" : { },
+    "supply_fan_run_status" : { }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.7"
+}
