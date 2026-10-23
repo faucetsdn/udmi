@@ -56,7 +56,6 @@ public class PointsetSequences extends PointsetBase {
   private static final Duration EVENT_WAIT_DURATION = Duration.ofMinutes(1);
   private static final String EXTRANEOUS_POINT = "extraneous_point";
   private static final String POINTS_MAP_PATH = "pointset.points";
-  private static final int DEFAULT_SAMPLE_RATE_SEC = 10;
 
   @Before
   public void setupExpectedParameters() {
@@ -116,8 +115,6 @@ public class PointsetSequences extends PointsetBase {
   @Summary("Check error when pointset configuration contains extraneous point")
   @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_request_extraneous() {
-    deviceConfig.pointset.sample_rate_sec = DEFAULT_SAMPLE_RATE_SEC;
-
     untilPointsetSanity();
 
     mapSemanticKey(POINTS_MAP_PATH, EXTRANEOUS_POINT, "extraneous_point", "point configuration");
@@ -144,7 +141,6 @@ public class PointsetSequences extends PointsetBase {
   @Summary("Check that pointset state does not report an unconfigured point")
   @Feature(stage = STABLE, bucket = POINTSET)
   public void pointset_remove_point() {
-    deviceConfig.pointset.sample_rate_sec = 10;
     untilPointsetSanity();
 
     List<String> candidatePoints = new ArrayList<>(deviceConfig.pointset.points.keySet());
@@ -178,7 +174,6 @@ public class PointsetSequences extends PointsetBase {
   @ValidateSchema(SubFolder.POINTSET)
   public void pointset_publish() {
     ifNullSkipTest(deviceConfig.pointset, "no pointset found in config");
-    deviceConfig.pointset.sample_rate_sec = 10;
     untilTrue("receive a pointset event",
         () -> (countReceivedEvents(PointsetEvents.class) > 1));
   }
@@ -203,7 +198,6 @@ public class PointsetSequences extends PointsetBase {
             .collect(Collectors.toCollection(TreeSet::new));
     ifTrueSkipTest(targetPoints.isEmpty(), format("No %s points defined in metadata", typeLabel));
 
-    deviceConfig.pointset.sample_rate_sec = DEFAULT_SAMPLE_RATE_SEC;
     popReceivedEvents(PointsetEvents.class);
     List<PointsetEvents> events = new ArrayList<>();
     Set<String> remainingPoints = new TreeSet<>(targetPoints);

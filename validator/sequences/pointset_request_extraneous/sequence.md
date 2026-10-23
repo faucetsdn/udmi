@@ -3,8 +3,6 @@
 
 Check error when pointset configuration contains extraneous point
 
-1. Update config before pointset state matches config
-    * Set `pointset.sample_rate_sec` = `10`
 1. Wait until pointset state matches config
 1. Wait until pointset event contains correct points
 1. Update config before pointset state contains extraneous point error

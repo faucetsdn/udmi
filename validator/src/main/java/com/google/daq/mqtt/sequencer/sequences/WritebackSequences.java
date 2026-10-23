@@ -81,7 +81,6 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
-    deviceConfig.pointset.sample_rate_sec = 10;
     TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
     waitUntil("target point to have target expected value", MAX_WAIT_TIME,
         () -> presentValueIs(targetModel));
@@ -121,7 +120,6 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Tests intermediate UPDATING state of a writeback operation")
   public void writeback_operation() {
-    deviceConfig.pointset.sample_rate_sec = 10;
     TargetTestingModel targetModel = getTarget(APPLIED_STATE);
     String targetPoint = targetModel.target_point;
     Object targetValue = targetModel.target_value;
