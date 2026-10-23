@@ -8,7 +8,6 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNotTrueGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
-import static com.google.udmi.util.GeneralUtils.isNumericString;
 import static com.google.udmi.util.GeneralUtils.prefixedDifference;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
@@ -27,14 +26,15 @@ import com.google.daq.mqtt.sequencer.PointsetBase;
 import com.google.daq.mqtt.sequencer.Summary;
 import com.google.daq.mqtt.sequencer.ValidateSchema;
 import com.google.daq.mqtt.util.SamplingRange;
+import com.google.daq.mqtt.validator.PointsetValidator;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -200,17 +200,32 @@ public class PointsetSequences extends PointsetBase {
             .filter(entry -> entry.getValue() != null && typePredicate.test(entry.getValue()))
             .map(Entry::getKey)
             .filter(name -> catchToFalse(() -> deviceConfig.pointset.points.containsKey(name)))
-            .collect(Collectors.toSet());
+            .collect(Collectors.toCollection(TreeSet::new));
     ifTrueSkipTest(targetPoints.isEmpty(), format("No %s points defined in metadata", typeLabel));
 
-    deviceConfig.pointset.sample_rate_sec = 10;
-    untilTrue("receive a pointset event", () -> (countReceivedEvents(PointsetEvents.class) > 0));
-    List<PointsetEvents> events = popReceivedEvents(PointsetEvents.class);
-    Set<String> checkedPoints = new HashSet<>();
+    deviceConfig.pointset.sample_rate_sec = DEFAULT_SAMPLE_RATE_SEC;
+    popReceivedEvents(PointsetEvents.class);
+    List<PointsetEvents> events = new ArrayList<>();
+    Set<String> remainingPoints = new TreeSet<>(targetPoints);
+    untilTrue(
+        "receive a pointset event",
+        () -> {
+          for (PointsetEvents event : popReceivedEvents(PointsetEvents.class)) {
+            if (event.points == null) {
+              continue;
+            }
+            events.add(event);
+            for (String pointName : targetPoints) {
+              PointPointsetEvents pointEvents = event.points.get(pointName);
+              if (pointEvents != null && pointEvents.present_value != null) {
+                remainingPoints.remove(pointName);
+              }
+            }
+          }
+          return remainingPoints.isEmpty();
+        },
+        () -> "missing present_value for " + remainingPoints);
     for (PointsetEvents event : events) {
-      if (event.points == null) {
-        continue;
-      }
       for (String pointName : targetPoints) {
         PointPointsetEvents pointEvents = event.points.get(pointName);
         if (pointEvents == null || pointEvents.present_value == null) {
@@ -218,12 +233,12 @@ public class PointsetSequences extends PointsetBase {
         }
         PointPointsetModel pointModel = deviceMetadata.pointset.points.get(pointName);
         valueValidator.validate(pointName, pointModel, pointEvents.present_value);
-        checkedPoints.add(pointName);
       }
     }
     checkThat(
-        format("received present_value for %s point(s) %s", typeLabel, targetPoints),
-        () -> !checkedPoints.isEmpty());
+        format("received present_value for %s point(s)", typeLabel),
+        remainingPoints::isEmpty,
+        format("missing present_value for %s", remainingPoints));
   }
 
   /**
@@ -239,21 +254,13 @@ public class PointsetSequences extends PointsetBase {
   public void pointset_value_numeric() {
     checkPointTypeValues(
         "numeric",
-        model -> model.units != null && !model.units.isEmpty(),
-        (pointName, pointModel, presentValue) -> {
-          if (presentValue instanceof String stringValue) {
-            checkThat(
+        PointsetValidator::isNumericPoint,
+        (pointName, pointModel, presentValue) ->
+            quietlyCheckThat(
                 format(
-                    "Point %s present_value '%s' is reported as JSON number, not string",
-                    pointName, stringValue),
-                () -> !isNumericString(stringValue));
-          }
-          quietlyCheckThat(
-              format(
-                  "Numeric point %s present_value '%s' is reported as JSON number",
-                  pointName, presentValue),
-              () -> presentValue instanceof Number);
-        });
+                    "Numeric point %s present_value '%s' is reported as JSON number",
+                    pointName, presentValue),
+                () -> PointsetValidator.isValidNumericValue(presentValue)));
   }
 
   /**
@@ -266,13 +273,13 @@ public class PointsetSequences extends PointsetBase {
   public void pointset_value_boolean() {
     checkPointTypeValues(
         "boolean",
-        model -> model.type == PointPointsetModel.Type.BOOLEAN,
+        PointsetValidator::isBooleanPoint,
         (pointName, pointModel, presentValue) ->
             quietlyCheckThat(
                 format(
                     "Boolean point %s present_value '%s' is reported as JSON boolean",
                     pointName, presentValue),
-                () -> presentValue instanceof Boolean));
+                () -> PointsetValidator.isValidBooleanValue(presentValue)));
   }
 
   /**
@@ -285,13 +292,13 @@ public class PointsetSequences extends PointsetBase {
   public void pointset_value_multistate() {
     checkPointTypeValues(
         "multi-state",
-        model -> model.values != null,
+        PointsetValidator::isMultistatePoint,
         (pointName, pointModel, presentValue) ->
             quietlyCheckThat(
                 format(
                     "Multi-state point %s present_value '%s' is a valid key in values %s",
                     pointName, presentValue, pointModel.values.keySet()),
-                () -> presentValue instanceof String s && pointModel.values.containsKey(s)));
+                () -> PointsetValidator.isValidMultistateValue(pointModel, presentValue)));
   }
 
   /**
@@ -304,13 +311,13 @@ public class PointsetSequences extends PointsetBase {
   public void pointset_value_string() {
     checkPointTypeValues(
         "string",
-        model -> model.type == PointPointsetModel.Type.STRING,
+        PointsetValidator::isStringPoint,
         (pointName, pointModel, presentValue) ->
             quietlyCheckThat(
                 format(
                     "String point %s present_value '%s' is reported as JSON string",
                     pointName, presentValue),
-                () -> presentValue instanceof String));
+                () -> PointsetValidator.isValidStringValue(presentValue)));
   }
 
   /**

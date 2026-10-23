@@ -1,5 +1,7 @@
 package daq.pubber.impl.point;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,10 @@ public class PubberMultistatePoint extends BasicPoint implements AbstractPoint {
    */
   public PubberMultistatePoint(String name, PointPointsetModel pointModel) {
     super(name, pointModel);
+    checkArgument(
+        pointModel.values != null && !pointModel.values.isEmpty(),
+        "Multi-state point %s must define non-empty values",
+        name);
     this.values = pointModel.values;
     this.keys = new ArrayList<>(pointModel.values.keySet());
     this.baselineValue = pointModel.baseline_value instanceof String s
@@ -35,11 +41,6 @@ public class PubberMultistatePoint extends BasicPoint implements AbstractPoint {
     }
     int index = (int) Math.floor(Math.random() * keys.size());
     return keys.get(index);
-  }
-
-  @Override
-  protected Object setValue(Object setValue) {
-    return setValue;
   }
 
   @Override

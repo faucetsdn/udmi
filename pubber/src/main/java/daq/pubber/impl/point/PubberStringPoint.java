@@ -26,11 +26,6 @@ public class PubberStringPoint extends BasicPoint implements AbstractPoint {
   }
 
   @Override
-  protected Object setValue(Object setValue) {
-    return setValue;
-  }
-
-  @Override
   protected boolean validateValue(Object setValue) {
     return setValue instanceof String;
   }

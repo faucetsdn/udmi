@@ -46,6 +46,7 @@ import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.ConfigManager;
 import com.google.daq.mqtt.util.DeviceExceptionManager;
 import com.google.daq.mqtt.util.providers.FamilyProvider;
+import com.google.daq.mqtt.validator.PointsetValidator;
 import com.google.udmi.util.ErrorMap;
 import com.google.udmi.util.ErrorMap.ErrorMapException;
 import com.google.udmi.util.ExceptionMap;
@@ -436,10 +437,10 @@ class LocalDevice implements SiteDevice {
 
   private void validatePointTypes(Map<String, PointPointsetModel> points) {
     points.forEach((pointName, pointModel) -> {
-      if (pointModel == null || pointModel.expr != null) {
+      if (pointModel == null) {
         return;
       }
-      boolean hasUnits = pointModel.units != null && !pointModel.units.isEmpty();
+      boolean hasUnits = pointModel.units != null;
       boolean hasValues = pointModel.values != null;
       boolean hasType = pointModel.type != null;
       int typeSpecifiers = (hasUnits ? 1 : 0) + (hasValues ? 1 : 0) + (hasType ? 1 : 0);
@@ -457,7 +458,12 @@ class LocalDevice implements SiteDevice {
             "Non-numeric point %s cannot specify numeric-only fields", pointName));
       }
       if (hasUnits) {
-        if (pointModel.baseline_value != null && !(pointModel.baseline_value instanceof Number)) {
+        if (pointModel.units.isBlank()) {
+          throw new ValidationError(format(
+              "Numeric point %s units must not be blank", pointName));
+        }
+        if (pointModel.baseline_value != null
+            && !PointsetValidator.isValidNumericValue(pointModel.baseline_value)) {
           throw new ValidationError(format(
               "Numeric point %s baseline_value must be a number", pointName));
         }
@@ -467,18 +473,19 @@ class LocalDevice implements SiteDevice {
               "Multi-state point %s values map must contain at least 2 entries", pointName));
         }
         if (pointModel.baseline_value != null
-            && (!(pointModel.baseline_value instanceof String key)
-                || !pointModel.values.containsKey(key))) {
+            && !PointsetValidator.isValidMultistateValue(pointModel, pointModel.baseline_value)) {
           throw new ValidationError(format(
               "Multi-state point %s baseline_value must be a key in values", pointName));
         }
-      } else if (pointModel.type == PointPointsetModel.Type.STRING) {
-        if (pointModel.baseline_value != null && !(pointModel.baseline_value instanceof String)) {
+      } else if (PointsetValidator.isStringPoint(pointModel)) {
+        if (pointModel.baseline_value != null
+            && !PointsetValidator.isValidStringValue(pointModel.baseline_value)) {
           throw new ValidationError(format(
               "String point %s baseline_value must be a string", pointName));
         }
-      } else if (pointModel.type == PointPointsetModel.Type.BOOLEAN) {
-        if (pointModel.baseline_value != null && !(pointModel.baseline_value instanceof Boolean)) {
+      } else if (PointsetValidator.isBooleanPoint(pointModel)) {
+        if (pointModel.baseline_value != null
+            && !PointsetValidator.isValidBooleanValue(pointModel.baseline_value)) {
           throw new ValidationError(format(
               "Binary point %s baseline_value must be a boolean", pointName));
         }
