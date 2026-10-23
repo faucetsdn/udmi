@@ -139,6 +139,6 @@ echo "Management UI built successfully."
 
 # 5. Bring up Docker compose
 echo "Starting bridgehead services via docker compose (Site model: $SITE_MODEL_PATH)..."
-docker compose up -d --build "$@"
+retry_cmd docker compose up -d --build "$@"
 
 echo "=== Bridgehead deployment started successfully ==="

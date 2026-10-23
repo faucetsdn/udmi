@@ -146,7 +146,7 @@ fi
 if [[ -n $build ]]; then
     echo Building ${dockerfile}
     echo docker build -f ${dockerfile} -t $udmi_ref .
-    docker build -f ${dockerfile} -t $udmi_ref -t "$target_tag" .
+    retry_cmd docker build -f ${dockerfile} -t $udmi_ref -t "$target_tag" .
 fi
 
 if [[ -n $push ]]; then

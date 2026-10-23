@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -e
 ROOT_DIR=$(dirname $(realpath $0))
 
 bash $ROOT_DIR/../../bin/build_container test-discovery_node

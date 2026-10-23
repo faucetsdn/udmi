@@ -118,6 +118,16 @@ function touch_prebuilt_jars {
     (cd "$UDMI_ROOT"; touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar)
 }
 
+function retry_cmd {
+    for attempt in 1 2 3; do
+        if "$@"; then
+            return 0
+        fi
+        [[ $attempt -lt 3 ]] || return 1
+        sleep 2
+    done
+}
+
 PUBBER_LOG=out/pubber.log
 PUBBER_WAIT=30
 function pubber_bg {
