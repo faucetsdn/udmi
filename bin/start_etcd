@@ -61,6 +61,7 @@ nohup $BINDIR/etcd -listen-client-urls=http://0.0.0.0:${etcd_port} \
              -initial-advertise-peer-urls=http://127.0.0.1:${etcd_peer_port} \
              -initial-cluster=default=http://127.0.0.1:${etcd_peer_port} \
              --data-dir "$ETCD_DIR" \
+             --unsafe-no-fsync \
              > $ETCD_LOG 2>&1 &
 ETCD_PID=$!
 echo $ETCD_PID > $ETCD_PID_FILE
