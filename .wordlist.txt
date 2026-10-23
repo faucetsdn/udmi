@@ -264,6 +264,7 @@ mortem
 mosquitto
 mqtt
 msb
+multistate
 multithreaded
 mydomain
 namespace

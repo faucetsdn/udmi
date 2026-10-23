@@ -10,10 +10,10 @@
     "operational" : true,
     "restart_count" : 1
   },
-  "serial_no" : "sequencer-8321",
+  "serial_no" : "sequencer-8809",
   "software" : {
     "firmware" : "v1",
-    "pubber_module" : "v1"
+    "system" : "v1"
   },
   "status" : {
     "category" : "system.config.apply",
@@ -22,5 +22,5 @@
     "timestamp" : "TIMESTAMP"
   },
   "timestamp" : "TIMESTAMP",
-  "version" : "1.5.3"
+  "version" : "1.5.7"
 }

@@ -8,10 +8,10 @@
         "addr" : "27312"
       },
       "ether" : {
-        "addr" : "42:01:ac:11:23:ac"
+        "addr" : "9c:65:eb:bb:a7:7e"
       },
       "ipv4" : {
-        "addr" : "172.17.35.172"
+        "addr" : "10.5.1.127"
       },
       "vendor" : {
         "addr" : "28179023"
@@ -20,16 +20,20 @@
   },
   "pointset" : {
     "points" : {
-      "filter_alarm_pressure_status" : {
-        "units" : "No-units"
+      "active_fault_code" : { },
+      "cooling_request_count" : {
+        "units" : "no-units"
       },
+      "filter_alarm_pressure_status" : { },
       "filter_differential_pressure_sensor" : {
         "units" : "Degrees-Celsius"
       },
       "filter_differential_pressure_setpoint" : {
         "units" : "Bars",
         "value_state" : "applied"
-      }
+      },
+      "occupancy_mode" : { },
+      "supply_fan_run_status" : { }
     }
   },
   "system" : {
@@ -44,10 +48,10 @@
       "operational" : true,
       "restart_count" : 1
     },
-    "serial_no" : "sequencer-8321",
+    "serial_no" : "sequencer-8809",
     "software" : {
       "firmware" : "v1",
-      "pubber_module" : "v1"
+      "system" : "v1"
     },
     "status" : {
       "category" : "system.config.apply",
@@ -57,5 +61,5 @@
     }
   },
   "timestamp" : "TIMESTAMP",
-  "version" : "1.5.3"
+  "version" : "1.5.7"
 }
