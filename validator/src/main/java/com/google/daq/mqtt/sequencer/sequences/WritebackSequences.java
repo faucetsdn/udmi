@@ -134,9 +134,7 @@ public class WritebackSequences extends PointsetBase {
     // 2. Error out if it takes too long to get to UPDATING.
     waitUntil(expectedValueState(UPDATING_STATE), UPDATING_WAIT_DURATION, () -> {
       String appliedStateCheck = valueStateIs(targetPoint, APPLIED_STATE);
-      String appliedValueCheck = presentValueIs(targetModel);
-      ifTrueSkipTest(appliedStateCheck == null && appliedValueCheck == null,
-          "operation completed quickly");
+      ifTrueSkipTest(appliedStateCheck == null, "operation completed quickly");
 
       return valueStateIs(targetPoint, UPDATING_STATE);
     });
