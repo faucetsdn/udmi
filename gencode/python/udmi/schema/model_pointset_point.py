@@ -12,15 +12,6 @@ from .building_translation import BuildingTranslation
 from .discovery_ref import RefDiscovery
 
 
-class Type(Enum):
-    """
-    Expected data type for the point
-    """
-
-    string = 'string'
-    boolean = 'boolean'
-
-
 class BaselineState(Enum):
     """
     Expected state when `baseline_value` is set as the `set_value` for this point the config message
@@ -44,7 +35,7 @@ class PointPointsetModel(DataModel):
 
     units: Optional[str] = None
     units_reported: Optional[str] = None
-    type: Optional[Type] = None
+    type: Optional[str] = None
     description: Optional[str] = None
     writable: Optional[bool] = None
     baseline_value: Optional[Any] = None

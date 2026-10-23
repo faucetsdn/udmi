@@ -11,13 +11,16 @@
   "pointset": {
     "points": {
       "valve_command_43": {
-        "ref": "BO:1.present_value"
+        "ref": "BO:1.present_value",
+        "type": "boolean"
       },
       "valve_command_44": {
-        "ref": "BO:2.present_value"
+        "ref": "BO:2.present_value",
+        "type": "boolean"
       },
       "valve_command_45": {
-        "ref": "BO:3.present_value"
+        "ref": "BO:3.present_value",
+        "type": "boolean"
       }
     },
     "sample_rate_sec": 300

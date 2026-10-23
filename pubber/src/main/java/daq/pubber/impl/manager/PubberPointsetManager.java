@@ -89,9 +89,9 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   @Override
   public AbstractPoint makePoint(String name, PointPointsetModel point) {
-    if (point.type == PointPointsetModel.Type.BOOLEAN) {
+    if ("boolean".equals(point.type)) {
       return new PubberRandomBoolean(name, point);
-    } else if (point.type == PointPointsetModel.Type.STRING) {
+    } else if ("string".equals(point.type)) {
       return new PubberStringPoint(name, point);
     } else if (point.values != null) {
       return new PubberMultistatePoint(name, point);
@@ -130,7 +130,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   @Override
   public Map<String, PointPointsetModel> getTestPoints() {
     PointPointsetModel readOnlyBoolean = new PointPointsetModel();
-    readOnlyBoolean.type = PointPointsetModel.Type.BOOLEAN;
+    readOnlyBoolean.type = "boolean";
     return ImmutableMap.of(
         "recalcitrant_angle", makePointPointsetModel(50, 50, "Celsius"),
         "faulty_finding", makePointPointsetModel(40, 0, "deg"),

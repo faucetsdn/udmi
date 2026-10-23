@@ -14,6 +14,17 @@
       "description": "If specified, indicates the units the device should report the data in.",
       "type": "string"
     },
+    "type": {
+      "description": "Expected data type for the point",
+      "type": "string"
+    },
+    "values": {
+      "type": "object",
+      "description": "State value mapping for this point (e.g. 0.0: OFF)",
+      "existingJavaType": "java.util.Map<String, String>",
+      "minProperties": 2,
+      "additionalProperties": { "type": "string" }
+    },
     "set_value": {
       "description": "Used for cloud writeback functionality, this field specifies the value for a given point in the device's current units. If the value is numeric, then the type must be integer or number.  If the value is an integer, it should be represented as type integer",
        "oneOf": [

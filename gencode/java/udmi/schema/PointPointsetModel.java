@@ -42,7 +42,7 @@ public class PointPointsetModel {
      */
     @JsonProperty("type")
     @JsonPropertyDescription("Expected data type for the point")
-    public PointPointsetModel.Type type;
+    public java.lang.String type;
     /**
      * Detailed description of this point
      * 
@@ -237,50 +237,6 @@ public class PointPointsetModel {
         @JsonCreator
         public static PointPointsetModel.Baseline_state fromValue(java.lang.String value) {
             PointPointsetModel.Baseline_state constant = CONSTANTS.get(value);
-            if (constant == null) {
-                throw new IllegalArgumentException(value);
-            } else {
-                return constant;
-            }
-        }
-
-    }
-
-
-    /**
-     * Expected data type for the point
-     * 
-     */
-    public enum Type {
-
-        STRING("string"),
-        BOOLEAN("boolean");
-        private final java.lang.String value;
-        private final static Map<java.lang.String, PointPointsetModel.Type> CONSTANTS = new HashMap<java.lang.String, PointPointsetModel.Type>();
-
-        static {
-            for (PointPointsetModel.Type c: values()) {
-                CONSTANTS.put(c.value, c);
-            }
-        }
-
-        Type(java.lang.String value) {
-            this.value = value;
-        }
-
-        @Override
-        public java.lang.String toString() {
-            return this.value;
-        }
-
-        @JsonValue
-        public java.lang.String value() {
-            return this.value;
-        }
-
-        @JsonCreator
-        public static PointPointsetModel.Type fromValue(java.lang.String value) {
-            PointPointsetModel.Type constant = CONSTANTS.get(value);
             if (constant == null) {
                 throw new IllegalArgumentException(value);
             } else {

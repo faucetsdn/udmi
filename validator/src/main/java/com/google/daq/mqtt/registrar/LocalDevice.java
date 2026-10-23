@@ -489,6 +489,10 @@ class LocalDevice implements SiteDevice {
           throw new ValidationError(format(
               "Binary point %s baseline_value must be a boolean", pointName));
         }
+      } else {
+        throw new ValidationError(format(
+            "Point %s has invalid type %s (expected string or boolean)",
+            pointName, pointModel.type));
       }
     });
   }

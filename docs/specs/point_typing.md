@@ -94,6 +94,7 @@ A point is **Multi-state** when `pointset.points.<point_name>.values` is present
   * Unquoted numbers (e.g., `1`, `1.0`), boolean values (`true`, `false`), or the translated canonical state labels from the right side of `values` (e.g., `"OCCUPIED"`, `"ON"`) MUST NOT be emitted as `present_value`.
   * If the underlying hardware reports a raw value that does not match any key in `values`, the client MUST omit `present_value` for that point (or mark the point invalid) and populate `state.pointset.points.<point_name>.status` with an error entry.
 * **Configuration & Writeback (`config_pointset`)**:
+  * `pointset.points.<point_name>.values` communicates the expected state value mapping to the client.
   * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `string` matching one of the raw value keys (left side) in `values` (e.g., `"1.0"`, `"1"`).
   * If `set_value` is not a string or does not match any raw value key in `values`, the client MUST reject the writeback and set `state.pointset.points.<point_name>.value_state` to `"invalid"`.
 
@@ -119,6 +120,7 @@ A point is **String** when `pointset.points.<point_name>.type` is set to `"strin
   * `points.<point_name>.present_value` MUST be serialized as a JSON `string` literal (e.g., `"NONE"`, `"v2.4.1"`).
   * Unquoted numbers (e.g., `21.5`, `100`) and boolean values (`true`, `false`) MUST NOT be emitted as `present_value`.
 * **Configuration & Writeback (`config_pointset`)**:
+  * `pointset.points.<point_name>.type` (`"string"`) communicates the expected point data type to the client.
   * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `string`.
   * If `set_value` is any type other than `string`, the client MUST reject the writeback and report `value_state: "invalid"` in `state.pointset.points.<point_name>`.
 
@@ -145,6 +147,7 @@ A point is **Binary** when `pointset.points.<point_name>.type` is set to `"boole
   * `points.<point_name>.present_value` MUST be serialized as a JSON `boolean` literal (`true` or `false`).
   * Numeric representations (`0`, `1`) and string literals (`"true"`, `"false"`, `"ON"`, `"OFF"`) are invalid for Binary points.
 * **Configuration & Writeback (`config_pointset`)**:
+  * `pointset.points.<point_name>.type` (`"boolean"`) communicates the expected point data type to the client.
   * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `boolean` (`true` or `false`).
   * If `set_value` is any type other than `boolean`, the client MUST reject the writeback and report `value_state: "invalid"` in `state.pointset.points.<point_name>`.
 
@@ -231,21 +234,34 @@ When the cloud configures the device (including writeback `set_value` entries de
     },
     "supply_fan_run_command": {
       "ref": "digital_output_2",
-      "set_value": "1.0"
+      "set_value": "1.0",
+      "values": {
+        "0.0": "OFF",
+        "1.0": "ON"
+      }
     },
     "occupancy_mode": {
       "ref": "multistate_value_1",
-      "set_value": "1"
+      "set_value": "1",
+      "values": {
+        "1": "OCCUPIED",
+        "2": "UNOCCUPIED",
+        "3": "STANDBY",
+        "4": "BYPASS"
+      }
     },
     "active_fault_code": {
-      "ref": "characterstring_value_1"
+      "ref": "characterstring_value_1",
+      "type": "string"
     },
     "filter_alarm_pressure_status": {
-      "ref": "binary_input_11"
+      "ref": "binary_input_11",
+      "type": "boolean"
     },
     "damper_isolation_enable": {
       "ref": "binary_output_5",
-      "set_value": true
+      "set_value": true,
+      "type": "boolean"
     }
   }
 }

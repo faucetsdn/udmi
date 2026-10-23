@@ -101,6 +101,8 @@ block with the following structure:e
   * `points`: Collection of point names, defining the representative point set for this device.
     * _{`point_name`}_: Point name.
       * `units`: Set as-operating units for this point.
+      * `values`: State value mapping for multi-state points (e.g., `"0.0": "OFF"`).
+      * `type`: Expected data type for non-numeric, non-enumerated points (`"string"` or `"boolean"`).
       * (`set_value`): Optional setting to control the specified device point. If the set_value represents a number, then this must be serialized as a JSON number, not a quoted string. See [writeback documentation](../specs/sequences/writeback.md).
       * (`cov_threshold`): Optional threshold for triggering a COV event update.
 

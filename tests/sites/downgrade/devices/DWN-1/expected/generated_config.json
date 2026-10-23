@@ -11,7 +11,8 @@
   "pointset": {
     "points": {
       "filter_alarm_pressure_status": {
-        "ref": "BV11.present_value"
+        "ref": "BV11.present_value",
+        "type": "boolean"
       },
       "filter_differential_pressure": {
         "units": "Bars"

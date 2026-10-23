@@ -28,6 +28,9 @@ import udmi.schema.State;
 /** Manage pointset validation. */
 public class PointsetValidator {
 
+  public static final String TYPE_BOOLEAN = "boolean";
+  public static final String TYPE_STRING = "string";
+
   private static final int MAX_DECIMAL_PLACES = 2;
 
   private final Metadata metadata;
@@ -280,7 +283,7 @@ public class PointsetValidator {
   }
 
   public static boolean isBooleanPoint(PointPointsetModel model) {
-    return model != null && model.type == PointPointsetModel.Type.BOOLEAN;
+    return model != null && TYPE_BOOLEAN.equals(model.type);
   }
 
   public static boolean isMultistatePoint(PointPointsetModel model) {
@@ -288,7 +291,7 @@ public class PointsetValidator {
   }
 
   public static boolean isStringPoint(PointPointsetModel model) {
-    return model != null && model.type == PointPointsetModel.Type.STRING;
+    return model != null && TYPE_STRING.equals(model.type);
   }
 
   public static boolean isValidNumericValue(Object value) {

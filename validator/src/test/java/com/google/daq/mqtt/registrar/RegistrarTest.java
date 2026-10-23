@@ -205,11 +205,11 @@ public class RegistrarTest {
     validMultistate.baseline_value = "1.0";
 
     PointPointsetModel validString = new PointPointsetModel();
-    validString.type = PointPointsetModel.Type.STRING;
+    validString.type = "string";
     validString.baseline_value = "NORMAL";
 
     PointPointsetModel validBinary = new PointPointsetModel();
-    validBinary.type = PointPointsetModel.Type.BOOLEAN;
+    validBinary.type = "boolean";
     validBinary.baseline_value = true;
 
     assertTrue("valid numeric point", isPointModelValid(validNumeric));
@@ -222,16 +222,16 @@ public class RegistrarTest {
 
     PointPointsetModel dualUnitsType = new PointPointsetModel();
     dualUnitsType.units = "No-units";
-    dualUnitsType.type = PointPointsetModel.Type.BOOLEAN;
+    dualUnitsType.type = "boolean";
     assertTrue("units + type rejected", !isPointModelValid(dualUnitsType));
 
     PointPointsetModel dualValuesType = new PointPointsetModel();
     dualValuesType.values = Map.of("0.0", "OFF", "1.0", "ON");
-    dualValuesType.type = PointPointsetModel.Type.STRING;
+    dualValuesType.type = "string";
     assertTrue("values + type rejected", !isPointModelValid(dualValuesType));
 
     PointPointsetModel binaryWithRange = new PointPointsetModel();
-    binaryWithRange.type = PointPointsetModel.Type.BOOLEAN;
+    binaryWithRange.type = "boolean";
     binaryWithRange.range_min = 0.0;
     assertTrue("binary with range_min rejected", !isPointModelValid(binaryWithRange));
 
@@ -246,9 +246,13 @@ public class RegistrarTest {
     assertTrue("multistate with < 2 entries rejected", !isPointModelValid(singleValueMultistate));
 
     PointPointsetModel badBinaryBaseline = new PointPointsetModel();
-    badBinaryBaseline.type = PointPointsetModel.Type.BOOLEAN;
+    badBinaryBaseline.type = "boolean";
     badBinaryBaseline.baseline_value = "true";
     assertTrue("binary with string baseline rejected", !isPointModelValid(badBinaryBaseline));
+
+    PointPointsetModel invalidType = new PointPointsetModel();
+    invalidType.type = "integer";
+    assertTrue("invalid point type rejected", !isPointModelValid(invalidType));
   }
 
   private boolean isPointModelValid(PointPointsetModel pointModel) {
