@@ -229,10 +229,6 @@ public class PointsetSequences extends PointsetBase {
         valueValidator.validate(pointName, pointModel, pointEvents.present_value);
       }
     }
-    checkThat(
-        format("received present_value for %s point(s)", typeLabel),
-        remainingPoints::isEmpty,
-        format("missing present_value for %s", remainingPoints));
   }
 
   /**

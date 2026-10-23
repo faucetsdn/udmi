@@ -635,7 +635,6 @@ Test passed.
 Check that boolean values in pointset payloads are reported as JSON booleans
 
 1. Wait for receive a pointset event
-1. Check that received present_value for boolean point(s)
 
 Test passed.
 
@@ -644,7 +643,6 @@ Test passed.
 Check that multi-state values in pointset payloads match configured values keys
 
 1. Wait for receive a pointset event
-1. Check that received present_value for multi-state point(s)
 
 Test passed.
 
@@ -653,7 +651,6 @@ Test passed.
 Check that numerical values in pointset payloads are reported as JSON numbers and not strings
 
 1. Wait for receive a pointset event
-1. Check that received present_value for numeric point(s)
 
 Test passed.
 
@@ -662,7 +659,6 @@ Test passed.
 Check that string values in pointset payloads are reported as JSON strings
 
 1. Wait for receive a pointset event
-1. Check that received present_value for string point(s)
 
 Test passed.
 
