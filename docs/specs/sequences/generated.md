@@ -63,14 +63,14 @@ Some caveats:
 * [family_ipv6_addr](#family_ipv6_addr-preview): Test skipped: No ipv6 address defined in metadata
 * [gateway_proxy_events](#gateway_proxy_events-beta): Check that a gateway proxies pointset events for indicated devices Test skipped: Not a gateway
 * [gateway_proxy_state](#gateway_proxy_state-preview): Check that a gateway proxies state updates for indicated devices Test skipped: Not a gateway
-* [pointset_boolean_values](#pointset_boolean_values-stable): Check that boolean values in pointset payloads are reported as JSON booleans
-* [pointset_multistate_values](#pointset_multistate_values-stable): Check that multi-state values in pointset payloads match configured values keys
-* [pointset_numeric_values](#pointset_numeric_values-stable): Check that numerical values in pointset payloads are reported as JSON numbers and not strings
 * [pointset_publish](#pointset_publish-stable): Check that a device publishes pointset events
 * [pointset_publish_interval](#pointset_publish_interval-stable): Check handling of sample_rate_sec and sample_limit_sec
 * [pointset_remove_point](#pointset_remove_point-stable): Check that pointset state does not report an unconfigured point
 * [pointset_request_extraneous](#pointset_request_extraneous-stable): Check error when pointset configuration contains extraneous point
-* [pointset_string_values](#pointset_string_values-stable): Check that string values in pointset payloads are reported as JSON strings
+* [pointset_value_boolean](#pointset_value_boolean-stable): Check that boolean values in pointset payloads are reported as JSON booleans
+* [pointset_value_multistate](#pointset_value_multistate-stable): Check that multi-state values in pointset payloads match configured values keys
+* [pointset_value_numeric](#pointset_value_numeric-stable): Check that numerical values in pointset payloads are reported as JSON numbers and not strings
+* [pointset_value_string](#pointset_value_string-stable): Check that string values in pointset payloads are reported as JSON strings
 * [scan_periodic_now_enumerate](#scan_periodic_now_enumerate-preview): Check periodic scan on a fixed schedule and enumeration
 * [scan_single_future](#scan_single_future-preview): Check results of a single scan scheduled soon
 * [scan_single_now](#scan_single_now-preview): Check results of a single scan scheduled in the recent past including enumeration
@@ -567,39 +567,6 @@ Check that a gateway proxies state updates for indicated devices
 
 Test skipped: Not a gateway
 
-## pointset_boolean_values (STABLE)
-
-Check that boolean values in pointset payloads are reported as JSON booleans
-
-1. Update config before receive a pointset event
-    * Set `pointset.sample_rate_sec` = `10`
-1. Wait for receive a pointset event
-1. Check that received present_value for boolean point(s) [filter_alarm_pressure_status]
-
-Test passed.
-
-## pointset_multistate_values (STABLE)
-
-Check that multi-state values in pointset payloads match configured values keys
-
-1. Update config before receive a pointset event
-    * Set `pointset.sample_rate_sec` = `10`
-1. Wait for receive a pointset event
-1. Check that received present_value for multi-state point(s) [occupancy_mode, supply_fan_run_status]
-
-Test passed.
-
-## pointset_numeric_values (STABLE)
-
-Check that numerical values in pointset payloads are reported as JSON numbers and not strings
-
-1. Update config before receive a pointset event
-    * Set `pointset.sample_rate_sec` = `10`
-1. Wait for receive a pointset event
-1. Check that received present_value for numeric point(s) [cooling_request_count, filter_differential_pressure_setpoint, filter_differential_pressure_sensor]
-
-Test passed.
-
 ## pointset_publish (STABLE)
 
 Check that a device publishes pointset events
@@ -669,7 +636,40 @@ Check error when pointset configuration contains extraneous point
 
 Test passed.
 
-## pointset_string_values (STABLE)
+## pointset_value_boolean (STABLE)
+
+Check that boolean values in pointset payloads are reported as JSON booleans
+
+1. Update config before receive a pointset event
+    * Set `pointset.sample_rate_sec` = `10`
+1. Wait for receive a pointset event
+1. Check that received present_value for boolean point(s) [filter_alarm_pressure_status]
+
+Test passed.
+
+## pointset_value_multistate (STABLE)
+
+Check that multi-state values in pointset payloads match configured values keys
+
+1. Update config before receive a pointset event
+    * Set `pointset.sample_rate_sec` = `10`
+1. Wait for receive a pointset event
+1. Check that received present_value for multi-state point(s) [occupancy_mode, supply_fan_run_status]
+
+Test passed.
+
+## pointset_value_numeric (STABLE)
+
+Check that numerical values in pointset payloads are reported as JSON numbers and not strings
+
+1. Update config before receive a pointset event
+    * Set `pointset.sample_rate_sec` = `10`
+1. Wait for receive a pointset event
+1. Check that received present_value for numeric point(s) [cooling_request_count, filter_differential_pressure_setpoint, filter_differential_pressure_sensor]
+
+Test passed.
+
+## pointset_value_string (STABLE)
 
 Check that string values in pointset payloads are reported as JSON strings
 

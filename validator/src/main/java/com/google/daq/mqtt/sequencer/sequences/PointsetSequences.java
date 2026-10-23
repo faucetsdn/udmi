@@ -236,7 +236,7 @@ public class PointsetSequences extends PointsetBase {
           + " strings")
   @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   @ValidateSchema(SubFolder.POINTSET)
-  public void pointset_numeric_values() {
+  public void pointset_value_numeric() {
     checkPointTypeValues(
         "numeric",
         model -> model.units != null && !model.units.isEmpty(),
@@ -263,7 +263,7 @@ public class PointsetSequences extends PointsetBase {
   @Summary("Check that boolean values in pointset payloads are reported as JSON booleans")
   @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   @ValidateSchema(SubFolder.POINTSET)
-  public void pointset_boolean_values() {
+  public void pointset_value_boolean() {
     checkPointTypeValues(
         "boolean",
         model -> model.type == PointPointsetModel.Type.BOOLEAN,
@@ -282,7 +282,7 @@ public class PointsetSequences extends PointsetBase {
   @Summary("Check that multi-state values in pointset payloads match configured values keys")
   @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   @ValidateSchema(SubFolder.POINTSET)
-  public void pointset_multistate_values() {
+  public void pointset_value_multistate() {
     checkPointTypeValues(
         "multi-state",
         model -> model.values != null,
@@ -301,7 +301,7 @@ public class PointsetSequences extends PointsetBase {
   @Summary("Check that string values in pointset payloads are reported as JSON strings")
   @Feature(stage = STABLE, bucket = POINTSET, nostate = true)
   @ValidateSchema(SubFolder.POINTSET)
-  public void pointset_string_values() {
+  public void pointset_value_string() {
     checkPointTypeValues(
         "string",
         model -> model.type == PointPointsetModel.Type.STRING,

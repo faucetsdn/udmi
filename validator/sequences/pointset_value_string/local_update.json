@@ -1,0 +1,57 @@
+{
+  "discovery" : {
+    "families" : {
+      "bacnet" : { },
+      "vendor" : { }
+    }
+  },
+  "localnet" : {
+    "families" : {
+      "bacnet" : { },
+      "ether" : { },
+      "ipv4" : { },
+      "vendor" : { }
+    }
+  },
+  "pointset" : {
+    "points" : {
+      "active_fault_code" : {
+        "ref" : "CSV/1#present_value"
+      },
+      "cooling_request_count" : {
+        "ref" : "AV/4#present_value",
+        "units" : "no-units"
+      },
+      "filter_alarm_pressure_status" : {
+        "ref" : "BV/11#present_value"
+      },
+      "filter_differential_pressure_sensor" : {
+        "ref" : "AV/12#present_value",
+        "units" : "Degrees-Celsius"
+      },
+      "filter_differential_pressure_setpoint" : {
+        "set_value" : 98,
+        "units" : "Bars"
+      },
+      "occupancy_mode" : {
+        "ref" : "MV/1#present_value"
+      },
+      "supply_fan_run_status" : {
+        "ref" : "BV/2#present_value"
+      }
+    },
+    "sample_rate_sec" : 300
+  },
+  "system" : {
+    "metrics_rate_sec" : 10,
+    "min_loglevel" : 100,
+    "operation" : {
+      "last_start" : "TIMESTAMP"
+    },
+    "testing" : {
+      "sequence_name" : "pointset_value_string"
+    }
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "@@@cloud udmi version###1.4.1"
+}
