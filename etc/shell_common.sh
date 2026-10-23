@@ -113,6 +113,11 @@ function up_to_date {
     return 0
 }
 
+function touch_prebuilt_jars {
+    echo "Skipping build checks (-n): updating existing JAR timestamps..."
+    (cd "$UDMI_ROOT"; touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar)
+}
+
 PUBBER_LOG=out/pubber.log
 PUBBER_WAIT=30
 function pubber_bg {

@@ -28,14 +28,13 @@ jarfile=$jardir/$jarbase
 mirror_udmi_files() {
   echo Mirroring udmi files...
   mkdir -p $jardir
-  rm -rf build/udmi_bin build/udmi_etc build/schema build/butler build/common build/gencode build/mcp
-  cp -a ../bin/ build/udmi_bin/
-  cp -a ../etc/ build/udmi_etc/
-  cp -a ../schema build/schema/
-  cp -a ../butler build/butler/
-  cp -a ../common build/common/
-  cp -a ../gencode build/gencode/
-  cp -a ../mcp build/mcp/
+  rm -rf build/udmi_bin build/udmi_etc
+  cp -a ../bin build/udmi_bin/
+  cp -a ../etc build/udmi_etc/
+  for dir in schema butler common gencode mcp; do
+    rm -rf build/$dir
+    cp -a ../$dir build/$dir/
+  done
   mkdir -p var && cp -a etc/*.json var/
 }
 

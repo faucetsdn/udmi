@@ -128,7 +128,7 @@ parse_tmux_args() {
                 ;;
             1)
                 local arg="${positional_args[0]}"
-                if [[ -d "$arg" || -f "$arg/cloud_iot_config.json" || ( "$arg" == sites/* && ( -d "$arg" || -d "$UDMI_ROOT/$arg" ) ) ]]; then
+                if [[ -d "$arg" || ( "$arg" == sites/* && -d "$UDMI_ROOT/$arg" ) ]]; then
                     echo "ERROR: An explicit site model ('$arg') requires an explicit project spec (e.g. //mqtt/localhost:46432)." >&2
                     exit 1
                 elif [[ -f "$arg" ]]; then
@@ -152,7 +152,7 @@ parse_tmux_args() {
             2)
                 local arg1="${positional_args[0]}"
                 local arg2="${positional_args[1]}"
-                if [[ -d "$arg1" || -f "$arg1/cloud_iot_config.json" || ( "$arg1" == sites/* && ( -d "$arg1" || -d "$UDMI_ROOT/$arg1" ) ) ]]; then
+                if [[ -d "$arg1" || ( "$arg1" == sites/* && -d "$UDMI_ROOT/$arg1" ) ]]; then
                     TMUX_SITE_MODEL="$arg1"
                     if [[ -f "$arg2" ]]; then
                         TMUX_PROJECT_SPEC="$arg2"

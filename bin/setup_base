@@ -26,6 +26,16 @@ get_requirements_file() {
     echo "$req_file"
 }
 
+retry_cmd() {
+    for attempt in 1 2 3; do
+        if "$@"; then
+            return 0
+        fi
+        [[ $attempt -lt 3 ]] || exit 1
+        sleep 2
+    done
+}
+
 if [[ $(id -u) == 0 ]]; then
     packages=(moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux lsof graphviz)
     if [[ -n $(which apt-get) ]]; then
@@ -35,31 +45,13 @@ if [[ $(id -u) == 0 ]]; then
             printf "https://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://archive.ubuntu.com/ubuntu/\tpriority:2\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n" > /etc/apt/apt-mirrors.txt
         fi
         apt_opts=(-o Acquire::ForceIPv4=true -o Acquire::Retries=2 -o Acquire::http::Timeout=5 -o Acquire::https::Timeout=5 -o DPkg::Lock::Timeout=60)
-        for attempt in 1 2 3; do
-            if timeout 120 apt-get "${apt_opts[@]}" update -y; then
-                break
-            fi
-            [[ $attempt -lt 3 ]] || exit 1
-            sleep 2
-        done
-        for attempt in 1 2 3; do
-            if timeout 120 apt-get "${apt_opts[@]}" install -y --no-upgrade --download-only "${packages[@]}"; then
-                break
-            fi
-            [[ $attempt -lt 3 ]] || exit 1
-            sleep 2
-        done
+        retry_cmd timeout 120 apt-get "${apt_opts[@]}" update -y
+        retry_cmd timeout 120 apt-get "${apt_opts[@]}" install -y --no-upgrade --download-only "${packages[@]}"
         dpkg --configure -a
         apt-get "${apt_opts[@]}" install -y --no-upgrade "${packages[@]}"
     else
         extra_packages=(${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc py3-grpcio py3-cryptography py3-cffi)
-        for attempt in 1 2 3; do
-            if apk add "${extra_packages[@]}" "${packages[@]}"; then
-                break
-            fi
-            [[ $attempt -lt 3 ]] || exit 1
-            sleep 2
-        done
+        retry_cmd apk add "${extra_packages[@]}" "${packages[@]}"
     fi
 else
     echo "Skipping system package installation in non-root mode (run 'sudo bin/setup_base' to install system packages)."

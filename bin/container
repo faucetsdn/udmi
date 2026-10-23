@@ -117,8 +117,7 @@ fi
 
 if [[ -n $prep ]]; then
     if [[ -n $NOBUILD ]]; then
-        echo "Skipping build checks (-n): updating existing JAR timestamps..."
-        (cd $UDMI_ROOT; touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar)
+        touch_prebuilt_jars
     fi
 
     rm -rf var tmp && mkdir -p var tmp build
