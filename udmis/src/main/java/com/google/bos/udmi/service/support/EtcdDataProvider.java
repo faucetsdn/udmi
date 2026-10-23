@@ -53,7 +53,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final String CERT_FILE_KEY = "cert_file";
   private static final String KEY_FILE_KEY = "key_file";
   private static final String RESULTING_PREFIX = "ip:///";
-  private static final long QUERY_TIMEOUT_SEC = 10;
+  private static final long QUERY_TIMEOUT_SEC = 30;
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(QUERY_TIMEOUT_SEC);
   private static final String CLIENTS = "/clients/";
   private static final ByteSequence CONNECTED_KEY = bytes(CLIENTS + clientId);
