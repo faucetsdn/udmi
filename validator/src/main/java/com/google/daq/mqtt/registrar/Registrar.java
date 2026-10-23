@@ -411,8 +411,8 @@ public class Registrar {
       if (createRegistries >= 0) {
         createRegistries();
       } else {
-        processSiteMetadata();
         processAllDevices(modelMunger);
+        processSiteMetadata();
       }
       writeErrors();
     } catch (ExceptionMap em) {
@@ -462,11 +462,14 @@ public class Registrar {
     return workingDevices;
   }
 
+  private Set<String> targetShardDevices;
+
   private void processSiteMetadata() {
     SiteMetadata siteMetadata = siteModel.loadSiteMetadata();
     siteMetadata.name = ofNullable(siteMetadata.name).orElse(siteModel.getSiteName());
     ifTrueThen(updateCloudIoT,
-        () -> cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.UPDATE));
+        () -> cloudIotManager.updateRegistry(getSiteMetadata(), ModelOperation.UPDATE,
+            targetShardDevices));
   }
 
   private SiteMetadata getSiteMetadata() {
@@ -509,7 +512,9 @@ public class Registrar {
 
   private void setDeviceList(List<String> deviceList) {
     this.deviceList = deviceList;
-    blockUnknown = false;
+    if (blockUnknown == null) {
+      blockUnknown = false;
+    }
   }
 
   @CommandLineOption(short_form = "-f", arg_name = "topic", description = "Set PubSub feed topic")
@@ -666,17 +671,27 @@ public class Registrar {
       ifNotNullThen(modelMunger, Runnable::run);
       initializeLocalDevices();
       updateExplicitDevices(explicitDevices, workingDevices);
+      targetShardDevices = explicitDevices != null ? new HashSet<>(explicitDevices) : null;
       cloudModels = ifNotNullGet(fetchCloudModels(), devices -> new ConcurrentHashMap<>(devices));
       if (deleteDevices || expungeDevices) {
         deleteCloudDevices();
         return;
       }
 
+      Set<String> targetedExtras = ImmutableSet.of();
       if (explicitDevices != null) {
-        Set<String> unknownLocals = difference(explicitDevices, workingDevices.keySet());
+        Set<String> unknownLocals =
+            new HashSet<>(difference(explicitDevices, workingDevices.keySet()));
         if (!unknownLocals.isEmpty()) {
-          throw new RuntimeException(
-              "Unknown specified devices: " + JOIN_CSV.join(unknownLocals));
+          if (isTrue(blockUnknown) && cloudModels != null) {
+            targetedExtras = new HashSet<>(intersection(unknownLocals, cloudModels.keySet()));
+            unknownLocals.removeAll(targetedExtras);
+            explicitDevices.removeAll(targetedExtras);
+          }
+          if (!unknownLocals.isEmpty()) {
+            throw new RuntimeException(
+                "Unknown specified devices: " + JOIN_CSV.join(unknownLocals));
+          }
         }
       }
 
@@ -710,8 +725,12 @@ public class Registrar {
 
       finalizeLocalDevices();
 
-      if (cloudModels != null && !isTargeted && !instantiateExtras) {
-        extraDevices = processExtraDevices(difference(cloudModels.keySet(), targetDevices));
+      if (cloudModels != null && !instantiateExtras) {
+        if (!isTargeted) {
+          extraDevices = processExtraDevices(difference(cloudModels.keySet(), targetDevices));
+        } else if (!targetedExtras.isEmpty()) {
+          extraDevices = processExtraDevices(targetedExtras);
+        }
       }
     } catch (Exception e) {
       throw new RuntimeException("While processing devices", e);
@@ -825,6 +844,10 @@ public class Registrar {
       reason = "extra";
     } else {
       throw new IllegalStateException("Neither delete nor expunge indicated");
+    }
+
+    if (targetShardDevices == null && !(deleteDevices && expungeDevices) && !toDelete.isEmpty()) {
+      targetShardDevices = new HashSet<>(toDelete);
     }
 
     executeDelete(toDelete, reason);
@@ -1131,7 +1154,9 @@ public class Registrar {
       dynamicTerminate(extraDevices.size());
       System.err.printf("There were %d/%d already blocked devices.%n", alreadyBlocked.get(),
           extraDevices.size());
-      reapExtraDevices(difference(siteModel.getExtraDevices(), extraDevices));
+      if (targetShardDevices == null) {
+        reapExtraDevices(difference(siteModel.getExtraDevices(), extraDevices));
+      }
       return extras.keySet();
     } catch (Exception e) {
       throw new RuntimeException(format("Processing %d extra devices", extraDevices.size()), e);

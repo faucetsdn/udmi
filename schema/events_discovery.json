@@ -29,6 +29,10 @@
     "family": {
       "existingJavaType": "String"
     },
+    "source": {
+      "description": "Optional source qualifier for the discovery scan (e.g., 'model')",
+      "type": "string"
+    },
     "addr": {
       "description": "The primary address of the device (for indicated family)",
       "type": "string"
@@ -40,6 +44,18 @@
     "event_no": {
       "description": "The active or passive series number of this result (matches reported state values)",
       "type": "integer"
+    },
+    "active_count": {
+      "description": "Total number of records expected for this active scan generation (only populated on the event_no=0 start marker event)",
+      "minimum": 0,
+      "type": "integer"
+    },
+    "addrs": {
+      "description": "List of target addresses for a partial discovery scan shard (only populated on the event_no=0 start marker event)",
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "families": {
       "description": "Links to other address families (family and id)",
@@ -131,6 +147,10 @@
           "$ref": "file:state_system_hardware.json"
         }
       }
+    },
+    "model": {
+      "description": "Device metadata model (for model discovery)",
+      "$ref": "file:metadata.json"
     }
   }
 }

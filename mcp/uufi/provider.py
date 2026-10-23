@@ -105,6 +105,8 @@ class UUFIProvider:
         prefix_seg = f"/{self.prefix}" if self.prefix else ""
         if registry_id and device_id:
             return f"{prefix_seg}/uufi/r/{registry_id}/d/{device_id}/c/{sub_type}/{sub_folder}"
+        if registry_id:
+            return f"{prefix_seg}/uufi/r/{registry_id}/c/{sub_type}/{sub_folder}"
         return f"{prefix_seg}/uufi/c/{sub_type}/{sub_folder}"
 
     def create_envelope(
