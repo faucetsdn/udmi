@@ -161,6 +161,7 @@ blobset
 blobsets
 bmod
 boolean
+booleans
 breakpoint
 btesting
 buildingsiot

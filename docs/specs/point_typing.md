@@ -91,7 +91,7 @@ A point is **Multi-state** when `pointset.points.<point_name>.values` is present
 #### Wire Payloads
 * **Telemetry (`events_pointset`)**:
   * `points.<point_name>.present_value` MUST be serialized as a JSON `string` that matches one of the raw value keys (left side) defined in `values` (e.g., `"1"`, `"1.0"`).
-  * Unquoted numbers (e.g., `1`, `1.0`), booleans (`true`, `false`), or the translated canonical state labels from the right side of `values` (e.g., `"OCCUPIED"`, `"ON"`) MUST NOT be emitted as `present_value`.
+  * Unquoted numbers (e.g., `1`, `1.0`), boolean values (`true`, `false`), or the translated canonical state labels from the right side of `values` (e.g., `"OCCUPIED"`, `"ON"`) MUST NOT be emitted as `present_value`.
   * If the underlying hardware reports a raw value that does not match any key in `values`, the client MUST omit `present_value` for that point (or mark the point invalid) and populate `state.pointset.points.<point_name>.status` with an error entry.
 * **Configuration & Writeback (`config_pointset`)**:
   * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `string` matching one of the raw value keys (left side) in `values` (e.g., `"1.0"`, `"1"`).
@@ -117,7 +117,7 @@ A point is **String** when `pointset.points.<point_name>.type` is set to `"strin
 #### Wire Payloads
 * **Telemetry (`events_pointset`)**:
   * `points.<point_name>.present_value` MUST be serialized as a JSON `string` literal (e.g., `"NONE"`, `"v2.4.1"`).
-  * Unquoted numbers (e.g., `21.5`, `100`) and booleans (`true`, `false`) MUST NOT be emitted as `present_value`.
+  * Unquoted numbers (e.g., `21.5`, `100`) and boolean values (`true`, `false`) MUST NOT be emitted as `present_value`.
 * **Configuration & Writeback (`config_pointset`)**:
   * When writeback is active, `pointset.points.<point_name>.set_value` MUST be a JSON `string`.
   * If `set_value` is any type other than `string`, the client MUST reject the writeback and report `value_state: "invalid"` in `state.pointset.points.<point_name>`.
