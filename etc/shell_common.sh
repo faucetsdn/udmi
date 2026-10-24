@@ -104,13 +104,23 @@ function newest_file {
 }
 
 function up_to_date {
-    target=$1
+    local target=$1
+    shift
     [[ ! -f $target ]] && return 1
-    newest=$(newest_file "$2")
-    [[ -n "$newest" && $target -ot "$newest" ]] && return 1
-    common=$(newest_file "$UDMI_ROOT/gencode/java" "$UDMI_ROOT/common/src/main/java" "$UDMI_ROOT/common/src/test/java")
-    [[ -n "$common" && $target -ot "$common" ]] && return 1
-    return 0
+    local newer_files=$(find "$@" "$UDMI_ROOT/gencode/java" "$UDMI_ROOT/common/src/main/java" "$UDMI_ROOT/common/src/test/java" -type f -newer "$target" 2>/dev/null)
+    [[ -z $newer_files ]]
+}
+
+function mirror_udmi_files {
+    echo Mirroring udmi files...
+    mkdir -p build/libs
+    rm -rf build/udmi_bin build/udmi_etc
+    cp -a "$UDMI_ROOT/bin" build/udmi_bin/
+    cp -a "$UDMI_ROOT/etc" build/udmi_etc/
+    for dir in "$@"; do
+        rm -rf "build/$dir"
+        cp -a "$UDMI_ROOT/$dir" "build/$dir/"
+    done
 }
 
 function touch_prebuilt_jars {
@@ -124,6 +134,7 @@ function retry_cmd {
             return 0
         fi
         [[ $attempt -lt 3 ]] || return 1
+        warn "Command '$*' failed (attempt $attempt/3); retrying in 2s..."
         sleep 2
     done
 }

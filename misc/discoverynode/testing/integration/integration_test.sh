@@ -8,7 +8,7 @@ export DN_TARGET=//mqtt/localhost
 
 cleanup() {
   # Deletes docker containers
-  docker ps -a | grep 'discovery-integration' | awk '{print $1}' | xargs --no-run-if-empty docker stop -t 1
+  docker ps -aq --filter network=discovery-integration | xargs --no-run-if-empty docker stop -t 1
 }
 # Because ctrl+c-ing this test has a tendancy to skip if thrashed
 trap cleanup EXIT INT

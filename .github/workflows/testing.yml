@@ -541,7 +541,7 @@ jobs:
             -v $PWD/out:/root/udmi/out \
             udmis udmi/bin/udmi start block site_model //mqtt/localhost:8883 !registrar
           for count in `seq 0 60`; do
-            echo Waiting for UDMIS startup $((30 - count))
+            echo Waiting for UDMIS startup $((60 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
             (docker ps | fgrep -q udmis) || break
             sleep 1

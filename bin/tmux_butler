@@ -64,15 +64,6 @@ case "$TMUX_ACTION" in
 
         # 4. registrar (default: enabled)
         if tmux_should_run_service "registrar"; then
-            tmux_init_or_add_window "$SESSION_NAME" "registrar" "bin/registrar '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
-        fi
-
-        # 5. validator (optional: ++validator)
-        if tmux_should_run_service "validator" "true"; then
-            tmux_init_or_add_window "$SESSION_NAME" "validator" "echo Starting validator service...; tail -f /dev/null"
-        fi
-
-        if tmux_should_run_service "registrar"; then
             pod_ready="${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}"
             for _ in $(seq 1 90); do
                 if [[ -f "$pod_ready" || -f /tmp/pod_ready.txt ]]; then
@@ -83,6 +74,15 @@ case "$TMUX_ACTION" in
                 fi
                 sleep 1
             done
+            tmux_init_or_add_window "$SESSION_NAME" "registrar" "bin/registrar '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
+        fi
+
+        # 5. validator (optional: ++validator)
+        if tmux_should_run_service "validator" "true"; then
+            tmux_init_or_add_window "$SESSION_NAME" "validator" "echo Starting validator service...; tail -f /dev/null"
+        fi
+
+        if tmux_should_run_service "registrar"; then
             echo "Waiting for initial registrar run in '$SESSION_NAME' to complete..."
             registrar_done=false
             for i in $(seq 1 90); do

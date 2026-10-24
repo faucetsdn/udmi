@@ -48,26 +48,30 @@ case "$CMD" in
         ;;
 esac
 
+build_tmux_target_args() {
+    TMUX_TARGET_ARGS=()
+    if [[ -n "${TMUX_NAMESPACE:-}" ]]; then
+        TMUX_TARGET_ARGS=("$TMUX_NAMESPACE")
+    elif [[ -n "${TMUX_SITE_MODEL:-}" && -d "$TMUX_SITE_MODEL" && -n "${TMUX_PROJECT_SPEC:-}" ]]; then
+        TMUX_TARGET_ARGS=("$TMUX_SITE_MODEL" "$TMUX_PROJECT_SPEC")
+    elif [[ -n "${TMUX_PROJECT_SPEC:-}" ]]; then
+        TMUX_TARGET_ARGS=("$TMUX_PROJECT_SPEC")
+    fi
+}
+
 # 1. Stop or Clean commands
 if [[ "$CMD" == "stop" || "$CMD" == "clean" ]]; then
     action="$CMD"
     shift
     parse_tmux_args "$@"
-    target_args=
-    if [[ -n "${TMUX_NAMESPACE:-}" ]]; then
-        target_args="$TMUX_NAMESPACE"
-    elif [[ -n "${TMUX_SITE_MODEL:-}" && -d "$TMUX_SITE_MODEL" && -n "${TMUX_PROJECT_SPEC:-}" ]]; then
-        target_args="$TMUX_SITE_MODEL $TMUX_PROJECT_SPEC"
-    elif [[ -n "${TMUX_PROJECT_SPEC:-}" ]]; then
-        target_args="$TMUX_PROJECT_SPEC"
-    fi
+    build_tmux_target_args
     if [[ "$action" == "stop" ]]; then
         echo "Stopping local UDMI infrastructure${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)} via tmux sessions..."
     else
         echo "Cleaning local UDMI infrastructure state${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)}..."
     fi
     for session in barbican butler bridgehead base model mcp; do
-        $UDMI_ROOT/bin/tmux_$session $action $target_args >/dev/null 2>&1 || true
+        $UDMI_ROOT/bin/tmux_$session $action "${TMUX_TARGET_ARGS[@]}" >/dev/null 2>&1 || true
     done
     if [[ "$action" == "stop" ]]; then
         echo "Local UDMI infrastructure stopped cleanly."
@@ -81,18 +85,12 @@ fi
 if [[ "$CMD" == "status" ]]; then
     shift
     parse_tmux_args "$@"
-    ns_arg="${TMUX_NAMESPACE:-}"
-    [[ -n "$ns_arg" ]] || ns_arg="${TMUX_PROJECT_SPEC:-}"
+    build_tmux_target_args
     echo "=== UDMI Infrastructure Status${TMUX_NAMESPACE:+ (namespace: $TMUX_NAMESPACE)} ==="
-    $UDMI_ROOT/bin/tmux_barbican status $ns_arg
-    echo ""
-    $UDMI_ROOT/bin/tmux_butler status $ns_arg
-    echo ""
-    $UDMI_ROOT/bin/tmux_bridgehead status $ns_arg
-    echo ""
-    $UDMI_ROOT/bin/tmux_base status $ns_arg
-    echo ""
-    $UDMI_ROOT/bin/tmux_mcp status $ns_arg
+    for session in barbican butler bridgehead base mcp; do
+        [[ "$session" == "barbican" ]] || echo ""
+        $UDMI_ROOT/bin/tmux_$session status "${TMUX_TARGET_ARGS[@]}"
+    done
     exit 0
 fi
 

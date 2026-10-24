@@ -2,6 +2,8 @@
 
 PIP_OPTS="--index-url https://pypi.org/simple"
 ROOT_DIR=$(realpath $(dirname $0)/..)
+UDMI_ROOT=$ROOT_DIR
+source $UDMI_ROOT/etc/shell_common.sh
 cd $ROOT_DIR
 
 # Packages provided by Alpine system repos where exact pins should be relaxed
@@ -26,23 +28,15 @@ get_requirements_file() {
     echo "$req_file"
 }
 
-retry_cmd() {
-    for attempt in 1 2 3; do
-        if "$@"; then
-            return 0
-        fi
-        [[ $attempt -lt 3 ]] || exit 1
-        sleep 2
-    done
-}
-
 if [[ $(id -u) == 0 ]]; then
     packages=(moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux lsof graphviz)
     if [[ -n $(which apt-get) ]]; then
         export DEBIAN_FRONTEND=noninteractive
-        rm -f /etc/apt/sources.list.d/microsoft-prod.*
-        if [[ -f /etc/apt/apt-mirrors.txt ]]; then
-            printf "https://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://archive.ubuntu.com/ubuntu/\tpriority:2\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n" > /etc/apt/apt-mirrors.txt
+        if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+            rm -f /etc/apt/sources.list.d/microsoft-prod.*
+            if [[ -f /etc/apt/apt-mirrors.txt ]]; then
+                printf "https://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://archive.ubuntu.com/ubuntu/\tpriority:2\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n" > /etc/apt/apt-mirrors.txt
+            fi
         fi
         apt_opts=(-o Acquire::ForceIPv4=true -o Acquire::Retries=2 -o Acquire::http::Timeout=5 -o Acquire::https::Timeout=5 -o DPkg::Lock::Timeout=60)
         retry_cmd timeout 120 apt-get "${apt_opts[@]}" update -y
@@ -71,7 +65,7 @@ $(dirname ${venv_pip3})/python3 -m pip install --upgrade pip $PIP_OPTS
 req_src=$(get_requirements_file)
 ${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r "$req_src" $PIP_OPTS
 
-if [[ -z $NO_CACHE_DIR ]]; then
+if [[ -z ${NO_CACHE_DIR:-} ]]; then
     $(dirname ${venv_pip3})/playwright install chromium
 fi
 

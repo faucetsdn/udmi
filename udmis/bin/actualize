@@ -8,7 +8,7 @@ cat udmi_site_model/cloud_iot_config.json
 
 docker rm -f udmis >/dev/null 2>&1 || true
 mkdir -p out var/tmp
-rm -f var/tmp/pod_ready.txt 2>/dev/null || sudo rm -f var/tmp/pod_ready.txt
+rm -f var/tmp/pod_ready.txt 2>/dev/null || sudo -n rm -f var/tmp/pod_ready.txt
 
 docker run -d --net udminet --name udmis -p 8883:8883 \
     -v $(realpath site_model):/root/site_model \
