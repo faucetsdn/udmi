@@ -271,7 +271,7 @@ public interface DiscoveryManager extends SubBlockManager {
    */
   default void startDiscoveryScan(String family, Date scanGeneration) {
     info(format("Discovery scan starting %s generation %s", family, isoConvert(scanGeneration)));
-    Date stopTime = Date.from(getNowInstant().plusSeconds(SCAN_DURATION_SEC));
+    Date stopTime = Date.from(getNowInstant().plusSeconds(getScanDuration(family)));
     final FamilyDiscoveryState familyDiscoveryState = ensureFamilyDiscoveryState(family);
     AtomicInteger sendCount = new AtomicInteger();
     scheduleFuture(stopTime, () -> discoveryScanComplete(family, scanGeneration, sendCount));
