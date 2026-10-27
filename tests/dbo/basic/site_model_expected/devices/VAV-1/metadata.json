@@ -2,6 +2,7 @@
   "timestamp": "2026-01-01T00:00:00Z",
   "version": "1.5.3",
   "system": {
+    "guid": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
     "location": {
       "floor": "US-MTV-BASIC-1",
       "room": "US-MTV-BASIC-1-R1",
@@ -10,13 +11,19 @@
   },
   "externals": {
     "dbo": {
-      "ext_id": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
       "type": "HVAC/VAV_SD_DSP",
       "label": "VAV-1"
     }
   },
   "cloud": {
     "num_id": "2541901344105616"
+  },
+  "relationships": {
+    "VAV-2": {
+      "FEEDS": [
+        {}
+      ]
+    }
   },
   "pointset": {
     "points": {

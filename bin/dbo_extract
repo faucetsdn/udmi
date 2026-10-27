@@ -18,10 +18,20 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
   """Extracts DBO configurations to a dict."""
   building_config = {}
 
-  facilities_path = site_model_dir / "externals" / "dbo" / "facilities.json"
-  if facilities_path.exists():
-    with open(facilities_path, "r", encoding="utf-8") as f:
-      building_config = json.load(f)
+  facilities_dir = site_model_dir / "externals" / "facilities"
+  raw_facility_connections = {}
+  if facilities_dir.is_dir():
+    for fac_path in sorted(facilities_dir.glob("*.json")):
+      with open(fac_path, "r", encoding="utf-8") as f:
+        fac_data = json.load(f)
+      guid = fac_data.pop("guid")
+      code = fac_path.stem
+      connections = fac_data.pop("connections", None)
+      if isinstance(connections, dict):
+        raw_facility_connections[guid] = connections
+      entity = {"code": code}
+      entity.update(fac_data)
+      building_config[guid] = entity
 
   device_id_to_guid = {}
 
@@ -39,7 +49,16 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
       dev_id = f"{base_id}_{counter}"
       counter += 1
     device_id_to_guid[dev_id] = guid
+    if code:
+      device_id_to_guid[code] = guid
     used_ids.add(dev_id)
+
+  for source_guid, conn_map in raw_facility_connections.items():
+    for target_code, rel_data in conn_map.items():
+      target_guid = device_id_to_guid.get(target_code, target_code)
+      target_entry = building_config.setdefault(target_guid, {})
+      connections = target_entry.setdefault("connections", {})
+      connections[source_guid] = rel_data
 
   devices_dir = site_model_dir / "devices"
   if not devices_dir.is_dir():
@@ -63,7 +82,7 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
     if not dbo_external:
       continue
 
-    guid = dbo_external.get("ext_id")
+    guid = metadata.get("system", {}).get("guid")
     if not guid:
       continue
 
@@ -82,19 +101,6 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
 
     if "cloud" in metadata and "num_id" in metadata["cloud"]:
       device_entry["cloud_device_id"] = str(metadata["cloud"]["num_id"])
-
-    if "relationships" in metadata and metadata["relationships"]:
-      # Map UDMI device IDs to GUIDs
-      connections = {}
-      for target_id, relation in metadata["relationships"].items():
-        target_guid = device_id_to_guid.get(target_id, target_id)
-        if isinstance(relation, dict):
-          if relation:
-            # Match string enum format expected by schema
-            rel_type = list(relation.keys())[0]
-            connections[target_guid] = rel_type
-
-      device_entry["connections"] = connections
 
     if "system" in metadata and "location" in metadata["system"]:
       loc = metadata["system"]["location"]
@@ -192,6 +198,19 @@ def extract_dbo_config(site_model_dir: Path) -> dict:
       device_entry["type"] = dbo_external["type"]
 
     building_config[guid] = device_entry
+
+  # Pass 3: Populate target connections from source relationships
+  for device_id, metadata in metadata_map.items():
+    source_guid = device_id_to_guid[device_id]
+    if "relationships" in metadata and metadata["relationships"]:
+      for target_id, relation in metadata["relationships"].items():
+        target_guid = device_id_to_guid.get(target_id, target_id)
+        if isinstance(relation, dict) and relation:
+          # Match string enum format expected by schema
+          rel_type = list(relation.keys())[0]
+          target_entry = building_config.setdefault(target_guid, {})
+          connections = target_entry.setdefault("connections", {})
+          connections[source_guid] = rel_type
 
   return building_config
 

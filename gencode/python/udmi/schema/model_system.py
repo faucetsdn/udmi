@@ -65,6 +65,7 @@ class SystemModel(DataModel):
     """
 
     name: Optional[str] = None
+    guid: Optional[str] = None
     description: Optional[str] = None
     device_version: Optional[str] = None
     zone: Optional[str] = None

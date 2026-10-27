@@ -884,6 +884,16 @@
       "type": "string",
       "description": "Friendly name describing this device"
     },
+    "system.guid": {
+      "display": "show",
+      "style": "bold",
+      "section": "system",
+      "type": "string",
+      "description": "Globally unique identifier for the device",
+      "examples": [
+        "0060917f-8c21-47c4-b011-52521085fdc3"
+      ]
+    },
     "system.description": {
       "display": "show",
       "style": "bold",

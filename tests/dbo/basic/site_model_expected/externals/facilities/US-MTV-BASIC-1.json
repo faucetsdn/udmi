@@ -1,0 +1,7 @@
+{
+  "guid": "floor-guid",
+  "connections": {
+    "US-MTV-BASIC-1-R1": "CONTAINS"
+  },
+  "type": "FACILITIES/FLOOR"
+}

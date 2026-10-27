@@ -1,0 +1,9 @@
+{
+  "guid": "0a84a996-1120-4178-91ca-e118500d5463",
+  "connections": {
+    "US-MTV-40-1-135A": [
+      "CONTAINS"
+    ]
+  },
+  "type": "FACILITIES/FLOOR"
+}
