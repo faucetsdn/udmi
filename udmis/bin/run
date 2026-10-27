@@ -24,9 +24,21 @@ POD_JAR=build/libs/udmis-1.0-SNAPSHOT-all.jar
 STACK_OPTS=-XX:-OmitStackTraceInFastThrow
 #DEBUG_OPTS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
 
-gcloud_project=$(gcloud config get project || true)
-if [[ -z $GCP_PROJECT && -z $gcloud_project ]]; then
-    gce_project=$(curl "http://metadata.google.internal/computeMetadata/v1/project/project-id" -H "Metadata-Flavor: Google" || true)
+is_local_pod=
+[[ $(basename "$POD_CONFIG") != "local_pod.json" && -z ${PUBSUB_EMULATOR_HOST:-} ]] || is_local_pod=1
+
+fetch_gce_metadata() {
+    curl -sf --connect-timeout 1 --max-time 2 -H "Metadata-Flavor: Google" \
+        "http://metadata.google.internal/computeMetadata/v1/$1" || true
+}
+
+gcloud_project=
+gce_project=
+if [[ -z $is_local_pod && -z $GCP_PROJECT ]]; then
+    gcloud_project=$(gcloud config get project 2>/dev/null || true)
+    if [[ -z $gcloud_project ]]; then
+        gce_project=$(fetch_gce_metadata "project/project-id")
+    fi
 fi
 
 if [[ -n $GCP_PROJECT ]]; then
@@ -69,9 +81,12 @@ if [[ -n $CLEARBLADE_CONFIGURATION && -s $CLEARBLADE_CONFIGURATION ]]; then
     echo Extracted ClearBlade project $CLEARBLADE_PROJECT from $CLEARBLADE_CONFIGURATION
 fi
 
-if nslookup metadata.google.internal; then
-    export GCP_SERVICE_ACCOUNT=$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/email)
-    echo Configured with GCP service account $GCP_SERVICE_ACCOUNT
+if [[ -z $is_local_pod ]]; then
+    gce_sa=$(fetch_gce_metadata "instance/service-accounts/default/email")
+    if [[ -n $gce_sa ]]; then
+        export GCP_SERVICE_ACCOUNT=$gce_sa
+        echo Configured with GCP service account $GCP_SERVICE_ACCOUNT
+    fi
 fi
 
 echo

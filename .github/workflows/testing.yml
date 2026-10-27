@@ -113,6 +113,7 @@ jobs:
     if: ${{ !cancelled() }}
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -166,6 +167,7 @@ jobs:
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -226,6 +228,7 @@ jobs:
       UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
       MATRIX_SHARD_COUNT: 10
       MATRIX_SHARD_INDEX: ${{ matrix.shard }}
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -289,6 +292,7 @@ jobs:
     needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -376,6 +380,7 @@ jobs:
     env:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       TARGET_PROJECT: //mqtt/localhost:9001
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -419,6 +424,7 @@ jobs:
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_REGISTRY_SUFFIX: _BU
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
         with:
@@ -497,8 +503,10 @@ jobs:
   discovery:
     name: Discovery Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
     needs: build_packages
+    env:
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
         with:
@@ -527,8 +535,7 @@ jobs:
           misc/discoverynode/testing/integration/integration_test.sh
       - name: Build UDMIS container
         run: |
-          udmis/bin/build check
-          bin/container udmis build --no-check latest
+          bin/container udmis build -n --no-check latest
           echo Built local UDMIS
       - name: Start UDMIS container
         run: |
@@ -542,7 +549,7 @@ jobs:
             -v $PWD/out:/root/udmi/out \
             udmis udmi/bin/udmi start block site_model //mqtt/localhost:8883 !registrar
           for count in `seq 0 60`; do
-            echo Waiting for UDMIS startup $((30 - count))
+            echo Waiting for UDMIS startup $((60 - count))
             [[ ! -f var/tmp/pod_ready.txt ]] || break
             (docker ps | fgrep -q udmis) || break
             sleep 1
@@ -640,6 +647,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: build_packages
+    env:
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -684,6 +693,7 @@ jobs:
     needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:18833
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -775,6 +785,7 @@ jobs:
     needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:18833
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5

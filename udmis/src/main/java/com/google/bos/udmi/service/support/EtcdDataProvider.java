@@ -53,7 +53,7 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
   private static final String CERT_FILE_KEY = "cert_file";
   private static final String KEY_FILE_KEY = "key_file";
   private static final String RESULTING_PREFIX = "ip:///";
-  private static final long QUERY_TIMEOUT_SEC = 10;
+  private static final long QUERY_TIMEOUT_SEC = 30;
   private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(QUERY_TIMEOUT_SEC);
   private static final String CLIENTS = "/clients/";
   private static final ByteSequence CONNECTED_KEY = bytes(CLIENTS + clientId);
@@ -288,8 +288,10 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
   private AutoCloseable lockRef(String lockName) {
     try {
-      long leaseId = client.getLeaseClient().grant(10).get().getID();
-      ByteSequence lockKey = lockClient.lock(bytes(lockName), leaseId).get().getKey();
+      long leaseId = client.getLeaseClient().grant(QUERY_TIMEOUT_SEC)
+          .get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS).getID();
+      ByteSequence lockKey = lockClient.lock(bytes(lockName), leaseId)
+          .get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS).getKey();
       info("Locked %s with lease %x", lockName, leaseId);
       return new LockCloser(lockName, leaseId, lockKey);
     } catch (Exception e) {
@@ -499,8 +501,8 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
 
     @Override
     public void close() throws Exception {
-      client.getLockClient().unlock(lockKey).get();
-      client.getLeaseClient().revoke(leaseId).get();
+      client.getLockClient().unlock(lockKey).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
+      client.getLeaseClient().revoke(leaseId).get(QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
       info("Released %s with lease %x", lockName, leaseId);
     }
   }

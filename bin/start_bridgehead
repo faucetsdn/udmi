@@ -137,8 +137,11 @@ jar -cf udmis/bridgeheadManager.war -C udmis/UI/ManagementWebapp/webapp .
 
 echo "Management UI built successfully."
 
-# 5. Bring up Docker compose
+# 5. Prepare images and bring up Docker compose
+echo "Preparing bridgehead container images..."
+retry_cmd docker compose pull --ignore-buildable --policy missing
+retry_cmd docker compose build
 echo "Starting bridgehead services via docker compose (Site model: $SITE_MODEL_PATH)..."
-docker compose up -d --build "$@"
+docker compose up -d --no-build "$@"
 
 echo "=== Bridgehead deployment started successfully ==="

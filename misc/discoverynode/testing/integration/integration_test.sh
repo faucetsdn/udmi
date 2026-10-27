@@ -3,18 +3,18 @@
 set -x
 ROOT_DIR=$(dirname $(realpath $0))
 
-export DN_SITE_PATH=$(realpath $1)
+export DN_SITE_PATH=${1:+$(realpath "$1")}
 export DN_TARGET=//mqtt/localhost
-
-bash $ROOT_DIR/../docker/bacnet_device/build.sh
-bash $ROOT_DIR/../../bin/build_container test-discovery_node
 
 cleanup() {
   # Deletes docker containers
-  docker ps -a | grep 'discovery-integration' | awk '{print $1}' | xargs --no-run-if-empty docker stop
+  docker ps -aq --filter network=discovery-integration | xargs --no-run-if-empty docker stop -t 1
 }
 # Because ctrl+c-ing this test has a tendancy to skip if thrashed
-trap cleanup INT
+trap cleanup EXIT INT
+
+bash $ROOT_DIR/../docker/bacnet_device/build.sh || exit 1
+bash $ROOT_DIR/../../bin/build_container test-discovery_node || exit 1
 
 docker network create --subnet=192.168.12.0/24 --ip-range=192.168.12.0/24 --gateway=192.168.12.254 discovery-integration || true
 
@@ -24,7 +24,7 @@ for i in $(seq 1); do
     --network=discovery-integration\
     --ip=192.168.12.$i \
     -e BACNET_ID=$i \
-    test-bacnet-device
+    test-bacnet-device || exit 1
 done
 
 SUMMARY=
@@ -37,6 +37,7 @@ TESTS=($(docker run --rm \
   -m pytest --collect-only -q tests/test_integration.py | grep '::test_'))
 
 echo "Found ${#TESTS[@]} tests to run."
+[ ${#TESTS[@]} -gt 0 ] || exit 1
 
 FINAL_EXIT_CODE=0
 for test in "${TESTS[@]}"; do
@@ -56,8 +57,6 @@ for test in "${TESTS[@]}"; do
     SUMMARY="${SUMMARY}${test}: PASS\n"
   fi
 done
-
-cleanup
 
 echo -e $SUMMARY
 

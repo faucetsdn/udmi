@@ -1,5 +1,12 @@
 #!/bin/bash -e
 
+ROOT=$(realpath $(dirname $0)/..)
+UDMI_ROOT=$(realpath $ROOT/..)
+source $UDMI_ROOT/etc/shell_common.sh
+cd $ROOT
+
+check=
+covg=
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == "check" ]]; then
     check=check
@@ -15,16 +22,13 @@ while [[ $# -gt 0 ]]; do
   fi
 done
 
-rundir=$(dirname $0)
-cd $rundir/..
-
 jarbase=pubber-1.0-SNAPSHOT-all.jar
 jartmp=/tmp/$jarbase
 jardir=build/libs
 jarfile=$jardir/$jarbase
 
-newer_files=$([[ -f $jarfile ]] && find src/ ../gencode/java ../common/src -type f -newer $jarfile 2>/dev/null || echo missing)
-if [[ -z ${check:-} && -z ${covg:-} && -z $newer_files ]]; then
+if [[ -z $check && -z $covg ]] && up_to_date $jarfile src/; then
+    mirror_udmi_files
     ls -l $jarfile
     echo $jarfile up-to-date, skipping build.
     exit 0
@@ -40,9 +44,7 @@ mkdir -p $jardir
 
 [[ ! -f $jartmp ]] || cp -a $jartmp $jarfile
 
-echo Mirroring udmi files...
-cp -a ../bin build/udmi_bin/
-cp -a ../etc build/udmi_etc/
+mirror_udmi_files
 
 echo Building pubber in $PWD
 ./gradlew --console=plain shadow $check $covg
