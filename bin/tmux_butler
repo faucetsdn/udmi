@@ -64,16 +64,27 @@ case "$TMUX_ACTION" in
 
         # 4. registrar (default: enabled)
         if tmux_should_run_service "registrar"; then
-            pod_ready="${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}"
-            for _ in $(seq 1 90); do
-                if [[ -f "$pod_ready" || -f /tmp/pod_ready.txt ]]; then
-                    break
+            barbican_session="${SESSION_NAME/#udmi_butler/udmi_barbican}"
+            if tmux list-windows -t "$barbican_session" -F '#{window_name}' 2>/dev/null | grep -qx 'udmis'; then
+                pod_ready=$(resolve_pod_ready_path)
+                for _ in $(seq 1 90); do
+                    if [[ -f "$pod_ready" ]]; then
+                        break
+                    fi
+                    udmis_pane=$(tmux capture-pane -t "$barbican_session:udmis" -p -S -20 2>/dev/null || true)
+                    if echo "$udmis_pane" | grep -qE "(=== \[udmis\] exited with code [^0]|Pane is dead)"; then
+                        echo "=== UDMIS window in '$barbican_session' failed during startup ===" >&2
+                        tmux capture-pane -t "$barbican_session:udmis" -p -S -50 >&2 || true
+                        fail "UDMIS startup failed in '$barbican_session'."
+                    fi
+                    sleep 1
+                done
+                if [[ ! -f "$pod_ready" ]]; then
+                    echo "=== UDMIS readiness sentinel ($pod_ready) not found within 90s ===" >&2
+                    tmux capture-pane -t "$barbican_session:udmis" -p -S -50 >&2 || true
+                    fail "UDMIS readiness sentinel ($pod_ready) not found within 90s."
                 fi
-                if ! pgrep -f "(bin/start_udmis|udmis-1\.0-SNAPSHOT-all\.jar)" >/dev/null 2>&1; then
-                    break
-                fi
-                sleep 1
-            done
+            fi
             tmux_init_or_add_window "$SESSION_NAME" "registrar" "bin/registrar '$TMUX_SITE_MODEL' '$TMUX_PROJECT_SPEC'"
         fi
 

@@ -106,6 +106,13 @@ function newest_file {
 function up_to_date {
     local target=$1
     shift
+    if [[ -n ${UDMI_NO_BUILD:-} ]]; then
+        if [[ ! -f $target ]]; then
+            echo "error: Prebuilt artifact $target not found (UDMI_NO_BUILD is set)." >&2
+            exit 1
+        fi
+        return 0
+    fi
     [[ ! -f $target ]] && return 1
     local newer_files=$(find "$@" "$UDMI_ROOT/gencode/java" "$UDMI_ROOT/common/src/main/java" "$UDMI_ROOT/common/src/test/java" -type f -newer "$target" 2>/dev/null)
     [[ -z $newer_files ]]
@@ -121,11 +128,6 @@ function mirror_udmi_files {
         rm -rf "build/$dir"
         cp -a "$UDMI_ROOT/$dir" "build/$dir/"
     done
-}
-
-function touch_prebuilt_jars {
-    echo "Skipping build checks (-n): updating existing JAR timestamps..."
-    (cd "$UDMI_ROOT"; touch -c udmis/build/libs/*.jar validator/build/libs/*.jar pubber/build/libs/*.jar services/build/libs/*.jar)
 }
 
 function retry_cmd {

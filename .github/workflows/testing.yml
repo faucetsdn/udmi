@@ -113,6 +113,7 @@ jobs:
     if: ${{ !cancelled() }}
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -166,6 +167,7 @@ jobs:
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -226,6 +228,7 @@ jobs:
       UDMI_REGISTRY_SUFFIX: _${{ matrix.shard }}
       MATRIX_SHARD_COUNT: 10
       MATRIX_SHARD_INDEX: ${{ matrix.shard }}
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -289,6 +292,7 @@ jobs:
     needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -376,6 +380,7 @@ jobs:
     env:
       UDMI_ALT_REGISTRY: ZZ-REDIRECT-NA
       TARGET_PROJECT: //mqtt/localhost:9001
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -419,6 +424,7 @@ jobs:
     env:
       TARGET_PROJECT: //mqtt/localhost:9001
       UDMI_REGISTRY_SUFFIX: _BU
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
         with:
@@ -499,6 +505,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     needs: build_packages
+    env:
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
         with:
@@ -639,6 +647,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     needs: build_packages
+    env:
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -683,6 +693,7 @@ jobs:
     needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:18833
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
@@ -774,6 +785,7 @@ jobs:
     needs: build_packages
     env:
       TARGET_PROJECT: //mqtt/localhost:18833
+      UDMI_NO_BUILD: 1
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5

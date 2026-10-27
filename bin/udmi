@@ -20,7 +20,7 @@ show_help() {
     echo "  help    : Show this help message"
     echo ""
     echo "Options:"
-    echo "  -n      : No build (touch existing JARs to skip rebuild checks)"
+    echo "  -n      : No build (set UDMI_NO_BUILD=1 and require prebuilt JARs)"
     echo ""
     echo "Services managed by udmi:"
     echo "  Barbican: mosquitto udmis etcd pubsub"
@@ -179,7 +179,8 @@ mkdir -p $(dirname "$UDMIS_LOG")
 echo Starting local services at $(date -u -Is) | tee $UDMIS_LOG
 
 if [[ -n $no_build ]]; then
-    touch_prebuilt_jars | tee -a $UDMIS_LOG
+    echo "Skipping build checks (-n): setting UDMI_NO_BUILD=1..." | tee -a $UDMIS_LOG
+    export UDMI_NO_BUILD=1
 fi
 
 iot_provider=$(jq -r .iot_provider $site_config)
@@ -258,11 +259,7 @@ fi
 
 # 2. If UDMIS was started, wait for its readiness sentinel before starting Butler/registrar
 if tmux_should_run_service "udmis"; then
-    if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
-        POD_READY=${UDMI_POD_READY:-/tmp/pod_ready.txt}
-    else
-        POD_READY=${UDMI_POD_READY:-var/pod_ready.txt}
-    fi
+    POD_READY=$(resolve_pod_ready_path)
     echo "Waiting for UDMIS readiness sentinel ($POD_READY)..."
     WAITING=90
     for i in $(seq 1 $WAITING); do

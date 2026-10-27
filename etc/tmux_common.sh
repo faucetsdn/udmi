@@ -4,6 +4,14 @@
 UDMI_ROOT=$(dirname $(realpath ${BASH_SOURCE[0]}))/..
 source $UDMI_ROOT/etc/shell_common.sh
 
+function resolve_pod_ready_path {
+    if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
+        printf '%s\n' "${UDMI_POD_READY:-/tmp/pod_ready.txt}"
+    else
+        printf '%s\n' "${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}"
+    fi
+}
+
 function derive_port_from_namespace {
     local ns="$1"
     python3 -c "import hashlib; print(20000 + (int(hashlib.sha256(b'$ns').hexdigest(), 16) % 3500) * 10)" 2>/dev/null || {
@@ -298,7 +306,7 @@ tmux_init_or_add_window() {
     local window_name="$2"
     local cmd="$3"
 
-    local env_exports="export UDMI_ROOT='$UDMI_ROOT' MQTT_PORT='${MQTT_PORT:-8883}' ETCD_PORT='${ETCD_PORT:-2379}' INFLUX_PORT='${INFLUX_PORT:-8086}' POSTGRES_PORT='${POSTGRES_PORT:-5432}' TARGET_PROJECT='${TARGET_PROJECT:-}' UDMI_REGISTRY_SUFFIX='${UDMI_REGISTRY_SUFFIX:-}' UDMI_ALT_REGISTRY='${UDMI_ALT_REGISTRY:-}'"
+    local env_exports="export UDMI_ROOT='$UDMI_ROOT' MQTT_PORT='${MQTT_PORT:-8883}' ETCD_PORT='${ETCD_PORT:-2379}' INFLUX_PORT='${INFLUX_PORT:-8086}' POSTGRES_PORT='${POSTGRES_PORT:-5432}' TARGET_PROJECT='${TARGET_PROJECT:-}' UDMI_REGISTRY_SUFFIX='${UDMI_REGISTRY_SUFFIX:-}' UDMI_ALT_REGISTRY='${UDMI_ALT_REGISTRY:-}' UDMI_NO_BUILD='${UDMI_NO_BUILD:-}' UDMI_POD_READY='${UDMI_POD_READY:-}'"
     local full_cmd="$env_exports; $cmd; ec=\\\$?; echo '=== [$window_name] exited with code '\\\$ec' ==='; while true; do read -r _ 2>/dev/null || sleep 3600; done"
 
     if ! tmux_session_exists "$session_name"; then
@@ -370,8 +378,7 @@ tmux_probe_service() {
             ;;
         udmis)
             local pid_file="var/udmis.pid"
-            local pod_ready="var/pod_ready.txt"
-            [[ -f "$pod_ready" ]] || pod_ready="/tmp/pod_ready.txt"
+            local pod_ready=$(resolve_pod_ready_path)
             local pid=$(cat "$pid_file" 2>/dev/null || true)
             if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
                 if [[ -f "$pod_ready" ]]; then

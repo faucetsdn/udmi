@@ -117,7 +117,8 @@ fi
 
 if [[ -n $prep ]]; then
     if [[ -n $NOBUILD ]]; then
-        touch_prebuilt_jars
+        echo "Skipping build checks (-n): setting UDMI_NO_BUILD=1..."
+        export UDMI_NO_BUILD=1
     fi
 
     rm -rf var tmp && mkdir -p var tmp build
