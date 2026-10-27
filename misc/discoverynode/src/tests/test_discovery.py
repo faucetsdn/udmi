@@ -217,3 +217,48 @@ def test_generation_is_incremented(scan_duration, scan_interval):
     assert want == got
     # Below disabled because flakey
     #assert mock_start.call_count == cycles
+
+
+def test_bacnet_refs_disconnected_fails_fast():
+  from BAC0.core.devices.Device import DeviceDisconnected
+  import udmi.discovery.bacnet
+
+  mock_bacnet = mock.MagicMock()
+  mock_bacnet.readMultiple.return_value = (
+      "Main-AHU",
+      "Delta",
+      "v1.2.3",
+      "DSC-1212",
+      "SN-9999",
+      "Air Handler",
+      "Roof",
+      "App-4.0",
+  )
+  controller = udmi.discovery.bacnet.GlobalBacnetDiscovery(
+      state.Discovery(),
+      mock.MagicMock(),
+      scan_id="families/bacnet",
+      bacnet=mock_bacnet,
+  )
+  controller.config = DiscoveryFamily(
+      generation=make_timestamp(), depth="refs"
+  )
+
+  disconnected_dev = DeviceDisconnected.__new__(DeviceDisconnected)
+  disconnected_dev.points = []
+  disconnected_dev.properties = mock.MagicMock()
+  disconnected_dev.properties.objects_list = []
+
+  empty_objlist_dev = mock.MagicMock()
+  empty_objlist_dev.points = []
+  empty_objlist_dev.properties.objects_list = []
+
+  with mock.patch.object(udmi.discovery.bacnet.BAC0, "device") as mock_device:
+    for timed_out_dev in (disconnected_dev, empty_objlist_dev):
+      mock_device.return_value = timed_out_dev
+      event = controller.discover_device("192.168.12.11", 12341)
+      assert not event.refs
+      assert event.status is not None
+      assert event.status.category == "discovery.error"
+      assert event.status.level == 500
+      assert "Failed to connect or read objectList" in event.status.message
