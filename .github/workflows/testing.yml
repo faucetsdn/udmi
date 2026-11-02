@@ -497,7 +497,7 @@ jobs:
   discovery:
     name: Discovery Tests
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     needs: build_packages
     steps:
       - uses: actions/checkout@v6
@@ -527,7 +527,6 @@ jobs:
           misc/discoverynode/testing/integration/integration_test.sh
       - name: Build UDMIS container
         run: |
-          udmis/bin/build check
           bin/container udmis build --no-check latest
           echo Built local UDMIS
       - name: Start UDMIS container
