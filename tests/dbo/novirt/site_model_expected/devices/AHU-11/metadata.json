@@ -19,14 +19,10 @@
   },
   "relationships": {
     "US-MTV-RLS1-1-11501P": {
-      "FEEDS": [
-        {}
-      ]
+      "FEEDS": []
     },
     "VAV-3151": {
-      "FEEDS": [
-        {}
-      ]
+      "FEEDS": []
     }
   },
   "pointset": {

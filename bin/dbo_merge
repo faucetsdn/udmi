@@ -132,17 +132,19 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
 
         rel_entry = None
         if isinstance(rel_data, str):
-          rel_entry = {rel_data: [{}]}
+          rel_entry = {rel_data: []}
         elif isinstance(rel_data, list):
           rel_entry = {}
           for item in rel_data:
             if isinstance(item, str):
-              rel_entry.setdefault(item, []).append({})
+              rel_entry.setdefault(item, [])
             elif isinstance(item, dict):
               item_copy = item.copy()
               if "type" in item_copy:
                 rel_type = item_copy.pop("type")
-                rel_entry.setdefault(rel_type, []).append(item_copy)
+                rel_list = rel_entry.setdefault(rel_type, [])
+                if item_copy:
+                  rel_list.append(item_copy)
 
         if rel_entry:
           source_relationships.setdefault(source_id, {})[target_id] = rel_entry

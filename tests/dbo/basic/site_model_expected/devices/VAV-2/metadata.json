@@ -15,9 +15,7 @@
   },
   "relationships": {
     "US-MTV-BASIC-1-R1": {
-      "FEEDS": [
-        {}
-      ]
+      "FEEDS": []
     }
   },
   "pointset": {

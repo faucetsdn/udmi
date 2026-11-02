@@ -20,9 +20,7 @@
   },
   "relationships": {
     "VAV-2": {
-      "FEEDS": [
-        {}
-      ]
+      "FEEDS": []
     }
   },
   "pointset": {
