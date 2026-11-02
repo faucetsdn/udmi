@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import udmi.schema.CloudModel;
+import udmi.schema.DiscoveryConfig;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
@@ -166,6 +167,14 @@ public class UufiProcessor extends ProcessorBase {
 
     // Standard UDMI devices expect a complete config merged with previous state.
     if (innerEnvelope.subType == SubType.CONFIG) {
+      if (innerEnvelope.subFolder == SubFolder.DISCOVERY) {
+        DiscoveryConfig discoveryConfig =
+            catchToNull(() -> convertTo(DiscoveryConfig.class, innerPayload));
+        if (ModelDiscoveryHandler.isModelDiscoveryConfig(innerEnvelope, discoveryConfig)) {
+          ModelDiscoveryHandler.processDiscoveryConfig(this, innerEnvelope, discoveryConfig);
+          return;
+        }
+      }
       String configUpdate = processConfigChange(innerEnvelope, innerPayload, null);
       if (configUpdate != null) {
         innerEnvelope.subFolder = null;

@@ -50,6 +50,13 @@ public class FamilyDiscoveryState {
     @JsonPropertyDescription("Number of passive scan results currently 'on hold'")
     public Integer passive_count;
     /**
+     * Optional source qualifier for the discovery scan (e.g., 'model')
+     * 
+     */
+    @JsonProperty("source")
+    @JsonPropertyDescription("Optional source qualifier for the discovery scan (e.g., 'model')")
+    public String source;
+    /**
      * Entry
      * <p>
      * 
@@ -64,6 +71,7 @@ public class FamilyDiscoveryState {
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.phase == null)? 0 :this.phase.hashCode()));
         result = ((result* 31)+((this.active_count == null)? 0 :this.active_count.hashCode()));
+        result = ((result* 31)+((this.source == null)? 0 :this.source.hashCode()));
         result = ((result* 31)+((this.passive_count == null)? 0 :this.passive_count.hashCode()));
         result = ((result* 31)+((this.status == null)? 0 :this.status.hashCode()));
         return result;
@@ -78,7 +86,7 @@ public class FamilyDiscoveryState {
             return false;
         }
         FamilyDiscoveryState rhs = ((FamilyDiscoveryState) other);
-        return ((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase))))&&((this.active_count == rhs.active_count)||((this.active_count!= null)&&this.active_count.equals(rhs.active_count))))&&((this.passive_count == rhs.passive_count)||((this.passive_count!= null)&&this.passive_count.equals(rhs.passive_count))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
+        return (((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.phase == rhs.phase)||((this.phase!= null)&&this.phase.equals(rhs.phase))))&&((this.active_count == rhs.active_count)||((this.active_count!= null)&&this.active_count.equals(rhs.active_count))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.passive_count == rhs.passive_count)||((this.passive_count!= null)&&this.passive_count.equals(rhs.passive_count))))&&((this.status == rhs.status)||((this.status!= null)&&this.status.equals(rhs.status))));
     }
 
 

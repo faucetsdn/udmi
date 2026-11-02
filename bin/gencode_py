@@ -69,6 +69,50 @@ bin/gencode_py_categories
 # create bucket.py from docs/specs/buckets.md
 bin/gencode_py_buckets
 
+# Resolve mutual circular imports by moving them to the bottom of the module (after class definitions)
+python3 - "$PYTHON_OUTPUT_DIR" << 'EOF'
+import os, re, sys
+
+out_dir = sys.argv[1]
+import_re = re.compile(r"^from \.([a-zA-Z0-9_]+) import .+$")
+deps = {}
+lines_by_mod = {}
+
+for fname in sorted(os.listdir(out_dir)):
+    if not fname.endswith(".py") or fname == "__init__.py":
+        continue
+    mod = fname[:-3]
+    path = os.path.join(out_dir, fname)
+    with open(path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    lines_by_mod[mod] = (path, lines)
+    deps[mod] = set()
+    for line in lines:
+        m = import_re.match(line.strip())
+        if m:
+            deps[mod].add(m.group(1))
+
+for mod, (path, lines) in lines_by_mod.items():
+    cyclic_targets = {target for target in deps[mod] if mod in deps.get(target, set())}
+    if not cyclic_targets:
+        continue
+    kept = []
+    deferred = []
+    for line in lines:
+        m = import_re.match(line.strip())
+        if m and m.group(1) in cyclic_targets:
+            deferred.append(line.rstrip("\n") + "\n")
+        else:
+            kept.append(line)
+    if deferred:
+        if kept and not kept[-1].endswith("\n"):
+            kept[-1] += "\n"
+        kept.append("\n")
+        kept.extend(deferred)
+        with open(path, "w", encoding="utf-8") as f:
+            f.writelines(kept)
+EOF
+
 # add import statements to udmi/schema/__init__.py
 find "$PYTHON_OUTPUT_DIR" -name "*.py" -not -name "__init__.py" -print0 | while IFS= read -r -d $'\0' file; do
   module_name=$(basename "$file" .py)

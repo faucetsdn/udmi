@@ -22,6 +22,7 @@ import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.GeneralUtils.multiTrim;
 import static com.google.udmi.util.GeneralUtils.requireNull;
 import static com.google.udmi.util.GeneralUtils.stackTraceString;
@@ -61,11 +62,13 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
+import udmi.schema.DiscoveryConfig;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.Level;
 import udmi.schema.SystemModel;
 import udmi.schema.UdmiConfig;
@@ -298,9 +301,29 @@ public class ReflectProcessor extends ProcessorBase {
 
   private CloudModel reflectModel(Envelope attributes, CloudModel request) {
     CloudModel modelResult = updateModel(attributes, request);
-    ifNotNullThen(extractModel(request),
+    Object extracted = extractModel(request);
+    ifNotNullThen(extracted,
         model -> publish(makeTargetEnvelope(attributes), model));
+    if (request.resource_type == REGISTRY && request.operation != PREVIEW) {
+      String targetRegistry = getTargetRegistryId(attributes.deviceRegistryId, attributes.deviceId);
+      Date siteTimestamp = (extracted instanceof SiteMetadataUpdate smu)
+          ? smu.timestamp : request.timestamp;
+      Date generation = ofNullable(siteTimestamp).orElseGet(Date::new);
+      FamilyDiscoveryConfig familyConfig = null;
+      if (request.device_ids != null && !request.device_ids.isEmpty()) {
+        familyConfig = new FamilyDiscoveryConfig();
+        familyConfig.addrs = request.device_ids.keySet().stream().sorted().toList();
+      }
+      ModelDiscoveryHandler.processDiscovery(this, targetRegistry, familyConfig, generation);
+    }
     return modelResult;
+  }
+
+  private String getTargetRegistryId(String registryId, String deviceId) {
+    if (isNotEmpty(deviceId) && (!isNotEmpty(registryId) || reflectRegistry.equals(registryId))) {
+      return deviceId;
+    }
+    return isNotEmpty(registryId) ? registryId : null;
   }
 
   private CloudModel updateModel(Envelope attributes, CloudModel request) {
@@ -358,6 +381,16 @@ public class ReflectProcessor extends ProcessorBase {
     reply.operation = ModelOperation.REPLY;
     if (payload == null) {
       return reply;
+    }
+    if (attributes.subType == SubType.CONFIG && attributes.subFolder == SubFolder.DISCOVERY) {
+      DiscoveryConfig discoveryConfig = convertTo(DiscoveryConfig.class, payload);
+      if (ModelDiscoveryHandler.isModelDiscoveryConfig(attributes, discoveryConfig)) {
+        Envelope discEnv = deepCopy(attributes);
+        discEnv.deviceRegistryId = getTargetRegistryId(
+            attributes.deviceRegistryId, attributes.deviceId);
+        ModelDiscoveryHandler.processDiscoveryConfig(this, discEnv, discoveryConfig);
+        return reply;
+      }
     }
     if (attributes.subType == SubType.CONFIG) {
       // If there was actually a config change, then the transaction will be acknowledged that way.

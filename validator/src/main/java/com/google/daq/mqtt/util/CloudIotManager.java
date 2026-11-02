@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.CloudModel.Resource_type;
@@ -450,6 +451,14 @@ public class CloudIotManager {
    * Update the cloud site metadata for the current registry.
    */
   public void updateRegistry(SiteMetadata siteMetadata, ModelOperation operation) {
+    updateRegistry(siteMetadata, operation, null);
+  }
+
+  /**
+   * Update the cloud site metadata for the current registry with optional explicit device shard.
+   */
+  public void updateRegistry(SiteMetadata siteMetadata, ModelOperation operation,
+      Set<String> explicitDevices) {
     CloudModel registryModel = new CloudModel();
     registryModel.resource_type = Resource_type.REGISTRY;
     registryModel.operation = operation;
@@ -461,6 +470,10 @@ public class CloudIotManager {
         MetadataMapKeys.UDMI_PROVISIONED,
         isoConvert(ofNullable(siteMetadata.timestamp).orElseGet(Date::new))
     );
+    if (explicitDevices != null && !explicitDevices.isEmpty()) {
+      registryModel.device_ids = explicitDevices.stream()
+          .collect(Collectors.toMap(id -> id, id -> new CloudModel()));
+    }
     getIotProvider().updateRegistry(registryModel);
   }
 

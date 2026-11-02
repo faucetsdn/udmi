@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 from ._base import DataModel
 from .ancillary_properties import AncillaryProperties
@@ -37,9 +37,12 @@ class DiscoveryEvents(DataModel):
     generation: Optional[str] = None
     status: Optional[Entry] = None
     family: Optional[Any] = None
+    source: Optional[str] = None
     addr: Optional[str] = None
     network: Optional[str] = None
     event_no: Optional[int] = None
+    active_count: Optional[int] = None
+    addrs: Optional[List[str]] = None
     families: Optional[Dict[str, FamilyDiscovery]] = None
     registries: Optional[Dict[str, CloudModel]] = None
     devices: Optional[Dict[str, CloudModel]] = None
@@ -48,3 +51,6 @@ class DiscoveryEvents(DataModel):
     features: Optional[Dict[str, FeatureDiscovery]] = None
     cloud_model: Optional[CloudModel] = None
     system: Optional[System] = None
+    model: Optional[Metadata] = None
+
+from .metadata import Metadata

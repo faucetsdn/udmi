@@ -1,0 +1,10 @@
+{
+  "version": "1.5.7",
+  "timestamp": "2026-04-06T20:10:01Z",
+  "generation": "2026-04-06T20:10:00Z",
+  "event_no": 0,
+  "family": "iot",
+  "source": "model",
+  "addrs": ["AHU-1", "AHU-2"],
+  "active_count": 3
+}

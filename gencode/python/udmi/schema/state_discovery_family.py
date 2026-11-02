@@ -31,4 +31,5 @@ class FamilyDiscoveryState(DataModel):
     phase: Optional[Phase] = None
     active_count: Optional[int] = None
     passive_count: Optional[int] = None
+    source: Optional[str] = None
     status: Optional[Entry] = None

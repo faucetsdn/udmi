@@ -1,0 +1,33 @@
+{
+  "version": "1.5.7",
+  "timestamp": "2026-04-06T20:10:01Z",
+  "generation": "2026-04-06T20:10:00Z",
+  "event_no": 1,
+  "family": "iot",
+  "addr": "AHU-1",
+  "model": {
+    "version": "1.5.7",
+    "timestamp": "2026-04-06T20:00:00Z",
+    "system": {
+      "location": {
+        "site": "US-SFO-X1",
+        "section": "1F"
+      },
+      "physical_tag": {
+        "asset": {
+          "guid": "drw://1234",
+          "site": "US-SFO-X1",
+          "name": "AHU-1"
+        }
+      }
+    },
+    "pointset": {
+      "points": {
+        "filter_alarm_pressure_status": {
+          "units": "No-units",
+          "ref": "BV11.present_value"
+        }
+      }
+    }
+  }
+}
