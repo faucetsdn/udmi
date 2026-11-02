@@ -26,6 +26,7 @@ public class PubberProxyHost extends PubberManager implements ProxyHost {
     publisherHost = (PubberPublisherHost) host;
     deviceManager = new PubberDeviceManager(this, makeProxyConfiguration(host, id, pubberConfig));
     deviceManager.setSiteModel(publisherHost.getSiteModel());
+    getStateDirty().set(false);
     schedulePeriodic(STATE_INTERVAL_SEC, this::publishDirtyState);
   }
 

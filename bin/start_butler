@@ -38,11 +38,12 @@ if [[ $target_project =~ localhost:([0-9]+) ]]; then
 fi
 export POSTGRES_PORT=${POSTGRES_PORT:-5432}
 export INFLUX_PORT=${INFLUX_PORT:-8086}
+source "$UDMI_ROOT/etc/mosquitto_ctrl.sh"
 
 # Wait for local broker and database services if running locally
-if [[ -d "${ETC_DIR:-var/mosquitto}" ]]; then
+if [[ -d "$ETC_DIR" ]]; then
     for i in {1..50}; do
-        if [[ -f "${ETC_DIR:-var/mosquitto}/mosquitto.ready" ]]; then
+        if [[ -f "$ETC_DIR/mosquitto.ready" ]]; then
             break
         fi
         sleep 0.2

@@ -29,9 +29,9 @@ fi
 bin/setup_ca $site_model mosquitto  
 bin/start_mosquitto
 
-$MOSQUITTO_CTRL deleteClient $SERV_USER
-$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS
-$MOSQUITTO_CTRL addClientRole $SERV_USER service
+$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS 2>/dev/null || true
+$MOSQUITTO_CTRL addClientRole $SERV_USER service 2>/dev/null || true
+$MOSQUITTO_CTRL addClientRole $SERV_USER uufi 2>/dev/null || true
 
 echo "Starting initializing site $site_model" | tee -a $UDMIS_LOG
 bin/mosquctl_site $site_model

@@ -1,11 +1,23 @@
 #!/bin/bash -e
 
 UDMI_ROOT=$(dirname $0)/..
+rm -f "${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}" "$UDMI_ROOT/var/pod_ready.txt" "/tmp/pod_ready.txt" 2>/dev/null || true
 source $UDMI_ROOT/etc/shell_common.sh
 source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 UDMIS_PID_FILE=${UDMIS_PID_FILE:-var/udmis.pid}
 mkdir -p $(dirname "$UDMIS_PID_FILE")
+
+if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
+    POD_READY=${UDMI_POD_READY:-/tmp/pod_ready.txt}
+    UDMIS_DIR=/root
+else
+    POD_READY=${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}
+    UDMIS_DIR=$UDMI_ROOT/udmis
+fi
+mkdir -p $(dirname "$POD_READY")
+export UDMI_POD_READY=$(realpath -m $POD_READY)
+rm -f $UDMI_POD_READY
 
 if [[ ${1:-} == stop ]]; then
     if [[ -f $UDMIS_PID_FILE ]]; then
@@ -15,6 +27,7 @@ if [[ ${1:-} == stop ]]; then
             kill $OLD_PID 2>/dev/null || true
             sleep 1
         fi
+        rm -f $UDMIS_PID_FILE
     fi
     exit 0
 fi
@@ -26,6 +39,7 @@ if [[ -f $UDMIS_PID_FILE ]]; then
         kill $OLD_PID 2>/dev/null || true
         sleep 2
     fi
+    rm -f $UDMIS_PID_FILE
 elif [[ "$UDMIS_PID_FILE" == "var/udmis.pid" || "$UDMIS_PID_FILE" == "$UDMI_ROOT/var/udmis.pid" ]]; then
     # Fallback only if default PID file and not in NO_SUDO mode
     if [[ ${UDMI_NO_SUDO:-false} != true ]]; then
@@ -38,16 +52,7 @@ elif [[ "$UDMIS_PID_FILE" == "var/udmis.pid" || "$UDMIS_PID_FILE" == "$UDMI_ROOT
     fi
 fi
 
-if [[ -f /.dockerenv || -n ${UDMI_CONTAINER:-} ]]; then
-    POD_READY=${UDMI_POD_READY:-/tmp/pod_ready.txt}
-    UDMIS_DIR=/root
-else
-    POD_READY=${UDMI_POD_READY:-$UDMI_ROOT/var/pod_ready.txt}
-    UDMIS_DIR=$UDMI_ROOT/udmis
-fi
-mkdir -p $(dirname "$POD_READY")
-export UDMI_POD_READY=$(realpath -m $POD_READY)
-rm -f $UDMI_POD_READY
+echo $$ > $UDMIS_PID_FILE
 
 if [[ ${UDMIS_SKIP_PREP:-false} != true ]]; then
     if [[ ! -f $UDMIS_DIR/build/libs/udmis-1.0-SNAPSHOT-all.jar || ! -f $UDMIS_DIR/var/deployed_version.json ]]; then
@@ -118,14 +123,14 @@ fi
 
 # Wait for prerequisite services (mosquitto and etcd) if running locally
 if [[ -d "$ETC_DIR" ]]; then
-    for i in $(seq 1 50); do
+    for i in $(seq 1 150); do
         if [[ -f "$ETC_DIR/mosquitto.ready" ]]; then
             break
         fi
         sleep 0.2
     done
 elif [[ -n "${MQTT_PORT:-}" ]]; then
-    for i in $(seq 1 50); do
+    for i in $(seq 1 150); do
         if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT}" 2>/dev/null; then
             break
         fi
@@ -134,7 +139,7 @@ elif [[ -n "${MQTT_PORT:-}" ]]; then
 fi
 
 if [[ -n "${ETCD_PORT:-}" ]]; then
-    for i in $(seq 1 50); do
+    for i in $(seq 1 150); do
         if timeout 1 bash -c "</dev/tcp/127.0.0.1/${ETCD_PORT}" 2>/dev/null || curl -sf "http://127.0.0.1:${ETCD_PORT}/health" >/dev/null 2>&1; then
             break
         fi
@@ -163,6 +168,7 @@ echo ::::::::: tail $UDMIS_LOG
 tail -n 30 "$UDMIS_LOG"
 
 if [[ ! -f $UDMI_POD_READY ]]; then
+    rm -f $UDMIS_PID_FILE
     echo "=== DIAGNOSTIC LOGS FOR UDMIS STARTUP FAILURE ==="
     echo "Host working directory: $PWD"
     echo "Process $PID status:"

@@ -27,8 +27,9 @@ class DiscoveryConfig(TypedDict):
   bacnet: bool
 
 
-class UdmiConfig(TypedDict):
+class UdmiConfig(TypedDict, total=False):
   discovery: DiscoveryConfig
+  state_interval_sec: int
 
 
 class BacnetConfig(TypedDict):

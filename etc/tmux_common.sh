@@ -296,8 +296,8 @@ tmux_init_or_add_window() {
     local window_name="$2"
     local cmd="$3"
 
-    local env_exports="export UDMI_ROOT='$UDMI_ROOT' MQTT_PORT='${MQTT_PORT:-8883}' ETCD_PORT='${ETCD_PORT:-2379}' INFLUX_PORT='${INFLUX_PORT:-8086}' POSTGRES_PORT='${POSTGRES_PORT:-5432}' TARGET_PROJECT='${TARGET_PROJECT:-}'"
-    local full_cmd="$env_exports; $cmd; ec=\$?; echo \"=== [$window_name] exited with code \$ec ===\"; while true; do read -r _ 2>/dev/null || sleep 3600; done"
+    local env_exports="export UDMI_ROOT='$UDMI_ROOT' MQTT_PORT='${MQTT_PORT:-8883}' ETCD_PORT='${ETCD_PORT:-2379}' INFLUX_PORT='${INFLUX_PORT:-8086}' POSTGRES_PORT='${POSTGRES_PORT:-5432}' TARGET_PROJECT='${TARGET_PROJECT:-}' UDMI_REGISTRY_SUFFIX='${UDMI_REGISTRY_SUFFIX:-}' UDMI_ALT_REGISTRY='${UDMI_ALT_REGISTRY:-}'"
+    local full_cmd="$env_exports; $cmd; ec=\\\$?; echo '=== [$window_name] exited with code '\\\$ec' ==='; while true; do read -r _ 2>/dev/null || sleep 3600; done"
 
     if ! tmux_session_exists "$session_name"; then
         echo "Creating tmux session '$session_name' [window: $window_name]..."

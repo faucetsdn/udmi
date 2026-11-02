@@ -103,20 +103,27 @@ class MCPServer:
             line = line.strip()
             if not line:
                 continue
+            req_id = None
             try:
                 request = json.loads(line)
+                if isinstance(request, dict):
+                    req_id = request.get("id")
                 response = self.handle_request(request)
                 if response is not None:
                     sys.stdout.write(json.dumps(response) + "\n")
                     sys.stdout.flush()
             except Exception as e:
-                err_resp = {
-                    "jsonrpc": "2.0",
-                    "id": None,
-                    "error": {"code": -32603, "message": str(e)},
-                }
-                sys.stdout.write(json.dumps(err_resp) + "\n")
-                sys.stdout.flush()
+                if req_id is not None:
+                    err_resp = {
+                        "jsonrpc": "2.0",
+                        "id": req_id,
+                        "error": {"code": -32603, "message": str(e)},
+                    }
+                    sys.stdout.write(json.dumps(err_resp) + "\n")
+                    sys.stdout.flush()
+                else:
+                    sys.stderr.write(f"Mantis MCP error: {e}\n")
+                    sys.stderr.flush()
 
     async def run_async(self) -> None:
         """Asynchronous non-blocking stdio loop for MCP protocol."""
@@ -132,26 +139,36 @@ class MCPServer:
             line = line_bytes.decode("utf-8").strip()
             if not line:
                 continue
+            req_id = None
             try:
                 request = json.loads(line)
+                if isinstance(request, dict):
+                    req_id = request.get("id")
                 response = await self.handle_request_async(request)
                 if response is not None:
                     sys.stdout.write(json.dumps(response) + "\n")
                     sys.stdout.flush()
             except Exception as e:
-                err_resp = {
-                    "jsonrpc": "2.0",
-                    "id": None,
-                    "error": {"code": -32603, "message": str(e)},
-                }
-                sys.stdout.write(json.dumps(err_resp) + "\n")
-                sys.stdout.flush()
+                if req_id is not None:
+                    err_resp = {
+                        "jsonrpc": "2.0",
+                        "id": req_id,
+                        "error": {"code": -32603, "message": str(e)},
+                    }
+                    sys.stdout.write(json.dumps(err_resp) + "\n")
+                    sys.stdout.flush()
+                else:
+                    sys.stderr.write(f"Mantis MCP error: {e}\n")
+                    sys.stderr.flush()
 
     async def handle_request_async(self, req: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Asynchronously processes an MCP request."""
         req_id = req.get("id")
         method = req.get("method")
-        params = req.get("params", {})
+        params = req.get("params") or {}
+
+        if req_id is None or (isinstance(method, str) and method.startswith("notifications/")):
+            return None
 
         if method == "initialize":
             return {
@@ -167,9 +184,6 @@ class MCPServer:
                 },
             }
 
-        if method == "notifications/initialized":
-            return None
-
         if method == "ping":
             return {"jsonrpc": "2.0", "id": req_id, "result": {}}
 
@@ -178,7 +192,7 @@ class MCPServer:
 
         if method == "tools/call":
             tool_name = params.get("name")
-            tool_args = params.get("arguments", {})
+            tool_args = params.get("arguments") or {}
             try:
                 loop = asyncio.get_running_loop()
                 result_data = await loop.run_in_executor(
@@ -220,7 +234,10 @@ class MCPServer:
     def handle_request(self, req: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         req_id = req.get("id")
         method = req.get("method")
-        params = req.get("params", {})
+        params = req.get("params") or {}
+
+        if req_id is None or (isinstance(method, str) and method.startswith("notifications/")):
+            return None
 
         if method == "initialize":
             return {
@@ -236,9 +253,6 @@ class MCPServer:
                 },
             }
 
-        if method == "notifications/initialized":
-            return None
-
         if method == "ping":
             return {"jsonrpc": "2.0", "id": req_id, "result": {}}
 
@@ -247,7 +261,7 @@ class MCPServer:
 
         if method == "tools/call":
             tool_name = params.get("name")
-            tool_args = params.get("arguments", {})
+            tool_args = params.get("arguments") or {}
             try:
                 result_data = self.execute_tool(tool_name, tool_args)
                 return {

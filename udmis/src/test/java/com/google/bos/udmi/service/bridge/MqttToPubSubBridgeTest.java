@@ -580,6 +580,8 @@ class MqttToPubSubBridgeTest {
     // Total publish calls should now be 6 (5 initial + 1 redelivery)
     verify(mockPublisher, org.mockito.Mockito.timeout(20000).times(6))
         .publish(any(PubsubMessage.class));
+    verify(mockMqttClient, org.mockito.Mockito.timeout(5000).times(1))
+        .messageArrivedComplete(3003, 1);
     // After success, unacked count should be 0
     assertEquals(0, bridge.getUnackedCount());
     assertEquals(0, bridge.getAbandonedCount());
@@ -610,6 +612,8 @@ class MqttToPubSubBridgeTest {
     callback.messageArrived(testTopic, mqttMessage);
     verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(1))
         .publish(any(PubsubMessage.class));
+    verify(mockMqttClient, org.mockito.Mockito.timeout(5000).times(1))
+        .messageArrivedComplete(2002, 1);
     // Verify unacked count popped to 0 after delivery
     assertEquals(0, bridge.getUnackedCount());
   }
@@ -722,6 +726,8 @@ class MqttToPubSubBridgeTest {
     callback.messageArrived(testTopic, mqttMessage2);
     verify(mockPublisher, org.mockito.Mockito.timeout(5000).times(6))
         .publish(any(PubsubMessage.class));
+    verify(mockMqttClient, org.mockito.Mockito.timeout(5000).times(1))
+        .messageArrivedComplete(4002, 1);
 
     // Message 2 succeeded and removed, Message 1 remains abandoned
     assertEquals(1, bridge.getUnackedCount());

@@ -321,6 +321,9 @@ def test_gummi_console_portrait_mode_height(gummi_server_url: str, browser_conte
     expect(console_pane).to_be_visible()
 
     # Measure computed height in portrait mode
+    page.wait_for_function(
+        "() => Math.abs(document.getElementById('console-pane').getBoundingClientRect().height - (window.innerHeight / 2)) <= 2"
+    )
     pane_height = page.evaluate("() => document.getElementById('console-pane').getBoundingClientRect().height")
     window_height = page.evaluate("() => window.innerHeight")
     # In portrait mode (1000px height), console should take up 1/2 = 500px
@@ -328,7 +331,9 @@ def test_gummi_console_portrait_mode_height(gummi_server_url: str, browser_conte
 
     # Switch to landscape: width 1200, height 800
     page.set_viewport_size({"width": 1200, "height": 800})
-    time.sleep(0.2)
+    page.wait_for_function(
+        "() => Math.abs(document.getElementById('console-pane').getBoundingClientRect().height - 380) <= 2"
+    )
     pane_height_landscape = page.evaluate("() => document.getElementById('console-pane').getBoundingClientRect().height")
     # In landscape mode, height should be standard fixed 380px
     assert abs(pane_height_landscape - 380) <= 2, f"Expected 380px height in landscape, got {pane_height_landscape}px"

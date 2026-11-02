@@ -5,6 +5,8 @@ import time
 from unittest import mock
 import udmi.discovery.bacnet
 import datetime
+import udmi.schema.config
+import udmi.schema.state
 import udmi.schema.util
 import argparse
 
@@ -23,25 +25,21 @@ def main():
   parser.add_argument("--addrs", default=None, help="comma seperated ip address targets" )
   args = parser.parse_args()
 
-  state = mock.MagicMock()
+  state = udmi.schema.state.Discovery()
+  stack = udmi.discovery.bacnet.create_bacnet_stack(ip=args.ip)
   a = udmi.discovery.bacnet.GlobalBacnetDiscovery(
-      state, print, bacnet_ip=args.ip
+      state, print, scan_id="families/bacnet", bacnet=stack
   )
 
-  a.controller(
-    {
-      "discovery": {
-        "families": {
-          "bacnet": {
-            "generation": udmi.schema.util.datetime_serializer(
+  a.apply_config(
+      udmi.schema.config.DiscoveryFamily(
+          generation=udmi.schema.util.datetime_serializer(
               udmi.schema.util.current_time_utc()
-              + datetime.timedelta(seconds=1)),
-            "depth":  args.depth,
-            "addrs": args.addrs.split(",") if args.addrs else None
-          }
-        }
-      }
-    }
+              + datetime.timedelta(seconds=1)
+          ),
+          depth=args.depth,
+          addrs=args.addrs.split(",") if args.addrs else None,
+      )
   )
   while True:
     time.sleep(1)

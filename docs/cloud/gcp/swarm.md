@@ -44,7 +44,7 @@ The 'pubber swarm' capability relies on four major components:
   `gcloud --project=${GCP_PROJECT} container clusters --zone=us-central1-c get-credentials pubber-swarm`
 
   * Maybe need to enable access to the container registry?  I did this, but not sure it's required:
-`gsutil iam ch serviceAccount:943284686802-compute@developer.gserviceaccount.com:roles/storage.objectViewer gs://us.artifacts.udmi-swarm-example.appspot.com/`
+`gcloud storage buckets add-iam-policy-binding gs://us.artifacts.udmi-swarm-example.appspot.com/ --member=serviceAccount:943284686802-compute@developer.gserviceaccount.com --role=roles/storage.objectViewer`
 
 ## Container build/deploy script
 

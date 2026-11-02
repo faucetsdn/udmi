@@ -42,11 +42,13 @@ DEVICE_ID=$(jq -r .device_id "$SITE_MODEL/cloud_iot_config.json")
 
 # Process Helpers and Cleanup Hook
 PUBBER_PID=""
-BRIDGE_EVENTS_PID=""
+BRIDGE_EVENTS_1_PID=""
+BRIDGE_EVENTS_2_PID=""
 BRIDGE_STATE_PID=""
 BRIDGE_REFLECT_PID=""
 UDMIS_PID=""
 PUBSUB_PID=""
+ETCD_TLS_PID=""
 
 kill_process() {
   local pid=$1
@@ -74,10 +76,12 @@ cleanup() {
   fi
   echo "Cleaning up openbridge test processes..."
   kill_process "$PUBBER_PID"
-  kill_process "$BRIDGE_EVENTS_PID"
+  kill_process "$BRIDGE_EVENTS_1_PID"
+  kill_process "$BRIDGE_EVENTS_2_PID"
   kill_process "$BRIDGE_STATE_PID"
   kill_process "$BRIDGE_REFLECT_PID"
   kill_process "$UDMIS_PID"
+  kill_process "$ETCD_TLS_PID"
   if [ -n "$PUBSUB_PID" ]; then
     kill_process "$PUBSUB_PID"
   fi
@@ -94,17 +98,79 @@ export registry_id="$REGISTRY_ID"
 
 # 2. Check Base Infrastructure Services (Etcd & Mosquitto)
 echo "Checking base infrastructure services..."
-ETCD_PORT=${ETCD_PORT:-2379}
+export MQTT_PORT=${MQTT_PORT:-8883}
+export ETCD_PORT=${ETCD_PORT:-2379}
 if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
   echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/udmi start $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
 
-MQTT_PORT=${MQTT_PORT:-8883}
 if ! nc -z 127.0.0.1 "$MQTT_PORT" &>/dev/null; then
   echo "Error: Mosquitto is not running on 127.0.0.1:$MQTT_PORT. Please run 'bin/udmi start $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
+
+# Stop background plain-HTTP etcd (started by bin/udmi start) and replace it in-place on $ETCD_PORT
+# with the single production-parity mTLS etcd instance (--client-cert-auth & --peer-client-cert-auth)
+bin/start_etcd stop >/dev/null 2>&1 || true
+ETCD_PEER_PORT=$((ETCD_PORT + 1000))
+ETCD_TLS_DIR="var/etcd_tls"
+ETCD_TLS_LOG="out/etcd_tls.log"
+rm -rf "$ETCD_TLS_DIR"
+mkdir -p "$ETCD_TLS_DIR/member" "$(dirname "$ETCD_TLS_LOG")"
+
+ETCD_BIN="udmis/bin/etcd_bin/etcd"
+[ -x "$ETCD_BIN" ] || udmis/bin/etcdctl version >/dev/null 2>&1
+
+echo "Starting mTLS etcd instance on https://127.0.0.1:$ETCD_PORT (--client-cert-auth)..."
+nohup "$ETCD_BIN" \
+  --listen-client-urls="https://127.0.0.1:${ETCD_PORT}" \
+  --advertise-client-urls="https://127.0.0.1:${ETCD_PORT}" \
+  --listen-peer-urls="https://127.0.0.1:${ETCD_PEER_PORT}" \
+  --initial-advertise-peer-urls="https://127.0.0.1:${ETCD_PEER_PORT}" \
+  --initial-cluster="default=https://127.0.0.1:${ETCD_PEER_PORT}" \
+  --client-cert-auth \
+  --trusted-ca-file="$SITE_MODEL/reflector/ca.crt" \
+  --cert-file="$SITE_MODEL/reflector/rsa_private.crt" \
+  --key-file="$SITE_MODEL/reflector/rsa_private.pem" \
+  --peer-client-cert-auth \
+  --peer-trusted-ca-file="$SITE_MODEL/reflector/ca.crt" \
+  --peer-cert-file="$SITE_MODEL/reflector/rsa_private.crt" \
+  --peer-key-file="$SITE_MODEL/reflector/rsa_private.pem" \
+  --data-dir="$ETCD_TLS_DIR" \
+  > "$ETCD_TLS_LOG" 2>&1 &
+ETCD_TLS_PID=$!
+
+echo "Waiting for mTLS etcd to be ready on https://127.0.0.1:${ETCD_PORT}..."
+etcd_tls_ready=false
+for i in {1..30}; do
+  if curl -sf --cacert "$SITE_MODEL/reflector/ca.crt" \
+       --cert "$SITE_MODEL/reflector/rsa_private.crt" \
+       --key "$SITE_MODEL/reflector/rsa_private.pem" \
+       "https://127.0.0.1:${ETCD_PORT}/health" >/dev/null 2>&1; then
+    etcd_tls_ready=true
+    break
+  fi
+  sleep 0.5
+done
+if [ "$etcd_tls_ready" != "true" ]; then
+  echo "Error: mTLS etcd failed to become healthy on https://127.0.0.1:${ETCD_PORT}. Log:" >&2
+  cat "$ETCD_TLS_LOG" >&2 || true
+  exit 1
+fi
+
+# Verify that unauthenticated (no client cert) connections to mTLS etcd are rejected
+if curl -sf --cacert "$SITE_MODEL/reflector/ca.crt" "https://127.0.0.1:${ETCD_PORT}/health" >/dev/null 2>&1; then
+  echo "Error: mTLS etcd accepted connection without client certificate!" >&2
+  exit 1
+fi
+echo "mTLS etcd ready on https://127.0.0.1:${ETCD_PORT} (client-cert-auth verified; unauthenticated TLS rejected)."
+
+ETCDCTL_BIN="$(dirname "$ETCD_BIN")/etcdctl"
+export ETCDCTL_ENDPOINTS="https://127.0.0.1:${ETCD_PORT}"
+export ETCDCTL_CACERT="$SITE_MODEL/reflector/ca.crt"
+export ETCDCTL_CERT="$SITE_MODEL/reflector/rsa_private.crt"
+export ETCDCTL_KEY="$SITE_MODEL/reflector/rsa_private.pem"
 
 echo "Ensuring device certificates exist for all devices in site model..."
 for device_dir in "$SITE_MODEL"/devices/*; do
@@ -249,11 +315,12 @@ jq --arg auth_user "$AUTH_USER" \
    --arg serv_user "$SERV_USER" \
    --arg serv_pass "$SERV_PASS" \
    --argjson mqtt_port "${MQTT_PORT:-8883}" \
-   --arg etcd_port "${ETCD_PORT:-2379}" \
+   --arg etcd_tls_port "$ETCD_PORT" \
    '.base.log_level = "DEBUG" |
     .flows.reflect.send_id = "udmi_reply" |
     .flows.distributor.enabled = "false" |
-    .iot_data.database.project_id = "http://${ETCD_CLUSTER}:\($etcd_port)" |
+    .iot_data.database.project_id = "https://${ETCD_CLUSTER}:\($etcd_tls_port)" |
+    .iot_data.database.options = "enabled=${ETCD_CLUSTER},ca_file='$(pwd)'/var/mosquitto/certs/ca.crt,cert_file='$(pwd)'/var/mosquitto/certs/rsa_private.crt,key_file='$(pwd)'/var/mosquitto/certs/rsa_private.pem" |
     .iot_access.zanzara = {
       "provider": "zanzara",
       "options": "enabled=${ETCD_CLUSTER}",
@@ -299,6 +366,9 @@ jq --arg auth_user "$AUTH_USER" \
       }
     }' udmis/etc/prod_pod.json > out/prod_pod_host.json
 
+# Stop local MQTT-mode UDMIS (if running from bin/udmi start) so only Host UDMIS (Pub/Sub Mode) processes traffic
+bin/start_udmis stop >/dev/null 2>&1 || true
+
 rm -f /tmp/pod_ready.txt
 
 udmis/bin/run out/prod_pod_host.json > out/udmis_host.log 2>&1 &
@@ -323,31 +393,56 @@ if [ $timeout -le 0 ]; then
   exit 1
 fi
 
-# 14. Start Bridges
-echo "Starting Bridges..."
+# 14. Start Bridges (Pure mTLS Certificate Auth - No MQTT Username/Password, Redundant Event Bridges with $share/, mTLS Etcd)
+export BRIDGE_MQTT_PORT=${BRIDGE_MQTT_PORT:-$((MQTT_PORT + 100))}
+echo "Starting Bridges on mTLS listener port $BRIDGE_MQTT_PORT (Pure mTLS Mode + Shared Subscriptions + mTLS Etcd https://127.0.0.1:$ETCD_PORT)..."
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
+  --mqtt_broker_url=ssl://127.0.0.1:$BRIDGE_MQTT_PORT \
   --mqtt_subscription_topic="/r/+/d/+/events/#" \
+  --shared_subscription=events_group \
   --gcp_project_id=udmis \
   --pubsub_topic_id=udmi_target \
-  --mqtt_client_id=bridge-events \
+  --mqtt_client_id=bridge-events-1 \
   --mqtt_tls \
   --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
   --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
-  --mqtt_username=rocket \
-  --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:$ETCD_PORT \
+  --etcd_target=https://127.0.0.1:$ETCD_PORT \
+  --etcd_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --etcd_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --etcd_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
-  > out/bridge_events.log 2>&1 &
-BRIDGE_EVENTS_PID=$!
+  > out/bridge_events_1.log 2>&1 &
+BRIDGE_EVENTS_1_PID=$!
 
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
+  --mqtt_broker_url=ssl://127.0.0.1:$BRIDGE_MQTT_PORT \
+  --mqtt_subscription_topic="/r/+/d/+/events/#" \
+  --shared_subscription=events_group \
+  --gcp_project_id=udmis \
+  --pubsub_topic_id=udmi_target \
+  --mqtt_client_id=bridge-events-2 \
+  --mqtt_tls \
+  --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
+  --etcd_target=https://127.0.0.1:$ETCD_PORT \
+  --etcd_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --etcd_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --etcd_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
+  --etcd_options=enabled=true \
+  --source_attribute=iot-access \
+  > out/bridge_events_2.log 2>&1 &
+BRIDGE_EVENTS_2_PID=$!
+
+java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
+  com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
+  --mqtt_broker_url=ssl://127.0.0.1:$BRIDGE_MQTT_PORT \
   --mqtt_subscription_topic="/r/+/d/+/state" \
+  --shared_subscription=state_group \
   --gcp_project_id=udmis \
   --pubsub_topic_id=udmi_state \
   --mqtt_client_id=bridge-state \
@@ -355,9 +450,10 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
   --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
-  --mqtt_username=rocket \
-  --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:$ETCD_PORT \
+  --etcd_target=https://127.0.0.1:$ETCD_PORT \
+  --etcd_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --etcd_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --etcd_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_state.log 2>&1 &
@@ -365,7 +461,7 @@ BRIDGE_STATE_PID=$!
 
 java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   com.google.bos.udmi.service.bridge.MqttToPubSubBridge \
-  --mqtt_broker_url=ssl://127.0.0.1:$MQTT_PORT \
+  --mqtt_broker_url=ssl://127.0.0.1:$BRIDGE_MQTT_PORT \
   --mqtt_subscription_topic="/r/UDMI-REFLECT/d/+/reflect" \
   --gcp_project_id=udmis \
   --pubsub_topic_id=udmi_reflect \
@@ -374,9 +470,10 @@ java -cp udmis/build/libs/udmis-1.0-SNAPSHOT-all.jar \
   --mqtt_ca_path="$SITE_MODEL/reflector/ca.crt" \
   --mqtt_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
   --mqtt_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
-  --mqtt_username=rocket \
-  --mqtt_password=monkey \
-  --etcd_target=http://127.0.0.1:$ETCD_PORT \
+  --etcd_target=https://127.0.0.1:$ETCD_PORT \
+  --etcd_ca_path="$SITE_MODEL/reflector/ca.crt" \
+  --etcd_client_cert_path="$SITE_MODEL/reflector/rsa_private.crt" \
+  --etcd_client_key_path="$SITE_MODEL/reflector/rsa_private.pem" \
   --etcd_options=enabled=true \
   --source_attribute=iot-access \
   > out/bridge_reflect.log 2>&1 &
@@ -447,7 +544,8 @@ wait_for_device_config() {
   fi
 }
 
-wait_for_bridge "Events Bridge" "$BRIDGE_EVENTS_PID" "out/bridge_events.log"
+wait_for_bridge "Events Bridge 1" "$BRIDGE_EVENTS_1_PID" "out/bridge_events_1.log"
+wait_for_bridge "Events Bridge 2" "$BRIDGE_EVENTS_2_PID" "out/bridge_events_2.log"
 wait_for_bridge "State Bridge" "$BRIDGE_STATE_PID" "out/bridge_state.log"
 wait_for_bridge "Reflect Bridge" "$BRIDGE_REFLECT_PID" "out/bridge_reflect.log"
 echo "Bridges are running and connected."
@@ -470,7 +568,7 @@ poll_timeout=45
 STATE_VAL=""
 
 for i in $(seq 1 $poll_timeout); do
-  STATE_VAL=$(udmis/bin/etcdctl get --print-value-only "/r/$REGISTRY_ID/d/$DEVICE_ID:last_state" 2>/dev/null) || STATE_VAL=""
+  STATE_VAL=$("$ETCDCTL_BIN" get --print-value-only "/r/$REGISTRY_ID/d/$DEVICE_ID:last_state" 2>/dev/null) || STATE_VAL=""
   if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
     break
   fi
@@ -478,10 +576,10 @@ for i in $(seq 1 $poll_timeout); do
 done
 
 echo "Verifying etcd state..."
-udmis/bin/etcdctl version
+"$ETCDCTL_BIN" version
 
 echo "All keys in etcd:"
-udmis/bin/etcdctl get --prefix ""
+"$ETCDCTL_BIN" get --prefix ""
 
 echo "STATE_VAL output: $STATE_VAL"
 
@@ -491,7 +589,7 @@ echo "=================================================================="
 
 # 1. Verify Registry Discovery in etcd
 echo "Querying etcd key ':registries' for registry discovery..."
-REGISTRIES_VAL=$(udmis/bin/etcdctl get --print-value-only ":registries")
+REGISTRIES_VAL=$("$ETCDCTL_BIN" get --print-value-only ":registries")
 echo "Discovered Registries in etcd: $REGISTRIES_VAL"
 
 if [[ "$REGISTRIES_VAL" != *"$REGISTRY_ID"* ]]; then
@@ -502,7 +600,7 @@ echo "Registry discovery PASSED for registry: $REGISTRY_ID"
 
 # 2. Verify Device Discovery in etcd
 echo "Querying etcd for devices discovered under registry '$REGISTRY_ID'..."
-DEVICES_VAL=$(udmis/bin/etcdctl get --prefix "/r/$REGISTRY_ID/d/")
+DEVICES_VAL=$("$ETCDCTL_BIN" get --prefix "/r/$REGISTRY_ID/d/")
 echo "Discovered Devices in etcd under $REGISTRY_ID:"
 echo "$DEVICES_VAL"
 
@@ -585,6 +683,52 @@ else
   echo "Error: CloudQuery discovery execution logs not found in out/udmis_host.log!" >&2
   exit 1
 fi
+
+echo "=================================================================="
+echo "Verifying End-to-End Sequencer Validation over Pub/Sub (//gref/udmis)"
+echo "=================================================================="
+bin/sequencer -s 852649 "$SITE_MODEL" //gref/udmis "$DEVICE_ID" device_config_acked
+
+if ! grep -q "RESULT pass system device_config_acked" "$SITE_MODEL/out/devices/$DEVICE_ID/RESULT.log" 2>/dev/null; then
+  echo "Error: Sequencer test 'device_config_acked' did not pass over //gref/udmis!" >&2
+  exit 1
+fi
+echo "Sequencer validation PASSED for 'device_config_acked' over //gref/udmis."
+
+echo "=================================================================="
+echo "Verifying Redundant Bridges & Shared Subscriptions (\$share/)"
+echo "=================================================================="
+if ! grep -q 'Subscribing to MQTT topic: \$share/events_group//r/+/d/+/events/#' out/bridge_events_1.log 2>/dev/null || \
+   ! grep -q 'Subscribing to MQTT topic: \$share/events_group//r/+/d/+/events/#' out/bridge_events_2.log 2>/dev/null; then
+  echo "Error: Shared subscription topic not found in both event bridge logs!" >&2
+  exit 1
+fi
+
+EVENTS_1_COUNT=$(grep -c "Published to Pub/Sub with message ID:" out/bridge_events_1.log 2>/dev/null || true)
+EVENTS_2_COUNT=$(grep -c "Published to Pub/Sub with message ID:" out/bridge_events_2.log 2>/dev/null || true)
+TOTAL_EVENTS_COUNT=$((EVENTS_1_COUNT + EVENTS_2_COUNT))
+echo "Shared subscription event distribution: bridge-events-1=$EVENTS_1_COUNT, bridge-events-2=$EVENTS_2_COUNT (total=$TOTAL_EVENTS_COUNT)"
+
+if [ "$EVENTS_1_COUNT" -le 0 ] || [ "$EVENTS_2_COUNT" -le 0 ]; then
+  echo "Error: Expected both event bridge replicas to receive load-balanced messages, got bridge-events-1=$EVENTS_1_COUNT, bridge-events-2=$EVENTS_2_COUNT!" >&2
+  exit 1
+fi
+echo "Redundant bridges and shared subscription verification PASSED."
+
+echo "=================================================================="
+echo "Verifying Etcd Mutual TLS (mTLS) Connections Across UDMIS & Bridges"
+echo "=================================================================="
+if ! grep -q "Connecting to etcd target https://127.0.0.1:${ETCD_PORT} to glean client list" out/udmis_host.log 2>/dev/null; then
+  echo "Error: Host UDMIS did not log mTLS connection to https://127.0.0.1:${ETCD_PORT}!" >&2
+  exit 1
+fi
+for blog in out/bridge_events_1.log out/bridge_events_2.log out/bridge_state.log out/bridge_reflect.log; do
+  if ! grep -q "Connecting to etcd target https://127.0.0.1:${ETCD_PORT} to glean client list" "$blog" 2>/dev/null; then
+    echo "Error: Bridge log $blog did not log mTLS connection to https://127.0.0.1:${ETCD_PORT}!" >&2
+    exit 1
+  fi
+done
+echo "Etcd mTLS verification PASSED across Host UDMIS and all 4 MqttToPubSubBridge replicas (https://127.0.0.1:${ETCD_PORT})."
 
 if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
   echo "Integration Test PASSED"

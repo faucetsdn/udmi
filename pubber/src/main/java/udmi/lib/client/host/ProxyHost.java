@@ -1,5 +1,6 @@
 package udmi.lib.client.host;
 
+import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.JsonUtil.safeSleep;
 import static java.lang.String.format;
@@ -67,9 +68,11 @@ public interface ProxyHost extends ManagerHost, ManagerLog {
    * @param config The configuration to be applied.
    */
   default void configHandler(Config config) {
-    getPublisherHost().configPreprocess(getDeviceId(), config);
-    getDeviceManager().updateConfig(config);
-    getPublisherHost().publisherConfigLog("apply", null, getDeviceId());
+    synchronized (getDeviceState()) {
+      getPublisherHost().configPreprocess(getDeviceId(), config);
+      getDeviceManager().updateConfig(config);
+      getPublisherHost().publisherConfigLog("apply", null, getDeviceId());
+    }
   }
 
   default void shutdown() {
@@ -86,8 +89,13 @@ public interface ProxyHost extends ManagerHost, ManagerLog {
    * Publish dirty state.
    */
   default void publishDirtyState() {
-    if (getStateDirty().getAndSet(false)) {
-      publish(getDeviceId(), getDeviceState());
+    if (!isActive().get()) {
+      return;
+    }
+    synchronized (getDeviceState()) {
+      if (getStateDirty().getAndSet(false)) {
+        publish(getDeviceId(), deepCopy(getDeviceState()));
+      }
     }
   }
 
@@ -103,9 +111,12 @@ public interface ProxyHost extends ManagerHost, ManagerLog {
     }
   }
 
+  @Override
   default void update(Object update) {
-    updateStateHolder(getDeviceState(), update);
-    getStateDirty().set(true);
+    synchronized (getDeviceState()) {
+      updateStateHolder(getDeviceState(), update);
+      getStateDirty().set(true);
+    }
   }
 
   @Override

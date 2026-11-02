@@ -10,21 +10,30 @@ import static org.junit.Assert.assertTrue;
 import static udmi.schema.BlobsetConfig.SystemBlobsets.IOT_ENDPOINT_CONFIG;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.JsonUtil;
 import daq.pubber.impl.host.PubberPublisherHost;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.After;
 import org.junit.Test;
 import udmi.lib.TestBase;
+import udmi.lib.client.host.ProxyHost;
 import udmi.lib.client.host.PublisherHost;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
+import udmi.schema.Config;
 import udmi.schema.DevicePersistent;
 import udmi.schema.EndpointConfiguration;
+import udmi.schema.Entry;
+import udmi.schema.Operation;
+import udmi.schema.Operation.SystemMode;
+import udmi.schema.PointsetConfig;
 import udmi.schema.State;
+import udmi.schema.SystemConfig;
 
 /**
  * Unit tests for Pubber.
@@ -289,5 +298,106 @@ public class PubberTest extends TestBase {
     pubber.initializePersistentStore();
     assertEquals(pubber.persistentData.endpoint.hostname, "persistent");
     assertEquals(pubber.getPubberConfig().endpoint.hostname, "persistent");
+  }
+
+  @Test
+  public void initializePersistentStoreEmptyBlobsTest() {
+    HashMap<PubberUnderTestFeatures, Boolean> testFeatures = new HashMap<>();
+    testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, true);
+    pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO, testFeatures);
+    pubber.initialize();
+    pubber.startConnection();
+
+    testPersistentData.endpoint = getEndpointConfiguration("persistent");
+    testPersistentData.applied_blobs = new HashMap<>();
+
+    testFeatures.put(PubberUnderTestFeatures.noInitializePersistentStore, false);
+    pubber.initializePersistentStore();
+    assertNull("Empty applied_blobs should not initialize empty blobset state",
+        pubber.getDeviceState().blobset);
+  }
+
+  @Test
+  public void dupeStateStatusAndModeUpdates() {
+    pubber = new PubberUnderTest(TEST_PROJECT, TEST_SITE, TEST_DEVICE, SERIAL_NO);
+    pubber.getPubberConfig().options.dupeState = true;
+    pubber.initialize();
+    pubber.startConnection();
+    pubber.getConfigLatch().countDown();
+
+    final int beforeCount = pubber.getMessageCounts()
+        .computeIfAbsent("state", k -> new AtomicInteger()).get();
+
+    Entry report = new Entry();
+    report.category = "system.config.receive";
+    report.message = "success";
+    pubber.getDeviceManager().setStatus(report, TEST_DEVICE);
+    assertEquals("setStatus should not send partial dupeState",
+        beforeCount, pubber.getMessageCounts().get("state").get());
+    assertEquals(report, pubber.getDeviceState().system.status);
+
+    State emptyState = new State();
+    udmi.lib.base.ManagerBase.updateStateHolder(emptyState, Entry.class);
+    assertNull("Clearing status on uninitialized system state should leave system null",
+        emptyState.system);
+    udmi.lib.base.ManagerBase.updateStateHolder(emptyState, report);
+    assertEquals("Setting status on uninitialized system state should initialize system",
+        report, emptyState.system.status);
+
+    SystemConfig systemConfig = new SystemConfig();
+    systemConfig.operation = new Operation();
+    systemConfig.operation.mode = SystemMode.ACTIVE;
+    pubber.getDeviceManager().getSystemManager().setSystemConfig(systemConfig);
+    pubber.getDeviceManager().maybeRestartSystem();
+    assertEquals("Transition to ACTIVE should send partial dupeState once",
+        beforeCount + 1, pubber.getMessageCounts().get("state").get());
+
+    pubber.getDeviceManager().maybeRestartSystem();
+    assertEquals("Repeated ACTIVE check should not send redundant partial dupeState",
+        beforeCount + 1, pubber.getMessageCounts().get("state").get());
+  }
+
+  @Test
+  public void proxyDeviceStateAndConfigStatusHandling() {
+    pubber = makeTestPubber(TEST_DEVICE);
+    ProxyHost proxy = pubber.getDeviceManager().getGatewayManager()
+        .createProxyDevice(pubber, "SNS-4");
+    pubber.getDeviceManager().getGatewayManager()
+        .setProxyDevices(ImmutableMap.of("SNS-4", proxy));
+    try {
+      assertEquals("New proxy device should not be marked dirty before config",
+          false, proxy.getStateDirty().get());
+
+      pubber.publisherHandler("config", "receive", null, "SNS-4");
+      pubber.publisherHandler("config", "parse", null, "SNS-4");
+      assertEquals("Successful receive/parse should not mark proxy state dirty before apply",
+          false, proxy.getStateDirty().get());
+      assertNull("Successful receive/parse should not set transient system status",
+          proxy.getDeviceState().system.status);
+
+      Config proxyConfig = new Config();
+      proxyConfig.timestamp = new Date();
+      proxyConfig.system = new SystemConfig();
+      proxyConfig.pointset = new PointsetConfig();
+      proxyConfig.pointset.points = new HashMap<>();
+      proxy.configHandler(proxyConfig);
+
+      assertEquals("Config handler should mark proxy state dirty",
+          true, proxy.getStateDirty().get());
+      proxy.publishDirtyState();
+      assertEquals("Inactive proxy should retain dirty state until activated",
+          true, proxy.getStateDirty().get());
+
+      proxy.isActive().set(true);
+      proxy.publishDirtyState();
+      assertEquals("Active proxy should clear dirty state after publishing",
+          false, proxy.getStateDirty().get());
+      assertNotEquals("Published proxy state must include pointset",
+          null, proxy.getDeviceState().pointset);
+      assertEquals("Published proxy state status should be system.config.apply",
+          "system.config.apply", proxy.getDeviceState().system.status.category);
+    } finally {
+      proxy.shutdown();
+    }
   }
 }

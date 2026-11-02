@@ -39,7 +39,7 @@ def future_wait_and_count_outstanding(futures: Iterable[concurrent.futures.Futur
   Returns:
     count of outstanding futures
   """
-  _, outstanding = concurrent.futures.wait(futures, 1)
+  _, outstanding = concurrent.futures.wait(futures, timeout)
   return len(outstanding)
 
 class BacnetObjectAcronyms(enum.StrEnum):
@@ -60,34 +60,47 @@ class CowardlyQuit(Exception):
   pass
 
 
+def create_bacnet_stack(*, ip: str | None = None, port: int | None = None):
+  """Creates the single BAC0 stack shared by every bacnet scan instance.
+
+  BAC0 binds a UDP port, so exactly one stack must exist per process; the
+  DiscoveryManager creates it once and passes it to each GlobalBacnetDiscovery.
+  """
+  return BAC0.lite(ip=ip, port=port, deviceId=BACNET_DEVICE_ID)
+
+
 class GlobalBacnetDiscovery(discovery.DiscoveryController):
   """Bacnet discovery."""
 
   family = "bacnet"
 
+  # Shares one BAC0 stack (and its discoveredDevices table) across instances,
+  # so only one bacnet scan may run at any time. See DiscoveryController.exclusive.
+  exclusive = True
+
   def __init__(
       self,
-      state: udmi.schema.state.LocalnetFamily,
+      state_entry: udmi.schema.state.Discovery,
       publisher: Callable[[DiscoveryEvent], None],
       *,
-      bacnet_ip: str = None,
-      bacnet_port: int = None,
-      bacnet_device_name = None,
-      bacnet_firmware_version = None,
+      scan_id: str,
+      bacnet,
   ):
+    """
+    Args:
+      state_entry: see DiscoveryController
+      publisher: see DiscoveryController
+      scan_id: see DiscoveryController
+      bacnet: shared BAC0 stack from `create_bacnet_stack`
+    """
     self.devices_published = set()
     self.targetted_devices_found = set()
     self.cancelled = None
     self.result_producer_thread = None
     self.resolver_dispatcher_thread = None
-   
-    self.bacnet = BAC0.lite(
-        ip=bacnet_ip,
-        port=bacnet_port,
-        deviceId=BACNET_DEVICE_ID
-    )
+    self.bacnet = bacnet
     
-    super().__init__(state, publisher)
+    super().__init__(state_entry, publisher, scan_id=scan_id)
 
   def resolve_task_dispatcher(self, target_ips: list[str]):
     """Dispatches ip->bacnet resolv tasks across simulateous workers"""
@@ -102,7 +115,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
   
   def resolve_task(self, ip_address: str) -> None:
     if id := self.get_bacnet_id_from_ip(ip_address):
-      logging.debug("found bacnet %s at ip %s", id, ip_address)
+      self.log.debug("found bacnet %s at ip %s", id, ip_address)
       self.targetted_devices_found.add((ip_address, id))
 
   def get_bacnet_id_from_ip(self, ip_address: str) -> int | bool:
@@ -121,6 +134,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     self.cancelled = False
 
     if not self.config.addrs:
+      if self.bacnet.discoveredDevices:
+        self.bacnet.discoveredDevices.clear()
       self.bacnet.discover(global_broadcast=True)
       device_list_function = self.discovery_device_list_producer
     else:
@@ -144,9 +159,10 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
 
   def stop_discovery(self):
     self.cancelled = True
-    if self.resolver_dispatcher_thread:
+    if self.resolver_dispatcher_thread and self.resolver_dispatcher_thread.is_alive():
       self.resolver_dispatcher_thread.join()
-    self.result_producer_thread.join()
+    if self.result_producer_thread and self.result_producer_thread.is_alive():
+      self.result_producer_thread.join()
 
 
   def discover_device(self, device_address, device_id) -> DiscoveryEvent:
@@ -154,7 +170,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     ### Existence of a device
     ###################################################################
     event = udmi.schema.discovery_event.DiscoveryEvent(
-        generation=self.config.generation,
+        generation=self.generation,
         family=self.family,
         addr=str(device_id),
     )
@@ -205,7 +221,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
         event.system.ancillary["name"] = object_name
 
       except (BAC0.core.io.IOExceptions.SegmentationNotSupported, Exception) as err:
-        logging.exception(f"error reading from {device_address}/{device_id}")
+        self.log.exception(f"error reading from {device_address}/{device_id}")
         event.status = udmi.schema.discovery_event.Status("discovery.error", 500, str(err))
         return event
 
@@ -230,7 +246,7 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     
       except Exception as err:
         event.status = udmi.schema.discovery_event.Status("discovery.error", 500, str(err))
-        logging.exception(f"error reading from {device_address}/{device_id}")
+        self.log.exception(f"error reading from {device_address}/{device_id}")
         return event
     
     return event
@@ -248,8 +264,8 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     return set()
 
 
-  @discovery.main_task
   @discovery.catch_exceptions_to_state
+  @discovery.main_task
   def devices_consumer(self, producer = Callable[[], set[tuple[str, str]]]) -> None:
     # used to determine when a scan is complete
     # in reality to a who/is scan devices will respond very quickly (seconds)
@@ -258,40 +274,41 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     # when to determine done
     UNCHANGED_COUNT_THRESHOLD:int = 300
 
-    while not self.cancelled:
-      try:
-        new_devices = (
-            producer() - self.devices_published
-        )
-        
-        if not new_devices:
-          unchanged_device_count_seconds += 1
-          continue
-        unchanged_device_count_seconds = 0
+    try:
+      while not self.cancelled:
+        try:
+          new_devices = (
+              producer() - self.devices_published
+          )
+          
+          if not new_devices:
+            unchanged_device_count_seconds += 1
+            continue
+          unchanged_device_count_seconds = 0
 
-        for device in new_devices:
-          # Check that it is not cancelled in the inner loop too because this
-          # can take a long time to enumerate through all found devices.
+          for device in new_devices:
+            # Check that it is not cancelled in the inner loop too because this
+            # can take a long time to enumerate through all found devices.
+            if self.cancelled:
+              return
+            
+            address, id = device
+            start = time.monotonic()
+            event = self.discover_device(address, id)
+            end = time.monotonic() 
+            self.log.debug("discovery for %s completed in %s seconds", device, str(end - start))
+
+            self.publish(event)
+            self.devices_published.add(device)
+        except AttributeError as err:
+          self.log.exception(err)
+        finally:
           if self.cancelled:
             return
-          
-          address, id = device
-          start = time.monotonic()
-          event = self.discover_device(address, id)
-          end = time.monotonic() 
-          logging.debug("discovery for %s completed in %s seconds", device, str(end - start))
-
-          self.publish(event)
-          self.devices_published.add(device)
-      except AttributeError as err:
-        logging.exception(err)
-      finally:
-        if self.cancelled:
-          return
-        if unchanged_device_count_seconds > UNCHANGED_COUNT_THRESHOLD:
-          return
-        time.sleep(1)
-
-  def __del__(self):
-    self.bacnet.disconnect()
-    super().__del__()
+          if unchanged_device_count_seconds > UNCHANGED_COUNT_THRESHOLD:
+            return
+          time.sleep(1)
+    finally:
+      if self.resolver_dispatcher_thread and self.resolver_dispatcher_thread.is_alive():
+        self.cancelled = True
+        self.resolver_dispatcher_thread.join()

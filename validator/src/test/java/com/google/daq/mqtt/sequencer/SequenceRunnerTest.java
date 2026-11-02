@@ -8,9 +8,12 @@ import com.google.daq.mqtt.TestCommon;
 import com.google.daq.mqtt.WebServerRunner;
 import com.google.udmi.util.SiteModel;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.Test;
 import udmi.schema.ExecutionConfiguration;
+import udmi.schema.SequenceValidationState.SequenceResult;
 
 /**
  * Unit tests for sequence runner (not to be confused with sequence tests themselves).
@@ -18,6 +21,8 @@ import udmi.schema.ExecutionConfiguration;
 public class SequenceRunnerTest {
 
   private static final String TEST_DEVICE = "AHU-1";
+  private static final String NO_FAMILIES_DEVICE = "AHU-22";
+  private static final String FACETED_TEST = "scan_single_now";
   // TODO: Dynamically pull this count form the udmi_site_model/devices/ directory.
   private static final int MODEL_DEVICE_COUNT = 4;
 
@@ -56,6 +61,26 @@ public class SequenceRunnerTest {
     // TODO: SequenceRunner is not properly mocked, so everything fails.
     assertEquals("site execution failures", runCount, failures);
     assertTestCount(runCount, TEST_COUNT_MIN);
+  }
+
+  /**
+   * A faceted test on a device that defines no facet values (no discovery families) must still be
+   * executed exactly once, with no facet suffix, and be reported as skipped rather than being
+   * silently omitted from the results. Uses the active mock publisher (as `bin/sequencer -- ...`
+   * does) rather than the fail-fast one, so that test setup is actually reached.
+   */
+  @Test
+  public void facetedTestWithoutFacetValues() {
+    ExecutionConfiguration config = TestCommon.testConfiguration();
+    config.device_id = NO_FAMILIES_DEVICE;
+    config.sequences = List.of(FACETED_TEST);
+    SequenceRunner.processRequest(config);
+
+    Map<String, SequenceResult> results = SequenceRunner.getAllTests();
+    String resultId = NO_FAMILIES_DEVICE + "/" + FACETED_TEST;
+    assertEquals("executed tests", Set.of(resultId), results.keySet());
+    assertEquals("faceted test without facet values", SequenceResult.SKIP, results.get(resultId));
+    assertTrue("no execution failures", SequenceRunner.getFailures().isEmpty());
   }
 
   private Map<String, String> makeParams(ExecutionConfiguration config) {

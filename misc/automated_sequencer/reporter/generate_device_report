@@ -17,8 +17,8 @@ REPORT_PATH=$3
 rm -rf $LOCAL_RESULTS_DIR/$DEVICE_PATH
 mkdir -p $LOCAL_RESULTS_DIR/$DEVICE_PATH
 
-# /.. because gsutil will copy into /device_id/device_id
-gsutil -m cp -r gs://$GCS_BUCKET/$GCS_SUMMARY_SUBDIR/$DEVICE_PATH $LOCAL_RESULTS_DIR/$DEVICE_PATH/..
+# /.. because gcloud storage will copy into /device_id/device_id
+gcloud storage cp --recursive gs://$GCS_BUCKET/$GCS_SUMMARY_SUBDIR/$DEVICE_PATH $LOCAL_RESULTS_DIR/$DEVICE_PATH/..
 
 python3 $ROOT_DIR/python/generate_report.py \
     $LOCAL_RESULTS_DIR/$DEVICE_PATH $DEVICE_PATH $REPORT_PATH

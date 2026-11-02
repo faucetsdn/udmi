@@ -128,6 +128,7 @@ public class SiteModel {
   private boolean warningsAsErrors;
   private SiteMetadata siteMetadata;
   private final Map<String, Map<String, Object>> allTemplates;
+  private File confOutFile;
 
   public SiteModel(String specPath) {
     this(specPath, null, null);
@@ -162,11 +163,20 @@ public class SiteModel {
 
   public SiteModel(String toolName, List<String> argList) {
     this(removeStringArg(argList, "site_model"), projectSpecSupplier(argList), null);
-    ExecutionConfiguration executionConfiguration = getExecutionConfiguration();
-    File outFile = new File(CONFIG_OUT_DIR, format("%s_conf.json", toolName));
-    System.err.println("Writing reconciled configuration file to " + outFile.getAbsolutePath());
-    CONFIG_OUT_DIR.mkdirs();
-    writeFile(executionConfiguration, outFile);
+    confOutFile = new File(CONFIG_OUT_DIR, format("%s_conf.json", toolName));
+    writeConfigFile();
+  }
+
+  /**
+   * Writes the reconciled execution configuration file if an output file is configured.
+   */
+  public void writeConfigFile() {
+    if (confOutFile != null) {
+      System.err.println(
+          "Writing reconciled configuration file to " + confOutFile.getAbsolutePath());
+      CONFIG_OUT_DIR.mkdirs();
+      writeFile(getExecutionConfiguration(), confOutFile);
+    }
   }
 
   public SiteModel(ExecutionConfiguration executionConfiguration) {

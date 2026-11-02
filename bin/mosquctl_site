@@ -17,8 +17,10 @@ source $UDMI_ROOT/etc/mosquitto_ctrl.sh
 
 site_config=$site_path/cloud_iot_config.json
 
+has_explicit_registry=false
 if [[ $# == 1 ]]; then
     registry_id=$1
+    has_explicit_registry=true
     shift
 else
     registry_id=$(jq -r .registry_id $site_config)
@@ -28,6 +30,52 @@ echo "Configuring default service user..."
 $MOSQUITTO_CTRL createClient rocket -p monkey 2>/dev/null || true
 $MOSQUITTO_CTRL addClientRole rocket service 2>/dev/null || true
 $MOSQUITTO_CTRL addClientRole rocket uufi 2>/dev/null || true
+
+ns_prefix=""
+if [[ "$site_path" =~ sites/udmi~([a-zA-Z0-9_-]+) ]]; then
+    ns_prefix="${BASH_REMATCH[1]}~"
+elif [[ -n "${UDMI_NAMESPACE:-}" ]]; then
+    ns_prefix="${UDMI_NAMESPACE}~"
+fi
+
+hash_pass=$(sha256sum < "$site_path/reflector/rsa_private.pkcs8")
+SERV_PASS=${hash_pass:0:8}
+
+configure_registry() {
+    local reg_id="$1"
+    local serv_user="/r/${ns_prefix}UDMI-REFLECT/d/${ns_prefix}${reg_id}${UDMI_REGISTRY_SUFFIX:-}"
+    echo "Configuring registry $serv_user..."
+
+    $MOSQUITTO_CTRL deleteClient "$serv_user" 2>/dev/null || true
+    $MOSQUITTO_CTRL createClient "$serv_user" -p "$SERV_PASS" 2>/dev/null || true
+    $MOSQUITTO_CTRL addClientRole "$serv_user" service 2>/dev/null || true
+
+    if [[ -n "$ns_prefix" ]]; then
+        local bare_user="/r/UDMI-REFLECT/d/${reg_id}${UDMI_REGISTRY_SUFFIX:-}"
+        $MOSQUITTO_CTRL deleteClient "$bare_user" 2>/dev/null || true
+        $MOSQUITTO_CTRL createClient "$bare_user" -p "$SERV_PASS" 2>/dev/null || true
+        $MOSQUITTO_CTRL addClientRole "$bare_user" service 2>/dev/null || true
+    fi
+
+    if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
+        local unsuffixed_user="/r/${ns_prefix}UDMI-REFLECT/d/${ns_prefix}${reg_id}"
+        $MOSQUITTO_CTRL deleteClient "$unsuffixed_user" 2>/dev/null || true
+        $MOSQUITTO_CTRL createClient "$unsuffixed_user" -p "$SERV_PASS" 2>/dev/null || true
+        $MOSQUITTO_CTRL addClientRole "$unsuffixed_user" service 2>/dev/null || true
+        if [[ -n "$ns_prefix" ]]; then
+            local bare_unsuffixed_user="/r/UDMI-REFLECT/d/${reg_id}"
+            $MOSQUITTO_CTRL deleteClient "$bare_unsuffixed_user" 2>/dev/null || true
+            $MOSQUITTO_CTRL createClient "$bare_unsuffixed_user" -p "$SERV_PASS" 2>/dev/null || true
+            $MOSQUITTO_CTRL addClientRole "$bare_unsuffixed_user" service 2>/dev/null || true
+        fi
+    fi
+}
+
+configure_registry "$registry_id"
+
+if [[ -n ${UDMI_ALT_REGISTRY:-} && "$has_explicit_registry" == false ]]; then
+    configure_registry "$UDMI_ALT_REGISTRY"
+fi
 
 # Provision device clients with cloud auth configured
 for device_dir in "$site_path"/devices/*; do
@@ -39,46 +87,6 @@ for device_dir in "$site_path"/devices/*; do
         fi
     fi
 done
-
-ns_prefix=""
-if [[ "$site_path" =~ sites/udmi~([a-zA-Z0-9_-]+) ]]; then
-    ns_prefix="${BASH_REMATCH[1]}~"
-elif [[ -n "${UDMI_NAMESPACE:-}" ]]; then
-    ns_prefix="${UDMI_NAMESPACE}~"
-fi
-
-hash_pass=$(sha256sum < "$site_path/reflector/rsa_private.pkcs8")
-SERV_PASS=${hash_pass:0:8}
-SERV_USER=/r/${ns_prefix}UDMI-REFLECT/d/${ns_prefix}$registry_id${UDMI_REGISTRY_SUFFIX:-}
-SERV_ID=$SERV_USER
-
-echo "Configuring registry $SERV_ID..."
-
-$MOSQUITTO_CTRL deleteClient $SERV_USER 2>/dev/null || true
-$MOSQUITTO_CTRL createClient $SERV_USER -p $SERV_PASS 2>/dev/null || true
-$MOSQUITTO_CTRL addClientRole $SERV_USER service 2>/dev/null || true
-
-if [[ -n "$ns_prefix" ]]; then
-    BARE_USER=/r/UDMI-REFLECT/d/$registry_id${UDMI_REGISTRY_SUFFIX:-}
-    $MOSQUITTO_CTRL deleteClient $BARE_USER 2>/dev/null || true
-    $MOSQUITTO_CTRL createClient $BARE_USER -p $SERV_PASS 2>/dev/null || true
-    $MOSQUITTO_CTRL addClientRole $BARE_USER service 2>/dev/null || true
-fi
-
-if [[ -n ${UDMI_ALT_REGISTRY:-} && $# -eq 0 ]]; then
-    ALT_USER=/r/UDMI-REFLECT/d/$UDMI_ALT_REGISTRY${UDMI_REGISTRY_SUFFIX:-}
-    echo "Configuring alternate registry $ALT_USER..."
-    $MOSQUITTO_CTRL deleteClient $ALT_USER 2>/dev/null || true
-    $MOSQUITTO_CTRL createClient $ALT_USER -p $SERV_PASS 2>/dev/null || true
-    $MOSQUITTO_CTRL addClientRole $ALT_USER service 2>/dev/null || true
-
-    if [[ -n ${UDMI_REGISTRY_SUFFIX:-} ]]; then
-        BARE_ALT_USER=/r/UDMI-REFLECT/d/$UDMI_ALT_REGISTRY
-        $MOSQUITTO_CTRL deleteClient $BARE_ALT_USER 2>/dev/null || true
-        $MOSQUITTO_CTRL createClient $BARE_ALT_USER -p $SERV_PASS 2>/dev/null || true
-        $MOSQUITTO_CTRL addClientRole $BARE_ALT_USER service 2>/dev/null || true
-    fi
-fi
 
 echo Registered sites:
 $MOSQUITTO_CTRL listClients | fgrep /r/UDMI-REFLECT/d/

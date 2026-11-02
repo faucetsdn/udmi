@@ -263,6 +263,7 @@ public class IotReflectorClient implements MessagePublisher {
       }
 
       publishStats.update();
+      initializedStateSent.countDown();
       publisher.publish(registryId, getReflectorTopic(), stringifyTerse(map), HIGH);
     } catch (Exception e) {
       throw new RuntimeException("Could not set reflector state", e);

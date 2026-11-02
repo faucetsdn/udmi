@@ -55,4 +55,17 @@ if [[ -n "$ns_prefix" ]]; then
     $MOSQUITTO_CTRL addClientRole $BARE_USER service
 fi
 
+if [[ -n "${UDMI_REGISTRY_SUFFIX:-}" ]]; then
+    SUFFIX_USER=/r/${ns_prefix}$registry_id${UDMI_REGISTRY_SUFFIX}/d/$device_id
+    $MOSQUITTO_CTRL deleteClient $SUFFIX_USER || true
+    $MOSQUITTO_CTRL createClient $SUFFIX_USER -p $DEV_PASS -c $SUFFIX_USER
+    $MOSQUITTO_CTRL addClientRole $SUFFIX_USER service
+    if [[ -n "$ns_prefix" ]]; then
+        BARE_SUFFIX_USER=/r/$registry_id${UDMI_REGISTRY_SUFFIX}/d/$device_id
+        $MOSQUITTO_CTRL deleteClient $BARE_SUFFIX_USER || true
+        $MOSQUITTO_CTRL createClient $BARE_SUFFIX_USER -p $DEV_PASS -c $BARE_SUFFIX_USER
+        $MOSQUITTO_CTRL addClientRole $BARE_SUFFIX_USER service
+    fi
+fi
+
 echo Registered devices for $device_id

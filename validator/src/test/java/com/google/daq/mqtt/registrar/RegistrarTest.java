@@ -30,6 +30,8 @@ import com.google.daq.mqtt.util.IotMockProvider;
 import com.google.daq.mqtt.util.IotMockProvider.ActionType;
 import com.google.daq.mqtt.util.IotMockProvider.MockAction;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
+import com.google.udmi.util.JsonUtil;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,6 +42,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import udmi.schema.CloudModel;
+import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
@@ -130,6 +133,11 @@ public class RegistrarTest {
     ifTrueThen(useAlternate, () -> args.addAll(ImmutableList.of("-a", ALT_REGISTRY)));
     ifTrueThen(useSuffix, () -> args.addAll(ImmutableList.of("-e", REGISTRY_SUFFIX)));
     Registrar registrar = getRegistrar(args);
+    File registrarConf = new File("out/registrar_conf.json");
+    ExecutionConfiguration writtenConf =
+        JsonUtil.loadFileRequired(ExecutionConfiguration.class, registrarConf);
+    assertEquals("reconciled registrar_conf.json registry_suffix",
+        useSuffix ? REGISTRY_SUFFIX : null, writtenConf.registry_suffix);
     registrar.execute();
     List<MockAction> mockActions = registrar.getMockActions();
     String mockClientString = IotMockProvider.mockClientString(MOCK_PROJECT,

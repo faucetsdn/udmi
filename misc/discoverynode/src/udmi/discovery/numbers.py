@@ -11,18 +11,20 @@ class NumberDiscovery(discovery.DiscoveryController):
 
   family = "vendor"
 
-  def __init__(self, state, publisher, *, range = None):
+  def __init__(self, state_entry, publisher, *, scan_id, range = None):
     # Number discovery
     # 
     # Args:
-    #   state
+    #   state_entry
     #   publisher
+    #   (kw) scan_id (string): see DiscoveryController
     #   (kw) range (string): Comma seperated string of the numbers to discover,
-    #      or None for infinte sequential from 1.
+    #      used when the scan config sets no `addrs`; or None for infinite
+    #      sequential from 1.
     self.cancelled = None
     self.task_thread = None
     self.range = range
-    super().__init__(state, publisher)
+    super().__init__(state_entry, publisher, scan_id=scan_id)
 
   def start_discovery(self):
     self.cancelled = False
@@ -34,7 +36,11 @@ class NumberDiscovery(discovery.DiscoveryController):
   @discovery.catch_exceptions_to_state
   @discovery.main_task
   def discoverer(self):
-    if self.range:
+    # Per-scan `addrs` take precedence so that multiple vendor scans can each
+    # have their own target list; the node-local `range` is the fallback.
+    if self.config is not None and self.config.addrs:
+      iterator = list(self.config.addrs)
+    elif self.range:
       iterator = self.range.split(",")
     else:
       iterator = itertools.count(1)

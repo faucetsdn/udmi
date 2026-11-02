@@ -8,11 +8,8 @@ import textwrap
 
 from typing import Any, Callable
 
-import udmi.discovery
 import udmi.discovery.bacnet
-import udmi.discovery.ether
-import udmi.discovery.numbers
-import udmi.discovery.passive
+import udmi.discovery.manager
 import udmi.publishers.publisher
 import udmi.schema.discovery_event
 import udmi.schema.state
@@ -28,6 +25,7 @@ class UDMICore:
   EVENT_DISCOVERY_TOPIC_TEMPLATE = "{}/events/discovery"
   EVENT_SYSTEM_TOPIC_TEMPLATE = "{}/events/system"
   _STATE_MONITOR_INTERVAL = 1  # [s]
+  DEFAULT_STATE_INTERVAL_SEC = 600  # [s] (10 minutes)
   
   INSTALLED_VERSION_FILE = "installed_version.txt"
 
@@ -41,8 +39,8 @@ class UDMICore:
     self.publisher = publisher
     self.config = config
     self.components = {}
-    self.callbacks = {}  # lambda,
     self.state_hooks = []
+    self.discovery_manager: udmi.discovery.manager.DiscoveryManager | None = None
 
     # Setup state
     self.state = udmi.schema.state.State()
@@ -83,13 +81,24 @@ class UDMICore:
         topic_prefix
     )
 
-    self.enable_discovery(**config.get("udmi",{}).get("discovery", {}))
+    udmi_cfg = config.get("udmi", {}) or {}
+    state_interval = udmi_cfg.get(
+        "state_interval_sec", self.DEFAULT_STATE_INTERVAL_SEC
+    )
+    if (
+        isinstance(state_interval, bool)
+        or not isinstance(state_interval, (int, float))
+        or state_interval <= 0
+    ):
+      raise ValueError(
+          f"udmi.state_interval_sec must be a positive number, got {state_interval!r}"
+      )
+    self.state_interval_sec = state_interval
+
+    self.enable_discovery(**udmi_cfg.get("discovery", {}))
 
     # Note, this depends on topic_state being set
     threading.Thread(target=self.state_monitor, args=[], daemon=True).start()
-
-  def add_config_route(self, filter: Callable, destination: Callable):
-    self.callbacks[filter] = destination
 
   def config_handler(self, config_string: str):
 
@@ -101,13 +110,11 @@ class UDMICore:
       logging.exception(err)
       self.status_from_exception(err)
       return
-    for filter, destination in self.callbacks.items():
-      if filter(config) is True:
-        try:
-          destination.controller(config)
-        except Exception as err:
-          logging.exception(err)
-          self.status_from_exception(err)
+    try:
+      self.discovery_manager.apply_config(config)
+    except Exception as err:
+      logging.exception(err)
+      self.status_from_exception(err)
     self.state.system.last_config = config["timestamp"]
 
   def status_from_exception(self, err: Exception):
@@ -133,14 +140,21 @@ class UDMICore:
 
   def state_monitor(self):
     self._last_state_hash = None
+    self._last_state_publish_mono = None
     while True:
-      current_hash = self.state.get_hash()
-      if self._last_state_hash != current_hash:
+      lock = self.discovery_manager.lock if self.discovery_manager else contextlib.nullcontext()
+      with lock:
         self.execute_state_hooks()
-        self.publish_state()
-        
-        # Regenerate hash because the "state" may been modified by the hooks
-        self._last_state_hash = self.state.get_hash()
+        current_hash = self.state.get_hash()
+        now = time.monotonic()
+        interval_elapsed = (
+            self._last_state_publish_mono is None
+            or (now - self._last_state_publish_mono) >= self.state_interval_sec
+        )
+        if self._last_state_hash != current_hash or interval_elapsed:
+          self.publish_state()
+          self._last_state_hash = current_hash
+          self._last_state_publish_mono = now
       time.sleep(self._STATE_MONITOR_INTERVAL)
 
   def publish_state(self):
@@ -152,71 +166,35 @@ class UDMICore:
     self.publisher.publish_message(self.topic_discovery_event, payload.to_json())
 
   def enable_discovery(self,*,bacnet=True,vendor=True,ipv4=True,ether=True):
+    """Creates the DiscoveryManager for the families enabled in local config.
 
-    if vendor:
-      number_discovery = udmi.discovery.numbers.NumberDiscovery(
-          self.state, self.publish_discovery, range=self.config.get("vendor", {}).get("range"),
+    No scan controllers are constructed here; the manager creates them on
+    demand when a family or named scan first appears in a UDMI config.
+    """
+    flags = dict(bacnet=bacnet, vendor=vendor, ipv4=ipv4, ether=ether)
+    enabled = {name for name, flag in flags.items() if flag}
+
+    family_kwargs = {
+        "vendor": dict(range=self.config.get("vendor", {}).get("range")),
+        "ipv4": dict(subnet_filter=self.config.get("ip", {}).get("subnet_filter")),
+        "ether": dict(ping_concurrency=self.config.get("ether", {}).get("ping_concurrency")),
+    }
+
+    if "bacnet" in enabled:
+      # BAC0 binds a UDP port: exactly one stack per process, shared by all
+      # bacnet scan instances (which are mutually exclusive, see bacnet.py).
+      family_kwargs["bacnet"] = dict(
+          bacnet=udmi.discovery.bacnet.create_bacnet_stack(
+              ip=self.config.get("bacnet", {}).get("ip"),
+              port=self.config.get("bacnet", {}).get("port"),
+          )
       )
 
-      self.add_config_route(
-          # True so that the complete config is always passed
-          # Otherwise, when a block is removed, it never gets triggered
-          # Should probably be refactored out
-          lambda x: True,
-          number_discovery,
-      )
-
-      self.register_state_hook(number_discovery.on_state_update_hook)
-
-      self.components["number_discovery"] = number_discovery
-    
-    if bacnet:
-      bacnet_discovery = udmi.discovery.bacnet.GlobalBacnetDiscovery(
-          self.state,
-          self.publish_discovery,
-          bacnet_ip=self.config.get("bacnet", {}).get("ip"),
-          bacnet_device_name=self.config.get("mqtt", {}).get("device_id"),
-          bacnet_firmware_version=self.state.system.software.version 
-      )
-
-      self.add_config_route(
-          lambda x: True,
-          bacnet_discovery,
-      )
-
-      self.register_state_hook(bacnet_discovery.on_state_update_hook)
-
-      self.components["bacnet_discovery"] = bacnet_discovery
-    
-    if ipv4:
-      passive_discovery = udmi.discovery.passive.PassiveNetworkDiscovery(
-          self.state,
-          self.publish_discovery,
-          subnet_filter = self.config.get("ip", {}).get("subnet_filter")
-      )
-
-      self.add_config_route(
-          lambda x: True,
-          passive_discovery,
-      )
-
-      self.register_state_hook(passive_discovery.on_state_update_hook)
-
-      self.components["passive_discovery"] = passive_discovery
-    
-    if ether:
-      ether_scan = udmi.discovery.ether.EtherDiscovery(
-          self.state,
-          self.publish_discovery,
-          ping_concurrency = self.config.get("ether", {}).get("ping_concurrency")
-      )
-
-      self.add_config_route(
-          lambda x: True,
-          ether_scan,
-      )
-
-      self.register_state_hook(ether_scan.on_state_update_hook)
-
-      self.components["ether_scan"] = ether_scan
-    
+    self.discovery_manager = udmi.discovery.manager.DiscoveryManager(
+        self.state,
+        self.publish_discovery,
+        enabled_families=enabled,
+        family_kwargs=family_kwargs,
+    )
+    self.register_state_hook(self.discovery_manager.on_state_update_hook)
+    self.components["discovery"] = self.discovery_manager

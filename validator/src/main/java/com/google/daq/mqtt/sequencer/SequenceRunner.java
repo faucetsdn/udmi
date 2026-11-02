@@ -9,6 +9,7 @@ import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.FeatureDiscovery.FeatureStage.ALPHA;
 import static udmi.schema.FeatureDiscovery.FeatureStage.BETA;
@@ -126,7 +127,17 @@ public class SequenceRunner {
     config.udmi_root = TOOL_ROOT;
     config.alt_project = testMode; // Sekrit hack for enabling mock components.
 
-    SiteModel siteModel = new SiteModel(sitePath, config);
+    processRequest(config);
+  }
+
+  /**
+   * Process sequences for the given execution configuration, either for the single device it
+   * specifies or for every device in the site model if no device is specified.
+   *
+   * @param config execution configuration to process
+   */
+  static void processRequest(ExecutionConfiguration config) {
+    SiteModel siteModel = new SiteModel(config.site_model, config);
     siteModel.initialize();
     config.key_file = siteModel.validatorKey();
 
@@ -135,7 +146,7 @@ public class SequenceRunner {
 
     SequenceBase.resetState();
 
-    if (deviceId != null) {
+    if (config.device_id != null) {
       SequenceRunner.processConfig(config);
     } else {
       siteModel.forEachDeviceId(siteDeviceId -> {
@@ -266,7 +277,8 @@ public class SequenceRunner {
         SequenceBase.activePrimary = getTargetPrimary(target);
         Set<String> targetFacets = getTargetFacets(kind);
         for (String targetFacet : targetFacets) {
-          SequenceBase.activeFacet = ifNotNullGet(kind, f -> new SimpleEntry<>(f, targetFacet));
+          SequenceBase.activeFacet =
+              ifNotNullGet(targetFacet, facet -> new SimpleEntry<>(kind, facet));
           runCount += runOneTarget(request);
         }
       }
@@ -335,15 +347,24 @@ public class SequenceRunner {
     return methods.stream().filter(this::shouldShardMethod).filter(this::isTargetMethod).toList();
   }
 
+  /**
+   * Determine the set of facet values to iterate a target over. A {@code null} entry means "run
+   * once with no active facet", which is used both for non-faceted targets and for faceted targets
+   * where no facet values are defined for the device. In the latter case the test is still executed
+   * so that it can report itself as skipped, rather than being silently omitted from the results.
+   */
   private Set<String> getTargetFacets(SubFolder facetKind) {
-    if (facetKind == null) {
-      Set<String> setOfNull = new HashSet<>();
-      setOfNull.add(null);
-      return setOfNull;
+    if (facetKind != null) {
+      Set<String> resolved = FACET_RESOLVERS.get(facetKind).resolve(siteModel, getDeviceId());
+      requireNonNull(resolved, format("Facet resolver for %s returned null", facetKind));
+      System.err.printf("Resolved facet %s to %s%n", facetKind, resolved);
+      if (!resolved.isEmpty()) {
+        return resolved;
+      }
     }
-    Set<String> resolved = FACET_RESOLVERS.get(facetKind).resolve(siteModel, getDeviceId());
-    System.err.printf("Resolved facet %s to %s%n", facetKind, resolved);
-    return resolved;
+    Set<String> setOfNull = new HashSet<>();
+    setOfNull.add(null);
+    return setOfNull;
   }
 
   private static String getTargetPrimary(Entry<Class<?>, String> target) {

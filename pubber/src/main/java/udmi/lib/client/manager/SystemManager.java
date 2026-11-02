@@ -209,7 +209,7 @@ public interface SystemManager extends SubBlockManager {
       return;
     }
 
-    if (SystemMode.ACTIVE.equals(configMode)) {
+    if (SystemMode.ACTIVE.equals(configMode) && !SystemMode.ACTIVE.equals(stateMode)) {
       getSystemState().operation.mode = SystemMode.ACTIVE;
       updateState();
     }
@@ -339,7 +339,7 @@ public interface SystemManager extends SubBlockManager {
 
   default void setStatus(Entry report) {
     getSystemState().status = report;
-    updateState();
+    updateState(ofNullable((Object) report).orElse(Entry.class));
   }
 
   /**
