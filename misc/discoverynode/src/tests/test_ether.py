@@ -214,3 +214,87 @@ def test_nmap_adjunct_excludes_sort_index():
   assert "sort_index" not in host_events[0].refs["22"]["adjunct"]
 
 
+def test_nmap_publishes_hosts_incrementally_before_exit():
+  mock_publisher = mock.MagicMock()
+  ether = udmi.discovery.ether.EtherDiscovery(
+      udmi.schema.state.Discovery(), mock_publisher, scan_id="scans/ports"
+  )
+  ether.config = DiscoveryFamily(
+      generation=make_timestamp(), depth="ports", addrs=["192.168.1.0/24"]
+  )
+  ether.generation = udmi.schema.util.current_time_utc()
+  ether.count_events = 0
+
+  first_host_xml = (
+      '<?xml version="1.0" encoding="UTF-8"?>\n'
+      '<nmaprun scanner="nmap">\n'
+      '  <host starttime="1" endtime="2">\n'
+      '    <address addr="192.168.1.10" addrtype="ipv4"/>\n'
+      '    <ports><port protocol="tcp" portid="22"><state state="open"/></port></ports>\n'
+      '  </host>\n'
+  )
+  second_host_xml = (
+      '  <host starttime="3" endtime="4">\n'
+      '    <address addr="192.168.1.11" addrtype="ipv4"/>\n'
+      '    <ports><port protocol="tcp" portid="80"><state state="open"/></port></ports>\n'
+      '  </host>\n'
+      '</nmaprun>\n'
+  )
+
+  published_during_first_tick = []
+  active_count_during_first_tick = []
+  captured_cmd = []
+
+  def fake_popen(cmd, **kwargs):
+    captured_cmd.extend(cmd)
+    output_file = cmd[cmd.index("-oX") + 1]
+    fake_proc = mock.MagicMock()
+    fake_proc.__enter__.return_value = fake_proc
+    fake_proc.stdout.read.return_value = b""
+    fake_proc.stdout.fileno.return_value = 0
+
+    calls = 0
+
+    def poll_side_effect():
+      nonlocal calls
+      calls += 1
+      if calls == 1:
+        with open(output_file, "w", encoding="utf-8") as f:
+          f.write(first_host_xml)
+        return None
+      if calls == 2:
+        published_during_first_tick.extend(
+            c.args[0].addr for c in mock_publisher.call_args_list if c.args[0].addr
+        )
+        ether.state.phase = udmi.schema.state.Phase.active
+        ether.on_state_update_hook()
+        active_count_during_first_tick.append(ether.state.active_count)
+        with open(output_file, "a", encoding="utf-8") as f:
+          f.write(second_host_xml)
+        return 0
+      return 0
+
+    fake_proc.poll.side_effect = poll_side_effect
+    return fake_proc
+
+  with mock.patch("subprocess.Popen", side_effect=fake_popen), \
+       mock.patch("os.set_blocking"), \
+       mock.patch("udmi.discovery.utils.nmap.results_reader", wraps=udmi.discovery.utils.nmap.results_reader) as reader_spy:
+    ether.nmap_runner()
+
+  assert "-T4" in captured_cmd
+  assert "-T3" not in captured_cmd
+  assert "--max-hostgroup" in captured_cmd
+  assert captured_cmd[captured_cmd.index("--max-hostgroup") + 1] == "32"
+  assert reader_spy.call_count == 1
+  assert published_during_first_tick == ["192.168.1.10"]
+  assert active_count_during_first_tick == [1]
+  all_published = [
+      (c.args[0].addr, c.args[0].event_no)
+      for c in mock_publisher.call_args_list
+      if c.args[0].addr
+  ]
+  assert all_published == [("192.168.1.10", 1), ("192.168.1.11", 2)]
+
+
+
