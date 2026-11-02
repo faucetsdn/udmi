@@ -74,7 +74,7 @@ pydantic_core==2.46.4
 pyee==13.0.1
 Pygments==2.20.0
 PyJWT==2.15.0
-pylint==4.0.5
+pylint==4.0.9
 pyOpenSSL==26.4.0
 pyparsing==3.1.0
 pytest==9.0.3
