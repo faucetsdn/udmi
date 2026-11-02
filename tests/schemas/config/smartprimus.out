@@ -1,3 +1,3 @@
 2 schema violations found
-  /pointset/points/fan_run_enable: object instance has properties which are not allowed by the schema: ["fix_value"]
-  /pointset/points/fan_run_status: object instance has properties which are not allowed by the schema: ["fix_value"]
+  $.pointset.points.fan_run_enable: property 'fix_value' is not defined in the schema and the schema does not allow additional properties
+  $.pointset.points.fan_run_status: property 'fix_value' is not defined in the schema and the schema does not allow additional properties

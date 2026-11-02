@@ -1,2 +1,2 @@
 1 schema violations found
-  object has missing required properties (["system"])
+  $: required property 'system' not found

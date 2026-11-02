@@ -1,7 +1,23 @@
-6 schema violations found
-  /pointset/points/return_air_temperature_sensor/status: instance type (string) does not match any allowed primitive type (allowed: ["object"])
-  /pointset/points/return_air_temperature_sensor: object instance has properties which are not allowed by the schema: ["cov_increment","deadband","high_limit","instance_number","low_limit","object_type","rapt","resolution"]
-  /system/status: instance type (string) does not match any allowed primitive type (allowed: ["object"])
-  /system: object has missing required properties (["hardware","last_config","operation","serial_no","software"])
-  /system: object instance has properties which are not allowed by the schema: ["device_id","device_status","fling","object_name","system_status"]
-  object instance has properties which are not allowed by the schema: ["id","status"]
+22 schema violations found
+  $.pointset.points.return_air_temperature_sensor.status: string found, object expected
+  $.pointset.points.return_air_temperature_sensor: property 'cov_increment' is not defined in the schema and the schema does not allow additional properties
+  $.pointset.points.return_air_temperature_sensor: property 'deadband' is not defined in the schema and the schema does not allow additional properties
+  $.pointset.points.return_air_temperature_sensor: property 'high_limit' is not defined in the schema and the schema does not allow additional properties
+  $.pointset.points.return_air_temperature_sensor: property 'instance_number' is not defined in the schema and the schema does not allow additional properties
+  $.pointset.points.return_air_temperature_sensor: property 'low_limit' is not defined in the schema and the schema does not allow additional properties
+  $.pointset.points.return_air_temperature_sensor: property 'object_type' is not defined in the schema and the schema does not allow additional properties
+  $.pointset.points.return_air_temperature_sensor: property 'rapt' is not defined in the schema and the schema does not allow additional properties
+  $.pointset.points.return_air_temperature_sensor: property 'resolution' is not defined in the schema and the schema does not allow additional properties
+  $.system.status: string found, object expected
+  $.system: property 'device_id' is not defined in the schema and the schema does not allow additional properties
+  $.system: property 'device_status' is not defined in the schema and the schema does not allow additional properties
+  $.system: property 'fling' is not defined in the schema and the schema does not allow additional properties
+  $.system: property 'object_name' is not defined in the schema and the schema does not allow additional properties
+  $.system: property 'system_status' is not defined in the schema and the schema does not allow additional properties
+  $.system: required property 'hardware' not found
+  $.system: required property 'last_config' not found
+  $.system: required property 'operation' not found
+  $.system: required property 'serial_no' not found
+  $.system: required property 'software' not found
+  $: property 'id' is not defined in the schema and the schema does not allow additional properties
+  $: property 'status' is not defined in the schema and the schema does not allow additional properties

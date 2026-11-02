@@ -1,2 +1,2 @@
 1 schema violations found
-  /system: object instance has properties which are not allowed by the schema: ["software"]
+  $.system: property 'software' is not defined in the schema and the schema does not allow additional properties

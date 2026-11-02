@@ -1,4 +1,7 @@
-3 schema violations found
-  /families/bacnet: object instance has properties which are not allowed by the schema: ["id"]
-  /families/mac: object instance has properties which are not allowed by the schema: ["group"]
-  object instance has properties which are not allowed by the schema: ["id","rabbits","scan_addr","uniqs"]
+6 schema violations found
+  $.families.bacnet: property 'id' is not defined in the schema and the schema does not allow additional properties
+  $.families.mac: property 'group' is not defined in the schema and the schema does not allow additional properties
+  $: property 'id' is not defined in the schema and the schema does not allow additional properties
+  $: property 'rabbits' is not defined in the schema and the schema does not allow additional properties
+  $: property 'scan_addr' is not defined in the schema and the schema does not allow additional properties
+  $: property 'uniqs' is not defined in the schema and the schema does not allow additional properties

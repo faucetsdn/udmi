@@ -13,7 +13,7 @@ import com.networknt.schema.ExecutionContext;
 import com.networknt.schema.JsonMetaSchema;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion;
+import com.networknt.schema.NonValidationKeyword;
 import com.networknt.schema.ValidationMessage;
 import com.networknt.schema.format.DateTimeFormat;
 import com.networknt.schema.resource.InputStreamSource;
@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Validation wrapper for processing individual messages.
@@ -36,9 +37,19 @@ public class MessageValidator {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   @SuppressWarnings("checkstyle:linelength")
   private static final List<String> IGNORE_LIST = ImmutableList.of(
-      "instance type \\(string\\) does not match any allowed primitive type \\(allowed: \\[.*\"number\"\\]\\)");
+      ".*: string found, (number|\\[integer, number\\]) expected$");
   private static final List<Pattern> IGNORE_PATTERNS = IGNORE_LIST.stream().map(Pattern::compile)
       .toList();
+  private static final List<String> UDMI_NON_VALIDATION_KEYWORDS = ImmutableList.of(
+      "$defaultPresentation",
+      "$presentation",
+      "$section",
+      "$udmi_version",
+      "descritpion",
+      "examples",
+      "existingJavaType",
+      "note",
+      "status");
 
   private final Map<String, JsonSchema> schemaMap = Maps.newConcurrentMap();
   private final File schemaRoot;
@@ -64,12 +75,23 @@ public class MessageValidator {
    */
   public static ValidationException fromProcessingReport(Set<ValidationMessage> report) {
     checkArgument(!report.isEmpty(), "Report must not be empty");
+    Set<String> failedOneOfPrefixes = report.stream()
+        .filter(msg -> "oneOf".equals(msg.getType()))
+        .map(msg -> msg.getEvaluationPath().toString() + "[")
+        .collect(Collectors.toSet());
     ImmutableList<ValidationException> causingExceptions =
         report.stream()
+            .filter(msg -> isNotPrunedByOneOf(msg, failedOneOfPrefixes))
             .filter(MessageValidator::notOnIgnoreList)
             .map(MessageValidator::convertMessage).collect(toImmutableList());
     return causingExceptions.isEmpty() ? null : new ValidationException(
         format("%d schema violations found", causingExceptions.size()), causingExceptions);
+  }
+
+  private static boolean isNotPrunedByOneOf(
+      ValidationMessage validationMessage, Set<String> failedOneOfPrefixes) {
+    String evalPath = validationMessage.getEvaluationPath().toString();
+    return failedOneOfPrefixes.stream().noneMatch(evalPath::startsWith);
   }
 
   private static boolean notOnIgnoreList(ValidationMessage validationMessage) {
@@ -118,19 +140,32 @@ public class MessageValidator {
    * @return configured JsonSchemaFactory
    */
   public static JsonSchemaFactory getSchemaFactory(SchemaLoader schemaLoader) {
-    JsonMetaSchema metaSchema = JsonMetaSchema.builder(
-        JsonMetaSchema.getV7().getUri(), JsonMetaSchema.getV7())
-        .addFormat(new DateTimeFormat() {
-          @Override
-          public boolean matches(ExecutionContext executionContext, String value) {
-            return super.matches(executionContext,
-                value == null ? null : value.replaceFirst("\\+0000$", "Z"));
-          }
-        })
+    List<NonValidationKeyword> nonValidationKeywords = UDMI_NON_VALIDATION_KEYWORDS.stream()
+        .map(NonValidationKeyword::new)
+        .toList();
+    DateTimeFormat dateTimeFormat = new DateTimeFormat() {
+      @Override
+      public boolean matches(ExecutionContext executionContext, String value) {
+        return super.matches(executionContext,
+            value == null ? null : value.replaceFirst("\\+0000$", "Z"));
+      }
+    };
+    JsonMetaSchema v4Base = JsonMetaSchema.builder(
+        JsonMetaSchema.getV4().getUri(), JsonMetaSchema.getV4())
+        .addKeywords(nonValidationKeywords)
+        .addFormat(dateTimeFormat)
         .build();
-    return JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V7,
-        builder -> builder.addMetaSchema(metaSchema)
-            .schemaLoaders(schemaLoaders -> schemaLoaders.add(schemaLoader)));
+    JsonMetaSchema v7Base = JsonMetaSchema.builder(
+        JsonMetaSchema.getV7().getUri(), JsonMetaSchema.getV7())
+        .addKeywords(nonValidationKeywords)
+        .addFormat(dateTimeFormat)
+        .build();
+    return JsonSchemaFactory.builder()
+        .defaultMetaSchemaURI(v7Base.getUri())
+        .addMetaSchema(v4Base)
+        .addMetaSchema(v7Base)
+        .schemaLoaders(schemaLoaders -> schemaLoaders.add(schemaLoader))
+        .build();
   }
 
   private JsonSchema getSchema(File schemaFile) {

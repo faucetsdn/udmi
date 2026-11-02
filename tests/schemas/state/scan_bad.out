@@ -1,2 +1,2 @@
 1 schema violations found
-  /discovery/families: object instance has properties which are not allowed by the schema: ["BACnet"]
+  $.discovery.families: property 'BACnet' is not defined in the schema and the schema does not allow additional properties
