@@ -73,7 +73,7 @@ sites/udmi_site_model/out/devices/AHU-1/events_pointset.out
     },
     {
       "category": "validation.device.schema",
-      "detail": "events_pointset: 2 schema violations found; $: property 'extraField' is not defined in the schema and the schema does not allow additional properties; $: required property 'points' not found",
+      "detail": "events_pointset: 1 schema violations found; $: property 'extraField' is not defined in the schema and the schema does not allow additional properties",
       "level": 500,
       "message": "1 schema violations found",
       "timestamp": "REDACTED_TIMESTAMP"
@@ -184,7 +184,7 @@ sites/udmi_site_model/out/devices/AHU-1/state.out
     },
     {
       "category": "validation.device.schema",
-      "detail": "state_update: 6 schema violations found; $.system: property 'extraField' is not defined in the schema and the schema does not allow additional properties; $.system: required property 'serial_no' not found; $.system: required property 'last_config' not found; $.system: required property 'hardware' not found; $.system: required property 'software' not found; $.system: required property 'operation' not found",
+      "detail": "state_update: 1 schema violations found; $.system: property 'extraField' is not defined in the schema and the schema does not allow additional properties",
       "level": 500,
       "message": "1 schema violations found",
       "timestamp": "REDACTED_TIMESTAMP"
@@ -358,17 +358,17 @@ sites/udmi_site_model/out/devices/AHU-22/state.out
   "errors": [
     {
       "category": "validation.device.schema",
-      "detail": "state_update: 6 schema violations found; $.system.hardware: required property 'make' not found; $.system.hardware: required property 'model' not found; $.system: required property 'serial_no' not found; $.system: required property 'last_config' not found; $.system: required property 'software' not found; $.system: required property 'operation' not found",
+      "detail": "state_update: 4 schema violations found; $.system.hardware: required property 'make' not found; $.system.hardware: required property 'model' not found; $.system: required property 'serial_no' not found; $.system: required property 'software' not found",
       "level": 500,
-      "message": "6 schema violations found",
+      "message": "4 schema violations found",
       "timestamp": "REDACTED_TIMESTAMP"
     }
   ],
   "status": {
     "category": "validation.device.schema",
-    "detail": "state_update: 6 schema violations found; $.system.hardware: required property 'make' not found; $.system.hardware: required property 'model' not found; $.system: required property 'serial_no' not found; $.system: required property 'last_config' not found; $.system: required property 'software' not found; $.system: required property 'operation' not found",
+    "detail": "state_update: 4 schema violations found; $.system.hardware: required property 'make' not found; $.system.hardware: required property 'model' not found; $.system: required property 'serial_no' not found; $.system: required property 'software' not found",
     "level": 500,
-    "message": "6 schema violations found",
+    "message": "4 schema violations found",
     "timestamp": "REDACTED_TIMESTAMP"
   },
   "sub_folder": "update",
@@ -403,17 +403,17 @@ sites/udmi_site_model/out/devices/AHU-22/state_system.out
   "errors": [
     {
       "category": "validation.device.schema",
-      "detail": "state_system: 6 schema violations found; $.hardware: required property 'make' not found; $.hardware: required property 'model' not found; $: required property 'serial_no' not found; $: required property 'last_config' not found; $: required property 'software' not found; $: required property 'operation' not found",
+      "detail": "state_system: 4 schema violations found; $.hardware: required property 'make' not found; $.hardware: required property 'model' not found; $: required property 'serial_no' not found; $: required property 'software' not found",
       "level": 500,
-      "message": "6 schema violations found",
+      "message": "4 schema violations found",
       "timestamp": "REDACTED_TIMESTAMP"
     }
   ],
   "status": {
     "category": "validation.device.schema",
-    "detail": "state_system: 6 schema violations found; $.hardware: required property 'make' not found; $.hardware: required property 'model' not found; $: required property 'serial_no' not found; $: required property 'last_config' not found; $: required property 'software' not found; $: required property 'operation' not found",
+    "detail": "state_system: 4 schema violations found; $.hardware: required property 'make' not found; $.hardware: required property 'model' not found; $: required property 'serial_no' not found; $: required property 'software' not found",
     "level": 500,
-    "message": "6 schema violations found",
+    "message": "4 schema violations found",
     "timestamp": "REDACTED_TIMESTAMP"
   },
   "sub_folder": "system",
@@ -865,9 +865,9 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
   "errors": [
     {
       "category": "validation.device.schema",
-      "detail": "state_update: 6 schema violations found; $.system.hardware: required property 'make' not found; $.system.hardware: required property 'model' not found; $.system: required property 'serial_no' not found; $.system: required property 'last_config' not found; $.system: required property 'software' not found; $.system: required property 'operation' not found",
+      "detail": "state_update: 4 schema violations found; $.system.hardware: required property 'make' not found; $.system.hardware: required property 'model' not found; $.system: required property 'serial_no' not found; $.system: required property 'software' not found",
       "level": 500,
-      "message": "6 schema violations found",
+      "message": "4 schema violations found",
       "timestamp": "REDACTED_TIMESTAMP"
     },
     {
@@ -880,7 +880,7 @@ sites/udmi_site_model/out/devices/SNS-4/state.out
   ],
   "status": {
     "category": "validation.device.multiple",
-    "detail": "6 schema violations found; Device has missing points: split_threshold, triangulating_axis",
+    "detail": "4 schema violations found; Device has missing points: split_threshold, triangulating_axis",
     "level": 500,
     "message": "Multiple validation errors",
     "timestamp": "REDACTED_TIMESTAMP"
@@ -929,17 +929,17 @@ sites/udmi_site_model/out/devices/SNS-4/state_system.out
   "errors": [
     {
       "category": "validation.device.schema",
-      "detail": "state_system: 6 schema violations found; $.hardware: required property 'make' not found; $.hardware: required property 'model' not found; $: required property 'serial_no' not found; $: required property 'last_config' not found; $: required property 'software' not found; $: required property 'operation' not found",
+      "detail": "state_system: 4 schema violations found; $.hardware: required property 'make' not found; $.hardware: required property 'model' not found; $: required property 'serial_no' not found; $: required property 'software' not found",
       "level": 500,
-      "message": "6 schema violations found",
+      "message": "4 schema violations found",
       "timestamp": "REDACTED_TIMESTAMP"
     }
   ],
   "status": {
     "category": "validation.device.schema",
-    "detail": "state_system: 6 schema violations found; $.hardware: required property 'make' not found; $.hardware: required property 'model' not found; $: required property 'serial_no' not found; $: required property 'last_config' not found; $: required property 'software' not found; $: required property 'operation' not found",
+    "detail": "state_system: 4 schema violations found; $.hardware: required property 'make' not found; $.hardware: required property 'model' not found; $: required property 'serial_no' not found; $: required property 'software' not found",
     "level": 500,
-    "message": "6 schema violations found",
+    "message": "4 schema violations found",
     "timestamp": "REDACTED_TIMESTAMP"
   },
   "sub_folder": "system",
