@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import udmi.schema.Category;
@@ -188,26 +189,58 @@ public class PointsetValidator {
         continue;
       }
 
-      if (pointModel.range_min == null && pointModel.range_max == null) {
-        continue;
+      if (pointModel.range_min != null || pointModel.range_max != null) {
+        if (!Number.class.isInstance(point.present_value)) {
+          outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
+        } else {
+          Double presentValue = ((Number) point.present_value).doubleValue();
+          if (pointModel.range_max != null && presentValue > pointModel.range_max) {
+            outOfRangeErrors.add(
+                String.format(
+                    "%s: present_value %s greater than range_max %s",
+                    pointName, presentValue, pointModel.range_max));
+          } else if (pointModel.range_min != null && presentValue < pointModel.range_min) {
+            outOfRangeErrors.add(
+                String.format(
+                    "%s: present_value %s lower than range_min %s",
+                    pointName, presentValue, pointModel.range_min));
+          }
+        }
       }
 
-      if (!Number.class.isInstance(point.present_value)) {
-        outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
-        continue;
-      }
-
-      Double presentValue = ((Number) point.present_value).doubleValue();
-      if (pointModel.range_max != null && presentValue > pointModel.range_max) {
-        outOfRangeErrors.add(
-            String.format(
-                "%s: present_value %s greater than range_max %s",
-                pointName, presentValue, pointModel.range_max));
-      } else if (pointModel.range_min != null && presentValue < pointModel.range_min) {
-        outOfRangeErrors.add(
-            String.format(
-                "%s: present_value %s lower than range_min %s",
-                pointName, presentValue, pointModel.range_min));
+      if (pointModel.baseline_value != null) {
+        if (pointModel.baseline_tolerance != null) {
+          if (!(pointModel.baseline_value instanceof Number baselineNum)
+              || !(point.present_value instanceof Number presentNum)) {
+            outOfRangeErrors.add(
+                String.format("%s: not numeric value, but baseline_tolerance is set", pointName));
+          } else {
+            double baselineValue = baselineNum.doubleValue();
+            double presentValue = presentNum.doubleValue();
+            double tolerance = pointModel.baseline_tolerance;
+            if (presentValue > baselineValue + tolerance
+                || presentValue < baselineValue - tolerance) {
+              outOfRangeErrors.add(
+                  String.format(
+                      "%s: present_value %s outside baseline_value %s +- %s",
+                      pointName, presentValue, baselineValue, tolerance));
+            }
+          }
+        } else {
+          boolean matches;
+          if (pointModel.baseline_value instanceof Number baselineNum
+              && point.present_value instanceof Number presentNum) {
+            matches = Double.compare(presentNum.doubleValue(), baselineNum.doubleValue()) == 0;
+          } else {
+            matches = Objects.equals(pointModel.baseline_value, point.present_value);
+          }
+          if (!matches) {
+            outOfRangeErrors.add(
+                String.format(
+                    "%s: present_value %s does not match baseline_value %s",
+                    pointName, point.present_value, pointModel.baseline_value));
+          }
+        }
       }
     }
     return outOfRangeErrors;
