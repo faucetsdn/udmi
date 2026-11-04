@@ -155,8 +155,14 @@ sleep 30
 docker exec validator bin/registrar site_model/ //mqtt/mosquitto > out/registrar_output.txt 2>&1 || true
 echo "Step 5: Ran Registrar to check results."
 
-echo "Verifying output..."
+echo "Verifying registrar output..."
 cat out/registrar_output.txt
+
+# 6. Execute Sequencer test inside validator container
+echo "Executing Sequencer test inside validator container..."
+docker exec validator /bin/bash -c "bin/sequencer -v site_model/ //mqtt/mosquitto GAT-123 system_last_update" > out/sequencer_output.txt 2>&1 || true
+echo "Step 6: Sequencer test executed."
+cat out/sequencer_output.txt
 
 # Verify expected summary
 failed=0
@@ -168,6 +174,9 @@ grep -q "Processed AHU-22" out/registrar_output.txt || failed=1
 grep -q "Processed SNS-4" out/registrar_output.txt || failed=1
 grep -q "Processed GAT-123" out/registrar_output.txt || failed=1
 grep -q "Processed UNK-1" out/registrar_output.txt || failed=1
+
+# Verify Sequencer results
+grep -q "RESULT.*system_last_update" out/sequencer_output.txt || failed=1
 
 if [ $failed -eq 0 ]; then
     echo "----- Test PASSED -----"
