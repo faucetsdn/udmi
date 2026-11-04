@@ -33,9 +33,9 @@ public class ReportingDevice implements ErrorCollector {
   private static final char DETAIL_REPLACE_CHAR = ',';
   private static final int DEFAULT_THRESHOLD_SEC = 60 * 60;
   private static final String CATEGORY_MISSING_MESSAGE
-      = "must be valid to one and only one schema, but 0 are valid";
+      = ".category: must be valid to one and only one schema, but 0 are valid";
   private static final String CATEGORY_MISSING_REPLACEMENT
-      = "instance entry category not recognized";
+      = ".category: instance entry category not recognized";
 
   private static Date mockNow;
   private final String deviceId;

@@ -1,7 +1,7 @@
 {
   "hardware" : {
-    "model" : "Jace",
-    "make" : "Tridium"
+    "make" : "Tridium",
+    "model" : "Jace"
   },
   "last_config" : "2022-11-06T21:30:39.000Z",
   "operation" : {

@@ -71,17 +71,12 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageUpgrader;
 import com.google.udmi.util.MessageValidator;
 import com.google.udmi.util.SiteModel;
-import com.networknt.schema.AbsoluteIri;
 import com.networknt.schema.JsonSchema;
 import com.networknt.schema.ValidationMessage;
-import com.networknt.schema.resource.InputStreamSource;
-import com.networknt.schema.resource.SchemaLoader;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
 import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
@@ -1214,12 +1209,7 @@ public class Validator {
   }
 
   private JsonSchema getSchema(File schemaFile) {
-    try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
-      return MessageValidator.getSchemaFactory(new RelativeDownloader())
-          .getSchema(OBJECT_MAPPER.readTree(schemaStream));
-    } catch (Exception e) {
-      throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
-    }
+    return MessageValidator.getSchema(schemaFile);
   }
 
   private List<File> makeFileList(String prefix, String spec) {
@@ -1362,28 +1352,6 @@ public class Validator {
       put(EXCEPTION_KEY, exception);
       put(MESSAGE_KEY, message);
       put(TIMESTAMP_KEY, timestamp);
-    }
-  }
-
-  class RelativeDownloader implements SchemaLoader {
-
-    private static final String FILE_URL_PREFIX = "file:";
-
-    @Override
-    public InputStreamSource getSchema(AbsoluteIri iri) {
-      return () -> {
-        String url = iri.toString();
-        try {
-          if (!url.startsWith(FILE_URL_PREFIX)) {
-            throw new IllegalStateException("Expected path to start with " + FILE_URL_PREFIX);
-          }
-          String newUrl =
-              FILE_URL_PREFIX + new File(schemaRoot, url.substring(FILE_URL_PREFIX.length()));
-          return (InputStream) (new URL(newUrl)).getContent();
-        } catch (Exception e) {
-          throw new RuntimeException("While loading URL " + url, e);
-        }
-      };
     }
   }
 }

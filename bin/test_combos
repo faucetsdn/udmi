@@ -36,6 +36,7 @@ done
 echo '################'
 if [[ -n $failures ]]; then
     echo Test failures detected: $failures
+    false
 else
     echo All combo tests passed.
 fi

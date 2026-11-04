@@ -111,7 +111,6 @@ dependencies {
     implementation('com.google.apis:google-api-services-cloudiot:v1-rev20210323-1.31.0') {
         exclude group: 'com.google.guava', module: 'guava-jdk5'
     }
-    implementation 'joda-time:joda-time:2.10.10'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
     implementation('io.moquette:moquette-broker:0.15') {
         exclude group: 'org.slf4j', module: 'slf4j-log4j12'

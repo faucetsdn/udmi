@@ -52,8 +52,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -79,17 +77,12 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.MessageValidator;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.ValidationError;
-import com.networknt.schema.AbsoluteIri;
 import com.networknt.schema.JsonSchema;
-import com.networknt.schema.resource.InputStreamSource;
-import com.networknt.schema.resource.SchemaLoader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
@@ -1697,22 +1690,7 @@ public class Registrar {
   }
 
   private void loadSchema(String key) {
-    File schemaFile = new File(schemaBase, key);
-    try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
-      JsonNode schemaTree = OBJECT_MAPPER.readTree(schemaStream);
-      if (schemaTree instanceof ObjectNode schemaObject) {
-        Set<String> toRemove = new HashSet<>();
-        schemaObject.fields().forEachRemaining(entry -> {
-          ifTrueThen(entry.getKey().startsWith("$"), () -> toRemove.add(entry.getKey()));
-        });
-        toRemove.forEach(schemaObject::remove);
-      }
-      JsonSchema schema =
-          MessageValidator.getSchemaFactory(new RelativeDownloader()).getSchema(schemaTree);
-      schemas.put(key, schema);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
-    }
+    schemas.put(key, MessageValidator.getSchema(new File(schemaBase, key)));
   }
 
   private void loadSiteDefaults() {
@@ -1764,20 +1742,5 @@ public class Registrar {
   @CommandLineOption(short_form = "-A", description = "Auto process alt_registry from config")
   private void setAutoAltRegistry() {
     autoAltRegistry = true;
-  }
-
-  class RelativeDownloader implements SchemaLoader {
-
-    @Override
-    public InputStreamSource getSchema(AbsoluteIri iri) {
-      return () -> {
-        try {
-          return Files.newInputStream(
-              new File(schemaBase, URI.create(iri.toString()).getSchemeSpecificPart()).toPath());
-        } catch (Exception e) {
-          throw new RuntimeException("While loading sub-schema " + iri, e);
-        }
-      };
-    }
   }
 }

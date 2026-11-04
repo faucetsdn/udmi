@@ -1,0 +1,10 @@
+{
+  "deviceId" : "TPS-1",
+  "deviceNumId" : "00000080040251",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "msgSource" : "001_events_pointset.json",
+  "projectId" : "playback-project",
+  "publishTime" : "1999-10-20T01:02:03Z",
+  "subFolder" : "pointset",
+  "subType" : "events"
+}

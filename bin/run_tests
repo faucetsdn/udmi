@@ -60,8 +60,9 @@ case "$1" in
     test_wrap bin/test_schema
     ;;
   trace_tests)
-    test_wrap bin/test_trace simple
-    test_wrap bin/test_trace upgrade
+    for trace in `cd tests/traces; ls`; do
+      test_wrap bin/test_trace $trace
+    done
     test_wrap bin/test_combos
     ;;
   registrar_tests)
