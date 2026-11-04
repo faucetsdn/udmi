@@ -29,6 +29,10 @@
       "minimum": 0,
       "type": "integer"
     },
+    "source": {
+      "description": "Optional source qualifier for the discovery scan (e.g., 'model')",
+      "type": "string"
+    },
     "status": {
       "description": "Status information about the discovery operation",
       "$ref": "file:entry.json"

@@ -11,6 +11,7 @@ import static com.google.daq.mqtt.util.IotMockProvider.ActionType.BLOCK_DEVICE_A
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.CREATE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.DELETE_DEVICE_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_DEVICE_ACTION;
+import static com.google.daq.mqtt.util.IotMockProvider.ActionType.UPDATE_REGISTRY_ACTION;
 import static com.google.daq.mqtt.util.IotMockProvider.MOCK_DEVICE_ID;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
@@ -118,6 +119,27 @@ public class RegistrarTest {
             Collectors.toSet()).size());
     blockActions.forEach(action -> assertEquals("device blocked " + action.deviceId,
         action.deviceId.equals(MOCK_DEVICE_ID), action.data));
+
+    List<MockAction> targetedActions = executeRegistrarPopulated(
+        ImmutableList.of("-b", DEVICE_ID, MOCK_DEVICE_ID));
+    List<MockAction> targetedBlocks = filterActions(targetedActions, BLOCK_DEVICE_ACTION);
+    assertEquals("targeted block action count", 1, targetedBlocks.size());
+    assertEquals(MOCK_DEVICE_ID, targetedBlocks.get(0).deviceId);
+    List<MockAction> registryUpdates = filterActions(targetedActions, UPDATE_REGISTRY_ACTION);
+    assertEquals(1, registryUpdates.size());
+    CloudModel regModel = (CloudModel) registryUpdates.get(0).data;
+    assertEquals(ImmutableSet.of(DEVICE_ID, MOCK_DEVICE_ID), regModel.device_ids.keySet());
+
+    List<MockAction> expungeActions = executeRegistrarPopulated(ImmutableList.of("-x"));
+    List<MockAction> expungeDeletes = filterActions(expungeActions, DELETE_DEVICE_ACTION);
+    assertEquals("expunge delete action count", 1, expungeDeletes.size());
+    assertEquals(MOCK_DEVICE_ID, expungeDeletes.get(0).deviceId);
+    List<MockAction> expungeRegUpdates = filterActions(expungeActions, UPDATE_REGISTRY_ACTION);
+    assertEquals(1, expungeRegUpdates.size());
+    CloudModel expungeRegModel = (CloudModel) expungeRegUpdates.get(0).data;
+    assertNotNull("Unscoped -x should populate device_ids shard with expunged devices",
+        expungeRegModel.device_ids);
+    assertEquals(ImmutableSet.of(MOCK_DEVICE_ID), expungeRegModel.device_ids.keySet());
   }
 
   @Test
@@ -205,6 +227,12 @@ public class RegistrarTest {
     int transitiveCreates = transitiveCreate.stream()
         .filter(mock -> !mock.deviceId.equals(GATEWAY_ID)).toList().size();
     assertEquals("Transitive devices", 3, transitiveCreates);
+
+    List<MockAction> registryUpdates = filterActions(transitiveMocked, UPDATE_REGISTRY_ACTION);
+    assertEquals(1, registryUpdates.size());
+    CloudModel regModel = (CloudModel) registryUpdates.get(0).data;
+    assertEquals("Registry update shard should include transitive devices",
+        4, regModel.device_ids.size());
   }
 
   @Test

@@ -241,8 +241,13 @@ class ButlerConnection:
                 self.username = f"/r/{ns_prefix}UDMI-REFLECT/d/{self.actual_registry}"
                 self.password = derived_pass
 
-    def get_discovery_topics(self, device_id):
-        """Returns list of topics to publish discovery config for target device."""
+    def get_discovery_topics(self, device_id=None):
+        """Returns list of topics to publish discovery config for target device or registry."""
+        if not device_id:
+            uufi_topic = f"/uufi/r/{self.actual_registry}/c/config/discovery"
+            if self.prefix:
+                uufi_topic = f"/{self.prefix}{uufi_topic}"
+            return [uufi_topic]
         if self.provider in ("gbos", "clearblade"):
             return [
                 f"/devices/{device_id}/commands/discovery",

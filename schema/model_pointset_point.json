@@ -107,8 +107,8 @@
     "expr": {
       "type": "string",
       "description": "Virtual equipment mapping linking this local point to a remote point in another device",
-      "pattern": "^[-0-9a-zA-Z$]+:[a-z0-9_]+$",
-      "examples": ["VAV-3:supply_air_flowrate_sensor"]
+      "pattern": ".*[-_0-9a-zA-Z$]+:[a-z0-9_]+.*",
+      "examples": ["VAV-3:supply_air_flowrate_sensor", "VAV-101:zone_air_temp_sensor - VAV-102:zone_air_temp_sensor"]
     },
     "values": {
       "type": "object",

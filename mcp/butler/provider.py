@@ -256,6 +256,9 @@ class ButlerProvider:
             if isinstance(payload, dict) and "payload" in payload and isinstance(payload.get("payload"), dict):
                 payload = payload["payload"]
 
+            if not isinstance(payload, dict) or payload.get("family") == "iot":
+                continue
+
             bacnet_addr = None
             ipv4_addr = None
             vendor_addr = None
@@ -287,6 +290,140 @@ class ButlerProvider:
                 })
 
         return devices
+
+    def get_discovered_models(self, registry_id: str) -> Dict[str, Dict[str, Any]]:
+        """Retrieves discovered device models (Metadata) for a registry from Model Discovery events or metadata store.
+
+        Args:
+            registry_id: Target device registry identifier.
+
+        Returns:
+            Dictionary mapping device_id to its latest Metadata dictionary.
+        """
+        models: Dict[str, Dict[str, Any]] = {}
+        if not self.pg_manager:
+            return models
+
+        try:
+            conn = self.pg_manager.get_connection()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT DISTINCT ON (device_id) device_id, metadata
+                    FROM udmi_metadata
+                    WHERE device_registry_id = %s AND metadata IS NOT NULL
+                    ORDER BY device_id, timestamp DESC;
+                    """,
+                    (registry_id,),
+                )
+                meta_rows = cur.fetchall()
+                for dev_id, meta_payload in meta_rows:
+                    if isinstance(meta_payload, str):
+                        try:
+                            meta_payload = json.loads(meta_payload)
+                        except Exception:
+                            continue
+                    if dev_id and isinstance(meta_payload, dict):
+                        models[str(dev_id)] = meta_payload
+
+                cur.execute(
+                    """
+                    SELECT device_id, sub_type, sub_folder, payload
+                    FROM udmi_messages
+                    WHERE registry_id = %s
+                      AND (
+                        (sub_folder = 'discovery' AND sub_type = 'events')
+                        OR sub_type = 'model'
+                      )
+                    ORDER BY id ASC;
+                    """,
+                    (registry_id,),
+                )
+                msg_rows = cur.fetchall()
+            conn.close()
+
+            gen_batches: Dict[str, Dict[str, Any]] = {}
+
+            def _reconcile_gen(gen_key: str) -> None:
+                batch = gen_batches.get(gen_key)
+                if not batch or not batch.get("has_start"):
+                    return
+                active_count = batch.get("active_count")
+                seen = batch.get("seen", set())
+                if not isinstance(active_count, int) or len(seen) < active_count:
+                    return
+                gen_batches.pop(gen_key, None)
+                addrs = batch.get("addrs")
+                if isinstance(addrs, list):
+                    for addr in addrs:
+                        addr_str = str(addr)
+                        if addr_str not in seen:
+                            models.pop(addr_str, None)
+                else:
+                    for existing_id in list(models.keys()):
+                        if existing_id not in seen:
+                            models.pop(existing_id, None)
+
+            for dev_id, sub_type, sub_folder, payload in msg_rows:
+                if isinstance(payload, str):
+                    try:
+                        payload = json.loads(payload)
+                    except Exception:
+                        continue
+                if isinstance(payload, dict) and "payload" in payload and isinstance(payload.get("payload"), dict):
+                    payload = payload["payload"]
+                if not isinstance(payload, dict):
+                    continue
+
+                if sub_folder == "discovery" and sub_type == "events":
+                    if payload.get("family") == "iot":
+                        gen = str(payload.get("generation") or "")
+                        event_no = payload.get("event_no")
+                        if (
+                            isinstance(event_no, int)
+                            and event_no == 0
+                            and not payload.get("addr")
+                            and not isinstance(payload.get("model"), dict)
+                        ):
+                            if gen:
+                                batch = gen_batches.setdefault(
+                                    gen,
+                                    {
+                                        "has_start": False,
+                                        "active_count": 0,
+                                        "addrs": None,
+                                        "seen": set(),
+                                    },
+                                )
+                                batch["has_start"] = True
+                                batch["active_count"] = payload.get("active_count", 0)
+                                batch["addrs"] = payload.get("addrs")
+                                _reconcile_gen(gen)
+                        elif isinstance(payload.get("model"), dict):
+                            target_dev = payload.get("addr") or dev_id
+                            if target_dev:
+                                target_str = str(target_dev)
+                                models[target_str] = payload["model"]
+                                if gen:
+                                    batch = gen_batches.setdefault(
+                                        gen,
+                                        {
+                                            "has_start": False,
+                                            "active_count": 0,
+                                            "addrs": None,
+                                            "seen": set(),
+                                        },
+                                    )
+                                    batch["seen"].add(target_str)
+                                    _reconcile_gen(gen)
+                elif sub_type == "model":
+                    if dev_id:
+                        models[str(dev_id)] = payload
+
+            return models
+        except Exception as e:
+            print(f"ButlerProvider error fetching discovered models: {e}", file=sys.stderr)
+            return models
 
     def get_device_messages(
         self,
@@ -559,6 +696,11 @@ class ButlerProvider:
                 deleted_count += cur.rowcount
                 cur.execute(
                     "DELETE FROM udmi_discovery WHERE device_registry_id = %s;",
+                    (registry_id,),
+                )
+                deleted_count += cur.rowcount
+                cur.execute(
+                    "DELETE FROM udmi_metadata WHERE device_registry_id = %s;",
                     (registry_id,),
                 )
                 deleted_count += cur.rowcount

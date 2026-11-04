@@ -46,6 +46,11 @@ public class TargetProcessor extends ProcessorBase {
 
     publish(defaultedMessage);
 
+    if (ModelDiscoveryHandler.isModelDiscoveryMessage(envelope, defaultedMessage)) {
+      debug("Skipping reflector forwarding for model discovery message");
+      return;
+    }
+
     if (deviceId == null) {
       notice("Dropping message with no deviceId: " + stringifyTerse(envelope));
       return;

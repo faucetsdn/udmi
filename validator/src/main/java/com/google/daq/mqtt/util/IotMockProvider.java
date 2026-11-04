@@ -48,7 +48,10 @@ public class IotMockProvider implements IotProvider {
     siteModel = new SiteModel(executionConfiguration);
     siteModel.initialize();
     ifNotTrueThen(executionConfiguration.project_id.equals(SiteModel.MOCK_CLEAN),
-        () -> siteModel.forEachDeviceId(this::populateCloudModel));
+        () -> {
+          siteModel.forEachDeviceId(this::populateCloudModel);
+          populateCloudModel(MOCK_DEVICE_ID);
+        });
     client = mockClientString(executionConfiguration.project_id, siteModel.getRegistryId(),
         siteModel.getCloudRegion());
   }
@@ -141,7 +144,9 @@ public class IotMockProvider implements IotProvider {
     Map<String, CloudModel> siteDeviceModels = siteModel.allMetadata().entrySet().stream().collect(
         Collectors.toMap(Entry::getKey, model -> makeCloudModel(model.getValue())));
     Map<String, CloudModel> deviceModels = new HashMap<>(siteDeviceModels);
-    deviceModels.put(MOCK_DEVICE_ID, makeMockModel(MOCK_DEVICE_ID));
+    if (cloudDevices.containsKey(MOCK_DEVICE_ID)) {
+      deviceModels.put(MOCK_DEVICE_ID, makeMockModel(MOCK_DEVICE_ID));
+    }
     if (forGatewayId != null) {
       deviceModels.remove(forGatewayId);
       deviceModels.remove(PROXY_DEVICE_ID);

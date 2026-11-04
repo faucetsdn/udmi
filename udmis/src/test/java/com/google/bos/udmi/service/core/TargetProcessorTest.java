@@ -94,4 +94,46 @@ class TargetProcessorTest extends ProcessorTestBase {
     verifyCommand(commandCaptor, false);
   }
 
+  private final java.util.List<String> notices = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+  @Override
+  protected ProcessorBase getProcessor(udmi.schema.EndpointConfiguration config,
+      Class<? extends ProcessorBase> clazz) {
+    if (clazz.equals(TargetProcessor.class)) {
+      return new TargetProcessor(config) {
+        @Override
+        public void notice(String message) {
+          notices.add(message);
+          super.notice(message);
+        }
+      };
+    }
+    return super.getProcessor(config, clazz);
+  }
+
+  @Test
+  public void modelDiscoveryStateSkippedTest() {
+    notices.clear();
+    initializeTestInstance();
+
+    udmi.schema.FamilyDiscoveryState familyState = new udmi.schema.FamilyDiscoveryState();
+    familyState.source = ModelDiscoveryHandler.MODEL_SOURCE;
+    udmi.schema.DiscoveryState state = new udmi.schema.DiscoveryState();
+    state.families = new java.util.HashMap<>();
+    state.families.put("iot", familyState);
+
+    Bundle bundle = new Bundle(state);
+    bundle.envelope.deviceRegistryId = TEST_REGISTRY;
+    bundle.envelope.deviceId = null;
+    bundle.envelope.subType = SubType.STATE;
+    bundle.envelope.subFolder = SubFolder.DISCOVERY;
+    bundle.envelope.source = "implicit";
+
+    getReverseDispatcher().publish(bundle);
+    terminateAndWait();
+
+    assertTrue(notices.isEmpty(),
+        "Registry-level model discovery state should not emit a notice: " + notices);
+  }
+
 }

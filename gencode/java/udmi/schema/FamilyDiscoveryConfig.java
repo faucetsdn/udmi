@@ -53,6 +53,13 @@ public class FamilyDiscoveryConfig {
     @JsonProperty("depth")
     public udmi.schema.Enumerations.Depth depth;
     /**
+     * Optional source qualifier for the discovery scan (e.g., 'model')
+     * 
+     */
+    @JsonProperty("source")
+    @JsonPropertyDescription("Optional source qualifier for the discovery scan (e.g., 'model')")
+    public String source;
+    /**
      * Trace Discovery Config
      * <p>
      * Configuration parameters for trace-level discovery operations (when depth is 'trace')
@@ -72,6 +79,7 @@ public class FamilyDiscoveryConfig {
         result = ((result* 31)+((this.passive_sec == null)? 0 :this.passive_sec.hashCode()));
         result = ((result* 31)+((this.scan_duration_sec == null)? 0 :this.scan_duration_sec.hashCode()));
         result = ((result* 31)+((this.addrs == null)? 0 :this.addrs.hashCode()));
+        result = ((result* 31)+((this.source == null)? 0 :this.source.hashCode()));
         result = ((result* 31)+((this.networks == null)? 0 :this.networks.hashCode()));
         return result;
     }
@@ -85,7 +93,7 @@ public class FamilyDiscoveryConfig {
             return false;
         }
         FamilyDiscoveryConfig rhs = ((FamilyDiscoveryConfig) other);
-        return (((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_interval_sec == rhs.scan_interval_sec)||((this.scan_interval_sec!= null)&&this.scan_interval_sec.equals(rhs.scan_interval_sec))))&&((this.trace == rhs.trace)||((this.trace!= null)&&this.trace.equals(rhs.trace))))&&((this.depth == rhs.depth)||((this.depth!= null)&&this.depth.equals(rhs.depth))))&&((this.passive_sec == rhs.passive_sec)||((this.passive_sec!= null)&&this.passive_sec.equals(rhs.passive_sec))))&&((this.scan_duration_sec == rhs.scan_duration_sec)||((this.scan_duration_sec!= null)&&this.scan_duration_sec.equals(rhs.scan_duration_sec))))&&((this.addrs == rhs.addrs)||((this.addrs!= null)&&this.addrs.equals(rhs.addrs))))&&((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks))));
+        return ((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_interval_sec == rhs.scan_interval_sec)||((this.scan_interval_sec!= null)&&this.scan_interval_sec.equals(rhs.scan_interval_sec))))&&((this.trace == rhs.trace)||((this.trace!= null)&&this.trace.equals(rhs.trace))))&&((this.depth == rhs.depth)||((this.depth!= null)&&this.depth.equals(rhs.depth))))&&((this.passive_sec == rhs.passive_sec)||((this.passive_sec!= null)&&this.passive_sec.equals(rhs.passive_sec))))&&((this.scan_duration_sec == rhs.scan_duration_sec)||((this.scan_duration_sec!= null)&&this.scan_duration_sec.equals(rhs.scan_duration_sec))))&&((this.addrs == rhs.addrs)||((this.addrs!= null)&&this.addrs.equals(rhs.addrs))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.networks == rhs.networks)||((this.networks!= null)&&this.networks.equals(rhs.networks))));
     }
 
 }

@@ -181,6 +181,178 @@ class HandlerTests(unittest.TestCase):
         self.assertEqual(row["project_id"], "proj-1")
         self.assertEqual(row["payload"], payload)
 
+    def test_model_discovery_handler(self):
+        handler = DiscoveryHandler()
+        self.assertTrue(handler.can_handle("discovery", "events", {}))
+        self.assertFalse(handler.can_handle("discovery", "state", {}))
+
+        start_env = {"deviceRegistryId": "reg-1"}
+        start_payload = {
+            "family": "iot",
+            "source": "model",
+            "generation": "2026-08-21T00:00:00Z",
+            "event_no": 0,
+            "addrs": ["AHU-1", "DEL-1"],
+            "active_count": 1,
+        }
+        start_res = handler.process_message(start_env, start_payload, self.mock_pg, self.mock_influx)
+        self.assertEqual(start_res["count"], 0)
+        self.assertEqual(start_res["addrs"], ["AHU-1", "DEL-1"])
+        self.mock_pg.insert_row.assert_not_called()
+
+        envelope = {"deviceId": "AHU-1", "deviceRegistryId": "reg-1"}
+        payload = {
+            "family": "iot",
+            "generation": "2026-08-21T00:00:00Z",
+            "event_no": 1,
+            "addr": "AHU-1",
+            "model": {
+                "version": "1.5.7",
+                "timestamp": "2026-08-21T00:00:00Z",
+                "system": {
+                    "hardware": {"make": "Acme", "model": "AHU-Pro"},
+                    "serial_no": "SN-AHU-1",
+                    "location": {"site": "reg-1", "section": "Floor-2", "position": {"x": 1, "y": 2}},
+                },
+                "localnet": {
+                    "families": {
+                        "bacnet": {"addr": "41122"},
+                        "ipv4": {"addr": "10.0.0.10"},
+                    }
+                },
+            },
+        }
+
+        res = handler.process_message(envelope, payload, self.mock_pg, self.mock_influx)
+        self.assertEqual(res["target"], "postgres")
+        self.assertEqual(res["table"], "udmi_discovery")
+        self.assertEqual(self.mock_pg.insert_row.call_count, 2)
+        disc_table, disc_row = self.mock_pg.insert_row.call_args_list[0][0]
+        meta_table, meta_row = self.mock_pg.insert_row.call_args_list[1][0]
+        self.assertEqual(disc_table, "udmi_discovery")
+        self.assertEqual(disc_row["scan_family"], "iot")
+        self.assertEqual(disc_row["bacnet_addr"], "41122")
+        self.assertEqual(disc_row["ipv4_addr"], "10.0.0.10")
+        self.assertEqual(disc_row["hardware_make"], "Acme")
+        self.assertEqual(meta_table, "udmi_metadata")
+        self.assertEqual(meta_row["device_id"], "AHU-1")
+        self.assertEqual(meta_row["metadata"]["system"]["serial_no"], "SN-AHU-1")
+        self.mock_pg.execute_sql.assert_called_once_with(
+            "DELETE FROM udmi_metadata WHERE device_registry_id = %s AND device_id IN (%s)",
+            ("reg-1", "DEL-1"),
+        )
+
+    def test_provider_discovered_models_deletion_reconciliation(self):
+        from mcp.butler.provider import ButlerProvider
+
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+        mock_conn.cursor.return_value.__enter__.return_value = mock_cur
+        mock_cur.fetchall.side_effect = [
+            [
+                ("AHU-1", {"system": {"serial_no": "SN-OLD"}}),
+                ("DEL-1", {"system": {"serial_no": "SN-DEL"}}),
+                ("VAV-1", {"system": {"serial_no": "SN-VAV"}}),
+            ],
+            [
+                (
+                    None,
+                    "events",
+                    "discovery",
+                    {
+                        "family": "iot",
+                        "generation": "2026-08-21T01:00:00Z",
+                        "event_no": 0,
+                        "addrs": ["AHU-1", "DEL-1"],
+                        "active_count": 1,
+                    },
+                ),
+                (
+                    "AHU-1",
+                    "events",
+                    "discovery",
+                    {
+                        "family": "iot",
+                        "generation": "2026-08-21T01:00:00Z",
+                        "event_no": 1,
+                        "addr": "AHU-1",
+                        "model": {"system": {"serial_no": "SN-NEW"}},
+                    },
+                ),
+                (
+                    None,
+                    "events",
+                    "discovery",
+                    {
+                        "family": "iot",
+                        "generation": "2026-08-21T02:00:00Z",
+                        "event_no": 0,
+                        "active_count": 2,
+                    },
+                ),
+            ],
+        ]
+        self.mock_pg.get_connection.return_value = mock_conn
+        provider = ButlerProvider(pg_manager=self.mock_pg, influx_manager=self.mock_influx)
+        models = provider.get_discovered_models("reg-1")
+        self.assertEqual(set(models.keys()), {"AHU-1", "VAV-1"})
+        self.assertEqual(models["AHU-1"]["system"]["serial_no"], "SN-NEW")
+
+    def test_registry_model_discovery_topics(self):
+        from butler.src.connection import ButlerConnection
+        conn = ButlerConnection("//mqtt/localhost:18833", registry_id="ZZ-TRI-FECTA")
+        self.assertEqual(
+            conn.get_discovery_topics(None),
+            ["/uufi/r/ZZ-TRI-FECTA/c/config/discovery"],
+        )
+        self.assertEqual(
+            conn.get_discovery_topics("GAT-123"),
+            ["/uufi/r/ZZ-TRI-FECTA/d/GAT-123/c/config/discovery"],
+        )
+
+    def test_mapping_with_discovered_models(self):
+        from unittest.mock import patch
+        from butler.src.mapping import run_mapping
+
+        mock_butler = MagicMock()
+        mock_butler.get_discovered_models.return_value = {
+            "AHU-1": {
+                "version": "1.5.2",
+                "timestamp": "2026-08-21T00:00:00Z",
+                "system": {"serial_no": "SN-AHU-1"},
+                "localnet": {
+                    "families": {
+                        "bacnet": {"addr": "41122"},
+                    }
+                },
+            }
+        }
+        mock_butler.get_discovered_devices.return_value = [
+            {
+                "gateway_id": "GAT-123",
+                "generation": "2026-08-21T00:00:00Z",
+                "bacnet": "41122",
+                "ipv4": "192.168.1.50",
+                "vendor": None,
+                "timestamp": "2026-08-21T00:00:01Z",
+            }
+        ]
+
+        with patch("butler.src.mapping.ButlerConnection") as mock_conn_cls:
+            mock_conn = MagicMock()
+            mock_conn.actual_registry = "ZZ-TRI-FECTA"
+            mock_conn.project = "localhost"
+            mock_conn.get_propose_topics.side_effect = (
+                lambda dev_id, sf="system": [f"/uufi/r/ZZ-TRI-FECTA/d/{dev_id}/c/propose/{sf}"]
+            )
+            mock_conn_cls.return_value = mock_conn
+
+            run_mapping("//mqtt/localhost:18833", "ZZ-TRI-FECTA", site_model=None, butler_client=mock_butler)
+            mock_conn.publish_messages.assert_called_once()
+            published_pairs = mock_conn.publish_messages.call_args[0][0]
+            topics = [t for t, _ in published_pairs]
+            self.assertIn("/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/propose/localnet", topics)
+
 
 if __name__ == "__main__":
     unittest.main()

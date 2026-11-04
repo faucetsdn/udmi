@@ -60,6 +60,22 @@ MCP_TOOLS = [
         },
     },
     {
+        "name": "get_discovered_models",
+        "description": (
+            "Retrieve discovered device models (Metadata) for a registry from Model Discovery events."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "registry_id": {
+                    "type": "string",
+                    "description": "The target device registry identifier",
+                }
+            },
+            "required": ["registry_id"],
+        },
+    },
+    {
         "name": "get_device_messages",
         "description": (
             "Retrieve chronological message lifecycle history (base model, discovery events, "
@@ -439,6 +455,8 @@ class ButlerMcpServer:
             return self.provider.get_discovery_events(registry_id=args["registry_id"])
         if name == "get_discovered_devices":
             return self.provider.get_discovered_devices(registry_id=args["registry_id"])
+        if name == "get_discovered_models":
+            return self.provider.get_discovered_models(registry_id=args["registry_id"])
         if name == "get_device_messages":
             return self.provider.get_device_messages(
                 registry_id=args["registry_id"], device_id=args["device_id"]
@@ -656,6 +674,10 @@ def main() -> None:
     devs_parser.add_argument("registry_id", help="Registry ID")
     devs_parser.add_argument("--pg-port", type=int, default=None)
 
+    models_parser = subparsers.add_parser("discovered-models", help="List discovered models for registry")
+    models_parser.add_argument("registry_id", help="Registry ID")
+    models_parser.add_argument("--pg-port", type=int, default=None)
+
     msgs_parser = subparsers.add_parser("device-messages", help="List lifecycle messages for a device")
     msgs_parser.add_argument("registry_id", help="Registry ID")
     msgs_parser.add_argument("device_id", help="Device ID")
@@ -692,6 +714,11 @@ def main() -> None:
     if args.command == "discovered-devices":
         devs = provider.get_discovered_devices(args.registry_id)
         print(json.dumps(devs, indent=2))
+        return
+
+    if args.command == "discovered-models":
+        models = provider.get_discovered_models(args.registry_id)
+        print(json.dumps(models, indent=2))
         return
 
     if args.command == "device-messages":

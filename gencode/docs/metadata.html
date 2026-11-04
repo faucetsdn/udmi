@@ -21120,15 +21120,17 @@
         </svg>
     <a href="#pointset_points_pattern1_expr" onclick="anchorLink('pointset_points_pattern1_expr')">expr</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Virtual equipment mapping linking this local point to a remote point in another device</p>
-</span><span class="pattern-value" id="pointset_points_pattern1_expr_pattern">Must match regular expression: <code>^[-0-9a-zA-Z$]+:[a-z0-9_]+$</code></span>
+</span><span class="pattern-value" id="pointset_points_pattern1_expr_pattern">Must match regular expression: <code>.*[-_0-9a-zA-Z$]+:[a-z0-9_]+.*</code></span>
         
 
         
         
 
         <br/>
-<div class="badge badge-secondary">Example:</div>
+<div class="badge badge-secondary">Examples:</div>
 <br/><div id="pointset_points_pattern1_expr_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;VAV-3:supply_air_flowrate_sensor&quot;</span>
+</pre></div>
+</div><div id="pointset_points_pattern1_expr_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;VAV-101:zone_air_temp_sensor - VAV-102:zone_air_temp_sensor&quot;</span>
 </pre></div>
 </div>
             </div>
@@ -24886,6 +24888,54 @@
         </div>
     </div>
 </div>
+<div class="accordion" id="accordionstructure_pattern1_source">
+    <div class="card">
+        <div class="card-header" id="headingstructure_pattern1_source">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#structure_pattern1_source"
+                        aria-expanded="" aria-controls="structure_pattern1_source" onclick="setAnchor('#structure_pattern1_source')"><span class="property-name">source</span></button>
+            </h2>
+        </div>
+
+        <div id="structure_pattern1_source"
+             class="collapse property-definition-div" aria-labelledby="headingstructure_pattern1_source"
+             data-parent="#accordionstructure_pattern1_source">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure" onclick="anchorLink('structure')">structure</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1" onclick="anchorLink('structure_pattern1')">Discovery Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1_source" onclick="anchorLink('structure_pattern1_source')">source</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+<span class="description"><p>Optional source qualifier for the discovery scan (e.g., 'model')</p>
+</span>
+        
+
+        
+        
+
+        
+            </div>
+        </div>
+    </div>
+</div>
 <div class="accordion" id="accordionstructure_pattern1_addr">
     <div class="card">
         <div class="card-header" id="headingstructure_pattern1_addr">
@@ -25026,6 +25076,144 @@
         
 
         
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionstructure_pattern1_active_count">
+    <div class="card">
+        <div class="card-header" id="headingstructure_pattern1_active_count">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#structure_pattern1_active_count"
+                        aria-expanded="" aria-controls="structure_pattern1_active_count" onclick="setAnchor('#structure_pattern1_active_count')"><span class="property-name">active_count</span></button>
+            </h2>
+        </div>
+
+        <div id="structure_pattern1_active_count"
+             class="collapse property-definition-div" aria-labelledby="headingstructure_pattern1_active_count"
+             data-parent="#accordionstructure_pattern1_active_count">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure" onclick="anchorLink('structure')">structure</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1" onclick="anchorLink('structure_pattern1')">Discovery Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1_active_count" onclick="anchorLink('structure_pattern1_active_count')">active_count</a></div><span class="badge badge-dark value-type">Type: integer</span><br/>
+<span class="description"><p>Total number of records expected for this active scan generation (only populated on the event_no=0 start marker event)</p>
+</span>
+        
+
+        
+        <p><span class="badge badge-light restriction numeric-restriction" id="structure_pattern1_active_count_number">Value must be greater or equal to <code>0</code></span></p>
+
+        
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionstructure_pattern1_addrs">
+    <div class="card">
+        <div class="card-header" id="headingstructure_pattern1_addrs">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#structure_pattern1_addrs"
+                        aria-expanded="" aria-controls="structure_pattern1_addrs" onclick="setAnchor('#structure_pattern1_addrs')"><span class="property-name">addrs</span></button>
+            </h2>
+        </div>
+
+        <div id="structure_pattern1_addrs"
+             class="collapse property-definition-div" aria-labelledby="headingstructure_pattern1_addrs"
+             data-parent="#accordionstructure_pattern1_addrs">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure" onclick="anchorLink('structure')">structure</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1" onclick="anchorLink('structure_pattern1')">Discovery Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1_addrs" onclick="anchorLink('structure_pattern1_addrs')">addrs</a></div><span class="badge badge-dark value-type">Type: array of string</span><br/>
+<span class="description"><p>List of target addresses for a partial discovery scan shard (only populated on the event_no=0 start marker event)</p>
+</span>
+        
+
+        
+        
+
+         <span class="badge badge-info no-additional">No Additional Items</span><h4>Each item of this array must be:</h4>
+    <div class="card">
+        <div class="card-body items-definition" id="structure_pattern1_addrs_items">
+            
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure" onclick="anchorLink('structure')">structure</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1" onclick="anchorLink('structure_pattern1')">Discovery Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1_addrs" onclick="anchorLink('structure_pattern1_addrs')">addrs</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1_addrs_items" onclick="anchorLink('structure_pattern1_addrs_items')">addrs items</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
+
+        
+
+        
+        
+
+        
+        </div>
+    </div>
             </div>
         </div>
     </div>
@@ -37393,15 +37581,17 @@
         </svg>
     <a href="#structure_pattern1_points_pattern1_expr" onclick="anchorLink('structure_pattern1_points_pattern1_expr')">expr</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
 <span class="description"><p>Virtual equipment mapping linking this local point to a remote point in another device</p>
-</span><span class="pattern-value" id="structure_pattern1_points_pattern1_expr_pattern">Must match regular expression: <code>^[-0-9a-zA-Z$]+:[a-z0-9_]+$</code></span>
+</span><span class="pattern-value" id="structure_pattern1_points_pattern1_expr_pattern">Must match regular expression: <code>.*[-_0-9a-zA-Z$]+:[a-z0-9_]+.*</code></span>
         
 
         
         
 
         <br/>
-<div class="badge badge-secondary">Example:</div>
+<div class="badge badge-secondary">Examples:</div>
 <br/><div id="structure_pattern1_points_pattern1_expr_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;VAV-3:supply_air_flowrate_sensor&quot;</span>
+</pre></div>
+</div><div id="structure_pattern1_points_pattern1_expr_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;VAV-101:zone_air_temp_sensor - VAV-102:zone_air_temp_sensor&quot;</span>
 </pre></div>
 </div>
             </div>
@@ -45871,6 +46061,48 @@
         </div>
     </div>
 </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="accordion" id="accordionstructure_pattern1_model">
+    <div class="card">
+        <div class="card-header" id="headingstructure_pattern1_model">
+            <h2 class="mb-0">
+                <button class="btn btn-link property-name-button" type="button" data-toggle="collapse" data-target="#structure_pattern1_model"
+                        aria-expanded="" aria-controls="structure_pattern1_model" onclick="setAnchor('#structure_pattern1_model')"><span class="property-name">model</span></button>
+            </h2>
+        </div>
+
+        <div id="structure_pattern1_model"
+             class="collapse property-definition-div" aria-labelledby="headingstructure_pattern1_model"
+             data-parent="#accordionstructure_pattern1_model">
+            <div class="card-body pl-5">
+
+    <div class="breadcrumbs">root
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure" onclick="anchorLink('structure')">structure</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1" onclick="anchorLink('structure_pattern1')">Discovery Events</a>
+        <svg width="1em" height="1em" viewBox="0 0 16 16" class="bi bi-arrow-right-short" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path
+                fill-rule="evenodd"
+                d="M4 8a.5.5 0 0 1 .5-.5h5.793L8.146 5.354a.5.5 0 1 1 .708-.708l3 3a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708-.708L10.293 8.5H4.5A.5.5 0 0 1 4 8z"
+            />
+        </svg>
+    <a href="#structure_pattern1_model" onclick="anchorLink('structure_pattern1_model')">model</a></div><h4>Metadata</h4><span class="badge badge-dark value-type">Type: object</span><br/>
+<span class="description"><p>Device metadata model (for model discovery)</p>
+</span><a href="#root" onclick="anchorLink('root')" class="ref-link">Same definition as Metadata</a>
             </div>
         </div>
     </div>

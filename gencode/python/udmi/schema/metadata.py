@@ -8,7 +8,6 @@ from typing import Dict, Optional
 
 from ._base import DataModel
 from .common import Operation
-from .events_discovery import DiscoveryEvents
 from .model_alarmset import AlarmsetModel
 from .model_cloud import CloudModel
 from .model_discovery import DiscoveryModel
@@ -47,3 +46,5 @@ class Metadata(DataModel):
     pointset: Optional[PointsetModel] = None
     structure: Optional[Dict[str, DiscoveryEvents]] = None
     policy: Optional[PolicyModel] = None
+
+from .events_discovery import DiscoveryEvents
