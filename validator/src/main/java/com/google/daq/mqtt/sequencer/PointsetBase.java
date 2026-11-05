@@ -32,6 +32,8 @@ public abstract class PointsetBase extends SequenceBase {
   @Before
   public void makePoints() {
     deviceConfig.pointset = Optional.ofNullable(deviceConfig.pointset).orElse(new PointsetConfig());
+    deviceConfig.pointset.state_etag = Optional.ofNullable(deviceConfig.pointset.state_etag)
+        .orElseGet(() -> catchToNull(() -> deviceState.pointset.state_etag));
     deviceConfig.pointset.points = Optional.ofNullable(deviceConfig.pointset.points)
         .orElse(new HashMap<>());
     try {

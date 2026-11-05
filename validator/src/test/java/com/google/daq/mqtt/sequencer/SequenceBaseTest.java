@@ -25,6 +25,7 @@ import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Metadata;
 import udmi.schema.Operation;
 import udmi.schema.PointsetConfig;
+import udmi.schema.PointsetModel;
 import udmi.schema.PointsetState;
 import udmi.schema.State;
 import udmi.schema.StateSystemOperation;
@@ -162,6 +163,33 @@ public class SequenceBaseTest {
     base.deviceState.pointset = null;
     assertNull("outside resetConfig, configIsPending should not block on subblock parity",
         base.configIsPending(false));
+  }
+
+  @Test
+  public void pointsetStateEtagSyncedToConfig() {
+    SequenceBase.deviceMetadata = new Metadata();
+    SequenceBase.deviceMetadata.pointset = new PointsetModel();
+    SequenceBase.deviceMetadata.pointset.points = new HashMap<>();
+
+    PointsetBase base = new PointsetBase() {};
+    Description testDesc = makeTestDescription("test_state_etag_sync");
+    base.testWatcher.starting(testDesc);
+    waitForNextMessage(base);
+
+    base.deviceState = new State();
+    base.deviceState.pointset = new PointsetState();
+    base.deviceState.pointset.state_etag = "etag-123";
+
+    base.resetDeviceConfig(false);
+    assertEquals("resetDeviceConfig(false) should sync pointset state_etag from deviceState",
+        "etag-123", base.deviceConfig.pointset.state_etag);
+
+    base.resetDeviceConfig(true);
+    base.makePoints();
+    assertEquals("PointsetBase.makePoints should sync pointset state_etag from deviceState",
+        "etag-123", base.deviceConfig.pointset.state_etag);
+
+    base.testWatcher.finished(testDesc);
   }
 
   @Test

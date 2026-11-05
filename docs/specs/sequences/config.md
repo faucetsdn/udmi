@@ -6,8 +6,6 @@
   a transactional state between the cloud and device.
 * When any `config` is received, a `state` update should be generated with a corresponding last_update.
 * The state message should be sent within 5 seconds
-  * If additional processing is required, then the `updating` flag should be set `true`.
-  * `updating` should be returned to `false` (or absent) once the device is done updating.
 * The device can asynchronously update `state` if some other condition changes independent of
   `config` message, including when:
   * There is an update from an external source, e.g. a BMS or local controller
@@ -42,7 +40,6 @@ Device->Broker: **STATE**
 
 * `system`:
   * `last_config`: Server-side timestamp from the last processed `config`.
-  * `updating`: Boolean indicating if the system is still processing the last `config` update.
 
 ## Erroneous Config Handling
 
