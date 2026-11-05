@@ -48,8 +48,8 @@ public class TestBase {
     pointsetEvent.version = TestCommon.UDMI_VERSION;
     HashMap<String, PointPointsetEvents> points = new HashMap<>();
     points.put(FILTER_ALARM_PRESSURE_STATUS, pointsetEventsPoint(Boolean.TRUE));
-    points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetEventsPoint(20));
-    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetEventsPoint("yes"));
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT, pointsetEventsPoint(98));
+    points.put(FILTER_DIFFERENTIAL_PRESSURE_SENSOR, pointsetEventsPoint(11));
     pointsetEvent.points = points;
     return pointsetEvent;
   }

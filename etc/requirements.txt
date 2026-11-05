@@ -52,11 +52,11 @@ marshmallow-enum==1.5.1
 mccabe==0.7.0
 mypy-extensions==0.4.3
 oauthlib==4.0.0
-opentelemetry-api==1.27.0
+opentelemetry-api==1.45.1
 opentelemetry-exporter-gcp-trace==1.7.0
 opentelemetry-resourcedetector-gcp==1.7.0a0
-opentelemetry-sdk==1.27.0
-opentelemetry-semantic-conventions==0.48b0
+opentelemetry-sdk==1.45.1
+opentelemetry-semantic-conventions==0.66b1
 packaging==24.1
 paho-mqtt==1.6.1
 pillow==13.0.0
@@ -66,7 +66,7 @@ pluggy==1.5.0
 proto-plus==1.24.0
 protobuf==5.29.6
 psycopg2-binary==2.9.12
-pyasn1==0.6.4
+pyasn1==0.6.5
 pyasn1_modules==0.4.1
 pycparser==2.22
 pydantic==2.13.4
@@ -74,7 +74,7 @@ pydantic_core==2.46.4
 pyee==13.0.1
 Pygments==2.20.0
 PyJWT==2.15.0
-pylint==4.0.5
+pylint==4.0.9
 pyOpenSSL==26.4.0
 pyparsing==3.1.0
 pytest==9.0.3

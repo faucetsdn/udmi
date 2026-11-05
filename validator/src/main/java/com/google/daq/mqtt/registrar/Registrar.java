@@ -1424,6 +1424,18 @@ public class Registrar {
   private void preprocessSiteMetadata() {
     allDevices.values().forEach(LocalDevice::configure);
     allDevices.values().stream().filter(LocalDevice::isGateway).forEach(this::preprocessGateway);
+    allDevices.values().stream().filter(LocalDevice::isProxied).forEach(this::preprocessProxied);
+  }
+
+  private void preprocessProxied(LocalDevice proxied) {
+    try {
+      String gatewayId = proxied.getGatewayId();
+      checkNotNull(gatewayId, "Proxied device missing gateway_id");
+      checkState(allDevices.containsKey(gatewayId),
+          format("Specified gateway_id %s not found in site model", gatewayId));
+    } catch (Exception e) {
+      proxied.captureError(ExceptionCategory.proxy, e);
+    }
   }
 
   private void preprocessGateway(LocalDevice gateway) {

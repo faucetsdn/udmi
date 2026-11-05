@@ -6,6 +6,7 @@ Exceptions for TEST-05053
     While converting device config
       While converting point HOLDING_REGISTER_53
         Point reference not allowed for family iot
+  Specified gateway_id CGW-05 not found in site model
   3 schema violations found
     $.pointset.points: property 'HOLDING_REGISTER_53' is not defined in the schema and the schema does not allow additional properties
     $.pointset.points: property 'HOLDING_REGISTER_153' is not defined in the schema and the schema does not allow additional properties
