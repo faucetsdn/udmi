@@ -10,7 +10,15 @@ COPY --from=tomcat /usr/local/tomcat /usr/local/tomcat
 COPY mosquitto/mosquitto_ctrl.sh /root/udmi/etc/
 COPY udmis/startup/udmis_startup.sh /usr/local/bin/startup/
 COPY udmis/startup/telegraf.conf /usr/local/bin/startup/
-COPY udmis/bridgeheadManager.war /usr/local/tomcat/webapps/
+COPY udmis/UI/ManagementWebapp /tmp/ManagementWebapp
+RUN rm -rf /tmp/ManagementWebapp/webapp/WEB-INF/classes/webapp && \
+    mkdir -p /tmp/ManagementWebapp/webapp/WEB-INF/classes && \
+    javac -cp "/tmp/ManagementWebapp/webapp/WEB-INF/lib/*" \
+      -d /tmp/ManagementWebapp/webapp/WEB-INF/classes \
+      /tmp/ManagementWebapp/src/webapp/*.java \
+      /tmp/ManagementWebapp/src/webapp/mqtt/*.java && \
+    jar -cf /usr/local/tomcat/webapps/bridgeheadManager.war -C /tmp/ManagementWebapp/webapp . && \
+    rm -rf /tmp/ManagementWebapp
 
 RUN chmod +x /root/udmi/etc/mosquitto_ctrl.sh
 RUN chmod +x /usr/local/bin/startup/udmis_startup.sh

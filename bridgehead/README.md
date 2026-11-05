@@ -15,7 +15,7 @@ This guide provides instructions for deploying the core UDMI services bundle. Th
 
 ### Quick Start: Automated Setup using `bin/start_bridgehead` (Recommended)
 
-The repository provides the `bin/start_bridgehead` helper script to automate prerequisite setup (creating host directories, generating missing X.509 reflector certificates, creating `.env` configuration, and building the Management UI WAR file) before launching Docker Compose.
+The repository provides the `bin/start_bridgehead` helper script to automate prerequisite setup (creating host directories, generating missing X.509 reflector certificates, and creating `.env` configuration) before launching Docker Compose.
 
 1. **Install docker engine:** Ensure Docker is installed and running on your system: `https://docs.docker.com/engine/install/`
 
@@ -42,8 +42,7 @@ The repository provides the `bin/start_bridgehead` helper script to automate pre
 - Creates required host data directories under `bridgehead/var/`.
 - Verifies site model availability and auto-generates missing X.509 reflector certificates (`rsa_private.crt`, `ca.crt`).
 - Generates a default `.env` configuration file with host IP detection and random tokens if `.env` does not already exist.
-- Checks JDK prerequisites (`javac` and `jar`), compiles Java sources, and builds `udmis/bridgeheadManager.war`.
-- Launches all services via `docker compose up -d --build`.
+- Builds container images (including packaging `bridgeheadManager.war` inside the `udmis` image) and launches all services via `docker compose up -d --build`.
 
 ---
 
@@ -71,22 +70,12 @@ If you prefer to configure `.env` or build and run containers manually:
    5. INFLUX_USER & INFLUX_PASSWORD: Credentials for accessing InfluxDB.
    6. GRAFANA_USER & GRAFANA_PASSWORD: Credentials for accessing Grafana.
    
-5. **Build the Management UI (Required):** The Management UI WAR file (`bridgeheadManager.war`) must be built before deploying the services. Run the following commands:
-    ```bash
-    # Compile Java sources
-    mkdir -p udmis/UI/ManagementWebapp/webapp/WEB-INF/classes
-    javac -cp "udmis/UI/ManagementWebapp/webapp/WEB-INF/lib/*" -d udmis/UI/ManagementWebapp/webapp/WEB-INF/classes udmis/UI/ManagementWebapp/src/webapp/*.java udmis/UI/ManagementWebapp/src/webapp/mqtt/*.java
-
-    # Package into WAR
-    jar -cf udmis/bridgeheadManager.war -C udmis/UI/ManagementWebapp/webapp .
-    ```
-
-6. **Deploy the service:** Execute the following command to build the custom images (if needed) and start the containers in detached mode.
+5. **Deploy the service:** Execute the following command to build the custom images (if needed) and start the containers in detached mode.
     * **First time/after changes:** Run `docker compose up -d --build`
     * **Standard run:** Run `docker compose up -d`
     
     
-7. **Confirm all containers are running:** Run `docker ps` in the terminal, you should see the following containers in any order:
+6. **Confirm all containers are running:** Run `docker ps` in the terminal, you should see the following containers in any order:
    - validator
    - udmis
    - mosquitto
@@ -168,6 +157,22 @@ To run the validator service in the background to validate telemetry in real-tim
 ```bash
 docker exec -d validator bin/validator site_model/ //mqtt/mosquitto
 ```
+
+## Sequencer
+
+The Sequencer tool executes automated UDMI sequence compliance tests against a target Device Under Test (DUT) over MQTT.
+
+### CLI Execution
+Run the sequencer inside the `validator` container against a registered target device:
+```bash
+# Run full sequencer suite for device GAT-123
+docker exec validator bin/sequencer -v site_model/ //mqtt/mosquitto GAT-123
+
+# Run a specific sequence (e.g. system_last_update)
+docker exec validator bin/sequencer -v site_model/ //mqtt/mosquitto GAT-123 system_last_update
+```
+
+Test results and summaries are written to `site_model/out/devices/<DEVICE_ID>/RESULT.log`, `site_model/out/devices/<DEVICE_ID>/results.md`, and `site_model/out/sequencer_<DEVICE_ID>.json`.
 
 ## Diagnostics
 
