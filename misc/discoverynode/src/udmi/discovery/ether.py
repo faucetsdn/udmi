@@ -189,10 +189,33 @@ class EtherDiscovery(discovery.DiscoveryController):
           self.log.info("nmap: %s", line)
 
     try:
+      reader = nmap.results_reader(output_file)
+
+      def _publish_completed_hosts() -> None:
+        for host in reader:
+          event = udmi.schema.discovery_event.DiscoveryEvent(
+              generation=self.generation,
+              family=self.family,
+              addr=host.ip,
+              refs={
+                  f"{p.port_number}": {
+                      "adjunct": {
+                          k: v
+                          for k, v in dataclasses.asdict(p).items()
+                          if k != "sort_index"
+                      }
+                  }
+                  for p in host.ports
+              },
+          )
+          if host.os:
+            event.system.ancillary["os"] = host.os
+          self.publish(event)
+
       cmd = ["/usr/bin/nmap"]
       if self.config.depth == "services":
         cmd.extend(["--script", "banner", "-A"])
-      cmd.extend(["-p-", "-T3"])
+      cmd.extend(["-p-", "-T4", "--max-hostgroup", "32"])
       cmd.extend(self.config.addrs)
       cmd.extend(["-oX", output_file, "--stats-every", "60s"])
 
@@ -213,6 +236,7 @@ class EtherDiscovery(discovery.DiscoveryController):
             *complete_lines, buf = buf.split(b"\n")
             if complete_lines:
               _log_progress(b"\n".join(complete_lines))
+          _publish_completed_hosts()
           if proc.poll() is not None:
             if output := proc.stdout.read():
               buf += output
@@ -229,29 +253,11 @@ class EtherDiscovery(discovery.DiscoveryController):
               proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
               proc.kill()
+            _publish_completed_hosts()
             return
 
       self.log.info("nmap scan complete, parsing results")
-
-      for host in nmap.results_reader(output_file):
-        event = udmi.schema.discovery_event.DiscoveryEvent(
-            generation=self.generation,
-            family=self.family,
-            addr=host.ip,
-            refs={
-                f"{p.port_number}": {
-                    "adjunct": {
-                        k: v
-                        for k, v in dataclasses.asdict(p).items()
-                        if k != "sort_index"
-                    }
-                }
-                for p in host.ports
-            },
-        )
-        if host.os:
-          event.system.ancillary["os"] = host.os
-        self.publish(event)
+      _publish_completed_hosts()
     finally:
       if os.path.exists(output_file):
         os.unlink(output_file)

@@ -11,6 +11,7 @@ import daq.pubber.impl.PubberManager;
 import daq.pubber.impl.point.PubberMultistatePoint;
 import daq.pubber.impl.point.PubberRandomBoolean;
 import daq.pubber.impl.point.PubberRandomPoint;
+import daq.pubber.impl.point.PubberStaticPoint;
 import daq.pubber.impl.point.PubberStringPoint;
 import java.util.HashMap;
 import java.util.Map;
@@ -95,6 +96,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
       return new PubberStringPoint(name, point);
     } else if (point.values != null) {
       return new PubberMultistatePoint(name, point);
+    } else if (point.baseline_value instanceof String) {
+      return new PubberStaticPoint(name, point);
     } else {
       return new PubberRandomPoint(name, point);
     }

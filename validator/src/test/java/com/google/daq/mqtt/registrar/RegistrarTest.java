@@ -332,6 +332,19 @@ public class RegistrarTest {
         device.hasCategory(ExceptionCategory.schema));
   }
 
+  @Test
+  public void invalidGatewayIdTest() {
+    Registrar registrar = getRegistrar(ImmutableList.of());
+    registrar.execute(() -> {
+      Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
+      localDevices.get("SNS-8").getMetadata().gateway.gateway_id = "GAT-100";
+    });
+
+    LocalDevice device = registrar.getWorkingDevices().get("SNS-8");
+    assertTrue("Device should record proxy error for nonexistent gateway_id",
+        device.hasCategory(ExceptionCategory.proxy));
+  }
+
   private Boolean isNotBlocking(MockAction action) {
     return !TRUE.equals(((CloudModel) action.data).blocked);
   }
