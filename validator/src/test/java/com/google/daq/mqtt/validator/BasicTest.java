@@ -286,4 +286,36 @@ public class BasicTest extends TestBase {
     assertTrue("Should have precision error", hasPrecisionError);
   }
 
+  @Test
+  public void baselineValueMismatch() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.get(FILTER_DIFFERENTIAL_PRESSURE_SETPOINT).present_value = 20;
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error summary", 1, report.summary.error_devices.size());
+    ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+        POINTSET_SUBFOLDER);
+    boolean hasBaselineError = result.errors.stream()
+        .anyMatch(entry -> entry.message.contains("baseline_value")
+            && Category.VALIDATION_DEVICE_CONTENT.equals(entry.category));
+    assertTrue("Should have baseline_value error", hasBaselineError);
+  }
+
+  @Test
+  public void baselineToleranceOutOfRange() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.get(FILTER_DIFFERENTIAL_PRESSURE_SENSOR).present_value = 15;
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error summary", 1, report.summary.error_devices.size());
+    ValidationEvents result = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+        POINTSET_SUBFOLDER);
+    boolean hasBaselineError = result.errors.stream()
+        .anyMatch(entry -> entry.message.contains("baseline_value")
+            && Category.VALIDATION_DEVICE_CONTENT.equals(entry.category));
+    assertTrue("Should have baseline_tolerance error", hasBaselineError);
+  }
+
 }
