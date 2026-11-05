@@ -10,6 +10,7 @@ import com.google.common.collect.Sets;
 import daq.pubber.impl.PubberManager;
 import daq.pubber.impl.point.PubberRandomBoolean;
 import daq.pubber.impl.point.PubberRandomPoint;
+import daq.pubber.impl.point.PubberStaticPoint;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -89,6 +90,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   public AbstractPoint makePoint(String name, PointPointsetModel point) {
     if ("No-units".equals(point.units)) {
       return new PubberRandomBoolean(name, point);
+    } else if (point.baseline_value instanceof String) {
+      return new PubberStaticPoint(name, point);
     } else {
       return new PubberRandomPoint(name, point);
     }

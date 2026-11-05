@@ -22,6 +22,7 @@ import org.junit.Test;
 import udmi.lib.TestBase;
 import udmi.lib.client.host.ProxyHost;
 import udmi.lib.client.host.PublisherHost;
+import udmi.lib.intf.AbstractPoint;
 import udmi.schema.BlobBlobsetConfig;
 import udmi.schema.BlobBlobsetConfig.BlobPhase;
 import udmi.schema.BlobsetConfig;
@@ -31,6 +32,9 @@ import udmi.schema.EndpointConfiguration;
 import udmi.schema.Entry;
 import udmi.schema.Operation;
 import udmi.schema.Operation.SystemMode;
+import udmi.schema.PointPointsetConfig;
+import udmi.schema.PointPointsetModel;
+import udmi.schema.PointPointsetState.Value_state;
 import udmi.schema.PointsetConfig;
 import udmi.schema.State;
 import udmi.schema.SystemConfig;
@@ -399,5 +403,30 @@ public class PubberTest extends TestBase {
     } finally {
       proxy.shutdown();
     }
+  }
+
+  @Test
+  public void stringBaselineValuePointTest() {
+    pubber = makeTestPubber(TEST_DEVICE);
+    PointPointsetModel pointModel = new PointPointsetModel();
+    pointModel.units = "No-units-custom";
+    pointModel.baseline_value = "closed";
+    pointModel.writable = true;
+
+    AbstractPoint point = pubber.getDeviceManager().getPointsetManager()
+        .makePoint("door_status", pointModel);
+    point.updateData();
+    assertEquals("closed", point.getData().present_value);
+
+    PointPointsetConfig validConfig = new PointPointsetConfig();
+    validConfig.set_value = "closed";
+    point.setConfig(validConfig);
+    assertEquals(Value_state.APPLIED, point.getState().value_state);
+    assertEquals("closed", point.getData().present_value);
+
+    PointPointsetConfig invalidConfig = new PointPointsetConfig();
+    invalidConfig.set_value = "open";
+    point.setConfig(invalidConfig);
+    assertEquals(Value_state.INVALID, point.getState().value_state);
   }
 }
