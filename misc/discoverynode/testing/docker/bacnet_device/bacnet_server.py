@@ -59,5 +59,5 @@ _new_objects = multistate_value(
 _new_objects.add_objects_to_application(bacnet)
 
 while True:
-  bacnet.discover(global_broadcast=True)
+  # Avoid periodic Who-Is broadcast storms across simulated servers that stall single-threaded bacpypes I/O.
   time.sleep(5)

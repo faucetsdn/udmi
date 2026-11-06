@@ -10,6 +10,13 @@ source etc/shell_common.sh
 # Initialize test passed state
 TEST_PASSED=false
 
+# Ensure all required Java artifacts (udmis, validator, pubber) are built synchronously
+# before setting the -Xmx512m heap limit or starting background test processes/timers.
+echo "Ensuring Java build artifacts are up to date..."
+udmis/bin/build
+validator/bin/build
+pubber/bin/build
+
 # Limit JVM heap size for all Java processes (UDMIS, Bridges, Pubber, Registrar)
 # to prevent out-of-memory issues in resource-constrained CI environments.
 export JAVA_TOOL_OPTIONS="-Xmx512m"
@@ -48,6 +55,7 @@ BRIDGE_STATE_PID=""
 BRIDGE_REFLECT_PID=""
 UDMIS_PID=""
 PUBSUB_PID=""
+PUBSUB_DOCKER_STARTED=false
 ETCD_TLS_PID=""
 
 kill_process() {
@@ -85,6 +93,9 @@ cleanup() {
   if [ -n "$PUBSUB_PID" ]; then
     kill_process "$PUBSUB_PID"
   fi
+  if [ "$PUBSUB_DOCKER_STARTED" = true ]; then
+    docker rm -f pubsub-emulator >/dev/null 2>&1 || true
+  fi
   echo "Test cleanup complete."
 }
 
@@ -96,26 +107,38 @@ export SERV_USER=rocket
 export SERV_PASS=monkey
 export registry_id="$REGISTRY_ID"
 
-# 2. Check Base Infrastructure Services (Etcd & Mosquitto)
+# 2. Check Base Infrastructure Services (Mosquitto) and Stop Unused Background Services
 echo "Checking base infrastructure services..."
 export MQTT_PORT=${MQTT_PORT:-8883}
 export ETCD_PORT=${ETCD_PORT:-2379}
-if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
-  echo "Error: Etcd is not running on 127.0.0.1:$ETCD_PORT. Please run 'bin/udmi start $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
-  exit 1
-fi
-
 if ! nc -z 127.0.0.1 "$MQTT_PORT" &>/dev/null; then
   echo "Error: Mosquitto is not running on 127.0.0.1:$MQTT_PORT. Please run 'bin/udmi start $SITE_MODEL //mqtt/localhost:${MQTT_PORT}' first." >&2
   exit 1
 fi
 
-# Stop background plain-HTTP etcd (started by bin/udmi start) and replace it in-place on $ETCD_PORT
-# with the single production-parity mTLS etcd instance (--client-cert-auth & --peer-client-cert-auth)
+# Stop background plain-HTTP etcd and unused MQTT-mode services (started by bin/udmi start)
+# so only mTLS etcd, Host UDMIS (Pub/Sub Mode), and the Openbridge components run.
 bin/start_etcd stop >/dev/null 2>&1 || true
+bin/start_udmis stop >/dev/null 2>&1 || true
+bin/start_butler stop >/dev/null 2>&1 || true
+bin/start_influx stop >/dev/null 2>&1 || true
+bin/start_postgresql stop >/dev/null 2>&1 || true
 ETCD_PEER_PORT=$((ETCD_PORT + 1000))
 ETCD_TLS_DIR="var/etcd_tls"
 ETCD_TLS_LOG="out/etcd_tls.log"
+if [ -f "$ETCD_TLS_DIR/etcd.pid" ]; then
+  old_tls_pid=$(cat "$ETCD_TLS_DIR/etcd.pid" 2>/dev/null || true)
+  if [ -n "$old_tls_pid" ] && kill -0 "$old_tls_pid" 2>/dev/null && \
+     ps -p "$old_tls_pid" -o comm= 2>/dev/null | grep -q '^etcd$'; then
+    kill_process "$old_tls_pid"
+  fi
+fi
+for i in {1..20}; do
+  if ! nc -z 127.0.0.1 "$ETCD_PORT" &>/dev/null; then
+    break
+  fi
+  sleep 0.5
+done
 rm -rf "$ETCD_TLS_DIR"
 mkdir -p "$ETCD_TLS_DIR/member" "$(dirname "$ETCD_TLS_LOG")"
 
@@ -140,14 +163,20 @@ nohup "$ETCD_BIN" \
   --data-dir="$ETCD_TLS_DIR" \
   > "$ETCD_TLS_LOG" 2>&1 &
 ETCD_TLS_PID=$!
+echo "$ETCD_TLS_PID" > "$ETCD_TLS_DIR/etcd.pid"
 
 echo "Waiting for mTLS etcd to be ready on https://127.0.0.1:${ETCD_PORT}..."
 etcd_tls_ready=false
 for i in {1..30}; do
+  if ! kill -0 "$ETCD_TLS_PID" 2>/dev/null; then
+    echo "Error: mTLS etcd process exited unexpectedly during startup." >&2
+    break
+  fi
   if curl -sf --cacert "$SITE_MODEL/reflector/ca.crt" \
        --cert "$SITE_MODEL/reflector/rsa_private.crt" \
        --key "$SITE_MODEL/reflector/rsa_private.pem" \
-       "https://127.0.0.1:${ETCD_PORT}/health" >/dev/null 2>&1; then
+       "https://127.0.0.1:${ETCD_PORT}/health" >/dev/null 2>&1 && \
+     kill -0 "$ETCD_TLS_PID" 2>/dev/null; then
     etcd_tls_ready=true
     break
   fi
@@ -211,6 +240,7 @@ if ! nc -z "$HOST_IP" "$PUBSUB_PORT" &>/dev/null; then
     if command -v docker >/dev/null 2>&1; then
       docker rm -f pubsub-emulator >/dev/null 2>&1 || true
       docker run -d --name pubsub-emulator -p "$PUBSUB_PORT:8085" gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators gcloud beta emulators pubsub start --host-port=0.0.0.0:8085 > out/pubsub_docker.log 2>&1
+      PUBSUB_DOCKER_STARTED=true
     else
       echo "Error: Neither native gcloud pubsub-emulator nor Docker is available to run the Pub/Sub emulator." >&2
       exit 1
@@ -365,9 +395,6 @@ jq --arg auth_user "$AUTH_USER" \
         }
       }
     }' udmis/etc/prod_pod.json > out/prod_pod_host.json
-
-# Stop local MQTT-mode UDMIS (if running from bin/udmi start) so only Host UDMIS (Pub/Sub Mode) processes traffic
-bin/start_udmis stop >/dev/null 2>&1 || true
 
 rm -f /tmp/pod_ready.txt
 
@@ -560,14 +587,42 @@ fi
 
 # 15. Run Pubber
 echo "Starting Pubber..."
+rm -rf "$SITE_MODEL/out/devices/$DEVICE_ID/persistent_data.json" \
+       "$SITE_MODEL/out/devices/$DEVICE_ID/metadata_mod.json"
 bin/pubber "$SITE_MODEL" //mqtt/127.0.0.1 "$DEVICE_ID" 852649 > out/pubber_host.log 2>&1 &
 PUBBER_PID=$!
+
+echo "Waiting for Pubber to initialize and connect to MQTT (up to 60s)..."
+pubber_ready=false
+for i in $(seq 1 60); do
+  if ! kill -0 "$PUBBER_PID" 2>/dev/null; then
+    echo "Error: Pubber process exited unexpectedly during startup. Log:" >&2
+    cat out/pubber_host.log >&2 || true
+    exit 1
+  fi
+  if grep -q "Subscribed to mqtt topic" out/pubber_host.log 2>/dev/null; then
+    echo "Pubber is connected and subscribed."
+    pubber_ready=true
+    break
+  fi
+  sleep 1
+done
+if [ "$pubber_ready" != "true" ]; then
+  echo "Error: Timeout waiting for Pubber to connect to MQTT. Log:" >&2
+  cat out/pubber_host.log >&2 || true
+  exit 1
+fi
 
 echo "Waiting for messages to propagate and populating etcd (up to 45s)..."
 poll_timeout=45
 STATE_VAL=""
 
 for i in $(seq 1 $poll_timeout); do
+  if ! kill -0 "$PUBBER_PID" 2>/dev/null; then
+    echo "Error: Pubber process exited unexpectedly while waiting for etcd state. Log:" >&2
+    cat out/pubber_host.log >&2 || true
+    exit 1
+  fi
   STATE_VAL=$("$ETCDCTL_BIN" get --print-value-only "/r/$REGISTRY_ID/d/$DEVICE_ID:last_state" 2>/dev/null) || STATE_VAL=""
   if [[ -n "$STATE_VAL" && "$STATE_VAL" == *'"version"'* ]]; then
     break
@@ -582,6 +637,11 @@ echo "All keys in etcd:"
 "$ETCDCTL_BIN" get --prefix ""
 
 echo "STATE_VAL output: $STATE_VAL"
+if [[ -z "$STATE_VAL" || "$STATE_VAL" != *'"version"'* ]]; then
+  echo "Error: Device state for $REGISTRY_ID/$DEVICE_ID was not populated in etcd within ${poll_timeout}s!" >&2
+  cat out/pubber_host.log >&2 || true
+  exit 1
+fi
 
 echo "=================================================================="
 echo "Verifying Registry & Device Discovery (ZanzaraIotAccessProvider)"
@@ -612,6 +672,7 @@ echo "Device discovery PASSED for device: $DEVICE_ID under registry: $REGISTRY_I
 
 # 3. Trigger CloudQuery discovery (depth: details) and capture published DiscoveryEvents payloads
 echo "Subscribing probe to capture DiscoveryEvents from Pub/Sub topic 'udmi_target'..."
+curl -s -X DELETE "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe" >/dev/null || true
 curl -s -X PUT "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe" \
   -H "Content-Type: application/json" \
   -d '{"topic":"projects/udmis/topics/udmi_target"}' >/dev/null
@@ -628,49 +689,78 @@ if echo "$PUB_RES" | grep -q '"error"'; then
   exit 1
 fi
 
-sleep 3
+echo "Waiting for CloudQuery discovery to complete in UDMIS (up to 30s)..."
+for i in $(seq 1 30); do
+  if grep -q "Detailed device $REGISTRY_ID/$DEVICE_ID" out/udmis_host.log 2>/dev/null; then
+    break
+  fi
+  sleep 1
+done
 
-# Pull discovery messages from probe subscription
-PROBE_PULL=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe:pull" \
-  -H "Content-Type: application/json" \
-  -d '{"maxMessages":30}')
+# Pull discovery messages from probe subscription (poll up to 15s until all discovery payloads arrive)
+REGISTRY_DISCOVERY_PAYLOAD=""
+DEVICE_DISCOVERY_PAYLOAD=""
+DEVICE_DETAILS_PAYLOAD=""
 
-REGISTRY_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
-  .receivedMessages[]? | .message | 
-  select(.data | @base64d | fromjson | .registries != null) | 
-  .data | @base64d | fromjson')
+for i in $(seq 1 15); do
+  PROBE_PULL=$(curl -s -X POST "$PUBSUB_BASE_URL/v1/projects/udmis/subscriptions/udmi_discovery_probe:pull" \
+    -H "Content-Type: application/json" \
+    -d '{"maxMessages":100}')
 
-DEVICE_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
-  .receivedMessages[]? | .message | 
-  select(.data | @base64d | fromjson | .devices != null) | 
-  .data | @base64d | fromjson')
+  if [ -z "$REGISTRY_DISCOVERY_PAYLOAD" ]; then
+    REGISTRY_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+      first(.receivedMessages[]? | .message |
+      select(.data | @base64d | fromjson | .registries != null) |
+      .data | @base64d | fromjson) // empty')
+  fi
 
-DEVICE_DETAILS_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
-  .receivedMessages[]? | .message | 
-  select(.attributes.deviceId == "'"$DEVICE_ID"'") | 
-  .data | @base64d | fromjson')
+  if [ -z "$DEVICE_DISCOVERY_PAYLOAD" ]; then
+    DEVICE_DISCOVERY_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+      first(.receivedMessages[]? | .message |
+      select(.data | @base64d | fromjson | .devices != null) |
+      .data | @base64d | fromjson) // empty')
+  fi
 
-if [ -n "$REGISTRY_DISCOVERY_PAYLOAD" ] && [ "$REGISTRY_DISCOVERY_PAYLOAD" != "null" ]; then
-  echo "=================================================================="
-  echo "Registry Discovery Payload (no deviceID/registryID attributes):"
-  echo "=================================================================="
-  echo "$REGISTRY_DISCOVERY_PAYLOAD" | jq .
-fi
+  if [ -z "$DEVICE_DETAILS_PAYLOAD" ]; then
+    DEVICE_DETAILS_PAYLOAD=$(echo "$PROBE_PULL" | jq -r '
+      first(.receivedMessages[]? | .message |
+      select(.attributes.deviceId == "'"$DEVICE_ID"'" and (.data | @base64d | fromjson | .cloud_model != null)) |
+      .data | @base64d | fromjson) // empty')
+  fi
 
-if [ -n "$DEVICE_DISCOVERY_PAYLOAD" ] && [ "$DEVICE_DISCOVERY_PAYLOAD" != "null" ]; then
-  echo "=================================================================="
-  echo "Device Discovery Payload (deviceRegistryId=$REGISTRY_ID):"
-  echo "=================================================================="
-  echo "$DEVICE_DISCOVERY_PAYLOAD" | jq .
-fi
+  if [ -n "$REGISTRY_DISCOVERY_PAYLOAD" ] && [ -n "$DEVICE_DISCOVERY_PAYLOAD" ] && [ -n "$DEVICE_DETAILS_PAYLOAD" ]; then
+    break
+  fi
+  sleep 1
+done
 
-if [ -n "$DEVICE_DETAILS_PAYLOAD" ] && [ "$DEVICE_DETAILS_PAYLOAD" != "null" ]; then
-  echo "=================================================================="
-  echo "Device Details Discovery Payload for $DEVICE_ID:"
-  echo "=================================================================="
-  echo "$DEVICE_DETAILS_PAYLOAD" | jq .
-  echo "=================================================================="
-fi
+verify_discovery_payload() {
+  local payload="$1"
+  local header="$2"
+  local error_msg="$3"
+  if [ -n "$payload" ]; then
+    echo "=================================================================="
+    echo "$header"
+    echo "=================================================================="
+    echo "$payload" | jq .
+  else
+    echo "Error: $error_msg" >&2
+    exit 1
+  fi
+}
+
+verify_discovery_payload "$REGISTRY_DISCOVERY_PAYLOAD" \
+  "Registry Discovery Payload (no deviceID/registryID attributes):" \
+  "Failed to receive Registry Discovery payload on udmi_discovery_probe!"
+
+verify_discovery_payload "$DEVICE_DISCOVERY_PAYLOAD" \
+  "Device Discovery Payload (deviceRegistryId=$REGISTRY_ID):" \
+  "Failed to receive Device Discovery payload on udmi_discovery_probe!"
+
+verify_discovery_payload "$DEVICE_DETAILS_PAYLOAD" \
+  "Device Details Discovery Payload for $DEVICE_ID:" \
+  "Failed to receive Device Details Discovery payload for $DEVICE_ID on udmi_discovery_probe!"
+echo "=================================================================="
 
 if grep -q "Starting CloudQuery" out/udmis_host.log 2>/dev/null && \
    grep -q "Project has .* registries" out/udmis_host.log 2>/dev/null && \

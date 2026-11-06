@@ -16,15 +16,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import udmi.lib.client.manager.PointsetManager;
 import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState.Value_state;
+import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 
@@ -35,8 +35,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
-  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
   private final Map<String, String> setValueCache = new ConcurrentHashMap<>();
+  private final AtomicBoolean pointConfigModified = new AtomicBoolean();
   private static final int WRITE_DELAY_SEC = 10;
 
   private int pointsetUpdateCount = -1;
@@ -143,6 +143,15 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   }
 
   @Override
+  public void updatePointsetPointsConfig(PointsetConfig config) {
+    pointConfigModified.set(false);
+    PointsetManager.super.updatePointsetPointsConfig(config);
+    if (isFastWrite() && pointConfigModified.getAndSet(false)) {
+      executor.execute(this::periodicUpdate);
+    }
+  }
+
+  @Override
   public void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
     boolean isFastWrite = isFastWrite();
     boolean isDelayWrite = isDelayWrite();
@@ -155,6 +164,9 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
     if (isFastWrite || isUnmodified) {
       PointsetManager.super.updatePointConfig(point, pointConfig);
+      if (isFastWrite && !isUnmodified) {
+        pointConfigModified.set(true);
+      }
     } else if (isDelayWrite) {
       debug(format("Applying delayed writeback for point %s with %ds delay", point.getName(),
           WRITE_DELAY_SEC));
@@ -170,7 +182,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   private void handleDelayWriteback(AbstractPoint point,
       PointPointsetConfig pointConfig, int delaySec) {
-    scheduler.schedule(() -> {
+    executor.schedule(() -> {
       try {
         info(format("Completing delayed writeback for %s", point.getName()));
         // Use the default interface method to apply the final state.
