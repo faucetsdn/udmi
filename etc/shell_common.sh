@@ -100,17 +100,45 @@ function usage {
 }
 
 function newest_file {
-    echo $(find ${1:-.} -type f -printf '%T@ %p\n' | sort -n | tail -1 | cut -d' ' -f 2-)
+    echo $(find ${@:-.} -type f -printf '%T@ %p\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f 2-)
 }
 
 function up_to_date {
-    target=$1
+    local target=$1
+    shift
+    if [[ -n ${UDMI_NO_BUILD:-} ]]; then
+        if [[ ! -f $target ]]; then
+            echo "error: Prebuilt artifact $target not found (UDMI_NO_BUILD is set)." >&2
+            exit 1
+        fi
+        return 0
+    fi
     [[ ! -f $target ]] && return 1
-    newest=$(newest_file $2)
-    [[ $target -ot $newest ]] && return 1
-    common=$(newest_file $UDMI_ROOT/common/src)
-    [[ $target -ot $common ]] && return 1
-    return 0
+    local newer_files=$(find "$@" "$UDMI_ROOT/gencode/java" "$UDMI_ROOT/common/src/main/java" "$UDMI_ROOT/common/src/test/java" -type f -newer "$target" 2>/dev/null)
+    [[ -z $newer_files ]]
+}
+
+function mirror_udmi_files {
+    echo Mirroring udmi files...
+    mkdir -p build/libs
+    rm -rf build/udmi_bin build/udmi_etc
+    cp -a "$UDMI_ROOT/bin" build/udmi_bin/
+    cp -a "$UDMI_ROOT/etc" build/udmi_etc/
+    for dir in "$@"; do
+        rm -rf "build/$dir"
+        cp -a "$UDMI_ROOT/$dir" "build/$dir/"
+    done
+}
+
+function retry_cmd {
+    for attempt in 1 2 3; do
+        if "$@"; then
+            return 0
+        fi
+        [[ $attempt -lt 3 ]] || return 1
+        warn "Command '$*' failed (attempt $attempt/3); retrying in 2s..."
+        sleep 2
+    done
 }
 
 PUBBER_LOG=out/pubber.log

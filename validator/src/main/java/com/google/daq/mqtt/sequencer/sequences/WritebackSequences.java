@@ -58,20 +58,25 @@ public class WritebackSequences extends PointsetBase {
     return format("target point has value_state %s", targetState);
   }
 
+  void resetPresentValue() {
+    lastPresentValue = null;
+    popReceivedEvents(PointsetEvents.class);
+  }
+
   /**
    * Checks if the `present_value` for the target point matches the target value.
    */
-  private String presentValueIs(TargetTestingModel targetModel) {
+  String presentValueIs(TargetTestingModel targetModel) {
     String pointName = targetModel.target_point;
     Object targetValue = targetModel.target_value;
     List<PointsetEvents> messages = popReceivedEvents(PointsetEvents.class);
     for (PointsetEvents pointsetEvent : messages) {
-      if (pointsetEvent.points.get(pointName) != null) {
+      if (pointsetEvent.points != null && pointsetEvent.points.get(pointName) != null) {
         lastPresentValue = pointsetEvent.points.get(pointName).present_value;
-        if (targetValue.equals(lastPresentValue)) {
-          return null;
-        }
       }
+    }
+    if (Objects.equals(targetValue, lastPresentValue)) {
+      return null;
     }
     return format("Point %s has present value %s, not target %s", pointName, lastPresentValue,
         targetValue);
@@ -89,13 +94,14 @@ public class WritebackSequences extends PointsetBase {
   private TargetTestingModel testTargetState(String targetState) {
     TargetTestingModel targetModel = getTarget(targetState);
     String targetPoint = targetModel.target_point;
-    Object targetValue = targetModel.target_value;
+    final Object targetValue = targetModel.target_value;
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
 
     waitUntil(expectedValueState(DEFAULT_STATE), MAX_WAIT_TIME,
         () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
+    resetPresentValue();
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
     waitUntil(expectedValueState(targetState), MAX_WAIT_TIME,
@@ -122,12 +128,13 @@ public class WritebackSequences extends PointsetBase {
   public void writeback_operation() {
     TargetTestingModel targetModel = getTarget(APPLIED_STATE);
     String targetPoint = targetModel.target_point;
-    Object targetValue = targetModel.target_value;
+    final Object targetValue = targetModel.target_value;
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
     waitUntil(expectedValueState(DEFAULT_STATE), MAX_WAIT_TIME,
         () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
+    resetPresentValue();
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
     // Wait until the intermediate UPDATING state. In other cases, this should:
     // 1. Skip if it ends up APPLIED too quickly.
