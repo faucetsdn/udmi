@@ -4,7 +4,7 @@ FROM ${VALIDATOR_BASE_IMAGE}
 COPY startup.sh /usr/local/bin/
 COPY discovery.sh /root/discovery.sh
 
-RUN apk add --no-cache openssh
+RUN apk upgrade --no-cache && apk add --no-cache openssh
 RUN chmod +x /usr/local/bin/startup.sh
 RUN chmod +x /root/discovery.sh
 

@@ -1,4 +1,4 @@
 3 schema violations found
-  /parameters/area/net_occupied_area/unit: instance failed to match exactly one schema (matched 0 out of 7)
-  /parameters/area: object instance has properties which are not allowed by the schema: ["extra"]
-  object has missing required properties (["timestamp"])
+  $.parameters.area.net_occupied_area.unit: must be valid to one and only one schema, but 0 are valid
+  $.parameters.area: property 'extra' is not defined in the schema and the schema does not allow additional properties
+  $: required property 'timestamp' not found

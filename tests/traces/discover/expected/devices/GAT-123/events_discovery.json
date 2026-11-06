@@ -1,0 +1,239 @@
+{
+  "event_no" : 9,
+  "families" : {
+    "ipv4" : {
+      "addr" : "192.168.1.131"
+    }
+  },
+  "generation" : "1999-10-20T01:02:03Z",
+  "refs" : {
+    "AI:1" : {
+      "ancillary" : {
+        "present_value" : 20.488115310668945
+      },
+      "description" : "",
+      "name" : "FCU_1180 Room Temp",
+      "possible_values" : [ ],
+      "units" : "degreesCelsius"
+    },
+    "AI:2" : {
+      "ancillary" : {
+        "present_value" : 20.14183235168457
+      },
+      "description" : "",
+      "name" : "FCU_1180 Supply Air Temp",
+      "possible_values" : [ ],
+      "units" : "degreesCelsius"
+    },
+    "AO:1" : {
+      "ancillary" : {
+        "present_value" : 0.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Heating Valve",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "AO:2" : {
+      "ancillary" : {
+        "present_value" : 0.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Cooling Valve",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "AO:3" : {
+      "ancillary" : {
+        "present_value" : 70.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Fan Speed",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "AV:1" : {
+      "ancillary" : {
+        "present_value" : 20.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Setpoint",
+      "possible_values" : [ ],
+      "units" : "degreesCelsius"
+    },
+    "AV:2" : {
+      "ancillary" : {
+        "present_value" : 20.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Min Fan Speed",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "AV:3" : {
+      "ancillary" : {
+        "present_value" : 100.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Max Fan Speed",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "AV:4" : {
+      "ancillary" : {
+        "present_value" : 70.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Design Fan Speed",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "AV:5" : {
+      "ancillary" : {
+        "present_value" : 75.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Design Heating Valve Position",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "AV:6" : {
+      "ancillary" : {
+        "present_value" : 67.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Design Cooling Valve Position",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "AV:7" : {
+      "ancillary" : {
+        "present_value" : 1.0
+      },
+      "description" : "",
+      "name" : "FCU_1180 Mode_Mimic",
+      "possible_values" : [ ],
+      "units" : "noUnits"
+    },
+    "AV:9991" : {
+      "ancillary" : {
+        "present_value" : 69.89265441894531
+      },
+      "description" : "",
+      "name" : "FCU_1180 Comfort KPI Score (Live)",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "AV:9992" : {
+      "ancillary" : {
+        "present_value" : 69.99639129638672
+      },
+      "description" : "",
+      "name" : "FCU_1180 Comfort KPI Score (Yesterday)",
+      "possible_values" : [ ],
+      "units" : "percent"
+    },
+    "BI:3" : {
+      "ancillary" : {
+        "present_value" : "active"
+      },
+      "description" : "",
+      "name" : "FCU_1180 Fan Status",
+      "possible_values" : [ ]
+    },
+    "BI:4" : {
+      "ancillary" : {
+        "present_value" : "active"
+      },
+      "description" : "",
+      "name" : "FCU_1180 Occupancy",
+      "possible_values" : [ ]
+    },
+    "BO:4" : {
+      "ancillary" : {
+        "present_value" : "active"
+      },
+      "description" : "",
+      "name" : "FCU_1180 Enable",
+      "possible_values" : [ ]
+    },
+    "BV:1" : {
+      "ancillary" : {
+        "present_value" : "active"
+      },
+      "description" : "",
+      "name" : "FCU_1180 BMS Remote",
+      "possible_values" : [ ]
+    },
+    "BV:2" : {
+      "ancillary" : {
+        "present_value" : "active"
+      },
+      "description" : "",
+      "name" : "FCU_1180 FCU Run Status",
+      "possible_values" : [ ]
+    },
+    "BV:9991" : {
+      "ancillary" : {
+        "present_value" : "active"
+      },
+      "description" : "",
+      "name" : "FCU_1180 Within Bounds",
+      "possible_values" : [ ]
+    },
+    "CSV:1" : {
+      "ancillary" : {
+        "present_value" : "{\n  \"hostName\": \"mqtt.bos.goog\",\n  \"tcpPort\": 8883,\n  \"location\": \"us-central1\",\n  \"project\": \"bos-platform-testing\",\n  \"registry\": \"UK-LON-GLAB\",\n  \"device\": \"DDC-17\"\n}"
+      },
+      "description" : "",
+      "name" : "Google Cloud IoT Gateway Configuration",
+      "possible_values" : [ ]
+    },
+    "CSV:1000001" : {
+      "ancillary" : {
+        "present_value" : "800700"
+      },
+      "description" : "",
+      "name" : "BLE PIN",
+      "possible_values" : [ ]
+    },
+    "LP:1" : {
+      "ancillary" : {
+        "present_value" : 50.0
+      },
+      "description" : "",
+      "name" : "FCU_101 Valve Control Loop",
+      "possible_values" : [ ]
+    },
+    "LP:2" : {
+      "ancillary" : {
+        "present_value" : 50.0
+      },
+      "description" : "",
+      "name" : "FCU_101 Fan Control Loop",
+      "possible_values" : [ ]
+    },
+    "MSV:1" : {
+      "ancillary" : {
+        "present_value" : 1
+      },
+      "description" : "",
+      "name" : "FCU_1180 Mode",
+      "possible_values" : [ "Auto_", "On_", "Off_", "Flushing_", "Commissioning_" ]
+    }
+  },
+  "scan_addr" : "10117",
+  "scan_family" : "bacnet",
+  "system" : {
+    "ancillary" : {
+      "name" : "DDC-17"
+    },
+    "hardware" : {
+      "make" : "Delta Controls Inc.",
+      "model" : "Red5-PLUS-1180"
+    },
+    "serial_no" : "141557/0009"
+  },
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.5.1"
+}

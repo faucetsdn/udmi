@@ -1,0 +1,10 @@
+{
+  "deviceId" : "GAT-123",
+  "deviceNumId" : "00000528111775",
+  "deviceRegistryId" : "ZZ-TRI-FECTA",
+  "msgSource" : "003_events_discovery.json",
+  "projectId" : "playback-project",
+  "publishTime" : "1999-10-20T01:02:03Z",
+  "subFolder" : "discovery",
+  "subType" : "events"
+}

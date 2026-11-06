@@ -1,2 +1,2 @@
 1 schema violations found
-  object instance has properties which are not allowed by the schema: ["provision"]
+  $: property 'provision' is not defined in the schema and the schema does not allow additional properties

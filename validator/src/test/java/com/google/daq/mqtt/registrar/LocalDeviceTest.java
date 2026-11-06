@@ -8,10 +8,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import com.github.fge.jsonschema.main.JsonSchema;
 import com.google.daq.mqtt.registrar.LocalDevice.DeviceKind;
 import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.SiteModel;
+import com.networknt.schema.JsonSchema;
 import java.io.File;
 import java.util.Map;
 import org.junit.Test;

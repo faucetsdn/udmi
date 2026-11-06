@@ -1,10 +1,16 @@
-9 schema violations found
-  /points/guid: instance type (string) does not match any allowed primitive type (allowed: ["object"])
-  /points/magic_voice_recognizer/present_value: instance failed to match exactly one schema (matched 0 out of 3)
-  /points/missing_present_value: object has missing required properties (["present_value"])
-  /points/old_properties: object has missing required properties (["present_value"])
-  /points/old_properties: object instance has properties which are not allowed by the schema: ["properties"]
-  /points/yoyo_motion_sensor: object has missing required properties (["present_value"])
-  /points/yoyo_motion_sensor: object instance has properties which are not allowed by the schema: ["bad_property_name"]
-  /points: object instance has properties which are not allowed by the schema: ["analogValue_1","bad_____sensor","bad_entity_name_","comment$string"]
-  object instance has properties which are not allowed by the schema: ["comment$string","id","properties","state_etag"]
+15 schema violations found
+  $.points.guid: string found, object expected
+  $.points.magic_voice_recognizer.present_value: must be valid to one and only one schema, but 0 are valid
+  $.points.missing_present_value: required property 'present_value' not found
+  $.points.old_properties: property 'properties' is not defined in the schema and the schema does not allow additional properties
+  $.points.old_properties: required property 'present_value' not found
+  $.points.yoyo_motion_sensor: property 'bad_property_name' is not defined in the schema and the schema does not allow additional properties
+  $.points.yoyo_motion_sensor: required property 'present_value' not found
+  $.points: property 'analogValue_1' is not defined in the schema and the schema does not allow additional properties
+  $.points: property 'bad_____sensor' is not defined in the schema and the schema does not allow additional properties
+  $.points: property 'bad_entity_name_' is not defined in the schema and the schema does not allow additional properties
+  $.points: property 'comment$string' is not defined in the schema and the schema does not allow additional properties
+  $: property 'comment$string' is not defined in the schema and the schema does not allow additional properties
+  $: property 'id' is not defined in the schema and the schema does not allow additional properties
+  $: property 'properties' is not defined in the schema and the schema does not allow additional properties
+  $: property 'state_etag' is not defined in the schema and the schema does not allow additional properties

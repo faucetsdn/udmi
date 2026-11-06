@@ -1,5 +1,6 @@
-4 schema violations found
-  /logentries/0/category: instance failed to match exactly one schema (matched 0 out of 42)
-  /logentries/0/level: numeric instance is lower than the required minimum (minimum: 100, found: 60)
-  /logentries/0: object has missing required properties (["message","timestamp"])
-  /logentries/1: instance type (string) does not match any allowed primitive type (allowed: ["object"])
+5 schema violations found
+  $.logentries[0].category: must be valid to one and only one schema, but 0 are valid
+  $.logentries[0].level: must have a minimum value of 100
+  $.logentries[0]: required property 'message' not found
+  $.logentries[0]: required property 'timestamp' not found
+  $.logentries[1]: string found, object expected
