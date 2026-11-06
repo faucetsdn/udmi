@@ -13,6 +13,7 @@ import udmi.schema.RefDiscovery;
 public class PubberRandomPoint extends BasicPoint implements AbstractPoint {
 
   private static final double DEFAULT_BASELINE_VALUE = 50;
+  private final Object fixedValue;
   private final double min;
   private final double max;
   private final String units;
@@ -22,6 +23,7 @@ public class PubberRandomPoint extends BasicPoint implements AbstractPoint {
    */
   public PubberRandomPoint(String name, PointPointsetModel pointModel) {
     super(name, pointModel);
+    this.fixedValue = pointModel.baseline_tolerance == null ? pointModel.baseline_value : null;
     double baselineValue = convertValue(pointModel.baseline_value, DEFAULT_BASELINE_VALUE);
     double baselineTolerance = convertValue(pointModel.baseline_tolerance, baselineValue);
     this.min = baselineValue - baselineTolerance;
@@ -41,6 +43,9 @@ public class PubberRandomPoint extends BasicPoint implements AbstractPoint {
 
   @Override
   protected Object getValue() {
+    if (fixedValue != null) {
+      return fixedValue;
+    }
     return Math.round(Math.random() * (max - min) + min);
   }
 
