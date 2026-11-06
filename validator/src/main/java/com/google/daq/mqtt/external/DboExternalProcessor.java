@@ -29,7 +29,7 @@ public class DboExternalProcessor implements ExternalProcessor {
   @Override
   public void process(SiteDevice device) {
     LinkExternalsModel linkExternalsModel = device.getMetadata().externals.get(getName());
-    String entityId = requireNonNull(linkExternalsModel.ext_id, "missing external id");
+    String entityId = requireNonNull(device.getMetadata().system.guid, "missing system guid");
 
     BuildingConfig buildingConfig = new BuildingConfig();
     BuildingConfigEntity buildingConfigEntity = buildingConfig.computeIfAbsent(entityId,

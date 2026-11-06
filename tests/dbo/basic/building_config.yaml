@@ -53,6 +53,7 @@ floor-guid:
 room-guid:
   code: US-MTV-BASIC-1-R1
   connections:
+    4931e096-dea5-4b81-86ad-234c6d07b978: FEEDS
     floor-guid: CONTAINS
     site-guid: CONTAINS
   type: FACILITIES/ROOM

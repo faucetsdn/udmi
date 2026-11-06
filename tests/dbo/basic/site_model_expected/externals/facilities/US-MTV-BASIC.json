@@ -1,0 +1,8 @@
+{
+  "guid": "site-guid",
+  "connections": {
+    "US-MTV-BASIC-1": "CONTAINS",
+    "US-MTV-BASIC-1-R1": "CONTAINS"
+  },
+  "type": "FACILITIES/BUILDING"
+}
