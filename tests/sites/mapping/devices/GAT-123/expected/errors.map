@@ -5,5 +5,6 @@ Exceptions for GAT-123
     Missing files: [rsa_public.pem]
   While converting device config
     unrecognized schema version null
-  1 schema violations found
-    object has missing required properties (["system","version"])
+  2 schema violations found
+    $: required property 'system' not found
+    $: required property 'version' not found

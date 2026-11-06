@@ -1,20 +1,13 @@
 {
-  "timestamp" : "1999-10-20T01:02:03Z",
-  "version" : "1.5.2",
+  "errors" : [ ],
+  "status" : {
+    "category" : "validation.device.receive",
+    "level" : 200,
+    "message" : "Successful validation",
+    "timestamp" : "1999-10-20T01:02:03Z"
+  },
   "sub_folder" : "update",
   "sub_type" : "state",
-  "status" : {
-    "message" : "missing pointset subblock",
-    "detail" : "state_update: missing pointset subblock",
-    "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 500
-  },
-  "errors" : [ {
-    "message" : "missing pointset subblock",
-    "detail" : "state_update: missing pointset subblock",
-    "category" : "validation.device.schema",
-    "timestamp" : "1999-10-20T01:02:03Z",
-    "level" : 500
-  } ]
+  "timestamp" : "1999-10-20T01:02:03Z",
+  "version" : "1.5.7"
 }

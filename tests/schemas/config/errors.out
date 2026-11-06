@@ -1,7 +1,12 @@
-6 schema violations found
-  /pointset/points/return_air_temperature_sensor: object instance has properties which are not allowed by the schema: ["object_type"]
-  /pointset/sample_rate_sec: instance type (string) does not match any allowed primitive type (allowed: ["integer"])
-  /pointset/state_etag: string "2a8b71dwqhdhdddddddddddddddddddddddddddddddddddddddddd8" is too long (length: 55, maximum allowed: 32)
-  /pointset/version: instance type (integer) does not match any allowed primitive type (allowed: ["string"])
-  /pointset: object instance has properties which are not allowed by the schema: ["config_etag","id","properties"]
-  object instance has properties which are not allowed by the schema: ["points","properties","type","upgraded_from"]
+11 schema violations found
+  $.pointset.points.return_air_temperature_sensor: property 'object_type' is not defined in the schema and the schema does not allow additional properties
+  $.pointset.sample_rate_sec: string found, integer expected
+  $.pointset.state_etag: must be at most 32 characters long
+  $.pointset.version: integer found, string expected
+  $.pointset: property 'config_etag' is not defined in the schema and the schema does not allow additional properties
+  $.pointset: property 'id' is not defined in the schema and the schema does not allow additional properties
+  $.pointset: property 'properties' is not defined in the schema and the schema does not allow additional properties
+  $: property 'points' is not defined in the schema and the schema does not allow additional properties
+  $: property 'properties' is not defined in the schema and the schema does not allow additional properties
+  $: property 'type' is not defined in the schema and the schema does not allow additional properties
+  $: property 'upgraded_from' is not defined in the schema and the schema does not allow additional properties
