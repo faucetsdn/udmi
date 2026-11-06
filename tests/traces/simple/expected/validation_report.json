@@ -16,7 +16,7 @@
       "last_seen" : "1999-10-20T01:02:03Z",
       "status" : {
         "category" : "validation.device.schema",
-        "detail" : "events_pointset: 2 schema violations found; object instance has properties which are not allowed by the schema: [\"yesvalue\"]; object has missing required properties ([\"version\"])",
+        "detail" : "events_pointset: 2 schema violations found; $: property 'yesvalue' is not defined in the schema and the schema does not allow additional properties; $: required property 'version' not found",
         "level" : 500,
         "message" : "2 schema violations found",
         "timestamp" : "1999-10-20T01:02:03Z"

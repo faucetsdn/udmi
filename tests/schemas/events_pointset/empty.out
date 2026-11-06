@@ -1,2 +1,4 @@
-1 schema violations found
-  object has missing required properties (["points","timestamp","version"])
+3 schema violations found
+  $: required property 'points' not found
+  $: required property 'timestamp' not found
+  $: required property 'version' not found
