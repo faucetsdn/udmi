@@ -13,6 +13,7 @@ import udmi.schema.RefDiscovery;
 public class PubberRandomPoint extends BasicPoint implements AbstractPoint {
 
   private static final double DEFAULT_BASELINE_VALUE = 50;
+  private final Object fixedValue;
   private final double min;
   private final double max;
   private final String units;
@@ -22,6 +23,7 @@ public class PubberRandomPoint extends BasicPoint implements AbstractPoint {
    */
   public PubberRandomPoint(String name, PointPointsetModel pointModel) {
     super(name, pointModel);
+    this.fixedValue = pointModel.baseline_tolerance == null ? pointModel.baseline_value : null;
     double baselineValue = convertValue(pointModel.baseline_value, DEFAULT_BASELINE_VALUE);
     double baselineTolerance = convertValue(pointModel.baseline_tolerance, baselineValue);
     this.min = baselineValue - baselineTolerance;
@@ -33,33 +35,24 @@ public class PubberRandomPoint extends BasicPoint implements AbstractPoint {
     if (baselineValue == null) {
       return defaultBaselineValue;
     }
-    if (baselineValue instanceof Double) {
-      return (double) baselineValue;
-    }
-    if (baselineValue instanceof Integer) {
-      return (double) (int) baselineValue;
+    if (baselineValue instanceof Number number) {
+      return number.doubleValue();
     }
     throw new RuntimeException(format("Unknown value type %s", baselineValue.getClass()));
   }
 
   @Override
-  protected Object setValue(Object setValue) {
-    return setValue;
-  }
-
-  @Override
   protected Object getValue() {
+    if (fixedValue != null) {
+      return fixedValue;
+    }
     return Math.round(Math.random() * (max - min) + min);
   }
 
   @Override
   protected boolean validateValue(Object setValue) {
-    if (setValue instanceof Integer) {
-      int value = (int) setValue;
-      return value >= min && value <= max;
-    }
-    if (setValue instanceof Double) {
-      double value = (double) setValue;
+    if (setValue instanceof Number number) {
+      double value = number.doubleValue();
       return value >= min && value <= max;
     }
     return false;

@@ -16,7 +16,7 @@ else
 fi
 
 MODEL_LINK=site_model
-MODEL_VER=1.25
+MODEL_VER=1.26
 TEST_SITE_GIT=https://github.com/faucetsdn/udmi_site_model.git
 MODEL_REPO=origin
 

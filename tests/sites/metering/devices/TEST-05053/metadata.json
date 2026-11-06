@@ -53,10 +53,12 @@
   "pointset" : {
     "points" : {
       "HOLDING_REGISTER_153" : {
+        "units" : "no-units",
         "writable" : true,
         "ref" : "281"
       },
       "HOLDING_REGISTER_53" : {
+        "units" : "no-units",
         "writable" : true,
         "ref" : "181"
       }

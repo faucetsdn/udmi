@@ -1,0 +1,109 @@
+{
+  "event_no" : 9,
+  "last_config" : "TIMESTAMP",
+  "logentries" : [ {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer 0ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Update state TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      },\n      \"ether\" : {\n        \"addr\" : \"9c:65:eb:bb:a7:7e\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.5.1.127\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"active_fault_code\" : { },\n      \"cooling_request_count\" : {\n        \"units\" : \"no-units\"\n      },\n      \"filter_alarm_pressure_status\" : { },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"occupancy_mode\" : { },\n      \"supply_fan_run_status\" : { }\n    }\n  },\n  \"system\" : {\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"last_config\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.7\"\n}",
+    "level" : 100,
+    "message" : "State update AHU-1 (pointset_value_multistate)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.receive",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.parse",
+    "level" : 100,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Device AHU-1 config handler",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : { },\n      \"ether\" : { },\n      \"ipv4\" : { },\n      \"vendor\" : { }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"active_fault_code\" : {\n        \"ref\" : \"CSV/1#present_value\"\n      },\n      \"cooling_request_count\" : {\n        \"ref\" : \"AV/4#present_value\",\n        \"units\" : \"no-units\"\n      },\n      \"filter_alarm_pressure_status\" : {\n        \"ref\" : \"BV/11#present_value\"\n      },\n      \"filter_differential_pressure_sensor\" : {\n        \"ref\" : \"AV/12#present_value\",\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"set_value\" : 98,\n        \"units\" : \"Bars\"\n      },\n      \"occupancy_mode\" : {\n        \"ref\" : \"MV/1#present_value\"\n      },\n      \"supply_fan_run_status\" : {\n        \"ref\" : \"BV/2#present_value\"\n      }\n    },\n    \"sample_rate_sec\" : 300\n  },\n  \"system\" : {\n    \"metrics_rate_sec\" : 10,\n    \"min_loglevel\" : 100,\n    \"operation\" : {\n      \"last_start\" : \"TIMESTAMP\",\n  \"version\" : \"1.4.1\"\n}",
+    "level" : 100,
+    "message" : "Config update AHU-1 (pointset_value_multistate)",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "value of noWriteback: false",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "system.config.apply",
+    "level" : 300,
+    "message" : "success",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 100,
+    "message" : "State update defer -5061ms",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "level" : 200,
+    "message" : "Update state TIMESTAMP",
+    "timestamp" : "TIMESTAMP"
+  }, {
+    "category" : "device.log",
+    "detail" : "{\n  \"discovery\" : {\n    \"families\" : { }\n  },\n  \"localnet\" : {\n    \"families\" : {\n      \"bacnet\" : {\n        \"addr\" : \"27312\"\n      },\n      \"ether\" : {\n        \"addr\" : \"9c:65:eb:bb:a7:7e\"\n      },\n      \"ipv4\" : {\n        \"addr\" : \"10.5.1.127\"\n      },\n      \"vendor\" : {\n        \"addr\" : \"28179023\"\n      }\n    }\n  },\n  \"pointset\" : {\n    \"points\" : {\n      \"active_fault_code\" : { },\n      \"cooling_request_count\" : {\n        \"units\" : \"no-units\"\n      },\n      \"filter_alarm_pressure_status\" : { },\n      \"filter_differential_pressure_sensor\" : {\n        \"units\" : \"Degrees-Celsius\"\n      },\n      \"filter_differential_pressure_setpoint\" : {\n        \"units\" : \"Bars\",\n        \"value_state\" : \"applied\"\n      },\n      \"occupancy_mode\" : { },\n      \"supply_fan_run_status\" : { }\n    }\n  },\n  \"system\" : {\n    \"hardware\" : {\n      \"make\" : \"BOS\",\n      \"model\" : \"pubber\"\n    },\n    \"last_config\" : \"TIMESTAMP\",\n  \"version\" : \"1.5.7\"\n}",
+    "level" : 100,
+    "message" : "State update AHU-1 (pointset_value_multistate)",
+    "timestamp" : "TIMESTAMP"
+  } ],
+  "metrics" : {
+    "mem_free_mb" : 34.89305114746094,
+    "mem_total_mb" : 80.0
+  },
+  "timestamp" : "TIMESTAMP",
+  "version" : "1.5.7"
+}

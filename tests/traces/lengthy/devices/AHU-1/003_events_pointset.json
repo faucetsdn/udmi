@@ -1,5 +1,11 @@
 {
   "points" : {
+    "active_fault_code" : {
+      "present_value" : "NONE"
+    },
+    "cooling_request_count" : {
+      "present_value" : 3
+    },
     "filter_alarm_pressure_status" : {
       "present_value" : true
     },
@@ -8,6 +14,12 @@
     },
     "filter_differential_pressure_sensor" : {
       "present_value" : 11
+    },
+    "occupancy_mode" : {
+      "present_value" : "1"
+    },
+    "supply_fan_run_status" : {
+      "present_value" : "1.0"
     }
   },
   "timestamp" : "2022-07-17T06:07:36Z", // Over threshold from _initial_ event

@@ -43,7 +43,9 @@ public abstract class BasicPoint implements AbstractPoint {
 
   protected abstract Object getValue();
 
-  protected abstract Object setValue(Object setValue);
+  protected Object setValue(Object setValue) {
+    return setValue;
+  }
 
   protected abstract boolean validateValue(Object setValue);
 

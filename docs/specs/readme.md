@@ -13,6 +13,7 @@
 - [IoT Gateway](gateway.md)
 - [MQTT Client](mqtt_client.md)
 - [Point Mapping](point_mapping.md)
+- [Point Typing](point_typing.md)
 - [Family Providers](family_providers.md)
   - [BACnet](bacnet.md)
   - [Modbus](modbus.md)

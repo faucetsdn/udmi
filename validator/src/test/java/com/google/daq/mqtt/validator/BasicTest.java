@@ -103,6 +103,36 @@ public class BasicTest extends TestBase {
   }
 
   @Test
+  public void invalidMultistatePointsetEvents() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.get(SUPPLY_FAN_RUN_STATUS).present_value = "ON";
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error devices", 1, report.summary.error_devices.size());
+  }
+
+  @Test
+  public void invalidBinaryPointsetEvents() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.get(FILTER_ALARM_PRESSURE_STATUS).present_value = "true";
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error devices", 1, report.summary.error_devices.size());
+  }
+
+  @Test
+  public void invalidStringPointsetEvents() {
+    PointsetEvents messageObject = basePointsetEvents();
+    messageObject.points.get(ACTIVE_FAULT_CODE).present_value = 404;
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, messageObject);
+    validator.validateMessage(bundle);
+    ValidationState report = getValidationReport();
+    assertEquals("One error devices", 1, report.summary.error_devices.size());
+  }
+
+  @Test
   public void missingPointsetEvents() {
     PointsetEvents messageObject = basePointsetEvents();
     messageObject.points.remove(FILTER_ALARM_PRESSURE_STATUS);
