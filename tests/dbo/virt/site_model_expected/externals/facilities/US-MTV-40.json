@@ -1,0 +1,9 @@
+{
+  "guid": "12dac17e-dda6-41bb-a757-e81fcf701482",
+  "connections": {
+    "US-MTV-40-1-135A": [
+      "CONTAINS"
+    ]
+  },
+  "type": "FACILITIES/BUILDING"
+}
