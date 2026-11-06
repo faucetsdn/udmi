@@ -4,7 +4,7 @@ UDMI_ROOT=$(dirname $0)/..
 source ${UDMI_ROOT}/etc/shell_common.sh
 
 if [[ $# -lt 2 ]]; then
-    usage target { prep, build, push, apply } [--no-check] [repo]
+    usage target { prep, build, push, apply } [-n] [--no-check] [repo]
 fi
 
 target=$1
@@ -46,6 +46,9 @@ REPOSITORY=ghcr.io/${git_repo}
 TEMPLATES=$(cd ${template_folder}; ls k8s_*.yaml) || true
 
 echo Processing templates from ${template_folder}: ${TEMPLATES}
+
+NOBUILD=
+[[ ${1:-} == "-n" ]] && NOBUILD=1 && shift
 
 NOCHECK=
 [[ ${1:-} == "--no-check" ]] && NOCHECK=1 && shift
@@ -113,9 +116,13 @@ if [[ -z $prep ]]; then
 fi
 
 if [[ -n $prep ]]; then
-    rm -rf var tmp build && mkdir -p var tmp build
+    if [[ -n $NOBUILD ]]; then
+        echo "Skipping build checks (-n): setting UDMI_NO_BUILD=1..."
+        export UDMI_NO_BUILD=1
+    fi
+
+    rm -rf var tmp && mkdir -p var tmp build
     cp -f etc/*.json var/ || true
-    cp -a ../schema build/schema
 
     bin/build
 
@@ -139,7 +146,7 @@ fi
 if [[ -n $build ]]; then
     echo Building ${dockerfile}
     echo docker build -f ${dockerfile} -t $udmi_ref .
-    docker build -f ${dockerfile} -t $udmi_ref -t "$target_tag" .
+    retry_cmd docker build -f ${dockerfile} -t $udmi_ref -t "$target_tag" .
 fi
 
 if [[ -n $push ]]; then

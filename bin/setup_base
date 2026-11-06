@@ -2,6 +2,8 @@
 
 PIP_OPTS="--index-url https://pypi.org/simple"
 ROOT_DIR=$(realpath $(dirname $0)/..)
+UDMI_ROOT=$ROOT_DIR
+source $UDMI_ROOT/etc/shell_common.sh
 cd $ROOT_DIR
 
 # Packages provided by Alpine system repos where exact pins should be relaxed
@@ -27,15 +29,24 @@ get_requirements_file() {
 }
 
 if [[ $(id -u) == 0 ]]; then
+    packages=(moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux lsof graphviz)
     if [[ -n $(which apt-get) ]]; then
-        apt-get update -y
-        update_cmd="apt-get install -y"
-        extra_packages=""
+        export DEBIAN_FRONTEND=noninteractive
+        if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+            rm -f /etc/apt/sources.list.d/microsoft-prod.*
+            if [[ -f /etc/apt/apt-mirrors.txt ]]; then
+                printf "https://archive.ubuntu.com/ubuntu/\tpriority:1\nhttp://archive.ubuntu.com/ubuntu/\tpriority:2\nhttp://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n" > /etc/apt/apt-mirrors.txt
+            fi
+        fi
+        apt_opts=(-o Acquire::ForceIPv4=true -o Acquire::Retries=2 -o Acquire::http::Timeout=5 -o Acquire::https::Timeout=5 -o DPkg::Lock::Timeout=60)
+        retry_cmd timeout 120 apt-get "${apt_opts[@]}" update -y
+        retry_cmd timeout 120 apt-get "${apt_opts[@]}" install -y --no-upgrade --download-only "${packages[@]}"
+        dpkg --configure -a
+        apt-get "${apt_opts[@]}" install -y --no-upgrade "${packages[@]}"
     else
-        update_cmd="apk add"
-        extra_packages="${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc py3-grpcio py3-cryptography py3-cffi"
+        extra_packages=(${NO_CACHE_DIR:+--no-cache} linux-headers g++ gcc py3-grpcio py3-cryptography py3-cffi)
+        retry_cmd apk add "${extra_packages[@]}" "${packages[@]}"
     fi
-    $update_cmd $extra_packages moreutils expect python3-dev mosquitto mosquitto-clients postgresql postgresql-client tmux lsof graphviz
 else
     echo "Skipping system package installation in non-root mode (run 'sudo bin/setup_base' to install system packages)."
 fi
@@ -54,7 +65,7 @@ $(dirname ${venv_pip3})/python3 -m pip install --upgrade pip $PIP_OPTS
 req_src=$(get_requirements_file)
 ${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r "$req_src" $PIP_OPTS
 
-if [[ -z $NO_CACHE_DIR ]]; then
+if [[ -z ${NO_CACHE_DIR:-} ]]; then
     $(dirname ${venv_pip3})/playwright install chromium
 fi
 

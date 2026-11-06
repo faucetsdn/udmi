@@ -5,6 +5,7 @@ import threading
 import time
 from typing import Any, Callable
 import BAC0
+from BAC0.core.devices.Device import DeviceDisconnected
 import BAC0.core.io.IOExceptions
 import udmi.discovery.discovery as discovery
 import udmi.schema.discovery_event
@@ -230,6 +231,11 @@ class GlobalBacnetDiscovery(discovery.DiscoveryController):
     if self.config.depth in ["refs"]:
       try:
         device = BAC0.device(device_address, device_id, self.bacnet, poll=0)
+        # BAC0.device swallows APDU timeouts into DeviceDisconnected or an empty objects_list instead of raising.
+        if isinstance(device, DeviceDisconnected) or not device.properties.objects_list:
+          raise BAC0.core.io.IOExceptions.NoResponseFromController(
+              f"Failed to connect or read objectList for {device_address}/{device_id}"
+          )
 
         for point in device.points:
           ref = DiscoveryPoint()
