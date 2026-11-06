@@ -5,6 +5,7 @@ import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
 
+from BAC0.core.devices.Device import DeviceDisconnected
 from edge.spotter.src.providers.bacnet import BacnetFamilyProvider
 from edge.spotter.src.providers.ether import EtherFamilyProvider
 from edge.spotter.src.providers.ether import get_mac_for_ip
@@ -83,6 +84,45 @@ class TestBacnetFamilyProvider(unittest.TestCase):
     self.assertEqual(refs["AV:1"].ancillary["present_value"], "22.5")
 
   @patch("edge.spotter.src.providers.bacnet.BAC0")
+  def test_bacnet_refs_disconnected_fails_fast(self, mock_bac0):
+    """Verifies silent BAC0.device timeouts surface as discovery.error status."""
+    mock_client = MagicMock()
+    mock_bac0.lite.return_value = mock_client
+    mock_client.readMultiple.return_value = (
+        "Main-AHU",
+        "Delta",
+        "v1.2.3",
+        "DSC-1212",
+        "SN-9999",
+        "Air Handler",
+        "Roof",
+        "App-4.0",
+    )
+
+    disconnected_dev = DeviceDisconnected.__new__(DeviceDisconnected)
+    disconnected_dev.points = []
+    disconnected_dev.properties = MagicMock()
+    disconnected_dev.properties.objects_list = []
+
+    empty_objlist_dev = MagicMock()
+    empty_objlist_dev.points = []
+    empty_objlist_dev.properties.objects_list = []
+
+    provider = BacnetFamilyProvider()
+    config = FamilyDiscoveryConfig(
+        generation="2026-09-01T12:00:00Z", depth="refs"
+    )
+
+    for timed_out_dev in (disconnected_dev, empty_objlist_dev):
+      mock_bac0.device.return_value = timed_out_dev
+      event = provider.discover_device("192.168.1.50", 12341, config)
+      self.assertIsNone(event.refs)
+      self.assertIsNotNone(event.status)
+      self.assertEqual(event.status.category, "discovery.error")
+      self.assertEqual(event.status.level, 500)
+      self.assertIn("Point enumeration failed", event.status.message)
+
+  @patch("edge.spotter.src.providers.bacnet.BAC0")
   def test_bacnet_scan_unchanged_threshold(self, mock_bac0):
     """Verifies BACnet scan terminates when no new devices appear."""
     mock_client = MagicMock()
@@ -109,6 +149,9 @@ class TestBacnetFamilyProvider(unittest.TestCase):
         config, lambda dev_id, evt: published.append((dev_id, evt))
     )
 
+    mock_client.discover.assert_called_once_with(
+        global_broadcast=True, reset=True
+    )
     self.assertEqual(len(published), 3)
     # Start marker
     self.assertEqual(published[0][1].event_no, 0)
