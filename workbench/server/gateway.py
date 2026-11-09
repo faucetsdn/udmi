@@ -25,6 +25,7 @@ from mantis.tools.registry import get_mcp_tools
 from workbench.server.http_util import HttpResponder
 from workbench.server.logger import SERVER_LOGGER
 from workbench.server.mantis_adapter import MantisSessionStore
+from workbench.server.mermaid_png import MERMAID_JS
 from workbench.server.notifications import Notifier
 from workbench.server.routes import ApiRoutes, classify_exception
 from workbench.server.runner import SequencerRunner
@@ -173,6 +174,16 @@ def main() -> None:
     problem = provider_setup.apply_to_environment()
     if problem:
         print(f"Error: {problem}", file=sys.stderr)
+        sys.exit(1)
+
+    root = args.udmi_root or os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    mermaid_path = os.path.join(root, MERMAID_JS)
+    if not os.path.isfile(mermaid_path) or os.path.getsize(mermaid_path) == 0:
+        print(
+            f"Error: Missing required Mermaid library at {mermaid_path}. "
+            "Run bin/setup_web_assets (or bin/setup_base) to install it.",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     gateway = create_gateway(host=args.host, port=args.port, udmi_root=args.udmi_root)

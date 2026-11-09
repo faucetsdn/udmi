@@ -17,6 +17,29 @@ from gummi.src.uufi import GummiUUFIClient
 from gummi.src.console import GummiConsoleManager
 
 
+STATIC_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "static")
+REQUIRED_WEB_ASSETS = (
+    "ext/xterm/xterm.css",
+    "ext/xterm/xterm.js",
+    "ext/xterm/xterm-addon-fit.js",
+)
+
+
+def verify_web_assets(static_dir: Optional[str] = None) -> None:
+    """Fails fast if any required frontend asset has not been installed."""
+    root = static_dir or STATIC_DIR
+    missing = []
+    for rel_path in REQUIRED_WEB_ASSETS:
+        full_path = os.path.join(root, rel_path)
+        if not os.path.isfile(full_path) or os.path.getsize(full_path) == 0:
+            missing.append(rel_path)
+    if missing:
+        raise RuntimeError(
+            f"Missing required GUMMI web assets in {root}: {', '.join(missing)}. "
+            "Run bin/setup_web_assets (or bin/setup_base) to install them."
+        )
+
+
 class GummiRequestHandler(SimpleHTTPRequestHandler):
     """Custom HTTP request handler serving GUMMI static files and REST API routes."""
 
@@ -24,8 +47,7 @@ class GummiRequestHandler(SimpleHTTPRequestHandler):
 
     def __init__(self, *args, **kwargs):
         # Set static directory root
-        static_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "static")
-        super().__init__(*args, directory=static_dir, **kwargs)
+        super().__init__(*args, directory=STATIC_DIR, **kwargs)
 
     @property
     def db(self) -> GummiDB:
@@ -419,6 +441,7 @@ class GummiServer:
         uufi_client: Optional[Any] = None,
         **kwargs,
     ):
+        verify_web_assets()
         self.host = host
         self.port = port
         self.mock_mode = mock_mode

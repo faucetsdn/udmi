@@ -1,0 +1,157 @@
+#!/bin/bash -e
+#
+# Fetches pinned, SHA-256-verified frontend web assets from npm tarballs into
+# gitignored local directories for GUMMI and Workbench.
+#
+
+set -o pipefail
+
+usage() {
+  echo "Usage: bin/setup_web_assets [all|gummi|workbench]" >&2
+  exit 1
+}
+
+if [[ $# -gt 1 ]]; then
+  usage
+fi
+
+SCOPE="${1:-all}"
+case "$SCOPE" in
+  all|gummi|workbench) ;;
+  *) usage ;;
+esac
+
+ROOT_DIR=$(cd "$(dirname "$0")/.." && pwd)
+TMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+XTERM_VERSION="5.3.0"
+XTERM_TARBALL_URL="https://registry.npmjs.org/xterm/-/xterm-${XTERM_VERSION}.tgz"
+XTERM_CSS_SHA256="832f3f2c603b43ad4351ff04970150cc7a873014276db126a6065c6dd81e4872"
+XTERM_JS_SHA256="f0aea0f75f48559013ae6643c2479dd737d26da42d5524e6d2b70915ae6523c7"
+
+XTERM_FIT_VERSION="0.8.0"
+XTERM_FIT_TARBALL_URL="https://registry.npmjs.org/xterm-addon-fit/-/xterm-addon-fit-${XTERM_FIT_VERSION}.tgz"
+XTERM_FIT_JS_SHA256="10f3194c5f17c1786fb7d5db865c1ec8539b6736a318063fd38bdaaf7c46848f"
+
+MERMAID_VERSION="10.9.8"
+MERMAID_TARBALL_URL="https://registry.npmjs.org/mermaid/-/mermaid-${MERMAID_VERSION}.tgz"
+MERMAID_JS_SHA256="8d607d7ef1d077a8aa202e18e62212bfa992c68bfeabc5cf45d51a128fe6675d"
+
+file_sha256() {
+  sha256sum "$1" | awk '{print $1}'
+}
+
+asset_valid() {
+  local dest="$1"
+  local expected_sha="$2"
+  [[ -f "$dest" ]] && [[ "$(file_sha256 "$dest")" == "$expected_sha" ]]
+}
+
+verify_sha256() {
+  local path="$1"
+  local expected_sha="$2"
+  local actual_sha
+  actual_sha=$(file_sha256 "$path")
+  if [[ "$actual_sha" != "$expected_sha" ]]; then
+    echo "Error: SHA-256 mismatch for $path (expected $expected_sha, got $actual_sha)" >&2
+    exit 1
+  fi
+}
+
+install_from_tarball() {
+  local url="$1"
+  local tarball_name="$2"
+  shift 2
+  # Remaining args come in triples: <tar_member> <dest_path> <expected_sha256>
+
+  local need_download=false
+  local args=("$@")
+  local i=0
+  while [[ $i -lt ${#args[@]} ]]; do
+    local dest="${args[$((i + 1))]}"
+    local sha="${args[$((i + 2))]}"
+    if ! asset_valid "$dest" "$sha"; then
+      need_download=true
+      break
+    fi
+    i=$((i + 3))
+  done
+
+  if [[ "$need_download" == false ]]; then
+    i=0
+    while [[ $i -lt ${#args[@]} ]]; do
+      echo "Web asset already up to date: ${args[$((i + 1))]}"
+      i=$((i + 3))
+    done
+    return 0
+  fi
+
+  local tgz_path="$TMP_DIR/$tarball_name"
+  local extract_dir="$TMP_DIR/extract_${tarball_name}"
+  mkdir -p "$extract_dir"
+  echo "Downloading $url..."
+  curl -fsSL "$url" -o "$tgz_path"
+
+  i=0
+  while [[ $i -lt ${#args[@]} ]]; do
+    local member="${args[$i]}"
+    local dest="${args[$((i + 1))]}"
+    local sha="${args[$((i + 2))]}"
+    tar -xzf "$tgz_path" -C "$extract_dir" "$member"
+    local extracted="$extract_dir/$member"
+    if [[ ! -f "$extracted" ]]; then
+      echo "Error: Expected member '$member' not found in $tarball_name" >&2
+      exit 1
+    fi
+    verify_sha256 "$extracted" "$sha"
+    mkdir -p "$(dirname "$dest")"
+    chmod 0644 "$extracted"
+    mv "$extracted" "$dest"
+    echo "Installed web asset: $dest"
+    i=$((i + 3))
+  done
+}
+
+install_gummi_assets() {
+  local static_dir="$ROOT_DIR/gummi/src/static"
+  if [[ ! -d "$static_dir" ]]; then
+    echo "Error: Required directory missing: $static_dir" >&2
+    exit 1
+  fi
+  local xterm_dir="$static_dir/ext/xterm"
+  install_from_tarball \
+    "$XTERM_TARBALL_URL" \
+    "xterm-${XTERM_VERSION}.tgz" \
+    "package/css/xterm.css" "$xterm_dir/xterm.css" "$XTERM_CSS_SHA256" \
+    "package/lib/xterm.js" "$xterm_dir/xterm.js" "$XTERM_JS_SHA256"
+  install_from_tarball \
+    "$XTERM_FIT_TARBALL_URL" \
+    "xterm-addon-fit-${XTERM_FIT_VERSION}.tgz" \
+    "package/lib/xterm-addon-fit.js" "$xterm_dir/xterm-addon-fit.js" "$XTERM_FIT_JS_SHA256"
+}
+
+install_workbench_assets() {
+  local js_dir="$ROOT_DIR/workbench/static/js"
+  if [[ ! -d "$js_dir" ]]; then
+    echo "Error: Required directory missing: $js_dir" >&2
+    exit 1
+  fi
+  install_from_tarball \
+    "$MERMAID_TARBALL_URL" \
+    "mermaid-${MERMAID_VERSION}.tgz" \
+    "package/dist/mermaid.min.js" "$js_dir/ext/mermaid.min.js" "$MERMAID_JS_SHA256"
+}
+
+case "$SCOPE" in
+  all)
+    install_gummi_assets
+    install_workbench_assets
+    ;;
+  gummi)
+    install_gummi_assets
+    ;;
+  workbench)
+    install_workbench_assets
+    ;;
+esac

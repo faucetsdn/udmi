@@ -890,7 +890,7 @@ function initTerminal() {
   if (!container) return;
 
   if (typeof Terminal === "undefined") {
-    console.warn("xterm Terminal is not defined; verify vendor assets are loaded.");
+    console.warn("xterm Terminal is not defined; run bin/setup_web_assets to install frontend assets.");
     return;
   }
 
