@@ -30,6 +30,12 @@ along with a public key for that device (required for communication with the clo
 Devices (that aren't proxied by a gateway) that do not auto-generate a public key
 can use the [`bin/keygen`](keygen.md) utility to create a proper public/private key pair.
 
+When using the `//gbos/PROJECT_ID` provider, `registrar` authenticates as `projects/PROJECT_ID/locations/REGION/registries/UDMI-REFLECT/devices/SITE_ID` using the private key in `<site_model>/reflector/rsa_private.pkcs8`. Before running `registrar` with `//gbos/PROJECT_ID` for a new site, the site's reflector entry (`devices/SITE_ID/metadata.json` and `devices/SITE_ID/rsa_public.pem`) must be registered in the project's `UDMI-REFLECT` site model using the Pub/Sub reflector (`//gref/`):
+
+```
+bin/registrar /path/to/UDMI-REFLECT/udmi //gref/PROJECT_ID+$USER
+```
+
 ## Tool Execution
 
 The registrar tool can be run locally to just validate the metadata, or with an optional
@@ -44,28 +50,38 @@ bin/registrar site_model project_spec [options] [devices...]
 bin/registrar site_spec [options] [devices...]
 ```
 
-* `site_model`: The path to the _directory_ containing the site model, or a model-with-project _file_ directly.
-* `project_spec`: The project ID that contains the target registry. The project ID can be prepended with iot_provider:
-  * `//clearblade/PROJECT_ID` for a public ClearBlade project.
-  * `//gbos/PROJECT_ID` for a Google operated ClearBlade project.
+* `site_model`: The path to the _directory_ containing the site model (e.g., `<repo>` or `<repo>/udmi` when the UDMI model resides in a `udmi/` subdirectory), or a model-with-project _file_ directly.
+* `project_spec`: The [project specification](project_spec.md) identifying the target provider and project:
+  * `//gbos/PROJECT_ID` for connecting via the MQTT reflector (`UDMI-REFLECT`) using keys in `<site_model>/reflector/`.
+  * `//gref/PROJECT_ID[+USER]` for connecting via the GCP Pub/Sub reflector (`udmi_reflect` / `udmi_reply+USER`).
+  * `//mqtt/HOSTNAME[:PORT]` for connecting to a local or direct MQTT broker.
 * `site_spec`: Path to a configuration file which contains configuration options;
 * `options`: Various options to impact behavior:
-  * `-a` Set alternate registry 
+  * `-a` Set alternate registry
+  * `-A` Auto process `alt_registry` from config
   * `-b` Block unknown devices.
   * `-c` Count of registries to be created
   * `-d` Delete all device in the site model from the registry (combine with `-x` to delete all devices from the registry)
   * `-e` Set registry suffix
   * `-f` Set PubSub feed topic
   * `-h` Show help and exit
+  * `-i` Instantiate extra (unknown) devices
+  * `-j` Dry run (just check): log what would happen without making changes
   * `-l` Set idle limit
   * `-m` Initial metadata model out
-  * `-n` Number of thread counts.
+  * `-n` Number of runner threads
+  * `-N` Number of binding threads
+  * `-o` Optimize run (only process devices updated after the last run)
   * `-p` Set Project ID
   * `-q` Query only, registry to not be updated
   * `-r` Set tool root path
   * `-s` Set site path
   * `-t` Do not validate metadata
+  * `-T` Expand transitive dependencies
+  * `-u` Update `metadata.json` with cloud-assigned `num_id`
+  * `-w` Strict warning checking (pedantic mode)
   * `-x` Delete unknown devices from the registry.
+  * `-z` Do not update existing devices
 * `devices`: Multiple device entries for limited registration. Can be just the device name
   (`AHU-12`), or path to device (`site/devices/AHU-12`) for use with file-name glob.
 
