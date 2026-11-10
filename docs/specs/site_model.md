@@ -8,8 +8,7 @@ applied against different cloud projects or device configurations to ensure that
 configured appropriately. It's fundamentally the building model that describes the on-prem
 devices and how they communicate with the cloud.
 
-A site model directory shows specific examples of how this would be constructed for a complete
-site. Typically, each site has its own git repo, with the site model files (`cloud_iot_config.json`,
+Typically, each site has its own git repo, with the site model files (`cloud_iot_config.json`,
 `devices/`, `reflector/`, etc.) located either at the repository root or inside a `udmi/`
 subdirectory (`<repo>/udmi/`) when the repository also stores non-UDMI site artifacts.
 For test and development, this only needs to be an on-disk directory.
