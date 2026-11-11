@@ -11,6 +11,9 @@ import sys
 from typing import Callable, List, Optional
 
 from mantis import preflight
+from workbench.server.mermaid_png import MERMAID_JS
+
+UDMI_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 #: Modules the gateway imports on top of Mantis's: Markdown for email bodies,
 #: the Gmail client and Google auth for notifications, Playwright for rendering
@@ -51,10 +54,23 @@ def check_chromium() -> Optional[str]:
     return None
 
 
+def check_mermaid(udmi_root: Optional[str] = None) -> Optional[str]:
+    """Mermaid renders diagrams in the Workbench UI and notification emails."""
+    root = udmi_root or UDMI_ROOT
+    mermaid_path = os.path.join(root, MERMAID_JS)
+    if not os.path.isfile(mermaid_path) or os.path.getsize(mermaid_path) == 0:
+        return (
+            f"Mermaid library is missing at {mermaid_path}; "
+            "run bin/setup_web_assets (or bin/setup_base) to install frontend web assets."
+        )
+    return None
+
+
 def workbench_checks() -> List[Callable[[], Optional[str]]]:
     return preflight.mantis_checks("cli") + [
         lambda: preflight.check_modules(WORKBENCH_MODULES),
         check_chromium,
+        check_mermaid,
         lambda: preflight.check_command("java", "bin/sequencer runs the Java sequencer"),
     ]
 

@@ -54,6 +54,7 @@ case "$1" in
     test_wrap bin/test_pull
     test_wrap bin/test_butler
     test_wrap bin/test_gummi
+    test_wrap bin/test_license
     ;;
 
   schema_tests)
