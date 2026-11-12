@@ -122,7 +122,7 @@ EOF
     echo ".env created successfully."
 fi
 
-# 5. Prepare images and bring up Docker compose
+# 4. Prepare images and bring up Docker compose
 echo "Preparing bridgehead container images..."
 retry_cmd docker compose pull --ignore-buildable --policy missing
 retry_cmd docker compose build
