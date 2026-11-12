@@ -10,6 +10,7 @@ import pytest
 
 from mantis import preflight as mantis_preflight
 from workbench.server import preflight
+from workbench.server.mermaid_png import MERMAID_JS
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
@@ -19,6 +20,7 @@ def test_workbench_checks_include_every_mantis_cli_check():
     assert "check_provider" in names
     assert "check_udmi_common" in names
     assert "check_chromium" in names
+    assert "check_mermaid" in names
 
 
 def test_main_lists_every_problem_and_fails(monkeypatch, capsys):
@@ -150,6 +152,18 @@ def test_chromium_check_names_the_missing_browser_directories(tmp_path, monkeypa
     assert "venv/bin/playwright install chromium" in problem
 
 
+def test_mermaid_check_requires_installed_asset(tmp_path, monkeypatch):
+    monkeypatch.setattr(preflight, "UDMI_ROOT", str(tmp_path))
+    problem = preflight.check_mermaid()
+    assert problem is not None
+    assert "bin/setup_web_assets" in problem
+
+    mermaid_path = tmp_path / MERMAID_JS
+    mermaid_path.parent.mkdir(parents=True)
+    mermaid_path.write_text("window.mermaid = {};", encoding="utf-8")
+    assert preflight.check_mermaid() is None
+
+
 # ------------------------------------------------ saved provider (bin/mantis setup) ---
 def _gateway_env(tmp_path, **extra):
     env = {k: v for k, v in os.environ.items() if k not in (
@@ -185,3 +199,14 @@ def test_workbench_no_longer_accepts_internal(tmp_path):
     )
     assert result.returncode == 1
     assert "Unknown argument '--internal'" in result.stdout
+
+
+def test_gateway_refuses_to_start_without_mermaid_asset(tmp_path):
+    env = _gateway_env(tmp_path, MANTIS_OFFLINE="true")
+    result = subprocess.run(
+        [sys.executable, "-m", "workbench.server.gateway", "--port=0", f"--udmi-root={tmp_path}"],
+        cwd=ROOT, env=env, capture_output=True, text=True, timeout=60,
+    )
+    assert result.returncode == 1
+    assert "bin/setup_web_assets" in result.stderr
+    assert "UDMI Workbench serving" not in result.stdout

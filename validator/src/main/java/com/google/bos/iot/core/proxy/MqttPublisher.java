@@ -47,6 +47,7 @@ import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Date;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -69,7 +70,6 @@ import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
-import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import udmi.schema.Credential;
@@ -701,12 +701,12 @@ public class MqttPublisher implements MessagePublisher {
    */
   private String createJwt(String projectId, byte[] privateKeyBytes, String algorithm)
       throws Exception {
-    DateTime now = new DateTime();
+    Instant now = Instant.now();
 
     JwtBuilder jwtBuilder =
         Jwts.builder()
-            .setIssuedAt(now.toDate())
-            .setExpiration(now.plusMillis((int) TOKEN_EXPIRATION.toMillis()).toDate())
+            .setIssuedAt(Date.from(now))
+            .setExpiration(Date.from(now.plus(TOKEN_EXPIRATION)))
             .setAudience(projectId);
 
     LOG.info(format("Creating jwt %s key with audience %s", algorithm, projectId));

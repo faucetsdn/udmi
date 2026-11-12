@@ -1,2 +1,3 @@
-1 schema violations found
-  /blobset/blobs/_firmware_update: object has missing required properties (["generation","sha256"])
+2 schema violations found
+  $.blobset.blobs._firmware_update: required property 'generation' not found
+  $.blobset.blobs._firmware_update: required property 'sha256' not found

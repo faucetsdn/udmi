@@ -98,3 +98,7 @@ bridgehead/.env
 
 # Bridgehead runtime output
 /bridgehead/out
+
+# Downloaded frontend assets (installed by bin/setup_web_assets)
+/gummi/src/static/ext/
+/workbench/static/js/ext/

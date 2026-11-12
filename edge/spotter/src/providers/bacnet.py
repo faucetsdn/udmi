@@ -9,9 +9,12 @@ from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 try:
   import BAC0
-  import BAC0.core.io.IOExceptions
+  from BAC0.core.devices.Device import DeviceDisconnected
+  from BAC0.core.io.IOExceptions import NoResponseFromController
 except ImportError:
   BAC0 = None
+  DeviceDisconnected = ()
+  NoResponseFromController = RuntimeError
 
 from udmi.core.managers.providers.family_provider import FamilyProvider
 from udmi.schema import (
@@ -148,7 +151,8 @@ class BacnetFamilyProvider(FamilyProvider):
     )
 
     if not addrs:
-      client.discover(global_broadcast=True)
+      # Reset cached Who-Is results so subsequent scans on the shared BAC0 stack do not replay stale devices.
+      client.discover(global_broadcast=True, reset=True)
       device_producer = self._global_device_producer
     else:
       for addr in addrs:
@@ -413,6 +417,11 @@ class BacnetFamilyProvider(FamilyProvider):
     device_address, device_id = parts[0], parts[1]
     try:
       dev = BAC0.device(device_address, int(device_id), client, poll=0)
+      # BAC0.device swallows APDU timeouts into DeviceDisconnected or an empty objects_list instead of raising.
+      if isinstance(dev, DeviceDisconnected) or not dev.properties.objects_list:
+        raise NoResponseFromController(
+            f"Failed to connect or read objectList for {device_address}/{device_id}"
+        )
       for point in dev.points:
         present_val = getattr(point, "lastValue", None)
         ancillary = {}

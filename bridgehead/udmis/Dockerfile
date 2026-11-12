@@ -3,7 +3,7 @@ FROM quay.io/coreos/etcd:v3.5.13 AS etcd-client-builder
 FROM tomcat:11-jre21-temurin AS tomcat
 FROM ${UDMIS_BASE_IMAGE}
 
-RUN apk add --no-cache bash openjdk21 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils nano telegraf openssh-client
+RUN apk upgrade --no-cache && apk add --no-cache bash openjdk21 gcompat curl jq sudo git python3 moreutils mosquitto mosquitto-clients openssl coreutils nano telegraf openssh-client
 
 COPY --from=etcd-client-builder /usr/local/bin/etcdctl /usr/local/bin/etcdctl
 COPY --from=tomcat /usr/local/tomcat /usr/local/tomcat

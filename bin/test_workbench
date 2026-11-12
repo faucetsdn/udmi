@@ -27,6 +27,8 @@ if [ ! -d "workbench/tests" ]; then
   exit 1
 fi
 
+"$ROOT_DIR/bin/setup_web_assets" workbench
+
 # Mantis must never reach a model endpoint from the test suite: a triage run
 # takes minutes and its output is not deterministic. Forcing offline mode makes
 # any test that tries to reason take the explicit provider-missing path instead

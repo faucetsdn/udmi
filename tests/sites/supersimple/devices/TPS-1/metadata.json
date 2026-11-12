@@ -2,13 +2,16 @@
   "pointset": {
     "points": {
       "room_temperature_sensor": {
+        "units": "Celsius",
         "range_min": 0
       },
       "room_humidity_sensor": {
+        "units": "percent",
         "range_min": 0,
         "range_max": 100
       },
       "room_co2_sensor": {
+        "units": "ppm",
         "range_max": 1200
       }
     }

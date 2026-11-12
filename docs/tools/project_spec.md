@@ -23,17 +23,16 @@ The structure can be conceptualized as:
 The provider designates the primary IoT backend or protocol used by the tool.
 * **Optionality**: The code parses this as optional (`(//([a-z]+)/)?`). If omitted, the `ExecutionConfiguration`'s `iot_provider` will not be overridden by the project spec, although tools may assume a default based on external configurations.
 * **Supported Values**:
-  * `gbos`: Uses reflector client through IoT Core.
+  * `gbos`: Uses reflector client through the MQTT reflector (`UDMI-REFLECT`).
   * `gref`: Uses reflector client through GCP PubSub.
   * `mqtt`: Uses reflector client through an MQTT broker.
   * `pubsub`: Uses direct access through PubSub (primarily for `validator`).
-  * `clearblade`: Connects to ClearBlade IoT Core.
   * *Other valid schema values*: `local`, `dynamic`, `implicit`, `etcd`, `jwt`.
 
 #### `project` (Group 3/4, Required)
 The project identifier is the core mandatory component of the spec. Its specific meaning depends heavily on the chosen `provider`.
 * **Semantics by Provider**:
-  * `gbos`, `clearblade`: IoT Core project ID.
+  * `gbos`: Target GCP / IoT project ID.
   * `gref`, `pubsub`: GCP project ID.
   * `mqtt`: Broker hostname (e.g., `localhost`).
 * **Special Case (`no-site`)**: The exact string `no-site` is mapped to a null `project_id` internally, signaling the tool to operate entirely locally or disconnected from a remote project.
@@ -62,7 +61,7 @@ The `registrar` tool uses the `project_spec` to determine how to connect to the 
 While this document aims to be an authoritative specification, developers should be aware of the following discrepancies between documentation and current code implementation:
 
 1. **Provider Optionality**: Documentation historically implied `//provider/project` was mandatory. The regex `(//([a-z]+)/)?` allows dropping the provider (e.g., simply `my-project`). In such cases, the provider may default or fail depending on tool-specific initialization logic.
-2. **Additional Providers**: The tools accept a broader list of providers internally via the `IotProvider` enum (like `clearblade`, `local`, `dynamic`) than what was originally formalized.
+2. **Additional Providers**: The tools accept a broader list of providers internally via the `IotProvider` enum (like `local`, `dynamic`, `etcd`, `jwt`) than what was originally formalized.
 3. **Regex Constraints**: The regex enforces strict alphanumeric characters for namespaces (`[a-z0-9]+`) and user segments (`[a-z0-9-]+`), ensuring valid resource IDs downstream. Hyphens are allowed in `project` and `user` but excluded from `namespace`.
 
 ## Examples

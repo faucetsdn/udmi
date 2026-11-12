@@ -1,5 +1,12 @@
-4 schema violations found
-  /gateway: object instance has properties which are not allowed by the schema: ["error_ids"]
-  /system/hardware: object has missing required properties (["make","model"])
-  /system/hardware: object instance has properties which are not allowed by the schema: ["cpu_usage","free_dynamic_memory","last_reset_timestamp","last_restart_reason","reset_count","revision","total_dynamic_memory"]
-  object instance has properties which are not allowed by the schema: ["last_config"]
+11 schema violations found
+  $.gateway: property 'error_ids' is not defined in the schema and the schema does not allow additional properties
+  $.system.hardware: property 'cpu_usage' is not defined in the schema and the schema does not allow additional properties
+  $.system.hardware: property 'free_dynamic_memory' is not defined in the schema and the schema does not allow additional properties
+  $.system.hardware: property 'last_reset_timestamp' is not defined in the schema and the schema does not allow additional properties
+  $.system.hardware: property 'last_restart_reason' is not defined in the schema and the schema does not allow additional properties
+  $.system.hardware: property 'reset_count' is not defined in the schema and the schema does not allow additional properties
+  $.system.hardware: property 'revision' is not defined in the schema and the schema does not allow additional properties
+  $.system.hardware: property 'total_dynamic_memory' is not defined in the schema and the schema does not allow additional properties
+  $.system.hardware: required property 'make' not found
+  $.system.hardware: required property 'model' not found
+  $: property 'last_config' is not defined in the schema and the schema does not allow additional properties

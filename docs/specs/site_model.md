@@ -8,9 +8,10 @@ applied against different cloud projects or device configurations to ensure that
 configured appropriately. It's fundamentally the building model that describes the on-prem
 devices and how they communicate with the cloud.
 
-A site model directory shows specific examples of how this would be constructed for a complete
-site. Typically, however, each site would have its own git repo (with the `cloud_iot_config.json`
-file in the repo root). For test and development, this only needs to be a on-disk directory.
+Typically, each site has its own git repo, with the site model files (`cloud_iot_config.json`,
+`devices/`, `reflector/`, etc.) located either at the repository root or inside a `udmi/`
+subdirectory (`<repo>/udmi/`) when the repository also stores non-UDMI site artifacts.
+For test and development, this only needs to be an on-disk directory.
 The [udmi_site_model](https://github.com/faucetsdn/udmi_site_model) repo
 provides an up-to-date example of what a site model might look like (actively used by some
 of the integration tests).
@@ -18,6 +19,7 @@ of the integration tests).
 At a high-level, the various constructs relevant to UDMI are (described in more detail below):
 * `cloud_iot_config.json`
 * `devices/`
+* `reflector/`
 
 ## Registrar Tool
 
@@ -43,3 +45,7 @@ by different tools for managing the devices.
 * `rsa_private.pem`: Private device key.
 * `rsa_private.pkcs8`: Private device key (binary format).
 * `rsa_public.pem`: Public device key (for registering with the cloud registry).
+
+## `reflector/`
+
+The `reflector` directory contains the key pair (`rsa_private.pem`, `rsa_private.pkcs8`, and `rsa_public.pem`) used by reflector tools (`registrar`, `validator`, `sequencer`) to authenticate as this site (`projects/<PROJECT_ID>/locations/<REGION>/registries/UDMI-REFLECT/devices/<SITE_ID>`) when connecting via `//gbos/<PROJECT_ID>`. The corresponding `rsa_public.pem` must be registered under `devices/<SITE_ID>/` in the target project's `UDMI-REFLECT` registry.

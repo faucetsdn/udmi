@@ -8,22 +8,25 @@ import static java.lang.String.format;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Sets;
 import daq.pubber.impl.PubberManager;
+import daq.pubber.impl.point.PubberMultistatePoint;
 import daq.pubber.impl.point.PubberRandomBoolean;
 import daq.pubber.impl.point.PubberRandomPoint;
+import daq.pubber.impl.point.PubberStaticPoint;
+import daq.pubber.impl.point.PubberStringPoint;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import udmi.lib.client.manager.PointsetManager;
 import udmi.lib.intf.AbstractPoint;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.PointPointsetConfig;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PointPointsetState.Value_state;
+import udmi.schema.PointsetConfig;
 import udmi.schema.PointsetState;
 import udmi.schema.PubberConfiguration;
 
@@ -34,8 +37,8 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   private final ExtraPointsetEvent pointsetEvent = new ExtraPointsetEvent();
   private final Map<String, AbstractPoint> managedPoints = new HashMap<>();
-  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
   private final Map<String, String> setValueCache = new ConcurrentHashMap<>();
+  private final AtomicBoolean pointConfigModified = new AtomicBoolean();
   private static final int WRITE_DELAY_SEC = 10;
 
   private int pointsetUpdateCount = -1;
@@ -87,8 +90,14 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   @Override
   public AbstractPoint makePoint(String name, PointPointsetModel point) {
-    if ("No-units".equals(point.units)) {
+    if ("boolean".equals(point.type)) {
       return new PubberRandomBoolean(name, point);
+    } else if ("string".equals(point.type)) {
+      return new PubberStringPoint(name, point);
+    } else if (point.values != null) {
+      return new PubberMultistatePoint(name, point);
+    } else if (point.baseline_value instanceof String) {
+      return new PubberStaticPoint(name, point);
     } else {
       return new PubberRandomPoint(name, point);
     }
@@ -123,10 +132,12 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   @Override
   public Map<String, PointPointsetModel> getTestPoints() {
+    PointPointsetModel readOnlyBoolean = new PointPointsetModel();
+    readOnlyBoolean.type = "boolean";
     return ImmutableMap.of(
-    "recalcitrant_angle", makePointPointsetModel(50, 50, "Celsius"),
-    "faulty_finding", makePointPointsetModel(40, 0, "deg"),
-    "superimposition_reading", new PointPointsetModel());
+        "recalcitrant_angle", makePointPointsetModel(50, 50, "Celsius"),
+        "faulty_finding", makePointPointsetModel(40, 0, "deg"),
+        "superimposition_reading", readOnlyBoolean);
   }
 
   private static PointPointsetModel makePointPointsetModel(int value, double tolerance,
@@ -140,6 +151,15 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
   }
 
   @Override
+  public void updatePointsetPointsConfig(PointsetConfig config) {
+    pointConfigModified.set(false);
+    PointsetManager.super.updatePointsetPointsConfig(config);
+    if (isFastWrite() && pointConfigModified.getAndSet(false)) {
+      executor.execute(this::periodicUpdate);
+    }
+  }
+
+  @Override
   public void updatePointConfig(AbstractPoint point, PointPointsetConfig pointConfig) {
     boolean isFastWrite = isFastWrite();
     boolean isDelayWrite = isDelayWrite();
@@ -150,8 +170,12 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
     String prevPointValue = setValueCache.put(point.getName(), newPointValue);
     boolean isUnmodified = Objects.equals(newPointValue, prevPointValue);
 
-    if (isFastWrite || isUnmodified) {
+    if (isFastWrite || isUnmodified || pointConfig == null
+        || !getPointsetState().points.containsKey(point.getName())) {
       PointsetManager.super.updatePointConfig(point, pointConfig);
+      if (isFastWrite && !isUnmodified) {
+        pointConfigModified.set(true);
+      }
     } else if (isDelayWrite) {
       debug(format("Applying delayed writeback for point %s with %ds delay", point.getName(),
           WRITE_DELAY_SEC));
@@ -167,7 +191,7 @@ public class PubberPointsetManager extends PubberManager implements PointsetMana
 
   private void handleDelayWriteback(AbstractPoint point,
       PointPointsetConfig pointConfig, int delaySec) {
-    scheduler.schedule(() -> {
+    executor.schedule(() -> {
       try {
         info(format("Completing delayed writeback for %s", point.getName()));
         // Use the default interface method to apply the final state.

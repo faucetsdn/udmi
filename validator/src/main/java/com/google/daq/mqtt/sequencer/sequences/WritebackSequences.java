@@ -58,20 +58,25 @@ public class WritebackSequences extends PointsetBase {
     return format("target point has value_state %s", targetState);
   }
 
+  void resetPresentValue() {
+    lastPresentValue = null;
+    popReceivedEvents(PointsetEvents.class);
+  }
+
   /**
    * Checks if the `present_value` for the target point matches the target value.
    */
-  private String presentValueIs(TargetTestingModel targetModel) {
+  String presentValueIs(TargetTestingModel targetModel) {
     String pointName = targetModel.target_point;
     Object targetValue = targetModel.target_value;
     List<PointsetEvents> messages = popReceivedEvents(PointsetEvents.class);
     for (PointsetEvents pointsetEvent : messages) {
-      if (pointsetEvent.points.get(pointName) != null) {
+      if (pointsetEvent.points != null && pointsetEvent.points.get(pointName) != null) {
         lastPresentValue = pointsetEvent.points.get(pointName).present_value;
-        if (targetValue.equals(lastPresentValue)) {
-          return null;
-        }
       }
+    }
+    if (Objects.equals(targetValue, lastPresentValue)) {
+      return null;
     }
     return format("Point %s has present value %s, not target %s", pointName, lastPresentValue,
         targetValue);
@@ -81,7 +86,6 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Implements UDMI writeback and can successfully writeback to a point")
   public void writeback_success() {
-    deviceConfig.pointset.sample_rate_sec = 10;
     TargetTestingModel targetModel = testTargetState(APPLIED_STATE);
     waitUntil("target point to have target expected value", MAX_WAIT_TIME,
         () -> presentValueIs(targetModel));
@@ -90,13 +94,14 @@ public class WritebackSequences extends PointsetBase {
   private TargetTestingModel testTargetState(String targetState) {
     TargetTestingModel targetModel = getTarget(targetState);
     String targetPoint = targetModel.target_point;
-    Object targetValue = targetModel.target_value;
+    final Object targetValue = targetModel.target_value;
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
 
     waitUntil(expectedValueState(DEFAULT_STATE), MAX_WAIT_TIME,
         () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
+    resetPresentValue();
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
 
     waitUntil(expectedValueState(targetState), MAX_WAIT_TIME,
@@ -121,24 +126,22 @@ public class WritebackSequences extends PointsetBase {
   @Feature(stage = ALPHA, bucket = WRITEBACK)
   @Summary("Tests intermediate UPDATING state of a writeback operation")
   public void writeback_operation() {
-    deviceConfig.pointset.sample_rate_sec = 10;
     TargetTestingModel targetModel = getTarget(APPLIED_STATE);
     String targetPoint = targetModel.target_point;
-    Object targetValue = targetModel.target_value;
+    final Object targetValue = targetModel.target_value;
 
     deviceConfig.pointset.points.get(targetPoint).set_value = null;
     waitUntil(expectedValueState(DEFAULT_STATE), MAX_WAIT_TIME,
         () -> valueStateIs(targetPoint, DEFAULT_STATE));
 
+    resetPresentValue();
     deviceConfig.pointset.points.get(targetPoint).set_value = targetValue;
     // Wait until the intermediate UPDATING state. In other cases, this should:
     // 1. Skip if it ends up APPLIED too quickly.
     // 2. Error out if it takes too long to get to UPDATING.
     waitUntil(expectedValueState(UPDATING_STATE), UPDATING_WAIT_DURATION, () -> {
       String appliedStateCheck = valueStateIs(targetPoint, APPLIED_STATE);
-      String appliedValueCheck = presentValueIs(targetModel);
-      ifTrueSkipTest(appliedStateCheck == null && appliedValueCheck == null,
-          "operation completed quickly");
+      ifTrueSkipTest(appliedStateCheck == null, "operation completed quickly");
 
       return valueStateIs(targetPoint, UPDATING_STATE);
     });

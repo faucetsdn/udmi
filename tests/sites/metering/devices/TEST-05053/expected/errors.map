@@ -6,5 +6,8 @@ Exceptions for TEST-05053
     While converting device config
       While converting point HOLDING_REGISTER_53
         Point reference not allowed for family iot
-  1 schema violations found
-    /gateway/gateway_id: ECMA 262 regex "^[A-Z]{2,6}-[1-9][0-9]*$" does not match input string "CGW-05"
+  Specified gateway_id CGW-05 not found in site model
+  3 schema violations found
+    $.pointset.points: property 'HOLDING_REGISTER_53' is not defined in the schema and the schema does not allow additional properties
+    $.pointset.points: property 'HOLDING_REGISTER_153' is not defined in the schema and the schema does not allow additional properties
+    $.gateway.gateway_id: does not match the regex pattern ^[A-Z]{2,6}-[1-9][0-9]*$

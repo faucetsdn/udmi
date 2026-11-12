@@ -262,6 +262,8 @@ public class ConfigManager {
     return runInContext("While converting point " + configKey, () -> {
       PointPointsetConfig pointConfig = new PointPointsetConfig();
       pointConfig.units = excludeUnits ? null : metadata.units;
+      pointConfig.type = excludeUnits ? null : metadata.type;
+      pointConfig.values = excludeUnits ? null : metadata.values;
       pointConfig.ref = pointConfigRef(metadata);
       if (Boolean.TRUE.equals(metadata.writable)) {
         pointConfig.set_value = metadata.baseline_value;

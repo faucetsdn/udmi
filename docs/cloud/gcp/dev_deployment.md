@@ -89,9 +89,17 @@ flowchart TD
 ## 3. Authentication & Credential Models
 
 1. **Reflector Tools (`registrar`, `validator`, `sequencer`)**:
-   - Connect directly to Mosquitto on port `8883` via mTLS.
-   - Requires client certificate (`rsa_private.crt`), private key (`rsa_private.pem` / `rsa_private.pkcs8`), and Root CA certificate (`ca.crt`) signed by the cluster root authority (available in secret `udmis-tls`).
-   - Uses the reflector device registry format: `/r/UDMI-REFLECT/d/<SITE_NAME>/reflect`.
+   - **`//gbos/<PROJECT_ID>` (MQTT Reflector via Zanzara)**:
+     - Connects to `ssl://mqtt.bos.goog:8883` as client `projects/<PROJECT_ID>/locations/<REGION>/registries/UDMI-REFLECT/devices/<SITE_NAME>` using a JWT signed by `<site_model>/reflector/rsa_private.pkcs8`.
+     - Requires `<SITE_NAME>` and its corresponding `<site_model>/reflector/rsa_public.pem` to be registered as a device in the `UDMI-REFLECT` registry in `etcd`.
+     - `UDMI-REFLECT` itself is bootstrapped or updated over the Pub/Sub reflector (`//gref/`):
+       `bin/registrar <path>/UDMI-REFLECT/udmi //gref/<PROJECT_ID>+$USER`
+   - **`//gref/<PROJECT_ID>[+<USER>]` (Pub/Sub Reflector)**:
+     - Communicates directly with UDMIS via GCP Pub/Sub (`udmi_reflect` topic and `udmi_reply+<USER>` subscription) using Application Default Credentials (`gcloud`).
+   - **`//mqtt/<HOST>` (Direct Broker mTLS)**:
+     - Connects directly to Mosquitto on port `8883` via mTLS.
+     - Requires client certificate (`rsa_private.crt`), private key (`rsa_private.pem` / `rsa_private.pkcs8`), and Root CA certificate (`ca.crt`) signed by the cluster root authority (available in secret `udmis-tls`).
+     - Uses the reflector device registry format: `/r/UDMI-REFLECT/d/<SITE_NAME>/reflect`.
 
 2. **Edge Devices (`pubber`, physical hardware)**:
    - Connect via the `auth` (Zanzara) proxy on port `1883` (TCP) or `8883` (TLS).

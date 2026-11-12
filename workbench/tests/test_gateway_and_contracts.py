@@ -122,6 +122,17 @@ def test_health_reports_real_service_identity(server_url):
     assert body["mcp_tools"] > 0, "MCP tool registry must be wired into the gateway"
 
 
+def test_static_ext_mermaid_asset(server_url):
+    with urllib.request.urlopen(f"{server_url}/js/ext/mermaid.min.js", timeout=10) as resp:
+        assert resp.status == 200
+        assert "mermaid" in resp.read().decode("utf-8", errors="ignore")
+
+    request = urllib.request.Request(f"{server_url}/js/vendor/mermaid.min.js")
+    with pytest.raises(urllib.error.HTTPError) as exc_info:
+        urllib.request.urlopen(request, timeout=10)
+    assert exc_info.value.code == 404
+
+
 # --------------------------------------------------------------- discovery ---
 def test_site_models_are_discovered_from_disk(server_url):
     _, _, body = get_json(f"{server_url}/api/site-models")

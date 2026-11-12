@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ADD gummi /root/gummi
 ADD mcp /root/mcp
 ADD common /root/common
+ADD bin/setup_web_assets /root/bin/setup_web_assets
+RUN /root/bin/setup_web_assets gummi
 
 ENV PYTHONPATH=/root:/root/gummi:/root/common/src/main/python
 ENV GUMMI_PORT=8080

@@ -52,12 +52,6 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.groupingBy;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.fge.jsonschema.core.load.configuration.LoadingConfiguration;
-import com.github.fge.jsonschema.core.load.download.URIDownloader;
-import com.github.fge.jsonschema.main.JsonSchema;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -80,15 +74,15 @@ import com.google.udmi.util.ExceptionMap;
 import com.google.udmi.util.ExceptionMap.ErrorTree;
 import com.google.udmi.util.ExceptionMap.ExceptionCategory;
 import com.google.udmi.util.JsonUtil;
+import com.google.udmi.util.MessageValidator;
 import com.google.udmi.util.SiteModel;
 import com.google.udmi.util.ValidationError;
+import com.networknt.schema.JsonSchema;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.nio.file.Files;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.AbstractMap.SimpleEntry;
@@ -1430,6 +1424,18 @@ public class Registrar {
   private void preprocessSiteMetadata() {
     allDevices.values().forEach(LocalDevice::configure);
     allDevices.values().stream().filter(LocalDevice::isGateway).forEach(this::preprocessGateway);
+    allDevices.values().stream().filter(LocalDevice::isProxied).forEach(this::preprocessProxied);
+  }
+
+  private void preprocessProxied(LocalDevice proxied) {
+    try {
+      String gatewayId = proxied.getGatewayId();
+      checkNotNull(gatewayId, "Proxied device missing gateway_id");
+      checkState(allDevices.containsKey(gatewayId),
+          format("Specified gateway_id %s not found in site model", gatewayId));
+    } catch (Exception e) {
+      proxied.captureError(ExceptionCategory.proxy, e);
+    }
   }
 
   private void preprocessGateway(LocalDevice gateway) {
@@ -1696,26 +1702,7 @@ public class Registrar {
   }
 
   private void loadSchema(String key) {
-    File schemaFile = new File(schemaBase, key);
-    try (InputStream schemaStream = Files.newInputStream(schemaFile.toPath())) {
-      JsonNode schemaTree = OBJECT_MAPPER.readTree(schemaStream);
-      if (schemaTree instanceof ObjectNode schemaObject) {
-        Set<String> toRemove = new HashSet<>();
-        schemaObject.fields().forEachRemaining(entry -> {
-          ifTrueThen(entry.getKey().startsWith("$"), () -> toRemove.add(entry.getKey()));
-        });
-        toRemove.forEach(schemaObject::remove);
-      }
-      JsonSchema schema =
-          JsonSchemaFactory.newBuilder()
-              .setLoadingConfiguration(
-                  LoadingConfiguration.newBuilder()
-                      .addScheme("file", new RelativeDownloader())
-                      .freeze()).freeze().getJsonSchema(schemaTree);
-      schemas.put(key, schema);
-    } catch (Exception e) {
-      throw new RuntimeException("While loading schema " + schemaFile.getAbsolutePath(), e);
-    }
+    schemas.put(key, MessageValidator.getSchema(new File(schemaBase, key)));
   }
 
   private void loadSiteDefaults() {
@@ -1767,17 +1754,5 @@ public class Registrar {
   @CommandLineOption(short_form = "-A", description = "Auto process alt_registry from config")
   private void setAutoAltRegistry() {
     autoAltRegistry = true;
-  }
-
-  class RelativeDownloader implements URIDownloader {
-
-    @Override
-    public InputStream fetch(URI source) {
-      try {
-        return Files.newInputStream(new File(schemaBase, source.getSchemeSpecificPart()).toPath());
-      } catch (Exception e) {
-        throw new RuntimeException("While loading sub-schema " + source, e);
-      }
-    }
   }
 }

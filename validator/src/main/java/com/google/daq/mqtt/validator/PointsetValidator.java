@@ -1,6 +1,5 @@
 package com.google.daq.mqtt.validator;
 
-import static com.google.udmi.util.GeneralUtils.isNumericString;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 
@@ -12,9 +11,9 @@ import com.google.udmi.util.JsonUtil;
 import com.google.udmi.util.ValidationException;
 import java.time.Instant;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import udmi.schema.Category;
@@ -28,6 +27,9 @@ import udmi.schema.State;
 
 /** Manage pointset validation. */
 public class PointsetValidator {
+
+  public static final String TYPE_BOOLEAN = "boolean";
+  public static final String TYPE_STRING = "string";
 
   private static final int MAX_DECIMAL_PLACES = 2;
 
@@ -150,10 +152,13 @@ public class PointsetValidator {
 
   private Set<String> validatePointValues(
       Map<String, PointPointsetModel> modelPoints, Map<String, PointPointsetEvents> points) {
-    Set<String> outOfRangeErrors = new HashSet<>();
+    Set<String> outOfRangeErrors = new TreeSet<>();
     for (Entry<String, PointPointsetEvents> entry : points.entrySet()) {
       String pointName = entry.getKey();
       PointPointsetEvents point = entry.getValue();
+      if (point == null || point.present_value == null) {
+        continue;
+      }
 
       // Check for excessive decimal precision on floating-point numbers
       if (point.present_value instanceof Number numberValue
@@ -176,41 +181,130 @@ public class PointsetValidator {
         continue;
       }
 
-      if (point == null || point.present_value == null) {
+      if (isMultistatePoint(pointModel)) {
+        if (!isValidMultistateValue(pointModel, point.present_value)) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value '%s' is not a valid state key in values %s",
+                  pointName, point.present_value, pointModel.values.keySet()));
+        }
         continue;
       }
 
-      if (point.present_value instanceof String stringValue && isNumericString(stringValue)) {
+      if (isStringPoint(pointModel)) {
+        if (!isValidStringValue(point.present_value)) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value '%s' is not a string", pointName, point.present_value));
+        }
+        continue;
+      }
+
+      if (isBooleanPoint(pointModel)) {
+        if (!isValidBooleanValue(point.present_value)) {
+          outOfRangeErrors.add(
+              String.format(
+                  "%s: present_value '%s' is not a boolean", pointName, point.present_value));
+        }
+        continue;
+      }
+
+      if (!isValidNumericValue(point.present_value)) {
         outOfRangeErrors.add(
             String.format(
-                "%s: present_value '%s' is a numerical string, expected JSON number",
-                pointName, stringValue));
+                "%s: present_value '%s' is not a number", pointName, point.present_value));
         continue;
       }
 
-      if (pointModel.range_min == null && pointModel.range_max == null) {
-        continue;
-      }
-
-      if (!Number.class.isInstance(point.present_value)) {
-        outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
-        continue;
-      }
-
-      Double presentValue = ((Number) point.present_value).doubleValue();
-      if (pointModel.range_max != null && presentValue > pointModel.range_max) {
-        outOfRangeErrors.add(
-            String.format(
-                "%s: present_value %s greater than range_max %s",
-                pointName, presentValue, pointModel.range_max));
-      } else if (pointModel.range_min != null && presentValue < pointModel.range_min) {
-        outOfRangeErrors.add(
-            String.format(
-                "%s: present_value %s lower than range_min %s",
-                pointName, presentValue, pointModel.range_min));
-      }
+      validatePointRange(outOfRangeErrors, pointName, pointModel, point);
+      validatePointBaseline(outOfRangeErrors, pointName, pointModel, point);
     }
     return outOfRangeErrors;
+  }
+
+  private void validatePointRange(
+      Set<String> outOfRangeErrors,
+      String pointName,
+      PointPointsetModel pointModel,
+      PointPointsetEvents point) {
+    if (pointModel.range_min == null && pointModel.range_max == null) {
+      return;
+    }
+
+    if (!Number.class.isInstance(point.present_value)) {
+      outOfRangeErrors.add(String.format("%s: not numeric value, but range is set", pointName));
+      return;
+    }
+
+    Double presentValue = ((Number) point.present_value).doubleValue();
+    if (pointModel.range_max != null && presentValue > pointModel.range_max) {
+      outOfRangeErrors.add(
+          String.format(
+              "%s: present_value %s greater than range_max %s",
+              pointName, presentValue, pointModel.range_max));
+    } else if (pointModel.range_min != null && presentValue < pointModel.range_min) {
+      outOfRangeErrors.add(
+          String.format(
+              "%s: present_value %s lower than range_min %s",
+              pointName, presentValue, pointModel.range_min));
+    }
+  }
+
+  private void validatePointBaseline(
+      Set<String> outOfRangeErrors,
+      String pointName,
+      PointPointsetModel pointModel,
+      PointPointsetEvents point) {
+    if (pointModel.baseline_value == null) {
+      return;
+    }
+    if (pointModel.baseline_tolerance != null) {
+      validateBaselineTolerance(outOfRangeErrors, pointName, pointModel, point);
+    } else {
+      validateBaselineValue(outOfRangeErrors, pointName, pointModel, point);
+    }
+  }
+
+  private void validateBaselineTolerance(
+      Set<String> outOfRangeErrors,
+      String pointName,
+      PointPointsetModel pointModel,
+      PointPointsetEvents point) {
+    if (!(pointModel.baseline_value instanceof Number baselineNum)
+        || !(point.present_value instanceof Number presentNum)) {
+      outOfRangeErrors.add(
+          String.format("%s: not numeric value, but baseline_tolerance is set", pointName));
+      return;
+    }
+    double baselineValue = baselineNum.doubleValue();
+    double presentValue = presentNum.doubleValue();
+    double tolerance = pointModel.baseline_tolerance;
+    if (presentValue > baselineValue + tolerance || presentValue < baselineValue - tolerance) {
+      outOfRangeErrors.add(
+          String.format(
+              "%s: present_value %s outside baseline_value %s +- %s",
+              pointName, presentValue, baselineValue, tolerance));
+    }
+  }
+
+  private void validateBaselineValue(
+      Set<String> outOfRangeErrors,
+      String pointName,
+      PointPointsetModel pointModel,
+      PointPointsetEvents point) {
+    if (!baselineValuesMatch(pointModel.baseline_value, point.present_value)) {
+      outOfRangeErrors.add(
+          String.format(
+              "%s: present_value %s does not match baseline_value %s",
+              pointName, point.present_value, pointModel.baseline_value));
+    }
+  }
+
+  private boolean baselineValuesMatch(Object baselineValue, Object presentValue) {
+    if (baselineValue instanceof Number baselineNum && presentValue instanceof Number presentNum) {
+      return Double.compare(presentNum.doubleValue(), baselineNum.doubleValue()) == 0;
+    }
+    return Objects.equals(baselineValue, presentValue);
   }
 
   private String makeMessageDetail(Date timestamp, Map<String, String> attributes) {
@@ -247,5 +341,41 @@ public class PointsetValidator {
 
   public Set<String> getExtraPoints() {
     return extraPoints;
+  }
+
+  public static boolean isNumericPoint(PointPointsetModel model) {
+    return model != null && model.units != null && !model.units.isEmpty();
+  }
+
+  public static boolean isBooleanPoint(PointPointsetModel model) {
+    return model != null && TYPE_BOOLEAN.equals(model.type);
+  }
+
+  public static boolean isMultistatePoint(PointPointsetModel model) {
+    return model != null && model.values != null;
+  }
+
+  public static boolean isStringPoint(PointPointsetModel model) {
+    return model != null && TYPE_STRING.equals(model.type);
+  }
+
+  public static boolean isValidNumericValue(Object value) {
+    return value instanceof Number;
+  }
+
+  public static boolean isValidBooleanValue(Object value) {
+    return value instanceof Boolean;
+  }
+
+  /** Check whether a value is a valid string key in a multi-state point's values map. */
+  public static boolean isValidMultistateValue(PointPointsetModel model, Object value) {
+    return value instanceof String s
+        && model != null
+        && model.values != null
+        && model.values.containsKey(s);
+  }
+
+  public static boolean isValidStringValue(Object value) {
+    return value instanceof String;
   }
 }

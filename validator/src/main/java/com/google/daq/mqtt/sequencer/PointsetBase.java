@@ -19,11 +19,20 @@ public abstract class PointsetBase extends SequenceBase {
   public static final String APPLIED_STATE = "applied";
   public static final String TWEAKED_REF = "tweaked_ref";
   public static final String UPDATING_STATE = "updating";
+  protected static final int DEFAULT_SAMPLE_RATE_SEC = 10;
 
   @Override
   public void setUp() {
     ifTrueSkipTest(catchToTrue(() -> deviceMetadata.pointset == null), "Does not support pointset");
     super.setUp();
+  }
+
+  @Override
+  protected void resetDeviceConfig(boolean clean) {
+    super.resetDeviceConfig(clean);
+    if (!clean && deviceConfig.pointset != null) {
+      deviceConfig.pointset.sample_rate_sec = DEFAULT_SAMPLE_RATE_SEC;
+    }
   }
 
   /**
@@ -32,6 +41,8 @@ public abstract class PointsetBase extends SequenceBase {
   @Before
   public void makePoints() {
     deviceConfig.pointset = Optional.ofNullable(deviceConfig.pointset).orElse(new PointsetConfig());
+    deviceConfig.pointset.state_etag = Optional.ofNullable(deviceConfig.pointset.state_etag)
+        .orElseGet(() -> catchToNull(() -> deviceState.pointset.state_etag));
     deviceConfig.pointset.points = Optional.ofNullable(deviceConfig.pointset.points)
         .orElse(new HashMap<>());
     try {

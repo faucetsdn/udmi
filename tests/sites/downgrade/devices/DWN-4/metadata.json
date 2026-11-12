@@ -3,7 +3,7 @@
     "exclude_units_from_config": true,
     "points": {
       "filter_alarm_pressure_status": {
-        "units": "No-units",
+        "type": "boolean",
         "ref": "BV11.present_value"
       },
       "filter_differential_pressure_sensor": {

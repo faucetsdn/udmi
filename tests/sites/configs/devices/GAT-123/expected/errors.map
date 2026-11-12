@@ -7,4 +7,4 @@ Exceptions for GAT-123
   expected files mismatch
     Missing files: [ec_public.pem]
   1 schema violations found
-    /system/location: object has missing required properties (["site"])
+    $.system.location: required property 'site' not found

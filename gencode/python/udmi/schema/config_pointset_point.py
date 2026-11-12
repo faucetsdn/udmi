@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 from ._base import DataModel
 
@@ -13,6 +13,8 @@ from ._base import DataModel
 class PointPointsetConfig(DataModel):
     ref: Optional[str] = None
     units: Optional[str] = None
+    type: Optional[str] = None
+    values: Optional[Dict[str, str]] = None
     set_value: Optional[Union[str, bool, float]] = None
     stop_time: Optional[str] = None
     cov_increment: Optional[float] = None

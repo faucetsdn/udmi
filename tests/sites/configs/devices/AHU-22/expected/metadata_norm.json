@@ -20,7 +20,7 @@
     "points": {
       "filter_alarm_pressure_status": {
         "ref": "MCN8.present_value",
-        "units": "No-units",
+        "type": "boolean",
         "url": "vendor://0x65/MCN8.present_value"
       },
       "filter_differential_pressure": {
