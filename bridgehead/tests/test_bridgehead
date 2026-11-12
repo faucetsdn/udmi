@@ -176,7 +176,10 @@ grep -q "Processed GAT-123" out/registrar_output.txt || failed=1
 grep -q "Processed UNK-1" out/registrar_output.txt || failed=1
 
 # Verify Sequencer results
-grep -q "RESULT.*system_last_update" out/sequencer_output.txt || failed=1
+grep -q "RESULT pass system system_last_update" out/sequencer_output.txt || failed=1
+grep -q "Found 0 test failures, exit code 0" out/sequencer_output.txt || failed=1
+[ -s "$SITE_MODEL_PATH/out/sequencer_GAT-123.json" ] || failed=1
+[ -s "$SITE_MODEL_PATH/out/devices/GAT-123/results.md" ] || failed=1
 
 if [ $failed -eq 0 ]; then
     echo "----- Test PASSED -----"
