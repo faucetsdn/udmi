@@ -18,11 +18,13 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "  2. Launches Bridgehead services using bin/start_bridgehead --local."
     echo "  3. Prepares device registrar and starts Pubber container to send telemetry."
     echo "  4. Executes discovery sequence and registrar verification."
+    echo "  5. Executes sequencer test against GAT-123 and verifies Management UI and report generation."
     echo ""
     echo "Expected Result:"
-    echo "  - UDMIS becomes ready within timeout."
+    echo "  - UDMIS becomes ready within timeout and Tomcat serves /bridgeheadManager/."
     echo "  - Output matches expected summary count (Device extra: 6, Device status: 5)."
     echo "  - Registrar processes discovery results for expected devices (AHU-22, SNS-4, GAT-123, UNK-1)."
+    echo "  - Sequencer passes system_last_update and generates results.md and sequencer_GAT-123.json."
     echo "  - Prints 'Test PASSED' with exit code 0."
     exit 0
 fi
@@ -58,8 +60,11 @@ cleanup() {
     mkdir -p "$UDMI_ROOT/out"
     docker logs udmis > "$UDMI_ROOT/out/bridgehead_udmis_docker.log" 2>&1 || true
     docker cp udmis:/tmp/udmis.log "$UDMI_ROOT/out/bridgehead_udmis.log" 2>/dev/null || true
+    docker cp udmis:/tmp/tomcat.log "$UDMI_ROOT/out/bridgehead_tomcat.log" 2>/dev/null || true
     docker logs validator > "$UDMI_ROOT/out/bridgehead_validator.log" 2>&1 || true
     docker logs pubber > "$UDMI_ROOT/out/bridgehead_pubber.log" 2>&1 || true
+    cp out/registrar_output.txt "$UDMI_ROOT/out/bridgehead_registrar.log" 2>/dev/null || true
+    cp out/sequencer_output.txt "$UDMI_ROOT/out/bridgehead_sequencer.log" 2>/dev/null || true
     
     if [ -f "$SITE_MODEL_PATH/devices/AHU-1/out/exceptions.txt" ]; then
         cp "$SITE_MODEL_PATH/devices/AHU-1/out/exceptions.txt" "$UDMI_ROOT/out/bridgehead_ahu1_exceptions.txt" 2>/dev/null || true
@@ -69,9 +74,9 @@ cleanup() {
     docker stop pubber || true
     
     echo "Fixing permissions..."
-    docker exec validator chown -R $(id -u):$(id -g) /root/site_model 2>/dev/null || true
-    docker exec udmis chown -R $(id -u):$(id -g) /root/udmi/var/etcd 2>/dev/null || true
-    docker exec mosquitto chown -R $(id -u):$(id -g) /mosquitto/data 2>/dev/null || true
+    docker exec validator chown -RH $(id -u):$(id -g) /root/site_model/ 2>/dev/null || true
+    docker exec udmis chown -RH $(id -u):$(id -g) /root/site_model/ /root/udmi/var/etcd/ 2>/dev/null || true
+    docker exec mosquitto chown -RH $(id -u):$(id -g) /site_model/ /mosquitto/data/ 2>/dev/null || true
     
     echo "Stopping docker-compose services..."
     "$UDMI_ROOT/bin/stop_bridgehead" || docker compose down
@@ -149,23 +154,26 @@ echo "Wait for Pubber messages completed."
 docker exec validator /root/discovery.sh GAT-123
 echo "Step 4: Discovery script executed."
 
+failed=0
+
 # 5. Run registrar to check results
 echo "Waiting for messages to flush before registrar..."
 sleep 30
-docker exec validator bin/registrar site_model/ //mqtt/mosquitto > out/registrar_output.txt 2>&1 || true
+docker exec validator bin/registrar site_model/ //mqtt/mosquitto > out/registrar_output.txt 2>&1 || failed=1
 echo "Step 5: Ran Registrar to check results."
+
+# 6. Execute Sequencer test inside validator container
+echo "Executing Sequencer test inside validator container..."
+docker exec validator bin/sequencer -v site_model/ //mqtt/mosquitto GAT-123 system_last_update > out/sequencer_output.txt 2>&1 || failed=1
+echo "Step 6: Sequencer test executed."
+
+echo "Verifying Management UI deployment..."
+curl -fsS http://localhost:8080/bridgeheadManager/ >/dev/null || failed=1
 
 echo "Verifying registrar output..."
 cat out/registrar_output.txt
 
-# 6. Execute Sequencer test inside validator container
-echo "Executing Sequencer test inside validator container..."
-docker exec validator /bin/bash -c "bin/sequencer -v site_model/ //mqtt/mosquitto GAT-123 system_last_update" > out/sequencer_output.txt 2>&1 || true
-echo "Step 6: Sequencer test executed."
-cat out/sequencer_output.txt
-
 # Verify expected summary
-failed=0
 grep -q "Device validation: 1" out/registrar_output.txt || failed=1
 grep -q "Device status: 5" out/registrar_output.txt || failed=1
 
@@ -174,6 +182,9 @@ grep -q "Processed AHU-22" out/registrar_output.txt || failed=1
 grep -q "Processed SNS-4" out/registrar_output.txt || failed=1
 grep -q "Processed GAT-123" out/registrar_output.txt || failed=1
 grep -q "Processed UNK-1" out/registrar_output.txt || failed=1
+
+echo "Verifying sequencer output..."
+cat out/sequencer_output.txt
 
 # Verify Sequencer results
 grep -q "RESULT pass system system_last_update" out/sequencer_output.txt || failed=1
