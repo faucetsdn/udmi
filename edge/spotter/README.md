@@ -11,10 +11,10 @@ Spotter runs as a single unified process using the UDMI Python Client Library (`
 1. **`LocalnetManager` & Pluggable Family Providers**:
    - **`BacnetFamilyProvider`**: Performs active BACnet Who-Is / I-Am discovery, object enumeration, and UDP port extraction.
    - **`EtherFamilyProvider`**: Performs Layer-2 Ethernet / ARP, nmap XML host parsing, and ICMP ping sweeps.
-   - **`PassiveFamilyProvider`**: Listens for passive broadcast network traffic and extracts discovered device metadata.
+   - **`PassiveFamilyProvider`**: Listens for passive broadcast network traffic, decodes BACnet/IP BVLL (`Forwarded-NPDU` real controller IP/port behind BBMDs) and NPDU (`SNET`/`SADR` routed MS/TP frames and `I-Am-Router-To-Network` DNET lists), and extracts discovered device metadata.
 2. **`SpotterDiscoveryManager`**:
    - Manages scheduled and on-demand discovery sweeps.
-   - Streams live remote packet capture traces (`events/streams`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
+   - Streams live remote packet capture traces (`upload/discovery`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
 3. **`SpotterSystemManager`**:
    - Collects host metrics (CPU load, memory, OS distribution) and emits periodic telemetry (`events/system`).
    - Evaluates memory usage against safety thresholds (`check_safety_circuit_breaker`), throttling active discovery and packet captures to protect edge devices from kernel OOM termination.
@@ -41,12 +41,12 @@ graph TD
     end
 
     subgraph "Messaging & Field Network"
-        MB["MQTT Broker / UDMIS"]
+        MB["MQTT Broker / UDMIS / Butler"]
         DEV["Field OT Devices / BACnet Controllers"]
     end
 
     SYS -->|"state.system / events/system"| MB
-    DISC -->|"events/discovery & events/streams"| MB
+    DISC -->|"events/discovery & upload/discovery"| MB
     LOC -->|"Scans & Probes"| DEV
 ```
 
@@ -64,11 +64,12 @@ When `configs_dir` is specified in the primary configuration (e.g. `/opt/discove
 - **Ethernet Concurrency**: `ether.ping_concurrency` configures the maximum parallel ICMP ping worker threads (default: `4`).
 - **Passive Sniffing & Subnet Exclusions**: `ip.subnet_filter` (CIDR format, e.g. `192.168.1.10/24`) and `ip.interface` configure the network capture interface and BPF exclusion filters for broadcast, gateway, and host addresses.
 
-### 3. Transparent Legacy Depth Normalization
-To maintain backward compatibility with legacy edge schedules without polluting the abstract UDMI schema, Spotter normalizes legacy strings at the edge ingestion boundary:
-- `"ping"` $\rightarrow$ `"entries"` (Host presence / IP addresses)
-- `"ports"` $\rightarrow$ `"details"` (Open TCP/UDP ports and attributes)
-- `"services"` $\rightarrow$ `"parts"` (Detailed service and point definitions)
+### 3. Strict UDMI Specification Compliance
+Spotter strictly enforces canonical UDMI discovery depths (`"buckets"`, `"entries"`, `"parts"`, `"system"`, `"refs"`, `"details"`, `"trace"`) and fails fast on non-canonical legacy depth strings (`"ping"`, `"ports"`, `"services"`), reporting a configuration error in `state.system.status`. All emitted `events/discovery` payloads conform to `docs/specs/discovery.md` and `docs/specs/discovery_bacnet.md`:
+- Canonical `<TYPE>/<INSTANCE>` BACnet point references (e.g. `AI/0`, `AV/1`, `BV/2`), hyphenated object types (`analog-input`), boolean `writable` flags, and `present-value` ancillary values.
+- Explicit `families.ipv4.port` (default `47808`), ARP-resolved `families.ethmac`, and MS/TP `<network>:<mac>` routing (`network` + `families.mstp.addr`).
+- Top-level `system.name`, `system.description`, `system.serial_no`, `system.hardware`, and hyphenated `system.ancillary` keys (`firmware-revision`, `application-software-version`, `location`).
+- Self-enumeration via `config.discovery.generation` and `config.discovery.enumerations` (`families`, `features`, `points`).
 
 ---
 
@@ -76,18 +77,22 @@ To maintain backward compatibility with legacy edge schedules without polluting 
 
 Spotter processes diagnostic packet capture triggers sent declaratively over the UDMI discovery configuration channel (`config.discovery.families` with `depth: "trace"`):
 
-1. **Capture Worker ([pcap.py](src/pcap.py))**: Spawns `tcpdump` with configurable interface filters, enforcing strict execution bounds (maximum duration and byte quotas).
-2. **Streaming MQTT Egress Transport**:
-   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`StreamsEvents`) over the universal streaming MQTT event topic (`events/streams`).
+1. **Capture Worker & Active BACnet Trace Rounds ([pcap.py](src/pcap.py))**:
+   - Spawns `tcpdump` with configurable interface filters (defaulting to `"udp port 47808"` for `bacnet`), enforcing strict execution bounds (maximum duration and byte quotas).
+   - For `families.bacnet` with `depth: "trace"`, skips `BAC0.lite()` socket binding so UDP port `47808` remains unbound and executes paced raw-socket (`SOCK_RAW, IPPROTO_UDP`) `Who-Is` and `Who-Is-Router-To-Network` rounds during the capture window.
+2. **Streaming MQTT Egress Transport (`upload/discovery`)**:
+   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM), gzip-compressed per chunk, and sequentially published as `DiscoveryUpload` chunks over the `upload/discovery` MQTT topic (`event_no = 0` start marker, `1..N` gzipped base64 chunks, and `-(N+1)` terminal marker with uncompressed `sha256` and `scan_manifest`).
    - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding external network credentials or outbound HTTP rules at the edge.
-3. **Ad-hoc PCAP Reassembly ([bin/reassemble_pcap](bin/reassemble_pcap))**:
-   Reassembles chunked `events/streams` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
+3. **Cloud & Local PCAP Reassembly**:
+   - **Butler Service (`PcapUploadHandler`)**: Subscribes to `upload/discovery` (or `uufi_upload`), gunzips and reassembles chunks in order, validates the terminal `sha256` digest, and writes the `.pcap` and `scan_manifest.json` to GCS (`gs://<bucket>/<site>/<gen>.pcap`) or local disk without persisting raw chunks to PostgreSQL.
+   - **Ad-hoc CLI Reassembly ([bin/reassemble_pcap](bin/reassemble_pcap))**:
+     Reassembles chunked `upload/discovery` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file and `scan_manifest.json`:
    ```bash
-   # Reassemble stream events file into a pcap file:
-   ./edge/spotter/bin/reassemble_pcap stream_events.json capture.pcap
+   # Reassemble upload/discovery chunks file into a pcap file:
+   ./edge/spotter/bin/reassemble_pcap discovery_upload.json capture.pcap
 
    # Or stream directly from mosquitto subscriber:
-   mosquitto_sub -h $BROKER -t '/r/+/d/+/events/streams' | ./edge/spotter/bin/reassemble_pcap - live.pcap
+   mosquitto_sub -h $BROKER -t '/r/+/d/+/upload/discovery' | ./edge/spotter/bin/reassemble_pcap - live.pcap
    ```
 
 ---
@@ -98,12 +103,12 @@ Spotter processes diagnostic packet capture triggers sent declaratively over the
 | :--- | :--- |
 | **[bin/spotter](../../bin/spotter)** | Unified CLI orchestrator for starting (local/container) and stopping instances |
 | **[bin/run_spotter_tests](bin/run_spotter_tests)** | Unified verification test runner for unit and integration suites |
-| **[bin/reassemble_pcap](bin/reassemble_pcap)** | Ad-hoc CLI utility to reassemble `events/streams` chunks into `.pcap` files |
+| **[bin/reassemble_pcap](bin/reassemble_pcap)** | Ad-hoc CLI utility to reassemble `upload/discovery` chunks into `.pcap` files |
 | **[bin/compare_field_parity](bin/compare_field_parity)** | Automated CLI tool to verify functional parity between legacy node and Spotter |
 | **[src/agent.py](src/agent.py)** | Main Spotter agent entry point, manager wiring, and command dispatcher |
 | **[src/providers/](src/providers/)** | Modular protocol discovery providers (BACnet, Ether, Passive) |
 | **[src/host_telemetry.py](src/host_telemetry.py)** | Host OS and performance telemetry probes |
-| **[src/pcap.py](src/pcap.py)** | Safe `tcpdump` wrapper yielding binary streams with duration and size caps |
+| **[src/pcap.py](src/pcap.py)** | Safe `tcpdump` wrapper and raw-socket BACnet `Who-Is` trace generator |
 | **[container/Dockerfile](container/Dockerfile)** | Multi-stage Docker image build specification |
 | **[spotter_config.json](spotter_config.json)** | Sample configuration file for endpoint and BACnet parameters |
 | **[GEMINI.md](GEMINI.md)** | Detailed testing standards, execution matrices, and triage guidelines |
@@ -177,7 +182,7 @@ To prove byte-for-byte discovery parity on an actual field testbed machine witho
 
 ```bash
 # Automated live scan comparison (back-to-back sequential execution):
-sudo ./edge/spotter/bin/compare_field_parity --config /etc/udmi_discovery/config.json --duration 20
+./edge/spotter/bin/compare_field_parity --config /etc/udmi_discovery/config.json --duration 20
 
 # Or offline diff of previously collected discovery event files:
 ./edge/spotter/bin/compare_field_parity --diff legacy_events.json spotter_events.json -v
@@ -189,7 +194,6 @@ sudo ./edge/spotter/bin/compare_field_parity --config /etc/udmi_discovery/config
 
 The following capabilities are tracked as future milestones:
 
-1. **UDMIS Native PCAP Ingestion Pipeline**: Native service-side ingestion and reassembly in UDMIS to automatically collect and persist `events/streams` PCAP chunks directly into Cloud Storage (GCS) or BigQuery blob storage.
-2. **Ephemeral Secret Delivery**: Architectural mechanism for delivering transient, authenticated operational credentials (e.g., vendor device credentials, BACnet network encryption keys, or REST API bearer tokens) strictly in volatile RAM without disk persistence. A dedicated architectural discussion will finalize the delivery transport (such as non-persisted command channels e.g. `commands/secret` vs encrypted `config.blobset`), memory scrubbing lifecycles, and cryptographic envelope validation before implementation.
-3. **Key Rotation & Lifecycle**: End-to-end device private/public key rotation with automated cloud IoT registry coordination, backup verification, and zero-downtime reconnection.
-4. **Expanded Host Observability Metrics**: Network adapter error/drop counters, hardware temperature, storage/inode thresholds, and edge-to-cloud roundtrip latency.
+1. **Ephemeral Secret Delivery**: Architectural mechanism for delivering transient, authenticated operational credentials (e.g., vendor device credentials, BACnet network encryption keys, or REST API bearer tokens) strictly in volatile RAM without disk persistence. A dedicated architectural discussion will finalize the delivery transport (such as non-persisted command channels e.g. `commands/secret` vs encrypted `config.blobset`), memory scrubbing lifecycles, and cryptographic envelope validation before implementation.
+2. **Key Rotation & Lifecycle**: End-to-end device private/public key rotation with automated cloud IoT registry coordination, backup verification, and zero-downtime reconnection.
+3. **Expanded Host Observability Metrics**: Network adapter error/drop counters, hardware temperature, storage/inode thresholds, and edge-to-cloud roundtrip latency.

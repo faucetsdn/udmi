@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
-"""Utility to reassemble UDMI events/streams chunks into a valid PCAP file.
+"""Utility to reassemble UDMI upload/discovery chunks into a valid PCAP file and scan manifest.
 
 Usage:
-    bin/reassemble_pcap <input_file_or_stdin> <output_pcap_path>
+    bin/reassemble_pcap <input_file_or_stdin> <output_pcap_path> [--manifest <manifest_path>]
 
 Supported input formats:
-    - Raw JSON array of StreamsEvents: [ {"event_no": 0, "data": "..."}, ... ]
-    - JSON Lines (JSONL): One StreamsEvents JSON object per line
+    - Raw JSON array of DiscoveryUpload messages: [ {"event_no": 0, ...}, {"event_no": 1, "data": "..."}, ... ]
+    - JSON Lines (JSONL): One DiscoveryUpload JSON object per line
     - mosquitto_sub output: "<topic> <json_payload>"
     - Standard input (specify "-" as input file)
 """
 
 import argparse
 import base64
+import gzip
+import hashlib
 import json
 import os
 import sys
+from typing import Any, Dict, List, Optional
 
 PCAP_MAGIC_NUMBERS = [
     b"\xa1\xb2\xc3\xd4",  # Standard pcap (same-endian)
@@ -24,9 +27,11 @@ PCAP_MAGIC_NUMBERS = [
     b"\x4d\x3c\xb2\xa1",  # Nanosecond pcap (swapped-endian)
 ]
 
+GZIP_MAGIC = b"\x1f\x8b"
 
-def parse_stream_events(raw_text: str):
-  """Parse StreamsEvents objects from JSON array, JSONL, or mosquitto_sub."""
+
+def parse_upload_messages(raw_text: str) -> List[Dict[str, Any]]:
+  """Parses DiscoveryUpload objects from JSON array, JSONL, or mosquitto_sub."""
   raw_text = raw_text.strip()
   if not raw_text:
     return []
@@ -36,21 +41,30 @@ def parse_stream_events(raw_text: str):
     try:
       data = json.loads(raw_text)
       if isinstance(data, list):
-        return [item.get("payload", item) if (isinstance(item, dict) and "payload" in item and isinstance(item["payload"], dict)) else item for item in data]
+        return [
+            item.get("payload", item)
+            if (
+                isinstance(item, dict)
+                and "payload" in item
+                and isinstance(item["payload"], dict)
+            )
+            else item
+            for item in data
+            if isinstance(item, dict)
+        ]
       if isinstance(data, dict):
-        if "payload" in data and isinstance(data["payload"], dict) and "data" in data["payload"]:
+        if "payload" in data and isinstance(data["payload"], dict):
           return [data["payload"]]
         return [data]
     except json.JSONDecodeError:
       pass
 
   # Case 2: Line by line (JSONL or mosquitto_sub format: "<topic> <payload>")
-  events = []
+  messages: List[Dict[str, Any]] = []
   for line in raw_text.splitlines():
     line = line.strip()
     if not line:
       continue
-    # Strip topic prefix if present
     if " " in line and not line.startswith("{"):
       _, _, payload = line.partition(" ")
     else:
@@ -59,17 +73,33 @@ def parse_stream_events(raw_text: str):
     try:
       obj = json.loads(payload)
       if isinstance(obj, dict):
-        inner = obj.get("payload") if (isinstance(obj.get("payload"), dict) and "data" in obj["payload"]) else obj
-        if "data" in inner:
-          events.append(inner)
+        inner = (
+            obj.get("payload")
+            if isinstance(obj.get("payload"), dict)
+            else obj
+        )
+        if "event_no" in inner or "data" in inner:
+          messages.append(inner)
     except json.JSONDecodeError:
       continue
 
-  return events
+  return messages
 
 
-def reassemble_pcap(input_source: str, output_path: str) -> None:
-  """Reassembles chunked events into a binary pcap capture file."""
+def decode_chunk_bytes(b64_str: str) -> bytes:
+  """Base64-decodes and gunzips a PCAP chunk payload."""
+  raw_bytes = base64.b64decode(b64_str)
+  if raw_bytes.startswith(GZIP_MAGIC):
+    return gzip.decompress(raw_bytes)
+  return raw_bytes
+
+
+def reassemble_pcap(
+    input_source: str,
+    output_path: str,
+    manifest_output_path: Optional[str] = None,
+) -> Dict[str, Any]:
+  """Reassembles chunked upload/discovery messages into a binary .pcap file and verifies sha256."""
   if input_source == "-":
     raw_content = sys.stdin.read()
   else:
@@ -78,77 +108,128 @@ def reassemble_pcap(input_source: str, output_path: str) -> None:
     with open(input_source, "r", encoding="utf-8", errors="replace") as f:
       raw_content = f.read()
 
-  events = parse_stream_events(raw_content)
-  if not events:
-    sys.exit("Error: No valid StreamsEvents records with 'data' found in input.")
+  messages = parse_upload_messages(raw_content)
+  if not messages:
+    sys.exit("Error: No valid upload/discovery records found in input.")
 
-  # Filter out records missing data
-  valid_events = [e for e in events if e.get("data")]
-  if not valid_events:
-    sys.exit("Error: Found stream records but none contained base64 'data'.")
+  data_events = [
+      m
+      for m in messages
+      if m.get("data") and int(m.get("event_no", 1)) > 0
+  ]
+  if not data_events:
+    sys.exit("Error: Found upload records but none contained base64 'data'.")
 
-  # Sort primarily by chunk_index, fallback to event_no
-  def sort_key(e):
-    return (
-        e.get("chunk_index", 0)
-        if e.get("chunk_index") is not None
-        else e.get("event_no", 0)
-    )
+  eof_events = [m for m in messages if int(m.get("event_no", 0)) < 0]
+  expected_sha256: Optional[str] = None
+  expected_chunks: Optional[int] = None
+  scan_manifest: Optional[Dict[str, Any]] = None
 
-  sorted_events = sorted(valid_events, key=sort_key)
-  session_id = sorted_events[0].get("session_id", "unknown")
+  if eof_events:
+    terminal = eof_events[-1]
+    expected_sha256 = terminal.get("sha256")
+    expected_chunks = (-int(terminal["event_no"])) - 1
+    if isinstance(terminal.get("scan_manifest"), dict):
+      scan_manifest = terminal["scan_manifest"]
+
+  def sort_key(e: Dict[str, Any]) -> int:
+    return int(e.get("event_no", 0))
+
+  sorted_events = sorted(data_events, key=sort_key)
+  generation = sorted_events[0].get("generation") or "unknown"
+  family = sorted_events[0].get("family", "bacnet")
   total_chunks = len(sorted_events)
 
-  # Reconstruct binary payload
+  if expected_chunks is not None and total_chunks != expected_chunks:
+    sys.exit(
+        f"Error: Chunk count mismatch (received {total_chunks}, expected"
+        f" {expected_chunks} from terminal event_no)."
+    )
+
   pcap_data = bytearray()
   for idx, evt in enumerate(sorted_events):
     b64_str = evt["data"]
     try:
-      chunk_bytes = base64.b64decode(b64_str)
+      chunk_bytes = decode_chunk_bytes(b64_str)
       pcap_data.extend(chunk_bytes)
     except Exception as err:  # pylint: disable=broad-exception-caught
-      sys.exit(f"Error: Failed to decode base64 chunk at index {idx}: {err}")
+      sys.exit(f"Error: Failed to decode/decompress chunk at index {idx}: {err}")
 
-  # Validate output
   if not pcap_data:
     sys.exit("Error: Reassembled PCAP payload is empty (0 bytes).")
+
+  actual_sha256 = hashlib.sha256(pcap_data).hexdigest()
+  if expected_sha256 and actual_sha256 != expected_sha256:
+    sys.exit(
+        f"Error: SHA-256 digest mismatch! Expected {expected_sha256}, got"
+        f" {actual_sha256}."
+    )
 
   magic = bytes(pcap_data[:4])
   is_valid_magic = any(magic == m for m in PCAP_MAGIC_NUMBERS)
 
-  # Write to destination file
   os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
   with open(output_path, "wb") as f:
     f.write(pcap_data)
+
+  resolved_manifest_path = manifest_output_path
+  if scan_manifest is not None:
+    if not resolved_manifest_path:
+      resolved_manifest_path = os.path.join(
+          os.path.dirname(os.path.abspath(output_path)), "scan_manifest.json"
+      )
+    os.makedirs(
+        os.path.dirname(os.path.abspath(resolved_manifest_path)), exist_ok=True
+    )
+    with open(resolved_manifest_path, "w", encoding="utf-8") as mf:
+      json.dump(scan_manifest, mf, indent=2)
 
   magic_status = "VALID" if is_valid_magic else "WARNING: Unexpected header"
   print("========================================")
   print("PCAP Reassembly Completed Successfully")
   print("========================================")
-  print(f"Session ID     : {session_id}")
+  print(f"Generation     : {generation}")
+  print(f"Family         : {family}")
   print(f"Chunks Decoded : {total_chunks}")
   print(f"Total Bytes    : {len(pcap_data)}")
+  print(f"SHA-256 Digest : {actual_sha256}")
   print(f"Magic Bytes    : {magic.hex()} ({magic_status})")
   print(f"Output File    : {output_path}")
+  if resolved_manifest_path and os.path.exists(resolved_manifest_path):
+    print(f"Scan Manifest  : {resolved_manifest_path}")
+
+  return {
+      "generation": generation,
+      "family": family,
+      "chunks": total_chunks,
+      "bytes": len(pcap_data),
+      "sha256": actual_sha256,
+      "output_path": output_path,
+      "manifest_path": resolved_manifest_path,
+  }
 
 
 def main():
   """CLI entry point for PCAP reassembly."""
   parser = argparse.ArgumentParser(
-      description="Reassemble UDMI stream events into PCAP file"
+      description="Reassemble UDMI upload/discovery chunks into PCAP file"
   )
   parser.add_argument(
       "input",
-      help="Input file containing stream event data (or '-' for stdin)",
+      help="Input file containing upload/discovery data (or '-' for stdin)",
   )
   parser.add_argument(
       "output", help="Destination file path for reassembled .pcap"
   )
+  parser.add_argument(
+      "--manifest",
+      default=None,
+      help="Optional destination path for scan_manifest.json",
+  )
   args = parser.parse_args()
 
-  reassemble_pcap(args.input, args.output)
+  reassemble_pcap(args.input, args.output, manifest_output_path=args.manifest)
 
 
 if __name__ == "__main__":
   main()
-
