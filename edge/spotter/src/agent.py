@@ -5,6 +5,7 @@ remote ephemeral packet capture (PCAP), and automated lifecycle management.
 """
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import logging
@@ -16,13 +17,30 @@ import sys
 import time
 from typing import Any, Dict, Optional
 
+def _early_signal_handler(signum: int, frame: Any) -> None:
+  """Handles SIGINT/SIGTERM even if received during initial module imports in PID 1."""
+  del frame
+  print(
+      f"Starting UDMI Spotter Unified Agent - Signal {signum} received. Shutting down Spotter...",
+      flush=True,
+  )
+  sys.exit(0)
+
+
+if __name__ == "__main__":
+  signal.signal(signal.SIGINT, _early_signal_handler)
+  signal.signal(signal.SIGTERM, _early_signal_handler)
+
 from udmi.core.factory import ClientConfig, create_device
 from udmi.core.managers import LocalnetManager
 from udmi.core.messaging.mqtt_messaging_client import TlsConfig
 from udmi.schema import (
     AuthProvider,
     Basic,
+    Config,
+    Depth,
     EndpointConfiguration,
+    Entry,
     Jwt,
     Protocol,
     StateSystemHardware,
@@ -36,7 +54,7 @@ try:
   )
   from manager.discovery import SpotterDiscoveryManager
   from manager.system import SpotterSystemManager
-  from providers.bacnet import BacnetFamilyProvider
+  from providers.bacnet import BACNET_DEVICE_ID, BacnetFamilyProvider
   from providers.ether import EtherFamilyProvider
   from providers.passive import PassiveFamilyProvider
 except ImportError:
@@ -46,12 +64,17 @@ except ImportError:
   )
   from edge.spotter.src.manager.discovery import SpotterDiscoveryManager
   from edge.spotter.src.manager.system import SpotterSystemManager
-  from edge.spotter.src.providers.bacnet import BacnetFamilyProvider
+  from edge.spotter.src.providers.bacnet import (
+      BACNET_DEVICE_ID,
+      BacnetFamilyProvider,
+  )
   from edge.spotter.src.providers.ether import EtherFamilyProvider
   from edge.spotter.src.providers.passive import PassiveFamilyProvider
 
 
 LOGGER = logging.getLogger("spotter_agent")
+
+VALID_UDMI_DEPTHS = frozenset(d.value for d in Depth)
 
 
 def merge_dicts(
@@ -82,6 +105,9 @@ def load_config(config_file: str) -> Dict[str, Any]:
 
   Returns:
       The merged configuration dictionary.
+
+  Raises:
+      ValueError: If an overlay JSON file is malformed.
   """
   with open(config_file, "r", encoding="utf-8") as f:
     config = json.load(f)
@@ -105,31 +131,29 @@ def load_config(config_file: str) -> Dict[str, Any]:
           overlay = json.load(f)
         config = merge_dicts(config, overlay)
       except (json.JSONDecodeError, OSError) as err:
-        LOGGER.warning(
+        LOGGER.error(
             "Failed to load config overlay from %s: %s", extra_file, err
         )
+        raise ValueError(
+            f"Failed to load config overlay from {extra_file}: {err}"
+        ) from err
   return config
 
 
-LEGACY_DEPTH_MAP: Dict[str, str] = {
-    "ping": "entries",
-    "ports": "details",
-    "services": "parts",
-}
+def validate_discovery_config(payload: Dict[str, Any]) -> Dict[str, Any]:
+  """Validates that discovery depths strictly conform to canonical UDMI Depth enums.
 
-
-def normalize_discovery_config(payload: Dict[str, Any]) -> Dict[str, Any]:
-  """Normalizes legacy discovery depths from discovery_node configs.
-
-  Maps legacy depth strings ('ping', 'ports', 'services') to canonical
-  UDMI depth enums ('entries', 'details', 'parts') for families and
-  enumerations.
+  Rejects non-canonical or legacy depth strings (such as 'ping', 'ports',
+  'services') rather than silently remapping them.
 
   Args:
       payload: Raw configuration dictionary from MQTT config channel.
 
   Returns:
-      The normalized dictionary with canonical depth enums.
+      The validated configuration dictionary.
+
+  Raises:
+      ValueError: If any family or enumeration specifies a non-canonical depth.
   """
   if not isinstance(payload, dict):
     return payload
@@ -138,37 +162,32 @@ def normalize_discovery_config(payload: Dict[str, Any]) -> Dict[str, Any]:
     families = discovery.get("families")
     if isinstance(families, dict):
       for fam_name, fam_conf in families.items():
-        if isinstance(fam_conf, dict) and "depth" in fam_conf:
+        if isinstance(fam_conf, dict) and fam_conf.get("depth") is not None:
           raw_depth = fam_conf["depth"]
+          depth_str = getattr(raw_depth, "value", raw_depth)
           if (
-              isinstance(raw_depth, str)
-              and raw_depth.lower() in LEGACY_DEPTH_MAP
+              not isinstance(depth_str, str)
+              or depth_str not in VALID_UDMI_DEPTHS
           ):
-            canonical = LEGACY_DEPTH_MAP[raw_depth.lower()]
-            LOGGER.info(
-                "Normalizing legacy discovery depth '%s' -> '%s' for family"
-                " '%s'",
-                raw_depth,
-                canonical,
-                fam_name,
+            raise ValueError(
+                f"Invalid discovery depth {raw_depth!r} for family"
+                f" '{fam_name}'. Allowed canonical UDMI depths:"
+                f" {sorted(VALID_UDMI_DEPTHS)}"
             )
-            fam_conf["depth"] = canonical
     enumerations = discovery.get("enumerations")
     if isinstance(enumerations, dict):
       for enum_field, enum_val in enumerations.items():
-        if (
-            isinstance(enum_val, str)
-            and enum_val.lower() in LEGACY_DEPTH_MAP
-        ):
-          canonical = LEGACY_DEPTH_MAP[enum_val.lower()]
-          LOGGER.info(
-              "Normalizing legacy discovery depth '%s' -> '%s' for"
-              " enumeration '%s'",
-              enum_val,
-              canonical,
-              enum_field,
-          )
-          enumerations[enum_field] = canonical
+        if enum_val is not None:
+          depth_str = getattr(enum_val, "value", enum_val)
+          if (
+              not isinstance(depth_str, str)
+              or depth_str not in VALID_UDMI_DEPTHS
+          ):
+            raise ValueError(
+                f"Invalid enumeration depth {enum_val!r} for"
+                f" '{enum_field}'. Allowed canonical UDMI depths:"
+                f" {sorted(VALID_UDMI_DEPTHS)}"
+            )
   return payload
 
 
@@ -189,7 +208,6 @@ def resolve_config_path(
   if base_dir and not os.path.isabs(path):
     return os.path.normpath(os.path.join(base_dir, path))
   if base_dir and os.path.isabs(path) and not os.path.exists(path):
-    # Check if basename or relative sub-path exists under base_dir
     rel_candidate = os.path.normpath(
         os.path.join(base_dir, os.path.basename(path))
     )
@@ -406,12 +424,9 @@ def main():
   client_config = ClientConfig(tls_config=tls_config)
 
   # Initialize Managers with cleanly constructed SystemState
-  metrics_rate_sec = int(
-      config.get("system", {}).get("metrics_rate_sec", 300)
-  )
-  circuit_breaker_mem_pct = float(
-      config.get("system", {}).get("circuit_breaker_mem_pct", 85.0)
-  )
+  sys_cfg = config.get("system", {})
+  metrics_rate_sec = int(sys_cfg.get("metrics_rate_sec", 300))
+  circuit_breaker_mem_pct = float(sys_cfg.get("circuit_breaker_mem_pct", 85.0))
 
   os_info = get_host_os_info()
   os_name = (
@@ -426,12 +441,16 @@ def main():
       or "unknown"
   ) if os_info else "unknown"
 
-  hw_config = config.get("system", {}).get("hardware", {})
+  hw_config = sys_cfg.get("hardware", {})
   hw_probed = get_host_hardware_info()
   make = hw_config.get("make") or hw_probed.get("make") or "UDMI"
   model = hw_config.get("model") or hw_probed.get("model") or "Spotter"
+  serial_no = sys_cfg.get("serial_no") or (
+      args.serial_no if args.serial_no and args.serial_no != "NA" else None
+  )
 
   initial_system_state = SystemState(
+      serial_no=serial_no,
       hardware=StateSystemHardware(make=make, model=model),
       software={"os": os_name, "os_version": os_version},
   )
@@ -457,14 +476,21 @@ def main():
   ipv4_enabled = is_truthy(discovery_cfg.get("ipv4", True))
 
   localnet_manager = LocalnetManager()
+  ip_cfg = config.get("ip", {})
+  subnet_filter = ip_cfg.get("subnet_filter")
 
   if bacnet_enabled:
     bacnet_cfg = config.get("bacnet", {})
     bacnet_ip = bacnet_cfg.get("ip")
     bacnet_port = bacnet_cfg.get("port")
+    bacnet_dev_id = int(bacnet_cfg.get("device_id") or BACNET_DEVICE_ID)
     localnet_manager.register_provider(
         "bacnet",
-        BacnetFamilyProvider(bacnet_ip=bacnet_ip, bacnet_port=bacnet_port),
+        BacnetFamilyProvider(
+            bacnet_ip=bacnet_ip,
+            bacnet_port=bacnet_port,
+            bacnet_device_id=bacnet_dev_id,
+        ),
     )
 
   if ether_enabled:
@@ -473,14 +499,16 @@ def main():
       ping_concurrency = int(ether_cfg.get("ping_concurrency", 4))
     except (ValueError, TypeError):
       ping_concurrency = 4
+    ether_subnet = ether_cfg.get("ip") or subnet_filter
     localnet_manager.register_provider(
         "ether",
-        EtherFamilyProvider(ping_concurrency=ping_concurrency),
+        EtherFamilyProvider(
+            ping_concurrency=ping_concurrency,
+            subnet_filter=ether_subnet,
+        ),
     )
 
   if ipv4_enabled:
-    ip_cfg = config.get("ip", {})
-    subnet_filter = ip_cfg.get("subnet_filter")
     interface = ip_cfg.get("interface")
     localnet_manager.register_provider(
         "ipv4",
@@ -501,14 +529,31 @@ def main():
       key_file=key_file,
   )
 
-  # Intercept and normalize legacy discovery depths from legacy
-  # discovery_node configs.
   raw_handle_config = device.handle_config
 
   def spotter_handle_config(
       device_id: str, channel: str, payload: Dict[str, Any]
   ) -> None:
-    normalize_discovery_config(payload)
+    try:
+      validate_discovery_config(payload)
+      Config.from_dict(payload)
+      if system_manager.system_state.status is not None:
+        system_manager.system_state.status = None
+    except (ValueError, TypeError) as err:
+      LOGGER.error("Rejected invalid UDMI configuration: %s", err)
+      now_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+      if isinstance(payload, dict) and payload.get("timestamp"):
+        # pylint: disable=protected-access
+        system_manager._last_config_ts = payload["timestamp"]
+      system_manager.system_state.status = Entry(
+          category="system.config.parse",
+          level=500,
+          message=str(err),
+          timestamp=now_str,
+      )
+      device.trigger_state_update(immediate=True)
+      return
+
     raw_handle_config(device_id, channel, payload)
 
   device.handle_config = spotter_handle_config
@@ -545,4 +590,3 @@ def main():
 
 if __name__ == "__main__":
   main()
-

@@ -236,6 +236,28 @@ class PostgresManager:
             updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
         """
+        pcap_captures_sql = """
+        CREATE TABLE IF NOT EXISTS udmi_pcap_captures (
+            id SERIAL PRIMARY KEY,
+            site VARCHAR(255) NOT NULL,
+            device_id VARCHAR(255) NOT NULL,
+            family VARCHAR(50) NOT NULL,
+            generation VARCHAR(64) NOT NULL,
+            status VARCHAR(50) DEFAULT 'PENDING',
+            chunks_received INTEGER DEFAULT 0,
+            expected_chunks INTEGER,
+            expected_sha256 VARCHAR(64),
+            actual_sha256 VARCHAR(64),
+            total_bytes BIGINT DEFAULT 0,
+            pcap_uri TEXT,
+            manifest_uri TEXT,
+            scan_manifest JSONB,
+            bug_id VARCHAR(64),
+            error_message TEXT,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(site, device_id, family, generation)
+        );
+        """
 
         tables = [
             raw_table_sql,
@@ -246,6 +268,7 @@ class PostgresManager:
             alarms_sql,
             metadata_sql,
             rollouts_sql,
+            pcap_captures_sql,
         ]
 
         try:

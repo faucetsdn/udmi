@@ -52,3 +52,59 @@ def run_discovery(conn_spec, registry_id, device_id, target_families, site_model
     topics = connection.get_discovery_topics(device_id)
     topic_message_pairs = [(t, msg) for t in topics]
     connection.publish_messages(topic_message_pairs)
+
+
+def trigger_bacnet_trace(
+    conn_spec,
+    registry_id,
+    device_id,
+    scan_duration_sec=7200,
+    max_bytes=268435456,
+    site_model=None,
+    generation=None,
+):
+    """Publishes config/discovery (families.bacnet with depth: 'trace') to trigger a Spotter PCAP capture."""
+    connection = ButlerConnection(conn_spec, registry_id, site_model, device_id)
+    actual_registry = connection.actual_registry
+
+    now = generation or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    tx_id = f"TXN-{uuid.uuid4().hex[:8]}"
+    source_id = "butler"
+    payload = {
+        "version": "1.5.7",
+        "timestamp": now,
+        "families": {
+            "bacnet": {
+                "generation": now,
+                "scan_duration_sec": int(scan_duration_sec),
+                "depth": "trace",
+                "trace": {
+                    "max_bytes": int(max_bytes),
+                },
+            }
+        },
+    }
+    msg = {
+        "subType": "config",
+        "subFolder": "discovery",
+        "deviceRegistryId": actual_registry,
+        "deviceId": device_id,
+        "projectId": connection.project or "vibrant",
+        "transactionId": tx_id,
+        "publishTime": now,
+        "source": source_id,
+        "principal": source_id,
+        "payload": payload,
+    }
+
+    topics = connection.get_discovery_topics(device_id)
+    topic_message_pairs = [(t, msg) for t in topics]
+    connection.publish_messages(topic_message_pairs)
+    return {
+        "site": actual_registry,
+        "gateway_id": device_id,
+        "generation": now,
+        "scan_duration_sec": int(scan_duration_sec),
+        "max_bytes": int(max_bytes),
+        "transaction_id": tx_id,
+    }

@@ -13,10 +13,10 @@ Spotter runs as a single unified process using the UDMI Python Client Library (`
 1. **`LocalnetManager` & Pluggable Family Providers**:
    - **`BacnetFamilyProvider`**: Performs active BACnet Who-Is / I-Am discovery, object enumeration, and UDP port extraction.
    - **`EtherFamilyProvider`**: Performs Layer-2 Ethernet / ARP, nmap XML host parsing, and ICMP ping sweeps.
-   - **`PassiveFamilyProvider`**: Listens for passive broadcast network traffic and extracts discovered device metadata.
+   - **`PassiveFamilyProvider`**: Listens for passive broadcast network traffic, decodes BACnet/IP `BVLL` (`Forwarded-NPDU` real controller IP/port behind `BBMD` routers) and `NPDU` (`SNET`/`SADR` routed `MS/TP` frames and `I-Am-Router-To-Network` `DNET` lists), and extracts discovered device metadata.
 2. **`SpotterDiscoveryManager`**:
    - Manages scheduled and on-demand discovery sweeps.
-   - Streams live remote packet capture traces (`events/streams`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
+   - Streams live remote packet capture traces (`upload/discovery`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
 3. **`SpotterSystemManager`**:
    - Collects host metrics (CPU load, memory, OS distribution) and emits periodic telemetry (`events/system`).
    - Evaluates memory usage against safety thresholds (`check_safety_circuit_breaker`), throttling active discovery and packet captures to protect edge devices from kernel OOM termination.
@@ -43,12 +43,12 @@ graph TD
     end
 
     subgraph "Messaging & Field Network"
-        MB["MQTT Broker / UDMIS"]
+        MB["MQTT Broker / UDMIS / Butler"]
         DEV["Field OT Devices / BACnet Controllers"]
     end
 
     SYS -->|"state.system / events/system"| MB
-    DISC -->|"events/discovery & events/streams"| MB
+    DISC -->|"events/discovery & upload/discovery"| MB
     LOC -->|"Scans & Probes"| DEV
 ```
 
@@ -58,18 +58,22 @@ graph TD
 
 Spotter processes diagnostic packet capture triggers sent declaratively over the UDMI discovery configuration channel (`config.discovery.families.<family>` with `depth: "trace"`):
 
-1. **Capture Worker ([pcap.py](../../edge/spotter/src/pcap.py))**: Spawns `tcpdump` with configurable interface filters, enforcing strict execution bounds (maximum duration and byte quotas).
-2. **Streaming MQTT Egress Transport**:
-   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM) and sequentially published as reliable base64 chunks (`StreamsEvents`) over the universal streaming MQTT event topic (`events/streams`).
+1. **Capture Worker & Active BACnet Trace Rounds ([pcap.py](../../edge/spotter/src/pcap.py))**:
+   - Spawns `tcpdump` with configurable interface filters (defaulting to `"udp port 47808"` for `bacnet`), enforcing strict execution bounds (maximum duration and byte quotas).
+   - For `families.bacnet` with `depth: "trace"`, skips `BAC0.lite()` socket binding so UDP port `47808` remains unbound and executes paced raw-socket (`SOCK_RAW, IPPROTO_UDP`) `Who-Is` and `Who-Is-Router-To-Network` rounds during the capture window.
+2. **Streaming MQTT Egress Transport (`upload/discovery`)**:
+   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM), `gzip`-compressed per chunk, and sequentially published as `DiscoveryUpload` chunks over the `upload/discovery` MQTT topic (`event_no = 0` start marker, `1..N` `gzip`-compressed base64 chunks, and `-(N+1)` terminal marker with uncompressed `sha256` and `scan_manifest`).
    - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding external network credentials or outbound HTTP rules at the edge.
-3. **Ad-hoc PCAP Reassembly ([bin/reassemble_pcap](../../edge/spotter/bin/reassemble_pcap))**:
-   Reassembles chunked `events/streams` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file:
+3. **Cloud & Local PCAP Reassembly**:
+   - **Butler Service (`PcapUploadHandler`)**: Subscribes to `upload/discovery` (or `uufi_upload`), decompresses and reassembles chunks in order, validates the terminal `sha256` digest, and writes the `.pcap` and `scan_manifest.json` to GCS (`gs://<bucket>/<site>/<gen>.pcap`) or local disk without persisting raw chunks to PostgreSQL.
+   - **Ad-hoc CLI Reassembly ([bin/reassemble_pcap](../../edge/spotter/bin/reassemble_pcap))**:
+     Reassembles chunked `upload/discovery` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file and `scan_manifest.json`:
    ```bash
-   # Reassemble stream events file into a pcap file:
-   ./edge/spotter/bin/reassemble_pcap stream_events.json capture.pcap
+   # Reassemble upload/discovery chunks file into a pcap file:
+   ./edge/spotter/bin/reassemble_pcap discovery_upload.json capture.pcap
 
    # Or stream directly from mosquitto subscriber:
-   mosquitto_sub -h $BROKER -t '/r/+/d/+/events/streams' | ./edge/spotter/bin/reassemble_pcap - live.pcap
+   mosquitto_sub -h $BROKER -t '/r/+/d/+/upload/discovery' | ./edge/spotter/bin/reassemble_pcap - live.pcap
    ```
 
 ---

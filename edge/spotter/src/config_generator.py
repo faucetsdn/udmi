@@ -148,28 +148,31 @@ def generate_spotter_config(  # pylint: disable=too-many-positional-arguments,to
   algorithm = "ES256" if is_ec else "RS256"
 
   # Inspect device metadata if available
+  bacnet_device_id = None
   metadata_path = os.path.join(device_dir, "metadata.json")
   if os.path.isfile(metadata_path):
     try:
       with open(metadata_path, "r", encoding="utf-8") as f:
         meta = json.load(f)
-      auth_type = meta.get("cloud", {}).get("auth_type") or meta.get(
-          "auth_type"
-      )
-      if auth_type:
-        if "ES256" in auth_type:
-          algorithm = "ES256"
-        elif "RS256" in auth_type:
-          algorithm = "RS256"
-      if not bacnet_ip:
-        bacnet_ip = (
-            meta.get("localnet", {})
-            .get("families", {})
-            .get("bacnet", {})
-            .get("ip")
-        )
-    except Exception:  # pylint: disable=broad-exception-caught
-      pass
+    except (json.JSONDecodeError, OSError) as err:
+      raise ValueError(
+          f"Failed to parse device metadata at {metadata_path}: {err}"
+      ) from err
+
+    auth_type = meta.get("cloud", {}).get("auth_type") or meta.get("auth_type")
+    if auth_type:
+      if "ES256" in auth_type:
+        algorithm = "ES256"
+      elif "RS256" in auth_type:
+        algorithm = "RS256"
+    bacnet_meta = meta.get("localnet", {}).get("families", {}).get("bacnet", {})
+    if not bacnet_ip:
+      bacnet_ip = bacnet_meta.get("ip")
+    raw_bacnet_addr = bacnet_meta.get("addr")
+    if raw_bacnet_addr is not None and str(raw_bacnet_addr).isdigit():
+      addr_int = int(raw_bacnet_addr)
+      if 1 <= addr_int <= 4194303:
+        bacnet_device_id = addr_int
 
   ca_file = None
   if parsed_spec["iot_provider"] == "mqtt":
@@ -178,6 +181,8 @@ def generate_spotter_config(  # pylint: disable=too-many-positional-arguments,to
   bacnet_section = {}
   if bacnet_ip:
     bacnet_section["ip"] = bacnet_ip
+  if bacnet_device_id is not None:
+    bacnet_section["device_id"] = bacnet_device_id
 
   config = {
       "log_level": "INFO",

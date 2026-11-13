@@ -310,6 +310,39 @@ MCP_TOOLS = [
             "required": ["rollout_id"],
         },
     },
+    {
+        "name": "trigger_bacnet_trace",
+        "description": (
+            "Trigger a depth: 'trace' BACnet packet capture on the target gateway, "
+            "track chunk reassembly status, and return target GCS/file URIs."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "site": {"type": "string", "description": "Target site / device registry identifier"},
+                "gateway_id": {"type": "string", "description": "Target gateway / Spotter device identifier"},
+                "scan_duration_sec": {"type": "integer", "default": 7200, "description": "Capture duration in seconds"},
+                "max_bytes": {"type": "integer", "default": 268435456, "description": "Maximum PCAP byte cap"},
+                "bug_id": {"type": "string", "description": "Optional issue or ticket identifier"},
+                "conn_spec": {"type": "string", "description": "Optional UDMI connection specification (e.g. //mqtt/localhost)"},
+                "site_model": {"type": "string", "description": "Optional path to the UDMI site model directory"},
+            },
+            "required": ["site", "gateway_id"],
+        },
+    },
+    {
+        "name": "get_pcap_capture",
+        "description": "Track chunk reassembly status and resolve the GCS/file URI for a PCAP capture.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "site": {"type": "string", "description": "Target site / device registry identifier"},
+                "gateway_id": {"type": "string", "description": "Optional gateway device identifier"},
+                "generation": {"type": "string", "description": "Optional capture generation timestamp"},
+            },
+            "required": ["site"],
+        },
+    },
 ]
 
 
@@ -514,6 +547,22 @@ class ButlerMcpServer:
                 status=args.get("status"),
                 converged_devices=args.get("converged_devices"),
                 failed_devices=args.get("failed_devices"),
+            )
+        if name == "trigger_bacnet_trace":
+            return self.provider.trigger_bacnet_trace(
+                site=args["site"],
+                gateway_id=args["gateway_id"],
+                scan_duration_sec=int(args.get("scan_duration_sec", 7200)),
+                max_bytes=int(args.get("max_bytes", 268435456)),
+                bug_id=args.get("bug_id"),
+                conn_spec=args.get("conn_spec"),
+                site_model=args.get("site_model"),
+            )
+        if name == "get_pcap_capture":
+            return self.provider.get_pcap_capture(
+                site=args["site"],
+                gateway_id=args.get("gateway_id"),
+                generation=args.get("generation"),
             )
         raise ValueError(f"Unknown tool or method: {name}")
 

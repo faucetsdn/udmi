@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Multi-device discovery parity tests between discoverynode & Spotter."""
+"""Multi-device discovery & UDMI spec compliance tests for Spotter."""
 
 import datetime
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -24,6 +25,9 @@ import paho.mqtt.client as mqtt  # pylint: disable=g-import-not-at-top
 
 sys.path.insert(0, os.path.join(_workspace_dir, "clientlib/python/src"))
 sys.path.insert(0, _workspace_dir)
+
+BACNET_POINT_REF_REGEX = re.compile(r"^([A-Z]{2,4})/(0|[1-9][0-9]*)(#[_a-z]+)?$")
+
 
 def get_container_engine():
   if os.environ.get("CONTAINER_ENGINE"):
@@ -57,38 +61,18 @@ def datetime_now_iso():
   )
 
 
-def remove_none_fields(d):
-  """Recursively removes keys/items with None values."""
-  if isinstance(d, dict):
-    return {k: remove_none_fields(v) for k, v in d.items() if v is not None}
-  if isinstance(d, list):
-    return [remove_none_fields(v) for v in d if v is not None]
-  return d
-
-
-def clean_events(events):
-  """Normalizes timestamps and generations for payload comparison."""
-  cleaned = []
-  for event in events:
-    evt = json.loads(json.dumps(event))
-    evt = remove_none_fields(evt)
-    if "timestamp" in evt:
-      evt["timestamp"] = "CLEANED"
-    if "generation" in evt:
-      evt["generation"] = "CLEANED"
-    if "version" in evt:
-      evt["version"] = "CLEANED"
-    if evt.get("families") and isinstance(evt["families"], dict):
-      for _, data in evt["families"].items():
-        if isinstance(data, dict) and "generation" in data:
-          data["generation"] = "CLEANED"
-    # Legacy discovery_node lacked DiscoverySystem name/description fields,
-    # populating them only in system.ancillary. Strip them for parity comparison.
-    if evt.get("system") and isinstance(evt["system"], dict):
-      evt["system"].pop("name", None)
-      evt["system"].pop("description", None)
-    cleaned.append(evt)
-  return cleaned
+def find_null_paths(obj, path="$"):
+  """Recursively finds any JSON paths with None (null) values."""
+  nulls = []
+  if obj is None:
+    nulls.append(path)
+  elif isinstance(obj, dict):
+    for k, v in obj.items():
+      nulls.extend(find_null_paths(v, f"{path}.{k}"))
+  elif isinstance(obj, list):
+    for idx, v in enumerate(obj):
+      nulls.extend(find_null_paths(v, f"{path}[{idx}]"))
+  return nulls
 
 
 def sort_discovery_events(events):
@@ -107,7 +91,7 @@ def sort_discovery_events(events):
 
 
 class TestParity(unittest.TestCase):
-  """Validates parity between discoverynode and Spotter container scans."""
+  """Validates UDMI spec compliance of Spotter and co-existence with legacy node."""
 
   @classmethod
   def setUpClass(cls):
@@ -166,7 +150,6 @@ class TestParity(unittest.TestCase):
     self.mqtt_port = 18883
     self.mqtt_plain_port = 18884
 
-    # 1. Get workspace paths for certificates
     workspace_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), "../../../")
     )
@@ -179,7 +162,6 @@ class TestParity(unittest.TestCase):
     ahu_crt_src = os.path.join(ahu_dir, "rsa_private.crt")
     ahu_pkcs8_src = os.path.join(ahu_dir, "rsa_private.pkcs8")
 
-    # Copy client certs for AHU-1 to config dir
     for cert_path in [
         ca_src,
         server_crt_src,
@@ -206,7 +188,6 @@ class TestParity(unittest.TestCase):
         ahu_crt_src, os.path.join(self.test_dir.name, "rsa_private.crt")
     )
 
-    # 2. Start local Mosquitto broker on unprivileged ports
     self.mosquitto_conf = os.path.join(self.test_dir.name, "mosquitto.conf")
     with open(self.mosquitto_conf, "w", encoding="utf-8") as f:
       f.write(f"""
@@ -239,7 +220,6 @@ allow_anonymous true
         log_content = f.read()
       raise RuntimeError(f"Mosquitto failed to start:\n{log_content}")
 
-    # 3. Ensure network exists
     res = subprocess.run(
         [CONTAINER_ENGINE, "network", "inspect", "parity-spotter-net"],
         stdout=subprocess.DEVNULL,
@@ -262,7 +242,6 @@ allow_anonymous true
       except subprocess.CalledProcessError:
         pass
 
-    # 4. Start N simulated BACnet devices
     self.simulated_devices = []
     print(
         f"\n[TestParity] Starting {PARITY_TEST_NUM_DEVICES} simulated BACnet"
@@ -300,7 +279,6 @@ allow_anonymous true
     time.sleep(3)
 
   def tearDown(self):
-    # Stop simulated devices
     for cname, proc, _, _ in getattr(self, "simulated_devices", []):
       subprocess.run(
           [CONTAINER_ENGINE, "stop", cname],
@@ -338,7 +316,7 @@ allow_anonymous true
       scan_duration_sec=6,
       settle_time=12,
   ):
-    """Executes a container discovery run and collects emitted events."""
+    """Executes a container discovery run and collects emitted events & states."""
     if self.mosquitto_proc.poll() is not None:
       self.mosquitto_log_file.close()
       with open(self.mosquitto_log_path, "r", encoding="utf-8") as f:
@@ -346,6 +324,7 @@ allow_anonymous true
       raise RuntimeError(f"Mosquitto broker died:\n{log_content}")
 
     messages = []
+    states = []
     client = create_mqtt_client()
     state_received = threading.Event()
     connected = threading.Event()
@@ -353,6 +332,7 @@ allow_anonymous true
     def on_message(client, userdata, message):
       # pylint: disable=unused-argument
       if message.topic.endswith("/state"):
+        states.append(json.loads(message.payload.decode()))
         state_received.set()
       elif message.topic.endswith("/events/discovery"):
         payload = json.loads(message.payload.decode())
@@ -373,7 +353,6 @@ allow_anonymous true
     client.subscribe(f"/r/ZZ-TRI-FECTA/d/{client_id}/events/discovery")
     client.subscribe(f"/r/ZZ-TRI-FECTA/d/{client_id}/state")
 
-    # Clean existing container name if running
     subprocess.run(
         [CONTAINER_ENGINE, "stop", container_name],
         stdout=subprocess.DEVNULL,
@@ -463,7 +442,7 @@ allow_anonymous true
       client.loop_stop()
       client.disconnect()
 
-    return messages
+    return messages, states
 
   def _prepare_configs(self):
     legacy_config = {
@@ -516,11 +495,12 @@ allow_anonymous true
       f.write(json.dumps(spotter_config))
 
   def test_01_bacnet_multi_device_discovery_parity(self):
-    """Verifies BACnet system discovery parity across N simulated devices."""
+    """Verifies BACnet system discovery coverage and UDMI spec compliance."""
     self._prepare_configs()
-    expected_dev_ids = [
-        str(dev_id) for _, _, dev_id, _ in self.simulated_devices
-    ]
+    expected_devs = {
+        str(dev_id): ip for _, _, dev_id, ip in self.simulated_devices
+    }
+    expected_dev_ids = sorted(expected_devs.keys())
 
     num_devs = len(self.simulated_devices)
     scan_dur = max(6, 2 + num_devs * 2)
@@ -530,7 +510,7 @@ allow_anonymous true
         f"\n--- [Test 1] Running Legacy Discovery: BACnet depth=system"
         f" (devices={num_devs}, scan={scan_dur}s, settle={settle_t}s) ---"
     )
-    legacy_events = self.run_discovery_test(
+    legacy_events, _ = self.run_discovery_test(
         "test-discovery_node:latest",
         "parity-legacy-node-system",
         "DSN-1",
@@ -545,7 +525,7 @@ allow_anonymous true
         f"\n--- [Test 1] Running Spotter Discovery: BACnet depth=system"
         f" (devices={num_devs}, scan={scan_dur}s, settle={settle_t}s) ---"
     )
-    spotter_events = self.run_discovery_test(
+    spotter_events, spotter_states = self.run_discovery_test(
         "udmi-spotter:latest",
         "parity-spotter-node-system",
         "DSN-1",
@@ -556,35 +536,72 @@ allow_anonymous true
         settle_time=settle_t,
     )
 
-    legacy_clean = sort_discovery_events(clean_events(legacy_events))
-    spotter_clean = sort_discovery_events(clean_events(spotter_events))
+    # 1. Verify zero null fields in raw Spotter state and event payloads
+    for s_idx, st in enumerate(spotter_states):
+      null_paths = find_null_paths(st)
+      self.assertEqual(
+          null_paths, [], f"Spotter state[{s_idx}] contains nulls: {null_paths}"
+      )
+    for e_idx, evt in enumerate(spotter_events):
+      null_paths = find_null_paths(evt)
+      self.assertEqual(
+          null_paths,
+          [],
+          f"Spotter event[{e_idx}] contains nulls: {null_paths}",
+      )
+
+    legacy_sorted = sort_discovery_events(legacy_events)
+    spotter_sorted = sort_discovery_events(spotter_events)
 
     print(f"\nDiscovered simulated BACnet device IDs: {expected_dev_ids}")
-    print(f"Legacy total events: {len(legacy_clean)}")
-    print(f"Spotter total events: {len(spotter_clean)}")
+    print(f"Legacy total events: {len(legacy_sorted)}")
+    print(f"Spotter total events: {len(spotter_sorted)}")
+    if spotter_states:
+      print("\n[Spotter Final State Payload]:")
+      print(json.dumps(spotter_states[-1], indent=2))
+    print("\n[Spotter Emitted Discovery Events (depth=system)]:")
+    print(json.dumps(spotter_sorted, indent=2))
 
-    # 1. Verify start & stop markers
+    # 2. Verify start & stop markers and final state phase/active_count
+    self.assertTrue(len(spotter_states) > 0, "No Spotter states captured")
+    final_bacnet_state = (
+        spotter_states[-1]
+        .get("discovery", {})
+        .get("families", {})
+        .get("bacnet", {})
+    )
+    self.assertEqual(
+        final_bacnet_state.get("phase"),
+        "stopped",
+        f"Expected final Spotter phase 'stopped', got {final_bacnet_state}",
+    )
+    self.assertEqual(
+        final_bacnet_state.get("active_count"),
+        len(expected_devs),
+        f"Expected final active_count {len(expected_devs)}, got {final_bacnet_state}",
+    )
     self.assertTrue(
-        any(e.get("event_no") == 0 for e in legacy_clean),
+        any(e.get("event_no") == 0 for e in legacy_sorted),
         "Legacy missing start marker 0",
     )
     self.assertTrue(
-        any(e.get("event_no") == 0 for e in spotter_clean),
+        any(e.get("event_no") == 0 for e in spotter_sorted),
         "Spotter missing start marker 0",
     )
     self.assertTrue(
-        any(e.get("event_no", 0) < 0 for e in legacy_clean),
+        any(e.get("event_no", 0) < 0 for e in legacy_sorted),
         "Legacy missing finish marker < 0",
     )
     self.assertTrue(
-        any(e.get("event_no", 0) < 0 for e in spotter_clean),
+        any(e.get("event_no", 0) < 0 for e in spotter_sorted),
         "Spotter missing finish marker < 0",
     )
+    self.assertEqual(len(legacy_sorted), len(spotter_sorted))
 
-    # 2. Verify all simulated devices are present in both
-    for dev_id in expected_dev_ids:
-      leg_match = [e for e in legacy_clean if e.get("addr") == dev_id]
-      spt_match = [e for e in spotter_clean if e.get("addr") == dev_id]
+    # 3. Verify all simulated devices are discovered and Spotter adheres to spec
+    for dev_id, expected_ip in expected_devs.items():
+      leg_match = [e for e in legacy_sorted if e.get("addr") == dev_id]
+      spt_match = [e for e in spotter_sorted if e.get("addr") == dev_id]
       self.assertEqual(
           len(leg_match), 1, f"Legacy failed to discover device {dev_id}"
       )
@@ -592,24 +609,43 @@ allow_anonymous true
           len(spt_match), 1, f"Spotter failed to discover device {dev_id}"
       )
 
-      # Verify system metadata parity
-      leg_sys = leg_match[0].get("system", {})
-      spt_sys = spt_match[0].get("system", {})
-      self.assertEqual(leg_sys.get("hardware"), spt_sys.get("hardware"))
-      self.assertEqual(leg_sys.get("ancillary"), spt_sys.get("ancillary"))
+      spt_evt = spt_match[0]
+      leg_evt = leg_match[0]
 
-    # 3. Verify total event parity
-    self.assertEqual(
-        legacy_clean, spotter_clean, "System discovery events do not match!"
+      # Verify Spotter families.ipv4 includes both addr and UDP port 47808
+      self.assertEqual(
+          spt_evt.get("families", {}).get("ipv4", {}).get("addr"), expected_ip
+      )
+      self.assertEqual(
+          spt_evt.get("families", {}).get("ipv4", {}).get("port"), 47808
+      )
+
+      # Verify system block per docs/specs/discovery_bacnet.md Section 3.3
+      leg_sys = leg_evt.get("system", {})
+      spt_sys = spt_evt.get("system", {})
+      self.assertEqual(leg_sys.get("hardware"), spt_sys.get("hardware"))
+      self.assertIsNotNone(spt_sys.get("name"))
+      self.assertEqual(
+          spt_sys.get("name"), leg_sys.get("ancillary", {}).get("name")
+      )
+      self.assertNotIn("name", spt_sys.get("ancillary", {}))
+      self.assertNotIn("description", spt_sys.get("ancillary", {}))
+      self.assertIn("firmware-revision", spt_sys.get("ancillary", {}))
+      self.assertIn(
+          "application-software-version", spt_sys.get("ancillary", {})
+      )
+
+    print(
+        "\nSUCCESS: BACnet multi-device system discovery and UDMI spec"
+        " compliance verified!"
     )
-    print("\nSUCCESS: BACnet multi-device system discovery parity achieved!")
 
   def test_02_bacnet_point_enumeration_parity(self):
-    """Verifies BACnet point reference enumeration parity across N devices."""
+    """Verifies BACnet point reference enumeration and UDMI spec compliance."""
     self._prepare_configs()
-    expected_dev_ids = [
+    expected_dev_ids = sorted(
         str(dev_id) for _, _, dev_id, _ in self.simulated_devices
-    ]
+    )
 
     num_devs = len(self.simulated_devices)
     scan_dur = max(7, 3 + num_devs * 2)
@@ -619,7 +655,7 @@ allow_anonymous true
         f"\n--- [Test 2] Running Legacy Discovery: BACnet depth=refs"
         f" (devices={num_devs}, scan={scan_dur}s, settle={settle_t}s) ---"
     )
-    legacy_events = self.run_discovery_test(
+    legacy_events, _ = self.run_discovery_test(
         "test-discovery_node:latest",
         "parity-legacy-node-refs",
         "DSN-1",
@@ -631,87 +667,144 @@ allow_anonymous true
     )
 
     print(
-        f"\n--- [Test 2] Running Spotter Discovery: BACnet depth=refs"
+        f"\n--- [Test 2] Running Spotter Discovery: BACnet depth=details"
         f" (devices={num_devs}, scan={scan_dur}s, settle={settle_t}s) ---"
     )
-    spotter_events = self.run_discovery_test(
+    spotter_events, spotter_states = self.run_discovery_test(
         "udmi-spotter:latest",
-        "parity-spotter-node-refs",
+        "parity-spotter-node-details",
         "DSN-1",
         "/config_dir/spotter_config.json",
         family="bacnet",
-        depth="refs",
+        depth="details",
         scan_duration_sec=scan_dur,
         settle_time=settle_t,
     )
 
-    legacy_clean = sort_discovery_events(clean_events(legacy_events))
-    spotter_clean = sort_discovery_events(clean_events(spotter_events))
+    for s_idx, st in enumerate(spotter_states):
+      null_paths = find_null_paths(st)
+      self.assertEqual(
+          null_paths,
+          [],
+          f"Spotter details state[{s_idx}] contains nulls: {null_paths}",
+      )
+    for e_idx, evt in enumerate(spotter_events):
+      null_paths = find_null_paths(evt)
+      self.assertEqual(
+          null_paths,
+          [],
+          f"Spotter details event[{e_idx}] contains nulls: {null_paths}",
+      )
 
-    print(f"\nLegacy refs events: {len(legacy_clean)}")
-    print(f"Spotter refs events: {len(spotter_clean)}")
+    legacy_sorted = sort_discovery_events(legacy_events)
+    spotter_sorted = sort_discovery_events(spotter_events)
 
-    # 1. Verify markers
-    self.assertTrue(any(e.get("event_no") == 0 for e in legacy_clean))
-    self.assertTrue(any(e.get("event_no") == 0 for e in spotter_clean))
-    self.assertTrue(any(e.get("event_no", 0) < 0 for e in legacy_clean))
-    self.assertTrue(any(e.get("event_no", 0) < 0 for e in spotter_clean))
+    print(f"\nLegacy refs events: {len(legacy_sorted)}")
+    print(f"Spotter details events: {len(spotter_sorted)}")
+    print("\n[Spotter Emitted Discovery Events (depth=details)]:")
+    print(json.dumps(spotter_sorted, indent=2))
+    if spotter_states:
+      print("\n[Spotter Final State (depth=details)]:")
+      print(json.dumps(spotter_states[-1], indent=2))
 
-    # 2. Verify all simulated devices are present and have points enumerated
-    expected_points = {"AI:0", "AV:0", "BI:0", "MSV:0"}
+    # 1. Verify markers and final state phase/active_count
+    self.assertTrue(len(spotter_states) > 0, "No Spotter states captured")
+    final_details_state = (
+        spotter_states[-1]
+        .get("discovery", {})
+        .get("families", {})
+        .get("bacnet", {})
+    )
+    self.assertEqual(
+        final_details_state.get("phase"),
+        "stopped",
+        f"Expected final Spotter phase 'stopped', got {final_details_state}",
+    )
+    self.assertEqual(
+        final_details_state.get("active_count"),
+        len(expected_dev_ids),
+        f"Expected final active_count {len(expected_dev_ids)}, got {final_details_state}",
+    )
+    self.assertTrue(any(e.get("event_no") == 0 for e in legacy_sorted))
+    self.assertTrue(any(e.get("event_no") == 0 for e in spotter_sorted))
+    self.assertTrue(any(e.get("event_no", 0) < 0 for e in legacy_sorted))
+    self.assertTrue(any(e.get("event_no", 0) < 0 for e in spotter_sorted))
+
+    # 2. Verify all simulated devices and canonical BACnet refs
+    expected_spotter_points = {
+        "AI/0": ("AI:0", "analog-input", False),
+        "AV/0": ("AV:0", "analog-value", True),
+        "BI/0": ("BI:0", "binary-input", False),
+        "MSV/0": ("MSV:0", "multi-state-value", True),
+    }
+
     for dev_id in expected_dev_ids:
-      leg_match = [e for e in legacy_clean if e.get("addr") == dev_id]
-      spt_match = [e for e in spotter_clean if e.get("addr") == dev_id]
+      leg_match = [e for e in legacy_sorted if e.get("addr") == dev_id]
+      spt_match = [e for e in spotter_sorted if e.get("addr") == dev_id]
       self.assertEqual(len(leg_match), 1, f"Legacy missing device {dev_id}")
       self.assertEqual(len(spt_match), 1, f"Spotter missing device {dev_id}")
 
       leg_refs = leg_match[0].get("refs", {})
       spt_refs = spt_match[0].get("refs", {})
 
+      for ref_key in spt_refs:
+        self.assertRegex(
+            ref_key,
+            BACNET_POINT_REF_REGEX,
+            f"Spotter ref key {ref_key} violates canonical <TYPE>/<INSTANCE> format",
+        )
+
       self.assertTrue(
-          expected_points.issubset(set(leg_refs.keys())),
-          f"Legacy missing expected points on {dev_id}",
-      )
-      self.assertTrue(
-          expected_points.issubset(set(spt_refs.keys())),
-          f"Spotter missing expected points on {dev_id}",
+          set(expected_spotter_points.keys()).issubset(set(spt_refs.keys())),
+          f"Spotter missing expected points on {dev_id}: {set(spt_refs.keys())}",
       )
 
-      # Verify point attributes parity (name, type, description, units, possible_values)
-      for pt_id in expected_points:
-        lp = leg_refs[pt_id]
-        sp = spt_refs[pt_id]
+      for spt_id, (leg_id, exp_type, exp_writable) in (
+          expected_spotter_points.items()
+      ):
+        lp = leg_refs[leg_id]
+        sp = spt_refs[spt_id]
         self.assertEqual(
             lp.get("name"),
             sp.get("name"),
-            f"Point {pt_id} name mismatch on {dev_id}",
+            f"Point {spt_id} name mismatch on {dev_id}",
         )
         self.assertEqual(
-            lp.get("type"),
             sp.get("type"),
-            f"Point {pt_id} type mismatch on {dev_id}",
+            exp_type,
+            f"Point {spt_id} type mismatch on {dev_id}",
+        )
+        self.assertEqual(
+            sp.get("writable"),
+            exp_writable,
+            f"Point {spt_id} writable mismatch on {dev_id}",
         )
         self.assertEqual(
             lp.get("description"),
             sp.get("description"),
-            f"Point {pt_id} description mismatch on {dev_id}",
+            f"Point {spt_id} description mismatch on {dev_id}",
+        )
+        self.assertIn(
+            "present-value",
+            sp.get("ancillary", {}),
+            f"Point {spt_id} missing present-value in ancillary",
         )
         if "units" in lp:
           self.assertEqual(
               lp.get("units"),
               sp.get("units"),
-              f"Point {pt_id} units mismatch on {dev_id}",
+              f"Point {spt_id} units mismatch on {dev_id}",
           )
-        if "possible_values" in lp:
-          self.assertEqual(
-              lp.get("possible_values"),
-              sp.get("possible_values"),
-              f"Point {pt_id} possible_values mismatch on {dev_id}",
+        if spt_id in ("BI/0", "MSV/0"):
+          self.assertTrue(
+              isinstance(sp.get("possible_values"), list)
+              and len(sp["possible_values"]) >= 2,
+              f"Point {spt_id} missing possible_values list on {dev_id}",
           )
 
     print(
-        "\nSUCCESS: BACnet point reference enumeration parity achieved across"
-        " all devices!"
+        "\nSUCCESS: BACnet point reference enumeration and UDMI spec"
+        " compliance verified across all devices!"
     )
 
 

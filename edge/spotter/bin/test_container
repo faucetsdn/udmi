@@ -125,7 +125,19 @@ class TestContainer(unittest.TestCase):
     with subprocess.Popen(
         cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
     ) as proc:
-      time.sleep(2.5)
+      deadline = time.time() + 10.0
+      while time.time() < deadline:
+        logs_res = subprocess.run(
+            [self.engine, "logs", container_name],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if "Starting UDMI Spotter Unified Agent" in (
+            logs_res.stdout + logs_res.stderr
+        ):
+          break
+        time.sleep(0.2)
       print(
           f"  Sending SIGTERM via '{self.engine} stop' to {container_name}...",
           flush=True,

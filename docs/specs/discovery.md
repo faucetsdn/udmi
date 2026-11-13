@@ -55,6 +55,7 @@ Discovery `depth` controls the level of detail collected during a scan. Each dep
 * **`entries`**: Individual discovered devices and cross-family address associations.
 * **`system`**: Device identity and hardware information.
 * **`details`**: Enumerated device points, objects, or services.
+* **`trace`**: Diagnostic raw packet capture (PCAP) streamed in `gzip`-compressed chunks over the `upload/discovery` channel ([schema](../../schema/upload_discovery.json)).
 
 | `depth` | Description | `bacnet` ([Spec](discovery_bacnet.md)) | `iot` | `ipv4` |
 | :--- | :--- | :--- | :--- | :--- |
@@ -62,6 +63,7 @@ Discovery `depth` controls the level of detail collected during a scan. Each dep
 | **`entries`** | Device addresses and bindings | Device instances and IP/MAC bindings | IoT device IDs and gateway bindings | Host IP, MAC, and hostname bindings |
 | **`system`** | Device identity and hardware | Device object identity and vendor info | Reported system hardware and software | Host OS and hardware fingerprint |
 | **`details`** | Exposed points or services | BACnet objects and properties | Configured or self-enumerated points | Open ports and network services |
+| **`trace`** | Diagnostic packet capture | Raw BACnet/IP & `MS/TP` PCAP chunks (`upload/discovery`) | Raw message trace | Filtered interface PCAP chunks (`upload/discovery`) |
 
 ## Enumeration
 

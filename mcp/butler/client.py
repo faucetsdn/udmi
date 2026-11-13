@@ -253,6 +253,45 @@ class ButlerClient:
             params["failed_devices"] = failed_devices
         return self.call_rpc("update_rollout", params)
 
+    def trigger_bacnet_trace(
+        self,
+        site: str,
+        gateway_id: str,
+        scan_duration_sec: int = 7200,
+        max_bytes: int = 268435456,
+        bug_id: Optional[str] = None,
+        conn_spec: Optional[str] = None,
+        site_model: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Trigger a depth: 'trace' BACnet packet capture on the target gateway."""
+        params: Dict[str, Any] = {
+            "site": site,
+            "gateway_id": gateway_id,
+            "scan_duration_sec": scan_duration_sec,
+            "max_bytes": max_bytes,
+        }
+        if bug_id is not None:
+            params["bug_id"] = bug_id
+        if conn_spec is not None:
+            params["conn_spec"] = conn_spec
+        if site_model is not None:
+            params["site_model"] = site_model
+        return self.call_rpc("trigger_bacnet_trace", params)
+
+    def get_pcap_capture(
+        self,
+        site: str,
+        gateway_id: Optional[str] = None,
+        generation: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Query PCAP chunk reassembly status and resolved GCS/file URIs."""
+        params: Dict[str, Any] = {"site": site}
+        if gateway_id is not None:
+            params["gateway_id"] = gateway_id
+        if generation is not None:
+            params["generation"] = generation
+        return self.call_rpc("get_pcap_capture", params)
+
     def tools_list(self) -> List[Dict[str, Any]]:
         """List all available MCP tools."""
         res = self.call_rpc("tools/list", {})

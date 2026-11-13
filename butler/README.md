@@ -14,11 +14,13 @@ graph TD
         SRC["UDMI Stream (MQTT Broker / Stdin)"] --> SVC["ButlerService (service.py)"]
         SVC --> DISP["MessageDispatcher (dispatcher.py)"]
         DISP --> H_RAW["RawFallbackHandler"]
+        DISP --> H_PCAP["PcapUploadHandler (upload/discovery)"]
         DISP --> H_PT["PointsetEventsHandler"]
         DISP --> H_ST["PointStateHandler / SystemStateHandler"]
         DISP --> H_OTH["Discovery / Validation / Alarms / Metadata"]
         
         H_RAW --> PG[("PostgreSQL (udmi_messages)")]
+        H_PCAP --> GCS[("GCS / Local PCAP Archive + udmi_pcap_captures")]
         H_PT --> INF[("InfluxDB (point_value)")]
         H_ST --> PG_SPEC[("PostgreSQL (udmi_* state tables)")]
         H_OTH --> PG_SPEC
@@ -50,6 +52,7 @@ butler/
 │   ├── dispatcher.py       # Message router & handler registry
 │   └── handlers/           # Specialized database payload handlers
 │       ├── base.py
+│       ├── pcap_upload.py
 │       ├── pointset_events.py
 │       ├── point_state.py
 │       ├── system_state.py
@@ -99,6 +102,18 @@ Execute mapping reconciliation against database discovery events:
 ```bash
 bin/mapper sites/udmi_site_model //mqtt/localhost:46432 GAT-1 map
 ```
+
+### 3. PCAP Upload Reassembly & MCP Trace Tools
+
+Butler's `PcapUploadHandler` (`butler/src/handlers/pcap_upload.py`) subscribes to `upload/discovery` (`DiscoveryUpload`), reassembles gzip-compressed chunks `1..N` in order, verifies the mandatory `sha256` digest on the terminal `-(N+1)` EOF marker, and archives the `.pcap` and `scan_manifest.json` without writing raw chunk blobs to `udmi_messages`.
+
+- **Environment Variables**:
+  - `BUTLER_PCAP_DIR`: Local directory for reassembled `.pcap` and `scan_manifest.json` files (default: `out/pcap`).
+  - `BUTLER_PCAP_GCS_BUCKET`: Optional Google Cloud Storage bucket name (`gs://<bucket>/<site>/<generation>.pcap`).
+  - `BUTLER_CONN_SPEC`: Default UDMI connection specification (e.g. `//mqtt/localhost:46432`) used by the Butler MCP server when triggering remote traces.
+- **MCP Tools (`mcp/butler/`)**:
+  - `trigger_bacnet_trace`: Publishes a `depth: "trace"` `config/discovery` trigger for `families.bacnet`, records a `PENDING` capture entry in `udmi_pcap_captures`, and returns the target `.pcap` and `scan_manifest.json` URIs.
+  - `get_pcap_capture`: Queries `udmi_pcap_captures` for chunk reassembly progress (`PENDING`, `RECEIVING`, `COMPLETED`, `FAILED`), verified `sha256`, `scan_manifest`, and resolved URIs.
 
 ---
 
