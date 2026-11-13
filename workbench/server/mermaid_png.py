@@ -2,7 +2,7 @@
 
 Email clients do not run JavaScript, and a notification must be composable after
 the operator has closed the Workbench tab, so diagrams are rendered here rather
-than in the browser. Headless Chromium (Playwright) loads the same vendored
+than in the browser. Headless Chromium (Playwright) loads the same local
 `mermaid.min.js` the Workbench UI uses, with the same configuration, so the image
 in the inbox matches the diagram on screen.
 
@@ -14,7 +14,7 @@ silently dropping the diagram.
 import os
 from typing import List
 
-MERMAID_JS = os.path.join("workbench", "static", "js", "vendor", "mermaid.min.js")
+MERMAID_JS = os.path.join("workbench", "static", "js", "ext", "mermaid.min.js")
 DEVICE_SCALE = 2  # Crisp on high-density displays; email clients scale the image down.
 RENDER_TIMEOUT_MS = 30000
 
@@ -45,8 +45,10 @@ def render_pngs(udmi_root: str, diagrams: List[str]) -> List[bytes]:
     if not diagrams:
         return []
     script_path = os.path.join(udmi_root, MERMAID_JS)
-    if not os.path.isfile(script_path):
-        raise MermaidRenderError(f"Mermaid library not found at {script_path}.")
+    if not os.path.isfile(script_path) or os.path.getsize(script_path) == 0:
+        raise MermaidRenderError(
+            f"Mermaid library not found at {script_path}; run bin/setup_web_assets to install it."
+        )
     try:
         from playwright.sync_api import Error as PlaywrightError
         from playwright.sync_api import sync_playwright

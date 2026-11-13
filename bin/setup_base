@@ -67,6 +67,7 @@ ${venv_pip3} install ${NO_CACHE_DIR:+--no-cache-dir} -r "$req_src" $PIP_OPTS
 
 if [[ -z ${NO_CACHE_DIR:-} ]]; then
     $(dirname ${venv_pip3})/playwright install chromium
+    $ROOT_DIR/bin/setup_web_assets
 fi
 
 java -version
@@ -81,7 +82,7 @@ sha256sum etc/requirements.txt | cut -d' ' -f1 > venv/.requirements.sha256
 
 if [[ $(id -u) == 0 ]]; then
     if [[ -n ${SUDO_UID:-} && -n ${SUDO_GID:-} ]]; then
-        chown -R ${SUDO_UID}:${SUDO_GID} sites venv 2>/dev/null || true
+        chown -R ${SUDO_UID}:${SUDO_GID} sites venv gummi/src/static/ext workbench/static/js/ext 2>/dev/null || true
     fi
-    chmod -R a+rwX sites venv 2>/dev/null || true
+    chmod -R a+rwX sites venv gummi/src/static/ext workbench/static/js/ext 2>/dev/null || true
 fi

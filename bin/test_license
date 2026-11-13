@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""Verifies repository third-party directory and license compliance."""
+
+import os
+import re
+import subprocess
+import sys
+
+FORBIDDEN_SUBDIR_RE = re.compile(
+    r'(?i)(?:^|/)(third_?party|3rd_?party|vendor|node_modules)/'
+)
+
+ALLOWED_SUBDIR_FILE_RE = re.compile(
+    r'(/BUILD|/OWNERS|/OWNERS_METADATA|/README|/README\.[^/]+'
+    r'|/BUILD\.gn|/build\.gradle|/CMakeLists\.txt|/\.gitignore'
+    r'|/\.clang-format|\.BUILD|\.bara\.sky|\.bazel|\.bzl'
+    r'|\.oss|\.patch|\.diff|\.tpl|\.gni)$'
+)
+
+BINARY_EXTENSIONS = frozenset({
+    '.class',
+    '.eot',
+    '.gif',
+    '.gz',
+    '.ico',
+    '.jar',
+    '.jpeg',
+    '.jpg',
+    '.pdf',
+    '.png',
+    '.pyc',
+    '.svg',
+    '.tar',
+    '.tgz',
+    '.ttf',
+    '.war',
+    '.webp',
+    '.woff',
+    '.woff2',
+    '.zip',
+})
+
+# Bracketed characters prevent this script from matching its own source.
+LICENSE_PATTERNS = (
+    ('MIT', re.compile(r'(?i)@licen[s]e\s+MIT\b')),
+    ('MIT', re.compile(r'(?i)\bMIT\s+Licen[s]e\b')),
+    ('MIT', re.compile(
+        r'(?i)Permission\s+is\s+hereby\s+gran[t]ed,\s+free\s+of\s+charge'
+    )),
+    ('MPL-2.0', re.compile(r'(?i)Mozilla\s+Public\s+Licen[s]e')),
+    ('BSD', re.compile(r'(?i)\bBSD\s+[23]-Clause\b')),
+    ('ISC', re.compile(r'(?i)\bISC\s+Licen[s]e\b')),
+    ('GPL', re.compile(r'(?i)\bGNU\s+General\s+Public\s+Licen[s]e\b')),
+    ('LGPL', re.compile(
+        r'(?i)\bGNU\s+Lesser\s+General\s+Public\s+Licen[s]e\b'
+    )),
+)
+
+
+def list_repo_files(repo_root):
+  """Returns non-ignored existing repo files relative to repo_root."""
+  result = subprocess.run(
+      ['git', '-C', repo_root, 'ls-files', '--cached', '--others',
+       '--exclude-standard', '-z'],
+      capture_output=True,
+      check=True,
+  )
+  paths = []
+  for raw in result.stdout.split(b'\0'):
+    if not raw:
+      continue
+    rel_path = raw.decode('utf-8', errors='surrogateescape')
+    if os.path.lexists(os.path.join(repo_root, rel_path)):
+      paths.append(rel_path)
+  return paths
+
+
+def check_root_license(repo_root):
+  """Verifies root LICENSE exists and records Apache-2.0."""
+  license_path = os.path.join(repo_root, 'LICENSE')
+  if not os.path.isfile(license_path):
+    return ['AllLicensesRecorded: Missing root LICENSE file.']
+  with open(license_path, 'r', encoding='utf-8') as handle:
+    content = handle.read()
+  if 'Apache License' not in content or 'Version 2.0' not in content:
+    return [
+        'AllLicensesRecorded: Root LICENSE must record Apache License '
+        'Version 2.0.'
+    ]
+  return []
+
+
+def check_no_third_party_subdir(paths):
+  """Flags bundled third-party/vendor subdirectories."""
+  findings = []
+  for rel_path in paths:
+    if ALLOWED_SUBDIR_FILE_RE.search('/' + rel_path):
+      continue
+    match = FORBIDDEN_SUBDIR_RE.search(rel_path)
+    if match:
+      findings.append(
+          f'NoThirdPartySubdir: Forbidden subdirectory {match.group(1)!r} '
+          f'in {rel_path}'
+      )
+  return findings
+
+
+def check_all_licenses_recorded(repo_root, paths):
+  """Flags unrecorded third-party license notices in source/static files."""
+  findings = check_root_license(repo_root)
+  for rel_path in paths:
+    ext = os.path.splitext(rel_path)[1].lower()
+    if ext in BINARY_EXTENSIONS:
+      continue
+    full_path = os.path.join(repo_root, rel_path)
+    if os.path.islink(full_path) or not os.path.isfile(full_path):
+      continue
+    with open(full_path, 'r', encoding='utf-8', errors='replace') as handle:
+      content = handle.read()
+    matched_lines = {}
+    for label, pattern in LICENSE_PATTERNS:
+      if label in matched_lines:
+        continue
+      match = pattern.search(content)
+      if match:
+        line_no = content.count('\n', 0, match.start()) + 1
+        matched_lines[label] = line_no
+    for label, line_no in matched_lines.items():
+      findings.append(
+          f'AllLicensesRecorded: Unrecorded license {label!r} in '
+          f'{rel_path}:{line_no}'
+      )
+  return findings
+
+
+def main():
+  """Runs third-party compliance checks across the UDMI repository."""
+  if len(sys.argv) != 1:
+    print('Usage: bin/test_license', file=sys.stderr)
+    return 1
+  repo_root = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+  paths = list_repo_files(repo_root)
+  findings = check_no_third_party_subdir(paths)
+  findings.extend(check_all_licenses_recorded(repo_root, paths))
+  if findings:
+    print(f'License compliance check FAILED ({len(findings)} finding(s)):')
+    for finding in findings:
+      print(f'  - {finding}')
+    return 1
+  print(f'License compliance check PASSED ({len(paths)} files scanned).')
+  return 0
+
+
+if __name__ == '__main__':
+  sys.exit(main())

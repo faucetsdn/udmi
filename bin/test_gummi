@@ -13,6 +13,7 @@ echo "Running GUMMI Unit & Integration Tests..."
 echo "=========================================================================="
 
 venv/bin/playwright install chromium
+bin/setup_web_assets gummi
 
 PYTHONPATH=common/src/main/python:gencode/python:gummi:. venv/bin/pytest -v gummi/tests
 

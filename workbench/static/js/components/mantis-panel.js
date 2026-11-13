@@ -804,7 +804,7 @@ export class MantisPanel {
       if (!window.mermaid) {
         await new Promise((resolve) => {
           const script = document.createElement('script');
-          script.src = '/js/vendor/mermaid.min.js';
+          script.src = '/js/ext/mermaid.min.js';
           script.onload = () => resolve();
           script.onerror = () => resolve();
           document.head.appendChild(script);
@@ -875,6 +875,18 @@ export class MantisPanel {
             // No SVG exists to export; the source above is the diagram.
             for (const btn of cardEl.querySelectorAll('[data-diagram-act]')) btn.hidden = true;
           }
+        }
+      } else {
+        for (const block of mermaidBlocks) {
+          const cardEl = container.querySelector(`#${block.id}`);
+          const bodyEl = cardEl?.querySelector('.mermaid-body');
+          if (!bodyEl) continue;
+          bodyEl.innerHTML =
+            '<div class="mermaid-error">Mermaid library unavailable. Run bin/setup_web_assets and reload.</div>' +
+            `<pre class="mermaid-fallback"><code class="language-mermaid">${this.escapeHtml(block.code)}</code></pre>`;
+          for (const btn of cardEl.querySelectorAll('[data-diagram-act]')) btn.hidden = true;
+          const fsBtn = cardEl?.querySelector('.btn-diagram-fullscreen');
+          if (fsBtn) fsBtn.hidden = true;
         }
       }
     }

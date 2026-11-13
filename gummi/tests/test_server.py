@@ -19,7 +19,7 @@ sys.path.insert(0, REPO_ROOT)
 
 from gummi.src.db import GummiDB
 from gummi.src.uufi import GummiUUFIClient
-from gummi.src.server import GummiServer, ThreadingHTTPServer, GummiRequestHandler
+from gummi.src.server import GummiServer, ThreadingHTTPServer, GummiRequestHandler, verify_web_assets
 
 
 @pytest.fixture(scope="module")
@@ -90,6 +90,30 @@ class TestGummiServer:
         with urllib.request.urlopen(f"{gummi_server}/js/app.js") as resp:
             assert resp.status == 200
             assert "GUMMI Frontend" in resp.read().decode("utf-8")
+
+    def test_static_ext_xterm_assets(self, gummi_server):
+        for rel_path, expected in (
+            ("ext/xterm/xterm.css", ".xterm"),
+            ("ext/xterm/xterm.js", "Terminal"),
+            ("ext/xterm/xterm-addon-fit.js", "FitAddon"),
+        ):
+            with urllib.request.urlopen(f"{gummi_server}/{rel_path}") as resp:
+                assert resp.status == 200
+                assert expected in resp.read().decode("utf-8")
+
+        with pytest.raises(urllib.error.HTTPError) as exc_info:
+            urllib.request.urlopen(f"{gummi_server}/vendor/xterm/xterm.css")
+        assert exc_info.value.code == 404
+
+    def test_verify_web_assets_fails_when_missing(self, tmp_path):
+        with pytest.raises(RuntimeError, match="bin/setup_web_assets"):
+            verify_web_assets(str(tmp_path))
+
+        xterm_dir = tmp_path / "ext" / "xterm"
+        xterm_dir.mkdir(parents=True)
+        for name in ("xterm.css", "xterm.js", "xterm-addon-fit.js"):
+            (xterm_dir / name).write_text("/* placeholder */", encoding="utf-8")
+        verify_web_assets(str(tmp_path))
 
     def test_api_system_capabilities(self, gummi_server):
         data = http_get_json(f"{gummi_server}/api/system/capabilities")

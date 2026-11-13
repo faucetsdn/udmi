@@ -15,12 +15,13 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from workbench.server import notify_compose
+from workbench.server import mermaid_png, notify_compose
 from workbench.server.mantis_adapter import MantisSessionStore
 from workbench.server.notifications import GMAIL_SEND_SCOPE, Email, NotificationError, Notifier
 from workbench.server.runner import SequencerRunner
 
 ADDRESS = "operator@example.com"
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 
 def _identity(address=ADDRESS, scopes=(GMAIL_SEND_SCOPE,)):
@@ -157,6 +158,17 @@ def test_an_unrenderable_diagram_keeps_its_source_and_the_error(monkeypatch):
     converted = notify_compose.markdown_with_diagrams(".", "```mermaid\ngraph TD\n  A-->\n```")
     assert "Parse error" in converted["html"] and "graph TD" in converted["html"]
     assert converted["images"] == {}
+
+
+def test_mermaid_render_pngs_missing_library_fails_fast(tmp_path):
+    with pytest.raises(mermaid_png.MermaidRenderError, match="bin/setup_web_assets"):
+        mermaid_png.render_pngs(str(tmp_path), ["graph TD\n  A-->B"])
+
+
+def test_mermaid_render_pngs_with_installed_library():
+    images = mermaid_png.render_pngs(ROOT, ["graph TD\n  A-->B"])
+    assert len(images) == 1
+    assert images[0].startswith(b"\x89PNG\r\n\x1a\n")
 
 
 @pytest.mark.parametrize(
