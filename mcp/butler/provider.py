@@ -57,6 +57,7 @@ class ButlerProvider:
         influx_port: Optional[Union[str, int]] = None,
     ):
         """Initializes ButlerProvider with relational and timeseries managers."""
+        self.project_spec = project_spec
         if pg_manager is not None:
             self.pg_manager = pg_manager
         elif PostgresManager is not None:
@@ -920,4 +921,166 @@ class ButlerProvider:
             converged_devices=converged_devices,
             failed_devices=failed_devices,
         )
+
+    def trigger_bacnet_trace(
+        self,
+        site: str,
+        gateway_id: str,
+        scan_duration_sec: int = 7200,
+        max_bytes: int = 268435456,
+        bug_id: Optional[str] = None,
+        conn_spec: Optional[str] = None,
+        site_model: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Triggers a depth: 'trace' BACnet packet capture on the target gateway and tracks reassembly."""
+        generation = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        gcs_bucket = os.environ.get("BUTLER_PCAP_GCS_BUCKET")
+        archive_dir = os.environ.get("BUTLER_PCAP_DIR", "out/pcap")
+        if gcs_bucket:
+            pcap_uri = f"gs://{gcs_bucket}/{site}/{generation}.pcap"
+            manifest_uri = (
+                f"gs://{gcs_bucket}/{site}/{generation}_scan_manifest.json"
+            )
+        else:
+            safe_site = re.sub(r"[^A-Za-z0-9._-]", "_", site)
+            safe_gen = re.sub(r"[^A-Za-z0-9._-]", "_", generation)
+            pcap_uri = os.path.abspath(
+                os.path.join(archive_dir, safe_site, f"{safe_gen}.pcap")
+            )
+            manifest_uri = os.path.abspath(
+                os.path.join(
+                    archive_dir, safe_site, f"{safe_gen}_scan_manifest.json"
+                )
+            )
+
+        effective_spec = (
+            conn_spec or self.project_spec or os.environ.get("BUTLER_CONN_SPEC")
+        )
+        if effective_spec:
+            from butler.src.discovery import trigger_bacnet_trace as publish_trace
+
+            publish_trace(
+                conn_spec=effective_spec,
+                registry_id=site,
+                device_id=gateway_id,
+                scan_duration_sec=int(scan_duration_sec),
+                max_bytes=int(max_bytes),
+                site_model=site_model or os.environ.get("BUTLER_SITE_MODEL"),
+                generation=generation,
+            )
+
+        if self.pg_manager and hasattr(self.pg_manager, "insert_row"):
+            self.pg_manager.insert_row(
+                "udmi_pcap_captures",
+                {
+                    "site": site,
+                    "device_id": gateway_id,
+                    "family": "bacnet",
+                    "generation": generation,
+                    "status": "PENDING",
+                    "chunks_received": 0,
+                    "pcap_uri": pcap_uri,
+                    "manifest_uri": manifest_uri,
+                    "bug_id": str(bug_id) if bug_id is not None else None,
+                },
+            )
+
+        return {
+            "status": "PENDING",
+            "site": site,
+            "gateway_id": gateway_id,
+            "generation": generation,
+            "scan_duration_sec": int(scan_duration_sec),
+            "max_bytes": int(max_bytes),
+            "bug_id": str(bug_id) if bug_id is not None else None,
+            "pcap_uri": pcap_uri,
+            "manifest_uri": manifest_uri,
+        }
+
+    def get_pcap_capture(
+        self,
+        site: str,
+        gateway_id: Optional[str] = None,
+        generation: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Retrieves chunk reassembly status and resolved GCS/file URIs for a PCAP capture."""
+        if not self.pg_manager:
+            return None
+        try:
+            conn = self.pg_manager.get_connection()
+            try:
+                with conn.cursor() as cur:
+                    clauses = ["site = %s"]
+                    params: List[Any] = [site]
+                    if gateway_id:
+                        clauses.append("device_id = %s")
+                        params.append(gateway_id)
+                    if generation:
+                        clauses.append("generation = %s")
+                        params.append(generation)
+                    where_sql = " AND ".join(clauses)
+                    cur.execute(
+                        f"""
+                        SELECT site, device_id, family, generation, status,
+                               chunks_received, expected_chunks, expected_sha256,
+                               actual_sha256, total_bytes, pcap_uri, manifest_uri,
+                               scan_manifest, bug_id, error_message, updated_at
+                        FROM udmi_pcap_captures
+                        WHERE {where_sql}
+                        ORDER BY updated_at DESC, id DESC
+                        LIMIT 1;
+                        """,
+                        tuple(params),
+                    )
+                    row = cur.fetchone()
+            finally:
+                conn.close()
+
+            if not row:
+                return None
+
+            (
+                r_site,
+                r_dev,
+                r_fam,
+                r_gen,
+                r_status,
+                r_chunks,
+                r_expected,
+                r_exp_sha,
+                r_act_sha,
+                r_bytes,
+                r_pcap_uri,
+                r_manifest_uri,
+                r_manifest,
+                r_bug_id,
+                r_err,
+                r_updated,
+            ) = row
+            if isinstance(r_manifest, str):
+                r_manifest = json.loads(r_manifest)
+            return {
+                "site": r_site,
+                "gateway_id": r_dev,
+                "family": r_fam,
+                "generation": r_gen,
+                "status": r_status,
+                "chunks_received": r_chunks,
+                "expected_chunks": r_expected,
+                "expected_sha256": r_exp_sha,
+                "actual_sha256": r_act_sha,
+                "total_bytes": r_bytes,
+                "pcap_uri": r_pcap_uri,
+                "manifest_uri": r_manifest_uri,
+                "scan_manifest": r_manifest,
+                "bug_id": r_bug_id,
+                "error_message": r_err,
+                "updated_at": _format_iso(r_updated),
+            }
+        except Exception as err:
+            print(
+                f"ButlerProvider error fetching pcap capture status: {err}",
+                file=sys.stderr,
+            )
+            return None
 

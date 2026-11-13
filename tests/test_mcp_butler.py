@@ -353,6 +353,82 @@ class TestButlerProvider(unittest.TestCase):
         self.assertIsNone(self.provider.get_rollout(999))
         self.assertIsNone(self.provider.update_rollout(999, status="PAUSED"))
 
+    @patch.dict(os.environ, {"BUTLER_PCAP_GCS_BUCKET": "udmi-captures"})
+    @patch("butler.src.discovery.trigger_bacnet_trace")
+    def test_pcap_trace_and_get_capture(self, mock_publish_trace):
+        # 1. trigger_bacnet_trace with GCS bucket and conn_spec
+        res = self.provider.trigger_bacnet_trace(
+            site="ZZ-TRI-FECTA",
+            gateway_id="GAT-1",
+            scan_duration_sec=3600,
+            max_bytes=1048576,
+            bug_id="ISSUE-101",
+            conn_spec="//mqtt/localhost:18833",
+        )
+        self.assertEqual(res["status"], "PENDING")
+        self.assertEqual(res["site"], "ZZ-TRI-FECTA")
+        self.assertEqual(res["gateway_id"], "GAT-1")
+        gen = res["generation"]
+        self.assertEqual(
+            res["pcap_uri"],
+            f"gs://udmi-captures/ZZ-TRI-FECTA/{gen}.pcap",
+        )
+        self.assertEqual(
+            res["manifest_uri"],
+            f"gs://udmi-captures/ZZ-TRI-FECTA/{gen}_scan_manifest.json",
+        )
+        mock_publish_trace.assert_called_once()
+        self.mock_pg.insert_row.assert_called_with(
+            "udmi_pcap_captures",
+            {
+                "site": "ZZ-TRI-FECTA",
+                "device_id": "GAT-1",
+                "family": "bacnet",
+                "generation": gen,
+                "status": "PENDING",
+                "chunks_received": 0,
+                "pcap_uri": res["pcap_uri"],
+                "manifest_uri": res["manifest_uri"],
+                "bug_id": "ISSUE-101",
+            },
+        )
+
+        # 2. get_pcap_capture querying udmi_pcap_captures
+        mock_conn = MagicMock()
+        mock_cur = MagicMock()
+        mock_conn.cursor.return_value.__enter__.return_value = mock_cur
+        mock_cur.fetchone.return_value = (
+            "ZZ-TRI-FECTA",
+            "GAT-1",
+            "bacnet",
+            gen,
+            "COMPLETED",
+            3,
+            3,
+            "abc123",
+            "abc123",
+            4096,
+            res["pcap_uri"],
+            res["manifest_uri"],
+            json.dumps({"gateway_ip": "192.168.1.50"}),
+            "ISSUE-101",
+            None,
+            "2026-11-11T05:00:00Z",
+        )
+        self.mock_pg.get_connection.return_value = mock_conn
+
+        cap = self.provider.get_pcap_capture(
+            site="ZZ-TRI-FECTA", gateway_id="GAT-1", generation=gen
+        )
+        self.assertIsNotNone(cap)
+        self.assertEqual(cap["status"], "COMPLETED")
+        self.assertEqual(cap["chunks_received"], 3)
+        self.assertEqual(cap["expected_chunks"], 3)
+        self.assertEqual(cap["actual_sha256"], "abc123")
+        self.assertEqual(cap["pcap_uri"], res["pcap_uri"])
+        self.assertEqual(cap["manifest_uri"], res["manifest_uri"])
+        self.assertEqual(cap["scan_manifest"], {"gateway_ip": "192.168.1.50"})
+
 
 class TestButlerMcpServer(unittest.TestCase):
     """Tests for ButlerMcpServer handling JSON-RPC 2.0 requests."""
@@ -397,9 +473,70 @@ class TestButlerMcpServer(unittest.TestCase):
             "list_rollouts",
             "get_rollout",
             "update_rollout",
+            "trigger_bacnet_trace",
+            "get_pcap_capture",
         ]
         for exp in expected:
             self.assertIn(exp, tool_names)
+
+    def test_tools_call_pcap_trace_methods(self):
+        self.mock_provider.trigger_bacnet_trace.return_value = {
+            "status": "PENDING",
+            "site": "ZZ-TRI-FECTA",
+            "gateway_id": "GAT-1",
+            "generation": "2026-11-05T13:00:00Z",
+            "pcap_uri": "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z.pcap",
+            "manifest_uri": "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z_scan_manifest.json",
+        }
+        req = {
+            "jsonrpc": "2.0",
+            "id": 20,
+            "method": "tools/call",
+            "params": {
+                "name": "trigger_bacnet_trace",
+                "arguments": {
+                    "site": "ZZ-TRI-FECTA",
+                    "gateway_id": "GAT-1",
+                    "scan_duration_sec": 7200,
+                },
+            },
+        }
+        resp = self.server.handle_request(req)
+        self.assertFalse(resp["result"]["isError"])
+        data = json.loads(resp["result"]["content"][0]["text"])
+        self.assertEqual(data["status"], "PENDING")
+        self.assertIn(".pcap", data["pcap_uri"])
+        self.assertIn("_scan_manifest.json", data["manifest_uri"])
+
+        self.mock_provider.get_pcap_capture.return_value = {
+            "site": "ZZ-TRI-FECTA",
+            "gateway_id": "GAT-1",
+            "generation": "2026-11-05T13:00:00Z",
+            "status": "COMPLETED",
+            "pcap_uri": "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z.pcap",
+            "manifest_uri": "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z_scan_manifest.json",
+        }
+        req_get = {
+            "jsonrpc": "2.0",
+            "id": 21,
+            "method": "tools/call",
+            "params": {
+                "name": "get_pcap_capture",
+                "arguments": {
+                    "site": "ZZ-TRI-FECTA",
+                    "gateway_id": "GAT-1",
+                    "generation": "2026-11-05T13:00:00Z",
+                },
+            },
+        }
+        resp_get = self.server.handle_request(req_get)
+        self.assertFalse(resp_get["result"]["isError"])
+        get_data = json.loads(resp_get["result"]["content"][0]["text"])
+        self.assertEqual(get_data["status"], "COMPLETED")
+        self.assertEqual(
+            get_data["manifest_uri"],
+            "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z_scan_manifest.json",
+        )
 
     def test_tools_call_rollout_methods(self):
         # 1. create_rollout tool
@@ -598,6 +735,47 @@ class TestButlerClientIntegration(unittest.TestCase):
         self.mock_provider.update_rollout.return_value = {"id": 1, "status": "PAUSED"}
         up = self.client.update_rollout(1, status="PAUSED")
         self.assertEqual(up["status"], "PAUSED")
+
+    def test_client_pcap_trace_and_get_capture(self):
+        self.mock_provider.trigger_bacnet_trace.return_value = {
+            "status": "PENDING",
+            "site": "ZZ-TRI-FECTA",
+            "gateway_id": "GAT-1",
+            "generation": "2026-11-05T13:00:00Z",
+            "pcap_uri": "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z.pcap",
+            "manifest_uri": "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z_scan_manifest.json",
+        }
+        trig = self.client.trigger_bacnet_trace(
+            site="ZZ-TRI-FECTA",
+            gateway_id="GAT-1",
+            scan_duration_sec=3600,
+            max_bytes=1048576,
+            bug_id="ISSUE-101",
+        )
+        self.assertEqual(trig["status"], "PENDING")
+        self.assertEqual(
+            trig["manifest_uri"],
+            "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z_scan_manifest.json",
+        )
+
+        self.mock_provider.get_pcap_capture.return_value = {
+            "site": "ZZ-TRI-FECTA",
+            "gateway_id": "GAT-1",
+            "generation": "2026-11-05T13:00:00Z",
+            "status": "COMPLETED",
+            "pcap_uri": "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z.pcap",
+            "manifest_uri": "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z_scan_manifest.json",
+        }
+        cap = self.client.get_pcap_capture(
+            site="ZZ-TRI-FECTA",
+            gateway_id="GAT-1",
+            generation="2026-11-05T13:00:00Z",
+        )
+        self.assertEqual(cap["status"], "COMPLETED")
+        self.assertEqual(
+            cap["pcap_uri"],
+            "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z.pcap",
+        )
 
 
 class TestButlerMcpStdioRunner(unittest.TestCase):

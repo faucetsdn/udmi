@@ -14,11 +14,13 @@ graph TD
         SRC["UDMI Stream (MQTT Broker / Stdin)"] --> SVC["ButlerService (service.py)"]
         SVC --> DISP["MessageDispatcher (dispatcher.py)"]
         DISP --> H_RAW["RawFallbackHandler"]
+        DISP --> H_PCAP["PcapUploadHandler (upload/discovery)"]
         DISP --> H_PT["PointsetEventsHandler"]
         DISP --> H_ST["PointStateHandler / SystemStateHandler"]
         DISP --> H_OTH["Discovery / Validation / Alarms / Metadata"]
         
         H_RAW --> PG[("PostgreSQL (udmi_messages)")]
+        H_PCAP --> GCS[("GCS / Local PCAP Archive + udmi_pcap_captures")]
         H_PT --> INF[("InfluxDB (point_value)")]
         H_ST --> PG_SPEC[("PostgreSQL (udmi_* state tables)")]
         H_OTH --> PG_SPEC
@@ -50,6 +52,7 @@ butler/
 │   ├── dispatcher.py       # Message router & handler registry
 │   └── handlers/           # Specialized database payload handlers
 │       ├── base.py
+│       ├── pcap_upload.py
 │       ├── pointset_events.py
 │       ├── point_state.py
 │       ├── system_state.py

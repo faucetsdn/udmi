@@ -181,6 +181,141 @@ class HandlerTests(unittest.TestCase):
         self.assertEqual(row["project_id"], "proj-1")
         self.assertEqual(row["payload"], payload)
 
+        # Verify RawFallbackHandler rejects subType == 'upload'
+        self.assertFalse(handler.can_handle("discovery", "upload", payload))
+        upload_res = handler.process_message(
+            {"subType": "upload", "subFolder": "discovery"},
+            payload,
+            self.mock_pg,
+            self.mock_influx,
+        )
+        self.assertEqual(upload_res["count"], 0)
+        self.assertEqual(self.mock_pg.insert_row.call_count, 1)
+
+    def test_pcap_upload_handler_reassembly_and_sha256_verification(self):
+        import base64
+        import gzip
+        import hashlib
+        import tempfile
+        from butler.src.handlers.pcap_upload import PcapUploadHandler
+
+        mock_gcs = MagicMock()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            handler = PcapUploadHandler(
+                archive_dir=tmpdir,
+                gcs_bucket="udmi-captures",
+                gcs_client=mock_gcs,
+            )
+            self.assertTrue(handler.can_handle("discovery", "upload", {}))
+            self.assertFalse(handler.can_handle("discovery", "events", {}))
+
+            c1 = b"\xa1\xb2\xc3\xd4\x00\x02\x00\x04"
+            c2 = b"BACNET_PACKET_PAYLOAD_BYTES"
+            full_pcap = c1 + c2
+            digest = hashlib.sha256(full_pcap).hexdigest()
+
+            env = {
+                "deviceRegistryId": "ZZ-TRI-FECTA",
+                "deviceId": "GAT-1",
+                "subType": "upload",
+                "subFolder": "discovery",
+            }
+            gen = "2026-11-05T13:00:00Z"
+
+            # Out-of-order arrival: chunk 2, then start (0), then EOF (-3), then chunk 1
+            r1 = handler.process_message(
+                env,
+                {
+                    "generation": gen,
+                    "family": "bacnet",
+                    "event_no": 2,
+                    "data": base64.b64encode(gzip.compress(c2)).decode("ascii"),
+                },
+                self.mock_pg,
+                self.mock_influx,
+            )
+            self.assertEqual(r1["status"], "RECEIVING")
+
+            # Out-of-order event_no=0 must NOT wipe chunk 2
+            r_start = handler.process_message(
+                env,
+                {
+                    "generation": gen,
+                    "family": "bacnet",
+                    "event_no": 0,
+                },
+                self.mock_pg,
+                self.mock_influx,
+            )
+            self.assertEqual(r_start["status"], "RECEIVING")
+            self.assertEqual(r_start["chunks_received"], 1)
+
+            r2 = handler.process_message(
+                env,
+                {
+                    "generation": gen,
+                    "family": "bacnet",
+                    "event_no": -3,
+                    "sha256": digest,
+                    "scan_manifest": {"gateway_ip": "192.168.1.50"},
+                },
+                self.mock_pg,
+                self.mock_influx,
+            )
+            self.assertEqual(r2["status"], "RECEIVING")
+
+            r3 = handler.process_message(
+                env,
+                {
+                    "generation": gen,
+                    "family": "bacnet",
+                    "event_no": 1,
+                    "data": base64.b64encode(gzip.compress(c1)).decode("ascii"),
+                },
+                self.mock_pg,
+                self.mock_influx,
+            )
+            self.assertEqual(r3["status"], "COMPLETED")
+            self.assertEqual(
+                r3["pcap_uri"],
+                "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z.pcap",
+            )
+            self.assertEqual(
+                r3["manifest_uri"],
+                "gs://udmi-captures/ZZ-TRI-FECTA/2026-11-05T13:00:00Z_scan_manifest.json",
+            )
+            self.assertEqual(mock_gcs.bucket.return_value.blob.call_count, 2)
+            with open(r3["local_pcap_path"], "rb") as pf:
+                self.assertEqual(pf.read(), full_pcap)
+
+            # Verify SHA-256 mismatch raises ValueError and evicts the failed session
+            with self.assertRaises(ValueError):
+                handler.process_message(
+                    env,
+                    {
+                        "generation": "2026-11-05T14:00:00Z",
+                        "family": "bacnet",
+                        "event_no": 1,
+                        "data": base64.b64encode(gzip.compress(c1)).decode(
+                            "ascii"
+                        ),
+                    },
+                    self.mock_pg,
+                    self.mock_influx,
+                )
+                handler.process_message(
+                    env,
+                    {
+                        "generation": "2026-11-05T14:00:00Z",
+                        "family": "bacnet",
+                        "event_no": -2,
+                        "sha256": "0" * 64,
+                    },
+                    self.mock_pg,
+                    self.mock_influx,
+                )
+            self.assertEqual(len(handler._sessions), 0)
+
 
 if __name__ == "__main__":
     unittest.main()
