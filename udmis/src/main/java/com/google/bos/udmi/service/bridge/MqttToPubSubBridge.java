@@ -460,7 +460,11 @@ public class MqttToPubSubBridge {
       Runnable shutdownTask = () -> {
         if (isShuttingDown.compareAndSet(false, true)) {
           gracefulShutdown(
-              finalBridge, finalMqttClient, finalPublisher, finalEtcdProvider, finalUploadPublisher);
+              finalBridge,
+              finalMqttClient,
+              finalPublisher,
+              finalEtcdProvider,
+              finalUploadPublisher);
         }
       };
 
