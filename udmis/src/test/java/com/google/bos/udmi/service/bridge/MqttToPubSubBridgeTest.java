@@ -994,16 +994,71 @@ class MqttToPubSubBridgeTest {
     Publisher mockPublisher = mock(Publisher.class);
     when(mockPublisher.awaitTermination(any(Long.class), any(java.util.concurrent.TimeUnit.class)))
         .thenReturn(true);
+    Publisher mockUploadPublisher = mock(Publisher.class);
+    when(mockUploadPublisher.awaitTermination(
+        any(Long.class), any(java.util.concurrent.TimeUnit.class)))
+        .thenReturn(true);
     EtcdDataProvider mockEtcdProvider = mock(EtcdDataProvider.class);
     MqttToPubSubBridge bridge = new MqttToPubSubBridge();
 
     MqttToPubSubBridge.gracefulShutdown(
-        bridge, mockMqttClient, mockPublisher, mockEtcdProvider);
+        bridge, mockMqttClient, mockPublisher, mockEtcdProvider, mockUploadPublisher);
 
     verify(mockMqttClient).disconnect();
     verify(mockPublisher).shutdown();
     verify(mockPublisher).awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS);
+    verify(mockUploadPublisher).shutdown();
+    verify(mockUploadPublisher).awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS);
     verify(mockEtcdProvider).shutdown();
+  }
+
+  @Test
+  void testSetupBridgeRoutesUploadSubTypeToUploadPublisher() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    Publisher mockUploadPublisher = mock(Publisher.class);
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("evt-123"));
+    when(mockUploadPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("upl-456"));
+
+    MqttToPubSubBridge bridge = new MqttToPubSubBridge();
+    bridge.setupBridge(
+        mockMqttClient, mockPublisher, "/r/+/d/#", null, "zanzara", null, mockUploadPublisher);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    // 1. Upload message routes to mockUploadPublisher
+    String uploadTopic = "/r/ZZ-TRI-FECTA/d/DSN-1/upload/discovery";
+    MqttMessage uploadMsg = new MqttMessage("{\"event_no\":0}".getBytes());
+    uploadMsg.setId(801);
+    callback.messageArrived(uploadTopic, uploadMsg);
+
+    ArgumentCaptor<PubsubMessage> uploadCaptor = ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockUploadPublisher, org.mockito.Mockito.timeout(5000)).publish(uploadCaptor.capture());
+    Map<String, String> uploadAttrs = uploadCaptor.getValue().getAttributesMap();
+    assertEquals("upload", uploadAttrs.get("subType"));
+    assertEquals("discovery", uploadAttrs.get("subFolder"));
+    assertEquals("DSN-1", uploadAttrs.get("deviceId"));
+    assertEquals("ZZ-TRI-FECTA", uploadAttrs.get("deviceRegistryId"));
+    verify(mockPublisher, org.mockito.Mockito.never()).publish(any(PubsubMessage.class));
+
+    // 2. Standard events message routes to mockPublisher
+    String eventTopic = "/r/ZZ-TRI-FECTA/d/DSN-1/events/discovery";
+    MqttMessage eventMsg = new MqttMessage("{\"event_no\":1}".getBytes());
+    eventMsg.setId(802);
+    callback.messageArrived(eventTopic, eventMsg);
+
+    ArgumentCaptor<PubsubMessage> eventCaptor = ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(eventCaptor.capture());
+    Map<String, String> eventAttrs = eventCaptor.getValue().getAttributesMap();
+    assertEquals("events", eventAttrs.get("subType"));
+    assertEquals("discovery", eventAttrs.get("subFolder"));
   }
 
   @Test
