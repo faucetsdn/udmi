@@ -209,6 +209,10 @@ def run_bacnet_trace_whois_rounds(
   dnet_pace_sec = 1.0 * scale
   global_wait_sec = 15.0 * scale
 
+  # Brief initial startup sync so tcpdump opens its capture socket before Round 1
+  if stop_event.wait(timeout=min(0.1, 0.02 * scale)):
+    return
+
   for _ in range(rounds):
     if stop_event.is_set():
       break

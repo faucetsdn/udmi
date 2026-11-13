@@ -683,14 +683,21 @@ class SpotterDiscoveryManager(DiscoveryManager):
 
     depth_val = getattr(fam_config, "depth", None) if fam_config else None
     if depth_val in (Depth.trace, Depth.trace.value):
+      f_state = self._discovery_state.families.get(family)
+      run_generation = getattr(f_state, "generation", None) or (
+          getattr(fam_config, "generation", None) if fam_config else None
+      )
       try:
         self._run_trace_capture(family, fam_config)
       finally:
         if provider in self._active_providers:
           self._active_providers.remove(provider)
-        self._family_providers.pop(family, None)
-        self._update_family_state(family, False)
-        self.trigger_state_update(immediate=True)
+        if self._family_providers.get(family) is provider:
+          self._family_providers.pop(family, None)
+        cur_state = self._discovery_state.families.get(family)
+        if cur_state is not None and cur_state.generation == run_generation:
+          self._update_family_state(family, False)
+          self.trigger_state_update(immediate=True)
       return
 
     # Standard Protocol Scan
@@ -705,6 +712,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
         and getattr(fam_config, "generation", None)
     ):
       f_state.generation = fam_config.generation
+    run_generation = f_state.generation
 
     f_state.phase = DiscoveryPhase.active
     f_state.active_count = 0
@@ -729,25 +737,29 @@ class SpotterDiscoveryManager(DiscoveryManager):
     try:
       provider.start_scan(effective_config, self._handle_scan_result)
       LOGGER.info("Scan finished for '%s'.", family)
-      f_state.status = None
-      passive_holdoff = getattr(provider, "passive_holdoff_count", 0)
-      if passive_holdoff:
-        f_state.passive_count = passive_holdoff
+      if f_state.generation == run_generation:
+        f_state.status = None
+        passive_holdoff = getattr(provider, "passive_holdoff_count", 0)
+        if passive_holdoff:
+          f_state.passive_count = passive_holdoff
     except Exception as e:  # pylint: disable=broad-exception-caught
       LOGGER.error("Scan failed for '%s': %s", family, e, exc_info=True)
-      err_msg = str(e).strip() or type(e).__name__
-      f_state.status = Entry(
-          category="discovery.family.scan",
-          level=500,
-          message=err_msg,
-          timestamp=_format_generation(datetime.now(timezone.utc)),
-      )
+      if f_state.generation == run_generation:
+        err_msg = str(e).strip() or type(e).__name__
+        f_state.status = Entry(
+            category="discovery.family.scan",
+            level=500,
+            message=err_msg,
+            timestamp=_format_generation(datetime.now(timezone.utc)),
+        )
     finally:
       if provider in self._active_providers:
         self._active_providers.remove(provider)
-      self._family_providers.pop(family, None)
-      self._update_family_state(family, False)
-      self.trigger_state_update(immediate=True)
+      if self._family_providers.get(family) is provider:
+        self._family_providers.pop(family, None)
+      if f_state.generation == run_generation:
+        self._update_family_state(family, False)
+        self.trigger_state_update(immediate=True)
 
   def _run_trace_capture(self, family: str, fam_config: Any) -> None:
     """Executes PCAP capture, runs raw-socket BACnet Who-Is rounds, and streams chunks over upload/discovery."""
@@ -946,9 +958,13 @@ class SpotterDiscoveryManager(DiscoveryManager):
         _emit_compressed_chunk(bytes(pending_buf))
         pending_buf.clear()
 
+      cancelled_externally = whois_stop_event.is_set()
       whois_stop_event.set()
       if whois_thread and whois_thread.is_alive():
         whois_thread.join(timeout=2.0)
+
+      if f_state.generation != generation:
+        return
 
       if circuit_breaker_tripped and chunk_count == 0:
         f_state.phase = DiscoveryPhase.stopped
@@ -959,6 +975,10 @@ class SpotterDiscoveryManager(DiscoveryManager):
             message="Trace capture throttled by safety circuit breaker",
             timestamp=_format_generation(datetime.now(timezone.utc)),
         )
+        return
+
+      if cancelled_externally and total_bytes == 0:
+        f_state.phase = DiscoveryPhase.stopped
         return
 
       if total_bytes == 0:
@@ -993,28 +1013,29 @@ class SpotterDiscoveryManager(DiscoveryManager):
           digest,
       )
 
-      f_state.phase = DiscoveryPhase.stopped
-      f_state.active_count = chunk_count
-      if circuit_breaker_tripped:
-        f_state.status = Entry(
-            category="discovery.family.scan",
-            level=400,
-            message=(
-                "Trace capture throttled by safety circuit breaker after"
-                f" {chunk_count} upload/discovery chunks."
-            ),
-            timestamp=_format_generation(datetime.now(timezone.utc)),
-        )
-      else:
-        f_state.status = Entry(
-            category="discovery.family.scan",
-            level=200,
-            message=(
-                f"Trace capture complete. {chunk_count} upload/discovery chunks"
-                " emitted."
-            ),
-            timestamp=_format_generation(datetime.now(timezone.utc)),
-        )
+      if f_state.generation == generation:
+        f_state.phase = DiscoveryPhase.stopped
+        f_state.active_count = chunk_count
+        if circuit_breaker_tripped:
+          f_state.status = Entry(
+              category="discovery.family.scan",
+              level=400,
+              message=(
+                  "Trace capture throttled by safety circuit breaker after"
+                  f" {chunk_count} upload/discovery chunks."
+              ),
+              timestamp=_format_generation(datetime.now(timezone.utc)),
+          )
+        else:
+          f_state.status = Entry(
+              category="discovery.family.scan",
+              level=200,
+              message=(
+                  f"Trace capture complete. {chunk_count} upload/discovery"
+                  " chunks emitted."
+              ),
+              timestamp=_format_generation(datetime.now(timezone.utc)),
+          )
 
     except Exception as e:  # pylint: disable=broad-exception-caught
       whois_stop_event.set()
@@ -1023,13 +1044,15 @@ class SpotterDiscoveryManager(DiscoveryManager):
       LOGGER.error(
           "Trace capture failed for family '%s': %s", family, e, exc_info=True
       )
-      f_state.phase = DiscoveryPhase.stopped
-      f_state.status = Entry(
-          category="discovery.family.scan",
-          level=500,
-          message=str(e),
-          timestamp=_format_generation(datetime.now(timezone.utc)),
-      )
+      if f_state.generation == generation:
+        f_state.phase = DiscoveryPhase.stopped
+        f_state.status = Entry(
+            category="discovery.family.scan",
+            level=500,
+            message=str(e),
+            timestamp=_format_generation(datetime.now(timezone.utc)),
+        )
     finally:
-      self._trace_stop_events.pop(family, None)
+      if self._trace_stop_events.get(family) is whois_stop_event:
+        self._trace_stop_events.pop(family, None)
       self.trigger_state_update()

@@ -249,6 +249,34 @@ def expand_ip_targets(
       yield str(ipaddress.ip_address(target_str))
 
 
+def _resolve_nmap_targets(
+    targets: List[str], fallback_subnet: Optional[str] = None
+) -> List[str]:
+  """Validates and resolves IP addresses, CIDRs, or VLAN IDs into Nmap target specs."""
+  resolved: List[str] = []
+  for target in targets:
+    target_str = str(target).strip()
+    if not target_str:
+      continue
+    if target_str.isdigit():
+      vlan_id = int(target_str)
+      if MIN_VLAN_ID <= vlan_id <= MAX_VLAN_ID:
+        if fallback_subnet:
+          resolved.append(
+              str(ipaddress.ip_interface(fallback_subnet).network)
+          )
+        continue
+      raise ValueError(
+          f"Ether VLAN network ID {target_str!r} must be between"
+          f" {MIN_VLAN_ID} and {MAX_VLAN_ID}"
+      )
+    if "/" in target_str:
+      resolved.append(str(ipaddress.ip_network(target_str, strict=False)))
+    else:
+      resolved.append(str(ipaddress.ip_address(target_str)))
+  return resolved
+
+
 class EtherFamilyProvider(FamilyProvider):
   """Pluggable Ethernet protocol discovery provider (Ping & Nmap)."""
 
@@ -643,11 +671,17 @@ class EtherFamilyProvider(FamilyProvider):
     if not os.path.exists("/usr/bin/nmap"):
       raise RuntimeError("nmap binary not found at /usr/bin/nmap")
 
+    nmap_targets = _resolve_nmap_targets(
+        targets, fallback_subnet=self.subnet_filter
+    )
+    if not nmap_targets:
+      return
+
     cmd = ["/usr/bin/nmap"]
     if depth in ("system", "details", "parts", "refs"):
       cmd.extend(["--script", "banner", "-sV"])
     cmd.extend(["-p-", "-T4", "--max-hostgroup", "32", "-oX", "-"])
-    cmd.extend(targets)
+    cmd.extend(nmap_targets)
 
     try:
       with self._lock:

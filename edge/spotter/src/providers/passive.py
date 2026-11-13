@@ -77,6 +77,7 @@ def decode_bacnet_bvll(
     return None
 
   bvlc_func = payload[1]
+  bvlc_len = int.from_bytes(payload[2:4], byteorder="big")
   orig_ip = outer_ip
   orig_port = outer_port
   npdu_offset = 4
@@ -130,7 +131,12 @@ def decode_bacnet_bvll(
         # Network Layer Message: 0x01 is I-Am-Router-To-Network
         if pos < len(payload) and payload[pos] == 0x01:
           dnets = []
-          rem = payload[pos + 1 :]
+          end_pos = (
+              min(len(payload), bvlc_len)
+              if bvlc_len >= pos + 1
+              else len(payload)
+          )
+          rem = payload[pos + 1 : end_pos]
           for i in range(0, len(rem) - 1, 2):
             dnet = int.from_bytes(rem[i : i + 2], byteorder="big")
             if 1 <= dnet <= 65534 and dnet not in dnets:
@@ -501,28 +507,45 @@ class PassiveFamilyProvider(FamilyProvider):
 
           now = time.monotonic()
           record_key = (
-              f"{effective_ip}:{snet}:{sadr}:{bacnet_id}"
-              if snet is not None
+              f"{effective_ip}:{snet or ''}:{sadr or ''}:{bacnet_id}"
+              if (snet is not None or bacnet_id is not None)
               else effective_ip
           )
           with self._records_lock:
             if passive_sec and int(passive_sec) > 0:
               last_pub = self._last_published_at.get(record_key)
+              if (
+                  last_pub is None
+                  and snet is None
+                  and bacnet_id is None
+              ):
+                last_pub = self._last_published_at.get(effective_ip)
               if last_pub is not None and (now - last_pub) < float(passive_sec):
                 self.passive_holdoff_count += 1
                 continue
               self._last_published_at[record_key] = now
-              if snet is None:
-                self._records_published = {
-                    r
-                    for r in self._records_published
-                    if not (r.addr == effective_ip and r.snet is None)
-                }
-                self._device_records = {
-                    r
-                    for r in self._device_records
-                    if not (r.addr == effective_ip and r.snet is None)
-                }
+              if snet is None and bacnet_id is None:
+                self._last_published_at[effective_ip] = now
+              self._records_published = {
+                  r
+                  for r in self._records_published
+                  if not (
+                      r.addr == effective_ip
+                      and r.snet == snet
+                      and r.sadr == sadr
+                      and (r.bacnet_id == bacnet_id or bacnet_id is None)
+                  )
+              }
+              self._device_records = {
+                  r
+                  for r in self._device_records
+                  if not (
+                      r.addr == effective_ip
+                      and r.snet == snet
+                      and r.sadr == sadr
+                      and (r.bacnet_id == bacnet_id or bacnet_id is None)
+                  )
+              }
             elif effective_ip in self._addresses_seen and bacnet_id is None:
               continue
 

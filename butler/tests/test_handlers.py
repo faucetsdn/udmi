@@ -316,6 +316,33 @@ class HandlerTests(unittest.TestCase):
                 )
             self.assertEqual(len(handler._sessions), 0)
 
+            # Verify missing sha256 on terminal EOF raises ValueError and evicts session
+            with self.assertRaises(ValueError):
+                handler.process_message(
+                    env,
+                    {
+                        "generation": "2026-11-05T15:00:00Z",
+                        "family": "bacnet",
+                        "event_no": 1,
+                        "data": base64.b64encode(gzip.compress(c1)).decode(
+                            "ascii"
+                        ),
+                    },
+                    self.mock_pg,
+                    self.mock_influx,
+                )
+                handler.process_message(
+                    env,
+                    {
+                        "generation": "2026-11-05T15:00:00Z",
+                        "family": "bacnet",
+                        "event_no": -2,
+                    },
+                    self.mock_pg,
+                    self.mock_influx,
+                )
+            self.assertEqual(len(handler._sessions), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

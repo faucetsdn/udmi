@@ -194,6 +194,6 @@ To prove byte-for-byte discovery parity on an actual field testbed machine witho
 
 The following capabilities are tracked as future milestones:
 
-1. **Ephemeral Secret Delivery**: Architectural mechanism for delivering transient, authenticated operational credentials (e.g., vendor device credentials, BACnet network encryption keys, or REST API bearer tokens) strictly in volatile RAM without disk persistence. A dedicated architectural discussion will finalize the delivery transport (such as non-persisted command channels e.g. `commands/secret` vs encrypted `config.blobset`), memory scrubbing lifecycles, and cryptographic envelope validation before implementation.
+1. **Ephemeral Secret Delivery**: Architectural mechanism for delivering transient, authenticated operational credentials (e.g., vendor device credentials, BACnet network encryption keys, or REST API bearer tokens) strictly in volatile RAM without disk persistence via the `download/blobset` channel framed by `config.blobset` and `state.blobset`.
 2. **Key Rotation & Lifecycle**: End-to-end device private/public key rotation with automated cloud IoT registry coordination, backup verification, and zero-downtime reconnection.
 3. **Expanded Host Observability Metrics**: Network adapter error/drop counters, hardware temperature, storage/inode thresholds, and edge-to-cloud roundtrip latency.

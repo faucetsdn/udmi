@@ -432,14 +432,13 @@ class BacnetFamilyProvider(FamilyProvider):
       target_nets: Any = (
           self._active_networks if self._active_networks else "known"
       )
-      min_low = min(low for low, _ in self._active_instance_ranges)
-      max_high = max(high for _, high in self._active_instance_ranges)
-      client.discover(
-          networks=target_nets,
-          limits=(min_low, max_high),
-          global_broadcast=True,
-          reset=True,
-      )
+      for idx, (low, high) in enumerate(self._active_instance_ranges):
+        client.discover(
+            networks=target_nets,
+            limits=(low, high),
+            global_broadcast=True,
+            reset=(idx == 0),
+        )
 
     self._scan_thread = threading.Thread(
         target=self._devices_consumer,

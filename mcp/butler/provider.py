@@ -956,17 +956,10 @@ class ButlerProvider:
         effective_spec = (
             conn_spec or self.project_spec or os.environ.get("BUTLER_CONN_SPEC")
         )
-        if effective_spec:
-            from butler.src.discovery import trigger_bacnet_trace as publish_trace
-
-            publish_trace(
-                conn_spec=effective_spec,
-                registry_id=site,
-                device_id=gateway_id,
-                scan_duration_sec=int(scan_duration_sec),
-                max_bytes=int(max_bytes),
-                site_model=site_model or os.environ.get("BUTLER_SITE_MODEL"),
-                generation=generation,
+        if not effective_spec:
+            raise ValueError(
+                "Missing connection specification (conn_spec or BUTLER_CONN_SPEC) "
+                "required to trigger BACnet trace"
             )
 
         if self.pg_manager and hasattr(self.pg_manager, "insert_row"):
@@ -984,6 +977,18 @@ class ButlerProvider:
                     "bug_id": str(bug_id) if bug_id is not None else None,
                 },
             )
+
+        from butler.src.discovery import trigger_bacnet_trace as publish_trace
+
+        publish_trace(
+            conn_spec=effective_spec,
+            registry_id=site,
+            device_id=gateway_id,
+            scan_duration_sec=int(scan_duration_sec),
+            max_bytes=int(max_bytes),
+            site_model=site_model or os.environ.get("BUTLER_SITE_MODEL"),
+            generation=generation,
+        )
 
         return {
             "status": "PENDING",

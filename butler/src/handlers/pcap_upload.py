@@ -176,9 +176,18 @@ class PcapUploadHandler(BaseHandler):
     def _upload_to_gcs(
         self, blob_path: str, content: bytes, content_type: str
     ) -> None:
-        """Uploads a reassembled artifact to GCS when gcs_client is configured."""
-        if not self.gcs_bucket or self.gcs_client is None:
+        """Uploads a reassembled artifact to GCS when gcs_bucket is configured."""
+        if not self.gcs_bucket:
             return
+        if self.gcs_client is None:
+            try:
+                from google.cloud import storage  # pylint: disable=import-outside-toplevel
+
+                self.gcs_client = storage.Client()
+            except Exception as err:
+                raise RuntimeError(
+                    f"Failed to initialize GCS client for bucket '{self.gcs_bucket}': {err}"
+                ) from err
         bucket = self.gcs_client.bucket(self.gcs_bucket)
         blob = bucket.blob(blob_path)
         blob.upload_from_string(content, content_type=content_type)
@@ -219,7 +228,17 @@ class PcapUploadHandler(BaseHandler):
         session.actual_sha256 = actual_sha256
         session.total_bytes = len(pcap_bytes)
 
-        if session.expected_sha256 and actual_sha256 != session.expected_sha256:
+        if not session.expected_sha256:
+            err_msg = (
+                f"Missing required 'sha256' digest in terminal upload/discovery EOF for "
+                f"{session.site}/{session.device_id}/{session.generation}"
+            )
+            self._upsert_capture_metadata(
+                postgres_manager, session, status="FAILED", error_message=err_msg
+            )
+            raise ValueError(err_msg)
+
+        if actual_sha256 != session.expected_sha256:
             err_msg = (
                 f"PCAP SHA-256 digest mismatch for {session.site}/{session.device_id}/"
                 f"{session.generation}: expected {session.expected_sha256}, got {actual_sha256}"

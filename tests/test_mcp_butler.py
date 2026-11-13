@@ -812,8 +812,13 @@ class TestButlerMcpStdioRunner(unittest.TestCase):
             self.assertIn("list_rollouts", tool_names)
             self.assertIn("get_rollout", tool_names)
             self.assertIn("update_rollout", tool_names)
+            self.assertIn("trigger_bacnet_trace", tool_names)
+            self.assertIn("get_pcap_capture", tool_names)
 
         finally:
+            for stream in (proc.stdin, proc.stdout, proc.stderr):
+                if stream is not None:
+                    stream.close()
             proc.terminate()
             proc.wait(timeout=2)
 

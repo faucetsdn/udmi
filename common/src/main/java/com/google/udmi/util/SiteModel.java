@@ -389,7 +389,8 @@ public class SiteModel {
     File[] files = Objects.requireNonNull(devicesFile.listFiles(),
         "no files in " + devicesFile.getAbsolutePath());
     return Arrays.stream(files).map(File::getName).sorted()
-        .filter(device -> validDeviceDirectory(devicesFile, device)).collect(Collectors.toSet());
+        .filter(device -> validDeviceDirectory(devicesFile, device))
+        .collect(Collectors.toCollection(java.util.LinkedHashSet::new));
   }
 
   public Set<String> getTemplateIds() {
