@@ -1,0 +1,7 @@
+var/
+out/
+*site_model*/
+.env*
+**/*.class
+**/*.war
+udmis/UI/ManagementWebapp/webapp/WEB-INF/classes/webapp/
