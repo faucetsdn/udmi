@@ -1,0 +1,22 @@
+{
+  "version": "1.5.7",
+  "timestamp": "2026-11-10T14:36:00Z",
+  "generation": "2026-11-10T14:35:00Z",
+  "family": "bacnet",
+  "event_no": -2,
+  "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "scan_manifest": {
+    "gateway_ip": "192.168.1.50",
+    "interface": "eth0",
+    "filter": "udp port 47808",
+    "scan_round_timestamps": [
+      "2026-11-10T14:35:01Z",
+      "2026-11-10T14:35:20Z",
+      "2026-11-10T14:35:40Z"
+    ],
+    "discovered_routed_networks": [
+      6100,
+      9288
+    ]
+  }
+}

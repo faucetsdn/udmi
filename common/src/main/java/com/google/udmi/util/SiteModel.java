@@ -388,7 +388,7 @@ public class SiteModel {
     File devicesFile = getDevicesDir();
     File[] files = Objects.requireNonNull(devicesFile.listFiles(),
         "no files in " + devicesFile.getAbsolutePath());
-    return Arrays.stream(files).map(File::getName)
+    return Arrays.stream(files).map(File::getName).sorted()
         .filter(device -> validDeviceDirectory(devicesFile, device)).collect(Collectors.toSet());
   }
 

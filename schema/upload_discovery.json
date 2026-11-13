@@ -1,0 +1,83 @@
+{
+  "$udmi_version": "1.5.7",
+  "title": "Discovery Upload",
+  "description": "Sequential compressed capture chunk transport over MQTT upload/discovery framed by config.discovery and state.discovery.",
+  "$section": "Messages",
+  "type": "object",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "timestamp": {
+      "description": "RFC 3339 UTC timestamp the chunk was emitted",
+      "type": "string",
+      "format": "date-time"
+    },
+    "version": {
+      "description": "Version of the UDMI schema",
+      "type": "string"
+    },
+    "generation": {
+      "description": "Trigger timestamp / session generation ID matching config.discovery and state.discovery",
+      "type": "string",
+      "format": "date-time"
+    },
+    "family": {
+      "description": "Protocol family identifier for the trace capture (e.g. bacnet, ether, ipv4)",
+      "type": "string"
+    },
+    "event_no": {
+      "description": "0 for start marker, 1..N for gzip-compressed data chunks, and required -(N+1) for stream termination",
+      "type": "integer"
+    },
+    "data": {
+      "description": "Base64-encoded gzip-compressed binary PCAP chunk payload (present for event_no > 0)",
+      "type": "string"
+    },
+    "sha256": {
+      "description": "Expected SHA-256 hex digest of the complete unencoded PCAP file (required on terminal event_no < 0)",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "scan_manifest": {
+      "title": "Scan Manifest",
+      "description": "Metadata describing active discovery scan rounds executed during trace capture",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "gateway_ip": {
+          "description": "Local gateway IPv4 address used during capture",
+          "type": "string"
+        },
+        "interface": {
+          "description": "Network interface captured",
+          "type": "string"
+        },
+        "filter": {
+          "description": "BPF packet filter applied during capture",
+          "type": "string"
+        },
+        "scan_round_timestamps": {
+          "description": "RFC 3339 UTC timestamps marking active Who-Is discovery scan rounds",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "discovered_routed_networks": {
+          "description": "Routed BACnet DNET numbers discovered via I-Am-Router-To-Network during trace",
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "timestamp",
+    "version",
+    "generation",
+    "family",
+    "event_no"
+  ]
+}
