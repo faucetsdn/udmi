@@ -25,6 +25,7 @@ ENV NO_CACHE_DIR=true
 RUN bin/setup_base
 
 ADD bin/ validator/bin/
+ADD sequences/ validator/sequences/
 ADD build/libs validator/build/libs/
 
 CMD ["/root/validator/bin/automate"]
