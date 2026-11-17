@@ -72,7 +72,8 @@ for container in udmis validator; do
     fi
 done
 
-if ! docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
+STARTED_AT=$(docker inspect -f '{{.State.StartedAt}}' udmis 2>/dev/null || true)
+if ! docker logs ${STARTED_AT:+--since "$STARTED_AT"} udmis 2>&1 | grep "udmis running in the background" >/dev/null; then
     fail "UDMIS container is running but not yet ready. Wait for startup to complete or check 'docker logs udmis'."
 fi
 

@@ -1,4 +1,4 @@
-ARG VALIDATOR_BASE_IMAGE=ghcr.io/faucetsdn/udmi:validator-latest
+ARG VALIDATOR_BASE_IMAGE=ghcr.io/faucetsdn/udmi/validator:latest
 FROM ${VALIDATOR_BASE_IMAGE}
 
 COPY startup.sh /usr/local/bin/

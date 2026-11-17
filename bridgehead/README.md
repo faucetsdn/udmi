@@ -110,7 +110,7 @@ Pubber requires access to the site model. There are 2 ways to get pubber setup w
 
 #### Run tool
 
-Start pubber container: `docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"`
+Start pubber container: `docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi/pubber:latest /bin/bash -c "tail -f /dev/null"`
 
 Run pubber: `docker exec pubber bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> AHU-22 123456`
 
@@ -129,7 +129,7 @@ Run the following commands to complete a discovery sequence:
 ```
 docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d && bin/registrar site_model/ //mqtt/mosquitto GAT-123"
 
-docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"
+docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi/pubber:latest /bin/bash -c "tail -f /dev/null"
 
 docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> GAT-123 852649" 
 

@@ -1,4 +1,4 @@
-ARG UDMIS_BASE_IMAGE=ghcr.io/faucetsdn/udmi:udmis-latest
+ARG UDMIS_BASE_IMAGE=ghcr.io/faucetsdn/udmi/udmis:latest
 FROM quay.io/coreos/etcd:v3.5.13 AS etcd-client-builder
 FROM tomcat:11-jre21-temurin AS tomcat
 FROM ${UDMIS_BASE_IMAGE} AS webapp-builder
