@@ -1,0 +1,130 @@
+#!/bin/bash -e
+
+UDMI_ROOT=$(dirname $(realpath $0))/..
+INVOCATION_DIR="$PWD"
+
+source $UDMI_ROOT/etc/shell_common.sh
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: $(basename $0) [-v|-vv] [-a] [-x] [-s serial_no] <DEVICE_ID> [TEST_NAMES...]"
+    echo ""
+    echo "Registers the target device in UDMI Bridgehead and runs the UDMI Sequencer"
+    echo "against it inside the validator container, restoring host file ownership"
+    echo "and printing the resulting host report paths."
+    echo ""
+    echo "Options / Arguments:"
+    echo "  -v                      Enable DEBUG logging and save message traces (default)."
+    echo "  -vv                     Enable TRACE logging."
+    echo "  -a                      Include ALPHA stage sequences (min_stage=ALPHA)."
+    echo "  -x                      Execute only ALPHA stage sequences (min_stage==ALPHA)."
+    echo "  -s <serial_no>          Explicit serial number override for the device."
+    echo "  <DEVICE_ID>             Target device ID defined under site_model/devices/."
+    echo "  [TEST_NAMES...]         (Optional) Specific sequence test names to run."
+    echo "  -h, --help              Show this help message and exit."
+    echo ""
+    echo "Examples:"
+    echo "  $(basename $0) GAT-123"
+    echo "  $(basename $0) GAT-123 system_last_update"
+    echo "  $(basename $0) -vv -a AHU-1 writeback"
+    exit 0
+fi
+
+SEQ_FLAGS=()
+HAS_VERBOSE=false
+
+while [[ $# -gt 0 && "$1" == -* ]]; do
+    case "$1" in
+        -v|-vv)
+            HAS_VERBOSE=true
+            SEQ_FLAGS+=("$1")
+            shift
+            ;;
+        -a|-x)
+            SEQ_FLAGS+=("$1")
+            shift
+            ;;
+        -s)
+            [[ $# -ge 2 ]] || fail "Option -s requires a <serial_no> argument."
+            SEQ_FLAGS+=("-s" "$2")
+            shift 2
+            ;;
+        *)
+            fail "Unknown option '$1'. Run '$(basename $0) --help' for usage."
+            ;;
+    esac
+done
+
+if [[ "$HAS_VERBOSE" != "true" ]]; then
+    SEQ_FLAGS=("-v" "${SEQ_FLAGS[@]}")
+fi
+
+if [[ $# -lt 1 ]]; then
+    fail "Missing required <DEVICE_ID> argument. Run '$(basename $0) --help' for usage."
+fi
+
+DEVICE_ID="$1"
+shift
+
+# 1. Verify Bridgehead containers are running and UDMIS is ready
+for container in udmis validator; do
+    if [[ "$(docker inspect -f '{{.State.Running}}' "$container" 2>/dev/null || true)" != "true" ]]; then
+        fail "Container '$container' is not running. Start Bridgehead first with: bin/start_bridgehead [site_model_path]"
+    fi
+done
+
+if ! docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
+    fail "UDMIS container is running but not yet ready. Wait for startup to complete or check 'docker logs udmis'."
+fi
+
+# 2. Resolve host SITE_MODEL_PATH from active validator container mount or bridgehead/.env
+if [[ -z "${SITE_MODEL_PATH:-}" ]]; then
+    SITE_MODEL_PATH=$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/root/site_model"}}{{.Source}}{{end}}{{end}}' validator 2>/dev/null || true)
+fi
+if [[ -z "${SITE_MODEL_PATH:-}" && -f "$UDMI_ROOT/bridgehead/.env" ]]; then
+    SITE_MODEL_PATH=$(grep -E '^SITE_MODEL_PATH=' "$UDMI_ROOT/bridgehead/.env" | tail -n 1 | cut -d= -f2- || true)
+fi
+if [[ -z "${SITE_MODEL_PATH:-}" ]]; then
+    SITE_MODEL_PATH="$UDMI_ROOT/sites/udmi_site_model"
+fi
+if [[ "$SITE_MODEL_PATH" != /* ]]; then
+    SITE_MODEL_PATH="$INVOCATION_DIR/$SITE_MODEL_PATH"
+fi
+SITE_MODEL_PATH=$(realpath -m "$SITE_MODEL_PATH")
+
+if [[ ! -d "$SITE_MODEL_PATH/devices/$DEVICE_ID" ]]; then
+    fail "Device '$DEVICE_ID' not found in site model directory '$SITE_MODEL_PATH/devices/$DEVICE_ID'."
+fi
+
+fix_permissions() {
+    docker exec validator chown -RH "$(id -u):$(id -g)" /root/site_model/ 2>/dev/null || true
+}
+trap fix_permissions EXIT
+
+# 3. Register target device so metadata and credentials are fresh in etcd and mosquitto
+echo "=== [1/2] Registering device '$DEVICE_ID' in Bridgehead ==="
+docker exec validator bin/registrar site_model/ //mqtt/mosquitto "$DEVICE_ID"
+
+# 4. Run sequencer against target device
+echo "=== [2/2] Running sequencer for device '$DEVICE_ID' ==="
+SEQ_EXIT=0
+docker exec validator bin/sequencer "${SEQ_FLAGS[@]}" site_model/ //mqtt/mosquitto "$DEVICE_ID" "$@" || SEQ_EXIT=$?
+
+fix_permissions
+
+RESULT_LOG="$SITE_MODEL_PATH/out/devices/$DEVICE_ID/RESULT.log"
+RESULTS_MD="$SITE_MODEL_PATH/out/devices/$DEVICE_ID/results.md"
+RESULTS_JSON="$SITE_MODEL_PATH/out/sequencer_${DEVICE_ID}.json"
+
+echo ""
+echo "=== Sequencer Reports (Host Paths) ==="
+[[ -f "$RESULT_LOG" ]] && echo "  RESULT.log : $RESULT_LOG"
+[[ -f "$RESULTS_MD" ]] && echo "  results.md : $RESULTS_MD"
+[[ -f "$RESULTS_JSON" ]] && echo "  JSON report: $RESULTS_JSON"
+
+if [[ $SEQ_EXIT -ne 0 ]] || \
+   ! docker exec validator grep -q "Found 0 test failures, exit code 0" /root/out/sequencer.log 2>/dev/null || \
+   grep -q "^RESULT fail " "$RESULT_LOG" 2>/dev/null; then
+    fail "Sequencer run failed for device '$DEVICE_ID'. See reports above for details."
+fi
+
+echo "=== Sequencer run PASSED for device '$DEVICE_ID' ==="

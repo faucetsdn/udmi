@@ -42,7 +42,7 @@ The repository provides the `bin/start_bridgehead` helper script to automate pre
 - Creates required host data directories under `bridgehead/var/`.
 - Verifies site model availability and auto-generates missing X.509 reflector certificates (`rsa_private.crt`, `ca.crt`).
 - Generates a default `.env` configuration file with host IP detection and random tokens if `.env` does not already exist.
-- Pulls missing base images, builds container images (including packaging `bridgeheadManager.war` inside the `udmis` image), and launches all services via `docker compose`.
+- Pulls missing base images, builds container images (including packaging `bridgeheadManager.war` inside the `udmis` image), launches all services via `docker compose`, and waits until the `udmis` service is initialized and ready.
 
 ---
 
@@ -160,7 +160,22 @@ docker exec -d validator bin/validator site_model/ //mqtt/mosquitto
 
 ## Sequencer
 
-The Sequencer tool executes automated UDMI sequence compliance tests against a target Device Under Test (DUT) over MQTT. Ensure the target device (or the `pubber` container if testing with a simulated device) is actively running and connected before executing the sequencer:
+The Sequencer tool executes automated UDMI sequence compliance tests against a target Device Under Test (DUT) over MQTT. Ensure the target device (or the `pubber` container if testing with a simulated device) is actively running and connected before executing the sequencer.
+
+### Recommended: Using Host Wrapper (`bin/sequencer_bridgehead`)
+
+From the repository root, run `bin/sequencer_bridgehead`, which automatically registers the target device via `registrar`, runs `sequencer` with trace logging (`-v`), restores host ownership of output files, and prints the resulting host report paths:
+```bash
+# Run full sequencer suite for device GAT-123
+bin/sequencer_bridgehead GAT-123
+
+# Run a specific sequence (e.g. system_last_update)
+bin/sequencer_bridgehead GAT-123 system_last_update
+```
+
+### Direct Container Execution
+
+Alternatively, run `bin/sequencer` directly inside the `validator` container:
 ```bash
 # Run full sequencer suite for device GAT-123
 docker exec validator bin/sequencer -v site_model/ //mqtt/mosquitto GAT-123
