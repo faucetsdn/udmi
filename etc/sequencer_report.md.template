@@ -13,6 +13,14 @@
 | Software | {{report.device_software|pretty_dict}} |
 {% if report.gateway is not none %}| Gateway | {{report.gateway}} |{%- endif %}
 
+## UDMI Version
+
+| Component | Version |
+|---|---|
+| Sequencer | {{report.udmi_version}} |
+{% if report.cloud_udmi_version is not none -%}
+| Cloud | {{report.cloud_udmi_version}} |
+{% endif %}
 ## Summary
 
 | | Feature | {%- for stage in report.stages %} {{stage.capitalize()}} |{%- endfor %}

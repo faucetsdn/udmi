@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Unit testing for sequence report generator"""
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from importlib import machinery, util
 import unittest
 
@@ -92,6 +92,20 @@ class SampleTestResult:
   name: str = "extra_config"
 
 
+@dataclass
+class SampleReport:
+  """Minimal in-memory report stub for template tests."""
+
+  udmi_version: str = "1.5.7"
+  cloud_udmi_version: str = None
+  gateway: str = None
+  stages: tuple = ()
+  features: dict = field(default_factory=dict)
+  results: dict = field(default_factory=dict)
+  schema_results_by_stage: dict = field(default_factory=dict)
+  results_by_feature: dict = field(default_factory=dict)
+
+
 class TestSequencerReport(unittest.TestCase):
   """Unit tests for sequence report generation"""
 
@@ -169,6 +183,23 @@ class TestSequencerReport(unittest.TestCase):
     print(done, fail, todo)
     formatted = seq.Sequence.format(ref, [], SampleTestResult())
     print(formatted)
+
+  def test_udmi_version(self):
+    self.assertIsNone(seq.SequencerReport.get_cloud_udmi_version({}))
+    self.assertEqual(
+        seq.SequencerReport.get_cloud_udmi_version(
+            {"cloud_version": {"udmi_version": "1.4.1"}}
+        ),
+        "1.4.1",
+    )
+    only_local = seq.render_report(SampleReport(), seq.TEMPLATE_PATH)
+    self.assertIn("| Sequencer | 1.5.7 |\n\n## Summary", only_local)
+    with_cloud = seq.render_report(
+        SampleReport(cloud_udmi_version="1.4.1"), seq.TEMPLATE_PATH
+    )
+    self.assertIn(
+        "| Sequencer | 1.5.7 |\n| Cloud | 1.4.1 |\n\n## Summary", with_cloud
+    )
 
 
 if __name__ == "__main__":
