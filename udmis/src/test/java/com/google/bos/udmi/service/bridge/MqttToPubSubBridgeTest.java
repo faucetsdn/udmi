@@ -383,7 +383,7 @@ class MqttToPubSubBridgeTest {
     // Call setupBridge with shared subscription
     new MqttToPubSubBridge()
         .setupBridge(mockMqttClient, mockPublisher, originalTopic, null,
-            "bridge", sharedSubscriptionName);
+            "bridge", sharedSubscriptionName, false);
 
     // Verify it subscribed to the shared subscription filter
     verify(mockMqttClient).subscribe(expectedFilter, 1);
@@ -1085,23 +1085,111 @@ class MqttToPubSubBridgeTest {
   }
 
   @Test
-  void testParseArgsOmitSubtypeOption() throws Exception {
-    String[] defaultArgs = {
+  void testSetupBridgeFromCommandLineDefaults() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    String[] args = {
         "--gcp_project_id=my-project",
         "--pubsub_topic_id=my-topic",
         "--mqtt_client_id=my-client"
     };
-    CommandLine defaultCommandLine = MqttToPubSubBridge.parseArgs(defaultArgs);
-    org.junit.jupiter.api.Assertions.assertFalse(defaultCommandLine.hasOption("omit_subtype"));
+    CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
 
-    String[] omitSubtypeArgs = {
+    new MqttToPubSubBridge()
+        .setupBridgeFromCommandLine(mockMqttClient, mockPublisher, null, commandLine);
+
+    verify(mockMqttClient).subscribe("/r/+/d/#", 1);
+
+    Map<String, String> attributes = publishedAttributes(mockMqttClient, mockPublisher,
+        "/r/my-registry/d/my-device/events/subfolder_name");
+    assertEquals("zanzara", attributes.get("source"));
+    assertEquals("events", attributes.get("subType"));
+    assertEquals("subfolder_name", attributes.get("subFolder"));
+  }
+
+  @Test
+  void testSetupBridgeFromCommandLineOmitSubtype() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    String[] args = {
         "--gcp_project_id=my-project",
         "--pubsub_topic_id=my-topic",
         "--mqtt_client_id=my-client",
         "--omit_subtype"
     };
-    CommandLine omitSubtypeCommandLine = MqttToPubSubBridge.parseArgs(omitSubtypeArgs);
-    org.junit.jupiter.api.Assertions.assertTrue(omitSubtypeCommandLine.hasOption("omit_subtype"));
+    CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
+
+    new MqttToPubSubBridge()
+        .setupBridgeFromCommandLine(mockMqttClient, mockPublisher, null, commandLine);
+
+    verify(mockMqttClient).subscribe("/r/+/d/#", 1);
+
+    Map<String, String> attributes = publishedAttributes(mockMqttClient, mockPublisher,
+        "/r/my-registry/d/my-device/events/subfolder_name");
+    assertEquals("zanzara", attributes.get("source"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subType"));
+    assertEquals("subfolder_name", attributes.get("subFolder"));
+  }
+
+  @Test
+  void testSetupBridgeFromCommandLineSubscriptionOptions() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    String[] args = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client",
+        "--mqtt_subscription_topic=/r/+/d/+/events/#",
+        "--source_attribute=custom-source",
+        "--shared_subscription=my-group"
+    };
+    CommandLine commandLine = MqttToPubSubBridge.parseArgs(args);
+
+    new MqttToPubSubBridge()
+        .setupBridgeFromCommandLine(mockMqttClient, mockPublisher, null, commandLine);
+
+    verify(mockMqttClient).subscribe("$share/my-group//r/+/d/+/events/#", 1);
+
+    Map<String, String> attributes = publishedAttributes(mockMqttClient, mockPublisher,
+        "/r/my-registry/d/my-device/events/subfolder_name");
+    assertEquals("custom-source", attributes.get("source"));
+    assertEquals("events", attributes.get("subType"));
+    assertEquals("subfolder_name", attributes.get("subFolder"));
+  }
+
+  @Test
+  void testSetupBridgeWithOmitSubtypeEventsTrailingSlash() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/my-registry/d/my-device/events/";
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    new MqttToPubSubBridge().setupBridge(
+        mockMqttClient, mockPublisher, testTopic, null, "zanzara", null, true);
+
+    Map<String, String> attributes = publishedAttributes(mockMqttClient, mockPublisher, testTopic);
+
+    // Pins the legacy attribute extraction that omit_subtype restores: it has no emptiness
+    // guard, so an events/ topic with an empty folder segment publishes an empty subFolder.
+    assertEquals(testTopic, attributes.get("mqttTopic"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subType"));
+    org.junit.jupiter.api.Assertions.assertTrue(attributes.containsKey("subFolder"));
+    assertEquals("", attributes.get("subFolder"));
   }
 
   @Test
@@ -1172,6 +1260,22 @@ class MqttToPubSubBridgeTest {
     assertEquals("UDMI-REFLECT", attributes.get("deviceRegistryId"));
     org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subType"));
     org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subFolder"));
+  }
+
+  private static Map<String, String> publishedAttributes(IMqttClient mockMqttClient,
+      Publisher mockPublisher, String topic) throws Exception {
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(topic, new MqttMessage("Hello World".getBytes()));
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
+
+    return pubsubMessageCaptor.getValue().getAttributesMap();
   }
 }
 

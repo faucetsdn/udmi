@@ -367,8 +367,6 @@ public class MqttToPubSubBridge {
     }
 
     String mqttBrokerUrl = commandLine.getOptionValue("mqtt_broker_url", "tcp://localhost:1883");
-    String mqttSubscriptionTopic =
-        commandLine.getOptionValue("mqtt_subscription_topic", "/r/+/d/#");
     String gcpProjectId = commandLine.getOptionValue("gcp_project_id");
     String pubsubTopicId = commandLine.getOptionValue("pubsub_topic_id");
     String mqttClientId = commandLine.getOptionValue("mqtt_client_id");
@@ -392,10 +390,6 @@ public class MqttToPubSubBridge {
     String mqttClientKeyPath = commandLine.getOptionValue("mqtt_client_key_path");
     String etcdTarget = commandLine.getOptionValue("etcd_target");
     String etcdOptions = getEtcdOptions(commandLine);
-
-    String sourceAttribute = commandLine.getOptionValue("source_attribute", "zanzara");
-    String sharedSubscription = commandLine.getOptionValue("shared_subscription");
-    boolean omitSubtype = commandLine.hasOption("omit_subtype");
 
     if (gcpProjectId == null || pubsubTopicId == null || mqttClientId == null) {
       logger.error("gcp_project_id, pubsub_topic_id, and mqtt_client_id are required.");
@@ -467,8 +461,7 @@ public class MqttToPubSubBridge {
       bridge.startPeriodicReconnect(mqttClient, reconnectIntervalSec);
 
       // Set up MQTT Message Callback
-      bridge.setupBridge(mqttClient, publisher, mqttSubscriptionTopic,
-          etcdProvider, sourceAttribute, sharedSubscription, omitSubtype);
+      bridge.setupBridgeFromCommandLine(mqttClient, publisher, etcdProvider, commandLine);
 
       // Keep the application running
       while (!bridge.isTripped()) {
@@ -591,6 +584,28 @@ public class MqttToPubSubBridge {
   }
 
   /**
+   * Sets up the bridge between MQTT and Pub/Sub using the message-handling options
+   * (subscription topic, source attribute, shared subscription, and subType omission) from the
+   * parsed command line.
+   *
+   * @param mqttClient   The MQTT client.
+   * @param publisher    The Pub/Sub publisher.
+   * @param etcdProvider The etcd provider used to look up device numeric ids.
+   * @param commandLine  The parsed command line.
+   * @throws MqttException If an MQTT error occurs.
+   */
+  void setupBridgeFromCommandLine(IMqttClient mqttClient, Publisher publisher,
+      EtcdDataProvider etcdProvider, CommandLine commandLine) throws MqttException {
+    String mqttSubscriptionTopic =
+        commandLine.getOptionValue("mqtt_subscription_topic", "/r/+/d/#");
+    String sourceAttribute = commandLine.getOptionValue("source_attribute", "zanzara");
+    String sharedSubscription = commandLine.getOptionValue("shared_subscription");
+    boolean omitSubtype = commandLine.hasOption("omit_subtype");
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute,
+        sharedSubscription, omitSubtype);
+  }
+
+  /**
    * Sets up the bridge between MQTT and Pub/Sub.
    *
    * @param mqttClient            The MQTT client.
@@ -600,7 +615,8 @@ public class MqttToPubSubBridge {
    */
   public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider) throws MqttException {
-    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, "zanzara", null);
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, "zanzara", null,
+        false);
   }
 
   /**
@@ -615,23 +631,23 @@ public class MqttToPubSubBridge {
   public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute)
       throws MqttException {
-    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute, null);
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute, null,
+        false);
   }
 
   /**
-   * Sets up the bridge between MQTT and Pub/Sub with a custom source attribute value.
-   */
-  public void setupBridge(IMqttClient mqttClient, Publisher publisher,
-      String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
-      String sharedSubscription)
-      throws MqttException {
-    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute,
-        sharedSubscription, false);
-  }
-
-  /**
-   * Sets up the bridge between MQTT and Pub/Sub with a custom source attribute value and
-   * optional subType omission.
+   * Sets up the bridge between MQTT and Pub/Sub with a custom source attribute value, an
+   * optional shared subscription, and optional subType omission.
+   *
+   * @param mqttClient            The MQTT client.
+   * @param publisher             The Pub/Sub publisher.
+   * @param mqttSubscriptionTopic The MQTT topic to subscribe to.
+   * @param etcdProvider          The etcd provider used to look up device numeric ids.
+   * @param sourceAttribute       The value of the source attribute.
+   * @param sharedSubscription    The shared subscription name, or null for a plain subscription.
+   * @param omitSubtype           If true, never set subType and only set subFolder for
+   *                              events/ topics.
+   * @throws MqttException If an MQTT error occurs.
    */
   public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
