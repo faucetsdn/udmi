@@ -5,6 +5,7 @@ from butler.src.handlers.alarms import AlarmsHandler
 from butler.src.handlers.base import BaseHandler
 from butler.src.handlers.discovery import DiscoveryHandler
 from butler.src.handlers.metadata import MetadataHandler
+from butler.src.handlers.pcap_upload import PcapUploadHandler
 from butler.src.handlers.point_state import PointStateHandler
 from butler.src.handlers.pointset_events import PointsetEventsHandler
 from butler.src.handlers.raw_fallback import RawFallbackHandler
@@ -33,6 +34,7 @@ class MessageDispatcher:
             self.handlers = custom_handlers
         else:
             self.handlers = [
+                PcapUploadHandler(),
                 PointsetEventsHandler(),
                 PointStateHandler(),
                 SystemStateHandler(),
@@ -69,7 +71,11 @@ class MessageDispatcher:
             envelope, payload, self.postgres_manager, self.influx_manager
         )
 
-        if self.always_save_raw and matched_handler is not self.raw_fallback:
+        if (
+            self.always_save_raw
+            and matched_handler is not self.raw_fallback
+            and sub_type != "upload"
+        ):
             self.raw_fallback.process_message(
                 envelope, payload, self.postgres_manager, self.influx_manager
             )

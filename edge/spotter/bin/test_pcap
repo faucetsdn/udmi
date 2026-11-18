@@ -7,10 +7,10 @@ WORKSPACE_DIR=$(realpath "$SCRIPT_DIR/../../../")
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "Usage: ./test_pcap"
     echo ""
-    echo "Validates remote-triggered PCAP packet capture diagnostics over MQTT streaming:"
+    echo "Validates remote-triggered PCAP packet capture diagnostics over MQTT upload/discovery streaming:"
     echo "1. Starts Mosquitto broker and udmi-spotter container."
     echo "2. Generates dummy traffic and publishes a Discovery TRACE configuration (depth: 'trace')."
-    echo "3. Asserts sequential StreamsEvents chunks over events/streams and parses PCAP magic headers."
+    echo "3. Asserts sequential DiscoveryUpload chunks (0, 1..N, -(N+1)) over upload/discovery and verifies sha256 & PCAP magic headers."
     echo "4. Verifies Level 200 status reports in the container's discovery state."
     echo ""
     echo "Prerequisites:"
@@ -109,7 +109,7 @@ cp "$AHU_CRT_SRC" "$TEST_DIR/rsa_private.crt"
 echo "Starting mosquitto broker with dual listeners"
 MOSQ_CONF="$TEST_DIR/mosquitto.conf"
 cat <<EOF > "$MOSQ_CONF"
-listener 1883 0.0.0.0
+listener 18884 127.0.0.1
 allow_anonymous true
 
 listener 18883 0.0.0.0
@@ -120,7 +120,9 @@ require_certificate true
 allow_anonymous true
 EOF
 
-sudo systemctl stop mosquitto >/dev/null 2>&1 || true
+if [[ $(id -u) == 0 ]]; then
+    systemctl stop mosquitto >/dev/null 2>&1 || true
+fi
 pkill -9 mosquitto >/dev/null 2>&1 || true
 sleep 0.5
 
@@ -157,12 +159,12 @@ cat <<EOF > "$TEST_DIR/spotter_config.json"
 }
 EOF
 
-echo "Setting up MQTT subscriber on port 1883 for state and stream event messages"
+echo "Setting up MQTT subscriber on port 18884 for state and upload/discovery messages"
 MQTT_OUT="$TEST_DIR/mqtt.out"
 touch "$MQTT_OUT"
-mosquitto_sub -h 127.0.0.1 -p 1883 \
+mosquitto_sub -h 127.0.0.1 -p 18884 \
     -t "/r/ZZ-TRI-FECTA/d/DSN-1/state" \
-    -t "/r/ZZ-TRI-FECTA/d/DSN-1/events/streams" \
+    -t "/r/ZZ-TRI-FECTA/d/DSN-1/upload/discovery" \
     -F "%t %p" > "$MQTT_OUT" &
 MOSQ_SUB_PID=$!
 
@@ -194,7 +196,7 @@ if [[ $DEVICE_ONLINE -eq 0 ]]; then
 fi
 
 echo "Preparing discovery TRACE trigger config"
-TIMESTAMP="2026-07-08T14:35:00Z"
+TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 cat <<EOF > "$TEST_DIR/config_payload.json"
 {
@@ -202,13 +204,11 @@ cat <<EOF > "$TEST_DIR/config_payload.json"
   "version": "1.5.7",
   "discovery": {
     "families": {
-      "ether": {
+      "bacnet": {
         "generation": "$TIMESTAMP",
         "depth": "trace",
         "scan_duration_sec": 4,
         "trace": {
-          "interface": "any",
-          "filter": "udp port 47808",
           "max_bytes": 100000
         }
       }
@@ -229,9 +229,9 @@ echo "Starting dummy UDP traffic thread"
 TRAFFIC_PID=$!
 
 echo "Publishing discovery TRACE config to trigger packet capture over MQTT..."
-mosquitto_pub -h 127.0.0.1 -p 1883 -t "/r/ZZ-TRI-FECTA/d/DSN-1/config" -f "$TEST_DIR/config_payload.json" -q 1
+mosquitto_pub -h 127.0.0.1 -p 18884 -t "/r/ZZ-TRI-FECTA/d/DSN-1/config" -f "$TEST_DIR/config_payload.json" -q 1
 
-echo "Waiting for discovery state 'stopped' and stream transfers"
+echo "Waiting for discovery state 'stopped' and upload/discovery terminal EOF marker"
 END_TIME=$((SECONDS + 25))
 STATE_STOPPED=0
 PCAP_DONE=0
@@ -243,10 +243,9 @@ while [[ $SECONDS -lt $END_TIME ]]; do
         fi
     fi
     
-    if grep -q '/events/streams' "$MQTT_OUT"; then
-        TOTAL=$(grep '/events/streams' "$MQTT_OUT" | head -n 1 | sed 's|^[^ ]* ||' | jq -r '.total_chunks')
-        COUNT=$(grep '/events/streams' "$MQTT_OUT" | wc -l)
-        if [[ -n "$TOTAL" && "$TOTAL" != "null" && $COUNT -ge $TOTAL ]]; then
+    if grep -q '/upload/discovery' "$MQTT_OUT"; then
+        LAST_EVT_NO=$(grep '/upload/discovery' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -r '.event_no')
+        if [[ -n "$LAST_EVT_NO" && "$LAST_EVT_NO" != "null" && "$LAST_EVT_NO" -lt 0 ]]; then
             PCAP_DONE=1
         fi
     fi
@@ -265,20 +264,20 @@ if [[ $STATE_STOPPED -eq 0 ]]; then
     exit 1
 fi
 if [[ $PCAP_DONE -eq 0 ]]; then
-    echo "ERROR: Test timed out waiting for PCAP streaming chunks over MQTT events/streams"
+    echo "ERROR: Test timed out waiting for PCAP streaming chunks over MQTT upload/discovery"
     exit 1
 fi
 
 echo "Validating state and payload"
-if grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -e '.discovery.families.ether.status.level != 200' >/dev/null 2>&1; then
-    STATUS_VAL=$(grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -r '.discovery.families.ether.status')
-    echo "ERROR: Discovery family state reported non-200 level: $STATUS_VAL"
+if grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -e '.discovery.families.bacnet.status.level != 200 or .discovery.families.bacnet.status.category != "discovery.family.scan"' >/dev/null 2>&1; then
+    STATUS_VAL=$(grep '/state' "$MQTT_OUT" | tail -n 1 | sed 's|^[^ ]* ||' | jq -r '.discovery.families.bacnet.status')
+    echo "ERROR: Discovery family state reported invalid status: $STATUS_VAL"
     exit 1
 fi
 
 echo "Reassembling pcap payload using reassemble_pcap utility"
-grep '/events/streams' "$MQTT_OUT" | sed 's|^[^ ]* ||' > "$TEST_DIR/stream_events.json"
-"${SCRIPT_DIR}/reassemble_pcap" "$TEST_DIR/stream_events.json" "$TEST_DIR/assembled.pcap"
+grep '/upload/discovery' "$MQTT_OUT" | sed 's|^[^ ]* ||' > "$TEST_DIR/upload_discovery_events.json"
+"${SCRIPT_DIR}/reassemble_pcap" "$TEST_DIR/upload_discovery_events.json" "$TEST_DIR/assembled.pcap" --manifest "$TEST_DIR/scan_manifest.json"
 
 echo "Validating pcap payload size"
 SIZE=$(stat -c%s "$TEST_DIR/assembled.pcap")

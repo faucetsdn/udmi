@@ -143,11 +143,11 @@ device:on_ready Connection successful.
 
 ---
 
-## 5. Engineering Standards & Parity Verification
+## 5. Engineering Standards & UDMI Specification Compliance
 
 To maintain technical integrity and ensure non-regression:
-- **Functional Parity**: Spotter must maintain functional parity with legacy discovery nodes for existing protocol sweeps.
-- **Differential Verification**: Run `bin/test_parity` against simulated device fixtures before changes are committed.
+- **Strict UDMI Specification Compliance**: Spotter strictly adheres to `docs/specs/discovery.md`, `docs/specs/discovery_bacnet.md`, and `schema/*_discovery.json` (canonical `<TYPE>/<INSTANCE>` BACnet refs, hyphenated object types, `families.ipv4.port`, top-level `system.name`/`description`, hyphenated `system.ancillary` keys, canonical `Depth` enum enforcement, and zero `null` fields). Where the legacy discovery node deviated from the UDMI specification, Spotter enforces the authoritative UDMI specification.
+- **Compliance & Co-Existence Verification**: Run `bin/test_parity` against simulated device fixtures before changes are committed.
 - **Negative Verification**: Confirm reproduction of any failure signatures before declaring a defect repaired.
 
 ---
