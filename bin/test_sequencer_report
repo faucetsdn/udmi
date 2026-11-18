@@ -2,6 +2,9 @@
 """Unit testing for sequence report generator"""
 from dataclasses import dataclass
 from importlib import machinery, util
+import json
+import os
+import tempfile
 import unittest
 
 spec = util.spec_from_loader(
@@ -169,6 +172,90 @@ class TestSequencerReport(unittest.TestCase):
     print(done, fail, todo)
     formatted = seq.Sequence.format(ref, [], SampleTestResult())
     print(formatted)
+
+  def _create_site_fixture(self, root_dir, results_extra=None):
+    """Creates a minimal site model directory with sequencer results."""
+    device_dir = os.path.join(root_dir, "devices", "AHU-1")
+    tests_dir = os.path.join(root_dir, "out", "devices", "AHU-1", "tests")
+    os.makedirs(device_dir, exist_ok=True)
+    os.makedirs(tests_dir, exist_ok=True)
+    metadata = {
+        "system": {
+            "hardware": {"make": "RadixIoT", "model": "Mango"},
+            "software": {"firmware": "5.6.2"},
+        }
+    }
+    with open(
+        os.path.join(device_dir, "metadata.json"), "w", encoding="utf-8"
+    ) as f:
+      json.dump(metadata, f)
+
+    results = {
+        "start_time": "2026-11-18T10:00:00Z",
+        "status": {
+            "timestamp": "2026-11-18T10:05:00Z",
+            "message": "Run completed",
+        },
+        "udmi_version": "1.5.7",
+        "features": {},
+        "schemas": {},
+    }
+    if results_extra is not None:
+      results.update(results_extra)
+    with open(
+        os.path.join(root_dir, "out", "sequencer_AHU-1.json"),
+        "w",
+        encoding="utf-8",
+    ) as f:
+      json.dump(results, f)
+
+  def test_render_report_with_sequencer_and_cloud_version(self):
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      self._create_site_fixture(
+          tmp_dir, results_extra={"cloud_version": {"udmi_version": "1.4.1"}}
+      )
+      report = seq.SequencerReport(tmp_dir, "AHU-1")
+      self.assertEqual(report.udmi_version, "1.5.7")
+      self.assertEqual(report.cloud_udmi_version, "1.4.1")
+      rendered = seq.render_report(report, "etc/sequencer_report.md.template")
+      expected = (
+          "## UDMI Version\n\n"
+          "| Component | Version |\n"
+          "|---|---|\n"
+          "| Sequencer | 1.5.7 |\n"
+          "| Cloud | 1.4.1 |\n\n"
+          "## Summary"
+      )
+      self.assertIn(expected, rendered)
+
+  def test_render_report_with_sequencer_version_only(self):
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      self._create_site_fixture(tmp_dir)
+      report = seq.SequencerReport(tmp_dir, "AHU-1")
+      self.assertEqual(report.udmi_version, "1.5.7")
+      self.assertIsNone(report.cloud_udmi_version)
+      rendered = seq.render_report(report, "etc/sequencer_report.md.template")
+      expected = (
+          "## UDMI Version\n\n"
+          "| Component | Version |\n"
+          "|---|---|\n"
+          "| Sequencer | 1.5.7 |\n\n"
+          "## Summary"
+      )
+      self.assertIn(expected, rendered)
+      self.assertNotIn("| Cloud |", rendered)
+
+  def test_missing_udmi_version_raises_key_error(self):
+    with tempfile.TemporaryDirectory() as tmp_dir:
+      self._create_site_fixture(tmp_dir)
+      results_path = os.path.join(tmp_dir, "out", "sequencer_AHU-1.json")
+      with open(results_path, encoding="utf-8") as f:
+        data = json.load(f)
+      del data["udmi_version"]
+      with open(results_path, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+      with self.assertRaises(KeyError):
+        seq.SequencerReport(tmp_dir, "AHU-1")
 
 
 if __name__ == "__main__":
