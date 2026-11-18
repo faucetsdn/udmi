@@ -1083,6 +1083,96 @@ class MqttToPubSubBridgeTest {
     verify(mockMqttClient, org.mockito.Mockito.timeout(5000)).disconnect(1000L);
     verify(mockMqttClient, org.mockito.Mockito.timeout(5000)).reconnect();
   }
+
+  @Test
+  void testParseArgsOmitSubtypeOption() throws Exception {
+    String[] defaultArgs = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client"
+    };
+    CommandLine defaultCommandLine = MqttToPubSubBridge.parseArgs(defaultArgs);
+    org.junit.jupiter.api.Assertions.assertFalse(defaultCommandLine.hasOption("omit_subtype"));
+
+    String[] omitSubtypeArgs = {
+        "--gcp_project_id=my-project",
+        "--pubsub_topic_id=my-topic",
+        "--mqtt_client_id=my-client",
+        "--omit_subtype"
+    };
+    CommandLine omitSubtypeCommandLine = MqttToPubSubBridge.parseArgs(omitSubtypeArgs);
+    org.junit.jupiter.api.Assertions.assertTrue(omitSubtypeCommandLine.hasOption("omit_subtype"));
+  }
+
+  @Test
+  void testSetupBridgeWithOmitSubtypeEventsTopic() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/my-registry/d/my-device/events/subfolder_name";
+    String payloadStr = "Hello World";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    new MqttToPubSubBridge().setupBridge(
+        mockMqttClient, mockPublisher, testTopic, null, "zanzara", null, true);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+    assertEquals(testTopic, attributes.get("mqttTopic"));
+    assertEquals("my-device", attributes.get("deviceId"));
+    assertEquals("my-registry", attributes.get("deviceRegistryId"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subType"));
+    assertEquals("subfolder_name", attributes.get("subFolder"));
+  }
+
+  @Test
+  void testSetupBridgeWithOmitSubtypeNonEventsTopic() throws Exception {
+    IMqttClient mockMqttClient = mock(IMqttClient.class);
+    when(mockMqttClient.getClientId()).thenReturn("test-client");
+    Publisher mockPublisher = mock(Publisher.class);
+    String testTopic = "/r/UDMI-REFLECT/d/ZZ-TRI-FECTA/reflect/extra";
+    String payloadStr = "{\"test\":\"payload\"}";
+    final MqttMessage mqttMessage = new MqttMessage(payloadStr.getBytes());
+
+    when(mockPublisher.publish(any(PubsubMessage.class)))
+        .thenReturn(ApiFutures.immediateFuture("msg-123"));
+
+    new MqttToPubSubBridge().setupBridge(
+        mockMqttClient, mockPublisher, testTopic, null, "zanzara", null, true);
+
+    ArgumentCaptor<MqttCallback> callbackCaptor =
+        ArgumentCaptor.forClass(MqttCallback.class);
+    verify(mockMqttClient).setCallback(callbackCaptor.capture());
+    MqttCallback callback = callbackCaptor.getValue();
+
+    callback.messageArrived(testTopic, mqttMessage);
+
+    ArgumentCaptor<PubsubMessage> pubsubMessageCaptor =
+        ArgumentCaptor.forClass(PubsubMessage.class);
+    verify(mockPublisher, org.mockito.Mockito.timeout(5000)).publish(pubsubMessageCaptor.capture());
+
+    PubsubMessage pubsubMessage = pubsubMessageCaptor.getValue();
+    Map<String, String> attributes = pubsubMessage.getAttributesMap();
+    assertEquals(testTopic, attributes.get("mqttTopic"));
+    assertEquals("ZZ-TRI-FECTA", attributes.get("deviceId"));
+    assertEquals("UDMI-REFLECT", attributes.get("deviceRegistryId"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subType"));
+    org.junit.jupiter.api.Assertions.assertFalse(attributes.containsKey("subFolder"));
+  }
 }
 
 

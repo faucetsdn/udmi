@@ -395,6 +395,7 @@ public class MqttToPubSubBridge {
 
     String sourceAttribute = commandLine.getOptionValue("source_attribute", "zanzara");
     String sharedSubscription = commandLine.getOptionValue("shared_subscription");
+    boolean omitSubtype = commandLine.hasOption("omit_subtype");
 
     if (gcpProjectId == null || pubsubTopicId == null || mqttClientId == null) {
       logger.error("gcp_project_id, pubsub_topic_id, and mqtt_client_id are required.");
@@ -467,7 +468,7 @@ public class MqttToPubSubBridge {
 
       // Set up MQTT Message Callback
       bridge.setupBridge(mqttClient, publisher, mqttSubscriptionTopic,
-          etcdProvider, sourceAttribute, sharedSubscription);
+          etcdProvider, sourceAttribute, sharedSubscription, omitSubtype);
 
       // Keep the application running
       while (!bridge.isTripped()) {
@@ -531,6 +532,8 @@ public class MqttToPubSubBridge {
         "Path to client private key for etcd TLS.");
     options.addOption(null, "source_attribute", true, "Value for the source attribute.");
     options.addOption(null, "shared_subscription", true, "Shared subscription name.");
+    options.addOption(null, "omit_subtype", false,
+        "Omit the subType attribute and only extract subFolder from events/ topics.");
     options.addOption(null, "mqtt_reconnect_interval_sec", true,
         "Periodic reconnect interval in seconds (default 900, 0 to disable).");
     options.addOption(null, "mqtt_clean_start", false,
@@ -621,6 +624,18 @@ public class MqttToPubSubBridge {
   public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
       String sharedSubscription)
+      throws MqttException {
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute,
+        sharedSubscription, false);
+  }
+
+  /**
+   * Sets up the bridge between MQTT and Pub/Sub with a custom source attribute value and
+   * optional subType omission.
+   */
+  public void setupBridge(IMqttClient mqttClient, Publisher publisher,
+      String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
+      String sharedSubscription, boolean omitSubtype)
       throws MqttException {
 
     final String actualSubscriptionTopic;
@@ -752,7 +767,14 @@ public class MqttToPubSubBridge {
                     attributes.put("deviceNumId", numId);
                   }
 
-                  if (topicSuffix != null && !topicSuffix.isEmpty()) {
+                  if (omitSubtype) {
+                    if (topicSuffix != null && topicSuffix.startsWith("events/")) {
+                      List<String> parts = Splitter.on('/').splitToList(topicSuffix);
+                      if (parts.size() >= 2) {
+                        attributes.put("subFolder", parts.get(1));
+                      }
+                    }
+                  } else if (topicSuffix != null && !topicSuffix.isEmpty()) {
                     List<String> parts = Splitter.on('/').splitToList(topicSuffix);
                     if (!parts.isEmpty() && !parts.get(0).isEmpty()) {
                       attributes.put("subType", parts.get(0));
