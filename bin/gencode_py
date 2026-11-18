@@ -29,7 +29,7 @@ PYTHON_OUTPUT_DIR="$GEN_PYTHON_DIR/udmi/schema"
 python3 -m venv "$VENV_DIR"
 source "$VENV_DIR"/bin/activate
 
-pip install "datamodel-code-generator==0.35.0" "dataclasses-json==0.6.7"
+pip install "datamodel-code-generator==0.93.0" "dataclasses-json==0.6.7"
 
 # Clean up previous output directories
 rm -rf "$SCHEMA_OUTPUT_DIR"
@@ -59,7 +59,8 @@ datamodel-codegen --input "$SCHEMA_OUTPUT_DIR" --input-file-type jsonschema \
 --output "$PYTHON_OUTPUT_DIR" --use-default --force-optional \
 --use-schema-description --reuse-model --use-exact-imports \
 --output-model-type dataclasses.dataclass --disable-timestamp \
---base-class ._base.DataModel
+--base-class ._base.DataModel \
+--no-use-union-operator --no-use-standard-collections --formatters builtin
 
 # handle manually curated enums
 # copy level.py from etc/level.py
