@@ -525,8 +525,11 @@ public class MqttToPubSubBridge {
         "Path to client private key for etcd TLS.");
     options.addOption(null, "source_attribute", true, "Value for the source attribute.");
     options.addOption(null, "shared_subscription", true, "Shared subscription name.");
+    // TODO: Remove the temporary omit_subtype flag, and the legacy attribute extraction it
+    // selects in setupBridge, once downstream changes land.
     options.addOption(null, "omit_subtype", false,
-        "Omit the subType attribute and only extract subFolder from events/ topics.");
+        "Temporary (will be deprecated and removed once downstream changes land): omit the"
+            + " subType attribute and only extract subFolder from events/ topics.");
     options.addOption(null, "mqtt_reconnect_interval_sec", true,
         "Periodic reconnect interval in seconds (default 900, 0 to disable).");
     options.addOption(null, "mqtt_clean_start", false,
