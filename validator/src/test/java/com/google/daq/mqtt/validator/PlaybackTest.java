@@ -24,7 +24,8 @@ public class PlaybackTest extends TestBase {
 
   public static final String SIMPLE_TRACE_DIR = "../tests/traces/simple";
   public static final String LENGTHY_TRACE_DIR = "../tests/traces/lengthy";
-  private static final List<String> TRACE_DEVICES = List.of("--", "AHU-22", "SNS-4", "XXX", "YYY");
+  public static final String DISCOVER_TRACE_DIR = "../tests/traces/discover";
+  private static final List<String> TRACE_DEVICES = List.of("--", "SNS-4", "YYY", "AHU-22", "XXX");
 
   @Test
   public void simpleTraceReport() {
@@ -84,9 +85,27 @@ public class PlaybackTest extends TestBase {
       assertEquals("correct devices", 0, finalReport.summary.correct_devices.size());
       assertEquals("pending devices", 1, finalReport.summary.pending_devices.size());
       assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
-      assertEquals("missing devices", 3, finalReport.summary.missing_devices.size());
+      assertEquals("missing devices", List.of("AHU-22", "GAT-123", "SNS-4"),
+          finalReport.summary.missing_devices);
       assertEquals("error devices", 0, finalReport.summary.error_devices.size());
       assertEquals("device summaries", 1, finalReport.devices.size());
+    } catch (Throwable e) {
+      outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));
+      throw e;
+    }
+  }
+
+  @Test
+  public void discoverTraceReport() {
+    MessageReadingClient client = validateTrace(DISCOVER_TRACE_DIR);
+    assertEquals("trace message count", 4, client.messageCount);
+    List<OutputBundle> outputMessages = client.getOutputMessages();
+    OutputBundle lastBundle = outputMessages.get(outputMessages.size() - 1);
+    ValidationState finalReport = asValidationState(lastBundle.message);
+    try {
+      assertEquals("missing devices", List.of("AHU-1", "AHU-22", "SNS-4"),
+          finalReport.summary.missing_devices);
+      assertEquals("error devices", List.of("GAT-123"), finalReport.summary.error_devices);
     } catch (Throwable e) {
       outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));
       throw e;
@@ -103,8 +122,8 @@ public class PlaybackTest extends TestBase {
     try {
       assertEquals("correct devices", 0, finalReport.summary.correct_devices.size());
       assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
-      assertEquals("missing devices", 2, finalReport.summary.missing_devices.size());
-      assertEquals("error devices", 2, finalReport.summary.error_devices.size());
+      assertEquals("missing devices", List.of("XXX", "YYY"), finalReport.summary.missing_devices);
+      assertEquals("error devices", List.of("AHU-22", "SNS-4"), finalReport.summary.error_devices);
       assertEquals("device summaries", 2, finalReport.devices.size());
     } catch (Throwable e) {
       outputMessages.forEach(message -> System.err.println(JsonUtil.stringify(message)));

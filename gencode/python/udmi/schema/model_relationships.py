@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, TypeAlias
 
 from ._base import DataModel
 
@@ -14,4 +14,6 @@ class EntityRelationship(DataModel):
     tags: Optional[List[str]] = None
 
 
-EntityRelationships = Optional[Dict[str, Dict[str, List[EntityRelationship]]]]
+EntityRelationships: TypeAlias = Optional[
+    Dict[str, Dict[str, List[EntityRelationship]]]
+]
