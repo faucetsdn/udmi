@@ -6,7 +6,7 @@ INVOCATION_DIR="$PWD"
 source $UDMI_ROOT/etc/shell_common.sh
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-    echo "Usage: $(basename $0) [-p] [-v|-vv] [-a] [-x] [-s serial_no] <DEVICE_ID> [TEST_NAMES...]"
+    echo "Usage: $(basename $0) [--setup-endpoint] [-v|-vv] [-a] [-x] [-s serial_no] <DEVICE_ID> [TEST_NAMES...]"
     echo ""
     echo "Registers the target device in UDMI Bridgehead and runs the UDMI Sequencer"
     echo "against it inside the validator container, restoring host file ownership"
@@ -18,9 +18,9 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "  -a                      Include ALPHA stage sequences (min_stage=ALPHA)."
     echo "  -x                      Execute only ALPHA stage sequences (min_stage==ALPHA)."
     echo "  -s <serial_no>          Explicit serial number override for the device."
-    echo "  -p                      (Optional) Provision device only: generate CA-signed client"
-    echo "                          cert, register device, write out/devices/<ID>/endpoint.json,"
-    echo "                          and exit without running sequencer."
+    echo "  --setup-endpoint        (Optional) Set up device endpoint only: generate CA-signed"
+    echo "                          client cert, register device in Mosquitto, write"
+    echo "                          out/devices/<ID>/endpoint.json, and exit without running sequencer."
     echo "  <DEVICE_ID>             Target device ID defined under site_model/devices/."
     echo "  [TEST_NAMES...]         (Optional) Specific sequence test names to run."
     echo "  -h, --help              Show this help message and exit."
@@ -29,19 +29,19 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "  $(basename $0) GAT-123                     # Run full sequencer suite"
     echo "  $(basename $0) GAT-123 system_last_update  # Run specific sequence test"
     echo "  $(basename $0) -vv -a AHU-1 writeback"
-    echo "  $(basename $0) -p GAT-123                  # Optional: export endpoint.json & certs for physical DUT"
+    echo "  $(basename $0) --setup-endpoint AHU-1      # Optional: export endpoint.json & certs for physical DUT"
     exit 0
 fi
 
-PROVISION_ONLY=false
+SETUP_ENDPOINT=false
 HAS_SEQ_FLAGS=false
 SEQ_FLAGS=()
 HAS_VERBOSE=false
 
 while [[ $# -gt 0 && "$1" == -* ]]; do
     case "$1" in
-        -p)
-            PROVISION_ONLY=true
+        --setup-endpoint)
+            SETUP_ENDPOINT=true
             shift
             ;;
         -v|-vv)
@@ -78,9 +78,9 @@ fi
 DEVICE_ID="$1"
 shift
 
-if [[ "$PROVISION_ONLY" == "true" ]]; then
-    [[ "$HAS_SEQ_FLAGS" != "true" ]] || fail "Option -p cannot be combined with sequencer flags (-v, -vv, -a, -x, -s)."
-    [[ $# -eq 0 ]] || fail "Option -p provisions the device and exits; do not pass [TEST_NAMES...] with -p."
+if [[ "$SETUP_ENDPOINT" == "true" ]]; then
+    [[ "$HAS_SEQ_FLAGS" != "true" ]] || fail "Option --setup-endpoint cannot be combined with sequencer flags (-v, -vv, -a, -x, -s)."
+    [[ $# -eq 0 ]] || fail "Option --setup-endpoint sets up the device endpoint and exits; do not pass [TEST_NAMES...] with --setup-endpoint."
 fi
 
 # 1. Verify Bridgehead containers are running and UDMIS is ready
@@ -125,7 +125,7 @@ if [[ ! -d "$SITE_MODEL_PATH/devices/$TARGET_ID" ]]; then
     fail "Target gateway '$TARGET_ID' for device '$DEVICE_ID' not found in '$SITE_MODEL_PATH/devices/$TARGET_ID'."
 fi
 
-if [[ "$PROVISION_ONLY" == "true" ]]; then
+if [[ "$SETUP_ENDPOINT" == "true" ]]; then
     SITE_CONFIG="$SITE_MODEL_PATH/cloud_iot_config.json"
     [[ -f "$SITE_CONFIG" ]] || fail "Site config '$SITE_CONFIG' not found."
     REGISTRY_ID=$(jq -r '.registry_id // empty' "$SITE_CONFIG")
@@ -198,12 +198,12 @@ if [[ "$PROVISION_ONLY" == "true" ]]; then
         }' > "$ENDPOINT_OUT"
 
     echo ""
-    echo "=== Device Provisioning Bundle (Host Paths) ==="
+    echo "=== Device Endpoint Bundle (Host Paths) ==="
     echo "  endpoint.json : $ENDPOINT_OUT"
     echo "  CA cert       : $CA_FILE"
     echo "  Client cert   : $CRT_FILE"
     echo "  Client key    : $PEM_FILE"
-    echo "=== Device '$DEVICE_ID' provisioned for Bridgehead ($HOST_IP:8883) ==="
+    echo "=== Endpoint configured for device '$DEVICE_ID' on Bridgehead ($HOST_IP:8883) ==="
     exit 0
 fi
 
