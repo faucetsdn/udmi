@@ -173,11 +173,11 @@ bin/sequencer_bridgehead GAT-123
 bin/sequencer_bridgehead GAT-123 system_last_update
 ```
 
-#### Optional: Setting Up an Unconfigured Physical Device Endpoint (`--setup-endpoint`)
+#### Optional: Setting Up an Unconfigured Physical Device (`bin/setup_bridgehead_device`)
 
-If onboarding an unconfigured physical DUT that needs a CA-signed client certificate, initial Mosquitto registration, and a ready-to-use `EndpointConfiguration` (`endpoint.json`) before connecting to `<HOST_IP>:8883`, run with `--setup-endpoint`:
+If onboarding an unconfigured physical DUT that needs a CA-signed client certificate, initial Mosquitto registration, and a ready-to-use `EndpointConfiguration` (`endpoint.json`) before connecting to `<HOST_IP>:8883`, run:
 ```bash
-bin/sequencer_bridgehead --setup-endpoint AHU-1
+bin/setup_bridgehead_device AHU-1
 ```
 Then copy the printed `endpoint.json`, `reflector/ca.crt`, client certificate (`*_private.crt`), and private key (`*_private.pem`) onto the device.
 

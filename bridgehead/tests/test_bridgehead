@@ -117,8 +117,8 @@ sleep 5
 docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d"
 echo "Registrar clean completed."
 sleep 15
-"$UDMI_ROOT/bin/sequencer_bridgehead" --setup-endpoint GAT-123
-echo "Step 1: Device endpoint setup (--setup-endpoint) completed."
+"$UDMI_ROOT/bin/setup_bridgehead_device" GAT-123
+echo "Step 1: Device endpoint setup (bin/setup_bridgehead_device) completed."
 
 # 2. Start Pubber container
 docker rm -f pubber 2>/dev/null || true
@@ -169,7 +169,7 @@ grep -q "Processed UNK-1" out/registrar_output.txt || failed=1
 echo "Verifying sequencer output..."
 cat out/sequencer_output.txt
 
-# Verify Sequencer & --setup-endpoint results and host file ownership
+# Verify Sequencer & setup_bridgehead_device results and host file ownership
 grep -q "RESULT pass system system_last_update" out/sequencer_output.txt || failed=1
 grep -q "Found 0 test failures, exit code 0" out/sequencer_output.txt || failed=1
 [ -s "$SITE_MODEL_PATH/out/devices/GAT-123/endpoint.json" ] || failed=1
