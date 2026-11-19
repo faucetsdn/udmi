@@ -1,8 +1,8 @@
 buildscript {
     repositories {
-        maven {
-            url 'https://plugins.gradle.org/m2/'
-        }
+        maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
+        mavenCentral()
+        gradlePluginPortal()
     }
 }
 
@@ -69,6 +69,7 @@ shadowJar {
 }
 
 repositories {
+    maven { url 'https://maven-central.storage-download.googleapis.com/maven2/' }
     mavenCentral()
     mavenLocal()
     maven { url 'https://jitpack.io' }

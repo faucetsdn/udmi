@@ -120,7 +120,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
       - name: Download prebuilt packages
@@ -174,7 +173,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
       - name: Download prebuilt packages
@@ -235,7 +233,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
       - name: Download prebuilt packages
@@ -387,7 +384,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
       - name: Download prebuilt packages
@@ -433,7 +429,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
       - name: Download prebuilt packages
@@ -516,7 +511,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: Setup prerequisites
         run: |
           sudo bin/setup_base
@@ -655,7 +649,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: Setup Base
         run: sudo bin/setup_base
       - name: Download prebuilt packages
@@ -700,7 +693,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: Setup Base
         run: sudo bin/setup_base
       - name: Download prebuilt packages
@@ -734,7 +726,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -769,7 +760,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
@@ -800,7 +790,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: base setup
         run: sudo bin/setup_base
       - name: Download prebuilt packages
@@ -841,7 +830,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'gradle'
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
