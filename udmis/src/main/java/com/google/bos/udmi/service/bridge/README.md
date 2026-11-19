@@ -40,6 +40,7 @@ To run the bridge in this open-source setup, you can use the `shadowJar` task to
 -   `--mqtt_password`: MQTT password for authentication.
 -   `--mqtt_client_cert_path`: Path to client certificate for TLS.
 -   `--mqtt_client_key_path`: Path to client private key for TLS.
+-   `--omit_subtype`: Omit the `subType` attribute and only set `subFolder` for `events/` topics (flag, no value needed). Temporary: this flag will be deprecated and removed once downstream changes land.
 
 ## Verification
 

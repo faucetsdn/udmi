@@ -3,9 +3,9 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict, Optional, TypeAlias
 
 from ._base import DataModel
 from .discovery_feature import FeatureDiscovery
 
-TestingModel = Optional[Dict[str, FeatureDiscovery]]
+TestingModel: TypeAlias = Optional[Dict[str, FeatureDiscovery]]

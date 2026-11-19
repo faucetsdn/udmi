@@ -5,7 +5,7 @@ description = "A Python library for UDMI"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4.0"
+python = ">=3.10,<4.0"
 paho-mqtt = ">=2.1.0,<3.0.0"
 PyJWT = "^2.15.0"
 cryptography = "^41.0.4"
