@@ -185,7 +185,7 @@ public class Validator {
       "Message validate");
   private Set<String> targetDevices;
   private final LoggingHandler outputLogger;
-  private Set<String> expectedDevices;
+  private Set<String> expectedDevices = new TreeSet<>();
   private File outBaseDir;
   private File schemaRoot;
   private String schemaSpec;
@@ -213,7 +213,7 @@ public class Validator {
     config = validatorConfig;
     setSchemaSpec("schema");
     client = new NullPublisher();
-    targetDevices = ImmutableSet.of();
+    targetDevices = ImmutableSortedSet.of();
   }
 
   /**
