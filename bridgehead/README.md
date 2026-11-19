@@ -173,6 +173,14 @@ bin/sequencer_bridgehead GAT-123
 bin/sequencer_bridgehead GAT-123 system_last_update
 ```
 
+#### Optional: Provisioning an Unconfigured Physical Device (`-p`)
+
+If onboarding an unconfigured physical DUT that needs a CA-signed client certificate, initial Mosquitto registration, and a ready-to-use `EndpointConfiguration` (`endpoint.json`) before connecting to `<HOST_IP>:8883`, run with `-p`:
+```bash
+bin/sequencer_bridgehead -p GAT-123
+```
+Then copy the printed `endpoint.json`, `reflector/ca.crt`, client certificate (`*_private.crt`), and private key (`*_private.pem`) onto the device.
+
 ### Direct Container Execution
 
 Alternatively, run `bin/sequencer` directly inside the `validator` container:

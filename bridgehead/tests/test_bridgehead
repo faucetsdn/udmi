@@ -117,8 +117,8 @@ sleep 5
 docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d"
 echo "Registrar clean completed."
 sleep 15
-docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto GAT-123"
-echo "Step 1: Registrar initial setup completed."
+"$UDMI_ROOT/bin/sequencer_bridgehead" -p GAT-123
+echo "Step 1: Device provisioning (-p) completed."
 
 # 2. Start Pubber container
 docker rm -f pubber 2>/dev/null || true
@@ -169,9 +169,14 @@ grep -q "Processed UNK-1" out/registrar_output.txt || failed=1
 echo "Verifying sequencer output..."
 cat out/sequencer_output.txt
 
-# Verify Sequencer results and host file ownership
+# Verify Sequencer & Provisioning (-p) results and host file ownership
 grep -q "RESULT pass system system_last_update" out/sequencer_output.txt || failed=1
 grep -q "Found 0 test failures, exit code 0" out/sequencer_output.txt || failed=1
+[ -s "$SITE_MODEL_PATH/out/devices/GAT-123/endpoint.json" ] || failed=1
+[ -O "$SITE_MODEL_PATH/out/devices/GAT-123/endpoint.json" ] || failed=1
+[ -s "$SITE_MODEL_PATH/devices/GAT-123/ec_private.crt" ] || failed=1
+[ -O "$SITE_MODEL_PATH/devices/GAT-123/ec_private.crt" ] || failed=1
+jq -e '.protocol == "mqtt" and .transport == "ssl" and .port == 8883 and .client_id == "/r/ZZ-TRI-FECTA/d/GAT-123" and .topic_prefix == "/r/ZZ-TRI-FECTA/d/GAT-123" and (.auth_provider.basic.password | length == 8)' "$SITE_MODEL_PATH/out/devices/GAT-123/endpoint.json" >/dev/null || failed=1
 [ -s "$SITE_MODEL_PATH/out/sequencer_GAT-123.json" ] || failed=1
 [ -s "$SITE_MODEL_PATH/out/devices/GAT-123/results.md" ] || failed=1
 [ -O "$SITE_MODEL_PATH/out/sequencer_GAT-123.json" ] || failed=1
