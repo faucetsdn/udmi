@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.access;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -352,6 +353,31 @@ class ZanzaraIotAccessProviderTest {
 
     Set<String> registries = provider.getRegistries();
     assertTrue(registries.contains(TEST_REGISTRY));
+  }
+
+  @Test
+  void testMetadataKeyBytesDoesNotOverwriteAuthKey() {
+    String existingPublicKey = "-----BEGIN PUBLIC KEY-----\nTEST_PUB_KEY\n-----END PUBLIC KEY-----";
+    store.put("r/test-reg/d/test-dev:auth_key", existingPublicKey);
+    store.put("r/test-reg/d/test-dev:auth_type", "RS256");
+
+    CloudModel updateModel = new CloudModel();
+    updateModel.operation = ModelOperation.UPDATE;
+    updateModel.metadata = Map.of("key_bytes", "BASE64_PRIVATE_KEY_PKCS8_BYTES");
+    updateModel.credentials = List.of();
+
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, updateModel, null);
+
+    assertEquals(existingPublicKey, store.get("r/test-reg/d/test-dev:auth_key"));
+
+    CloudModel createModel = new CloudModel();
+    createModel.operation = ModelOperation.CREATE;
+    createModel.metadata = Map.of("key_bytes", "BASE64_PRIVATE_KEY_PKCS8_BYTES");
+    createModel.credentials = List.of();
+
+    provider.modelDevice(TEST_REGISTRY, "other-dev", createModel, null);
+
+    assertNull(store.get("r/test-reg/d/other-dev:auth_key"));
   }
 
 

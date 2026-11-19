@@ -236,8 +236,8 @@ class LocalDevice implements SiteDevice {
   public void initialize() {
     prepareOutDir();
     populatePointUrls();
-    ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
     configure();
+    ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
   }
 
   private void populatePointUrls() {

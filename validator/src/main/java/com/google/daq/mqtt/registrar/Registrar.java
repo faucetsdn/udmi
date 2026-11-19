@@ -1642,7 +1642,6 @@ public class Registrar {
         localDevice.initialize();
       } catch (Exception e) {
         localDevice.captureError(ExceptionCategory.settings, e);
-        return;
       }
       try {
         localDevice.loadCredentials();
