@@ -53,6 +53,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.daq.mqtt.util.CloudIotManager;
 import com.google.daq.mqtt.util.FileDataSink;
 import com.google.daq.mqtt.util.ImpulseRunningAverage;
@@ -227,7 +228,7 @@ public class Validator {
     if (client == null) {
       validateReflector();
     }
-    targetDevices = Set.copyOf(listCopy);
+    targetDevices = ImmutableSortedSet.copyOf(listCopy);
     siteModel = ifNotNullGet(config.site_model, SiteModel::new);
     ifNotNullThen(siteModel, this::initializeExpectedDevices);
   }
@@ -254,7 +255,7 @@ public class Validator {
       commandLineProcessor.showUsage(e.getMessage());
     }
     processProfile(siteModel.getExecutionConfiguration());
-    targetDevices = Set.copyOf(postProcessArgs(argList));
+    targetDevices = ImmutableSortedSet.copyOf(postProcessArgs(argList));
     initializeExpectedDevices();
     return this;
   }
@@ -455,7 +456,7 @@ public class Validator {
   private void initializeExpectedDevices() {
     Set<String> siteDevices = siteModel.getDeviceIds();
     try {
-      expectedDevices = new HashSet<>(siteDevices);
+      expectedDevices = new TreeSet<>(siteDevices);
       for (String device : siteDevices) {
         ReportingDevice reportingDevice = newReportingDevice(device);
         try {

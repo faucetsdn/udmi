@@ -3,9 +3,9 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict, Optional, TypeAlias
 
 from ._base import DataModel
 from .model_externals_link import LinkExternalsModel
 
-ExternalsModel = Optional[Dict[str, LinkExternalsModel]]
+ExternalsModel: TypeAlias = Optional[Dict[str, LinkExternalsModel]]
