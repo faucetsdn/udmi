@@ -66,7 +66,7 @@ if [[ ! -d "$DATA_DIR" ]]; then
     rm -rf "$DATA_DIR"
     if [[ $(id -u) -eq 0 ]]; then
         mkdir -p $(dirname "$DATA_DIR")
-        chown -R postgres:postgres var/postgresql
+        chown -R postgres:postgres "$POSTGRES_DIR"
         su -s /bin/bash postgres -c "$BINDIR/initdb -D '$DATA_DIR' -U '${postgres_user}' --auth-local=trust --auth-host=trust --nosync"
     else
         # initdb requires to run under current user. We use trust auth for local development testing.
@@ -79,7 +79,7 @@ echo Starting postgresql locally...
 # Start postgres process in user space with nohup
 # We use -k /tmp to ensure unix socket files are created in /tmp (where we have write permission) instead of /var/run/postgresql.
 if [[ $(id -u) -eq 0 ]]; then
-    chown -R postgres:postgres out var/postgresql
+    chown -R postgres:postgres "$(dirname "$POSTGRES_LOG")" "$POSTGRES_DIR"
     nohup su -s /bin/bash postgres -c "$BINDIR/postgres -D '$DATA_DIR' -p ${postgres_port} -h '*' -k /tmp" > $POSTGRES_LOG 2>&1 &
 else
     nohup $BINDIR/postgres -D "$DATA_DIR" \

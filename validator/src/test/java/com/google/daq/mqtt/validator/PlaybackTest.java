@@ -24,7 +24,8 @@ public class PlaybackTest extends TestBase {
 
   public static final String SIMPLE_TRACE_DIR = "../tests/traces/simple";
   public static final String LENGTHY_TRACE_DIR = "../tests/traces/lengthy";
-  private static final List<String> TRACE_DEVICES = List.of("--", "AHU-22", "SNS-4", "XXX", "YYY");
+  private static final List<String> TRACE_DEVICES =
+      List.of("--", "SNS-4", "YYY", "AHU-22", "XXX");
 
   @Test
   public void simpleTraceReport() {
@@ -84,7 +85,8 @@ public class PlaybackTest extends TestBase {
       assertEquals("correct devices", 0, finalReport.summary.correct_devices.size());
       assertEquals("pending devices", 1, finalReport.summary.pending_devices.size());
       assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
-      assertEquals("missing devices", 3, finalReport.summary.missing_devices.size());
+      assertEquals("missing devices",
+          List.of("AHU-22", "GAT-123", "SNS-4"), finalReport.summary.missing_devices);
       assertEquals("error devices", 0, finalReport.summary.error_devices.size());
       assertEquals("device summaries", 1, finalReport.devices.size());
     } catch (Throwable e) {
@@ -103,7 +105,8 @@ public class PlaybackTest extends TestBase {
     try {
       assertEquals("correct devices", 0, finalReport.summary.correct_devices.size());
       assertEquals("extra devices", 0, finalReport.summary.extra_devices.size());
-      assertEquals("missing devices", 2, finalReport.summary.missing_devices.size());
+      assertEquals("missing devices",
+          List.of("XXX", "YYY"), finalReport.summary.missing_devices);
       assertEquals("error devices", 2, finalReport.summary.error_devices.size());
       assertEquals("device summaries", 2, finalReport.devices.size());
     } catch (Throwable e) {

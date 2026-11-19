@@ -18,7 +18,7 @@
     "correct_devices" : [ ],
     "error_devices" : [ ],
     "extra_devices" : [ ],
-    "missing_devices" : [ "GAT-123", "AHU-22", "SNS-4" ],
+    "missing_devices" : [ "AHU-22", "GAT-123", "SNS-4" ],
     "pending_devices" : [ "AHU-1" ]
   },
   "timestamp" : "1999-10-20T01:02:03Z",
