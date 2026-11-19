@@ -13,8 +13,19 @@ from .entry import Entry
 
 
 @dataclass
+class Point(DataModel):
+    """
+    Discovery information for a protocol family.
+    """
+
+    addr: Optional[str] = None
+    port: Optional[int] = None
+    ref: Optional[str] = None
+
+
+@dataclass
 class Structure(DataModel):
-    point: Optional[FamilyDiscovery] = None
+    point: Optional[Point] = None
     families: Optional[Dict[str, FamilyDiscovery]] = None
 
 
