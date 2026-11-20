@@ -1,0 +1,10 @@
+{
+  "version": "1.5.7",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "generation": "2018-08-26T21:30:00Z",
+  "family": "bacnet",
+  "scan": "Bacnet-Targeted",
+  "scan_name": "bacnet_targeted",
+  "addr": "1042",
+  "event_no": 3
+}

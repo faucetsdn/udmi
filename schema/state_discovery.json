@@ -30,6 +30,16 @@
           "$ref": "file:state_discovery_family.json"
         }
       }
+    },
+    "scans": {
+      "description": "Named discovery scans, keyed by the scan name from config",
+      "additionalProperties": false,
+      "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryState>",
+      "patternProperties": {
+        "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
+          "$ref": "file:state_discovery_family.json"
+        }
+      }
     }
   }
 }

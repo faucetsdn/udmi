@@ -29,6 +29,11 @@
     "family": {
       "existingJavaType": "String"
     },
+    "scan": {
+      "description": "Name of the configured scan that produced this result, present only for results of entries in `config.discovery.scans`",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+    },
     "addr": {
       "description": "The primary address of the device (for indicated family)",
       "type": "string"

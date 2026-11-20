@@ -6,6 +6,8 @@ RESULT pass discovery.scan scan_depth_entries+bacnet ALPHA 10/10 Sequence comple
 RESULT pass discovery.scan scan_depth_entries+vendor ALPHA 10/10 Sequence complete
 RESULT pass discovery.scan scan_depth_system+bacnet ALPHA 10/10 Sequence complete
 RESULT pass discovery.scan scan_depth_system+vendor ALPHA 10/10 Sequence complete
+RESULT pass discovery.scan scan_named+bacnet ALPHA 10/10 Sequence complete
+RESULT pass discovery.scan scan_named+vendor ALPHA 10/10 Sequence complete
 RESULT pass discovery.scan scan_network_single+bacnet ALPHA 10/10 Sequence complete
 RESULT pass discovery.scan scan_network_single+vendor ALPHA 10/10 Sequence complete
 RESULT pass discovery.scan scan_periodic_now_enumerate+bacnet PREVIEW 10/10 Sequence complete

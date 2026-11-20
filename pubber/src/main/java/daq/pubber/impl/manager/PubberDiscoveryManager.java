@@ -1,17 +1,24 @@
 package daq.pubber.impl.manager;
 
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 
 import com.google.udmi.util.SiteModel;
 import daq.pubber.impl.PubberFeatures;
 import daq.pubber.impl.PubberManager;
+import daq.pubber.impl.provider.PubberProviderBase;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import udmi.lib.client.manager.DeviceManager;
 import udmi.lib.client.manager.DiscoveryManager;
+import udmi.lib.client.manager.DiscoveryScan;
+import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
+import udmi.schema.FamilyDiscoveryModel;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
@@ -22,8 +29,11 @@ import udmi.schema.PubberConfiguration;
 public class PubberDiscoveryManager extends PubberManager implements DiscoveryManager {
 
   private final PubberDeviceManager deviceManager;
-  private DiscoveryState discoveryState;
-  private DiscoveryConfig discoveryConfig;
+  private final Map<DiscoveryScan, String> activeScanFamilies = new HashMap<>();
+  private final Map<DiscoveryScan, ScanSchedule> scanSchedules = new ConcurrentHashMap<>();
+  private final AtomicInteger stateUpdateCount = new AtomicInteger();
+  private volatile DiscoveryState discoveryState;
+  private volatile DiscoveryConfig discoveryConfig;
 
   private SiteModel siteModel;
 
@@ -56,6 +66,43 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
   @Override
   public void setDiscoveryConfig(DiscoveryConfig discoveryConfig) {
     this.discoveryConfig = discoveryConfig;
+  }
+
+  @Override
+  public Map<DiscoveryScan, String> getActiveScanFamilies() {
+    return activeScanFamilies;
+  }
+
+  @Override
+  public Map<DiscoveryScan, ScanSchedule> getScanSchedules() {
+    return scanSchedules;
+  }
+
+  @Override
+  public AtomicInteger getStateUpdateCount() {
+    return stateUpdateCount;
+  }
+
+  @Override
+  public FamilyProvider discoveryProvider(String family) {
+    FamilyProvider provider = DiscoveryManager.super.discoveryProvider(family);
+    if (!(provider instanceof PubberProviderBase)) {
+      return null;
+    }
+    if (siteModel != null) {
+      Map<String, FamilyDiscoveryModel> configured =
+          catchToNull(() -> siteModel.getMetadata(getDeviceId()).discovery.families);
+      if (configured == null || !configured.containsKey(family)) {
+        return null;
+      }
+    }
+    return provider;
+  }
+
+  @Override
+  public void shutdown() {
+    shutdownDiscoveryScans();
+    super.shutdown();
   }
 
   @Override
