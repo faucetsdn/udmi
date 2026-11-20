@@ -61,7 +61,7 @@
         "style": "bold"
       }
     },
-    "tags":{
+    "tags": {
       "description": "Tags associated with the device",
       "type": "array",
       "uniqueItems": true,
