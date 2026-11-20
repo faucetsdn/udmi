@@ -162,24 +162,24 @@ docker exec -d validator bin/validator site_model/ //mqtt/mosquitto
 
 The Sequencer tool executes automated UDMI sequence compliance tests against a target Device Under Test (DUT) over MQTT. Ensure the target device (or the `pubber` container if testing with a simulated device) is actively running and connected before executing the sequencer.
 
-### Recommended: Using Host Wrapper (`bin/sequencer_bridgehead`)
+### Recommended: Using Host Wrapper (`bridgehead/bin/sequencer`)
 
-From the repository root, run `bin/sequencer_bridgehead`, which automatically registers the target device via `registrar`, runs `sequencer` with trace logging (`-v`), restores host ownership of output files, and prints the resulting host report paths:
+From the repository root, run `bridgehead/bin/sequencer` to execute `bin/sequencer` inside the Bridgehead `validator` container with trace logging (`-v`), restore host ownership of generated reports, and print the resulting host report paths:
 ```bash
 # Run full sequencer suite for device GAT-123
-bin/sequencer_bridgehead GAT-123
+bridgehead/bin/sequencer GAT-123
 
 # Run a specific sequence (e.g. system_last_update)
-bin/sequencer_bridgehead GAT-123 system_last_update
+bridgehead/bin/sequencer GAT-123 system_last_update
 ```
 
-#### Optional: Setting Up an Unconfigured Physical Device (`bin/setup_bridgehead_device`)
+#### Optional: Onboarding / Refreshing a Device (`bridgehead/bin/setup_device`)
 
-If onboarding an unconfigured physical DUT that needs a CA-signed client certificate, initial Mosquitto registration, and a ready-to-use `EndpointConfiguration` (`endpoint.json`) before connecting to `<HOST_IP>:8883`, run:
+If onboarding an unconfigured physical device (or refreshing device registration after editing `metadata.json` while Bridgehead is running), run:
 ```bash
-bin/setup_bridgehead_device AHU-1
+bridgehead/bin/setup_device AHU-1
 ```
-Then copy the printed `endpoint.json`, `reflector/ca.crt`, client certificate (`*_private.crt`), and private key (`*_private.pem`) onto the device.
+This generates any missing CA-signed client certificate, registers the device via `registrar` in `etcd` and Mosquitto, writes `site_model/out/devices/<DEVICE_ID>/endpoint.json`, and prints the 4 host files (`endpoint.json`, `reflector/ca.crt`, `*_private.crt`, `*_private.pem`) to copy onto the device.
 
 ### Direct Container Execution
 

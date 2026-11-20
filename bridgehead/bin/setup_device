@@ -1,17 +1,18 @@
 #!/bin/bash -e
 
-UDMI_ROOT=$(dirname $(realpath $0))/..
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+UDMI_ROOT=$(realpath "$SCRIPT_DIR/../..")
 INVOCATION_DIR="$PWD"
 
 source "$UDMI_ROOT/etc/shell_common.sh"
-source "$UDMI_ROOT/bridgehead/bridgehead_common.sh"
+source "$SCRIPT_DIR/common.sh"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-    echo "Usage: $(basename $0) <DEVICE_ID>"
+    echo "Usage: bridgehead/bin/$(basename "$0") <DEVICE_ID>"
     echo ""
-    echo "Prepares an unconfigured device for UDMI Bridgehead by generating its"
-    echo "CA-signed client certificate (if missing), registering it in etcd and"
-    echo "Mosquitto, writing site_model/out/devices/<DEVICE_ID>/endpoint.json,"
+    echo "Onboards or refreshes a device for UDMI Bridgehead by generating its"
+    echo "CA-signed client certificate (if missing), registering it via registrar"
+    echo "in etcd and Mosquitto, writing site_model/out/devices/<DEVICE_ID>/endpoint.json,"
     echo "and printing the host file paths to copy onto the device."
     echo ""
     echo "Arguments:"
@@ -23,17 +24,17 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "  SITE_MODEL_PATH         Override host site model path (default: active validator container mount)."
     echo ""
     echo "Examples:"
-    echo "  $(basename $0) AHU-1"
-    echo "  $(basename $0) GAT-123"
+    echo "  bridgehead/bin/$(basename "$0") AHU-1"
+    echo "  bridgehead/bin/$(basename "$0") GAT-123"
     exit 0
 fi
 
 if [[ $# -ne 1 ]]; then
-    fail "Expected exactly one <DEVICE_ID> argument. Run '$(basename $0) --help' for usage."
+    fail "Expected exactly one <DEVICE_ID> argument. Run 'bridgehead/bin/$(basename "$0") --help' for usage."
 fi
 
 if [[ "$1" == -* ]]; then
-    fail "Unknown option '$1'. Run '$(basename $0) --help' for usage."
+    fail "Unknown option '$1'. Run 'bridgehead/bin/$(basename "$0") --help' for usage."
 fi
 
 DEVICE_ID="$1"
@@ -79,7 +80,11 @@ if [[ ! -f "$CRT_FILE" ]]; then
 fi
 
 echo "=== Registering device '$DEVICE_ID' in Bridgehead ==="
-register_bridgehead_device "$DEVICE_ID" "$TARGET_ID"
+if [[ "$TARGET_ID" != "$DEVICE_ID" ]]; then
+    docker exec validator bin/registrar site_model/ //mqtt/mosquitto "$TARGET_ID" "$DEVICE_ID"
+else
+    docker exec validator bin/registrar site_model/ //mqtt/mosquitto "$DEVICE_ID"
+fi
 fix_bridgehead_permissions
 
 HASH_PASS=$(sha256sum < "$PKCS8_FILE")

@@ -1,17 +1,18 @@
 #!/bin/bash -e
 
-UDMI_ROOT=$(dirname $(realpath $0))/..
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+UDMI_ROOT=$(realpath "$SCRIPT_DIR/../..")
 INVOCATION_DIR="$PWD"
 
 source "$UDMI_ROOT/etc/shell_common.sh"
-source "$UDMI_ROOT/bridgehead/bridgehead_common.sh"
+source "$SCRIPT_DIR/common.sh"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-    echo "Usage: $(basename $0) [-v|-vv] [-a] [-x] [-s serial_no] <DEVICE_ID> [TEST_NAMES...]"
+    echo "Usage: bridgehead/bin/$(basename "$0") [-v|-vv] [-a] [-x] [-s serial_no] <DEVICE_ID> [TEST_NAMES...]"
     echo ""
-    echo "Registers the target device in UDMI Bridgehead and runs the UDMI Sequencer"
-    echo "against it inside the validator container, restoring host file ownership"
-    echo "and printing the resulting host report paths."
+    echo "Runs the UDMI Sequencer against the target device inside the Bridgehead"
+    echo "validator container, restores host file ownership of generated outputs,"
+    echo "and prints the resulting host report paths."
     echo ""
     echo "Options / Arguments:"
     echo "  -v                      Enable DEBUG logging and save message traces (default)."
@@ -24,9 +25,9 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "  -h, --help              Show this help message and exit."
     echo ""
     echo "Examples:"
-    echo "  $(basename $0) GAT-123                     # Run full sequencer suite"
-    echo "  $(basename $0) GAT-123 system_last_update  # Run specific sequence test"
-    echo "  $(basename $0) -vv -a AHU-1 writeback"
+    echo "  bridgehead/bin/$(basename "$0") GAT-123                     # Run full sequencer suite"
+    echo "  bridgehead/bin/$(basename "$0") GAT-123 system_last_update  # Run specific sequence test"
+    echo "  bridgehead/bin/$(basename "$0") -vv -a AHU-1 writeback"
     exit 0
 fi
 
@@ -50,7 +51,7 @@ while [[ $# -gt 0 && "$1" == -* ]]; do
             shift 2
             ;;
         *)
-            fail "Unknown option '$1'. Run '$(basename $0) --help' for usage."
+            fail "Unknown option '$1'. Run 'bridgehead/bin/$(basename "$0") --help' for usage."
             ;;
     esac
 done
@@ -60,7 +61,7 @@ if [[ "$HAS_VERBOSE" != "true" ]]; then
 fi
 
 if [[ $# -lt 1 ]]; then
-    fail "Missing required <DEVICE_ID> argument. Run '$(basename $0) --help' for usage."
+    fail "Missing required <DEVICE_ID> argument. Run 'bridgehead/bin/$(basename "$0") --help' for usage."
 fi
 
 DEVICE_ID="$1"
@@ -70,12 +71,7 @@ require_bridgehead_ready
 resolve_bridgehead_device "$DEVICE_ID"
 trap fix_bridgehead_permissions EXIT
 
-# 1. Register target device so metadata and credentials are fresh in etcd and mosquitto
-echo "=== [1/2] Registering device '$DEVICE_ID' in Bridgehead ==="
-register_bridgehead_device "$DEVICE_ID" "$TARGET_ID"
-
-# 2. Run sequencer against target device
-echo "=== [2/2] Running sequencer for device '$DEVICE_ID' ==="
+echo "=== Running sequencer for device '$DEVICE_ID' ==="
 SEQ_EXIT=0
 docker exec validator bin/sequencer "${SEQ_FLAGS[@]}" site_model/ //mqtt/mosquitto "$DEVICE_ID" "$@" || SEQ_EXIT=$?
 

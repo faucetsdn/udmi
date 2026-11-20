@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shared helpers for UDMI Bridgehead host wrapper scripts.
+# Shared helpers for Bridgehead host wrapper scripts under bridgehead/bin/.
 # Expects UDMI_ROOT, INVOCATION_DIR, and etc/shell_common.sh (fail) to be loaded.
 
 require_bridgehead_ready() {
@@ -47,15 +47,4 @@ resolve_bridgehead_device() {
 
 fix_bridgehead_permissions() {
     docker exec validator chown -RH "$(id -u):$(id -g)" /root/site_model/ 2>/dev/null || true
-}
-
-register_bridgehead_device() {
-    local device_id="$1"
-    local target_id="$2"
-
-    if [[ "$target_id" != "$device_id" ]]; then
-        docker exec validator bin/registrar site_model/ //mqtt/mosquitto "$target_id" "$device_id"
-    else
-        docker exec validator bin/registrar site_model/ //mqtt/mosquitto "$device_id"
-    fi
 }
