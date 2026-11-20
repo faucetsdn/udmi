@@ -10,9 +10,12 @@ Check a named scan reports its own state and attributes its results
 1. Wait until discovery family keys match
 1. Wait for no scans active
 1. Update config before family scan pending
-    * Add `discovery.scans` = { "sequencer_scan": { "generation": `scan generation`, "depth": `entries`, "scan_duration_sec": `10`, "family": `vendor` } }
+    * Add `discovery.scans` = { "sequencer_scan": { "generation": `scan generation`, "depth": `entries`, "scan_duration_sec": `10` } }
     * Add `discovery.families.vendor` = { "generation": `future family generation` }
 1. Wait until family scan pending
+1. Wait until missing family reported as scan error
+1. Update config before named scan active
+    * Add `discovery.scans.sequencer_scan.family` = `vendor`
 1. Wait until named scan active
 1. Wait until named scan complete
 1. Check that family scan still pending
@@ -25,6 +28,9 @@ Check a named scan reports its own state and attributes its results
 1. Check that received proper last discovery event
 1. Check that received proper discovery termination event
 1. Check that all expected addresses were found
+1. Update config before changed unsupported family reported as scan error
+    * Set `discovery.scans.sequencer_scan.family` = `invalid_family`
+1. Wait until changed unsupported family reported as scan error
 1. Update config before named scan state removed
     * Remove `discovery.scans`
 1. Wait for named scan state removed

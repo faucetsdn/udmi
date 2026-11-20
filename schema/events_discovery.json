@@ -30,7 +30,7 @@
       "existingJavaType": "String"
     },
     "scan": {
-      "description": "Name of the configured scan that produced this result, present only for results of entries in `config.discovery.scans`",
+      "description": "Name of the configured scan in `config.discovery.scans` that produced this event (including start and termination markers)",
       "type": "string",
       "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
     },

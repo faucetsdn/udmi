@@ -41,7 +41,8 @@
       }
     },
     "scans": {
-      "description": "Named discovery scan configs, keyed by scan name. Each entry must specify its `family`, and is scheduled independently of `families` and other scans.",
+      "description": "Named discovery scan configs, keyed by scan name. Each entry must specify its `family`.",
+      "type": "object",
       "existingJavaType": "java.util.Map<String, FamilyDiscoveryConfig>",
       "additionalProperties": false,
       "patternProperties": {

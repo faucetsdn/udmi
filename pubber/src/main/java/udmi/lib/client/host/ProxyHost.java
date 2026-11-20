@@ -9,6 +9,7 @@ import static udmi.lib.base.MqttPublisher.DEFAULT_CONFIG_WAIT_SEC;
 
 import java.util.Date;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
 import udmi.lib.base.MqttDevice;
 import udmi.lib.client.manager.DeviceManager;
 import udmi.lib.intf.FamilyProvider;
@@ -68,11 +69,11 @@ public interface ProxyHost extends ManagerHost, ManagerLog {
    * @param config The configuration to be applied.
    */
   default void configHandler(Config config) {
-    synchronized (getDeviceState()) {
+    withStateLock(() -> {
       getPublisherHost().configPreprocess(getDeviceId(), config);
       getDeviceManager().updateConfig(config);
       getPublisherHost().publisherConfigLog("apply", null, getDeviceId());
-    }
+    });
   }
 
   default void shutdown() {
@@ -92,11 +93,11 @@ public interface ProxyHost extends ManagerHost, ManagerLog {
     if (!isActive().get()) {
       return;
     }
-    synchronized (getDeviceState()) {
+    withStateLock(() -> {
       if (getStateDirty().getAndSet(false)) {
         publish(getDeviceId(), deepCopy(getDeviceState()));
       }
-    }
+    });
   }
 
   @Override
@@ -112,11 +113,34 @@ public interface ProxyHost extends ManagerHost, ManagerLog {
   }
 
   @Override
+  default void withStateLock(Runnable action) {
+    getStateLock().lock();
+    try {
+      action.run();
+    } finally {
+      getStateLock().unlock();
+    }
+  }
+
+  @Override
+  default boolean tryWithStateLock(Runnable action) {
+    if (!getStateLock().tryLock()) {
+      return false;
+    }
+    try {
+      action.run();
+      return true;
+    } finally {
+      getStateLock().unlock();
+    }
+  }
+
+  @Override
   default void update(Object update) {
-    synchronized (getDeviceState()) {
+    withStateLock(() -> {
       updateStateHolder(getDeviceState(), update);
       getStateDirty().set(true);
-    }
+    });
   }
 
   @Override
@@ -133,6 +157,8 @@ public interface ProxyHost extends ManagerHost, ManagerLog {
   AtomicBoolean getStateDirty();
 
   State getDeviceState();
+
+  Lock getStateLock();
 
   @Override
   default Date getStartTime() {

@@ -40,11 +40,11 @@ public class DiscoveryConfig {
     @JsonPropertyDescription("Address family configs for discovery scans.")
     public Map<String, FamilyDiscoveryConfig> families;
     /**
-     * Named discovery scan configs, keyed by scan name. Each entry must specify its `family`, and is scheduled independently of `families` and other scans.
+     * Named discovery scan configs, keyed by scan name. Each entry must specify its `family`.
      * 
      */
     @JsonProperty("scans")
-    @JsonPropertyDescription("Named discovery scan configs, keyed by scan name. Each entry must specify its `family`, and is scheduled independently of `families` and other scans.")
+    @JsonPropertyDescription("Named discovery scan configs, keyed by scan name. Each entry must specify its `family`.")
     public Map<String, FamilyDiscoveryConfig> scans;
 
     @Override

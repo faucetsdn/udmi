@@ -33,6 +33,7 @@
     },
     "scans": {
       "description": "Named discovery scans, keyed by the scan name from config",
+      "type": "object",
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, FamilyDiscoveryState>",
       "patternProperties": {

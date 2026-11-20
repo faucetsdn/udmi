@@ -11,7 +11,9 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static udmi.lib.client.manager.DiscoveryScan.forFamily;
 import static udmi.schema.Category.DISCOVERY_FAMILY_SCAN;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
@@ -22,13 +24,20 @@ import daq.pubber.impl.manager.PubberDiscoveryManager;
 import daq.pubber.impl.provider.PubberBacnetProvider;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -45,7 +54,8 @@ import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
 
 /**
- * Unit tests for DiscoveryManager scan scheduling, including named scans.
+ * Unit tests for {@link DiscoveryManager} and {@link DiscoveryScheduler}, including named scans,
+ * deferred sporadic scans, and lock-free provider interactions.
  */
 public class DiscoveryManagerTest {
 
@@ -53,10 +63,17 @@ public class DiscoveryManagerTest {
   private static final String VENDOR = "vendor";
   private static final Instant START_TIME = Instant.now().minusSeconds(60);
 
-  private final FamilyProvider bacnetProvider = mock(FamilyProvider.class);
-  private final FamilyProvider vendorProvider = mock(FamilyProvider.class);
+  private final FamilyProvider bacnetProvider = mockScanProvider();
+  private final FamilyProvider vendorProvider = mockScanProvider();
   private final FakeDiscoveryManager manager = new FakeDiscoveryManager(
       Map.of(BACNET, bacnetProvider, VENDOR, vendorProvider));
+  private final DiscoveryScheduler scheduler = manager.getDiscoveryScheduler();
+
+  private static FamilyProvider mockScanProvider() {
+    FamilyProvider provider = mock(FamilyProvider.class);
+    when(provider.supportsDiscoveryScan()).thenReturn(true);
+    return provider;
+  }
 
   @Test
   public void scanStopsAfterConfiguredDuration() {
@@ -73,11 +90,11 @@ public class DiscoveryManagerTest {
     familyConfig.scan_duration_sec = scanDurationSec;
     DiscoveryConfig discoveryConfig = new DiscoveryConfig();
     discoveryConfig.families = new HashMap<>(Map.of(BACNET, familyConfig));
-    manager.setDiscoveryConfig(discoveryConfig);
-    manager.setDiscoveryState(new DiscoveryState());
+    scheduler.setDiscoveryConfig(discoveryConfig);
+    scheduler.setDiscoveryState(new DiscoveryState());
 
     long startMs = manager.now.toEpochMilli();
-    manager.startDiscoveryScan(forFamily(BACNET), new Date(startMs));
+    scheduler.startDiscoveryScan(forFamily(BACNET), new Date(startMs));
 
     return (manager.futures.get(0).time().getTime() - startMs) / 1000;
   }
@@ -149,14 +166,28 @@ public class DiscoveryManagerTest {
   }
 
   @Test
-  public void secondScanOfBusyFamilyFails() {
+  public void sporadicScanOfBusyFamilyDefersUntilActiveScanCompletes() {
     manager.updateConfig(discovery(Map.of(BACNET, oneShotScan(null)),
         Map.of("adhoc", oneShotScan(BACNET))));
     manager.runFuture(0);
+    final int familyCompletion = manager.futures.size() - 1;
     manager.runFuture(1);
 
     assertEquals(ACTIVE, manager.getDiscoveryState().families.get(BACNET).phase);
-    assertScanError(scanState("adhoc"), "busy");
+    assertEquals(PENDING, scanState("adhoc").phase);
+    assertNull(scanState("adhoc").status);
+    verify(bacnetProvider, times(1)).startScan(any(), any());
+
+    // Unrelated config re-apply preserves the deferred pending scan.
+    manager.updateConfig(discovery(Map.of(BACNET, oneShotScan(null)),
+        Map.of("adhoc", oneShotScan(BACNET))));
+    assertEquals(PENDING, scanState("adhoc").phase);
+
+    manager.runFuture(familyCompletion);
+    assertEquals(STOPPED, manager.getDiscoveryState().families.get(BACNET).phase);
+    assertEquals(ACTIVE, scanState("adhoc").phase);
+    assertNull(scanState("adhoc").status);
+    verify(bacnetProvider, times(2)).startScan(any(), any());
   }
 
   @Test
@@ -187,14 +218,102 @@ public class DiscoveryManagerTest {
   }
 
   @Test
-  public void familyScanFailsWhenNamedScanHoldsFamily() {
+  public void sporadicFamilyScanDefersAndPeriodicFamilyScanFailsBusyWhenNamedScanHoldsFamily() {
     manager.updateConfig(discovery(Map.of(BACNET, oneShotScan(null)),
         Map.of("adhoc", oneShotScan(BACNET))));
     manager.runFuture(1);
+    final int adhocCompletion = manager.futures.size() - 1;
     manager.runFuture(0);
 
     assertEquals(ACTIVE, scanState("adhoc").phase);
+    assertEquals(PENDING, manager.getDiscoveryState().families.get(BACNET).phase);
+    assertNull(manager.getDiscoveryState().families.get(BACNET).status);
+
+    manager.runFuture(adhocCompletion);
+    assertEquals(STOPPED, scanState("adhoc").phase);
+    assertEquals(ACTIVE, manager.getDiscoveryState().families.get(BACNET).phase);
+
+    // Now verify a periodic families.bacnet slot hitting an active named scan reports busy.
+    final int familyCompletion = manager.futures.size() - 1;
+    manager.runFuture(familyCompletion);
+    assertEquals(STOPPED, manager.getDiscoveryState().families.get(BACNET).phase);
+
+    FamilyDiscoveryConfig blocker = oneShotScan(BACNET);
+    blocker.generation = Date.from(START_TIME.plusSeconds(45));
+    FamilyDiscoveryConfig periodicFamily = periodicScan(null, 60);
+    periodicFamily.generation = Date.from(START_TIME.plusSeconds(50));
+    manager.now = START_TIME.plusSeconds(40);
+    manager.updateConfig(discovery(Map.of(BACNET, periodicFamily), Map.of("blocker", blocker)));
+
+    manager.now = blocker.generation.toInstant();
+    manager.runFuture(manager.futureIndexFor("blocker"));
+    manager.now = periodicFamily.generation.toInstant();
+    manager.runFuture(manager.futureIndexForFamily(BACNET));
+
     assertScanError(manager.getDiscoveryState().families.get(BACNET), "busy");
+  }
+
+  @Test
+  public void deferredSporadicScansRunFifoAndRespectRescheduleOrBlockerRemoval() {
+    FamilyDiscoveryConfig blocker = oneShotScan(BACNET);
+    blocker.generation = Date.from(START_TIME.plusSeconds(10));
+    FamilyDiscoveryConfig first = oneShotScan(BACNET);
+    first.generation = Date.from(START_TIME.plusSeconds(11));
+    FamilyDiscoveryConfig second = oneShotScan(BACNET);
+    second.generation = Date.from(START_TIME.plusSeconds(12));
+    FamilyDiscoveryConfig rescheduledFuture = oneShotScan(BACNET);
+    rescheduledFuture.generation = Date.from(START_TIME.plusSeconds(13));
+
+    manager.now = START_TIME.plusSeconds(5);
+    manager.updateConfig(discovery(null, Map.of(
+        "blocker", blocker,
+        "first", first,
+        "second", second,
+        "later", rescheduledFuture)));
+
+    manager.now = START_TIME.plusSeconds(10);
+    manager.runFuture(manager.futureIndexFor("blocker"));
+    manager.now = START_TIME.plusSeconds(11);
+    manager.runFuture(manager.futureIndexFor("first"));
+    manager.now = START_TIME.plusSeconds(12);
+    manager.runFuture(manager.futureIndexFor("second"));
+    manager.now = START_TIME.plusSeconds(13);
+    manager.runFuture(manager.futureIndexFor("later"));
+
+    assertEquals(ACTIVE, scanState("blocker").phase);
+    assertEquals(PENDING, scanState("first").phase);
+    assertEquals(PENDING, scanState("second").phase);
+    assertEquals(PENDING, scanState("later").phase);
+
+    // Reschedule "later" into the future and remove "blocker": "first" starts immediately,
+    // "second" stays deferred behind "first", and "later" waits for its future timestamp.
+    FamilyDiscoveryConfig movedFuture = oneShotScan(BACNET);
+    movedFuture.generation = Date.from(START_TIME.plusSeconds(300));
+    manager.updateConfig(discovery(null, Map.of(
+        "first", first,
+        "second", second,
+        "later", movedFuture)));
+
+    assertFalse(manager.getDiscoveryState().scans.containsKey("blocker"));
+    assertEquals(ACTIVE, scanState("first").phase);
+    assertEquals(PENDING, scanState("second").phase);
+    assertEquals(PENDING, scanState("later").phase);
+
+    final int firstCompletion = manager.futures.size() - 1;
+    manager.now = START_TIME.plusSeconds(23);
+    manager.runFuture(firstCompletion);
+
+    assertEquals(STOPPED, scanState("first").phase);
+    assertEquals(ACTIVE, scanState("second").phase);
+    assertEquals(PENDING, scanState("later").phase);
+
+    final int secondCompletion = manager.futures.size() - 1;
+    manager.now = START_TIME.plusSeconds(33);
+    manager.runFuture(secondCompletion);
+
+    assertEquals(STOPPED, scanState("second").phase);
+    assertEquals(PENDING, scanState("later").phase);
+    assertFalse(scheduler.hasActiveScans());
   }
 
   @Test
@@ -229,8 +348,8 @@ public class DiscoveryManagerTest {
 
     verify(vendorProvider).stopScan();
     verify(bacnetProvider).stopScan();
-    assertTrue(manager.getActiveScanFamilies().isEmpty());
-    assertTrue(manager.getScanSchedules().isEmpty());
+    assertFalse(scheduler.hasActiveScans());
+    assertFalse(scheduler.hasScanSchedules());
     assertNull(manager.getDiscoveryState());
   }
 
@@ -254,7 +373,7 @@ public class DiscoveryManagerTest {
     Date generation = Date.from(START_TIME);
     Date lastRun = Date.from(START_TIME.plusSeconds(60));
     Instant slightlyBeforeLastRun = lastRun.toInstant().minusMillis(5);
-    assertEquals(Date.from(START_TIME.plusSeconds(120)), DiscoveryManager.nextPeriodicStart(
+    assertEquals(Date.from(START_TIME.plusSeconds(120)), DiscoveryScheduler.nextPeriodicStart(
         generation, 60, lastRun, slightlyBeforeLastRun));
   }
 
@@ -318,7 +437,7 @@ public class DiscoveryManagerTest {
   public void periodicStartRunsAtGenerationWhenAfterStartTime() {
     Date generation = Date.from(START_TIME.plusSeconds(10));
     Instant now = START_TIME.plusSeconds(12);
-    assertEquals(generation, DiscoveryManager.nextPeriodicStart(
+    assertEquals(generation, DiscoveryScheduler.nextPeriodicStart(
         generation, 60, Date.from(START_TIME), now));
   }
 
@@ -326,7 +445,7 @@ public class DiscoveryManagerTest {
   public void periodicStartWaitsForNextSlotWhenGenerationAtOrBeforeStartTime() {
     Date generation = Date.from(START_TIME);
     Instant now = START_TIME.plusSeconds(10);
-    assertEquals(Date.from(START_TIME.plusSeconds(60)), DiscoveryManager.nextPeriodicStart(
+    assertEquals(Date.from(START_TIME.plusSeconds(60)), DiscoveryScheduler.nextPeriodicStart(
         generation, 60, Date.from(START_TIME), now));
   }
 
@@ -334,7 +453,7 @@ public class DiscoveryManagerTest {
   public void periodicStartCatchesUpSlotAfterLateCompletion() {
     Date generation = Date.from(START_TIME);
     Instant lateCompletion = START_TIME.plusSeconds(60).plusMillis(300);
-    assertEquals(Date.from(START_TIME.plusSeconds(60)), DiscoveryManager.nextPeriodicStart(
+    assertEquals(Date.from(START_TIME.plusSeconds(60)), DiscoveryScheduler.nextPeriodicStart(
         generation, 60, generation, lateCompletion));
   }
 
@@ -365,7 +484,7 @@ public class DiscoveryManagerTest {
 
     assertScanError(manager.getDiscoveryState().families.get(BACNET), "must not specify family");
     verify(bacnetProvider).stopScan();
-    assertTrue(manager.getActiveScanFamilies().isEmpty());
+    assertFalse(scheduler.hasActiveScans());
     manager.runFuture(manager.futures.size() - 1);
     assertEquals(ACTIVE, scanState("adhoc").phase);
   }
@@ -382,6 +501,70 @@ public class DiscoveryManagerTest {
 
     assertEquals(1, manager.published.size());
     assertFalse(manager.getDiscoveryState().scans.containsKey("adhoc"));
+  }
+
+  @Test
+  public void stopScanJoiningPublisherThreadDoesNotDeadlock() throws Exception {
+    AtomicReference<BiConsumer<String, DiscoveryEvents>> captured = new AtomicReference<>();
+    doAnswer(invocation -> {
+      captured.set(invocation.getArgument(1));
+      return null;
+    }).when(bacnetProvider).startScan(any(), any());
+
+    manager.updateConfig(discovery(null, Map.of("adhoc", oneShotScan(BACNET))));
+    manager.runFuture(0);
+    assertEquals(1, manager.published.size());
+
+    CountDownLatch inPublish = new CountDownLatch(1);
+    CountDownLatch hostLockHeld = new CountDownLatch(1);
+    manager.onPostDiscoveryProcess = () -> {
+      inPublish.countDown();
+      try {
+        assertTrue(hostLockHeld.await(2, TimeUnit.SECONDS));
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    };
+
+    AtomicReference<Throwable> workerError = new AtomicReference<>();
+    Thread worker = new Thread(() -> {
+      try {
+        captured.get().accept("AHU-1", discovered("1042"));
+      } catch (Throwable t) {
+        workerError.set(t);
+      }
+    });
+    worker.start();
+    assertTrue(inPublish.await(2, TimeUnit.SECONDS));
+
+    doAnswer(invocation -> {
+      worker.join(2000);
+      assertFalse("Provider worker deadlocked in publisher during stopScan()", worker.isAlive());
+      return null;
+    }).when(bacnetProvider).stopScan();
+
+    manager.getHost().withStateLock(() -> {
+      hostLockHeld.countDown();
+      manager.updateConfig(discovery(null, Map.of()));
+    });
+    manager.onPostDiscoveryProcess = null;
+
+    assertNull(workerError.get());
+    assertEquals(2, manager.published.size());
+    assertFalse(scheduler.hasActiveScans());
+  }
+
+  @Test
+  public void scheduleFutureRejectedOnShutdownLeavesSchedulerClean() {
+    manager.rejectSchedules = true;
+    manager.updateConfig(discovery(null, Map.of("adhoc", oneShotScan(BACNET))));
+    assertNull(scanState("adhoc").phase);
+    assertFalse(scheduler.hasScanSchedules());
+
+    scheduler.startDiscoveryScan(DiscoveryScan.forScan("adhoc"),
+        manager.getDiscoveryConfig().scans.get("adhoc").generation);
+    assertFalse(scheduler.hasActiveScans());
+    assertTrue(manager.published.isEmpty());
   }
 
   @Test
@@ -431,13 +614,15 @@ public class DiscoveryManagerTest {
 
   @Test
   public void changingScanFamilyRestartsScan() {
-    manager.updateConfig(discovery(null, Map.of("adhoc", oneShotScan(BACNET))));
+    DiscoveryConfig config = discovery(null, Map.of("adhoc", oneShotScan(BACNET)));
+    manager.updateConfig(config);
     manager.runFuture(0);
     final FamilyDiscoveryState original = scanState("adhoc");
 
-    FamilyDiscoveryConfig changed = oneShotScan(VENDOR);
-    changed.generation = manager.getDiscoveryConfig().scans.get("adhoc").generation;
-    manager.updateConfig(discovery(null, Map.of("adhoc", changed)));
+    // Mutate family in-place on the same FamilyDiscoveryConfig instance to verify
+    // configuredScanFamilies tracking does not rely on distinct object references.
+    config.scans.get("adhoc").family = VENDOR;
+    manager.updateConfig(config);
 
     verify(bacnetProvider).stopScan();
     assertNotSame(original, scanState("adhoc"));
@@ -507,19 +692,20 @@ public class DiscoveryManagerTest {
 
     manager.runFuture(manager.futureIndexFor("bad_bacnet"));
     assertScanError(scanState("bad_bacnet"), "failed to start");
-    assertFalse(manager.getActiveScanFamilies().containsValue(BACNET));
+    assertFalse(scheduler.isFamilyActive(BACNET));
 
     manager.runFuture(manager.futureIndexFor("vendor_scan"));
     assertEquals(ACTIVE, scanState("vendor_scan").phase);
     manager.updateConfig(null);
     assertNull(manager.getDiscoveryState());
-    assertTrue(manager.getActiveScanFamilies().isEmpty());
+    assertFalse(scheduler.hasActiveScans());
   }
 
   @Test
   public void pubberDiscoveryManagerRejectsLocalnetOnlyProviderAndStopsOnShutdown() {
     FamilyProvider ipOnlyProvider = new FamilyProvider() {};
     PubberBacnetProvider scanCapableProvider = mock(PubberBacnetProvider.class);
+    when(scanCapableProvider.supportsDiscoveryScan()).thenReturn(true);
     ManagerHost host = mock(ManagerHost.class, invocation -> switch (invocation.getMethod()
         .getName()) {
       case "getLocalnetProvider" -> switch ((String) invocation.getArgument(0)) {
@@ -528,11 +714,20 @@ public class DiscoveryManagerTest {
         default -> null;
       };
       case "getStartTime" -> Date.from(START_TIME);
+      case "withStateLock" -> {
+        ((Runnable) invocation.getArgument(0)).run();
+        yield null;
+      }
+      case "tryWithStateLock" -> {
+        ((Runnable) invocation.getArgument(0)).run();
+        yield true;
+      }
       default -> null;
     });
     PubberConfiguration pubberConfig = new PubberConfiguration();
     pubberConfig.deviceId = "AHU-1";
     PubberDiscoveryManager pubberManager = new PubberDiscoveryManager(host, pubberConfig, null);
+    DiscoveryScheduler pubberScheduler = pubberManager.getDiscoveryScheduler();
     FamilyDiscoveryConfig adhocScan = oneShotScan(BACNET);
     adhocScan.generation = Date.from(Instant.now().plusSeconds(30));
     try {
@@ -545,15 +740,15 @@ public class DiscoveryManagerTest {
       assertScanError(pubberManager.getDiscoveryState().scans.get("ip_scan"), "not supported");
       assertEquals(PENDING, pubberManager.getDiscoveryState().scans.get("adhoc").phase);
 
-      pubberManager.startDiscoveryScan(DiscoveryScan.forScan("adhoc"), adhocScan.generation);
+      pubberScheduler.startDiscoveryScan(DiscoveryScan.forScan("adhoc"), adhocScan.generation);
       assertEquals(ACTIVE, pubberManager.getDiscoveryState().scans.get("adhoc").phase);
       verify(scanCapableProvider).startScan(any(), any());
     } finally {
       pubberManager.shutdown();
     }
     verify(scanCapableProvider).stopScan();
-    assertTrue(pubberManager.getActiveScanFamilies().isEmpty());
-    assertTrue(pubberManager.getScanSchedules().isEmpty());
+    assertFalse(pubberScheduler.hasActiveScans());
+    assertFalse(pubberScheduler.hasScanSchedules());
   }
 
   @Test
@@ -564,11 +759,13 @@ public class DiscoveryManagerTest {
     } catch (RuntimeException expected) {
       assertEquals("simulated state failure", expected.getMessage());
     }
-    assertEquals(0, manager.getStateUpdateCount().get());
 
     final int before = manager.stateUpdates;
-    manager.updateState();
+    final int beforeLocks = manager.hostLockEntries;
+    scheduler.updateState();
     assertEquals(before + 1, manager.stateUpdates);
+    assertEquals(beforeLocks + 1, manager.hostLockEntries);
+    assertEquals(2, manager.hostLockEntries);
   }
 
   @Test
@@ -588,6 +785,7 @@ public class DiscoveryManagerTest {
     manager.now = t0.toInstant().plusSeconds(DiscoveryManager.SCAN_DURATION_SEC);
     manager.runFuture(1);
     assertEquals(PENDING, scanState("nightly").phase);
+    assertEquals(Integer.valueOf(1), scanState("nightly").active_count);
     final int nextLoopFuture = manager.futures.size() - 1;
     assertFalse(manager.futures.get(nextLoopFuture).isCancelled());
 
@@ -656,16 +854,16 @@ public class DiscoveryManagerTest {
     manager.updateConfig(discovery(Map.of(BACNET, oneShotScan(null)), null));
     manager.updateConfig(null);
 
-    manager.checkDiscoveryScan(forFamily(BACNET), generation);
-    manager.startDiscoveryScan(forFamily(BACNET), generation);
-    assertTrue(manager.getActiveScanFamilies().isEmpty());
+    scheduler.checkDiscoveryScan(forFamily(BACNET), generation);
+    scheduler.startDiscoveryScan(forFamily(BACNET), generation);
+    assertFalse(scheduler.hasActiveScans());
     assertTrue(manager.published.isEmpty());
 
     manager.updateConfig(discovery(null, Map.of("adhoc", oneShotScan(BACNET))));
     manager.runFuture(manager.futureIndexFor("adhoc"));
     assertEquals(1, manager.published.size());
 
-    manager.startDiscoveryScan(DiscoveryScan.forScan("adhoc"), generation);
+    scheduler.startDiscoveryScan(DiscoveryScan.forScan("adhoc"), generation);
     assertEquals(1, manager.published.size());
   }
 
@@ -680,13 +878,14 @@ public class DiscoveryManagerTest {
     manager.runFuture(manager.futureIndexFor("adhoc"));
 
     assertNull(manager.getDiscoveryState().scans);
-    assertTrue(manager.getActiveScanFamilies().isEmpty());
+    assertFalse(scheduler.hasActiveScans());
 
     FamilyDiscoveryConfig replacement = oneShotScan(VENDOR);
     replacement.generation = Date.from(START_TIME.plusSeconds(60));
     AtomicInteger starts = new AtomicInteger();
     doAnswer(invocation -> {
       if (starts.getAndIncrement() == 0) {
+        manager.now = replacement.generation.toInstant();
         manager.updateConfig(discovery(null, Map.of("other", replacement)));
         manager.runFuture(manager.futureIndexFor("other"));
       }
@@ -736,6 +935,251 @@ public class DiscoveryManagerTest {
     assertEquals(PENDING, scanState(BACNET).phase);
   }
 
+  @Test
+  public void deferredSporadicReconfiguredToPeriodicReArmsFutureAndEarlyWakeupRuns() {
+    FamilyDiscoveryConfig blocker = oneShotScan(BACNET);
+    blocker.generation = Date.from(START_TIME.plusSeconds(20));
+    FamilyDiscoveryConfig target = oneShotScan(BACNET);
+    target.generation = Date.from(START_TIME.plusSeconds(25));
+
+    manager.now = START_TIME.plusSeconds(20);
+    manager.updateConfig(discovery(null, Map.of("blocker", blocker, "target", target)));
+    manager.runFuture(manager.futureIndexFor("blocker"));
+
+    // Fire target's timer 2ms early (now = 24.998s < 25.000s) so it enters deferredScans,
+    // then verify early wakeup does NOT drop it when blocker is replaced.
+    manager.now = target.generation.toInstant().minusMillis(2);
+    manager.runFuture(manager.futureIndexFor("target"));
+    assertEquals(PENDING, scanState("target").phase);
+
+    // Reconfigure deferred sporadic "target" into a periodic scan while removing "blocker":
+    // must re-arm a ScheduledFuture instead of wedging in PENDING with no timer.
+    FamilyDiscoveryConfig periodicTarget = periodicScan(BACNET, 3600);
+    periodicTarget.generation = target.generation;
+    manager.now = START_TIME.plusSeconds(30);
+    manager.updateConfig(discovery(null, Map.of("target", periodicTarget)));
+
+    assertEquals(PENDING, scanState("target").phase);
+    manager.runFuture(manager.futureIndexFor("target"));
+    assertEquals(ACTIVE, scanState("target").phase);
+  }
+
+  @Test
+  public void deferredSporadicWakesEvenAfterBackwardClockStepAndSupersededEnumerationIsIgnored() {
+    FamilyDiscoveryConfig blocker = oneShotScan(BACNET);
+    blocker.generation = Date.from(START_TIME.plusSeconds(20));
+    FamilyDiscoveryConfig target = oneShotScan(BACNET);
+    target.generation = Date.from(START_TIME.plusSeconds(25));
+
+    manager.now = START_TIME.plusSeconds(20);
+    manager.updateConfig(discovery(null, Map.of("blocker", blocker, "target", target)));
+    manager.runFuture(manager.futureIndexFor("blocker"));
+    final int blockerCompletion = manager.futures.size() - 1;
+
+    manager.now = target.generation.toInstant().minusMillis(5);
+    manager.runFuture(manager.futureIndexFor("target"));
+    assertEquals(PENDING, scanState("target").phase);
+
+    manager.runFuture(blockerCompletion);
+    assertEquals(ACTIVE, scanState("target").phase);
+
+    // Now stop "target" via updateConfig(config1 with enumeration T1), while inside stopScan()
+    // a newer updateConfig(config2 with enumeration null) supersedes config1.
+    Date enumGen = Date.from(START_TIME.plusSeconds(40));
+    doAnswer(invocation -> {
+      DiscoveryConfig newer = discovery(null, Map.of());
+      newer.generation = null;
+      manager.updateConfig(newer);
+      return null;
+    }).when(bacnetProvider).stopScan();
+
+    DiscoveryConfig older = discovery(null, Map.of());
+    older.generation = enumGen;
+    manager.updateConfig(older);
+
+    assertNull(manager.getDiscoveryState().generation);
+  }
+
+  @Test
+  public void completionFiringDuringProviderStartScanCompletesInOrderAfterStartScanReturns() {
+    FamilyDiscoveryConfig first = oneShotScan(BACNET);
+    first.generation = Date.from(START_TIME.plusSeconds(20));
+    first.scan_duration_sec = 0;
+    FamilyDiscoveryConfig second = oneShotScan(BACNET);
+    second.generation = Date.from(START_TIME.plusSeconds(25));
+
+    manager.now = first.generation.toInstant();
+    manager.updateConfig(discovery(null, Map.of("first", first, "second", second)));
+    final int firstStart = manager.futureIndexFor("first");
+    final int secondStart = manager.futureIndexFor("second");
+
+    AtomicInteger starts = new AtomicInteger();
+    doAnswer(invocation -> {
+      if (starts.getAndIncrement() == 0) {
+        final int firstCompletion = manager.futures.size() - 1;
+        manager.runFuture(firstCompletion);
+        manager.now = second.generation.toInstant();
+        manager.runFuture(secondStart);
+        assertEquals(PENDING, scanState("second").phase);
+        verify(bacnetProvider, never()).stopScan();
+        BiConsumer<String, DiscoveryEvents> publisher = invocation.getArgument(1);
+        publisher.accept("dev-1", discovered("1001"));
+      }
+      return null;
+    }).when(bacnetProvider).startScan(any(), any());
+
+    manager.runFuture(firstStart);
+
+    assertEquals(STOPPED, scanState("first").phase);
+    assertEquals(Integer.valueOf(1), scanState("first").active_count);
+    assertEquals(ACTIVE, scanState("second").phase);
+    assertEquals(2, starts.get());
+    verify(bacnetProvider, times(1)).stopScan();
+    assertEquals(4, manager.published.size());
+    assertEquals("first", manager.published.get(0).scan);
+    assertEquals(Integer.valueOf(0), manager.published.get(0).event_no);
+    assertEquals("first", manager.published.get(1).scan);
+    assertEquals(Integer.valueOf(1), manager.published.get(1).event_no);
+    assertEquals("first", manager.published.get(2).scan);
+    assertEquals(Integer.valueOf(-2), manager.published.get(2).event_no);
+    assertEquals("second", manager.published.get(3).scan);
+    assertEquals(Integer.valueOf(0), manager.published.get(3).event_no);
+  }
+
+  @Test
+  public void clearingScansOrFamiliesWhileStoppingActiveScanNeverPublishesEmptyMap() {
+    manager.updateConfig(discovery(
+        Map.of(VENDOR, oneShotScan(null)),
+        Map.of("adhoc", oneShotScan(BACNET))));
+    manager.runFuture(manager.futureIndexFor("adhoc"));
+    manager.runFuture(manager.futureIndexForFamily(VENDOR));
+
+    doAnswer(invocation -> {
+      scheduler.updateState();
+      return null;
+    }).when(bacnetProvider).stopScan();
+    doAnswer(invocation -> {
+      scheduler.updateState();
+      return null;
+    }).when(vendorProvider).stopScan();
+
+    manager.updateConfig(discovery(Map.of(VENDOR, oneShotScan(null)), null));
+    assertFalse(manager.sawEmptyScansMap);
+    assertNull(manager.getDiscoveryState().scans);
+
+    manager.updateConfig(discovery(null, Map.of("other", oneShotScan(BACNET))));
+    assertFalse(manager.sawEmptyFamiliesMap);
+    assertNull(manager.getDiscoveryState().families);
+  }
+
+  @Test
+  public void negativeIntervalOrDurationRejectedAndMatchesTargetHandlesNullAddr() {
+    FamilyDiscoveryConfig negInterval = oneShotScan(BACNET);
+    negInterval.scan_interval_sec = -1;
+    FamilyDiscoveryConfig negDuration = oneShotScan(BACNET);
+    negDuration.scan_duration_sec = -5;
+    FamilyDiscoveryConfig nullAddr = oneShotScan(BACNET);
+    nullAddr.addrs = Arrays.asList("1000", null);
+    FamilyDiscoveryConfig familyNeg = oneShotScan(null);
+    familyNeg.scan_interval_sec = -2;
+
+    manager.updateConfig(discovery(
+        Map.of(BACNET, familyNeg),
+        Map.of("neg_interval", negInterval, "neg_duration", negDuration, "null_addr", nullAddr)));
+
+    assertScanError(scanState("neg_interval"), "negative scan_interval_sec");
+    assertScanError(scanState("neg_duration"), "negative scan_duration_sec");
+    assertScanError(scanState("null_addr"), "null target address");
+    assertScanError(manager.getDiscoveryState().families.get(BACNET), "negative scan_interval_sec");
+    assertFalse(DiscoveryManager.matchesTarget(Set.of("1000"), null));
+    assertTrue(DiscoveryManager.matchesTarget(null, null));
+  }
+
+  @Test
+  public void exceptionDuringStartOrCompletionReleasesFamilyAndStartsDeferredScan() {
+    FamilyDiscoveryConfig first = oneShotScan(BACNET);
+    first.generation = Date.from(START_TIME.plusSeconds(10));
+    FamilyDiscoveryConfig second = oneShotScan(BACNET);
+    second.generation = Date.from(START_TIME.plusSeconds(15));
+    FamilyDiscoveryConfig third = oneShotScan(BACNET);
+    third.generation = Date.from(START_TIME.plusSeconds(20));
+
+    manager.now = START_TIME;
+    manager.updateConfig(discovery(null, Map.of(
+        "first", first, "second", second, "third", third)));
+    final int firstStart = manager.futureIndexFor("first");
+    final int secondStart = manager.futureIndexFor("second");
+    final int thirdStart = manager.futureIndexFor("third");
+
+    manager.now = first.generation.toInstant();
+    manager.throwOnNextUpdateState = true;
+    try {
+      manager.runFuture(firstStart);
+    } catch (RuntimeException expected) {
+      assertEquals("While checking for discovery scan start", expected.getMessage());
+    }
+    assertScanError(scanState("first"), "simulated state failure");
+    assertFalse(scheduler.hasActiveScans());
+
+    manager.now = second.generation.toInstant();
+    manager.runFuture(secondStart);
+    final int secondCompletion = manager.futures.size() - 1;
+    manager.now = third.generation.toInstant();
+    manager.runFuture(thirdStart);
+    assertEquals(ACTIVE, scanState("second").phase);
+    assertEquals(PENDING, scanState("third").phase);
+
+    manager.throwOnNextPublish = true;
+    try {
+      manager.runFuture(secondCompletion);
+    } catch (RuntimeException expected) {
+      assertTrue(expected.getMessage().contains("While completing discovery scan"));
+    }
+    assertEquals(STOPPED, scanState("second").phase);
+    assertEquals(ACTIVE, scanState("third").phase);
+    assertFalse(manager.sawActiveBeforeStartMarker);
+  }
+
+  @Test
+  public void advancingPeriodicGenerationClearsRetryErrorAndRemovingGenerationStopsLoop() {
+    Date t0 = Date.from(START_TIME.plusSeconds(10));
+    FamilyDiscoveryConfig blocker = oneShotScan(BACNET);
+    blocker.generation = Date.from(START_TIME.plusSeconds(5));
+    FamilyDiscoveryConfig nightly = periodicScan(BACNET, 3600);
+    nightly.generation = t0;
+
+    manager.now = START_TIME;
+    manager.updateConfig(discovery(null, Map.of("blocker", blocker, "nightly", nightly)));
+    manager.now = blocker.generation.toInstant();
+    manager.runFuture(manager.futureIndexFor("blocker"));
+    final int blockerCompletion = manager.futures.size() - 1;
+    manager.now = t0.toInstant();
+    manager.runFuture(manager.futureIndexFor("nightly"));
+    assertScanError(scanState("nightly"), "busy");
+
+    manager.runFuture(blockerCompletion);
+
+    Date nextSlot = Date.from(t0.toInstant().plusSeconds(3600));
+    FamilyDiscoveryConfig advanced = periodicScan(BACNET, 3600);
+    advanced.generation = nextSlot;
+    manager.now = t0.toInstant().plusSeconds(300);
+    manager.updateConfig(discovery(null, Map.of("nightly", advanced)));
+
+    assertEquals(PENDING, scanState("nightly").phase);
+    assertEquals(nextSlot, scanState("nightly").generation);
+    assertNull(scanState("nightly").status);
+    final int nextSlotFuture = manager.futureIndexFor("nightly");
+
+    FamilyDiscoveryConfig noGeneration = periodicScan(BACNET, 3600);
+    noGeneration.generation = null;
+    manager.updateConfig(discovery(null, Map.of("nightly", noGeneration)));
+
+    assertTrue(manager.futures.get(nextSlotFuture).isCancelled());
+    assertFalse(manager.getDiscoveryState().scans.containsKey("nightly"));
+    assertFalse(scheduler.hasActiveScans());
+    assertFalse(scheduler.hasScanSchedules());
+  }
+
   private FamilyDiscoveryState scanState(String name) {
     return manager.getDiscoveryState().scans.get(name);
   }
@@ -763,7 +1207,7 @@ public class DiscoveryManagerTest {
   }
 
   private static DiscoveryConfig discovery(Map<String, FamilyDiscoveryConfig> families,
-      Map<String, FamilyDiscoveryConfig> scans) {
+       Map<String, FamilyDiscoveryConfig> scans) {
     DiscoveryConfig config = new DiscoveryConfig();
     config.families = families == null ? null : new HashMap<>(families);
     config.scans = scans == null ? null : new HashMap<>(scans);
@@ -828,24 +1272,53 @@ public class DiscoveryManagerTest {
    */
   private static class FakeDiscoveryManager implements DiscoveryManager {
 
-    final List<ScheduledEntry> futures = new ArrayList<>();
-    final List<DiscoveryEvents> published = new ArrayList<>();
-    private final Map<DiscoveryScan, String> activeScanFamilies = new HashMap<>();
-    private final Map<DiscoveryScan, ScanSchedule> scanSchedules = new ConcurrentHashMap<>();
-    private final AtomicInteger stateUpdateCount = new AtomicInteger();
+    final List<ScheduledEntry> futures = Collections.synchronizedList(new ArrayList<>());
+    final List<DiscoveryEvents> published = Collections.synchronizedList(new ArrayList<>());
+    private final DiscoveryScheduler discoveryScheduler = new DiscoveryScheduler(this);
+    private final ReentrantLock hostStateLock = new ReentrantLock();
     private final ManagerHost host;
     Instant now = Instant.now();
+    volatile Runnable onPostDiscoveryProcess;
     boolean sawEmptyScansMap;
+    boolean sawEmptyFamiliesMap;
+    boolean sawActiveBeforeStartMarker;
     boolean throwOnNextUpdateState;
+    boolean throwOnNextPublish;
+    boolean rejectSchedules;
     int stateUpdates;
-    private volatile DiscoveryState discoveryState;
-    private volatile DiscoveryConfig discoveryConfig;
+    int hostLockEntries;
 
     FakeDiscoveryManager(Map<String, FamilyProvider> providers) {
       host = mock(ManagerHost.class, invocation -> switch (invocation.getMethod().getName()) {
         case "getLocalnetProvider" -> providers.get((String) invocation.getArgument(0));
         case "getStartTime" -> Date.from(START_TIME);
+        case "withStateLock" -> {
+          hostStateLock.lock();
+          try {
+            hostLockEntries++;
+            ((Runnable) invocation.getArgument(0)).run();
+          } finally {
+            hostStateLock.unlock();
+          }
+          yield null;
+        }
+        case "tryWithStateLock" -> {
+          if (!hostStateLock.tryLock()) {
+            yield false;
+          }
+          try {
+            hostLockEntries++;
+            ((Runnable) invocation.getArgument(0)).run();
+            yield true;
+          } finally {
+            hostStateLock.unlock();
+          }
+        }
         case "publish" -> {
+          if (throwOnNextPublish) {
+            throwOnNextPublish = false;
+            throw new RuntimeException("simulated publish failure");
+          }
           if (invocation.getArguments().length == 1) {
             published.add(invocation.getArgument(0));
           }
@@ -872,51 +1345,34 @@ public class DiscoveryManagerTest {
       throw new IllegalStateException("No future scheduled for scan " + scanName);
     }
 
+    int futureIndexForFamily(String family) {
+      Date generation = getDiscoveryState().families.get(family).generation;
+      for (int i = 0; i < futures.size(); i++) {
+        if (!futures.get(i).isCancelled() && futures.get(i).time().equals(generation)) {
+          return i;
+        }
+      }
+      throw new IllegalStateException("No future scheduled for family " + family);
+    }
+
+    @Override
+    public DiscoveryScheduler getDiscoveryScheduler() {
+      return discoveryScheduler;
+    }
+
     @Override
     public Instant getScanNow() {
       return now;
     }
 
     @Override
-    public Map<DiscoveryScan, String> getActiveScanFamilies() {
-      return activeScanFamilies;
-    }
-
-    @Override
-    public Map<DiscoveryScan, ScanSchedule> getScanSchedules() {
-      return scanSchedules;
-    }
-
-    @Override
-    public AtomicInteger getStateUpdateCount() {
-      return stateUpdateCount;
-    }
-
-    @Override
     public ScheduledFuture<?> scheduleFuture(Date startGeneration, Runnable runnable) {
+      if (rejectSchedules) {
+        throw new RejectedExecutionException("executor shut down");
+      }
       ScheduledEntry entry = new ScheduledEntry(startGeneration, runnable);
       futures.add(entry);
       return entry.future();
-    }
-
-    @Override
-    public DiscoveryState getDiscoveryState() {
-      return discoveryState;
-    }
-
-    @Override
-    public void setDiscoveryState(DiscoveryState discoveryState) {
-      this.discoveryState = discoveryState;
-    }
-
-    @Override
-    public DiscoveryConfig getDiscoveryConfig() {
-      return discoveryConfig;
-    }
-
-    @Override
-    public void setDiscoveryConfig(DiscoveryConfig discoveryConfig) {
-      this.discoveryConfig = discoveryConfig;
     }
 
     @Override
@@ -941,6 +1397,10 @@ public class DiscoveryManagerTest {
 
     @Override
     public void postDiscoveryProcess(String deviceId, DiscoveryEvents discoveryEvents) {
+      Runnable hook = onPostDiscoveryProcess;
+      if (hook != null) {
+        hook.run();
+      }
     }
 
     @Override
@@ -950,9 +1410,32 @@ public class DiscoveryManagerTest {
         throw new RuntimeException("simulated state failure");
       }
       stateUpdates++;
-      if (state instanceof DiscoveryState ds && ds.scans != null && ds.scans.isEmpty()
-          && (discoveryConfig == null || discoveryConfig.scans == null)) {
-        sawEmptyScansMap = true;
+      DiscoveryConfig currentConfig = getDiscoveryConfig();
+      if (state instanceof DiscoveryState ds) {
+        if (ds.scans != null && ds.scans.isEmpty()
+            && (currentConfig == null || currentConfig.scans == null)) {
+          sawEmptyScansMap = true;
+        }
+        if (ds.families != null && ds.families.isEmpty()
+            && (currentConfig == null || currentConfig.families == null)) {
+          sawEmptyFamiliesMap = true;
+        }
+        if (ds.scans != null) {
+          ds.scans.forEach((name, scanState) -> {
+            if (scanState != null && scanState.phase == ACTIVE) {
+              boolean hasStartMarker;
+              synchronized (published) {
+                hasStartMarker = published.stream().anyMatch(ev -> name.equals(ev.scan)
+                    && Integer.valueOf(0).equals(ev.event_no)
+                    && scanState.generation.toInstant().getEpochSecond()
+                        == ev.generation.toInstant().getEpochSecond());
+              }
+              if (!hasStartMarker) {
+                sawActiveBeforeStartMarker = true;
+              }
+            }
+          });
+        }
       }
     }
 
@@ -1001,6 +1484,5 @@ public class DiscoveryManagerTest {
     @Override
     public void warn(String message) {
     }
-
   }
 }

@@ -50,11 +50,11 @@ public class DiscoveryEvents {
     @JsonProperty("family")
     public String family;
     /**
-     * Name of the configured scan that produced this result, present only for results of entries in `config.discovery.scans`
+     * Name of the configured scan in `config.discovery.scans` that produced this event (including start and termination markers)
      * 
      */
     @JsonProperty("scan")
-    @JsonPropertyDescription("Name of the configured scan that produced this result, present only for results of entries in `config.discovery.scans`")
+    @JsonPropertyDescription("Name of the configured scan in `config.discovery.scans` that produced this event (including start and termination markers)")
     public java.lang.String scan;
     /**
      * The primary address of the device (for indicated family)

@@ -9,6 +9,21 @@ public interface ManagerHost extends ManagerLog {
 
   void update(Object update);
 
+  /**
+   * Executes an action while holding this host's state lock, if any.
+   */
+  default void withStateLock(Runnable action) {
+    action.run();
+  }
+
+  /**
+   * Executes an action if this host's state lock can be acquired immediately without blocking.
+   */
+  default boolean tryWithStateLock(Runnable action) {
+    withStateLock(action);
+    return true;
+  }
+
   default void publish(Object message) {
     publish(null, message);
   }
