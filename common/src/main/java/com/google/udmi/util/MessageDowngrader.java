@@ -4,9 +4,8 @@ import static com.google.udmi.util.Common.DOWNGRADED_FROM;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.OBJECT_MAPPER_RAW;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
+import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
-import static com.google.udmi.util.GeneralUtils.ifNotTrueThen;
-import static com.google.udmi.util.MessageUpgrader.NODE_FACTORY;
 import static java.lang.Integer.parseInt;
 import static udmi.util.SchemaVersion.LEGACY_REPLACEMENT;
 import static udmi.util.SchemaVersion.VERSION_1;
@@ -178,7 +177,9 @@ public class MessageDowngrader {
     AtomicReference<ObjectNode> reference = new AtomicReference<>(message);
     Arrays.stream(keys).forEach(key -> {
       ObjectNode ref = reference.get();
-      ifNotTrueThen(ref.has(key), () -> ref.put(key, new ObjectNode(NODE_FACTORY)));
+      if (!(ref.get(key) instanceof ObjectNode)) {
+        ref.putObject(key);
+      }
       reference.set((ObjectNode) ref.get(key));
     });
     return reference.get();
@@ -199,19 +200,12 @@ public class MessageDowngrader {
       return;
     }
 
-    String targetFamily = target.get("family").asText();
-    String targetAddr = target.get("addr").asText();
-
-    // Create localnet block
-    if (!message.has("localnet")) {
-      message.put("localnet", new ObjectNode(NODE_FACTORY));
+    String targetFamily = ifNotNullGet(target.get("family"), JsonNode::textValue);
+    String targetAddr = ifNotNullGet(target.get("addr"), JsonNode::textValue);
+    if (targetFamily != null) {
+      ObjectNode familyNode = ensure(message, "localnet", "families", targetFamily);
+      ifNotNullThen(targetAddr, addr -> familyNode.put("addr", addr));
     }
-    ObjectNode localnet = (ObjectNode) message.get("localnet");
-    ObjectNode localnetFamilies = (ObjectNode) localnet.get("families");
-
-    localnetFamilies.set(targetFamily, new ObjectNode(NODE_FACTORY));
-    ObjectNode localnetFamily = (ObjectNode) localnetFamilies.get(targetFamily);
-    localnetFamily.put("addr", targetAddr);
   }
 
   private void downgradeLocalnetTo_1_3_13_From_1_4_1() {
@@ -220,7 +214,7 @@ public class MessageDowngrader {
       return;
     }
     JsonNode downgradeLocalnetTo_1_From_1_4_1 = localnet.get("families");
-    if (downgradeLocalnetTo_1_From_1_4_1 != null) {
+    if (downgradeLocalnetTo_1_From_1_4_1 instanceof ObjectNode) {
       downgradeLocalnetTo_1_From_1_4_1.fieldNames().forEachRemaining(familyName -> {
         ObjectNode family = (ObjectNode) downgradeLocalnetTo_1_From_1_4_1.get(familyName);
         JsonNode removedNode = family.remove("addr");
@@ -237,7 +231,7 @@ public class MessageDowngrader {
       return;
     }
     JsonNode families = localnet.remove("families");
-    if (families != null) {
+    if (families instanceof ObjectNode) {
       localnet.set("subsystem", families);
       families.fieldNames().forEachRemaining(familyName -> {
         ObjectNode family = (ObjectNode) families.get(familyName);

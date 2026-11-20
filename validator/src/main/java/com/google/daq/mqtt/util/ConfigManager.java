@@ -320,7 +320,7 @@ public class ConfigManager {
   }
 
   private LocalnetConfig getDeviceLocalnetConfig() {
-    if (metadata.localnet == null) {
+    if (metadata.localnet == null || metadata.localnet.families == null) {
       return null;
     }
 
