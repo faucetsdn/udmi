@@ -11,6 +11,10 @@ import udmi.schema.RefDiscovery;
  */
 public interface FamilyProvider {
 
+  default boolean supportsDiscoveryScan() {
+    return false;
+  }
+
   default void startScan(FamilyDiscoveryConfig discoveryConfig,
       BiConsumer<String, DiscoveryEvents> publish) {
     throw new RuntimeException("Not yet implemented");

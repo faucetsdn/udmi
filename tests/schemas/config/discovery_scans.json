@@ -1,0 +1,28 @@
+//
+// MQTT topic: /devices/{device_id}/config
+// where {device_id} is that of the discovery node.
+//
+{
+  "version": "1.5.7",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "discovery": {
+    "scans": {
+      "bacnet_nightly": {
+        "family": "bacnet",
+        "generation": "2018-08-26T02:00:00Z",
+        "scan_interval_sec": 86400,
+        "scan_duration_sec": 600,
+        "depth": "entries"
+      },
+      "bacnet_targeted": {
+        "family": "bacnet",
+        "generation": "2018-08-26T21:39:00Z",
+        "scan_duration_sec": 60,
+        "addrs": [
+          "1000-1099"
+        ],
+        "depth": "entries"
+      }
+    }
+  }
+}

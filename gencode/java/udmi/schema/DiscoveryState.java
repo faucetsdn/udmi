@@ -46,6 +46,13 @@ public class DiscoveryState {
     @JsonProperty("families")
     @JsonPropertyDescription("Discovery protocol families")
     public HashMap<String, FamilyDiscoveryState> families;
+    /**
+     * Named discovery scans, keyed by the scan name from config
+     * 
+     */
+    @JsonProperty("scans")
+    @JsonPropertyDescription("Named discovery scans, keyed by the scan name from config")
+    public HashMap<String, FamilyDiscoveryState> scans;
 
     @Override
     public int hashCode() {
@@ -53,6 +60,7 @@ public class DiscoveryState {
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
         result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.scans == null)? 0 :this.scans.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
     }
@@ -66,7 +74,7 @@ public class DiscoveryState {
             return false;
         }
         DiscoveryState rhs = ((DiscoveryState) other);
-        return (((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.scans == rhs.scans)||((this.scans!= null)&&this.scans.equals(rhs.scans))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

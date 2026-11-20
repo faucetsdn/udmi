@@ -1,0 +1,31 @@
+{
+  "version": "1.5.7",
+  "timestamp": "2018-08-26T21:39:29.364Z",
+  "system": {
+    "hardware": {
+      "make": "ACME",
+      "model": "Bird Trap"
+    },
+    "software": {
+      "firmware": "3.2a"
+    },
+    "serial_no": "182732142",
+    "last_config": "2018-08-26T21:49:29.364Z",
+    "operation": {
+      "operational": true
+    }
+  },
+  "discovery": {
+    "scans": {
+      "Bacnet-Nightly": {
+        "generation": "2018-08-27T02:00:00Z",
+        "phase": "pending"
+      },
+      "bacnet_adhoc": {
+        "generation": "2018-08-26T21:30:00Z",
+        "phase": "stopped",
+        "family": "bacnet"
+      }
+    }
+  }
+}

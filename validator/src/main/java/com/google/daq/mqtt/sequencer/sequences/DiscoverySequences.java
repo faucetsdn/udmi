@@ -33,6 +33,7 @@ import static udmi.schema.Bucket.ENUMERATION;
 import static udmi.schema.Bucket.ENUMERATION_FAMILIES;
 import static udmi.schema.Bucket.ENUMERATION_FEATURES;
 import static udmi.schema.Bucket.ENUMERATION_POINTSET;
+import static udmi.schema.Category.DISCOVERY_FAMILY_SCAN;
 import static udmi.schema.Enumerations.Depth.DETAILS;
 import static udmi.schema.Enumerations.Depth.ENTRIES;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
@@ -82,6 +83,7 @@ import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.FeatureDiscovery;
+import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
 
@@ -101,6 +103,7 @@ public class DiscoverySequences extends SequenceBase {
   private static final int SCAN_DURATION_SEC = 10;
   private static final long SCAN_TARGET_COUNT = 2;
   public static final int EVENT_MARKERS = 2;
+  private static final String NAMED_SCAN = "sequencer_scan";
   private Set<String> metaFamilies;
   private Instant scanGeneration;
   private String scanFamily;
@@ -447,11 +450,7 @@ public class DiscoverySequences extends SequenceBase {
     List<String> condensedReasons = condenseList(reasons);
     checkThat("discovery events were valid", reasons.isEmpty(), CSV_JOINER.join(condensedReasons));
 
-    checkThat("received all unique event numbers", eventNos.size() == expectedEvents);
-    final Integer endEventNo = eventNos.removeFirst();
-    checkThat("received proper discovery start event", eventNos.getFirst() == 0);
-    checkThat("received proper last discovery event", eventNos.getLast() == actualCount);
-    checkThat("received proper discovery termination event", endEventNo == -(actualCount + 1));
+    checkDiscoveryEventNumbers(eventNos, expectedEvents, actualCount);
 
     Set<String> discoveredAddresses = events.stream().map(x -> x.addr).filter(Objects::nonNull)
         .collect(toSet());
@@ -487,6 +486,15 @@ public class DiscoverySequences extends SequenceBase {
     SetView<String> diffNetworks = symmetricDifference(discoveredNetworks, expNet);
     checkThat("all expected networks were found", diffNetworks.isEmpty(),
         format("expected %s, found %s", expNet, discoveredNetworks));
+  }
+
+  private void checkDiscoveryEventNumbers(SortedSet<Integer> eventNos, int expectedEvents,
+      int actualCount) {
+    checkThat("received all unique event numbers", eventNos.size() == expectedEvents);
+    final Integer endEventNo = eventNos.removeFirst();
+    checkThat("received proper discovery start event", eventNos.getFirst() == 0);
+    checkThat("received proper last discovery event", eventNos.getLast() == actualCount);
+    checkThat("received proper discovery termination event", endEventNo == -(actualCount + 1));
   }
 
   private static List<String> condenseList(List<String> reasons) {
@@ -575,6 +583,7 @@ public class DiscoverySequences extends SequenceBase {
         () -> assertEquals("bad scan family", scanFamily, discoveryEvent.family));
     addIfCaught(exceptions,
         () -> assertEquals("bad generation", scanGeneration, discoveryEvent.generation));
+    addIfFalse(exceptions, discoveryEvent.scan == null, "unexpected scan in family scan event");
     ifTrueThen(discoveryEvent.event_no > 0,
         () -> validateEvent(discoveryEvent, effectiveDepth, exceptions));
     return exceptions;
@@ -734,6 +743,93 @@ public class DiscoverySequences extends SequenceBase {
     ifNotEmptyThrow(checkEnumeration(lastGenerationEvents, true), CSV_JOINER::join);
   }
 
+  @Test(timeout = TWO_MINUTES_MS)
+  @Feature(bucket = DISCOVERY_SCAN, stage = ALPHA, facets = SubFolder.DISCOVERY)
+  @Summary("Check a named scan reports its own state and attributes its results")
+  public void scan_named() {
+    initializeDiscovery();
+    Date familyGeneration = SemanticDate.describe("future family generation",
+        cleanInstantDate(Instant.now().plus(Duration.ofDays(1))));
+    getConfigFamily(scanFamily).generation = familyGeneration;
+    Date generation = SemanticDate.describe("scan generation",
+        cleanInstantDate(Instant.now().minusSeconds(1)));
+    FamilyDiscoveryConfig namedScan = new FamilyDiscoveryConfig();
+    namedScan.generation = generation;
+    namedScan.depth = ENTRIES;
+    namedScan.scan_duration_sec = SCAN_DURATION_SEC;
+    deviceConfig.discovery.scans = new HashMap<>(Map.of(NAMED_SCAN, namedScan));
+
+    waitUntil("family scan pending", WAITING_PERIOD, () -> detailFamilyPending(familyGeneration));
+    waitUntil("missing family reported as scan error", WAITING_PERIOD, this::detailNamedScanError);
+
+    namedScan.family = scanFamily;
+    popReceivedEvents(DiscoveryEvents.class);
+
+    waitUntil("named scan active", WAITING_PERIOD, () -> detailNamedScan(generation, ACTIVE));
+    waitUntil("named scan complete", WAITING_PERIOD, () -> detailNamedScan(generation, STOPPED));
+    checkThat("family scan still pending", detailFamilyPending(familyGeneration) == null);
+    FamilyDiscoveryState namedState = deviceState.discovery.scans.get(NAMED_SCAN);
+    checkThat("named scan has no error status", namedState.status == null);
+    checkThat("named scan reported active count", namedState.active_count != null);
+
+    final int activeCount = namedState.active_count;
+    sleepFor("discovery events synchronized", EVENT_JITTER_SLEEP_TIME);
+    List<DiscoveryEvents> events = popReceivedEvents(DiscoveryEvents.class);
+    int expectedEvents = activeCount + EVENT_MARKERS;
+    checkThat("received expected number of discovery events", events.size() == expectedEvents);
+    checkThat("all events attributed to named scan", events.stream().allMatch(
+        event -> NAMED_SCAN.equals(event.scan) && scanFamily.equals(event.family)
+            && dateEquals(generation, event.generation)));
+
+    SortedSet<Integer> eventNos = events.stream().map(event -> event.event_no)
+        .filter(Objects::nonNull).collect(Collectors.toCollection(TreeSet::new));
+    checkDiscoveryEventNumbers(eventNos, expectedEvents, activeCount);
+
+    Set<String> discoveredAddresses = events.stream().map(event -> event.addr)
+        .filter(Objects::nonNull).collect(toSet());
+    Set<String> expectedAddresses = expectedTargetDevices(null);
+    checkThat("all expected addresses were found",
+        discoveredAddresses.equals(expectedAddresses),
+        format("expected %s, found %s", expectedAddresses, discoveredAddresses));
+
+    namedScan.family = "invalid_family";
+    waitUntil("changed unsupported family reported as scan error", WAITING_PERIOD,
+        this::detailNamedScanError);
+
+    deviceConfig.discovery.scans = null;
+    untilTrue("named scan state removed", () -> deviceState.discovery.scans == null
+        || !deviceState.discovery.scans.containsKey(NAMED_SCAN));
+  }
+
+  private String detailFamilyPending(Date familyGeneration) {
+    FamilyDiscoveryState familyState = ifNotNullGet(deviceState.discovery.families,
+        families -> families.get(scanFamily));
+    boolean matches = familyState != null && dateEquals(familyState.generation, familyGeneration)
+        && familyState.phase == PENDING && familyState.status == null;
+    return ifNotTrueGet(matches, format("Expected pending %s but %s",
+        isoConvert(familyGeneration), stringifyTerse(familyState)));
+  }
+
+  private String detailNamedScan(Date generation, FamilyDiscoveryState.Phase phase) {
+    FamilyDiscoveryState scanState = ifNotNullGet(deviceState.discovery.scans,
+        scans -> scans.get(NAMED_SCAN));
+    boolean matches = scanState != null && dateEquals(scanState.generation, generation)
+        && scanState.phase == phase;
+    return ifNotTrueGet(matches, format("Expected %s %s but %s", phase, isoConvert(generation),
+        stringifyTerse(scanState)));
+  }
+
+  private String detailNamedScanError() {
+    FamilyDiscoveryState scanState = ifNotNullGet(deviceState.discovery.scans,
+        scans -> scans.get(NAMED_SCAN));
+    boolean matches = scanState != null && scanState.phase == STOPPED
+        && scanState.active_count == null && scanState.status != null
+        && DISCOVERY_FAMILY_SCAN.equals(scanState.status.category)
+        && Objects.equals(Level.ERROR.value(), scanState.status.level);
+    return ifNotTrueGet(matches, format("Expected stopped error status but %s",
+        stringifyTerse(scanState)));
+  }
+
   private void initializeDiscovery() {
     initializeFamilies();
     deviceConfig.discovery = new DiscoveryConfig();
@@ -745,7 +841,8 @@ public class DiscoverySequences extends SequenceBase {
         symmetricDifference(configFamilies.keySet(), stateFamilies.keySet())
     ));
     untilTrue("no scans active",
-        () -> stateFamilies.keySet().stream().noneMatch(scanActive()));
+        () -> stateFamilies.keySet().stream().noneMatch(scanActive())
+            && (deviceState.discovery.scans == null || deviceState.discovery.scans.isEmpty()));
   }
 
   private void initializeFamilies() {
