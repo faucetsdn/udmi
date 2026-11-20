@@ -24,7 +24,7 @@
         "family": {
             "description": "Connection family/protocol of the parent device to which the device is physically connected",
             "type": "string",
-            "examples": ["bacnet_mstp", "modbus_tcp", "mqtt"],
+            "examples": ["bacnet_mstp", "modbus_tcp", "mqtt", "hardwired"],
             "$presentation": {
               "display": "show",
               "style": "bold"
@@ -33,6 +33,7 @@
       }
     },
     "families": {
+      "description": "Address family parameters for the device on local networks",
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, FamilyLocalnetModel>",
       "patternProperties": {
@@ -75,6 +76,7 @@
       }
     },
     "networks": {
+      "description": "Named local network definitions",
       "additionalProperties": false,
       "existingJavaType": "java.util.HashMap<String, FamilyLocalnetModel>",
       "patternProperties": {
@@ -83,8 +85,5 @@
         }
       }
     }
-  },
-  "required": [
-    "families"
-  ]
+  }
 }
