@@ -8,8 +8,9 @@ source $UDMI_ROOT/etc/shell_common.sh
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "Usage: $(basename $0) [--local|--from-workspace] [site_model_path] [docker-compose-options...]"
     echo ""
-    echo "Prepares prerequisites (certificates, .env, directories)"
-    echo "and brings up the UDMI Bridgehead architecture using Docker Compose."
+    echo "Prepares prerequisites (certificates, .env, directories),"
+    echo "brings up the UDMI Bridgehead architecture using Docker Compose,"
+    echo "and waits until the UDMIS service is ready."
     echo ""
     echo "Options / Arguments:"
     echo "  --local, --from-workspace Build base container images (udmis, validator, pubber)"
@@ -20,8 +21,8 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo ""
     echo "Environment Variables:"
     echo "  SITE_MODEL_PATH         Path to site model directory (default: sites/udmi_site_model)."
-    echo "  UDMIS_BASE_IMAGE        Base image for udmis (default: ghcr.io/faucetsdn/udmi:udmis-latest)."
-    echo "  VALIDATOR_BASE_IMAGE    Base image for validator (default: ghcr.io/faucetsdn/udmi:validator-latest)."
+    echo "  UDMIS_BASE_IMAGE        Base image for udmis (default: ghcr.io/faucetsdn/udmi/udmis:latest)."
+    echo "  VALIDATOR_BASE_IMAGE    Base image for validator (default: ghcr.io/faucetsdn/udmi/validator:latest)."
     echo ""
     echo "Examples:"
     echo "  $(basename $0)                             # Default: uses ghcr.io latest images"
@@ -127,6 +128,26 @@ echo "Preparing bridgehead container images..."
 retry_cmd docker compose pull --ignore-buildable --policy missing
 retry_cmd docker compose build
 echo "Starting bridgehead services via docker compose (Site model: $SITE_MODEL_PATH)..."
+rm -f var/tmp/udmis.log var/tmp/pod_ready.txt 2>/dev/null || true
 docker compose up -d --no-build "$@"
+
+echo "Waiting for UDMIS service to become ready..."
+UDMIS_READY=false
+for i in {1..60}; do
+    STARTED_AT=$(docker inspect -f '{{.State.StartedAt}}' udmis 2>/dev/null || true)
+    if docker logs ${STARTED_AT:+--since "$STARTED_AT"} udmis 2>&1 | grep "udmis running in the background" >/dev/null; then
+        UDMIS_READY=true
+        echo "UDMIS service is ready."
+        break
+    fi
+    echo "Waiting for UDMIS... [$i/60]"
+    sleep 2
+done
+
+if [[ "$UDMIS_READY" != "true" ]]; then
+    echo "Dumping UDMIS logs:"
+    docker logs udmis || true
+    fail "UDMIS failed to become ready within 120 seconds."
+fi
 
 echo "=== Bridgehead deployment started successfully ==="
