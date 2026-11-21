@@ -346,11 +346,20 @@ class SequencerReport:
     self.start_time = self.results_json["start_time"]
     self.end_time = self.results_json["status"]["timestamp"]
     self.status_message = self.results_json["status"]["message"]
+    self.udmi_version = self.results_json["udmi_version"]
+    self.cloud_udmi_version = self.get_cloud_udmi_version(self.results_json)
 
     self._load_test_results()
     self._load_schema_results()
     self._load_device_metadata()
     self._load_sequences()
+
+  @staticmethod
+  def get_cloud_udmi_version(results_json: dict):
+    cloud_version = results_json.get("cloud_version")
+    if isinstance(cloud_version, dict):
+      return cloud_version.get("udmi_version") or None
+    return None
 
   def _load_sequences(self):
     self.sequences = {
@@ -487,23 +496,27 @@ def parse_command_line_args():
   return parser.parse_args()
 
 
+def render_report(report: SequencerReport, template_file_path: str) -> str:
+  """Renders a SequencerReport using the given Jinja2 template file."""
+  environment = jinja2.Environment(autoescape=False)
+  environment.filters["pretty_dict"] = TemplateHelper.pretty_dict
+  environment.filters["md_table_header"] = TemplateHelper.md_table_header
+  environment.filters["result_icon"] = TemplateHelper.result_icon
+
+  with open(template_file_path, encoding="utf-8") as f:
+    template = environment.from_string(f.read())
+
+  return template.render(report=report)
+
+
 def main():
   args = parse_command_line_args()
   site_model = args.site_model
   device_id = args.device_id
 
   report = SequencerReport(site_model, device_id)
-
-  environment = jinja2.Environment(autoescape=False)
-  environment.filters["pretty_dict"] = TemplateHelper.pretty_dict
-  environment.filters["md_table_header"] = TemplateHelper.md_table_header
-  environment.filters["result_icon"] = TemplateHelper.result_icon
-
   template_file_path = os.path.join(sys.path[0], "../", TEMPLATE_PATH)
-  with open(template_file_path, encoding="utf-8") as f:
-    template = environment.from_string(f.read())
-
-  output = template.render(report=report)
+  output = render_report(report, template_file_path)
 
   output_file = os.path.join(site_model, f"out/devices/{device_id}", OUT_FILE)
 
