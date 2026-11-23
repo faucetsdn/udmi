@@ -44,7 +44,7 @@ public class DboExternalProcessor implements ExternalProcessor {
         .orElseGet(() -> ofNullable(linkExternalsModel.label).orElse(device.getDeviceId()));
     buildingConfigEntity.type =
         (linkExternalsModel.type != null && !linkExternalsModel.type.isEmpty())
-            ? String.join(",", linkExternalsModel.type)
+            ? linkExternalsModel.type
             : null;
 
     File dboOut = new File(device.getOutDir(), DBO_OUT_FILE);

@@ -210,8 +210,8 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
         etype_val = entity["type"]
         if isinstance(etype_val, list):
           dbo["type"] = [str(t).strip() for t in etype_val if str(t).strip()]
-        elif isinstance(etype_val, str):
-          dbo["type"] = [t.strip() for t in etype_val.split(",") if t.strip()]
+        elif isinstance(etype_val, str) and etype_val.strip():
+          dbo["type"] = [etype_val.strip()]
 
       # Localnet
       if "code" in entity:

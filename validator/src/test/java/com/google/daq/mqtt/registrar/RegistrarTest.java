@@ -389,7 +389,8 @@ public class RegistrarTest {
         written.get("11111111-2222-3333-4444-555555555555");
     assertNotNull("DBO entity written", entity);
     assertEquals("prefers localnet.families.bacnet.name", "VAV-BAC-99", entity.code);
-    assertEquals("joins multi-type list", "HVAC/VAV_SD,HVAC/DMP", entity.type);
+    assertEquals("preserves multi-type list",
+        ImmutableList.of("HVAC/VAV_SD", "HVAC/DMP"), entity.type);
     dboFile.delete();
     tempOut.delete();
   }
