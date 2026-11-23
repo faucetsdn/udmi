@@ -147,10 +147,10 @@ public class DiscoverySequences extends SequenceBase {
     return event;
   }
 
-  private void checkSelfEnumeration(DiscoveryEvents event, Enumerations depths) {
+  void checkSelfEnumeration(DiscoveryEvents event, Enumerations depths) {
     if (shouldEnumerate(depths.families)) {
       Set<String> models = ofNullable(deviceMetadata.localnet)
-          .map(localnet -> localnet.families.keySet()).orElse(ImmutableSet.of());
+          .map(localnet -> localnet.families).map(Map::keySet).orElse(ImmutableSet.of());
       Set<String> events = ofNullable(event.families).map(Map::keySet)
           .orElse(ImmutableSet.of());
 

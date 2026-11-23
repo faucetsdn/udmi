@@ -25,13 +25,18 @@ public class LocalnetModel {
     @JsonPropertyDescription("Parent device to which the device is physically connected")
     public Parent parent;
     /**
-     * 
-     * (Required)
+     * Address family parameters for the device on local networks
      * 
      */
     @JsonProperty("families")
+    @JsonPropertyDescription("Address family parameters for the device on local networks")
     public HashMap<String, FamilyLocalnetModel> families;
+    /**
+     * Named local network definitions
+     * 
+     */
     @JsonProperty("networks")
+    @JsonPropertyDescription("Named local network definitions")
     public HashMap<String, FamilyLocalnetModel> networks;
 
     @Override
