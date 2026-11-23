@@ -37,11 +37,11 @@ public class PointPointsetModel {
     @JsonPropertyDescription("Actual input unit that is sent from the device")
     public java.lang.String units_reported;
     /**
-     * Expected data type for the point
+     * Expected data type for the point, or 'missing' when intentionally absent on the device
      * 
      */
     @JsonProperty("type")
-    @JsonPropertyDescription("Expected data type for the point")
+    @JsonPropertyDescription("Expected data type for the point, or 'missing' when intentionally absent on the device")
     public java.lang.String type;
     /**
      * Detailed description of this point

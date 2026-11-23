@@ -9,8 +9,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "UNTYPED/TYPELESS",
-      "label": "VAVRH S1-1-24"
+      "type": [
+        "UNTYPED/TYPELESS"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "VAVRH S1-1-24"
+      }
     }
   },
   "cloud": {

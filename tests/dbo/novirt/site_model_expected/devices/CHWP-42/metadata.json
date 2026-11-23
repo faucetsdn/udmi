@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/PMP_SS_VSC",
-      "label": "Air Cooled Chiller S-4 / San Antonio, CHWP S-4B (Chiller 4) VFD Integration / San Antonio"
+      "type": [
+        "HVAC/PMP_SS_VSC"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "Air Cooled Chiller S-4 / San Antonio, CHWP S-4B (Chiller 4) VFD Integration / San Antonio"
+      }
     }
   },
   "cloud": {

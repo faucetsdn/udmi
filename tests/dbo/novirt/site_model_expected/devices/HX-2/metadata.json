@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/HX_CHWDT_PRWDT_CHWDPM_PWDPM_CHWRWISOVPM",
-      "label": "Process Cooling Water PCW-30"
+      "type": [
+        "HVAC/HX_CHWDT_PRWDT_CHWDPM_PWDPM_CHWRWISOVPM"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "Process Cooling Water PCW-30"
+      }
     }
   },
   "cloud": {

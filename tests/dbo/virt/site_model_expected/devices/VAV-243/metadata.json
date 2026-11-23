@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/VAV_SD_DSP_HWDC",
-      "label": "RH 2-4-3"
+      "type": [
+        "HVAC/VAV_SD_DSP_HWDC"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "RH 2-4-3"
+      }
     }
   },
   "cloud": {

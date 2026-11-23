@@ -6,8 +6,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "INFO_TECH/PRNTR",
-      "label": "ppchauffeur"
+      "type": [
+        "INFO_TECH/PRNTR"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "ppchauffeur"
+      }
     }
   },
   "cloud": {

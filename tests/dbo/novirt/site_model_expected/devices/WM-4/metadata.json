@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "METERS/WM_STANDARD",
-      "label": "utility-Water_Main_B"
+      "type": [
+        "METERS/WM_STANDARD"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "utility-Water_Main_B"
+      }
     }
   },
   "cloud": {

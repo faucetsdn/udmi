@@ -33,6 +33,8 @@ public abstract class ProcessorTestBase extends MessageTestBase {
   public static final Date TEST_TIMESTAMP = CleanDateFormat.cleanDate();
   public static final long ASYNC_PROCESSING_DELAY_MS = 2000;
   protected final List<Object> captured = Collections.synchronizedList(new ArrayList<>());
+  protected final List<Envelope> capturedEnvelopes =
+      Collections.synchronizedList(new ArrayList<>());
   protected IotAccessBase provider;
   private ProcessorBase processor;
 
@@ -150,5 +152,6 @@ public abstract class ProcessorTestBase extends MessageTestBase {
 
   private void resultHandler(Object message) {
     captured.add(message);
+    capturedEnvelopes.add(getReverseDispatcher().getContinuation(message).getEnvelope());
   }
 }
