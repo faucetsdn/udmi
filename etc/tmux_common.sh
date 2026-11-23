@@ -306,7 +306,7 @@ tmux_init_or_add_window() {
     local window_name="$2"
     local cmd="$3"
 
-    local env_exports="export UDMI_ROOT='$UDMI_ROOT' MQTT_PORT='${MQTT_PORT:-8883}' ETCD_PORT='${ETCD_PORT:-2379}' INFLUX_PORT='${INFLUX_PORT:-8086}' POSTGRES_PORT='${POSTGRES_PORT:-5432}' TARGET_PROJECT='${TARGET_PROJECT:-}' UDMI_REGISTRY_SUFFIX='${UDMI_REGISTRY_SUFFIX:-}' UDMI_ALT_REGISTRY='${UDMI_ALT_REGISTRY:-}' UDMI_NO_BUILD='${UDMI_NO_BUILD:-}' UDMI_POD_READY='${UDMI_POD_READY:-}'"
+    local env_exports="export UDMI_ROOT='$UDMI_ROOT' UDMI_RUN_DIR='${UDMI_RUN_DIR:-}' UDMI_NAMESPACE='${UDMI_NAMESPACE:-}' MQTT_PORT='${MQTT_PORT:-8883}' ETCD_PORT='${ETCD_PORT:-2379}' INFLUX_PORT='${INFLUX_PORT:-8086}' POSTGRES_PORT='${POSTGRES_PORT:-5432}' TARGET_PROJECT='${TARGET_PROJECT:-}' UDMI_REGISTRY_SUFFIX='${UDMI_REGISTRY_SUFFIX:-}' UDMI_ALT_REGISTRY='${UDMI_ALT_REGISTRY:-}' UDMI_NO_BUILD='${UDMI_NO_BUILD:-}' UDMI_POD_READY='${UDMI_POD_READY:-}'"
     local full_cmd="$env_exports; $cmd; ec=\\\$?; echo '=== [$window_name] exited with code '\\\$ec' ==='; while true; do read -r _ 2>/dev/null || sleep 3600; done"
 
     if ! tmux_session_exists "$session_name"; then
@@ -352,7 +352,7 @@ tmux_probe_service() {
     case "$svc" in
         etcd)
             local port="${ETCD_PORT:-2379}"
-            local pid_file="var/etcd/etcd.pid"
+            local pid_file="${ETCD_DIR:-var/etcd}/etcd.pid"
             local pid=$(cat "$pid_file" 2>/dev/null || true)
             if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null && (timeout 1 bash -c "</dev/tcp/127.0.0.1/$port" 2>/dev/null || curl -sf "http://127.0.0.1:$port/health" >/dev/null 2>&1); then
                 echo "RUNNING (PID $pid, port $port)"
@@ -377,7 +377,7 @@ tmux_probe_service() {
             fi
             ;;
         udmis)
-            local pid_file="var/udmis.pid"
+            local pid_file="${UDMIS_PID_FILE:-var/udmis.pid}"
             local pod_ready=$(resolve_pod_ready_path)
             local pid=$(cat "$pid_file" 2>/dev/null || true)
             if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
@@ -401,7 +401,7 @@ tmux_probe_service() {
             ;;
         postgres)
             local port="${POSTGRES_PORT:-5432}"
-            local pid_file="var/postgresql/postgresql.pid"
+            local pid_file="${POSTGRES_DIR:-var/postgresql}/postgresql.pid"
             local pid=$(cat "$pid_file" 2>/dev/null || true)
             if timeout 1 bash -c "</dev/tcp/127.0.0.1/$port" 2>/dev/null; then
                 echo "RUNNING (port $port${pid:+, PID $pid})"
@@ -413,7 +413,7 @@ tmux_probe_service() {
             ;;
         influxdb)
             local port="${INFLUX_PORT:-8086}"
-            local pid_file="var/influx/influxd.pid"
+            local pid_file="${INFLUX_DIR:-var/influx}/influxd.pid"
             local pid=$(cat "$pid_file" 2>/dev/null || true)
             if timeout 1 bash -c "</dev/tcp/127.0.0.1/$port" 2>/dev/null || curl -sf "http://127.0.0.1:$port/health" >/dev/null 2>&1; then
                 echo "RUNNING (port $port${pid:+, PID $pid})"
@@ -424,7 +424,7 @@ tmux_probe_service() {
             fi
             ;;
         butler)
-            local pid_file="var/butler.pid"
+            local pid_file="${BUTLER_PID_FILE:-var/butler.pid}"
             local pid=$(cat "$pid_file" 2>/dev/null || true)
             if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
                 echo "RUNNING (PID $pid)"

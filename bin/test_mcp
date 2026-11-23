@@ -19,8 +19,8 @@ echo "=================================================================="
 
 # Ensure cleanup on failure
 cleanup() {
-    echo "Cleaning up any active test sessions..."
-    bin/test_setup terminate "$TEST_ID" >/dev/null 2>&1 || true
+    echo "Cleaning up any active test sessions (preserving instance logs on failure)..."
+    bin/test_setup terminate "$TEST_ID" --no-clean >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
@@ -132,11 +132,16 @@ if [[ $(echo "$TERM_INFO" | jq -r .status) != "TERMINATED" ]]; then
     fail "Unexpected terminate response: $TERM_INFO"
 fi
 
-# 9. Verify session list is clean
+# 9. Verify session list and child sessions are clean
 LIST_AFTER=$(bin/test_setup list --json)
 if echo "$LIST_AFTER" | jq -e ".[] | select(.test_id == \"$TEST_ID\")" >/dev/null; then
     fail "Test session $TEST_ID still present in active list after termination: $LIST_AFTER"
 fi
+for child_sess in udmi_barbican udmi_butler; do
+    if tmux has-session -t "$child_sess" 2>/dev/null; then
+        fail "Child tmux session '$child_sess' was left running after bin/test_setup terminate!"
+    fi
+done
 
 trap - EXIT
 echo "=================================================================="

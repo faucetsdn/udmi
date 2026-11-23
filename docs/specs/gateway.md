@@ -116,6 +116,9 @@ device points into a [_pointset_ message](../../tests/schemas/events_pointset/ex
 [_Proxy Device Full Metadata Example_](../../tests/schemas/metadata/proxy.json)
 
 The [🧬`localnet` block](../../gencode/docs/metadata.html#localnet) within the [metadata](metadata.md)
-describes the presence of the device on a local network. This can/should be used for initial
-programming and configuration of the device, or to validate proper device configuration. The gateway
-implementation itself would not directly deal with this block.
+describes a device's local network topology and parameters—including optional protocol address
+`families`, an upstream physical `parent` connection (such as a `hardwired` controller link where
+no fieldbus protocol address applies), and/or named local `networks`. This information is used for
+initial programming, validation, and config generation (generating `config.localnet` only when
+`families` is specified); the gateway implementation itself does not directly consume this metadata
+block.

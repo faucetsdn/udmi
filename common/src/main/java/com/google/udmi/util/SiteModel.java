@@ -343,7 +343,8 @@ public class SiteModel {
 
   public Set<String> getExtraDevices() {
     String[] existing = ofNullable(getExtrasDir().list()).orElse(new String[0]);
-    return Arrays.stream(existing).filter(this::extraExists).collect(Collectors.toSet());
+    return Arrays.stream(existing).filter(this::extraExists)
+        .collect(Collectors.toCollection(TreeSet::new));
   }
 
   private boolean extraExists(String extraId) {

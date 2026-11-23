@@ -1213,7 +1213,8 @@
       "examples": [
         "bacnet_mstp",
         "modbus_tcp",
-        "mqtt"
+        "mqtt",
+        "hardwired"
       ]
     },
     "localnet.families.bacnet.addr": {

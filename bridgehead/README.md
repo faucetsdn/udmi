@@ -42,7 +42,7 @@ The repository provides the `bin/start_bridgehead` helper script to automate pre
 - Creates required host data directories under `bridgehead/var/`.
 - Verifies site model availability and auto-generates missing X.509 reflector certificates (`rsa_private.crt`, `ca.crt`).
 - Generates a default `.env` configuration file with host IP detection and random tokens if `.env` does not already exist.
-- Pulls missing base images, builds container images (including packaging `bridgeheadManager.war` inside the `udmis` image), and launches all services via `docker compose`.
+- Pulls missing base images, builds container images (including packaging `bridgeheadManager.war` inside the `udmis` image), launches all services via `docker compose`, and waits until the `udmis` service is initialized and ready.
 
 ---
 
@@ -110,7 +110,7 @@ Pubber requires access to the site model. There are 2 ways to get pubber setup w
 
 #### Run tool
 
-Start pubber container: `docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"`
+Start pubber container: `docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi/pubber:latest /bin/bash -c "tail -f /dev/null"`
 
 Run pubber: `docker exec pubber bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> AHU-22 123456`
 
@@ -129,7 +129,7 @@ Run the following commands to complete a discovery sequence:
 ```
 docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d && bin/registrar site_model/ //mqtt/mosquitto GAT-123"
 
-docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi:pubber-latest /bin/bash -c "tail -f /dev/null"
+docker run -d --rm --name pubber -v $(realpath udmi_site_model):/root/site_model ghcr.io/faucetsdn/udmi/pubber:latest /bin/bash -c "tail -f /dev/null"
 
 docker exec -d pubber /bin/bash -c "bin/pubber site_model/ //mqtt/<YOUR_HOST_IP> GAT-123 852649" 
 
@@ -160,7 +160,30 @@ docker exec -d validator bin/validator site_model/ //mqtt/mosquitto
 
 ## Sequencer
 
-The Sequencer tool executes automated UDMI sequence compliance tests against a target Device Under Test (DUT) over MQTT. Ensure the target device (or the `pubber` container if testing with a simulated device) is actively running and connected before executing the sequencer:
+The Sequencer tool executes automated UDMI sequence compliance tests against a target Device Under Test (DUT) over MQTT. Ensure the target device (or the `pubber` container if testing with a simulated device) is actively running and connected before executing the sequencer.
+
+### Recommended: Using Host Wrapper (`bridgehead/bin/sequencer`)
+
+From the repository root, run `bridgehead/bin/sequencer` to execute `bin/sequencer` inside the Bridgehead `validator` container with trace logging (`-v`), restore host ownership of generated reports, and print the resulting host report paths:
+```bash
+# Run full sequencer suite for device GAT-123
+bridgehead/bin/sequencer GAT-123
+
+# Run a specific sequence (e.g. system_last_update)
+bridgehead/bin/sequencer GAT-123 system_last_update
+```
+
+#### Optional: Onboarding / Refreshing a Device (`bridgehead/bin/setup_device`)
+
+If onboarding an unconfigured physical device (or refreshing device registration after editing `metadata.json` while Bridgehead is running), run:
+```bash
+bridgehead/bin/setup_device AHU-1
+```
+This generates any missing CA-signed client certificate, registers the device via `registrar` in `etcd` and Mosquitto, writes `site_model/out/devices/<DEVICE_ID>/endpoint.json`, and prints the 4 host files (`endpoint.json`, `reflector/ca.crt`, `*_private.crt`, `*_private.pem`) to copy onto the device.
+
+### Direct Container Execution
+
+Alternatively, run `bin/sequencer` directly inside the `validator` container:
 ```bash
 # Run full sequencer suite for device GAT-123
 docker exec validator bin/sequencer -v site_model/ //mqtt/mosquitto GAT-123

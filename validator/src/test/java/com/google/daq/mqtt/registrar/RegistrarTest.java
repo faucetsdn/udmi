@@ -20,6 +20,7 @@ import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -46,6 +47,7 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
+import udmi.schema.Parent;
 import udmi.schema.PointPointsetModel;
 
 /**
@@ -343,6 +345,28 @@ public class RegistrarTest {
     LocalDevice device = registrar.getWorkingDevices().get("SNS-8");
     assertTrue("Device should record proxy error for nonexistent gateway_id",
         device.hasCategory(ExceptionCategory.proxy));
+  }
+
+  @Test
+  public void localnetWithoutFamiliesTest() {
+    Registrar registrar = getRegistrar(ImmutableList.of());
+    registrar.execute(() -> {
+      LocalnetModel parentOnly = new LocalnetModel();
+      parentOnly.parent = new Parent();
+      parentOnly.parent.target = GATEWAY_ID;
+      parentOnly.parent.family = "hardwired";
+      Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
+      localDevices.get("SNS-8").getMetadata().localnet = parentOnly;
+      localDevices.get(GATEWAY_ID).getMetadata().localnet.families = null;
+    });
+
+    for (String deviceId : ImmutableList.of("SNS-8", GATEWAY_ID)) {
+      LocalDevice device = registrar.getWorkingDevices().get(deviceId);
+      assertEquals(deviceId + " should have no errors", Set.of(), device.getTreeChildren());
+      assertNotNull(deviceId + " generated config should exist", device.getSettings().config);
+      assertNull(deviceId + " generated config.localnet should be null when families is omitted",
+          device.deviceConfigObject().localnet);
+    }
   }
 
   private Boolean isNotBlocking(MockAction action) {
