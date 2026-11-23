@@ -138,11 +138,11 @@ public class PointPointsetModel {
     @JsonPropertyDescription("Collection of family point information")
     public Map<String, RefDiscovery> structure;
     /**
-     * Virtual equipment mapping linking this local point to a remote point in another device
+     * Expression defining a virtual or calculated point
      * 
      */
     @JsonProperty("expr")
-    @JsonPropertyDescription("Virtual equipment mapping linking this local point to a remote point in another device")
+    @JsonPropertyDescription("Expression defining a virtual or calculated point")
     public java.lang.String expr;
     /**
      * State value mapping for this point (e.g. 0.0: OFF)

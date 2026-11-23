@@ -12587,16 +12587,18 @@
             />
         </svg>
     <a href="#points_pattern1_expr" onclick="anchorLink('points_pattern1_expr')">expr</a></div><span class="badge badge-dark value-type">Type: string</span><br/>
-<span class="description"><p>Virtual equipment mapping linking this local point to a remote point in another device</p>
-</span><span class="pattern-value" id="points_pattern1_expr_pattern">Must match regular expression: <code>^[-_0-9a-zA-Z$]+:[a-z0-9_]+$</code></span>
+<span class="description"><p>Expression defining a virtual or calculated point</p>
+</span>
         
 
         
-        
+        <p><span class="badge badge-light restriction min-length-restriction" id="points_pattern1_expr_minLength">Must be at least <code>1</code> characters long</span></p>
 
         <br/>
-<div class="badge badge-secondary">Example:</div>
+<div class="badge badge-secondary">Examples:</div>
 <br/><div id="points_pattern1_expr_ex1" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;VAV-3:supply_air_flowrate_sensor&quot;</span>
+</pre></div>
+</div><div id="points_pattern1_expr_ex2" class="jumbotron examples"><div class="highlight"><pre><span></span><span class="s2">&quot;VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor&quot;</span>
 </pre></div>
 </div>
             </div>

@@ -53,6 +53,9 @@
       "remote_supply_temp_sensor": {
         "expr": "CHWP-2:discharge_air_temperature_sensor"
       },
+      "calculated_flowrate_diff": {
+        "expr": "VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor"
+      },
       "compressor_run_command": {
         "type": "missing"
       }

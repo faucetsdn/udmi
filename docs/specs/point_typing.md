@@ -17,13 +17,13 @@ Every point declared under `pointset.points.<point_name>` in a device's `metadat
 | **String** | `type` is `"string"`; `units` and `values` are omitted | `string` (arbitrary string literal) | `"v2.4.1"`, `"NONE"`, `"A1-04"` | `21.5`, `100`, `true`, `false` |
 | **Binary** | `type` is `"boolean"`; `units` and `values` are omitted | `boolean` (`true` or `false`) | `true`, `false` | `0`, `1`, `"true"`, `"ON"` |
 | **Missing** | `type` is `"missing"`; `units`, `values`, and `expr` are omitted | *Omitted* (model-only; stripped from `config`, not reported in `events` or `state`) | N/A | Any reported point entry |
-| **Expression** | `expr` is defined; at most one of `units`, `values`, or `type` (`"string"` / `"boolean"`) is defined | *Omitted* (inter-device linkage; stripped from `config`, not reported directly by device) | N/A | N/A |
+| **Expression** | `expr` is defined; at most one of `units`, `values`, or `type` (`"string"` / `"boolean"`) is defined | *Omitted* (virtual/calculated expression; stripped from `config`, not reported directly by device) | N/A | N/A |
 | *Invalid* | Two or more of `units`, `values`, and `type` are defined, or all are omitted without `expr` | *Validation Error* | N/A | N/A |
 
 ```mermaid
 flowchart TD
     A["Point definition in metadata.json<br/>pointset.points.&lt;point_name&gt;"] --> EX{"Is 'expr' defined with<br/>no 'units', 'values', or 'type'?"}
-    EX -- Yes --> EXPR["Type: EXPRESSION<br/>Model-only inter-device link"]
+    EX -- Yes --> EXPR["Type: EXPRESSION<br/>Model-only virtual/calculated point"]
     EX -- No --> B{"Is exactly one of 'units',<br/>'values', or 'type' defined?"}
     B -- No --> ERR["Validation Error:<br/>Exactly one of 'units', 'values', or 'type' must be defined"]
     B -- Yes --> C{"Is 'units' defined?"}
@@ -38,7 +38,7 @@ flowchart TD
 
 ### Mutual Exclusivity and Model Constraints
 
-1. **Exact-One Requirement (Mutual Exclusivity)**: Every physical point definition in `metadata.json` (where `expr` is omitted) MUST specify **at most one** and **at least one** of `units`, `values`, or `type`. Points defining `expr` MAY omit all three (an expression-only linked point) or specify at most one non-missing type specifier (`units`, `values`, or `type` equal to `"string"` or `"boolean"`). Specifying two or more of `units`, `values`, and `type` is always a site model validation error.
+1. **Exact-One Requirement (Mutual Exclusivity)**: Every physical point definition in `metadata.json` (where `expr` is omitted) MUST specify **at most one** and **at least one** of `units`, `values`, or `type`. Points defining `expr` MAY omit all three (an expression-only point) or specify at most one non-missing type specifier (`units`, `values`, or `type` equal to `"string"` or `"boolean"`). Specifying two or more of `units`, `values`, and `type` is always a site model validation error.
 2. **Field Definitions**:
    * When `units` is present, it MUST be a non-empty string designating the unit of measure (or an explicit dimensionless unit designator such as `"no-units"`).
    * When `values` is present, it MUST be a non-empty object mapping at least two raw device values to canonical state strings.

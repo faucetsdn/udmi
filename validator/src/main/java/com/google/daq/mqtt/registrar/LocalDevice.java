@@ -449,6 +449,10 @@ class LocalDevice implements SiteDevice {
         throw new ValidationError(format(
             "Non-numeric point %s cannot specify numeric-only fields", pointName));
       }
+      if (hasExpr && pointModel.expr.isBlank()) {
+        throw new ValidationError(format(
+            "Expression point %s expr must not be blank", pointName));
+      }
       if (hasExpr && typeSpecifiers == 0) {
         if (pointModel.baseline_value != null) {
           throw new ValidationError(format(

@@ -357,7 +357,7 @@ public class BasicTest extends TestBase {
     deviceMetadata.pointset.points.put("unimplemented_sensor", missingModel);
 
     udmi.schema.PointPointsetModel exprModel = new udmi.schema.PointPointsetModel();
-    exprModel.expr = "GAT-123:remote_sensor";
+    exprModel.expr = "VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor";
     deviceMetadata.pointset.points.put("derived_sensor", exprModel);
 
     PointsetEvents validEvents = basePointsetEvents();

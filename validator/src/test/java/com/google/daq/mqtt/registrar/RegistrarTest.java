@@ -291,10 +291,20 @@ public class RegistrarTest {
     assertTrue("valid expr-only point with underscore device id",
         isPointModelValid(validExprOnly));
 
+    PointPointsetModel validArithmeticExpr = new PointPointsetModel();
+    validArithmeticExpr.expr =
+        "VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor";
+    assertTrue("valid arithmetic expr-only point", isPointModelValid(validArithmeticExpr));
+
     PointPointsetModel validExprWithUnits = new PointPointsetModel();
-    validExprWithUnits.expr = "AHU-1:supply_air_flowrate_sensor";
+    validExprWithUnits.expr =
+        "(AHU-1:supply_air_flowrate_sensor + AHU-2:supply_air_flowrate_sensor) / 2";
     validExprWithUnits.units = "Liters-per-second";
-    assertTrue("valid expr point with units", isPointModelValid(validExprWithUnits));
+    assertTrue("valid arithmetic expr point with units", isPointModelValid(validExprWithUnits));
+
+    PointPointsetModel blankExpr = new PointPointsetModel();
+    blankExpr.expr = "   ";
+    assertTrue("blank expr rejected", !isPointModelValid(blankExpr));
 
     PointPointsetModel exprOnlyWithBaseline = new PointPointsetModel();
     exprOnlyWithBaseline.expr = "AHU-1:supply_air_flowrate_sensor";
@@ -320,8 +330,8 @@ public class RegistrarTest {
       metadata.pointset.points.put("missing_sensor", missingPoint);
 
       PointPointsetModel exprPoint = new PointPointsetModel();
-      exprPoint.expr = "GAT-123:remote_sensor";
-      metadata.pointset.points.put("linked_sensor", exprPoint);
+      exprPoint.expr = "VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor";
+      metadata.pointset.points.put("calculated_sensor", exprPoint);
     });
 
     LocalDevice device = registrar.getWorkingDevices().get(DEVICE_ID);
@@ -332,7 +342,7 @@ public class RegistrarTest {
     assertTrue("missing point stripped from config",
         !config.pointset.points.containsKey("missing_sensor"));
     assertTrue("expr point stripped from config",
-        !config.pointset.points.containsKey("linked_sensor"));
+        !config.pointset.points.containsKey("calculated_sensor"));
   }
 
   @Test
