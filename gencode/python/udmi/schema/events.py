@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from ._base import DataModel
-from .events_discovery import DiscoveryEvents
+from ._internal import DiscoveryEvents
 from .events_pointset import PointsetEvents
 from .events_streams import StreamsEvents
 from .events_system import SystemEvents

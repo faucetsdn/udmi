@@ -131,6 +131,62 @@
           "$ref": "file:state_system_hardware.json"
         }
       }
+    },
+    "model": {
+      "$ref": "file:metadata.json"
     }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": ["model"],
+        "anyOf": [
+          { "required": ["cloud_model"] },
+          { "required": ["registries"] },
+          { "required": ["devices"] },
+          { "required": ["families"] },
+          { "required": ["points"] },
+          { "required": ["refs"] },
+          { "required": ["features"] },
+          { "required": ["system"] }
+        ]
+      },
+      {
+        "required": ["cloud_model"],
+        "anyOf": [
+          { "required": ["registries"] },
+          { "required": ["devices"] },
+          { "required": ["families"] },
+          { "required": ["points"] },
+          { "required": ["refs"] },
+          { "required": ["features"] },
+          { "required": ["system"] }
+        ]
+      },
+      {
+        "required": ["registries"],
+        "anyOf": [
+          { "required": ["devices"] },
+          { "required": ["families"] },
+          { "required": ["points"] },
+          { "required": ["refs"] },
+          { "required": ["features"] },
+          { "required": ["system"] }
+        ]
+      },
+      {
+        "required": ["devices"],
+        "anyOf": [
+          { "required": ["families"] },
+          { "required": ["points"] },
+          { "required": ["refs"] },
+          { "required": ["features"] },
+          { "required": ["system"] }
+        ]
+      }
+    ]
+  },
+  "message": {
+    "not": "model, cloud_model, registries, devices, and device discovery fields are mutually exclusive"
   }
 }
