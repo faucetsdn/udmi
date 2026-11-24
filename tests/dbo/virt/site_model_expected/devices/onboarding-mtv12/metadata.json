@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "INFO_TECH/PRNTR",
-      "label": "onboarding-mtv12"
+      "type": [
+        "INFO_TECH/PRNTR"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "onboarding-mtv12"
+      }
     }
   },
   "cloud": {

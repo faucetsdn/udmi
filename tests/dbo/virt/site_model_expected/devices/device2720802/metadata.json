@@ -9,8 +9,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "UNTYPED/TYPELESS",
-      "label": "device2720802"
+      "type": [
+        "UNTYPED/TYPELESS"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "device2720802"
+      }
     }
   },
   "cloud": {

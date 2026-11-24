@@ -214,4 +214,23 @@ public class ReflectProcessorTest extends ProcessorTestBase {
       System.setOut(originalOut);
     }
   }
+
+  @Test
+  public void modelDevicePropagatesDeviceGuidTest() {
+    final String expectedGuid = "11111111-2222-3333-4444-555555555555";
+    CloudModel returnModel = new CloudModel();
+    returnModel.operation = ModelOperation.CREATE;
+    returnModel.resource_type = Resource_type.DIRECT;
+    when(provider.modelDevice(anyString(), anyString(), notNull(), any())).thenReturn(returnModel);
+
+    CloudModel requestModel = new CloudModel();
+    requestModel.operation = ModelOperation.CREATE;
+    requestModel.resource_type = Resource_type.DIRECT;
+    requestModel.metadata = ImmutableMap.of(
+        "udmi_metadata", "{\"system\":{\"guid\":\"" + expectedGuid + "\"}}");
+
+    activeTestInstance(() -> getReverseDispatcher().publish(makeModelBundle(requestModel)));
+    assertEquals(1, capturedEnvelopes.size(), "expected one ModelUpdate published");
+    assertEquals(expectedGuid, capturedEnvelopes.get(0).deviceGuid);
+  }
 }

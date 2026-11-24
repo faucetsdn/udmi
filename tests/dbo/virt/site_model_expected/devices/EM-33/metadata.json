@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "METERS/EM_PWM_AVCM_PLPM_PVCM",
-      "label": "power-meter-MatrixRoom"
+      "type": [
+        "METERS/EM_PWM_AVCM_PLPM_PVCM"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "power-meter-MatrixRoom"
+      }
     }
   },
   "cloud": {

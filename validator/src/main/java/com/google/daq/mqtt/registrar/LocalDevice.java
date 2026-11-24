@@ -438,11 +438,8 @@ class LocalDevice implements SiteDevice {
       boolean hasUnits = pointModel.units != null;
       boolean hasValues = pointModel.values != null;
       boolean hasType = pointModel.type != null;
+      boolean hasExpr = pointModel.expr != null;
       int typeSpecifiers = (hasUnits ? 1 : 0) + (hasValues ? 1 : 0) + (hasType ? 1 : 0);
-      if (typeSpecifiers != 1) {
-        throw new ValidationError(format(
-            "Point %s must specify exactly one of units, values, or type", pointName));
-      }
       boolean hasNumericOnlyFields = pointModel.units_reported != null
           || pointModel.range_min != null
           || pointModel.range_max != null
@@ -451,6 +448,22 @@ class LocalDevice implements SiteDevice {
       if (!hasUnits && hasNumericOnlyFields) {
         throw new ValidationError(format(
             "Non-numeric point %s cannot specify numeric-only fields", pointName));
+      }
+      if (hasExpr && pointModel.expr.isBlank()) {
+        throw new ValidationError(format(
+            "Expression point %s expr must not be blank", pointName));
+      }
+      if (hasExpr && typeSpecifiers == 0) {
+        if (pointModel.baseline_value != null) {
+          throw new ValidationError(format(
+              "Expression-only point %s cannot specify baseline_value", pointName));
+        }
+        return;
+      }
+      if (typeSpecifiers != 1) {
+        throw new ValidationError(format(
+            "Point %s must specify %s one of units, values, or type",
+            pointName, hasExpr ? "at most" : "exactly"));
       }
       if (hasUnits) {
         if (pointModel.units.isBlank()) {
@@ -484,9 +497,18 @@ class LocalDevice implements SiteDevice {
           throw new ValidationError(format(
               "Binary point %s baseline_value must be a boolean", pointName));
         }
+      } else if (PointsetValidator.isMissingPoint(pointModel)) {
+        if (hasExpr
+            || pointModel.ref != null
+            || Boolean.TRUE.equals(pointModel.writable)
+            || pointModel.baseline_value != null) {
+          throw new ValidationError(format(
+              "Missing point %s cannot specify ref, expr, writable, or baseline_value",
+              pointName));
+        }
       } else {
         throw new ValidationError(format(
-            "Point %s has invalid type %s (expected string or boolean)",
+            "Point %s has invalid type %s (expected string, boolean, or missing)",
             pointName, pointModel.type));
       }
     });
@@ -782,6 +804,7 @@ class LocalDevice implements SiteDevice {
       // Don't use actual project id because it should be abstracted away.
       envelope.projectId = fakeProjectId();
       envelope.deviceNumId = makeNumId(envelope);
+      envelope.deviceGuid = getDeviceGuid();
       String envelopeJson = OBJECT_MAPPER_STRICT.writeValueAsString(envelope);
       Set<ValidationMessage> processingReport = schemas.get(ENVELOPE_SCHEMA_JSON)
           .validate(OBJECT_MAPPER.readTree(envelopeJson));
@@ -949,8 +972,13 @@ class LocalDevice implements SiteDevice {
     }
   }
 
+  @Override
   public String getDeviceId() {
     return deviceId;
+  }
+
+  public String getDeviceGuid() {
+    return catchToNull(() -> metadata.system.guid);
   }
 
   public String getDeviceNumId() {
