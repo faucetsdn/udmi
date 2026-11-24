@@ -30,6 +30,7 @@ public class PointsetValidator {
 
   public static final String TYPE_BOOLEAN = "boolean";
   public static final String TYPE_STRING = "string";
+  public static final String TYPE_MISSING = "missing";
 
   private static final int MAX_DECIMAL_PLACES = 2;
 
@@ -131,7 +132,12 @@ public class PointsetValidator {
 
   private MetadataDiff validateMessage(Set<String> strings) {
     Set<String> deliveredPoints = new TreeSet<>(strings);
-    Set<String> expectedPoints = new TreeSet<>(getPoints(metadata).keySet());
+    Set<String> expectedPoints = new TreeSet<>();
+    getPoints(metadata).forEach((name, point) -> {
+      if (!isMissingPoint(point) && !isExprPoint(point)) {
+        expectedPoints.add(name);
+      }
+    });
     MetadataDiff metadataDiff = new MetadataDiff();
     metadataDiff.extraPoints = new TreeSet<>(deliveredPoints);
     metadataDiff.extraPoints.removeAll(expectedPoints);
@@ -177,7 +183,7 @@ public class PointsetValidator {
       }
 
       PointPointsetModel pointModel = modelPoints.get(pointName);
-      if (pointModel == null) {
+      if (pointModel == null || isMissingPoint(pointModel) || isExprPoint(pointModel)) {
         continue;
       }
 
@@ -357,6 +363,14 @@ public class PointsetValidator {
 
   public static boolean isStringPoint(PointPointsetModel model) {
     return model != null && TYPE_STRING.equals(model.type);
+  }
+
+  public static boolean isMissingPoint(PointPointsetModel model) {
+    return model != null && TYPE_MISSING.equals(model.type);
+  }
+
+  public static boolean isExprPoint(PointPointsetModel model) {
+    return model != null && model.expr != null;
   }
 
   public static boolean isValidNumericValue(Object value) {

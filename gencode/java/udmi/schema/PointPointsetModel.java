@@ -37,11 +37,11 @@ public class PointPointsetModel {
     @JsonPropertyDescription("Actual input unit that is sent from the device")
     public java.lang.String units_reported;
     /**
-     * Expected data type for the point
+     * Expected data type for the point, or 'missing' when intentionally absent on the device
      * 
      */
     @JsonProperty("type")
-    @JsonPropertyDescription("Expected data type for the point")
+    @JsonPropertyDescription("Expected data type for the point, or 'missing' when intentionally absent on the device")
     public java.lang.String type;
     /**
      * Detailed description of this point
@@ -138,11 +138,11 @@ public class PointPointsetModel {
     @JsonPropertyDescription("Collection of family point information")
     public Map<String, RefDiscovery> structure;
     /**
-     * Virtual equipment mapping linking this local point to a remote point in another device
+     * Expression defining a virtual or calculated point
      * 
      */
     @JsonProperty("expr")
-    @JsonPropertyDescription("Virtual equipment mapping linking this local point to a remote point in another device")
+    @JsonPropertyDescription("Expression defining a virtual or calculated point")
     public java.lang.String expr;
     /**
      * State value mapping for this point (e.g. 0.0: OFF)

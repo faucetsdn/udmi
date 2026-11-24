@@ -6,8 +6,9 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/VAV_SD_DSP",
-      "label": "VAV-3"
+      "type": [
+        "HVAC/VAV_SD_DSP"
+      ]
     }
   },
   "cloud": {
@@ -24,6 +25,13 @@
           "0.0": "OFF",
           "1.0": "ON"
         }
+      }
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "VAV-3"
       }
     }
   }

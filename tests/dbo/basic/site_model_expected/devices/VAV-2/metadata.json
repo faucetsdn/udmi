@@ -6,8 +6,10 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/VAV_SD_CSP",
-      "label": "VAV-2"
+      "type": [
+        "HVAC/VAV_SD_CSP",
+        "HVAC/DMP"
+      ]
     }
   },
   "cloud": {
@@ -23,6 +25,16 @@
       "zone_air_temperature_sensor": {
         "units": "degrees_celsius",
         "units_reported": "degC"
+      },
+      "discharge_air_temperature_sensor": {
+        "type": "missing"
+      }
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "VAV-2"
       }
     }
   }

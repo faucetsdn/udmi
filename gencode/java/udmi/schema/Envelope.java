@@ -23,6 +23,13 @@ public class Envelope {
 
     @JsonProperty("deviceId")
     public String deviceId;
+    /**
+     * Globally unique identifier for the device
+     * 
+     */
+    @JsonProperty("deviceGuid")
+    @JsonPropertyDescription("Globally unique identifier for the device")
+    public String deviceGuid;
     @JsonProperty("deviceNumId")
     public String deviceNumId;
     /**
@@ -75,6 +82,7 @@ public class Envelope {
         result = ((result* 31)+((this.transactionId == null)? 0 :this.transactionId.hashCode()));
         result = ((result* 31)+((this.principal == null)? 0 :this.principal.hashCode()));
         result = ((result* 31)+((this.deviceNumId == null)? 0 :this.deviceNumId.hashCode()));
+        result = ((result* 31)+((this.deviceGuid == null)? 0 :this.deviceGuid.hashCode()));
         result = ((result* 31)+((this.payload == null)? 0 :this.payload.hashCode()));
         result = ((result* 31)+((this.deviceRegistryId == null)? 0 :this.deviceRegistryId.hashCode()));
         result = ((result* 31)+((this.subType == null)? 0 :this.subType.hashCode()));
@@ -92,7 +100,7 @@ public class Envelope {
             return false;
         }
         Envelope rhs = ((Envelope) other);
-        return ((((((((((((((((this.deviceRegistryLocation == rhs.deviceRegistryLocation)||((this.deviceRegistryLocation!= null)&&this.deviceRegistryLocation.equals(rhs.deviceRegistryLocation)))&&((this.publishTime == rhs.publishTime)||((this.publishTime!= null)&&this.publishTime.equals(rhs.publishTime))))&&((this.subFolder == rhs.subFolder)||((this.subFolder!= null)&&this.subFolder.equals(rhs.subFolder))))&&((this.updateFrom == rhs.updateFrom)||((this.updateFrom!= null)&&this.updateFrom.equals(rhs.updateFrom))))&&((this.rawFolder == rhs.rawFolder)||((this.rawFolder!= null)&&this.rawFolder.equals(rhs.rawFolder))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.deviceId == rhs.deviceId)||((this.deviceId!= null)&&this.deviceId.equals(rhs.deviceId))))&&((this.transactionId == rhs.transactionId)||((this.transactionId!= null)&&this.transactionId.equals(rhs.transactionId))))&&((this.principal == rhs.principal)||((this.principal!= null)&&this.principal.equals(rhs.principal))))&&((this.deviceNumId == rhs.deviceNumId)||((this.deviceNumId!= null)&&this.deviceNumId.equals(rhs.deviceNumId))))&&((this.payload == rhs.payload)||((this.payload!= null)&&this.payload.equals(rhs.payload))))&&((this.deviceRegistryId == rhs.deviceRegistryId)||((this.deviceRegistryId!= null)&&this.deviceRegistryId.equals(rhs.deviceRegistryId))))&&((this.subType == rhs.subType)||((this.subType!= null)&&this.subType.equals(rhs.subType))))&&((this.projectId == rhs.projectId)||((this.projectId!= null)&&this.projectId.equals(rhs.projectId))))&&((this.gatewayId == rhs.gatewayId)||((this.gatewayId!= null)&&this.gatewayId.equals(rhs.gatewayId))));
+        return (((((((((((((((((this.deviceRegistryLocation == rhs.deviceRegistryLocation)||((this.deviceRegistryLocation!= null)&&this.deviceRegistryLocation.equals(rhs.deviceRegistryLocation)))&&((this.publishTime == rhs.publishTime)||((this.publishTime!= null)&&this.publishTime.equals(rhs.publishTime))))&&((this.subFolder == rhs.subFolder)||((this.subFolder!= null)&&this.subFolder.equals(rhs.subFolder))))&&((this.updateFrom == rhs.updateFrom)||((this.updateFrom!= null)&&this.updateFrom.equals(rhs.updateFrom))))&&((this.rawFolder == rhs.rawFolder)||((this.rawFolder!= null)&&this.rawFolder.equals(rhs.rawFolder))))&&((this.source == rhs.source)||((this.source!= null)&&this.source.equals(rhs.source))))&&((this.deviceId == rhs.deviceId)||((this.deviceId!= null)&&this.deviceId.equals(rhs.deviceId))))&&((this.transactionId == rhs.transactionId)||((this.transactionId!= null)&&this.transactionId.equals(rhs.transactionId))))&&((this.principal == rhs.principal)||((this.principal!= null)&&this.principal.equals(rhs.principal))))&&((this.deviceNumId == rhs.deviceNumId)||((this.deviceNumId!= null)&&this.deviceNumId.equals(rhs.deviceNumId))))&&((this.deviceGuid == rhs.deviceGuid)||((this.deviceGuid!= null)&&this.deviceGuid.equals(rhs.deviceGuid))))&&((this.payload == rhs.payload)||((this.payload!= null)&&this.payload.equals(rhs.payload))))&&((this.deviceRegistryId == rhs.deviceRegistryId)||((this.deviceRegistryId!= null)&&this.deviceRegistryId.equals(rhs.deviceRegistryId))))&&((this.subType == rhs.subType)||((this.subType!= null)&&this.subType.equals(rhs.subType))))&&((this.projectId == rhs.projectId)||((this.projectId!= null)&&this.projectId.equals(rhs.projectId))))&&((this.gatewayId == rhs.gatewayId)||((this.gatewayId!= null)&&this.gatewayId.equals(rhs.gatewayId))));
     }
 
     public enum SubFolder {
