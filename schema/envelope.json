@@ -10,7 +10,7 @@
       "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
     },
     "providerId": {
-      "description": "Identifier for a non-device backend provider emitting this message (mutually exclusive with deviceId)",
+      "description": "Identifier for a non-device backend provider emitting this message. Mutually exclusive with deviceId.",
       "type": "string",
       "minLength": 1
     },
@@ -112,5 +112,8 @@
       "deviceId",
       "providerId"
     ]
+  },
+  "message": {
+    "not": "deviceId and providerId are mutually exclusive"
   }
 }

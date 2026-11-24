@@ -24,11 +24,11 @@ public class Envelope {
     @JsonProperty("deviceId")
     public String deviceId;
     /**
-     * Identifier for a non-device backend provider emitting this message (mutually exclusive with deviceId)
+     * Identifier for a non-device backend provider emitting this message. Mutually exclusive with deviceId.
      * 
      */
     @JsonProperty("providerId")
-    @JsonPropertyDescription("Identifier for a non-device backend provider emitting this message (mutually exclusive with deviceId)")
+    @JsonPropertyDescription("Identifier for a non-device backend provider emitting this message. Mutually exclusive with deviceId.")
     public String providerId;
     /**
      * Optional key scoping a logical subset of messages within a subFolder

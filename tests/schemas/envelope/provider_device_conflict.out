@@ -1,2 +1,2 @@
 1 schema violations found
-  $: must not be valid to the schema "$.not" : {"required":["deviceId","providerId"]}
+  deviceId and providerId are mutually exclusive

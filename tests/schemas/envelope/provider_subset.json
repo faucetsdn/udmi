@@ -2,7 +2,7 @@
   "projectId": "daq-test-suite",
   "deviceRegistryId": "ZZ-TRI-FECTA",
   "providerId": "site-model-service",
-  "subSetKey": "model_v1",
+  "subSetKey": "model",
   "subFolder": "discovery",
   "subType": "events",
   "transactionId": "2026-03-01T12:00:00Z"

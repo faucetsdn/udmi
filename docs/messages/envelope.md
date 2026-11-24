@@ -14,12 +14,11 @@ to do anything other than specify the correct `subFolder` postfix of the MQTT to
 
 ## Provider Messages and Subset Keys
 
-* **`deviceId` and `providerId` (mutually exclusive)**: Standard device telemetry and state
-  messages identify their origin with `deviceId`. Back-end services that emit registry-scoped
-  messages on behalf of a service rather than an individual device set `providerId` instead and
-  omit `deviceId`. A message envelope must not set both `deviceId` and `providerId` (enforced by
-  the envelope schema).
-* **`subSetKey`**: An optional snake-case identifier (`^[a-z][a-z0-9]*(_[a-z0-9]+)*$`) that scopes
-  a logical subset of messages within a `subFolder`. For example, site model discovery sets
-  `subFolder` to `discovery` and `subSetKey` to `model` so consumers can distinguish model
-  discovery streams from standard network discovery scans.
+* **`deviceId` vs. `providerId`**: Standard device telemetry and state messages identify their
+  origin with `deviceId`. Back-end services emitting registry-scoped messages set `providerId`
+  instead and omit `deviceId`. The envelope schema enforces mutual exclusion so an envelope
+  cannot set both fields.
+* **`subSetKey`**: An optional snake-case identifier matching `^[a-z][a-z0-9]*(_[a-z0-9]+)*$`
+  that scopes a logical subset of messages within a `subFolder`. For example, site model
+  discovery sets `subFolder` to `discovery` and `subSetKey` to `model` so consumers can
+  distinguish model discovery streams from standard network discovery scans.

@@ -83,17 +83,17 @@ be reported:
 ## Site Model Discovery
 
 Site model discovery exports the cloud-managed device metadata models for a registry using the
-standard discovery event stream contract. Requests and emitted messages use `subFolder` set to
-`discovery`, `subSetKey` set to `model`, and a non-device `providerId` (with `deviceId` omitted) on
-the message [envelope](../messages/envelope.md).
+standard discovery event stream contract. Requests and emitted messages set `subFolder` to
+`discovery`, `subSetKey` to `model`, and `providerId` to the backend service identifier with
+`deviceId` omitted on the message [envelope](../messages/envelope.md).
 
 A full-site model discovery scan for a registry with `N` active devices emits a deterministic,
 ordered sequence of `events/discovery` messages sharing the same `generation` timestamp and
-`family` (`iot`):
+`iot` family:
 
-1. **Start marker (`event_no: 0`)**: Signals the start of the scan stream for `generation`.
-2. **Device model events (`event_no: 1 .. N`)**: One event per active device in sorted `deviceId`
-   order, with `addr` set to the device ID and `model` populated with the device's
+1. **Start marker** with `event_no: 0`: Signals the start of the scan stream for `generation`.
+2. **Device model events** with `event_no: 1 .. N`: One event per active device in sorted
+   `deviceId` order, with `addr` set to the device ID and `model` populated with the device's
    [metadata](metadata.md).
-3. **End marker (`event_no: -(N + 1)`)**: Signals completion of the scan stream. For an empty
-   registry (`N = 0`), the stream consists of `event_no: 0` immediately followed by `event_no: -1`.
+3. **End marker** with `event_no: -(N + 1)`: Signals completion of the scan stream. When a
+   registry has zero active devices, `event_no: 0` is followed immediately by `event_no: -1`.
