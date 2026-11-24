@@ -131,6 +131,9 @@
           "$ref": "file:state_system_hardware.json"
         }
       }
+    },
+    "model": {
+      "$ref": "file:metadata.json"
     }
   }
 }
