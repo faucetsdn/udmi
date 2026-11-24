@@ -108,12 +108,12 @@ class ModelDiscoveryHandlerTest implements MessageContinuation {
   @Test
   void projectWideFanOut() {
     envelope.deviceRegistryId = null;
-    doReturn(Set.of("REG-B", "REG-A")).when(iotAccess).getRegistries();
+    doReturn(Set.of("REG-B", "UDMI-REFLECT", "REG-A")).when(iotAccess).getRegistries();
 
     ModelDiscoveryHandler.processDiscoveryConfig(controlProcessor, config);
 
     List<Envelope> fannedEnvelopes = sideEnvelopeCapture.getAllValues();
-    assertEquals(2, fannedEnvelopes.size(), "fan-out count");
+    assertEquals(2, fannedEnvelopes.size(), "fan-out excludes UDMI-REFLECT");
     assertEquals("REG-A", fannedEnvelopes.get(0).deviceRegistryId, "first registry sorted");
     assertEquals("REG-B", fannedEnvelopes.get(1).deviceRegistryId, "second registry sorted");
     assertNull(fannedEnvelopes.get(0).deviceId, "deviceId remains null");
@@ -123,6 +123,19 @@ class ModelDiscoveryHandlerTest implements MessageContinuation {
     assertEquals(config, fannedMessages.get(1));
     assertNull(envelope.deviceRegistryId, "original envelope not mutated");
     verify(controlProcessor, never()).publish(any(Envelope.class), any());
+  }
+
+  @Test
+  void emptyRegistryIdTriggersFanOut() {
+    envelope.deviceRegistryId = "";
+    doReturn(Set.of("REG-A", "UDMI-REFLECT")).when(iotAccess).getRegistries();
+
+    ModelDiscoveryHandler.processDiscoveryConfig(controlProcessor, config);
+
+    List<Envelope> fannedEnvelopes = sideEnvelopeCapture.getAllValues();
+    assertEquals(1, fannedEnvelopes.size(), "empty registryId fans out and skips UDMI-REFLECT");
+    assertEquals("REG-A", fannedEnvelopes.get(0).deviceRegistryId);
+    verify(iotAccess, never()).listDevices(any(), any());
   }
 
   @Test
@@ -214,11 +227,12 @@ class ModelDiscoveryHandlerTest implements MessageContinuation {
     listResult.device_ids = new HashMap<>();
     listResult.device_ids.put("GAT-1", makeDeviceListEntry(false));
     listResult.device_ids.put("GAT-2", makeDeviceListEntry(false));
+    listResult.device_ids.put("GAT-3", makeDeviceListEntry(false));
     doReturn(listResult).when(iotAccess).listDevices(eq(TEST_REGISTRY), eq(null));
 
-    CloudModel gwWithMeta = makeCloudDevice("GAT-1", List.of("SNS-2"));
+    CloudModel gwWithMeta = makeCloudDevice("GAT-1", List.of("SNS-OLD", "SNS-2"));
     gwWithMeta.gateway = new GatewayModel();
-    gwWithMeta.gateway.proxy_ids = List.of("SNS-3", "SNS-1", "SNS-2");
+    gwWithMeta.gateway.proxy_ids = List.of("SNS-3", "SNS-1");
     doReturn(gwWithMeta).when(iotAccess).fetchDevice(TEST_REGISTRY, "GAT-1");
 
     CloudModel gwWithoutMeta = new CloudModel();
@@ -226,17 +240,31 @@ class ModelDiscoveryHandlerTest implements MessageContinuation {
     gwWithoutMeta.gateway.proxy_ids = List.of("SNS-3");
     doReturn(gwWithoutMeta).when(iotAccess).fetchDevice(TEST_REGISTRY, "GAT-2");
 
+    CloudModel gwUnboundAll = makeCloudDevice("GAT-3", List.of("SNS-OLD"));
+    gwUnboundAll.gateway = new GatewayModel();
+    gwUnboundAll.gateway.proxy_ids = List.of();
+    doReturn(gwUnboundAll).when(iotAccess).fetchDevice(TEST_REGISTRY, "GAT-3");
+
     ModelDiscoveryHandler.processDiscoveryConfig(controlProcessor, config);
 
     List<Object> outMessages = publishMessageCapture.getAllValues();
     DiscoveryEvents gat1Event = (DiscoveryEvents) outMessages.get(2);
     assertEquals("GAT-1", gat1Event.addr);
-    assertEquals(List.of("SNS-1", "SNS-2", "SNS-3"), gat1Event.model.gateway.proxy_ids);
+    assertEquals(List.of("SNS-1", "SNS-3"), gat1Event.model.gateway.proxy_ids,
+        "live cloud bindings replace stale stored proxy_ids in sorted order");
 
     DiscoveryEvents gat2Event = (DiscoveryEvents) outMessages.get(3);
     assertEquals("GAT-2", gat2Event.addr);
     assertNotNull(gat2Event.model);
+    assertNotNull(gat2Event.model.timestamp, "synthesized metadata has timestamp");
+    assertNotNull(gat2Event.model.version, "synthesized metadata has version");
+    assertNotNull(gat2Event.model.system, "synthesized metadata has system");
     assertEquals(List.of("SNS-3"), gat2Event.model.gateway.proxy_ids);
+
+    DiscoveryEvents gat3Event = (DiscoveryEvents) outMessages.get(4);
+    assertEquals("GAT-3", gat3Event.addr);
+    assertEquals(List.of(), gat3Event.model.gateway.proxy_ids,
+        "empty live bindings clear stale stored proxy_ids");
   }
 
   @Test
@@ -327,6 +355,10 @@ class ModelDiscoveryHandlerTest implements MessageContinuation {
     ModelDiscoveryHandler.processDiscoveryConfig(controlProcessor, config);
 
     envelope.subSetKey = ModelDiscoveryHandler.MODEL_SUBSET_KEY;
+    envelope.deviceId = "AHU-1";
+    ModelDiscoveryHandler.processDiscoveryConfig(controlProcessor, config);
+
+    envelope.deviceId = null;
     config.families.clear();
     ModelDiscoveryHandler.processDiscoveryConfig(controlProcessor, config);
 

@@ -49,6 +49,13 @@ public class ControlProcessor extends ProcessorBase {
     ModelDiscoveryHandler.processDiscoveryConfig(this, config);
   }
 
+  static boolean isReflectRegistry(String registryId) {
+    if (registryId == null) {
+      return false;
+    }
+    return registryId.equals(reflectRegistry) || registryId.equals(REFLECT_BASE);
+  }
+
   /**
    * Handle a udmi config command.
    */

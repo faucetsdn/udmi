@@ -36,6 +36,7 @@ import udmi.schema.FamilyDiscoveryState.Phase;
 import udmi.schema.GatewayModel;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
+import udmi.schema.SystemModel;
 
 /**
  * Handler for executing full-site Model Discovery exports for IoT registries.
@@ -67,7 +68,8 @@ public class ModelDiscoveryHandler {
    * Determine whether the incoming envelope and discovery config request model discovery.
    */
   public static boolean isModelDiscoveryConfig(Envelope envelope, DiscoveryConfig config) {
-    if (envelope == null || config == null || !MODEL_SUBSET_KEY.equals(envelope.subSetKey)) {
+    if (envelope == null || config == null || !MODEL_SUBSET_KEY.equals(envelope.subSetKey)
+        || isNotEmpty(envelope.deviceId)) {
       return false;
     }
     return config.families != null && config.families.get(ProtocolFamily.IOT) != null;
@@ -93,7 +95,7 @@ public class ModelDiscoveryHandler {
    * Execute project-wide fan-out or a registry-scoped full-site model export.
    */
   public void process() {
-    if (envelope.deviceRegistryId == null) {
+    if (!isNotEmpty(envelope.deviceRegistryId)) {
       fanOutAllRegistries();
     } else {
       exportRegistry(envelope.deviceRegistryId);
@@ -103,6 +105,7 @@ public class ModelDiscoveryHandler {
   private void fanOutAllRegistries() {
     Set<String> registries = new TreeSet<>(
         ofNullable(iotAccess.getRegistries()).orElse(Set.of()));
+    registries.removeIf(ControlProcessor::isReflectRegistry);
     controller.debug("Fanning out model discovery across %d registries", registries.size());
     for (String registryId : registries) {
       Envelope mutated = deepCopy(envelope);
@@ -240,20 +243,21 @@ public class ModelDiscoveryHandler {
       Metadata metadata = (metadataStr != null && !metadataStr.isBlank())
           ? fromString(Metadata.class, metadataStr)
           : null;
-      if (deviceModel.gateway != null && deviceModel.gateway.proxy_ids != null
-          && !deviceModel.gateway.proxy_ids.isEmpty()) {
-        if (metadata == null) {
+      if (deviceModel.gateway != null && deviceModel.gateway.proxy_ids != null) {
+        TreeSet<String> liveProxies = new TreeSet<>();
+        deviceModel.gateway.proxy_ids.stream().filter(Objects::nonNull).forEach(liveProxies::add);
+        if (metadata == null && !liveProxies.isEmpty()) {
           metadata = new Metadata();
+          metadata.timestamp = new Date();
+          metadata.version = UdmiServicePod.UDMI_VERSION;
+          metadata.system = new SystemModel();
         }
-        if (metadata.gateway == null) {
-          metadata.gateway = new GatewayModel();
+        if (metadata != null) {
+          if (metadata.gateway == null) {
+            metadata.gateway = new GatewayModel();
+          }
+          metadata.gateway.proxy_ids = new ArrayList<>(liveProxies);
         }
-        TreeSet<String> mergedProxies = new TreeSet<>();
-        if (metadata.gateway.proxy_ids != null) {
-          metadata.gateway.proxy_ids.stream().filter(Objects::nonNull).forEach(mergedProxies::add);
-        }
-        deviceModel.gateway.proxy_ids.stream().filter(Objects::nonNull).forEach(mergedProxies::add);
-        metadata.gateway.proxy_ids = new ArrayList<>(mergedProxies);
       }
       return metadata;
     } catch (Exception e) {
