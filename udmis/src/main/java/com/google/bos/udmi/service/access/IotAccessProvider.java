@@ -55,10 +55,13 @@ public interface IotAccessProvider extends UdmiComponent {
   String fetchState(String registryId, String deviceId);
 
   /**
-   * Get all registries associated with this provider.
+   * Get the provider identifier backing the given registry.
    */
   String getProviderId(String registryId);
 
+  /**
+   * Get all registries associated with this provider.
+   */
   Set<String> getRegistries();
 
   boolean isEnabled();
