@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.core;
 
+import static com.google.common.base.Preconditions.checkState;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.isNotEmpty;
@@ -44,7 +45,6 @@ import udmi.schema.SystemModel;
 public class ModelDiscoveryHandler {
 
   public static final String MODEL_SUBSET_KEY = "model";
-  public static final String PROVIDER_ID = "zanzara";
   private static final ConcurrentMap<String, Object> REGISTRY_LOCKS =
       new MapMaker().weakValues().makeMap();
 
@@ -123,28 +123,32 @@ public class ModelDiscoveryHandler {
         .orElseGet(Date::new);
     String transactionId = isoConvert(generation);
 
+    String providerId = iotAccess.getProviderId(registryId);
+    checkState(isNotEmpty(providerId), "Missing providerId for registry " + registryId);
+
     Object lock = REGISTRY_LOCKS.computeIfAbsent(registryId, k -> new Object());
     synchronized (lock) {
       int emittedCount = 0;
       try {
-        publishState(registryId, generation, transactionId, Phase.ACTIVE, null, null);
+        publishState(registryId, providerId, generation, transactionId, Phase.ACTIVE, null, null);
 
         TreeSet<String> activeDevices = listActiveDevices(registryId);
         int totalCount = activeDevices.size();
         controller.info("Starting full-site model discovery for %s (%d active devices, gen=%s)",
             registryId, totalCount, transactionId);
 
-        publishMarkerEvent(registryId, generation, transactionId, 0);
+        publishMarkerEvent(registryId, providerId, generation, transactionId, 0);
 
         int eventNo = 0;
         for (String deviceId : activeDevices) {
           eventNo++;
-          publishDeviceEvent(registryId, generation, transactionId, deviceId, eventNo);
+          publishDeviceEvent(registryId, providerId, generation, transactionId, deviceId, eventNo);
           emittedCount = eventNo;
         }
 
-        publishMarkerEvent(registryId, generation, transactionId, -(totalCount + 1));
-        publishState(registryId, generation, transactionId, Phase.STOPPED, totalCount, null);
+        publishMarkerEvent(registryId, providerId, generation, transactionId, -(totalCount + 1));
+        publishState(registryId, providerId, generation, transactionId, Phase.STOPPED, totalCount,
+            null);
       } catch (Exception e) {
         controller.error("Model discovery failed for %s: %s", registryId, friendlyStackTrace(e));
         udmi.schema.Entry status = new udmi.schema.Entry();
@@ -155,7 +159,8 @@ public class ModelDiscoveryHandler {
             : e.getClass().getSimpleName();
         status.detail = friendlyStackTrace(e);
         status.timestamp = new Date();
-        publishState(registryId, generation, transactionId, Phase.STOPPED, emittedCount, status);
+        publishState(registryId, providerId, generation, transactionId, Phase.STOPPED, emittedCount,
+            status);
       }
     }
   }
@@ -175,8 +180,8 @@ public class ModelDiscoveryHandler {
     return activeDevices;
   }
 
-  private void publishState(String registryId, Date generation, String transactionId,
-      Phase phase, Integer activeCount, udmi.schema.Entry status) {
+  private void publishState(String registryId, String providerId, Date generation,
+      String transactionId, Phase phase, Integer activeCount, udmi.schema.Entry status) {
     FamilyDiscoveryState familyState = new FamilyDiscoveryState();
     familyState.generation = generation;
     familyState.phase = phase;
@@ -190,22 +195,24 @@ public class ModelDiscoveryHandler {
     discoveryState.families = new HashMap<>();
     discoveryState.families.put(ProtocolFamily.IOT, familyState);
 
-    controller.publish(createOutputEnvelope(registryId, SubType.STATE, transactionId),
+    controller.publish(createOutputEnvelope(registryId, providerId, SubType.STATE, transactionId),
         discoveryState);
   }
 
-  private void publishMarkerEvent(String registryId, Date generation, String transactionId,
-      int eventNo) {
+  private void publishMarkerEvent(String registryId, String providerId, Date generation,
+      String transactionId, int eventNo) {
     DiscoveryEvents event = createDiscoveryEvent(generation, eventNo);
-    controller.publish(createOutputEnvelope(registryId, SubType.EVENTS, transactionId), event);
+    controller.publish(createOutputEnvelope(registryId, providerId, SubType.EVENTS, transactionId),
+        event);
   }
 
-  private void publishDeviceEvent(String registryId, Date generation, String transactionId,
-      String deviceId, int eventNo) {
+  private void publishDeviceEvent(String registryId, String providerId, Date generation,
+      String transactionId, String deviceId, int eventNo) {
     DiscoveryEvents event = createDiscoveryEvent(generation, eventNo);
     event.addr = deviceId;
     event.model = fetchDeviceMetadata(registryId, deviceId);
-    controller.publish(createOutputEnvelope(registryId, SubType.EVENTS, transactionId), event);
+    controller.publish(createOutputEnvelope(registryId, providerId, SubType.EVENTS, transactionId),
+        event);
   }
 
   private DiscoveryEvents createDiscoveryEvent(Date generation, int eventNo) {
@@ -218,12 +225,13 @@ public class ModelDiscoveryHandler {
     return event;
   }
 
-  private Envelope createOutputEnvelope(String registryId, SubType subType, String transactionId) {
+  private Envelope createOutputEnvelope(String registryId, String providerId, SubType subType,
+      String transactionId) {
     Envelope out = new Envelope();
     out.projectId = envelope.projectId;
     out.deviceRegistryId = registryId;
     out.deviceId = null;
-    out.providerId = PROVIDER_ID;
+    out.providerId = providerId;
     out.subSetKey = MODEL_SUBSET_KEY;
     out.subType = subType;
     out.subFolder = SubFolder.DISCOVERY;

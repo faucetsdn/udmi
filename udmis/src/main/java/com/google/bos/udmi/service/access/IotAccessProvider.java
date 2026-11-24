@@ -57,6 +57,8 @@ public interface IotAccessProvider extends UdmiComponent {
   /**
    * Get all registries associated with this provider.
    */
+  String getProviderId(String registryId);
+
   Set<String> getRegistries();
 
   boolean isEnabled();

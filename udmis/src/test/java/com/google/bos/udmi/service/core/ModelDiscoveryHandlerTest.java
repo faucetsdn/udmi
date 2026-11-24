@@ -52,6 +52,7 @@ import udmi.schema.SystemModel;
 class ModelDiscoveryHandlerTest implements MessageContinuation {
 
   private static final String TEST_PROJECT = "daq-test-suite";
+  private static final String TEST_PROVIDER_ID = "zanzara";
   private static final Date GENERATION = Date.from(Instant.parse("2026-03-01T12:00:00Z"));
   private static final String EXPECTED_TXN = isoConvert(GENERATION);
 
@@ -78,6 +79,7 @@ class ModelDiscoveryHandlerTest implements MessageContinuation {
   void setupMocks() {
     controlProcessor = mock(ControlProcessor.class);
     iotAccess = mock(IotAccessBase.class);
+    doReturn(TEST_PROVIDER_ID).when(iotAccess).getProviderId(any());
     controlProcessor.iotAccess = iotAccess;
 
     envelope = new Envelope();
@@ -368,11 +370,27 @@ class ModelDiscoveryHandlerTest implements MessageContinuation {
     verify(controlProcessor, never()).sideProcess(any(), any());
   }
 
+  @Test
+  void usesProviderIdFromIotAccess() {
+    doReturn("clearblade").when(iotAccess).getProviderId(eq(TEST_REGISTRY));
+    CloudModel listResult = new CloudModel();
+    listResult.device_ids = new HashMap<>();
+    doReturn(listResult).when(iotAccess).listDevices(eq(TEST_REGISTRY), eq(null));
+
+    ModelDiscoveryHandler.processDiscoveryConfig(controlProcessor, config);
+
+    List<Envelope> outEnvelopes = publishEnvelopeCapture.getAllValues();
+    assertEquals(4, outEnvelopes.size());
+    for (Envelope out : outEnvelopes) {
+      assertEquals("clearblade", out.providerId);
+    }
+  }
+
   private void assertEnvelope(Envelope out, SubType expectedSubType) {
     assertEquals(TEST_PROJECT, out.projectId);
     assertEquals(TEST_REGISTRY, out.deviceRegistryId);
     assertNull(out.deviceId, "deviceId must be null for provider messages");
-    assertEquals(ModelDiscoveryHandler.PROVIDER_ID, out.providerId);
+    assertEquals(TEST_PROVIDER_ID, out.providerId);
     assertEquals(ModelDiscoveryHandler.MODEL_SUBSET_KEY, out.subSetKey);
     assertEquals(SubFolder.DISCOVERY, out.subFolder);
     assertEquals(expectedSubType, out.subType);
@@ -415,6 +433,7 @@ class ModelDiscoveryHandlerTest implements MessageContinuation {
       CloudModel listResult = new CloudModel();
       listResult.device_ids = new HashMap<>();
       listResult.device_ids.put("AHU-1", makeDeviceListEntry(false));
+      doReturn(TEST_PROVIDER_ID).when(provider).getProviderId(eq(TEST_REGISTRY));
       doReturn(listResult).when(provider).listDevices(eq(TEST_REGISTRY), eq(null));
       doReturn(makeCloudDevice("AHU-1", null)).when(provider).fetchDevice(TEST_REGISTRY, "AHU-1");
 
@@ -460,7 +479,7 @@ class ModelDiscoveryHandlerTest implements MessageContinuation {
       assertEquals(5, capturedEnvelopes.size());
       for (Envelope out : capturedEnvelopes) {
         assertNull(out.deviceId, "deviceId must remain null across dispatcher");
-        assertEquals(ModelDiscoveryHandler.PROVIDER_ID, out.providerId);
+        assertEquals(TEST_PROVIDER_ID, out.providerId);
         assertEquals(ModelDiscoveryHandler.MODEL_SUBSET_KEY, out.subSetKey);
         assertEquals(EXPECTED_TXN, out.transactionId);
       }

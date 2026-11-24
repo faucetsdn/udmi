@@ -127,7 +127,7 @@ class TargetProcessorTest extends ProcessorTestBase {
     Bundle bundle = new Bundle(event);
     bundle.envelope.deviceRegistryId = TEST_REGISTRY;
     bundle.envelope.deviceId = null;
-    bundle.envelope.providerId = ModelDiscoveryHandler.PROVIDER_ID;
+    bundle.envelope.providerId = "zanzara";
     bundle.envelope.subSetKey = ModelDiscoveryHandler.MODEL_SUBSET_KEY;
     bundle.envelope.subType = SubType.EVENTS;
     bundle.envelope.subFolder = SubFolder.DISCOVERY;
