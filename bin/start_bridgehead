@@ -6,7 +6,7 @@ INVOCATION_DIR="$PWD"
 source $UDMI_ROOT/etc/shell_common.sh
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-    echo "Usage: $(basename $0) [--local|--from-workspace] [site_model_path] [docker-compose-options...]"
+    echo "Usage: $(basename $0) [--local|--from-workspace | --version <tag>] [site_model_path] [docker-compose-options...]"
     echo ""
     echo "Prepares prerequisites (certificates, .env, directories),"
     echo "brings up the UDMI Bridgehead architecture using Docker Compose,"
@@ -15,6 +15,9 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "Options / Arguments:"
     echo "  --local, --from-workspace Build base container images (udmis, validator, pubber)"
     echo "                          from local workspace source instead of using ghcr.io latest."
+    echo "  --version <tag>         Pin ghcr.io/faucetsdn/udmi/{udmis,validator,pubber} base"
+    echo "                          images to a specific release tag (e.g., 1.5.7 or latest)."
+    echo "                          Mutually exclusive with --local/--from-workspace."
     echo "  site_model_path         (Optional) Path to site model directory."
     echo "                          Overrides SITE_MODEL_PATH env variable."
     echo "  -h, --help              Show this help message and exit."
@@ -26,6 +29,7 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo ""
     echo "Examples:"
     echo "  $(basename $0)                             # Default: uses ghcr.io latest images"
+    echo "  $(basename $0) --version 1.5.7             # Pin Bridgehead to UDMI release tag 1.5.7"
     echo "  $(basename $0) --local                     # Build base images from workspace source"
     echo "  $(basename $0) --local sites/udmi_site_model"
     exit 0
@@ -33,6 +37,7 @@ fi
 
 # Parse options
 LOCAL_BUILD=false
+UDMI_VERSION=""
 SITE_MODEL_ARG=""
 
 while [[ $# -gt 0 ]]; do
@@ -40,6 +45,14 @@ while [[ $# -gt 0 ]]; do
         --local|--from-workspace)
             LOCAL_BUILD=true
             shift
+            ;;
+        --version)
+            [[ $# -ge 2 && -n "$2" && "$2" != -* ]] || fail "Option --version requires a <tag> argument (e.g., --version 1.5.7)."
+            UDMI_VERSION="$2"
+            shift 2
+            ;;
+        --version=*)
+            fail "Non-canonical syntax '$1'. Use '--version <tag>' (space-separated)."
             ;;
         *)
             if [[ -z "$SITE_MODEL_ARG" && "$1" != -* ]]; then
@@ -51,6 +64,22 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if [[ "$LOCAL_BUILD" == "true" && -n "$UDMI_VERSION" ]]; then
+    fail "Options --local/--from-workspace and --version cannot be used together."
+fi
+
+if [[ -n "$UDMI_VERSION" ]]; then
+    if [[ ! "$UDMI_VERSION" =~ ^[A-Za-z0-9_][A-Za-z0-9._-]{0,127}$ ]]; then
+        fail "Invalid UDMI version tag '$UDMI_VERSION'."
+    fi
+    if [[ -n "${UDMIS_BASE_IMAGE:-}" || -n "${VALIDATOR_BASE_IMAGE:-}" || -n "${PUBBER_IMAGE:-}" ]]; then
+        fail "Option --version cannot be combined with explicit UDMIS_BASE_IMAGE, VALIDATOR_BASE_IMAGE, or PUBBER_IMAGE overrides."
+    fi
+    export UDMIS_BASE_IMAGE="ghcr.io/faucetsdn/udmi/udmis:${UDMI_VERSION}"
+    export VALIDATOR_BASE_IMAGE="ghcr.io/faucetsdn/udmi/validator:${UDMI_VERSION}"
+    export PUBBER_IMAGE="ghcr.io/faucetsdn/udmi/pubber:${UDMI_VERSION}"
+fi
 
 # Resolve site model path from positional argument or environment variable
 if [[ -n "$SITE_MODEL_ARG" ]]; then
@@ -66,6 +95,21 @@ else
     SITE_MODEL_PATH="$UDMI_ROOT/sites/udmi_site_model"
 fi
 export SITE_MODEL_PATH
+
+if [[ ! -d "$SITE_MODEL_PATH" ]]; then
+    fail "Site model directory '$SITE_MODEL_PATH' does not exist."
+fi
+
+if [[ -n "$UDMI_VERSION" ]]; then
+    for img in "$UDMIS_BASE_IMAGE" "$VALIDATOR_BASE_IMAGE"; do
+        if ! docker image inspect "$img" >/dev/null 2>&1; then
+            echo "Pulling pinned base image $img..."
+            if ! docker pull "$img"; then
+                fail "Requested UDMI version '$UDMI_VERSION' image '$img' could not be pulled. Verify the tag exists in ghcr.io/faucetsdn/udmi/ (if GHCR returns 'denied', run 'docker logout ghcr.io')."
+            fi
+        fi
+    done
+fi
 
 if [[ "$LOCAL_BUILD" == "true" ]]; then
     echo "Building base container images from local workspace source..."
@@ -85,12 +129,7 @@ echo "=== Setting up Bridgehead prerequisites ==="
 echo "Creating var directories..."
 mkdir -p var/mosquitto/data var/mosquitto/log var/mosquitto/certs var/etcd var/tmp var/sshKeys var/influxdb-storage
 
-# 2. Verify site model exists
-if [[ ! -d "$SITE_MODEL_PATH" ]]; then
-    fail "Site model directory '$SITE_MODEL_PATH' does not exist."
-fi
-
-# Ensure reflector certificate exists if site model is available
+# 2. Ensure reflector certificate exists if site model is available
 if [[ -d "$SITE_MODEL_PATH/reflector" ]]; then
     if [[ ! -f "$SITE_MODEL_PATH/reflector/rsa_private.crt" && -f "$SITE_MODEL_PATH/reflector/rsa_private.pem" ]]; then
         echo "Generating X.509 certificate for reflector client..."
@@ -127,7 +166,7 @@ fi
 echo "Preparing bridgehead container images..."
 retry_cmd docker compose pull --ignore-buildable --policy missing
 retry_cmd docker compose build
-echo "Starting bridgehead services via docker compose (Site model: $SITE_MODEL_PATH)..."
+echo "Starting bridgehead services via docker compose (Site model: $SITE_MODEL_PATH, UDMIS: ${UDMIS_BASE_IMAGE:-ghcr.io/faucetsdn/udmi/udmis:latest}, Validator: ${VALIDATOR_BASE_IMAGE:-ghcr.io/faucetsdn/udmi/validator:latest})..."
 rm -f var/tmp/udmis.log var/tmp/pod_ready.txt 2>/dev/null || true
 docker compose up -d --no-build "$@"
 

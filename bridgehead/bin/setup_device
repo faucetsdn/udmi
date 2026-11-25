@@ -11,6 +11,7 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "Usage: bridgehead/bin/$(basename "$0") <DEVICE_ID>"
     echo ""
     echo "Onboards or refreshes a device for UDMI Bridgehead by generating its"
+    echo "keypair (from cloud.auth_type in metadata.json when no keys exist) and"
     echo "CA-signed client certificate (if missing), registering it via registrar"
     echo "in etcd and Mosquitto, writing site_model/out/devices/<DEVICE_ID>/endpoint.json,"
     echo "and printing the host file paths to copy onto the device."
@@ -45,7 +46,7 @@ trap fix_bridgehead_permissions EXIT
 
 SITE_CONFIG="$SITE_MODEL_PATH/cloud_iot_config.json"
 [[ -f "$SITE_CONFIG" ]] || fail "Site config '$SITE_CONFIG' not found."
-REGISTRY_ID=$(jq -r '.registry_id // empty' "$SITE_CONFIG")
+REGISTRY_ID=$(docker exec -i validator jq -r '.registry_id // empty' < "$SITE_CONFIG")
 [[ -n "$REGISTRY_ID" ]] || fail "registry_id not defined in '$SITE_CONFIG'."
 
 CA_FILE="$SITE_MODEL_PATH/reflector/ca.crt"
@@ -56,20 +57,48 @@ if [[ -z "${HOST_IP:-}" && -f "$UDMI_ROOT/bridgehead/.env" ]]; then
 fi
 [[ -n "${HOST_IP:-}" ]] || fail "HOST_IP is not set in environment or '$UDMI_ROOT/bridgehead/.env'."
 
+TARGET_DIR="$SITE_MODEL_PATH/devices/$TARGET_ID"
 KEY_PREFIX=""
 for prefix in rsa ec es; do
-    if [[ -f "$SITE_MODEL_PATH/devices/$TARGET_ID/${prefix}_private.pkcs8" ]]; then
+    if [[ -f "$TARGET_DIR/${prefix}_private.pkcs8" ]]; then
         KEY_PREFIX="$prefix"
         break
     fi
 done
+
 if [[ -z "$KEY_PREFIX" ]]; then
-    fail "No *_private.pkcs8 key found in '$SITE_MODEL_PATH/devices/$TARGET_ID/'. Generate device keys first (e.g., docker exec validator bin/keygen RS256 site_model/devices/$TARGET_ID)."
+    for existing in "$TARGET_DIR"/*_private.pem "$TARGET_DIR"/*_public.pem "$TARGET_DIR"/*_cert.pem; do
+        if [[ -f "$existing" ]]; then
+            fail "Existing key file '$existing' found without a matching *_private.pkcs8 in '$TARGET_DIR'. Refusing to overwrite existing device keys."
+        fi
+    done
+
+    TARGET_METADATA="$TARGET_DIR/metadata.json"
+    [[ -f "$TARGET_METADATA" ]] || fail "No device keys found and metadata file '$TARGET_METADATA' does not exist."
+    AUTH_TYPE=$(docker exec -i validator jq -r '.cloud.auth_type // empty' < "$TARGET_METADATA")
+    case "$AUTH_TYPE" in
+        RS256|RS256_X509|ES256|ES256_X509)
+            echo "=== Generating $AUTH_TYPE keypair for '$TARGET_ID' ==="
+            docker exec validator bin/keygen "$AUTH_TYPE" "site_model/devices/$TARGET_ID"
+            fix_bridgehead_permissions
+            ;;
+        *)
+            fail "No device keys found in '$TARGET_DIR' and cloud.auth_type ('$AUTH_TYPE') in '$TARGET_METADATA' is missing or unsupported (expected RS256, RS256_X509, ES256, or ES256_X509)."
+            ;;
+    esac
+
+    for prefix in rsa ec es; do
+        if [[ -f "$TARGET_DIR/${prefix}_private.pkcs8" ]]; then
+            KEY_PREFIX="$prefix"
+            break
+        fi
+    done
+    [[ -n "$KEY_PREFIX" ]] || fail "Failed to generate *_private.pkcs8 key in '$TARGET_DIR'."
 fi
 
-PKCS8_FILE="$SITE_MODEL_PATH/devices/$TARGET_ID/${KEY_PREFIX}_private.pkcs8"
-PEM_FILE="$SITE_MODEL_PATH/devices/$TARGET_ID/${KEY_PREFIX}_private.pem"
-CRT_FILE="$SITE_MODEL_PATH/devices/$TARGET_ID/${KEY_PREFIX}_private.crt"
+PKCS8_FILE="$TARGET_DIR/${KEY_PREFIX}_private.pkcs8"
+PEM_FILE="$TARGET_DIR/${KEY_PREFIX}_private.pem"
+CRT_FILE="$TARGET_DIR/${KEY_PREFIX}_private.crt"
 [[ -f "$PEM_FILE" ]] || fail "Matching PEM private key '$PEM_FILE' not found."
 
 if [[ ! -f "$CRT_FILE" ]]; then
@@ -87,14 +116,14 @@ else
 fi
 fix_bridgehead_permissions
 
-HASH_PASS=$(sha256sum < "$PKCS8_FILE")
+HASH_PASS=$(docker exec -i validator sha256sum < "$PKCS8_FILE")
 CLIENT_PASS="${HASH_PASS:0:8}"
 CLIENT_ID="/r/${REGISTRY_ID}/d/${TARGET_ID}"
 TOPIC_PREFIX="/r/${REGISTRY_ID}/d/${DEVICE_ID}"
 
 ENDPOINT_OUT="$SITE_MODEL_PATH/out/devices/$DEVICE_ID/endpoint.json"
 mkdir -p "$(dirname "$ENDPOINT_OUT")"
-jq -n \
+docker exec validator jq -n \
     --arg hostname "$HOST_IP" \
     --arg client_id "$CLIENT_ID" \
     --arg topic_prefix "$TOPIC_PREFIX" \
