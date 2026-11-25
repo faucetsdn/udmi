@@ -23,6 +23,8 @@ class SystemConfig(DataModel):
     [System Config Documentation](../docs/messages/system.md#config)
     """
 
+    timestamp: Optional[str] = None
+    version: Optional[str] = None
     min_loglevel: Optional[int] = 300
     metrics_rate_sec: Optional[int] = 10
     operation: Optional[Operation] = None

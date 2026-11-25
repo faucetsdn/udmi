@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyDescription;
@@ -16,6 +17,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SystemConfig {
 
+    /**
+     * RFC 3339 UTC timestamp the configuration was generated
+     * 
+     */
+    @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 UTC timestamp the configuration was generated")
+    public Date timestamp;
+    /**
+     * Version of the UDMI schema
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("Version of the UDMI schema")
+    public String version;
     /**
      * The minimum loglevel for reporting log messages below which log entries should not be sent. Default to 300.
      * 
@@ -46,8 +61,10 @@ public class SystemConfig {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.metrics_rate_sec == null)? 0 :this.metrics_rate_sec.hashCode()));
+        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.operation == null)? 0 :this.operation.hashCode()));
         result = ((result* 31)+((this.min_loglevel == null)? 0 :this.min_loglevel.hashCode()));
+        result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.testing == null)? 0 :this.testing.hashCode()));
         return result;
     }
@@ -61,7 +78,7 @@ public class SystemConfig {
             return false;
         }
         SystemConfig rhs = ((SystemConfig) other);
-        return (((((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec)))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))));
+        return (((((((this.metrics_rate_sec == rhs.metrics_rate_sec)||((this.metrics_rate_sec!= null)&&this.metrics_rate_sec.equals(rhs.metrics_rate_sec)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.operation == rhs.operation)||((this.operation!= null)&&this.operation.equals(rhs.operation))))&&((this.min_loglevel == rhs.min_loglevel)||((this.min_loglevel!= null)&&this.min_loglevel.equals(rhs.min_loglevel))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.testing == rhs.testing)||((this.testing!= null)&&this.testing.equals(rhs.testing))));
     }
 
 }

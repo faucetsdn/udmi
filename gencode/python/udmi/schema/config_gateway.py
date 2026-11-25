@@ -16,5 +16,7 @@ class GatewayConfig(DataModel):
     Configuration for gateways. Only required for devices which are acting as [gateways](../docs/specs/gateway.md)
     """
 
+    timestamp: Optional[str] = None
+    version: Optional[str] = None
     proxy_ids: Optional[List[str]] = None
     target: Optional[FamilyLocalnetModel] = None

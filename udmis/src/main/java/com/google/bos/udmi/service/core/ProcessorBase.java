@@ -422,6 +422,9 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
     if (dispatcher != null) {
       dispatcher.shutdown();
     }
+    if (sidecar != null) {
+      sidecar.shutdown();
+    }
   }
 
   /**

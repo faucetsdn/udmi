@@ -536,8 +536,10 @@ def main():
 
     if args.command == "health":
         provider = UUFIProvider(project_spec=args.project_spec, auto_connect=True)
-        print(json.dumps(provider.health(), indent=2))
-        provider.disconnect()
+        try:
+            print(json.dumps(provider.health(), indent=2))
+        finally:
+            provider.disconnect()
         return
 
     if args.command == "handshake":
@@ -555,31 +557,35 @@ def main():
     if args.command == "publish-config":
         provider = UUFIProvider(project_spec=args.project_spec, auto_connect=True)
         try:
-            payload_data = json.loads(args.payload)
-        except Exception:
-            if os.path.exists(args.payload):
-                with open(args.payload, "r", encoding="utf-8") as f:
-                    payload_data = json.load(f)
-            else:
-                print("Error: payload must be valid JSON or file path", file=sys.stderr)
-                sys.exit(1)
-        res = provider.publish_config(
-            args.registry_id,
-            args.device_id,
-            args.sub_folder,
-            payload_data,
-            wait_for_ack=args.wait_for_ack,
-            timeout_sec=args.timeout,
-        )
-        print(json.dumps(res, indent=2))
-        provider.disconnect()
+            try:
+                payload_data = json.loads(args.payload)
+            except Exception:
+                if os.path.exists(args.payload):
+                    with open(args.payload, "r", encoding="utf-8") as f:
+                        payload_data = json.load(f)
+                else:
+                    print("Error: payload must be valid JSON or file path", file=sys.stderr)
+                    sys.exit(1)
+            res = provider.publish_config(
+                args.registry_id,
+                args.device_id,
+                args.sub_folder,
+                payload_data,
+                wait_for_ack=args.wait_for_ack,
+                timeout_sec=args.timeout,
+            )
+            print(json.dumps(res, indent=2))
+        finally:
+            provider.disconnect()
         return
 
     if args.command == "poll-events":
         provider = UUFIProvider(project_spec=args.project_spec, auto_connect=True)
-        events = provider.poll_events(cursor=args.cursor, timeout_sec=args.timeout)
-        print(json.dumps(events, indent=2))
-        provider.disconnect()
+        try:
+            events = provider.poll_events(cursor=args.cursor, timeout_sec=args.timeout)
+            print(json.dumps(events, indent=2))
+        finally:
+            provider.disconnect()
         return
 
     # Default to stdio mode if stdin is piped or no command supplied

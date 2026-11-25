@@ -35,7 +35,12 @@ class UUFIClient:
         self.timeout = timeout
         self._id_counter = itertools.count(1)
 
-    def call_rpc(self, method: str, params: Optional[Dict[str, Any]] = None) -> Any:
+    def call_rpc(
+        self,
+        method: str,
+        params: Optional[Dict[str, Any]] = None,
+        timeout: Optional[float] = None,
+    ) -> Any:
         """Execute a JSON-RPC 2.0 call against the UUFI MCP server."""
         req_id = next(self._id_counter)
         payload = {
@@ -50,8 +55,9 @@ class UUFIClient:
             "Accept": "application/json",
         }
         req = urllib.request.Request(self.endpoint, data=data, headers=headers, method="POST")
+        effective_timeout = self.timeout if timeout is None else max(self.timeout, timeout)
         try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+            with urllib.request.urlopen(req, timeout=effective_timeout) as resp:
                 resp_data = json.loads(resp.read().decode("utf-8"))
         except urllib.error.HTTPError as e:
             body = e.read().decode("utf-8", errors="replace")
@@ -87,7 +93,11 @@ class UUFIClient:
 
     def handshake(self, functions_ver: int = 9, timeout_sec: float = 10.0) -> Dict[str, Any]:
         """Execute Layer 1 UUFI service handshake to establish communication presence and negotiate capabilities."""
-        return self.call_rpc("handshake", {"functions_ver": functions_ver, "timeout_sec": timeout_sec})
+        return self.call_rpc(
+            "handshake",
+            {"functions_ver": functions_ver, "timeout_sec": timeout_sec},
+            timeout=timeout_sec + 5.0,
+        )
 
     def publish_config(
         self,
@@ -108,7 +118,11 @@ class UUFIClient:
         if wait_for_ack:
             params["wait_for_ack"] = True
             params["timeout_sec"] = timeout_sec
-        return self.call_rpc("publish_config", params)
+        return self.call_rpc(
+            "publish_config",
+            params,
+            timeout=(timeout_sec + 5.0) if wait_for_ack else None,
+        )
 
     def query_state(
         self,
@@ -126,6 +140,7 @@ class UUFIClient:
                 "sub_folder": sub_folder,
                 "timeout_sec": timeout_sec,
             },
+            timeout=timeout_sec + 5.0,
         )
 
     def query_system_model(
@@ -142,6 +157,7 @@ class UUFIClient:
                 "device_id": device_id,
                 "timeout_sec": timeout_sec,
             },
+            timeout=timeout_sec + 5.0,
         )
 
     def update_system_model(
@@ -180,4 +196,5 @@ class UUFIClient:
                 "registry_id": registry_id,
                 "device_id": device_id,
             },
+            timeout=(timeout_sec + 5.0) if timeout_sec > 0 else None,
         )

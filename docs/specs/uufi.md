@@ -84,9 +84,10 @@ Format: `scheme://[user@]host[:port][/path]`
   - **Standardized Client ID Format:** Client IDs MUST be formatted strictly as `[/{prefix}]/{registry_id}/{client_id}`. If the registry is unknown or not applicable, the Client ID MUST be formatted as `[/{prefix}]/{client_id}`.
   - **Uniqueness and Nonces:** To ensure absolute uniqueness and prevent session hijacking or connection drops when multiple clients share a broker, implementations MAY append a random, unique alphanumeric suffix (e.g., `_sess123` or a secure random nonce) to the formatted Client ID.
 - **Project Identity:** For the MQTT transport, the `projectId` field in the envelope SHOULD be treated as a general environment or project identifier. All components within a single UUFI session MUST use a consistent `projectId` (default: `vibrant`) to avoid ambiguity in message processing.
-- **Single-Channel Query Service (Config, State, System Model):**
+- **Single-Channel Query Service (Config, State, System/Cloud Model):**
   - **Query:** Clients publish a `null`-payload request (`"payload": null` on MQTT; `"null"` or empty data on PubSub) with mandatory `principal` and `transactionId` directly on the target resource channel:
     - System Model: `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`
+    - Cloud Model (non-secret metadata; `password` and `credentials` removed): `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/cloud`
     - Cached State: `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/state/{subFolder}`
     - Active Config: `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/config/{subFolder}`
   - **Response:** The System replies on the **exact same channel** with `source: "udmis"`, copying the caller's `principal` and `transactionId`, returning either the matching domain payload (conforming to `<subType>_<subFolder>.json`), a lower-layer string sentinel if the target resource is absent, or a `schema/control_uufi.json` Control Ack on error. If no response is received within 15 seconds, the Client SHOULD consider the query timed out.
@@ -253,8 +254,8 @@ To ensure protocol compatibility, data integrity, and protection against replay 
   - Nested payload hierarchies (e.g., nesting under a `"registries"`, `"devices"`, or `"system"` root key inside the JSON payload) are strictly prohibited.
   - Sourcing or publishing system model updates from `/uufi/c/config/system` or any other unscoped/registry-less topics is strictly prohibited.
 
-### 5.2. Update Semantics (Partial Merge)
-The `UPDATE` operation for the `system` subfolder is a partial merge at the device subsystem level. Existing fields not in the payload MUST NOT be modified.
+### 5.2. Update Semantics and Current Write Status
+Device model updates originate from the administrative registrar/reflector pipeline and are broadcast outbound to UUFI clients on `model/system` (`source: "udmis"`, `principal: null`). Inbound client writes on `model/*` over UUFI are not yet implemented and are rejected with a `status.level = 500` `schema/control_uufi.json` Control Ack. When write support is added, the `UPDATE` operation for the `system` subfolder will apply a partial merge at the device subsystem level without modifying omitted fields.
 
 ### 5.3. Device System Configuration
 To configure a device's expected or desired software subsystem version, implementations MUST adhere to exactly ONE standard schema:
@@ -279,7 +280,8 @@ To report a device's actual or currently running software subsystem version, imp
 | Telemetry Stream | `events` | `pointset` | Receive | Broadcast Stream (`principal: null`) |
 | Discovery Stream | `events` | `discovery` | Receive | Broadcast Stream (`principal: null`) |
 | System Model Query / Reply | `model` | `system` | Publish / Receive | `payload: null` Query; same-channel `model_system.json` (or sentinel) Success Ack |
-| System Model Update / Ack | `model` | `system` | Publish / Receive | Partial-merge `model_system.json` Write; same-channel Success Ack |
+| Cloud Model Query / Reply | `model` | `cloud` | Publish / Receive | `payload: null` Query; same-channel `model_cloud.json` with `password`/`credentials` removed |
+| System Model Broadcast | `model` | `system` | Receive | Outbound `model_system.json` Broadcast (`principal: null`); inbound `model/*` writes currently return level-500 Control Ack |
 | Blobset Config / Ack | `config` | `blobset` | Publish / Receive | `config_blobset.json` Write; same-channel Success Ack or Control Ack |
 | Blobset State | `state` | `blobset` | Receive | Broadcast Stream (`principal: null`) |
 | Control Progress / Error | *matches request* | *matches request* | Receive | `control_uufi.json` (`status.level < 500` progress, `>= 500` terminal error) |
@@ -398,15 +400,20 @@ bin/site_trigger update sites/udmi_site_model AHU-1 system 1.0.0 //mqtt/localhos
   Publishing model/system update to /uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/model/system...
   Model update message triggered successfully.
   ```
-- **Expected Wire-Level Message Output:** The utility publishes a flat, device-scoped system model update message directly to the topic path `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system` (for example, `/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/model/system`). The published MQTT payload contains the standard envelope metadata and the flat `schema/model_system.json` structure:
+- **Expected Wire-Level Message Output:** The utility publishes a flat, device-scoped system model message directly to the topic path `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system` (for example, `/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/model/system`). Because inbound `model/*` writes over UUFI are currently rejected, the System replies on the same channel with a level-500 `schema/control_uufi.json` Control Ack. The published MQTT payload contains the standard envelope metadata and the flat `schema/model_system.json` structure:
   ```json
   {
+    "subType": "model",
+    "subFolder": "system",
+    "deviceRegistryId": "ZZ-TRI-FECTA",
+    "deviceId": "AHU-1",
     "projectId": "vibrant",
     "transactionId": "TXN-a1b2c3d4",
     "publishTime": "2026-07-24T06:57:00Z",
     "source": "site_trigger",
+    "principal": "site_trigger",
     "payload": {
-      "version": "1.5.2",
+      "version": "1.5.7",
       "timestamp": "2026-07-24T06:57:00Z",
       "software": {
         "system": "1.0.0"
@@ -510,7 +517,7 @@ This appendix references the formal JSON schemas and provides message examples f
   "subFolder": "udmi",
   "subType": "config",
   "transactionId": "UUFI:sess123:001",
-  "source": "system-id",
+  "source": "udmis",
   "principal": "client-id@"
 }
 ```
@@ -569,7 +576,7 @@ This appendix references the formal JSON schemas and provides message examples f
   "projectId": "vibrant",
   "transactionId": "UUFI:sess123:001",
   "publishTime": "2026-04-29T10:00:05Z",
-  "source": "system-id",
+  "source": "udmis",
   "principal": "client-id",
   "payload": {
     "version": "1.5.2",
@@ -653,16 +660,14 @@ This appendix references the formal JSON schemas and provides message examples f
 **Data:**
 ```json
 {
-  "version": "1.5.2",
+  "version": "1.5.7",
   "timestamp": "2026-04-29T10:10:00Z",
-  "blobset": {
-    "blobs": {
-      "system": {
-        "phase": "apply",
-        "url": "file:///path/to/bundle.bin",
-        "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-        "generation": "2026-04-29T10:10:00Z"
-      }
+  "blobs": {
+    "system": {
+      "phase": "apply",
+      "url": "file:///path/to/bundle.bin",
+      "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "generation": "2026-04-29T10:10:00Z"
     }
   }
 }
@@ -680,25 +685,24 @@ This appendix references the formal JSON schemas and provides message examples f
   "deviceRegistryId": "reg-1",
   "deviceId": "dev-1",
   "transactionId": "UUFI:sess123:003",
+  "source": "client-id",
   "principal": "client-id",
   "payload": {
-    "version": "1.5.2",
+    "version": "1.5.7",
     "timestamp": "2026-04-29T10:10:00Z",
-    "blobset": {
-      "blobs": {
-        "system": {
-          "phase": "apply",
-          "url": "file:///path/to/bundle.bin",
-          "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
-          "generation": "2026-04-29T10:10:00Z"
-        }
+    "blobs": {
+      "system": {
+        "phase": "apply",
+        "url": "file:///path/to/bundle.bin",
+        "sha256": "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        "generation": "2026-04-29T10:10:00Z"
       }
     }
   }
 }
 ```
 
-### A.1.7. System Model Update (PubSub)
+### A.1.7. System Model Broadcast (PubSub)
 
 **Attributes:**
 ```json
@@ -706,8 +710,7 @@ This appendix references the formal JSON schemas and provides message examples f
   "subFolder": "system",
   "subType": "model",
   "transactionId": "UUFI:sess123:004",
-  "source": "orchestrator",
-  "principal": "orchestrator",
+  "source": "udmis",
   "deviceRegistryId": "reg-1",
   "deviceId": "dev-1"
 }
@@ -716,15 +719,15 @@ This appendix references the formal JSON schemas and provides message examples f
 **Data:**
 ```json
 {
-  "version": "1.5.2",
+  "version": "1.5.7",
   "timestamp": "2026-04-29T10:15:00Z",
   "software": {
-        "system": "2.1.0"
+    "system": "2.1.0"
   }
 }
 ```
 
-### A.1.8. System Model Update (MQTT)
+### A.1.8. System Model Broadcast (MQTT)
 
 **Topic:** `/uufi/r/reg-1/d/dev-1/c/model/system`
 
@@ -738,10 +741,9 @@ This appendix references the formal JSON schemas and provides message examples f
   "projectId": "vibrant",
   "transactionId": "UUFI:sess123:004",
   "publishTime": "2026-04-29T10:15:00Z",
-  "source": "orchestrator",
-  "principal": "orchestrator",
+  "source": "udmis",
   "payload": {
-    "version": "1.5.2",
+    "version": "1.5.7",
     "timestamp": "2026-04-29T10:15:00Z",
     "software": {
       "system": "2.1.0"

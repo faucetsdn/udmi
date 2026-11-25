@@ -16,5 +16,7 @@ class LocalnetConfig(DataModel):
     Currently unused: request local network configuration
     """
 
+    timestamp: Optional[str] = None
+    version: Optional[str] = None
     families: Optional[Dict[str, FamilyLocalnetConfig]] = None
     networks: Optional[Dict[str, FamilyLocalnetConfig]] = None

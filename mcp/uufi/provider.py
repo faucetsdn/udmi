@@ -68,8 +68,8 @@ class UUFIProvider:
         # Correlation waiters for request-reply queries, handshakes, and config acks
         self._pending_responses: Dict[str, Dict[str, Any]] = {}
 
-        # Outgoing publication history (useful for test assertions and replay)
-        self._published_messages: List[Dict[str, Any]] = []
+        # Outgoing publication history (bounded to prevent unbounded growth in long-running servers)
+        self._published_messages: Deque[Dict[str, Any]] = deque(maxlen=2000)
 
         # Background MQTT / PubSub state
         self._mqtt_client: Optional[Any] = None
@@ -117,25 +117,10 @@ class UUFIProvider:
             else {"provider": "mqtt", "project": "vibrant", "port": None, "prefix": "", "user": None}
         )
         if spec_info.get("provider") == "pubsub":
-            if spec_info.get("port") is not None:
-                raise ValueError(
-                    f"Port specification is prohibited for pubsub transport: {spec}"
-                )
-            self.transport = "pubsub"
-            self.project_id = spec_info.get("project") or ""
-            if not self.project_id or self.project_id == "localhost":
-                raise ValueError(f"Missing GCP project ID in pubsub spec: {spec}")
-            self.prefix = prefix if prefix is not None else (spec_info.get("prefix") or "")
-            user = spec_info.get("user") or client_id or "unknown"
-            self.pubsub_topic = (
-                f"{self.prefix}{DEFAULT_PUBSUB_TOPIC}"
-                if self.prefix and not self.prefix.endswith(DEFAULT_PUBSUB_TOPIC)
-                else (self.prefix or DEFAULT_PUBSUB_TOPIC)
+            raise ValueError(
+                f"Non-canonical //pubsub/ spec is not supported; "
+                f"use pubsub://[user@]project[/topic]: {spec}"
             )
-            self.pubsub_subscription = f"{self.pubsub_topic}+{user}"
-            self.client_id = user
-            self.principal = f"{user}@"
-            return
 
         # Default MQTT / MQTTS transport
         self.transport = "mqtt"
@@ -456,6 +441,9 @@ class UUFIProvider:
             return
 
         envelope = data if isinstance(data, dict) else {}
+        msg_principal = envelope.get("principal")
+        if msg_principal and msg_principal != self.principal:
+            return
         inner_payload = envelope["payload"] if "payload" in envelope else envelope
 
         sub_type = envelope.get("subType")
@@ -490,6 +478,9 @@ class UUFIProvider:
         envelope: Dict[str, Any],
         inner_payload: Any,
     ) -> None:
+        if inner_payload is None:
+            return
+
         sub_type = envelope.get("subType")
         sub_folder = envelope.get("subFolder")
         reg_id = envelope.get("deviceRegistryId")
@@ -497,7 +488,7 @@ class UUFIProvider:
         tx_id = envelope.get("transactionId")
         source = envelope.get("source")
 
-        # 1. Check pending response waiters (correlated via transactionId)
+        # 1. Check pending response waiters (correlated via transactionId and channel)
         with self._lock:
             reply_tx = None
             if isinstance(inner_payload, dict):
@@ -508,7 +499,15 @@ class UUFIProvider:
             target_tx = tx_id or reply_tx
             if target_tx and target_tx in self._pending_responses:
                 slot = self._pending_responses[target_tx]
-                if not slot.get("require_system_source") or self._is_system_source(source):
+                expected_type = slot.get("expected_sub_type")
+                expected_folder = slot.get("expected_sub_folder")
+                channel_matches = (
+                    (expected_type is None or sub_type == expected_type)
+                    and (expected_folder is None or sub_folder == expected_folder)
+                )
+                if channel_matches and (
+                    not slot.get("require_system_source") or self._is_system_source(source)
+                ):
                     if isinstance(inner_payload, dict) and "control" in inner_payload:
                         control_block = inner_payload.get("control") or {}
                         status = (
@@ -516,7 +515,11 @@ class UUFIProvider:
                             if isinstance(control_block, dict)
                             else {}
                         ) or {}
-                        level = int(status.get("level", 500)) if isinstance(status, dict) else 500
+                        raw_level = status.get("level") if isinstance(status, dict) else None
+                        try:
+                            level = int(raw_level) if raw_level is not None else 500
+                        except (TypeError, ValueError):
+                            level = 500
                         if level < 500:
                             slot.setdefault("progress", []).append(inner_payload)
                         else:
@@ -529,7 +532,7 @@ class UUFIProvider:
                             event_obj = slot.get("event")
                             if event_obj:
                                 event_obj.set()
-                    elif inner_payload is not None:
+                    else:
                         slot["response"] = {
                             "envelope": envelope,
                             "payload": inner_payload,
@@ -571,7 +574,8 @@ class UUFIProvider:
 
     @staticmethod
     def _raise_control_error(operation: str, status: Dict[str, Any]) -> None:
-        level = status.get("level", 500)
+        raw_level = status.get("level")
+        level = 500 if raw_level is None else raw_level
         category = status.get("category", "unknown")
         message = status.get("message", "UUFI control error")
         detail = status.get("detail")
@@ -610,6 +614,8 @@ class UUFIProvider:
                 "event": response_event,
                 "response": None,
                 "require_system_source": True,
+                "expected_sub_type": "config",
+                "expected_sub_folder": "udmi",
                 "progress": [],
             }
 
@@ -699,6 +705,8 @@ class UUFIProvider:
                 "event": response_event,
                 "response": None,
                 "require_system_source": True,
+                "expected_sub_type": "config",
+                "expected_sub_folder": sub_folder,
                 "progress": [],
             }
 
@@ -762,6 +770,8 @@ class UUFIProvider:
                 "event": response_event,
                 "response": None,
                 "require_system_source": True,
+                "expected_sub_type": sub_type,
+                "expected_sub_folder": sub_folder,
                 "progress": [],
             }
 

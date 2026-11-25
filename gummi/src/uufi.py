@@ -109,16 +109,32 @@ class GummiUUFIClient:
                     dev_id = ev.get("deviceId", "unknown")
                     payload = ev.get("payload", {})
 
-                    if sub_type == "state":
+                    if isinstance(payload, dict) and "control" in payload:
+                        control_block = payload.get("control") or {}
+                        status = (
+                            control_block.get("status")
+                            if isinstance(control_block, dict)
+                            else {}
+                        ) or {}
+                        raw_level = status.get("level") if isinstance(status, dict) else None
+                        try:
+                            level = int(raw_level) if raw_level is not None else 500
+                        except (TypeError, ValueError):
+                            level = 500
+                        if level >= 500:
+                            self.broadcast_event("alert", {
+                                "topic": ev.get("topic"),
+                                "payload": payload,
+                                "timestamp": ev.get("timestamp"),
+                            })
+                    elif sub_type == "state":
                         self.broadcast_event("device_state", {
                             "registry_id": reg_id,
                             "device_id": dev_id,
                             "sub_folder": sub_folder,
                             "timestamp": ev.get("timestamp"),
                         })
-                    elif sub_folder in ("status", "validation") or (
-                        isinstance(payload, dict) and "control" in payload
-                    ):
+                    elif sub_folder in ("status", "validation"):
                         self.broadcast_event("alert", {
                             "topic": ev.get("topic"),
                             "payload": payload,

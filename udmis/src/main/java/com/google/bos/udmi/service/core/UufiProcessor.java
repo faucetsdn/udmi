@@ -2,14 +2,12 @@ package com.google.bos.udmi.service.core;
 
 import static com.google.bos.udmi.service.pod.UdmiServicePod.UDMI_VERSION;
 import static com.google.udmi.util.GeneralUtils.catchToNull;
-import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.isoConvert;
 import static com.google.udmi.util.JsonUtil.toMap;
-import static com.google.udmi.util.JsonUtil.toObject;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessageContinuation;
@@ -17,6 +15,7 @@ import com.google.bos.udmi.service.messaging.MessageDispatcher;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.NullMessage;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.SentinelPayload;
 import com.google.bos.udmi.service.messaging.StateUpdate;
+import com.google.bos.udmi.service.messaging.impl.MessageBase.BundleException;
 import com.google.bos.udmi.service.messaging.impl.PubSubPipe;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
 import com.google.common.annotations.VisibleForTesting;
@@ -25,6 +24,7 @@ import com.google.udmi.util.CleanDateFormat;
 import com.google.udmi.util.Common;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,6 +51,7 @@ import udmi.schema.UufiControlBlock;
 public class UufiProcessor extends ProcessorBase {
 
   private static final String UUFI_GATEWAY_ID = "uufi";
+  private static final String UUFI_EVENTS_CONTAINER_ID = "uufi_events";
   private static final String UDMIS_SOURCE = "udmis";
   private static final String PUBSUB_UDMIS_SOURCE =
       PubSubPipe.PUBSUB_SOURCE + Common.SOURCE_SEPARATOR + UDMIS_SOURCE;
@@ -93,16 +94,27 @@ public class UufiProcessor extends ProcessorBase {
     return fallback;
   }
 
-  private static Object decodeStringPayload(String raw) {
-    try {
-      String decoded = decodeBase64(raw);
-      if (decoded != null && decoded.trim().startsWith("{")) {
-        return toObject(decoded);
+  @SuppressWarnings("unchecked")
+  private static Map<String, Object> scrubCloudModelMap(Map<String, Object> raw) {
+    Map<String, Object> scrubbed = new HashMap<>(raw);
+    scrubbed.remove("password");
+    scrubbed.remove("credentials");
+    Object deviceIdsObj = scrubbed.get("device_ids");
+    if (deviceIdsObj instanceof Map<?, ?> deviceIdsMap) {
+      Map<String, Object> scrubbedDevices = new HashMap<>();
+      for (Map.Entry<?, ?> entry : deviceIdsMap.entrySet()) {
+        Object val = entry.getValue();
+        if (val instanceof Map<?, ?> childMap) {
+          scrubbedDevices.put(String.valueOf(entry.getKey()),
+              scrubCloudModelMap((Map<String, Object>) childMap));
+        } else if (val != null) {
+          scrubbedDevices.put(String.valueOf(entry.getKey()),
+              scrubCloudModelMap(toMap(val)));
+        }
       }
-    } catch (IllegalArgumentException ignored) {
-      // Not a base64-encoded JSON object; transport as string sentinel token.
+      scrubbed.put("device_ids", scrubbedDevices);
     }
-    return MessageDispatcher.sentinelPayload(raw);
+    return scrubbed;
   }
 
   private static String errorCategoryFor(Envelope envelope) {
@@ -110,6 +122,47 @@ public class UufiProcessor extends ProcessorBase {
       return Category.SYSTEM_CONFIG_PARSE;
     }
     return Category.VALIDATION_DEVICE_RECEIVE;
+  }
+
+  @Override
+  protected void exceptionHandler(Exception e) {
+    if (e instanceof BundleException bundleException) {
+      handleUufiBundleException(bundleException);
+      return;
+    }
+    error("Unhandled UUFI processor exception (suppressed from reflect error channel): "
+        + friendlyStackTrace(e));
+  }
+
+  private void handleUufiBundleException(BundleException bundleException) {
+    Map<String, String> attrs =
+        bundleException.bundle != null ? bundleException.bundle.attributesMap : null;
+    if (attrs == null) {
+      warn("Dropping UUFI BundleException without attributes: %s",
+          Common.getExceptionMessage(bundleException));
+      return;
+    }
+    final String principal = attrs.get("principal");
+    final String transactionId = attrs.get("transactionId");
+    Envelope reqEnv = new Envelope();
+    reqEnv.subType = catchToNull(() -> SubType.fromValue(attrs.get("subType")));
+    reqEnv.subFolder = catchToNull(() -> SubFolder.fromValue(attrs.get("subFolder")));
+    reqEnv.deviceRegistryId = attrs.get("deviceRegistryId");
+    reqEnv.deviceId = attrs.get("deviceId");
+    reqEnv.projectId = attrs.get("projectId");
+    reqEnv.principal = principal;
+    reqEnv.transactionId = transactionId;
+
+    boolean hasMinimalProps = !Strings.isNullOrEmpty(principal)
+        && (pubSubProtocol || (reqEnv.subType != null && reqEnv.subFolder != null));
+    if (!hasMinimalProps) {
+      warn("Dropping UUFI BundleException without minimal routing properties "
+          + "(pubsub=%s, principal=%s, subType=%s, subFolder=%s): %s",
+          pubSubProtocol, principal, reqEnv.subType, reqEnv.subFolder,
+          Common.getExceptionMessage(bundleException));
+      return;
+    }
+    sendControlError(reqEnv, principal, transactionId, errorCategoryFor(reqEnv), bundleException);
   }
 
   @Override
@@ -151,6 +204,14 @@ public class UufiProcessor extends ProcessorBase {
     }
 
     if (isHandshake(envelope)) {
+      if (message instanceof NullMessage || message instanceof SentinelPayload) {
+        warn("Invalid non-object UUFI handshake payload for principal=%s, txn=%s",
+            envelope.principal, envelope.transactionId);
+        sendControlError(envelope, envelope.principal, envelope.transactionId,
+            errorCategoryFor(envelope),
+            new IllegalArgumentException("UUFI handshake requires a UdmiState JSON object"));
+        return;
+      }
       info("Processing UUFI handshake request");
       handleHandshake(envelope, convertTo(UdmiState.class, message));
       return;
@@ -315,6 +376,7 @@ public class UufiProcessor extends ProcessorBase {
     Envelope replyCoords = deepCopy(envelope);
     try {
       Envelope innerEnvelope = convertTo(Envelope.class, mutableMap);
+      boolean hasTopicPath = envelope.subType != null || envelope.subFolder != null;
       if (innerEnvelope.subType == null || innerEnvelope.subFolder == null
           || (envelope.deviceRegistryId != null && innerEnvelope.deviceRegistryId == null)
           || (envelope.deviceId != null && innerEnvelope.deviceId == null)) {
@@ -324,10 +386,14 @@ public class UufiProcessor extends ProcessorBase {
             innerEnvelope.deviceRegistryId, innerEnvelope.deviceId);
         throw new IllegalArgumentException(msg);
       }
-      boolean registryMismatch = envelope.deviceRegistryId != null
-          && !Objects.equals(envelope.deviceRegistryId, innerEnvelope.deviceRegistryId);
-      boolean deviceMismatch = envelope.deviceId != null
-          && !Objects.equals(envelope.deviceId, innerEnvelope.deviceId);
+      boolean registryMismatch = hasTopicPath
+          ? !Objects.equals(envelope.deviceRegistryId, innerEnvelope.deviceRegistryId)
+          : (envelope.deviceRegistryId != null
+              && !Objects.equals(envelope.deviceRegistryId, innerEnvelope.deviceRegistryId));
+      boolean deviceMismatch = hasTopicPath
+          ? !Objects.equals(envelope.deviceId, innerEnvelope.deviceId)
+          : (envelope.deviceId != null
+              && !Objects.equals(envelope.deviceId, innerEnvelope.deviceId));
       if ((envelope.subType != null && innerEnvelope.subType != envelope.subType)
           || (envelope.subFolder != null && innerEnvelope.subFolder != envelope.subFolder)
           || registryMismatch || deviceMismatch) {
@@ -353,7 +419,7 @@ public class UufiProcessor extends ProcessorBase {
       replyCoords = innerEnvelope;
 
       Object innerPayload = (payloadRaw instanceof String strPayload)
-          ? decodeStringPayload(strPayload) : payloadRaw;
+          ? MessageDispatcher.sentinelPayload(strPayload) : payloadRaw;
 
       if (hasControlRoot(innerPayload)) {
         warn("Dropping client-originated UUFI control payload for %s/%s (principal=%s, txn=%s)",
@@ -388,28 +454,36 @@ public class UufiProcessor extends ProcessorBase {
     debug("Forwarding UUFI message %s/%s from %s to internal bus",
         innerEnvelope.subType, innerEnvelope.subFolder, innerEnvelope.source);
 
-    if (innerEnvelope.subType == SubType.CONFIG) {
-      String configUpdate = processConfigChange(innerEnvelope, innerPayload, null);
-      if (configUpdate != null) {
-        Envelope busEnvelope = deepCopy(innerEnvelope);
-        busEnvelope.subFolder = null;
-        Map<String, Object> fullConfig = toMap(configUpdate);
-        publish(busEnvelope, fullConfig);
+    if (innerEnvelope.subType == SubType.MODEL) {
+      throw new IllegalArgumentException(
+          "UUFI model writes are not supported; use registrar/reflector for model updates");
+    }
 
-        Object ackPayload = extractSubBlockPayload(fullConfig, innerEnvelope.subFolder);
-        sendUufiSuccessReply(innerEnvelope, reqPrincipal, reqTxnId, ackPayload);
+    if (innerEnvelope.subType == SubType.CONFIG) {
+      if (Strings.isNullOrEmpty(innerEnvelope.deviceRegistryId)
+          || Strings.isNullOrEmpty(innerEnvelope.deviceId)) {
+        throw new IllegalArgumentException(
+            "Missing required deviceRegistryId/deviceId for UUFI config write");
       }
+      if (!(innerPayload instanceof Map<?, ?>)) {
+        throw new IllegalArgumentException(
+            "UUFI config write payload must be a JSON object");
+      }
+      String configUpdate = processConfigChange(innerEnvelope, innerPayload, null);
+      if (configUpdate == null) {
+        throw new IllegalStateException("UUFI config update failed or produced no result");
+      }
+      Envelope busEnvelope = deepCopy(innerEnvelope);
+      busEnvelope.subFolder = null;
+      Map<String, Object> fullConfig = toMap(configUpdate);
+      publish(busEnvelope, fullConfig);
+
+      Object ackPayload = extractSubBlockPayload(fullConfig, innerEnvelope.subFolder);
+      sendUufiSuccessReply(innerEnvelope, reqPrincipal, reqTxnId, ackPayload);
       return;
     }
 
     publish(innerEnvelope, innerPayload);
-
-    if (innerEnvelope.subType == SubType.MODEL) {
-      Map<String, Object> ackPayload = toMap(innerPayload);
-      ackPayload.putIfAbsent("version", UDMI_VERSION);
-      ackPayload.putIfAbsent("timestamp", isoConvert());
-      sendUufiSuccessReply(innerEnvelope, reqPrincipal, reqTxnId, ackPayload);
-    }
   }
 
   private void handleStringSentinelWrite(Envelope innerEnvelope, SentinelPayload sentinel,
@@ -469,7 +543,11 @@ public class UufiProcessor extends ProcessorBase {
           payloadMap.put("version", ofNullable(deviceModel.version).orElse(UDMI_VERSION));
           sendUufiSuccessReply(replyCoords, reqPrincipal, reqTxnId, payloadMap);
         } else if (requestEnvelope.subFolder == SubFolder.CLOUD) {
-          sendUufiSuccessReply(requestEnvelope, reqPrincipal, reqTxnId, toMap(deviceModel));
+          Map<String, Object> payloadMap = scrubCloudModelMap(toMap(deviceModel));
+          payloadMap.putIfAbsent("timestamp", ofNullable(requestEnvelope.publishTime)
+              .map(t -> isoConvert(t)).orElseGet(() -> isoConvert()));
+          payloadMap.putIfAbsent("version", ofNullable(deviceModel.version).orElse(UDMI_VERSION));
+          sendUufiSuccessReply(requestEnvelope, reqPrincipal, reqTxnId, payloadMap);
         } else {
           throw new IllegalArgumentException(
               "Unsupported model query subFolder: " + requestEnvelope.subFolder);
@@ -519,9 +597,10 @@ public class UufiProcessor extends ProcessorBase {
       debug("Suppressing UUFI control reply because principal is absent");
       return;
     }
-    if (requestEnvelope == null || requestEnvelope.subType == null
-        || requestEnvelope.subFolder == null) {
-      warn("Cannot send UUFI control reply without subType/subFolder coordinates");
+    if (!pubSubProtocol
+        && (requestEnvelope == null || requestEnvelope.subType == null
+            || requestEnvelope.subFolder == null)) {
+      warn("Cannot send UUFI MQTT control reply without subType/subFolder coordinates");
       return;
     }
     final Date now = CleanDateFormat.cleanDate();
@@ -551,12 +630,14 @@ public class UufiProcessor extends ProcessorBase {
   private Envelope makeReplyEnvelope(Envelope requestEnvelope, String principal,
       String transactionId) {
     Envelope reply = new Envelope();
-    reply.subType = requestEnvelope.subType;
-    reply.subFolder = requestEnvelope.subFolder;
-    reply.deviceRegistryId = requestEnvelope.deviceRegistryId;
-    reply.deviceId = requestEnvelope.deviceId;
-    reply.deviceGuid = requestEnvelope.deviceGuid;
-    reply.projectId = requestEnvelope.projectId;
+    if (requestEnvelope != null) {
+      reply.subType = requestEnvelope.subType;
+      reply.subFolder = requestEnvelope.subFolder;
+      reply.deviceRegistryId = requestEnvelope.deviceRegistryId;
+      reply.deviceId = requestEnvelope.deviceId;
+      reply.deviceGuid = requestEnvelope.deviceGuid;
+      reply.projectId = requestEnvelope.projectId;
+    }
     reply.source = UDMIS_SOURCE;
     reply.principal = principal;
     reply.transactionId = transactionId;
@@ -631,6 +712,23 @@ public class UufiProcessor extends ProcessorBase {
         return;
       } catch (Exception e) {
         error("Error processing monolithic outbound state update: " + friendlyStackTrace(e));
+      }
+    }
+
+    if (envelope.subFolder == null) {
+      debug("Dropping outbound message with null subFolder for subType=%s", envelope.subType);
+      return;
+    }
+
+    if (UUFI_EVENTS_CONTAINER_ID.equals(containerId)) {
+      boolean allowedTargetBroadcast = envelope.subType == SubType.EVENTS
+          || (envelope.subType == SubType.MODEL
+              && envelope.subFolder == SubFolder.SYSTEM
+              && Strings.isNullOrEmpty(envelope.principal));
+      if (!allowedTargetBroadcast) {
+        debug("Dropping non-broadcast message %s/%s (principal=%s) on %s",
+            envelope.subType, envelope.subFolder, envelope.principal, containerId);
+        return;
       }
     }
 

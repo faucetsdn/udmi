@@ -42,6 +42,7 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static udmi.schema.IotAccess.IotProvider.PUBSUB;
 
+import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.bos.iot.core.proxy.IotReflectorClient;
@@ -659,7 +660,7 @@ public class Validator {
       writeMessageCapture(msgObject, attributes);
     }
 
-    if (!shouldProcessMessage(attributes)) {
+    if (!shouldProcessMessage(attributes, msgObject)) {
       return;
     }
 
@@ -940,7 +941,17 @@ public class Validator {
     }
   }
 
-  private boolean shouldProcessMessage(Map<String, String> attributes) {
+  private static boolean isUufiMessage(Map<String, String> attributes) {
+    if (attributes == null) {
+      return false;
+    }
+    String source = attributes.get("source");
+    return "uufi".equals(attributes.get("gatewayId"))
+        || "udmis".equals(source)
+        || "pubsub+udmis".equals(source);
+  }
+
+  private boolean shouldProcessMessage(Map<String, String> attributes, Object msgObject) {
     String registryId = attributes.get(DEVICE_REGISTRY_ID_KEY);
 
     if (registryId == null || !registryId.equals(getRegistryId())) {
@@ -958,9 +969,11 @@ public class Validator {
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     String subFolder = attributes.get(SUBFOLDER_PROPERTY_KEY);
     boolean ignore = isReplySubtype(subType);
+    boolean isUufiControl = "control_uufi".equals(messageSchema(attributes, msgObject));
     boolean process = subType == null
         || INTERESTING_TYPES.contains(subType)
-        || SubFolder.UPDATE.value().equals(subFolder);
+        || SubFolder.UPDATE.value().equals(subFolder)
+        || isUufiControl;
     return process && !ignore;
   }
 
@@ -975,18 +988,14 @@ public class Validator {
   }
 
   private boolean isUufiSentinelString(String raw, Map<String, String> attributes) {
-    if (raw == null) {
+    if (raw == null || !isUufiMessage(attributes)) {
       return false;
     }
-    String trimmed = raw.trim();
-    boolean isJsonStringLiteral = trimmed.length() >= 2
-        && trimmed.startsWith("\"") && trimmed.endsWith("\"");
-    if (!isJsonStringLiteral) {
+    try (var parser = OBJECT_MAPPER.getFactory().createParser(raw)) {
+      return parser.nextToken() == JsonToken.VALUE_STRING && parser.nextToken() == null;
+    } catch (Exception e) {
       return false;
     }
-    return "uufi".equals(attributes.get("gatewayId"))
-        || "udmis".equals(attributes.get("source"))
-        || attributes.containsKey("principal");
   }
 
   private void writeDeviceOutCapture(Object message, Map<String, String> attributes,
@@ -1023,7 +1032,9 @@ public class Validator {
   }
 
   private String messageSchema(Map<String, String> attributes, Object messageObj) {
-    if (messageObj instanceof Map<?, ?> messageMap && messageMap.containsKey("control")) {
+    if (isUufiMessage(attributes)
+        && messageObj instanceof Map<?, ?> messageMap
+        && messageMap.containsKey("control")) {
       return "control_uufi";
     }
     return messageSchema(attributes);
