@@ -9,8 +9,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "GATEWAYS/PASSTHROUGH",
-      "label": "Liebert CRAC 1 / UPS"
+      "type": [
+        "GATEWAYS/PASSTHROUGH"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "Liebert CRAC 1 / UPS"
+      }
     }
   },
   "cloud": {

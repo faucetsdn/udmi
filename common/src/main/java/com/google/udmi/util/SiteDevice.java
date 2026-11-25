@@ -8,6 +8,8 @@ import udmi.schema.Metadata;
  */
 public interface SiteDevice {
 
+  String getDeviceId();
+
   Metadata getMetadata();
 
   File getOutDir();

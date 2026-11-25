@@ -47,6 +47,22 @@ def get_butler_interface(conn_spec=None, butler_port=None):
     return None
 
 
+def _get_family_addr(model, family):
+    """Safely extracts localnet.families.<family>.addr when optional fields may be omitted or None."""
+    if not isinstance(model, dict):
+        return None
+    localnet = model.get("localnet")
+    if not isinstance(localnet, dict):
+        return None
+    families = localnet.get("families")
+    if not isinstance(families, dict):
+        return None
+    family_entry = families.get(family)
+    if not isinstance(family_entry, dict):
+        return None
+    return family_entry.get("addr")
+
+
 def run_mapping(
     conn_spec,
     registry_id,
@@ -96,11 +112,9 @@ def run_mapping(
                 
         original_models[device_id] = payload
         
-        localnet = payload.get('localnet', {})
-        families = localnet.get('families', {})
-        bacnet_addr = families.get('bacnet', {}).get('addr') if 'bacnet' in families else None
-        ipv4_addr = families.get('ipv4', {}).get('addr') if 'ipv4' in families else None
-        vendor_addr = families.get('vendor', {}).get('addr') if 'vendor' in families else None
+        bacnet_addr = _get_family_addr(payload, 'bacnet')
+        ipv4_addr = _get_family_addr(payload, 'ipv4')
+        vendor_addr = _get_family_addr(payload, 'vendor')
             
         modeled_devices.append({
             'device_id': device_id,
@@ -178,10 +192,9 @@ def run_mapping(
             orig['version'] = '1.5.7'
             orig['timestamp'] = now
 
-            orig_localnet = orig.get('localnet', {}).get('families', {})
-            orig_b = orig_localnet.get('bacnet', {}).get('addr') if 'bacnet' in orig_localnet else None
-            orig_i = orig_localnet.get('ipv4', {}).get('addr') if 'ipv4' in orig_localnet else None
-            orig_v = orig_localnet.get('vendor', {}).get('addr') if 'vendor' in orig_localnet else None
+            orig_b = _get_family_addr(orig, 'bacnet')
+            orig_i = _get_family_addr(orig, 'ipv4')
+            orig_v = _get_family_addr(orig, 'vendor')
 
             diff_families = {}
             if b_addr and b_addr != orig_b:
@@ -192,9 +205,9 @@ def run_mapping(
                 diff_families['vendor'] = {'addr': v_addr}
 
             if diff_families:
-                if 'localnet' not in orig:
+                if not isinstance(orig.get('localnet'), dict):
                     orig['localnet'] = {}
-                if 'families' not in orig['localnet']:
+                if not isinstance(orig['localnet'].get('families'), dict):
                     orig['localnet']['families'] = {}
                 orig['localnet']['families'].update(diff_families)
 

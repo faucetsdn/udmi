@@ -1,0 +1,10 @@
+{
+  "projectId": "building-iot-prod",
+  "deviceRegistryId": "US-MTV-BASIC",
+  "deviceId": "VAV-101",
+  "deviceGuid": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
+  "deviceNumId": "2541901344105616",
+  "subFolder": "pointset",
+  "subType": "events",
+  "publishTime": "2026-07-30T17:00:00Z"
+}

@@ -54,6 +54,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -342,7 +343,8 @@ public class SiteModel {
 
   public Set<String> getExtraDevices() {
     String[] existing = ofNullable(getExtrasDir().list()).orElse(new String[0]);
-    return Arrays.stream(existing).filter(this::extraExists).collect(Collectors.toSet());
+    return Arrays.stream(existing).filter(this::extraExists)
+        .collect(Collectors.toCollection(TreeSet::new));
   }
 
   private boolean extraExists(String extraId) {
@@ -389,7 +391,8 @@ public class SiteModel {
     File[] files = Objects.requireNonNull(devicesFile.listFiles(),
         "no files in " + devicesFile.getAbsolutePath());
     return Arrays.stream(files).map(File::getName)
-        .filter(device -> validDeviceDirectory(devicesFile, device)).collect(Collectors.toSet());
+        .filter(device -> validDeviceDirectory(devicesFile, device))
+        .collect(Collectors.toCollection(TreeSet::new));
   }
 
   public Set<String> getTemplateIds() {
@@ -401,7 +404,7 @@ public class SiteModel {
         (templates) -> Arrays.stream(templates)
             .filter(template -> template.getName().endsWith(".json"))
             .map(template -> template.getName().split(".json")[0])
-            .collect(Collectors.toSet()), Collections::emptySet);
+            .collect(Collectors.toCollection(TreeSet::new)), Collections::emptySet);
   }
 
   public SiteMetadata loadSiteMetadata() {

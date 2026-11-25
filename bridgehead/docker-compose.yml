@@ -3,7 +3,7 @@ services:
     build:
       context: ./mosquitto
       args:
-        UDMIS_BASE_IMAGE: ${UDMIS_BASE_IMAGE:-ghcr.io/faucetsdn/udmi:udmis-latest}
+        UDMIS_BASE_IMAGE: ${UDMIS_BASE_IMAGE:-ghcr.io/faucetsdn/udmi/udmis:latest}
     container_name: mosquitto
     volumes:
       - ${SITE_MODEL_PATH:-./udmi_site_model}:/site_model
@@ -50,7 +50,7 @@ services:
       context: .
       dockerfile: udmis/Dockerfile
       args:
-        UDMIS_BASE_IMAGE: ${UDMIS_BASE_IMAGE:-ghcr.io/faucetsdn/udmi:udmis-latest}
+        UDMIS_BASE_IMAGE: ${UDMIS_BASE_IMAGE:-ghcr.io/faucetsdn/udmi/udmis:latest}
     container_name: udmis
     volumes:
       - ${SITE_MODEL_PATH:-./udmi_site_model}:/root/site_model
@@ -92,7 +92,7 @@ services:
     build:
       context: ./validator
       args:
-        VALIDATOR_BASE_IMAGE: ${VALIDATOR_BASE_IMAGE:-ghcr.io/faucetsdn/udmi:validator-latest}
+        VALIDATOR_BASE_IMAGE: ${VALIDATOR_BASE_IMAGE:-ghcr.io/faucetsdn/udmi/validator:latest}
     container_name: validator
     volumes:
       - ${SITE_MODEL_PATH:-./udmi_site_model}:/root/site_model

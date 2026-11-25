@@ -1,0 +1,2 @@
+1 schema violations found
+  $.subSetKey: does not match the regex pattern ^[a-z][a-z0-9]*(_[a-z0-9]+)*$

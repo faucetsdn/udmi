@@ -20,6 +20,7 @@ import static com.google.udmi.util.SiteModel.MOCK_PROJECT;
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -46,6 +47,7 @@ import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.LocalnetModel;
 import udmi.schema.Metadata;
+import udmi.schema.Parent;
 import udmi.schema.PointPointsetModel;
 
 /**
@@ -253,6 +255,161 @@ public class RegistrarTest {
     PointPointsetModel invalidType = new PointPointsetModel();
     invalidType.type = "integer";
     assertTrue("invalid point type rejected", !isPointModelValid(invalidType));
+
+    PointPointsetModel validMissing = new PointPointsetModel();
+    validMissing.type = "missing";
+    assertTrue("valid missing point", isPointModelValid(validMissing));
+
+    PointPointsetModel missingWithRef = new PointPointsetModel();
+    missingWithRef.type = "missing";
+    missingWithRef.ref = "AV1.present_value";
+    assertTrue("missing point with ref rejected", !isPointModelValid(missingWithRef));
+
+    PointPointsetModel missingWithExpr = new PointPointsetModel();
+    missingWithExpr.type = "missing";
+    missingWithExpr.expr = "AHU-1:supply_air_flowrate_sensor";
+    assertTrue("missing point with expr rejected", !isPointModelValid(missingWithExpr));
+
+    PointPointsetModel missingWithWritable = new PointPointsetModel();
+    missingWithWritable.type = "missing";
+    missingWithWritable.writable = true;
+    assertTrue("missing point with writable rejected", !isPointModelValid(missingWithWritable));
+
+    PointPointsetModel missingWithBaseline = new PointPointsetModel();
+    missingWithBaseline.type = "missing";
+    missingWithBaseline.baseline_value = 0;
+    assertTrue("missing point with baseline_value rejected",
+        !isPointModelValid(missingWithBaseline));
+
+    PointPointsetModel missingWithRange = new PointPointsetModel();
+    missingWithRange.type = "missing";
+    missingWithRange.range_min = 0.0;
+    assertTrue("missing point with range_min rejected", !isPointModelValid(missingWithRange));
+
+    PointPointsetModel validExprOnly = new PointPointsetModel();
+    validExprOnly.expr = "US-MTV_1:supply_air_flowrate_sensor";
+    assertTrue("valid expr-only point with underscore device id",
+        isPointModelValid(validExprOnly));
+
+    PointPointsetModel validArithmeticExpr = new PointPointsetModel();
+    validArithmeticExpr.expr =
+        "VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor";
+    assertTrue("valid arithmetic expr-only point", isPointModelValid(validArithmeticExpr));
+
+    PointPointsetModel validExprWithUnits = new PointPointsetModel();
+    validExprWithUnits.expr =
+        "(AHU-1:supply_air_flowrate_sensor + AHU-2:supply_air_flowrate_sensor) / 2";
+    validExprWithUnits.units = "Liters-per-second";
+    assertTrue("valid arithmetic expr point with units", isPointModelValid(validExprWithUnits));
+
+    PointPointsetModel blankExpr = new PointPointsetModel();
+    blankExpr.expr = "   ";
+    assertTrue("blank expr rejected", !isPointModelValid(blankExpr));
+
+    PointPointsetModel exprOnlyWithBaseline = new PointPointsetModel();
+    exprOnlyWithBaseline.expr = "AHU-1:supply_air_flowrate_sensor";
+    exprOnlyWithBaseline.baseline_value = 10.0;
+    assertTrue("expr-only point with baseline_value rejected",
+        !isPointModelValid(exprOnlyWithBaseline));
+
+    PointPointsetModel exprOnlyWithRange = new PointPointsetModel();
+    exprOnlyWithRange.expr = "AHU-1:supply_air_flowrate_sensor";
+    exprOnlyWithRange.range_min = 0.0;
+    assertTrue("expr-only point with range_min rejected", !isPointModelValid(exprOnlyWithRange));
+  }
+
+  @Test
+  public void missingAndExprPointsExcludedFromConfigTest() {
+    Registrar registrar = getRegistrar(ImmutableList.of());
+    registrar.execute(() -> {
+      LocalDevice device = registrar.getWorkingDevices().get(DEVICE_ID);
+      Metadata metadata = device.getMetadata();
+
+      PointPointsetModel missingPoint = new PointPointsetModel();
+      missingPoint.type = "missing";
+      metadata.pointset.points.put("missing_sensor", missingPoint);
+
+      PointPointsetModel exprPoint = new PointPointsetModel();
+      exprPoint.expr = "VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor";
+      metadata.pointset.points.put("calculated_sensor", exprPoint);
+    });
+
+    LocalDevice device = registrar.getWorkingDevices().get(DEVICE_ID);
+    udmi.schema.Config config =
+        com.google.daq.mqtt.util.ConfigManager.configFrom(device.getMetadata()).deviceConfig();
+    assertTrue("regular point remains in config",
+        config.pointset.points.containsKey("filter_alarm_pressure_status"));
+    assertTrue("missing point stripped from config",
+        !config.pointset.points.containsKey("missing_sensor"));
+    assertTrue("expr point stripped from config",
+        !config.pointset.points.containsKey("calculated_sensor"));
+  }
+
+  @Test
+  public void dboExternalProcessorTest() throws Exception {
+    File tempOut = java.nio.file.Files.createTempDirectory("dbo_ext_test").toFile();
+    tempOut.deleteOnExit();
+
+    Metadata metadata = new Metadata();
+    metadata.system = new udmi.schema.SystemModel();
+    metadata.system.guid = "11111111-2222-3333-4444-555555555555";
+    metadata.localnet = new LocalnetModel();
+    metadata.localnet.families = new HashMap<>();
+    FamilyLocalnetModel bacnet = new FamilyLocalnetModel();
+    bacnet.name = "VAV-BAC-99";
+    metadata.localnet.families.put("bacnet", bacnet);
+    metadata.externals = new HashMap<>();
+    udmi.schema.LinkExternalsModel dboLink = new udmi.schema.LinkExternalsModel();
+    dboLink.type = ImmutableList.of("HVAC/VAV_SD", "HVAC/DMP");
+    dboLink.label = "LEGACY-LABEL";
+    metadata.externals.put("dbo", dboLink);
+
+    com.google.udmi.util.SiteDevice siteDevice = new com.google.udmi.util.SiteDevice() {
+      @Override
+      public String getDeviceId() {
+        return "VAV-99";
+      }
+
+      @Override
+      public Metadata getMetadata() {
+        return metadata;
+      }
+
+      @Override
+      public File getOutDir() {
+        return tempOut;
+      }
+    };
+
+    new com.google.daq.mqtt.external.DboExternalProcessor(null).process(siteDevice);
+    File dboFile = new File(tempOut, "building_config.json");
+    com.google.daq.mqtt.external.BuildingConfig written =
+        JsonUtil.loadFileRequired(com.google.daq.mqtt.external.BuildingConfig.class, dboFile);
+    udmi.schema.BuildingConfigEntity entity =
+        written.get("11111111-2222-3333-4444-555555555555");
+    assertNotNull("DBO entity written", entity);
+    assertEquals("prefers localnet.families.bacnet.name", "VAV-BAC-99", entity.code);
+    assertEquals("preserves multi-type list",
+        ImmutableList.of("HVAC/VAV_SD", "HVAC/DMP"), entity.type);
+    dboFile.delete();
+    tempOut.delete();
+  }
+
+  @Test
+  public void deviceGuidValidationAndGetterTest() {
+    Registrar registrar = getRegistrar(ImmutableList.of());
+    registrar.execute();
+    LocalDevice sns4 = registrar.getWorkingDevices().get("SNS-4");
+    assertEquals("0060917f-8c21-47c4-b011-52521085fdc3", sns4.getDeviceGuid());
+
+    LocalDevice ahu1 = registrar.getWorkingDevices().get(DEVICE_ID);
+    ahu1.getMetadata().system.guid = "NOT-A-UUID";
+    try {
+      ahu1.validateEnvelope(REGISTRY_ID, "ZZ-TRI-FECTA");
+      fail("Expected invalid system.guid to fail envelope validation");
+    } catch (IllegalStateException expected) {
+      assertTrue(friendlyStackTrace(expected).contains("deviceGuid"));
+    }
   }
 
   private boolean isPointModelValid(PointPointsetModel pointModel) {
@@ -343,6 +500,28 @@ public class RegistrarTest {
     LocalDevice device = registrar.getWorkingDevices().get("SNS-8");
     assertTrue("Device should record proxy error for nonexistent gateway_id",
         device.hasCategory(ExceptionCategory.proxy));
+  }
+
+  @Test
+  public void localnetWithoutFamiliesTest() {
+    Registrar registrar = getRegistrar(ImmutableList.of());
+    registrar.execute(() -> {
+      LocalnetModel parentOnly = new LocalnetModel();
+      parentOnly.parent = new Parent();
+      parentOnly.parent.target = GATEWAY_ID;
+      parentOnly.parent.family = "hardwired";
+      Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
+      localDevices.get("SNS-8").getMetadata().localnet = parentOnly;
+      localDevices.get(GATEWAY_ID).getMetadata().localnet.families = null;
+    });
+
+    for (String deviceId : ImmutableList.of("SNS-8", GATEWAY_ID)) {
+      LocalDevice device = registrar.getWorkingDevices().get(deviceId);
+      assertEquals(deviceId + " should have no errors", Set.of(), device.getTreeChildren());
+      assertNotNull(deviceId + " generated config should exist", device.getSettings().config);
+      assertNull(deviceId + " generated config.localnet should be null when families is omitted",
+          device.deviceConfigObject().localnet);
+    }
   }
 
   private Boolean isNotBlocking(MockAction action) {

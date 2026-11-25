@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-07-30T17:00:00Z",
+  "version": "1.5.7",
+  "system": {
+    "name": "Variable Air Volume Unit 101",
+    "guid": "c773b86d-b0c0-46fc-bd3f-d726fadd5f1e",
+    "location": {
+      "site": "US-MTV-BASIC",
+      "floor": "US-MTV-BASIC-1",
+      "room": "US-MTV-BASIC-1-R1"
+    }
+  },
+  "cloud": {
+    "num_id": "2541901344105616"
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "VAV-101"
+      }
+    }
+  },
+  "externals": {
+    "dbo": {
+      "type": [
+        "HVAC/VAV_SD_DSP"
+      ]
+    }
+  },
+  "relationships": {
+    "AHU-1": {
+      "FEEDS": [
+        {}
+      ]
+    }
+  },
+  "pointset": {
+    "points": {
+      "zone_air_temperature_sensor": {
+        "units": "degrees_celsius",
+        "units_reported": "degC"
+      },
+      "custom_ref_sensor": {
+        "units": "degrees_celsius",
+        "ref": "raw_bacnet.points.sensor_01.pv"
+      },
+      "fan_status": {
+        "values": {
+          "0.0": "OFF",
+          "1.0": "ON"
+        }
+      },
+      "remote_supply_temp_sensor": {
+        "expr": "CHWP-2:discharge_air_temperature_sensor"
+      },
+      "calculated_flowrate_diff": {
+        "expr": "VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor"
+      },
+      "compressor_run_command": {
+        "type": "missing"
+      }
+    }
+  }
+}

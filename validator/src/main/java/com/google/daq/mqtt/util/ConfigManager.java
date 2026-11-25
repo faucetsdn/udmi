@@ -19,6 +19,7 @@ import static java.util.Optional.ofNullable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.daq.mqtt.util.providers.FamilyProvider;
+import com.google.daq.mqtt.validator.PointsetValidator;
 import com.google.udmi.util.ExceptionList;
 import com.google.udmi.util.SiteModel;
 import java.io.File;
@@ -242,9 +243,14 @@ public class ConfigManager {
     if (!excludePoints) {
       pointsetConfig.points = new HashMap<>();
       metadata.pointset.points.forEach(
-          (metadataKey, value) ->
+          (metadataKey, value) -> {
+            if (value == null
+                || (!PointsetValidator.isMissingPoint(value)
+                    && !PointsetValidator.isExprPoint(value))) {
               pointsetConfig.points.computeIfAbsent(
-                  metadataKey, configKey -> configFromMetadata(configKey, value, excludeUnits)));
+                  metadataKey, configKey -> configFromMetadata(configKey, value, excludeUnits));
+            }
+          });
     }
 
     // Copy selected MetadataPointset properties into PointsetConfig.
@@ -320,7 +326,7 @@ public class ConfigManager {
   }
 
   private LocalnetConfig getDeviceLocalnetConfig() {
-    if (metadata.localnet == null) {
+    if (metadata.localnet == null || metadata.localnet.families == null) {
       return null;
     }
 

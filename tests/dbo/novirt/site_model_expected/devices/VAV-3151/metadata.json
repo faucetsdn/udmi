@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/VAV_SD_DSP_HWDC_CO2M",
-      "label": "VAVRH S3-1-51 CO2"
+      "type": [
+        "HVAC/VAV_SD_DSP_HWDC_CO2M"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "VAVRH S3-1-51 CO2"
+      }
     }
   },
   "cloud": {

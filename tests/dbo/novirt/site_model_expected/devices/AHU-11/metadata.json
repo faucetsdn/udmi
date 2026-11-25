@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/AHU_SFVSC2X_EFVSC_CHWSC_ECON2X_BSPC_SSPC_FDPM",
-      "label": "AHU M1 RF1 VFD Interface, AHU M1 SF1 VFD Interface, AHU M1 SF2 VFD Interface, AHU-M-1 / 100 Mayfield"
+      "type": [
+        "HVAC/AHU_SFVSC2X_EFVSC_CHWSC_ECON2X_BSPC_SSPC_FDPM"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "AHU M1 RF1 VFD Interface, AHU M1 SF1 VFD Interface, AHU M1 SF2 VFD Interface, AHU-M-1 / 100 Mayfield"
+      }
     }
   },
   "cloud": {

@@ -9,6 +9,21 @@
       "type": "string",
       "pattern": "^[A-Z]{2,6}-[1-9][0-9]*$"
     },
+    "providerId": {
+      "description": "Identifier for a non-device backend provider emitting this message. Mutually exclusive with deviceId.",
+      "type": "string",
+      "minLength": 1
+    },
+    "subSetKey": {
+      "description": "Optional key scoping a logical subset of messages within a subFolder",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+    },
+    "deviceGuid": {
+      "description": "Globally unique identifier for the device",
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+    },
     "deviceNumId": {
       "type": "string",
       "pattern": "^[0-9]+$"
@@ -91,5 +106,14 @@
   },
   "required": [
     "deviceRegistryId"
-  ]
+  ],
+  "not": {
+    "required": [
+      "deviceId",
+      "providerId"
+    ]
+  },
+  "message": {
+    "not": "deviceId and providerId are mutually exclusive"
+  }
 }

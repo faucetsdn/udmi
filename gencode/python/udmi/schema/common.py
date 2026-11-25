@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
+from typing import Optional, TypeAlias
 
 from ._base import DataModel
 
@@ -23,7 +23,7 @@ class Mode(Enum):
     shutdown = 'shutdown'
 
 
-Family = Optional[str]
+Family: TypeAlias = Optional[str]
 
 
 class Depth(Enum):

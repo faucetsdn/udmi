@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import List, Optional
 
 from ._base import DataModel
 
@@ -12,4 +12,4 @@ from ._base import DataModel
 @dataclass
 class BuildingConfigEntity(DataModel):
     code: Optional[str] = None
-    type: Optional[str] = None
+    type: Optional[List[str]] = None

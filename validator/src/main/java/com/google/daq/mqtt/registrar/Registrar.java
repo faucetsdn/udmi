@@ -6,6 +6,7 @@ import static com.google.common.collect.Sets.difference;
 import static com.google.common.collect.Sets.intersection;
 import static com.google.daq.mqtt.util.ConfigUtil.UDMI_ROOT;
 import static com.google.udmi.util.Common.CLOUD_VERSION_KEY;
+import static com.google.udmi.util.Common.DEVICE_GUID_KEY;
 import static com.google.udmi.util.Common.DEVICE_ID_KEY;
 import static com.google.udmi.util.Common.DEVICE_NUM_KEY;
 import static com.google.udmi.util.Common.NO_SITE;
@@ -1250,6 +1251,7 @@ public class Registrar {
       Map<String, String> attributes = new HashMap<>();
       attributes.put(DEVICE_ID_KEY, localDevice.getDeviceId());
       attributes.put(DEVICE_NUM_KEY, localDevice.getDeviceNumId());
+      ifNotNullThen(localDevice.getDeviceGuid(), guid -> attributes.put(DEVICE_GUID_KEY, guid));
       attributes.put(REGISTRY_ID_PROPERTY_KEY, cloudIotManager.getRegistryId());
       attributes.put(PROJECT_ID_PROPERTY_KEY, cloudIotManager.getProjectId());
       attributes.put(SUBTYPE_PROPERTY_KEY, subType);
