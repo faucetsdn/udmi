@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-01-01T00:00:00Z",
+  "version": "1.5.3",
+  "cloud": {
+    "num_id": "99000111222333"
+  },
+  "system": {
+    "guid": "11111111-2222-3333-4444-555555555555"
+  },
+  "externals": {
+    "dbo": {
+      "type": [
+        "HVAC/VAV_SD_DSP"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "EM36_VAV-1"
+      }
+    }
+  },
+  "pointset": {
+    "points": {
+      "zone_air_temperature_sensor": {
+        "units": "degrees_celsius",
+        "units_reported": "degC"
+      }
+    }
+  }
+}

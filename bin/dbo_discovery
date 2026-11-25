@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Script to generate discovery.csv from an existing UDMI site model."""
+import csv
+import json
+from pathlib import Path
+import sys
+
+CSV_COLUMNS = [
+    "device_registry_id",
+    "device_id",
+    "device_num_id",
+    "last_event_time",
+]
+
+
+def _load_json_dict(path: Path):
+  """Loads a JSON object from path, warning and returning None on failure."""
+  if not path.is_file():
+    return None
+  try:
+    with open(path, "r", encoding="utf-8") as f:
+      data = json.load(f)
+  except (OSError, json.JSONDecodeError) as err:
+    print(f"Warning: skipping unreadable {path}: {err}", file=sys.stderr)
+    return None
+  return data if isinstance(data, dict) else None
+
+
+def resolve_registry_id(site_model_dir: Path) -> str:
+  """Resolves the registry ID from site config files or directory name."""
+  cloud_config = _load_json_dict(site_model_dir / "cloud_iot_config.json")
+  if cloud_config:
+    for key in ("registry_id", "site_name"):
+      val = cloud_config.get(key)
+      if isinstance(val, str) and val.strip():
+        return val.strip()
+
+  site_metadata = _load_json_dict(site_model_dir / "site_metadata.json")
+  if site_metadata:
+    val = site_metadata.get("site")
+    if isinstance(val, str) and val.strip():
+      return val.strip()
+
+  resolved = site_model_dir.resolve()
+  if resolved.name == "udmi" and resolved.parent.name:
+    return resolved.parent.name
+  return resolved.name
+
+
+def generate_discovery_csv(site_model_dir: Path, output_csv: Path) -> int:
+  """Writes discovery.csv from devices/*/metadata.json cloud.num_id fields."""
+  devices_dir = site_model_dir / "devices"
+  if not devices_dir.is_dir():
+    raise FileNotFoundError(f"Devices directory not found: {devices_dir}")
+
+  registry_id = resolve_registry_id(site_model_dir)
+  rows = []
+  seen_num_ids = {}
+
+  for device_dir in sorted(devices_dir.iterdir()):
+    if not device_dir.is_dir():
+      continue
+    metadata = _load_json_dict(device_dir / "metadata.json")
+    if not metadata:
+      continue
+    cloud = metadata.get("cloud")
+    if not isinstance(cloud, dict):
+      continue
+    num_id = cloud.get("num_id")
+    if not isinstance(num_id, (str, int)) or isinstance(num_id, bool):
+      continue
+    clean_num_id = str(num_id).strip()
+    if not clean_num_id:
+      continue
+    if clean_num_id in seen_num_ids:
+      print(
+          f"Warning: duplicate cloud.num_id {clean_num_id} in "
+          f"{device_dir.name} (previously {seen_num_ids[clean_num_id]})",
+          file=sys.stderr,
+      )
+    seen_num_ids[clean_num_id] = device_dir.name
+    rows.append([
+        registry_id,
+        device_dir.name,
+        clean_num_id,
+        "null",
+    ])
+
+  output_csv.parent.mkdir(parents=True, exist_ok=True)
+  with open(output_csv, "w", encoding="utf-8", newline="") as f:
+    writer = csv.writer(f, lineterminator="\n")
+    writer.writerow(CSV_COLUMNS)
+    writer.writerows(rows)
+
+  return len(rows)
+
+
+def main() -> None:
+  """CLI entry point for generating discovery.csv."""
+  if len(sys.argv) not in (2, 3):
+    print(f"Usage: {sys.argv[0]} <site_model_dir> [output_csv]")
+    sys.exit(1)
+
+  site_model_dir = Path(sys.argv[1])
+  output_csv = (
+      Path(sys.argv[2])
+      if len(sys.argv) == 3
+      else site_model_dir / "discovery.csv"
+  )
+  count = generate_discovery_csv(site_model_dir, output_csv)
+  print(f"Wrote {count} device rows to {output_csv}")
+
+
+if __name__ == "__main__":
+  main()

@@ -67,9 +67,78 @@ function run_test {
     return 0
 }
 
+function run_discovery_test {
+    echo "Running DBO discovery CSV and precedence tests..."
+    TMP_DIR=$(mktemp -d) || return 1
+    trap 'rm -rf "$TMP_DIR"' RETURN
+
+    SITE_DIR="$TMP_DIR/site"
+    mkdir -p "$SITE_DIR/devices/AHU-1" "$SITE_DIR/devices/NO-NUM"
+    cat > "$SITE_DIR/cloud_iot_config.json" << 'EOF'
+{"registry_id": "TEST-REG"}
+EOF
+    cat > "$SITE_DIR/devices/AHU-1/metadata.json" << 'EOF'
+{"timestamp": "2026-01-01T00:00:00Z", "version": "1.5.3", "cloud": {"num_id": "123456"}}
+EOF
+    cat > "$SITE_DIR/devices/NO-NUM/metadata.json" << 'EOF'
+{"timestamp": "2026-01-01T00:00:00Z", "version": "1.5.3"}
+EOF
+
+    "$ROOT_DIR/bin/dbo_discovery" "$SITE_DIR" || return 1
+
+    EXPECTED_CSV="$TMP_DIR/expected.csv"
+    cat > "$EXPECTED_CSV" << 'EOF'
+device_registry_id,device_id,device_num_id,last_event_time
+TEST-REG,AHU-1,123456,null
+EOF
+    if ! diff -u "$EXPECTED_CSV" "$SITE_DIR/discovery.csv"; then
+        echo "Discovery CSV mismatch"
+        return 1
+    fi
+
+    # Verify explicit output_csv path argument.
+    CUSTOM_CSV="$TMP_DIR/custom/out.csv"
+    "$ROOT_DIR/bin/dbo_discovery" "$SITE_DIR" "$CUSTOM_CSV" || return 1
+    if ! diff -u "$EXPECTED_CSV" "$CUSTOM_CSV"; then
+        echo "Custom output discovery CSV mismatch"
+        return 1
+    fi
+
+    # Verify discovery.csv takes precedence over metadata.json cloud.num_id.
+    cp "$SITE_DIR/devices/AHU-1/metadata.json" "$TMP_DIR/ahu1_before.json"
+    cat > "$SITE_DIR/discovery.csv" << 'EOF'
+device_registry_id,device_id,device_num_id,last_event_time
+TEST-REG,OVERRIDE-1,123456,null
+EOF
+    cat > "$TMP_DIR/building_config.yaml" << 'EOF'
+aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee:
+  cloud_device_id: '123456'
+  code: CODE_IGNORED
+  type: HVAC/AHU
+EOF
+    "$ROOT_DIR/bin/dbo_merge" "$TMP_DIR/building_config.yaml" "$SITE_DIR" || return 1
+    if [ ! -f "$SITE_DIR/devices/OVERRIDE-1/metadata.json" ]; then
+        echo "Expected discovery.csv override device OVERRIDE-1 to be created"
+        return 1
+    fi
+    if [ -d "$SITE_DIR/devices/CODE_IGNORED" ]; then
+        echo "Unexpected duplicate device CODE_IGNORED created"
+        return 1
+    fi
+    if ! diff -u "$TMP_DIR/ahu1_before.json" "$SITE_DIR/devices/AHU-1/metadata.json"; then
+        echo "Expected AHU-1/metadata.json to remain unchanged under CSV override"
+        return 1
+    fi
+
+    echo "Test passed: dbo_discovery and precedence"
+    return 0
+}
+
 SITES=("$@")
+RUN_DISCOVERY=0
 if [ ${#SITES[@]} -eq 0 ]; then
     SITES=($ROOT_DIR/tests/dbo/*)
+    RUN_DISCOVERY=1
 fi
 
 RET=0
@@ -80,5 +149,9 @@ for SITE in "${SITES[@]}"; do
         echo "Skipping non-directory: $SITE"
     fi
 done
+
+if [ "$RUN_DISCOVERY" -eq 1 ]; then
+    run_discovery_test || RET=1
+fi
 
 exit $RET

@@ -1,0 +1,11 @@
+11111111-2222-3333-4444-555555555555:
+  cloud_device_id: '99000111222333'
+  code: EM36_VAV-1
+  translation:
+    zone_air_temperature_sensor:
+      present_value: points.zone_air_temperature_sensor.present_value
+      units:
+        key: pointset.points.zone_air_temperature_sensor.units
+        values:
+          degrees_celsius: degC
+  type: HVAC/VAV_SD_DSP

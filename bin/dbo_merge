@@ -20,6 +20,46 @@ def sanitize_id(id_str) -> str:
   s = re.sub(r"[^a-zA-Z0-9_-]+", "_", str(id_str))
   return s.strip("_")[:64]
 
+def load_metadata_num_id_map(site_model_dir: Path) -> dict:
+  """Loads cloud.num_id -> device_id map from existing device metadata."""
+  num_id_map = {}
+  devices_dir = site_model_dir / "devices"
+  if not devices_dir.is_dir():
+    return num_id_map
+
+  for device_dir in sorted(devices_dir.iterdir()):
+    if not device_dir.is_dir():
+      continue
+    metadata_path = device_dir / "metadata.json"
+    if not metadata_path.is_file():
+      continue
+    try:
+      with open(metadata_path, "r", encoding="utf-8") as f:
+        metadata = json.load(f)
+    except (OSError, json.JSONDecodeError) as err:
+      print(
+          f"Warning: skipping unreadable {metadata_path}: {err}",
+          file=sys.stderr,
+      )
+      continue
+    if not isinstance(metadata, dict):
+      continue
+    cloud = metadata.get("cloud")
+    if isinstance(cloud, dict):
+      num_id = cloud.get("num_id")
+      if isinstance(num_id, (str, int)) and not isinstance(num_id, bool):
+        clean_num_id = str(num_id).strip()
+        if clean_num_id:
+          if clean_num_id in num_id_map:
+            print(
+                f"Warning: duplicate cloud.num_id {clean_num_id} in "
+                f"{device_dir.name} (previously {num_id_map[clean_num_id]})",
+                file=sys.stderr,
+            )
+          num_id_map[clean_num_id] = device_dir.name
+  return num_id_map
+
+
 def load_csv_map(site_model_dir: Path):
   """Loads device_num_id -> device_id map from discovery.csv if it exists."""
   csv_map = {}
@@ -31,8 +71,8 @@ def load_csv_map(site_model_dir: Path):
     with open(csv_path, "r", encoding="utf-8") as f:
       reader = csv.DictReader(f)
       for row in reader:
-        num_id = row.get("device_num_id")
-        dev_id = row.get("device_id")
+        num_id = (row.get("device_num_id") or "").strip()
+        dev_id = (row.get("device_id") or "").strip()
         if num_id and dev_id:
           csv_map[num_id] = dev_id
   return csv_map
@@ -52,20 +92,23 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     devices_dir = site_model_dir / "devices"
     devices_dir.mkdir(parents=True, exist_ok=True)
 
-    csv_map = load_csv_map(site_model_dir)
+    num_id_map = load_metadata_num_id_map(site_model_dir)
+    num_id_map.update(load_csv_map(site_model_dir))
 
     # First pass: map every GUID to a unique ID
     guid_to_id = {}
     used_ids = set()
 
-    # Priority 1: CSV-mapped devices (don't sanitize these, assume they are
-    # authoritative)
+    # Priority 1: Existing metadata.json cloud.num_id and discovery.csv
+    # mappings (don't sanitize these, assume they are authoritative;
+    # discovery.csv takes precedence if both exist)
     for guid, entity in config.items():
       if guid == "CONFIG_METADATA" or not isinstance(entity, dict):
         continue
-      cloud_id = str(entity.get("cloud_device_id", ""))
-      if cloud_id in csv_map:
-        dev_id = csv_map[cloud_id]
+      raw_cloud_id = entity.get("cloud_device_id")
+      cloud_id = str(raw_cloud_id).strip() if raw_cloud_id is not None else ""
+      if cloud_id in num_id_map:
+        dev_id = num_id_map[cloud_id]
         guid_to_id[guid] = dev_id
         used_ids.add(dev_id)
 
