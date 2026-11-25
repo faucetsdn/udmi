@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.Date;
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -17,6 +18,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class GatewayConfig {
 
+    /**
+     * RFC 3339 UTC timestamp the configuration was generated
+     * 
+     */
+    @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 UTC timestamp the configuration was generated")
+    public Date timestamp;
+    /**
+     * Version of the UDMI schema
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("Version of the UDMI schema")
+    public String version;
     /**
      * An array of all the device IDs which are bound to the device
      * 
@@ -38,6 +53,8 @@ public class GatewayConfig {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.proxy_ids == null)? 0 :this.proxy_ids.hashCode()));
+        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         result = ((result* 31)+((this.target == null)? 0 :this.target.hashCode()));
         return result;
     }
@@ -51,7 +68,7 @@ public class GatewayConfig {
             return false;
         }
         GatewayConfig rhs = ((GatewayConfig) other);
-        return (((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
+        return (((((this.proxy_ids == rhs.proxy_ids)||((this.proxy_ids!= null)&&this.proxy_ids.equals(rhs.proxy_ids)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))))&&((this.target == rhs.target)||((this.target!= null)&&this.target.equals(rhs.target))));
     }
 
 }

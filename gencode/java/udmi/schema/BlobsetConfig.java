@@ -1,6 +1,7 @@
 
 package udmi.schema;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -21,6 +22,20 @@ import com.fasterxml.jackson.annotation.JsonValue;
 public class BlobsetConfig {
 
     /**
+     * RFC 3339 UTC timestamp the configuration was generated
+     * 
+     */
+    @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 UTC timestamp the configuration was generated")
+    public Date timestamp;
+    /**
+     * Version of the UDMI schema
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("Version of the UDMI schema")
+    public java.lang.String version;
+    /**
      * System Blobsets
      * <p>
      * Predefined system blobsets
@@ -36,7 +51,9 @@ public class BlobsetConfig {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.blobs == null)? 0 :this.blobs.hashCode()));
+        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.blobsets == null)? 0 :this.blobsets.hashCode()));
+        result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
     }
 
@@ -49,7 +66,7 @@ public class BlobsetConfig {
             return false;
         }
         BlobsetConfig rhs = ((BlobsetConfig) other);
-        return (((this.blobs == rhs.blobs)||((this.blobs!= null)&&this.blobs.equals(rhs.blobs)))&&((this.blobsets == rhs.blobsets)||((this.blobsets!= null)&&this.blobsets.equals(rhs.blobsets))));
+        return (((((this.blobs == rhs.blobs)||((this.blobs!= null)&&this.blobs.equals(rhs.blobs)))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.blobsets == rhs.blobsets)||((this.blobsets!= null)&&this.blobsets.equals(rhs.blobsets))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 

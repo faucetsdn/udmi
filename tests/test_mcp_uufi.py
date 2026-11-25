@@ -6,6 +6,7 @@ import sys
 import threading
 import time
 import unittest
+from unittest.mock import MagicMock, patch
 import urllib.error
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -32,15 +33,12 @@ class TestUUFIProvider(unittest.TestCase):
 
     def test_topic_formatting(self):
         """Verifies rigid segment and leading slash topic construction per uufi.md §2.2."""
-        # Common channel
         t1 = self.provider.get_topic("state", "udmi")
         self.assertEqual(t1, "/uufi/c/state/udmi")
 
-        # Device-scoped channel
         t2 = self.provider.get_topic("config", "pointset", registry_id="ZZ-TRI-FECTA", device_id="AHU-1")
         self.assertEqual(t2, "/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/config/pointset")
 
-        # Scoped channel with prefix
         provider_ns = UUFIProvider(
             project_spec="//mqtt/localhost:18833/my_prefix",
             prefix="my_prefix",
@@ -49,8 +47,28 @@ class TestUUFIProvider(unittest.TestCase):
         t3 = provider_ns.get_topic("model", "system", registry_id="ZZ-TRI-FECTA", device_id="AHU-1")
         self.assertEqual(t3, "/my_prefix/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/model/system")
 
+    def test_pubsub_uri_parsing_and_port_rejection(self):
+        """Verifies canonical pubsub:// parsing, :port prohibition, and //pubsub/ rejection."""
+        ps = UUFIProvider(project_spec="pubsub://app_ctrl@my-gcp-project/custom_uufi", auto_connect=False)
+        self.assertEqual(ps.transport, "pubsub")
+        self.assertEqual(ps.project_id, "my-gcp-project")
+        self.assertEqual(ps.pubsub_topic, "custom_uufi")
+        self.assertEqual(ps.pubsub_subscription, "custom_uufi+app_ctrl")
+        self.assertEqual(ps.principal, "app_ctrl@")
+
+        ps_default = UUFIProvider(project_spec="pubsub://my-gcp-project", auto_connect=False)
+        self.assertEqual(ps_default.pubsub_topic, "udmi_uufi")
+        self.assertEqual(ps_default.pubsub_subscription, "udmi_uufi+unknown")
+        self.assertEqual(ps_default.principal, "unknown@")
+
+        with self.assertRaises(ValueError):
+            UUFIProvider(project_spec="//pubsub/my-gcp-project/dev_+operator", auto_connect=False)
+
+        with self.assertRaises(ValueError):
+            UUFIProvider(project_spec="pubsub://user@my-gcp-project:8085/udmi_uufi", auto_connect=False)
+
     def test_envelope_creation(self):
-        """Verifies mandatory envelope fields and inner payload metadata per uufi.md §4, §8.4."""
+        """Verifies mandatory envelope fields, null query payloads, and string sentinels."""
         env = self.provider.create_envelope(
             sub_type="config",
             sub_folder="system",
@@ -64,11 +82,32 @@ class TestUUFIProvider(unittest.TestCase):
         self.assertEqual(env["deviceRegistryId"], "ZZ-TRI-FECTA")
         self.assertEqual(env["deviceId"], "AHU-1")
         self.assertEqual(env["projectId"], "localhost")
+        self.assertEqual(env["principal"], self.provider.principal)
         self.assertTrue(env["transactionId"].startswith("UUFI:"))
         self.assertTrue(env["publishTime"].endswith("Z"))
-        self.assertEqual(env["payload"]["version"], "1.5.2")
+        self.assertEqual(env["payload"]["version"], "1.5.7")
         self.assertTrue(env["payload"]["timestamp"].endswith("Z"))
         self.assertEqual(env["payload"]["software"]["system"], "2.0.0")
+
+        # Null query payload must remain None
+        q_env = self.provider.create_envelope(
+            sub_type="state",
+            sub_folder="pointset",
+            registry_id="ZZ-TRI-FECTA",
+            device_id="AHU-1",
+            inner_payload=None,
+        )
+        self.assertIsNone(q_env["payload"])
+
+        # String sentinel must not have version/timestamp injected
+        s_env = self.provider.create_envelope(
+            sub_type="config",
+            sub_folder="pointset",
+            registry_id="ZZ-TRI-FECTA",
+            device_id="AHU-1",
+            inner_payload="delete",
+        )
+        self.assertEqual(s_env["payload"], "delete")
 
     def test_publish_config_records_publication(self):
         """Verifies publish_config constructs compliant message and records it."""
@@ -76,7 +115,7 @@ class TestUUFIProvider(unittest.TestCase):
             registry_id="ZZ-TRI-FECTA",
             device_id="AHU-22",
             sub_folder="blobset",
-            payload={"blobset": {"blobs": {}}},
+            payload={"blobs": {}},
         )
         self.assertEqual(res["status"], "DISPATCHED")
         self.assertEqual(res["topic"], "/uufi/r/ZZ-TRI-FECTA/d/AHU-22/c/config/blobset")
@@ -84,7 +123,178 @@ class TestUUFIProvider(unittest.TestCase):
         msgs = self.provider.get_published_messages()
         self.assertEqual(len(msgs), 1)
         self.assertEqual(msgs[0]["topic"], "/uufi/r/ZZ-TRI-FECTA/d/AHU-22/c/config/blobset")
-        self.assertEqual(msgs[0]["envelope"]["payload"]["version"], "1.5.2")
+        self.assertEqual(msgs[0]["envelope"]["payload"]["version"], "1.5.7")
+
+    def test_publish_config_wait_for_ack_progress_and_success(self):
+        """Verifies wait_for_ack ignores self-echo, records level<500 progress, resolves on Ack."""
+        def _simulate_ack_sequence():
+            time.sleep(0.05)
+            msgs = self.provider.get_published_messages()
+            req_env = msgs[-1]["envelope"]
+            tx_id = req_env["transactionId"]
+            topic = msgs[-1]["topic"]
+
+            # 1. Self-echo (non-udmis source) must be ignored
+            self.provider.inject_inbound_message(topic, req_env)
+
+            # 2. Interim progress (level 200) must keep waiter open
+            self.provider.inject_inbound_message(
+                topic,
+                {
+                    "subType": "config",
+                    "subFolder": "pointset",
+                    "deviceRegistryId": "ZZ-TRI-FECTA",
+                    "deviceId": "AHU-22",
+                    "transactionId": tx_id,
+                    "source": "udmis",
+                    "principal": self.provider.principal,
+                    "payload": {
+                        "version": "1.5.7",
+                        "timestamp": "2026-11-24T19:00:01Z",
+                        "control": {
+                            "status": {
+                                "message": "Applying config step 1/2",
+                                "category": "system.config.receive",
+                                "level": 200,
+                                "timestamp": "2026-11-24T19:00:01Z",
+                            }
+                        },
+                    },
+                },
+            )
+            time.sleep(0.05)
+
+            # 3. Final Success Ack clears waiter
+            self.provider.inject_inbound_message(
+                topic,
+                {
+                    "subType": "config",
+                    "subFolder": "pointset",
+                    "deviceRegistryId": "ZZ-TRI-FECTA",
+                    "deviceId": "AHU-22",
+                    "transactionId": tx_id,
+                    "source": "udmis",
+                    "principal": self.provider.principal,
+                    "payload": {
+                        "version": "1.5.7",
+                        "timestamp": "2026-11-24T19:00:02Z",
+                        "points": {"temp": {"set_value": 22.0}},
+                    },
+                },
+            )
+
+        worker = threading.Thread(target=_simulate_ack_sequence)
+        worker.start()
+
+        res = self.provider.publish_config(
+            registry_id="ZZ-TRI-FECTA",
+            device_id="AHU-22",
+            sub_folder="pointset",
+            payload={"points": {"temp": {"set_value": 22.0}}},
+            wait_for_ack=True,
+            timeout_sec=2.0,
+        )
+        worker.join()
+
+        self.assertEqual(res["status"], "ACKNOWLEDGED")
+        self.assertEqual(len(res["progress"]), 1)
+        self.assertEqual(res["progress"][0]["control"]["status"]["level"], 200)
+        self.assertEqual(res["ack"]["points"]["temp"]["set_value"], 22.0)
+
+    def test_publish_config_wait_for_ack_control_error_raises(self):
+        """Verifies terminal control reply (level >= 500) raises RuntimeError."""
+        def _simulate_error():
+            time.sleep(0.05)
+            msgs = self.provider.get_published_messages()
+            req_env = msgs[-1]["envelope"]
+            self.provider.inject_inbound_message(
+                msgs[-1]["topic"],
+                {
+                    "subType": "config",
+                    "subFolder": "pointset",
+                    "deviceRegistryId": "ZZ-TRI-FECTA",
+                    "deviceId": "AHU-22",
+                    "transactionId": req_env["transactionId"],
+                    "source": "udmis",
+                    "principal": self.provider.principal,
+                    "payload": {
+                        "version": "1.5.7",
+                        "timestamp": "2026-11-24T19:00:01Z",
+                        "control": {
+                            "status": {
+                                "message": "Unsupported string sentinel",
+                                "category": "system.config.parse",
+                                "level": 500,
+                                "timestamp": "2026-11-24T19:00:01Z",
+                            }
+                        },
+                    },
+                },
+            )
+
+        worker = threading.Thread(target=_simulate_error)
+        worker.start()
+
+        with self.assertRaises(RuntimeError) as ctx:
+            self.provider.publish_config(
+                registry_id="ZZ-TRI-FECTA",
+                device_id="AHU-22",
+                sub_folder="pointset",
+                payload="unknown_sentinel",
+                wait_for_ack=True,
+                timeout_sec=2.0,
+            )
+        worker.join()
+        self.assertIn("Unsupported string sentinel", str(ctx.exception))
+        # Verify string sentinel was published verbatim without dict wrapping
+        self.assertEqual(self.provider.get_published_messages()[-1]["envelope"]["payload"], "unknown_sentinel")
+
+    def test_pubsub_unwrapped_query_and_sentinel_ack(self):
+        """Verifies PubSub unwrapped publish/receive, principal filtering, and string sentinel replies."""
+        ps = UUFIProvider(project_spec="pubsub://tester@my-proj/udmi_uufi", auto_connect=False)
+
+        def _simulate_ps_reply():
+            time.sleep(0.05)
+            rec = ps.get_published_messages()[-1]
+            self.assertEqual(rec["data"], b"null")
+            self.assertEqual(rec["attributes"]["subType"], "state")
+            self.assertEqual(rec["attributes"]["subFolder"], "blobset")
+            self.assertEqual(rec["attributes"]["principal"], "tester@")
+            tx_id = rec["attributes"]["transactionId"]
+
+            # Different principal should be ignored
+            ps.inject_inbound_pubsub_message(
+                {
+                    "subType": "state",
+                    "subFolder": "blobset",
+                    "deviceRegistryId": "ZZ-TRI-FECTA",
+                    "deviceId": "AHU-99",
+                    "transactionId": tx_id,
+                    "source": "udmis",
+                    "principal": "other@",
+                },
+                {"wrong": True},
+            )
+
+            # Matching principal with string sentinel "missing"
+            ps.inject_inbound_pubsub_message(
+                {
+                    "subType": "state",
+                    "subFolder": "blobset",
+                    "deviceRegistryId": "ZZ-TRI-FECTA",
+                    "deviceId": "AHU-99",
+                    "transactionId": tx_id,
+                    "source": "pubsub+udmis",
+                    "principal": "tester@",
+                },
+                "missing",
+            )
+
+        worker = threading.Thread(target=_simulate_ps_reply)
+        worker.start()
+        reply = ps.query_state("ZZ-TRI-FECTA", "AHU-99", sub_folder="blobset", timeout_sec=2.0)
+        worker.join()
+        self.assertEqual(reply, "missing")
 
     def test_update_system_model(self):
         """Verifies update_system_model publishes on model/system."""
@@ -98,7 +308,6 @@ class TestUUFIProvider(unittest.TestCase):
 
     def test_inbound_event_buffering_and_polling(self):
         """Verifies event ring buffer, cursor incrementation, and filtering."""
-        # Inject state message
         self.provider.inject_inbound_message(
             "/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/state/system",
             {
@@ -109,7 +318,6 @@ class TestUUFIProvider(unittest.TestCase):
                 "payload": {"make": "Acme", "model": "Ctrl"},
             },
         )
-        # Inject alert event
         self.provider.inject_inbound_message(
             "/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/events/status",
             {
@@ -125,12 +333,10 @@ class TestUUFIProvider(unittest.TestCase):
         self.assertEqual(len(poll1["events"]), 2)
         self.assertEqual(poll1["cursor"], 2)
 
-        # Poll with sub_folders filter
         poll_status = self.provider.poll_events(cursor=0, sub_folders=["status"])
         self.assertEqual(len(poll_status["events"]), 1)
         self.assertEqual(poll_status["events"][0]["subFolder"], "status")
 
-        # Poll since cursor 2 returns nothing new
         poll2 = self.provider.poll_events(cursor=2)
         self.assertEqual(len(poll2["events"]), 0)
 
@@ -147,8 +353,9 @@ class TestUUFIProvider(unittest.TestCase):
                     "subFolder": "udmi",
                     "transactionId": tx_id,
                     "source": "udmis",
+                    "principal": self.provider.principal,
                     "payload": {
-                        "version": "1.5.2",
+                        "version": "1.5.7",
                         "setup": {
                             "deviceRegistryId": "DISCOVERED-REG",
                             "functions_ver": 9,
@@ -172,22 +379,31 @@ class TestUUFIProvider(unittest.TestCase):
         self.assertEqual(self.provider.handshake_status, "ACTIVE")
 
     def test_query_state_correlated_response(self):
-        """Verifies query_state publishes query and waits for correlated reply."""
+        """Verifies query_state publishes single-channel null-payload query on state/<subFolder>."""
         def _simulate_state_response():
             time.sleep(0.05)
             msgs = self.provider.get_published_messages()
             if msgs:
-                req_env = msgs[-1]["envelope"]
+                req_rec = msgs[-1]
+                self.assertEqual(
+                    req_rec["topic"], "/uufi/r/ZZ-TRI-FECTA/d/AHU-22/c/state/blobset"
+                )
+                req_env = req_rec["envelope"]
+                self.assertEqual(req_env["subType"], "state")
+                self.assertEqual(req_env["subFolder"], "blobset")
+                self.assertIsNone(req_env["payload"])
                 tx_id = req_env["transactionId"]
                 state_reply = {
                     "subType": "state",
                     "subFolder": "blobset",
                     "transactionId": tx_id,
+                    "source": "udmis",
+                    "principal": self.provider.principal,
                     "deviceRegistryId": "ZZ-TRI-FECTA",
                     "deviceId": "AHU-22",
                     "payload": {
-                        "version": "1.5.2",
-                        "blobset": {"blobs": {"system": {"phase": "applied"}}},
+                        "version": "1.5.7",
+                        "blobs": {"system": {"phase": "applied"}},
                     },
                 }
                 self.provider.inject_inbound_message(
@@ -205,25 +421,34 @@ class TestUUFIProvider(unittest.TestCase):
         )
         worker.join()
 
-        self.assertEqual(reply["blobset"]["blobs"]["system"]["phase"], "applied")
+        self.assertEqual(reply["blobs"]["system"]["phase"], "applied")
 
     def test_query_system_model_correlated_response(self):
-        """Verifies query_system_model publishes query and waits for correlated model reply."""
+        """Verifies query_system_model publishes single-channel null-payload query on model/system."""
         def _simulate_model_response():
             time.sleep(0.05)
             msgs = self.provider.get_published_messages()
             if msgs:
-                req_env = msgs[-1]["envelope"]
+                req_rec = msgs[-1]
+                self.assertEqual(
+                    req_rec["topic"], "/uufi/r/ZZ-TRI-FECTA/d/AHU-22/c/model/system"
+                )
+                req_env = req_rec["envelope"]
+                self.assertEqual(req_env["subType"], "model")
+                self.assertEqual(req_env["subFolder"], "system")
+                self.assertIsNone(req_env["payload"])
                 tx_id = req_env["transactionId"]
                 model_reply = {
                     "subType": "model",
                     "subFolder": "system",
                     "transactionId": tx_id,
+                    "source": "udmis",
+                    "principal": self.provider.principal,
                     "deviceRegistryId": "ZZ-TRI-FECTA",
                     "deviceId": "AHU-22",
                     "payload": {
-                        "version": "1.5.2",
-                        "system": {"hardware": {"make": "Bosch", "model": "Ctrl-X"}},
+                        "version": "1.5.7",
+                        "hardware": {"make": "Bosch", "model": "Ctrl-X"},
                     },
                 }
                 self.provider.inject_inbound_message(
@@ -240,7 +465,160 @@ class TestUUFIProvider(unittest.TestCase):
         )
         worker.join()
 
-        self.assertEqual(reply["system"]["hardware"]["make"], "Bosch")
+        self.assertEqual(reply["hardware"]["make"], "Bosch")
+
+    def test_mqtt_inbound_filters_other_principal(self):
+        """Verifies MQTT inbound messages addressed to another principal are ignored."""
+        self.provider.inject_inbound_message(
+            "/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/config/pointset",
+            {
+                "subType": "config",
+                "subFolder": "pointset",
+                "deviceRegistryId": "ZZ-TRI-FECTA",
+                "deviceId": "AHU-1",
+                "source": "udmis",
+                "principal": "other-client",
+                "transactionId": "UUFI:other-tx",
+                "payload": {"points": {"temp": {"set_value": 10}}},
+            },
+        )
+        polled = self.provider.poll_events(cursor=0)
+        self.assertEqual(
+            len(polled["events"]),
+            0,
+            "MQTT inbound messages for a different principal must not be buffered",
+        )
+
+    def test_wait_for_ack_ignores_wrong_channel_same_transaction_id(self):
+        """Verifies pending Ack waiter requires matching subType/subFolder channel."""
+        def _simulate_cross_channel_then_ack():
+            time.sleep(0.05)
+            rec = self.provider.get_published_messages()[-1]
+            tx_id = rec["envelope"]["transactionId"]
+
+            # Unrelated channel carrying same transactionId must not resolve config/pointset waiter
+            self.provider.inject_inbound_message(
+                "/uufi/r/ZZ-TRI-FECTA/d/AHU-22/c/events/system",
+                {
+                    "subType": "events",
+                    "subFolder": "system",
+                    "deviceRegistryId": "ZZ-TRI-FECTA",
+                    "deviceId": "AHU-22",
+                    "transactionId": tx_id,
+                    "source": "udmis",
+                    "principal": self.provider.principal,
+                    "payload": {"wrong_channel": True},
+                },
+            )
+            time.sleep(0.05)
+
+            # Matching config/pointset Ack
+            self.provider.inject_inbound_message(
+                rec["topic"],
+                {
+                    "subType": "config",
+                    "subFolder": "pointset",
+                    "deviceRegistryId": "ZZ-TRI-FECTA",
+                    "deviceId": "AHU-22",
+                    "transactionId": tx_id,
+                    "source": "udmis",
+                    "principal": self.provider.principal,
+                    "payload": {"points": {"temp": {"set_value": 24.0}}},
+                },
+            )
+
+        worker = threading.Thread(target=_simulate_cross_channel_then_ack)
+        worker.start()
+        res = self.provider.publish_config(
+            registry_id="ZZ-TRI-FECTA",
+            device_id="AHU-22",
+            sub_folder="pointset",
+            payload={"points": {"temp": {"set_value": 24.0}}},
+            wait_for_ack=True,
+            timeout_sec=1.0,
+        )
+        worker.join()
+        self.assertNotIn("wrong_channel", res["ack"])
+        self.assertEqual(res["ack"]["points"]["temp"]["set_value"], 24.0)
+
+    def test_control_reply_with_null_level_raises_runtime_error(self):
+        """Verifies control.status with level=None fails cleanly instead of crashing _on_message."""
+        worker_exc = []
+
+        def _simulate_null_level():
+            try:
+                time.sleep(0.05)
+                rec = self.provider.get_published_messages()[-1]
+                self.provider.inject_inbound_message(
+                    rec["topic"],
+                    {
+                        "subType": "config",
+                        "subFolder": "pointset",
+                        "deviceRegistryId": "ZZ-TRI-FECTA",
+                        "deviceId": "AHU-22",
+                        "transactionId": rec["envelope"]["transactionId"],
+                        "source": "udmis",
+                        "principal": self.provider.principal,
+                        "payload": {
+                            "version": "1.5.7",
+                            "timestamp": "2026-11-24T19:00:01Z",
+                            "control": {
+                                "status": {
+                                    "message": "Null level control reply",
+                                    "category": "system.config.parse",
+                                    "level": None,
+                                }
+                            },
+                        },
+                    },
+                )
+            except Exception as ex:
+                worker_exc.append(ex)
+
+        worker = threading.Thread(target=_simulate_null_level)
+        worker.start()
+        with self.assertRaises(RuntimeError):
+            self.provider.publish_config(
+                registry_id="ZZ-TRI-FECTA",
+                device_id="AHU-22",
+                sub_folder="pointset",
+                payload={"points": {}},
+                wait_for_ack=True,
+                timeout_sec=0.5,
+            )
+        worker.join()
+        self.assertEqual(worker_exc, [], f"Inbound handler raised unexpected error: {worker_exc}")
+
+    def test_inbound_null_payload_not_buffered(self):
+        """Verifies inbound messages with null payload are dropped rather than buffered as events."""
+        self.provider.inject_inbound_message(
+            "/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/state/pointset",
+            {
+                "subType": "state",
+                "subFolder": "pointset",
+                "deviceRegistryId": "ZZ-TRI-FECTA",
+                "deviceId": "AHU-1",
+                "source": "udmis",
+                "payload": None,
+            },
+        )
+        polled = self.provider.poll_events(cursor=0)
+        self.assertEqual(len(polled["events"]), 0, "Null-payload messages must not be buffered")
+
+    def test_published_messages_history_is_bounded(self):
+        """Verifies outgoing publication history is bounded in long-running server sessions."""
+        for i in range(2100):
+            self.provider.publish_config(
+                registry_id="ZZ-TRI-FECTA",
+                device_id="AHU-1",
+                sub_folder="pointset",
+                payload={"points": {"temp": {"set_value": i}}},
+            )
+        self.assertLessEqual(
+            len(self.provider.get_published_messages()),
+            2000,
+            "_published_messages must be bounded to prevent unbounded memory growth",
+        )
 
 
 class TestUUFIJsonRpcProtocol(unittest.TestCase):
@@ -329,7 +707,6 @@ class TestUUFIHttpServerAndClient(unittest.TestCase):
         cls.server_thread.start()
 
         cls.client = UUFIClient(port=cls.test_port)
-        # Wait for server readiness
         for _ in range(30):
             try:
                 h = cls.client.health()
@@ -368,6 +745,52 @@ class TestUUFIHttpServerAndClient(unittest.TestCase):
         events_resp = self.client.poll_events(cursor=0)
         self.assertIn("events", events_resp)
         self.assertTrue(len(events_resp["events"]) >= 1)
+
+    def test_client_http_timeout_accommodates_wait_for_ack_timeout(self):
+        """Verifies UUFIClient HTTP timeout does not prematurely abort wait_for_ack calls."""
+        client = UUFIClient(port=self.test_port, timeout=5.0)
+        fake_resp = MagicMock()
+        fake_resp.read.return_value = json.dumps(
+            {"jsonrpc": "2.0", "id": 1, "result": {"status": "ACKNOWLEDGED"}}
+        ).encode("utf-8")
+        fake_resp.__enter__.return_value = fake_resp
+
+        with patch("urllib.request.urlopen", return_value=fake_resp) as mock_open:
+            client.publish_config(
+                registry_id="ZZ-TRI-FECTA",
+                device_id="AHU-99",
+                sub_folder="pointset",
+                payload={"points": {}},
+                wait_for_ack=True,
+                timeout_sec=20.0,
+            )
+            self.assertGreaterEqual(
+                mock_open.call_args.kwargs.get("timeout", 0.0),
+                20.0,
+                "HTTP socket timeout must exceed wait_for_ack timeout_sec",
+            )
+
+    def test_cli_publish_config_disconnects_on_ack_error(self):
+        """Verifies CLI publish-config disconnects provider even when wait_for_ack raises."""
+        import mcp.uufi.server as uufi_server
+
+        mock_provider = MagicMock()
+        mock_provider.publish_config.side_effect = TimeoutError("Config ack timed out")
+        argv = [
+            "server.py",
+            "publish-config",
+            "ZZ-TRI-FECTA",
+            "AHU-1",
+            "pointset",
+            '{"points": {}}',
+            "--wait-for-ack",
+        ]
+        with patch.object(sys, "argv", argv), patch.object(
+            uufi_server, "UUFIProvider", return_value=mock_provider
+        ):
+            with self.assertRaises((TimeoutError, SystemExit)):
+                uufi_server.main()
+        mock_provider.disconnect.assert_called_once()
 
 
 if __name__ == "__main__":

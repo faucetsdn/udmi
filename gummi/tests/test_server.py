@@ -233,6 +233,96 @@ class TestGummiServer:
             "ZZ-TRI-FECTA", "AHU-1", "system", {"software": {"system": "1.0.0"}}
         )
 
+    def test_uufi_control_error_on_state_and_progress_alert_filtering(self):
+        """Verifies state/* control errors emit alerts (not device_state) and level<500 progress does not alert."""
+        import queue as queue_mod
+        from unittest.mock import MagicMock
+
+        poll_batches = [
+            {
+                "cursor": 2,
+                "events": [
+                    {
+                        "id": 1,
+                        "timestamp": "2026-11-24T19:00:01Z",
+                        "topic": "/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/state/pointset",
+                        "subType": "state",
+                        "subFolder": "pointset",
+                        "deviceRegistryId": "ZZ-TRI-FECTA",
+                        "deviceId": "AHU-1",
+                        "payload": {
+                            "version": "1.5.7",
+                            "timestamp": "2026-11-24T19:00:01Z",
+                            "control": {
+                                "status": {
+                                    "message": "State query failed",
+                                    "category": "validation.device.receive",
+                                    "level": 500,
+                                    "timestamp": "2026-11-24T19:00:01Z",
+                                }
+                            },
+                        },
+                    },
+                    {
+                        "id": 2,
+                        "timestamp": "2026-11-24T19:00:02Z",
+                        "topic": "/uufi/r/ZZ-TRI-FECTA/d/AHU-1/c/config/pointset",
+                        "subType": "config",
+                        "subFolder": "pointset",
+                        "deviceRegistryId": "ZZ-TRI-FECTA",
+                        "deviceId": "AHU-1",
+                        "payload": {
+                            "version": "1.5.7",
+                            "timestamp": "2026-11-24T19:00:02Z",
+                            "control": {
+                                "status": {
+                                    "message": "Applying config step 1/2",
+                                    "category": "system.config.receive",
+                                    "level": 200,
+                                    "timestamp": "2026-11-24T19:00:02Z",
+                                }
+                            },
+                        },
+                    },
+                ],
+            }
+        ]
+
+        polled_once = threading.Event()
+
+        def _fake_poll(cursor=0, timeout_sec=0.5):
+            if poll_batches:
+                polled_once.set()
+                return poll_batches.pop(0)
+            time.sleep(0.05)
+            return {"cursor": cursor, "events": []}
+
+        mock_uufi = MagicMock()
+        mock_uufi.poll_events.side_effect = _fake_poll
+        mock_uufi.health.return_value = {"status": "UP", "broker": "127.0.0.1:1883"}
+
+        client = GummiUUFIClient(uufi_client=mock_uufi)
+        sub_q = client.register_sse_subscriber()
+        client.start()
+        try:
+            assert polled_once.wait(timeout=2.0)
+            time.sleep(0.1)
+        finally:
+            client.stop()
+
+        emitted = []
+        while True:
+            try:
+                emitted.append(sub_q.get_nowait())
+            except queue_mod.Empty:
+                break
+
+        alert_msgs = [m for m in emitted if m.startswith("event: alert\n")]
+        state_msgs = [m for m in emitted if m.startswith("event: device_state\n")]
+        assert len(state_msgs) == 0, f"Control reply on state channel must not emit device_state: {state_msgs}"
+        assert len(alert_msgs) == 1, f"Expected exactly 1 alert (level 500 error only), got: {alert_msgs}"
+        assert "State query failed" in alert_msgs[0]
+
     def test_mock_mode_disabled_health_and_query_failures(self):
         """Verifies that with mock_mode=False and unavailable backends, GummiDB fails fast."""
         from mcp.butler.client import ButlerClient

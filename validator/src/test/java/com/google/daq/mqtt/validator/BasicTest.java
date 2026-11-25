@@ -16,6 +16,7 @@ import com.google.daq.mqtt.validator.Validator.MessageBundle;
 import com.google.udmi.util.SiteModel;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +27,8 @@ import udmi.schema.CloudModel.ModelOperation;
 import udmi.schema.Config;
 import udmi.schema.DeviceValidationEvents;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.Entry;
+import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetEvents;
 import udmi.schema.PointsetEvents;
@@ -34,6 +37,8 @@ import udmi.schema.PointsetSummary;
 import udmi.schema.State;
 import udmi.schema.SystemModel;
 import udmi.schema.SystemState;
+import udmi.schema.UufiControl;
+import udmi.schema.UufiControlBlock;
 import udmi.schema.ValidationEvents;
 import udmi.schema.ValidationState;
 
@@ -388,6 +393,71 @@ public class BasicTest extends TestBase {
         POINTSET_SUBFOLDER);
     assertTrue("Reported missing point flagged in extra",
         invalidResult.pointset.extra.contains("unimplemented_sensor"));
+  }
+
+  @Test
+  public void invalidUufiControlOnConfigChannelFlagged() {
+    MessageBundle bundle = getMessageBundle(CONFIG_SUBTYPE, POINTSET_SUBFOLDER, new HashMap<>());
+    bundle.attributes.put("source", "udmis");
+    bundle.attributes.put("principal", "client-1");
+    bundle.message.put("version", TestCommon.UDMI_VERSION);
+    bundle.message.put("control", Map.of("unexpected_field", true));
+
+    validator.validateMessage(bundle);
+
+    ReportingDevice device = validator.getReportingDevices().get(TestCommon.DEVICE_ID);
+    assertTrue("Invalid control_uufi on config channel must be validated and flagged",
+        device.hasErrors());
+  }
+
+  @Test
+  public void malformedQuotedStringRejectedAsUufiSentinel() {
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, new HashMap<>());
+    bundle.attributes.put("source", "udmis");
+    bundle.attributes.put("gatewayId", "uufi");
+    bundle.message = null;
+    bundle.rawMessage = "\"foo\" \"bar\"";
+
+    validator.validateMessage(bundle);
+
+    ValidationState report = getValidationReport();
+    assertEquals("Syntactically invalid JSON string must not be accepted as UUFI sentinel",
+        1, report.summary.error_devices.size());
+  }
+
+  @Test
+  public void reflectedNonUufiEmptyStringWithPrincipalNotAcceptedAsSentinel() {
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, new HashMap<>());
+    bundle.attributes.put("principal", "instance-abc");
+    bundle.message = null;
+    bundle.rawMessage = "\"\"";
+
+    validator.validateMessage(bundle);
+
+    ValidationState report = getValidationReport();
+    assertEquals("Non-UUFI message with principal and empty JSON string must fail validation",
+        1, report.summary.error_devices.size());
+  }
+
+  @Test
+  public void nonUufiDeviceMessageWithControlKeyNotReclassifiedAsUufiControl() {
+    UufiControl spoofedControl = new UufiControl();
+    spoofedControl.timestamp = new Date();
+    spoofedControl.version = TestCommon.UDMI_VERSION;
+    spoofedControl.control = new UufiControlBlock();
+    spoofedControl.control.status = new Entry();
+    spoofedControl.control.status.message = "Not a pointset event";
+    spoofedControl.control.status.category = Category.SYSTEM_CONFIG_PARSE;
+    spoofedControl.control.status.level = Level.INFO.value();
+    spoofedControl.control.status.timestamp = new Date();
+
+    MessageBundle bundle = getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, spoofedControl);
+
+    validator.validateMessage(bundle);
+
+    ValidationState report = getValidationReport();
+    assertEquals("Device events/pointset containing 'control' must not pass as control_uufi",
+        1, report.summary.error_devices.size());
   }
 
 }

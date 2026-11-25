@@ -4,6 +4,8 @@ AHUs
 APDU
 APIs
 ARP
+Ack
+Acks
 Agentic
 Alarmset
 Auth
@@ -79,6 +81,7 @@ MQTTS
 MacOS
 Mod10k
 Mosquitto
+NOP
 NPDU
 Nonces
 OEM

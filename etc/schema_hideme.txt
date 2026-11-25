@@ -25,9 +25,15 @@ state_localnet.json .version
 state_system.json .timestamp
 state_system.json .version
 
+state_blobset.json .timestamp
+state_blobset.json .version
+
 state.json .upgraded_from
 state_system.json .upgraded_from
 state_pointset.json .upgraded_from
+
+model_system.json .timestamp
+model_system.json .version
 
 model_cloud.json .timestamp
 model_cloud.json .version

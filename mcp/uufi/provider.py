@@ -1,7 +1,7 @@
 """UUFI Data Provider for UDMI MCP Server.
 
-Encapsulates external-facing messaging transport (MQTT/UUFI), Layer 1 service handshakes,
-device configuration mutations, system model operations, live state queries, and
+Encapsulates external-facing messaging transport (MQTT/UUFI and PubSub/UUFI), Layer 1 service
+handshakes, device configuration mutations, system model operations, live state queries, and
 event stream ingress according to the authoritative UUFI specification (docs/specs/uufi.md).
 """
 
@@ -13,7 +13,8 @@ import socket
 import sys
 import threading
 import time
-from typing import Any, Deque, Dict, List, Optional, Tuple
+from typing import Any, Deque, Dict, List, Optional, Tuple, Union
+import urllib.parse
 import uuid
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -25,6 +26,12 @@ if os.path.exists(common_py) and common_py not in sys.path:
 import paho.mqtt.client as mqtt
 from udmi.common.project_spec import parse_project_spec
 from udmi.common.site_model import find_ca_file, find_cert_file
+
+SYSTEM_SOURCES = ("udmis", "pubsub+udmis")
+DEFAULT_PUBSUB_TOPIC = "udmi_uufi"
+DEFAULT_UDMI_VERSION = "1.5.7"
+
+
 class UUFIProvider:
     """Provider encapsulating UUFI messaging, handshakes, queries, and event streams."""
 
@@ -44,16 +51,82 @@ class UUFIProvider:
         self.handshake_status = "UNINITIALIZED"
         self.negotiated_functions_ver = 0
 
-        # Parse project specification
+        self.transport = "mqtt"
+        self.host = "127.0.0.1"
+        self.port = 1883
+        self.pubsub_topic = DEFAULT_PUBSUB_TOPIC
+        self.pubsub_subscription: Optional[str] = None
+
+        self._parse_transport_config(client_id=client_id, prefix=prefix)
+
+        # Inbound event ring buffer and subscription management
+        self._lock = threading.RLock()
+        self._event_condition = threading.Condition(self._lock)
+        self._event_counter = 0
+        self._event_buffer: Deque[Dict[str, Any]] = deque(maxlen=2000)
+
+        # Correlation waiters for request-reply queries, handshakes, and config acks
+        self._pending_responses: Dict[str, Dict[str, Any]] = {}
+
+        # Outgoing publication history (bounded to prevent unbounded growth in long-running servers)
+        self._published_messages: Deque[Dict[str, Any]] = deque(maxlen=2000)
+
+        # Background MQTT / PubSub state
+        self._mqtt_client: Optional[Any] = None
+        self._pubsub_publisher: Optional[Any] = None
+        self._pubsub_subscriber: Optional[Any] = None
+        self._pubsub_topic_path: Optional[str] = None
+        self._pubsub_sub_path: Optional[str] = None
+        self._streaming_pull_future: Optional[Any] = None
+        self.is_connected = False
+        self._running = False
+        self._thread: Optional[threading.Thread] = None
+
+        if auto_connect:
+            self.connect()
+
+    def _parse_transport_config(
+        self,
+        client_id: Optional[str],
+        prefix: Optional[str],
+    ) -> None:
+        spec = self.project_spec.strip()
+        if spec.startswith("pubsub://"):
+            parsed = urllib.parse.urlparse(spec)
+            host_part = parsed.netloc.split("@")[-1]
+            if parsed.port is not None or ":" in host_part:
+                raise ValueError(
+                    f"Port specification is prohibited for pubsub:// transport: {spec}"
+                )
+            if not parsed.hostname:
+                raise ValueError(f"Missing GCP project ID in pubsub:// URI: {spec}")
+            self.transport = "pubsub"
+            self.project_id = parsed.hostname
+            self.prefix = prefix if prefix is not None else ""
+            user = parsed.username or client_id or "unknown"
+            path_segs = [seg for seg in parsed.path.split("/") if seg]
+            self.pubsub_topic = path_segs[0] if path_segs else DEFAULT_PUBSUB_TOPIC
+            self.pubsub_subscription = f"{self.pubsub_topic}+{user}"
+            self.client_id = user
+            self.principal = f"{user}@"
+            return
+
         spec_info = (
-            parse_project_spec(self.project_spec)
+            parse_project_spec(spec)
             if parse_project_spec
-            else {"project": "vibrant", "port": None, "prefix": ""}
+            else {"provider": "mqtt", "project": "vibrant", "port": None, "prefix": "", "user": None}
         )
+        if spec_info.get("provider") == "pubsub":
+            raise ValueError(
+                f"Non-canonical //pubsub/ spec is not supported; "
+                f"use pubsub://[user@]project[/topic]: {spec}"
+            )
+
+        # Default MQTT / MQTTS transport
+        self.transport = "mqtt"
         self.project_id = spec_info.get("project") or "vibrant"
         self.prefix = prefix if prefix is not None else (spec_info.get("prefix") or "")
 
-        # Resolve host and port
         env_port = os.environ.get("MQTT_PORT")
         spec_port = spec_info.get("port")
         self.port = int(spec_port or env_port or 1883)
@@ -68,27 +141,11 @@ class UUFIProvider:
         prefix_part = f"/{self.prefix}" if self.prefix else ""
         reg_part = f"/{self.active_registry}" if self.active_registry else ""
         self.client_id = f"{prefix_part}{reg_part}/{base_name}"
+        self.principal = self.client_id
 
-        # Inbound event ring buffer and subscription management
-        self._lock = threading.RLock()
-        self._event_condition = threading.Condition(self._lock)
-        self._event_counter = 0
-        self._event_buffer: Deque[Dict[str, Any]] = deque(maxlen=2000)
-
-        # Correlation waiters for request-reply queries and handshakes: {tx_id: threading.Event, ...}
-        self._pending_responses: Dict[str, Dict[str, Any]] = {}
-
-        # Outgoing publication history (useful for test assertions and replay)
-        self._published_messages: List[Dict[str, Any]] = []
-
-        # Background MQTT state
-        self._mqtt_client: Optional[Any] = None
-        self.is_connected = False
-        self._running = False
-        self._thread: Optional[threading.Thread] = None
-
-        if auto_connect:
-            self.connect()
+    @staticmethod
+    def _is_system_source(source: Optional[str]) -> bool:
+        return source in SYSTEM_SOURCES
 
     # --------------------------------------------------------------------------
     # Topic & Envelope Helpers (uufi.md §2.2, §4, §8.4)
@@ -114,16 +171,28 @@ class UUFIProvider:
         registry_id: Optional[str] = None,
         device_id: Optional[str] = None,
         transaction_id: Optional[str] = None,
-        inner_payload: Optional[Dict[str, Any]] = None,
+        inner_payload: Optional[Union[Dict[str, Any], str]] = None,
     ) -> Dict[str, Any]:
-        """Creates a standard UUFI message envelope with mandatory headers and nested payload."""
+        """Creates a standard UUFI message envelope with mandatory headers and payload.
+
+        - inner_payload=None produces a canonical single-channel Query (`"payload": None`).
+        - inner_payload=<str> preserves the string sentinel without injecting object metadata.
+        - inner_payload=<dict> copies the dict and ensures `version` and `timestamp` are set.
+        """
         now_iso = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         tx_id = transaction_id or f"UUFI:{uuid.uuid4().hex[:12]}"
-        payload = dict(inner_payload or {})
-        if "version" not in payload:
-            payload["version"] = "1.5.2"
-        if "timestamp" not in payload:
-            payload["timestamp"] = now_iso
+
+        payload: Optional[Union[Dict[str, Any], str]]
+        if inner_payload is None:
+            payload = None
+        elif isinstance(inner_payload, str):
+            payload = inner_payload
+        else:
+            payload = dict(inner_payload)
+            if "version" not in payload:
+                payload["version"] = DEFAULT_UDMI_VERSION
+            if "timestamp" not in payload:
+                payload["timestamp"] = now_iso
 
         envelope: Dict[str, Any] = {
             "subType": sub_type,
@@ -132,7 +201,7 @@ class UUFIProvider:
             "transactionId": tx_id,
             "publishTime": now_iso,
             "source": self.client_id,
-            "principal": self.client_id,
+            "principal": self.principal,
             "payload": payload,
         }
         if registry_id:
@@ -147,7 +216,48 @@ class UUFIProvider:
     # --------------------------------------------------------------------------
 
     def connect(self) -> bool:
-        """Establishes connection to the MQTT broker and starts subscription loop."""
+        """Establishes connection to the configured MQTT or PubSub transport."""
+        if self.transport == "pubsub":
+            return self._connect_pubsub()
+        return self._connect_mqtt()
+
+    def _connect_pubsub(self) -> bool:
+        if self.is_connected and self._pubsub_publisher:
+            return True
+
+        try:
+            from google.cloud import pubsub_v1
+        except ImportError as e:
+            print(f"Warning: google-cloud-pubsub not available: {e}", file=sys.stderr)
+            return False
+
+        self._running = True
+        try:
+            publisher = pubsub_v1.PublisherClient()
+            subscriber = pubsub_v1.SubscriberClient()
+            topic_path = publisher.topic_path(self.project_id, self.pubsub_topic)
+            sub_path = subscriber.subscription_path(self.project_id, self.pubsub_subscription)
+
+            def _callback(message: Any) -> None:
+                try:
+                    message.ack()
+                    self._handle_inbound_pubsub(dict(message.attributes), message.data)
+                except Exception as ex:
+                    print(f"Error handling inbound PubSub UUFI message: {ex}", file=sys.stderr)
+
+            self._pubsub_publisher = publisher
+            self._pubsub_subscriber = subscriber
+            self._pubsub_topic_path = topic_path
+            self._pubsub_sub_path = sub_path
+            self._streaming_pull_future = subscriber.subscribe(sub_path, callback=_callback)
+            self.is_connected = True
+            return True
+        except Exception as e:
+            print(f"Failed to connect to PubSub transport: {e}", file=sys.stderr)
+            self.is_connected = False
+            return False
+
+    def _connect_mqtt(self) -> bool:
         if self.is_connected and self._mqtt_client:
             return True
 
@@ -157,11 +267,13 @@ class UUFIProvider:
 
         self._running = True
         try:
-            # Check TCP port availability
             with socket.create_connection((self.host, self.port), timeout=1.0):
                 pass
         except Exception as e:
-            print(f"Warning: MQTT broker unreachable at {self.host}:{self.port}: {e}", file=sys.stderr)
+            print(
+                f"Warning: MQTT broker unreachable at {self.host}:{self.port}: {e}",
+                file=sys.stderr,
+            )
             return False
 
         try:
@@ -171,11 +283,11 @@ class UUFIProvider:
             if user:
                 client.username_pw_set(user, pwd)
 
-            # Check for TLS certificates in site model or SSL_SECRETS_DIR
             ca_cert = find_ca_file(self.site_model)
             cert_pair = find_cert_file(self.site_model)
             if ca_cert and os.path.exists(ca_cert):
                 import ssl
+
                 if cert_pair:
                     client.tls_set(
                         ca_certs=ca_cert,
@@ -188,13 +300,13 @@ class UUFIProvider:
                 client.tls_insecure_set(True)
             elif self.port == 8883 or str(os.environ.get("MQTT_PORT")) == "8883":
                 import ssl
+
                 client.tls_set(cert_reqs=ssl.CERT_NONE)
                 client.tls_insecure_set(True)
 
             def _on_connect(c, userdata, flags, rc):
                 if rc == 0:
                     self.is_connected = True
-                    # Subscribe to all UUFI topics within prefix
                     sub_filter = f"/{self.prefix}/uufi/#" if self.prefix else "/uufi/#"
                     c.subscribe(sub_filter, qos=1)
                 else:
@@ -205,8 +317,7 @@ class UUFIProvider:
 
             def _on_message(c, userdata, msg):
                 try:
-                    payload_bytes = msg.payload
-                    self._handle_inbound_raw(msg.topic, payload_bytes)
+                    self._handle_inbound_raw(msg.topic, msg.payload)
                 except Exception as ex:
                     print(f"Error handling inbound UUFI message: {ex}", file=sys.stderr)
 
@@ -218,7 +329,6 @@ class UUFIProvider:
             client.loop_start()
             self._mqtt_client = client
 
-            # Wait briefly for connection establishment
             t0 = time.time()
             while time.time() - t0 < 3.0 and not self.is_connected:
                 time.sleep(0.05)
@@ -230,7 +340,7 @@ class UUFIProvider:
             return False
 
     def disconnect(self) -> None:
-        """Disconnects and terminates the background MQTT loop."""
+        """Disconnects and terminates active MQTT or PubSub loops."""
         self._running = False
         if self._mqtt_client:
             try:
@@ -239,10 +349,39 @@ class UUFIProvider:
             except Exception:
                 pass
             self._mqtt_client = None
+        if self._streaming_pull_future:
+            try:
+                self._streaming_pull_future.cancel()
+            except Exception:
+                pass
+            self._streaming_pull_future = None
+        if self._pubsub_subscriber:
+            try:
+                self._pubsub_subscriber.close()
+            except Exception:
+                pass
+            self._pubsub_subscriber = None
+        self._pubsub_publisher = None
         self.is_connected = False
 
     def health(self) -> Dict[str, Any]:
-        """Probes the broker connection and reports UUFI session status."""
+        """Probes the transport connection and reports UUFI session status."""
+        if self.transport == "pubsub":
+            return {
+                "status": "UP" if self.is_connected else "DISCONNECTED",
+                "transport": "pubsub",
+                "broker": f"pubsub://{self.project_id}/{self.pubsub_topic}",
+                "subscription": self.pubsub_subscription,
+                "latency_ms": 0.0,
+                "prefix": self.prefix,
+                "client_id": self.client_id,
+                "principal": self.principal,
+                "handshake_status": self.handshake_status,
+                "active_registry": self.active_registry,
+                "negotiated_functions_ver": self.negotiated_functions_ver,
+                "buffered_events_count": len(self._event_buffer),
+            }
+
         latency = 0.0
         status = "DISCONNECTED"
         try:
@@ -255,10 +394,12 @@ class UUFIProvider:
 
         return {
             "status": status,
+            "transport": "mqtt",
             "broker": f"{self.host}:{self.port}",
             "latency_ms": latency,
             "prefix": self.prefix,
             "client_id": self.client_id,
+            "principal": self.principal,
             "handshake_status": self.handshake_status,
             "active_registry": self.active_registry,
             "negotiated_functions_ver": self.negotiated_functions_ver,
@@ -266,8 +407,30 @@ class UUFIProvider:
         }
 
     # --------------------------------------------------------------------------
-    # Inbound Message Ingress & Correlation (uufi.md §2.2, §3.5)
+    # Inbound Message Ingress & Correlation (uufi.md §2.2, §3.5, §4)
     # --------------------------------------------------------------------------
+
+    def _handle_inbound_pubsub(self, attributes: Dict[str, str], payload_bytes: bytes) -> None:
+        """Processes unwrapped PubSub attributes + JSON data bytes."""
+        msg_principal = attributes.get("principal")
+        if msg_principal and msg_principal != self.principal:
+            return
+
+        try:
+            raw_text = payload_bytes.decode("utf-8").strip() if payload_bytes else ""
+            inner_payload: Any = json.loads(raw_text) if raw_text else None
+        except Exception:
+            return
+
+        envelope: Dict[str, Any] = dict(attributes)
+        envelope["payload"] = inner_payload
+
+        sub_type = envelope.get("subType") or "unknown"
+        sub_folder = envelope.get("subFolder") or "unknown"
+        reg_id = envelope.get("deviceRegistryId")
+        dev_id = envelope.get("deviceId")
+        topic = self.get_topic(sub_type, sub_folder, registry_id=reg_id, device_id=dev_id)
+        self._process_inbound_message(topic, envelope, inner_payload)
 
     def _handle_inbound_raw(self, topic: str, payload_bytes: bytes) -> None:
         """Processes raw MQTT topic and bytes, notifying pending waiters and buffering events."""
@@ -278,18 +441,18 @@ class UUFIProvider:
             return
 
         envelope = data if isinstance(data, dict) else {}
-        inner_payload = envelope.get("payload", envelope)
+        msg_principal = envelope.get("principal")
+        if msg_principal and msg_principal != self.principal:
+            return
+        inner_payload = envelope["payload"] if "payload" in envelope else envelope
 
         sub_type = envelope.get("subType")
         sub_folder = envelope.get("subFolder")
         reg_id = envelope.get("deviceRegistryId")
         dev_id = envelope.get("deviceId")
-        tx_id = envelope.get("transactionId")
 
-        # Fallback to parse attributes from topic if missing from envelope wrapper
         if not sub_type or not sub_folder:
             parts = [p for p in topic.strip("/").split("/") if p]
-            # Pattern: .../r/{reg}/d/{dev}/c/{subType}/{subFolder} or .../c/{subType}/{subFolder}
             for i, p in enumerate(parts):
                 if p == "r" and i + 1 < len(parts):
                     reg_id = reg_id or parts[i + 1]
@@ -298,10 +461,35 @@ class UUFIProvider:
                 elif p == "c" and i + 2 < len(parts):
                     sub_type = sub_type or parts[i + 1]
                     sub_folder = sub_folder or parts[i + 2]
+            if sub_type and "subType" not in envelope:
+                envelope["subType"] = sub_type
+            if sub_folder and "subFolder" not in envelope:
+                envelope["subFolder"] = sub_folder
+            if reg_id and "deviceRegistryId" not in envelope:
+                envelope["deviceRegistryId"] = reg_id
+            if dev_id and "deviceId" not in envelope:
+                envelope["deviceId"] = dev_id
 
-        # 1. Check pending response waiters (correlated via transactionId)
+        self._process_inbound_message(topic, envelope, inner_payload)
+
+    def _process_inbound_message(
+        self,
+        topic: str,
+        envelope: Dict[str, Any],
+        inner_payload: Any,
+    ) -> None:
+        if inner_payload is None:
+            return
+
+        sub_type = envelope.get("subType")
+        sub_folder = envelope.get("subFolder")
+        reg_id = envelope.get("deviceRegistryId")
+        dev_id = envelope.get("deviceId")
+        tx_id = envelope.get("transactionId")
+        source = envelope.get("source")
+
+        # 1. Check pending response waiters (correlated via transactionId and channel)
         with self._lock:
-            # Check symmetric envelope transactionId or payload reply transaction_id
             reply_tx = None
             if isinstance(inner_payload, dict):
                 reply_block = inner_payload.get("reply", {})
@@ -311,14 +499,48 @@ class UUFIProvider:
             target_tx = tx_id or reply_tx
             if target_tx and target_tx in self._pending_responses:
                 slot = self._pending_responses[target_tx]
-                slot["response"] = {
-                    "envelope": envelope,
-                    "payload": inner_payload,
-                    "topic": topic,
-                }
-                event_obj = slot.get("event")
-                if event_obj:
-                    event_obj.set()
+                expected_type = slot.get("expected_sub_type")
+                expected_folder = slot.get("expected_sub_folder")
+                channel_matches = (
+                    (expected_type is None or sub_type == expected_type)
+                    and (expected_folder is None or sub_folder == expected_folder)
+                )
+                if channel_matches and (
+                    not slot.get("require_system_source") or self._is_system_source(source)
+                ):
+                    if isinstance(inner_payload, dict) and "control" in inner_payload:
+                        control_block = inner_payload.get("control") or {}
+                        status = (
+                            control_block.get("status")
+                            if isinstance(control_block, dict)
+                            else {}
+                        ) or {}
+                        raw_level = status.get("level") if isinstance(status, dict) else None
+                        try:
+                            level = int(raw_level) if raw_level is not None else 500
+                        except (TypeError, ValueError):
+                            level = 500
+                        if level < 500:
+                            slot.setdefault("progress", []).append(inner_payload)
+                        else:
+                            slot["error"] = status
+                            slot["response"] = {
+                                "envelope": envelope,
+                                "payload": inner_payload,
+                                "topic": topic,
+                            }
+                            event_obj = slot.get("event")
+                            if event_obj:
+                                event_obj.set()
+                    else:
+                        slot["response"] = {
+                            "envelope": envelope,
+                            "payload": inner_payload,
+                            "topic": topic,
+                        }
+                        event_obj = slot.get("event")
+                        if event_obj:
+                            event_obj.set()
 
             # 2. Buffer message in thread-safe event ring buffer
             self._event_counter += 1
@@ -332,6 +554,8 @@ class UUFIProvider:
                 "deviceRegistryId": reg_id,
                 "deviceId": dev_id,
                 "transactionId": tx_id,
+                "source": source,
+                "principal": envelope.get("principal"),
                 "envelope": envelope,
                 "payload": inner_payload,
             }
@@ -339,9 +563,24 @@ class UUFIProvider:
             self._event_condition.notify_all()
 
     def inject_inbound_message(self, topic: str, data: Dict[str, Any]) -> None:
-        """In-process injection for testing without live MQTT broker."""
+        """In-process MQTT injection for testing without live MQTT broker."""
         raw_bytes = json.dumps(data).encode("utf-8")
         self._handle_inbound_raw(topic, raw_bytes)
+
+    def inject_inbound_pubsub_message(self, attributes: Dict[str, str], payload: Any) -> None:
+        """In-process PubSub injection for testing without live GCP PubSub."""
+        raw_bytes = json.dumps(payload).encode("utf-8")
+        self._handle_inbound_pubsub(attributes, raw_bytes)
+
+    @staticmethod
+    def _raise_control_error(operation: str, status: Dict[str, Any]) -> None:
+        raw_level = status.get("level")
+        level = 500 if raw_level is None else raw_level
+        category = status.get("category", "unknown")
+        message = status.get("message", "UUFI control error")
+        detail = status.get("detail")
+        suffix = f" ({detail})" if detail else ""
+        raise RuntimeError(f"UUFI {operation} failed [{category}, level={level}]: {message}{suffix}")
 
     # --------------------------------------------------------------------------
     # Layer 1 Handshake Protocol (uufi.md §3)
@@ -374,6 +613,10 @@ class UUFIProvider:
             self._pending_responses[tx_id] = {
                 "event": response_event,
                 "response": None,
+                "require_system_source": True,
+                "expected_sub_type": "config",
+                "expected_sub_folder": "udmi",
+                "progress": [],
             }
 
         start_time = time.time()
@@ -381,7 +624,6 @@ class UUFIProvider:
 
         try:
             while time.time() - start_time < timeout_sec:
-                # Periodic publish (every 5 seconds per §3.6)
                 if time.time() - last_publish >= 5.0:
                     self._publish_raw(req_topic, envelope)
                     last_publish = time.time()
@@ -391,10 +633,11 @@ class UUFIProvider:
 
             with self._lock:
                 slot = self._pending_responses.pop(tx_id, None)
+                if slot and slot.get("error"):
+                    self._raise_control_error("handshake", slot["error"])
                 if slot and slot.get("response"):
                     resp_data = slot["response"]
                     payload = resp_data.get("payload", {})
-                    # Inspect setup block in reply
                     setup_block = payload.get("setup", {}) if isinstance(payload, dict) else {}
                     if isinstance(setup_block, dict):
                         discovered_reg = setup_block.get("deviceRegistryId")
@@ -416,13 +659,12 @@ class UUFIProvider:
             with self._lock:
                 self._pending_responses.pop(tx_id, None)
 
-        # Timeout occurred
         raise TimeoutError(
             f"UUFI Handshake timed out after {timeout_sec}s awaiting reply on {resp_topic} for {tx_id}"
         )
 
     # --------------------------------------------------------------------------
-    # Device Configuration Mutation (uufi.md §2.2, §6, §8)
+    # Device Configuration Mutation (uufi.md §2.2, §4, §6, §8)
     # --------------------------------------------------------------------------
 
     def publish_config(
@@ -430,9 +672,11 @@ class UUFIProvider:
         registry_id: str,
         device_id: str,
         sub_folder: str,
-        payload: Dict[str, Any],
+        payload: Union[Dict[str, Any], str],
+        wait_for_ack: bool = False,
+        timeout_sec: float = 15.0,
     ) -> Dict[str, Any]:
-        """Publishes configuration update with mandatory envelope duplication and QoS 1."""
+        """Publishes a configuration update (dict or string sentinel) and optionally waits for Ack."""
         topic = self.get_topic("config", sub_folder, registry_id=registry_id, device_id=device_id)
         envelope = self.create_envelope(
             sub_type="config",
@@ -441,39 +685,83 @@ class UUFIProvider:
             device_id=device_id,
             inner_payload=payload,
         )
+        tx_id = envelope["transactionId"]
 
-        self._publish_raw(topic, envelope)
+        if not wait_for_ack:
+            self._publish_raw(topic, envelope)
+            return {
+                "status": "DISPATCHED",
+                "topic": topic,
+                "transactionId": tx_id,
+                "publishTime": envelope["publishTime"],
+                "registry_id": registry_id,
+                "device_id": device_id,
+                "sub_folder": sub_folder,
+            }
 
-        return {
-            "status": "DISPATCHED",
-            "topic": topic,
-            "transactionId": envelope["transactionId"],
-            "publishTime": envelope["publishTime"],
-            "registry_id": registry_id,
-            "device_id": device_id,
-            "sub_folder": sub_folder,
-        }
+        response_event = threading.Event()
+        with self._lock:
+            self._pending_responses[tx_id] = {
+                "event": response_event,
+                "response": None,
+                "require_system_source": True,
+                "expected_sub_type": "config",
+                "expected_sub_folder": sub_folder,
+                "progress": [],
+            }
+
+        try:
+            self._publish_raw(topic, envelope)
+            if response_event.wait(timeout=timeout_sec):
+                with self._lock:
+                    slot = self._pending_responses.pop(tx_id, None)
+                    if slot and slot.get("error"):
+                        self._raise_control_error(f"config/{sub_folder}", slot["error"])
+                    if slot and slot.get("response"):
+                        return {
+                            "status": "ACKNOWLEDGED",
+                            "topic": topic,
+                            "transactionId": tx_id,
+                            "publishTime": envelope["publishTime"],
+                            "registry_id": registry_id,
+                            "device_id": device_id,
+                            "sub_folder": sub_folder,
+                            "ack": slot["response"]["payload"],
+                            "progress": list(slot.get("progress", [])),
+                        }
+        finally:
+            with self._lock:
+                self._pending_responses.pop(tx_id, None)
+
+        raise TimeoutError(
+            f"Config ack timed out after {timeout_sec}s for {registry_id}/{device_id} "
+            f"config/{sub_folder} ({tx_id})"
+        )
 
     # --------------------------------------------------------------------------
-    # System Model Operations (uufi.md §2.2, §5)
+    # Single-Channel Queries & System Model Operations (uufi.md §1, §4, §5)
     # --------------------------------------------------------------------------
 
-    def query_system_model(
+    def _execute_query(
         self,
+        sub_type: str,
+        sub_folder: str,
         registry_id: str,
         device_id: str,
-        timeout_sec: float = 15.0,
-    ) -> Dict[str, Any]:
-        """Queries device system model on query/system and waits for correlated model/system reply."""
-        tx_id = f"UUFI:model:{uuid.uuid4().hex[:8]}"
-        req_topic = self.get_topic("query", "system", registry_id=registry_id, device_id=device_id)
+        tx_prefix: str,
+        timeout_sec: float,
+    ) -> Any:
+        tx_id = f"UUFI:{tx_prefix}:{uuid.uuid4().hex[:8]}"
+        req_topic = self.get_topic(
+            sub_type, sub_folder, registry_id=registry_id, device_id=device_id
+        )
         envelope = self.create_envelope(
-            sub_type="query",
-            sub_folder="system",
+            sub_type=sub_type,
+            sub_folder=sub_folder,
             registry_id=registry_id,
             device_id=device_id,
             transaction_id=tx_id,
-            inner_payload={},
+            inner_payload=None,
         )
 
         response_event = threading.Event()
@@ -481,6 +769,10 @@ class UUFIProvider:
             self._pending_responses[tx_id] = {
                 "event": response_event,
                 "response": None,
+                "require_system_source": True,
+                "expected_sub_type": sub_type,
+                "expected_sub_folder": sub_folder,
+                "progress": [],
             }
 
         try:
@@ -488,13 +780,34 @@ class UUFIProvider:
             if response_event.wait(timeout=timeout_sec):
                 with self._lock:
                     slot = self._pending_responses.pop(tx_id, None)
+                    if slot and slot.get("error"):
+                        self._raise_control_error(f"{sub_type}/{sub_folder} query", slot["error"])
                     if slot and slot.get("response"):
                         return slot["response"]["payload"]
         finally:
             with self._lock:
                 self._pending_responses.pop(tx_id, None)
 
-        raise TimeoutError(f"System model query timed out after {timeout_sec}s for device {device_id}")
+        raise TimeoutError(
+            f"{sub_type}/{sub_folder} query timed out after {timeout_sec}s "
+            f"for device {device_id}"
+        )
+
+    def query_system_model(
+        self,
+        registry_id: str,
+        device_id: str,
+        timeout_sec: float = 15.0,
+    ) -> Any:
+        """Queries device system model via single-channel null-payload request on model/system."""
+        return self._execute_query(
+            sub_type="model",
+            sub_folder="system",
+            registry_id=registry_id,
+            device_id=device_id,
+            tx_prefix="model",
+            timeout_sec=timeout_sec,
+        )
 
     def update_system_model(
         self,
@@ -524,48 +837,22 @@ class UUFIProvider:
             "sub_folder": "system",
         }
 
-    # --------------------------------------------------------------------------
-    # State Query Service (uufi.md §2.2, §6)
-    # --------------------------------------------------------------------------
-
     def query_state(
         self,
         registry_id: str,
         device_id: str,
         sub_folder: str = "blobset",
         timeout_sec: float = 15.0,
-    ) -> Dict[str, Any]:
-        """Queries cached device state on query/state and awaits correlated state response."""
-        tx_id = f"UUFI:state:{uuid.uuid4().hex[:8]}"
-        req_topic = self.get_topic("query", "state", registry_id=registry_id, device_id=device_id)
-        envelope = self.create_envelope(
-            sub_type="query",
-            sub_folder="state",
+    ) -> Any:
+        """Queries cached device state via single-channel null-payload request on state/<subFolder>."""
+        return self._execute_query(
+            sub_type="state",
+            sub_folder=sub_folder,
             registry_id=registry_id,
             device_id=device_id,
-            transaction_id=tx_id,
-            inner_payload={"target": sub_folder},
+            tx_prefix="state",
+            timeout_sec=timeout_sec,
         )
-
-        response_event = threading.Event()
-        with self._lock:
-            self._pending_responses[tx_id] = {
-                "event": response_event,
-                "response": None,
-            }
-
-        try:
-            self._publish_raw(req_topic, envelope)
-            if response_event.wait(timeout=timeout_sec):
-                with self._lock:
-                    slot = self._pending_responses.pop(tx_id, None)
-                    if slot and slot.get("response"):
-                        return slot["response"]["payload"]
-        finally:
-            with self._lock:
-                self._pending_responses.pop(tx_id, None)
-
-        raise TimeoutError(f"State query timed out after {timeout_sec}s for device {device_id} ({sub_folder})")
 
     # --------------------------------------------------------------------------
     # Event Stream Polling (uufi.md §2.2, §6)
@@ -613,7 +900,6 @@ class UUFIProvider:
                     "events": events,
                 }
 
-            # Wait for incoming events on condition variable
             deadline = time.time() + timeout_sec
             while not events and time.time() < deadline:
                 remaining = max(0.01, deadline - time.time())
@@ -630,16 +916,33 @@ class UUFIProvider:
     # --------------------------------------------------------------------------
 
     def _publish_raw(self, topic: str, envelope: Dict[str, Any]) -> None:
-        """Publishes envelope dictionary as JSON bytes to MQTT broker."""
-        record = {
+        """Publishes envelope via MQTT (JSON wrapper) or PubSub (attributes + unwrapped data)."""
+        record: Dict[str, Any] = {
             "topic": topic,
             "envelope": envelope,
+            "transport": self.transport,
             "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
         }
+        if self.transport == "pubsub":
+            attributes = {
+                k: str(v) for k, v in envelope.items() if k != "payload" and v is not None
+            }
+            data_bytes = json.dumps(envelope.get("payload")).encode("utf-8")
+            record["attributes"] = attributes
+            record["data"] = data_bytes
+
         with self._lock:
             self._published_messages.append(record)
 
-        if self._mqtt_client and self.is_connected:
+        if self.transport == "pubsub":
+            if self._pubsub_publisher and self.is_connected and self._pubsub_topic_path:
+                future = self._pubsub_publisher.publish(
+                    self._pubsub_topic_path,
+                    record["data"],
+                    **record["attributes"],
+                )
+                future.result(timeout=5.0)
+        elif self._mqtt_client and self.is_connected:
             raw_data = json.dumps(envelope)
             inf = self._mqtt_client.publish(topic, raw_data, qos=1)
             inf.wait_for_publish(timeout=5.0)

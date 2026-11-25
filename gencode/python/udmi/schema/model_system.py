@@ -64,6 +64,8 @@ class SystemModel(DataModel):
     High-level system information about the device. [System Model Documentation](../docs/messages/system.md)
     """
 
+    timestamp: Optional[str] = None
+    version: Optional[str] = None
     name: Optional[str] = None
     guid: Optional[str] = None
     description: Optional[str] = None

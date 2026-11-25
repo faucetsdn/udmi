@@ -1,0 +1,6 @@
+{
+  "version": "1.5.7",
+  "timestamp": "2026-11-24T19:00:01Z",
+  "min_loglevel": 300,
+  "metrics_rate_sec": 60
+}

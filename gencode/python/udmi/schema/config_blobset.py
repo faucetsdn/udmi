@@ -13,5 +13,7 @@ from .config_blobset_blob import BlobBlobsetConfig
 
 @dataclass
 class BlobsetConfig(DataModel):
+    timestamp: Optional[str] = None
+    version: Optional[str] = None
     blobsets: Optional[Blobsets] = None
     blobs: Optional[Dict[str, BlobBlobsetConfig]] = None

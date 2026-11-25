@@ -12,4 +12,6 @@ from .state_blobset_blob import BlobBlobsetState
 
 @dataclass
 class BlobsetState(DataModel):
+    timestamp: Optional[str] = None
+    version: Optional[str] = None
     blobs: Optional[Dict[str, BlobBlobsetState]] = None

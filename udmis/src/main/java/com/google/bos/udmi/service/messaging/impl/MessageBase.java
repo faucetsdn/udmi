@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.api.client.util.Preconditions.checkState;
+import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.RAWFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
@@ -21,7 +22,9 @@ import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.messaging.MessageDispatcher;
+import com.google.bos.udmi.service.messaging.MessageDispatcher.NullMessage;
 import com.google.bos.udmi.service.messaging.MessageDispatcher.RawString;
+import com.google.bos.udmi.service.messaging.MessageDispatcher.SentinelPayload;
 import com.google.bos.udmi.service.messaging.MessagePipe;
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.bos.udmi.service.pod.UdmiServicePod;
@@ -345,10 +348,24 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     receiveBundle(stringify(bundle));
   }
 
+  private boolean isUufiChannel(Map<String, String> attributesMap) {
+    return "uufi".equals(containerId)
+        || (attributesMap != null && "uufi".equals(attributesMap.get(GATEWAY_ID_KEY)));
+  }
+
   private void receiveMessageRaw(Map<String, String> attributesMap, String messageString) {
     Object messageObject;
     try {
-      messageObject = parseJson(messageString);
+      String trimmed = messageString == null ? null : messageString.trim();
+      if (isUufiChannel(attributesMap)
+          && (Strings.isNullOrEmpty(trimmed) || "null".equals(trimmed))) {
+        messageObject = MessageDispatcher.nullMessage();
+      } else if (isUufiChannel(attributesMap)
+          && trimmed.length() >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+        messageObject = MessageDispatcher.sentinelPayload(fromString(String.class, trimmed));
+      } else {
+        messageObject = parseJson(messageString);
+      }
     } catch (Exception e) {
       receiveException(attributesMap, messageString, e, SubFolder.ERROR);
       messageObject = MessageDispatcher.rawString(messageString);
@@ -514,6 +531,8 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     public Object message;
     public Map<String, String> attributesMap;
     public String payload;
+    public Boolean nullMessage;
+    public String sentinelValue;
 
     public Bundle() {
       this.envelope = new Envelope();
@@ -537,6 +556,10 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     private void assignMessage(Object checkMessage) {
       if (checkMessage instanceof RawString rawString) {
         payload = rawString.rawString;
+      } else if (checkMessage instanceof NullMessage) {
+        nullMessage = true;
+      } else if (checkMessage instanceof SentinelPayload sentinelPayload) {
+        sentinelValue = sentinelPayload.value;
       } else {
         message = checkMessage;
       }
@@ -546,6 +569,12 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
      * Get the actual send bytes for this bundle, either from raw payload or message object.
      */
     public byte[] sendBytes() {
+      if (Boolean.TRUE.equals(nullMessage)) {
+        return "null".getBytes();
+      }
+      if (sentinelValue != null) {
+        return JsonUtil.stringifyTerse(sentinelValue).getBytes();
+      }
       checkState(message != null || payload != null, "no message or payload");
       checkState(message == null || payload == null, "both message and payload");
       return ofNullable(message).map(JsonUtil::stringifyTerse).orElse(payload).getBytes();

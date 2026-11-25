@@ -51,6 +51,7 @@ import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
 import udmi.schema.SystemState;
+import udmi.schema.UufiControl;
 
 /**
  * Implementation of the typed message dispatcher interface.
@@ -212,7 +213,11 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
   private void processMessageBundle(Bundle bundle) {
     Envelope envelope = Preconditions.checkNotNull(bundle.envelope, "bundle envelope is null");
     Object message = bundle.message;
-    if (bundle.payload != null) {
+    if (Boolean.TRUE.equals(bundle.nullMessage)) {
+      message = MessageDispatcher.nullMessage();
+    } else if (bundle.sentinelValue != null) {
+      message = MessageDispatcher.sentinelPayload(bundle.sentinelValue);
+    } else if (bundle.payload != null) {
       if (message != null) {
         message = new BundleException((String) message, bundle.attributesMap, bundle.payload);
       } else {
@@ -221,15 +226,18 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
     }
     boolean isException = message instanceof Exception;
     boolean isRawString = message instanceof RawString;
+    boolean isNullMessage = message instanceof NullMessage;
+    boolean isSentinel = message instanceof SentinelPayload;
     Class<?> handlerType = isException ? EXCEPTION_CLASS
         : isRawString ? RawString.class
-            : getMessageClassFor(envelope, true);
+            : (isNullMessage || isSentinel) ? DEFAULT_CLASS
+                : getMessageClassFor(envelope, true);
     try {
       handlers.computeIfAbsent(handlerType, key -> {
         notice("Defaulting messages of type/folder " + key.getName());
         return handlers.getOrDefault(DEFAULT_CLASS, this::devNullHandler);
       });
-      Object messageObject = isException ? message :
+      Object messageObject = (isException || isNullMessage || isSentinel) ? message :
           isRawString ? ((RawString) message).rawString
               : convertStrictOrObject(handlerType, message);
       if (messageObject instanceof Map) {
@@ -340,6 +348,9 @@ public class MessageDispatcherImpl extends ContainerBase implements MessageDispa
       requireNonNull(bundleEnvelope.subType, "subType not defined for raw string");
       bundle.payload = rawString.rawString;
       bundle.message = null;
+    } else if (message instanceof NullMessage || message instanceof SentinelPayload
+        || message instanceof UufiControl) {
+      // Preserve envelope subType/subFolder verbatim on UUFI query/sentinel/control payloads.
     } else if (!(message instanceof Map)) {
       SimpleEntry<SubType, SubFolder> messageType = CLASS_TYPES.get(message.getClass());
       requireNonNull(messageType, "unknown message type for " + message.getClass());

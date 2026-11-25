@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.messaging;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
@@ -100,6 +101,14 @@ public interface MessageDispatcher {
     return new RawString(rawString);
   }
 
+  static NullMessage nullMessage() {
+    return new NullMessage();
+  }
+
+  static SentinelPayload sentinelPayload(String value) {
+    return new SentinelPayload(value);
+  }
+
   /**
    * Marker class to indicate a string that should be applied/sent directly with no JSON or
    * map interpretation.
@@ -109,6 +118,36 @@ public interface MessageDispatcher {
 
     private RawString(String rawString) {
       this.rawString = rawString;
+    }
+  }
+
+  /**
+   * Marker class representing an explicit wire null/empty payload (used for UUFI queries).
+   * Always instantiated per-message so identityHashCode keys never collide across threads.
+   */
+  class NullMessage {
+    private NullMessage() {
+    }
+
+    @JsonValue
+    public Object getValue() {
+      return null;
+    }
+  }
+
+  /**
+   * Marker class representing a bare JSON String sentinel payload (e.g. "missing").
+   */
+  class SentinelPayload {
+    public final String value;
+
+    private SentinelPayload(String value) {
+      this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
     }
   }
 }

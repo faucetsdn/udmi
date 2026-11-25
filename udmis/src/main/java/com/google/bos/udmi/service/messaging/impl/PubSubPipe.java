@@ -148,10 +148,22 @@ public class PubSubPipe extends MessageBase implements MessageReceiver {
       int currentQueueSize = publisherQueueSize.incrementAndGet();
       Envelope envelope = ofNullable(bundle.envelope).orElse(new Envelope());
       Map<String, String> stringMap = toMap(envelope).entrySet().stream()
+          .filter(entry -> !(Common.GATEWAY_ID_KEY.equals(entry.getKey())
+              && "uufi".equals(entry.getValue())))
           .collect(Collectors.toMap(Entry::getKey, entry -> (String) entry.getValue()));
+      String dataString;
+      if (Boolean.TRUE.equals(bundle.nullMessage)) {
+        dataString = "null";
+      } else if (bundle.sentinelValue != null) {
+        dataString = stringify(bundle.sentinelValue);
+      } else if (bundle.message != null) {
+        dataString = stringify(bundle.message);
+      } else {
+        dataString = ofNullable(bundle.payload).orElse("null");
+      }
       PubsubMessage message = PubsubMessage.newBuilder()
           .putAllAttributes(stringMap)
-          .setData(ByteString.copyFromUtf8(stringify(bundle.message)))
+          .setData(ByteString.copyFromUtf8(dataString))
           .build();
       randomlyFail();
 
