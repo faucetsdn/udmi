@@ -31,8 +31,8 @@ The repository provides the `bin/start_bridgehead` helper script to automate pre
     # Standard start (using pre-built ghcr.io latest images):
     bin/start_bridgehead
 
-    # Pin to a specific UDMI release tag (e.g., 1.5.7):
-    bin/start_bridgehead --version 1.5.7 path/to/udmi_site_model
+    # Pin to a specific UDMI release tag (e.g., 1.5.6):
+    bin/start_bridgehead --version 1.5.6 path/to/udmi_site_model
 
     # Local workspace build (builds images directly from local source code):
     bin/start_bridgehead --local

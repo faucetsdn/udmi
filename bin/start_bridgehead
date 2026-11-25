@@ -16,7 +16,7 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo "  --local, --from-workspace Build base container images (udmis, validator, pubber)"
     echo "                          from local workspace source instead of using ghcr.io latest."
     echo "  --version <tag>         Pin ghcr.io/faucetsdn/udmi/{udmis,validator,pubber} base"
-    echo "                          images to a specific release tag (e.g., 1.5.7 or latest)."
+    echo "                          images to a specific release tag (e.g., 1.5.6 or latest)."
     echo "                          Mutually exclusive with --local/--from-workspace."
     echo "  site_model_path         (Optional) Path to site model directory."
     echo "                          Overrides SITE_MODEL_PATH env variable."
@@ -29,7 +29,7 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
     echo ""
     echo "Examples:"
     echo "  $(basename $0)                             # Default: uses ghcr.io latest images"
-    echo "  $(basename $0) --version 1.5.7             # Pin Bridgehead to UDMI release tag 1.5.7"
+    echo "  $(basename $0) --version 1.5.6             # Pin Bridgehead to UDMI release tag 1.5.6"
     echo "  $(basename $0) --local                     # Build base images from workspace source"
     echo "  $(basename $0) --local sites/udmi_site_model"
     exit 0
@@ -47,7 +47,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --version)
-            [[ $# -ge 2 && -n "$2" && "$2" != -* ]] || fail "Option --version requires a <tag> argument (e.g., --version 1.5.7)."
+            [[ $# -ge 2 && -n "$2" && "$2" != -* ]] || fail "Option --version requires a <tag> argument (e.g., --version 1.5.6)."
             UDMI_VERSION="$2"
             shift 2
             ;;
