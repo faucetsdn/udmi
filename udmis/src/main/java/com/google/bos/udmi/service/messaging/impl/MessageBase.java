@@ -1,6 +1,7 @@
 package com.google.bos.udmi.service.messaging.impl;
 
 import static com.google.api.client.util.Preconditions.checkState;
+import static com.google.udmi.util.Common.GATEWAY_ID_KEY;
 import static com.google.udmi.util.Common.RAWFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
@@ -347,13 +348,20 @@ public abstract class MessageBase extends ContainerBase implements MessagePipe {
     receiveBundle(stringify(bundle));
   }
 
+  private boolean isUufiChannel(Map<String, String> attributesMap) {
+    return "uufi".equals(containerId)
+        || (attributesMap != null && "uufi".equals(attributesMap.get(GATEWAY_ID_KEY)));
+  }
+
   private void receiveMessageRaw(Map<String, String> attributesMap, String messageString) {
     Object messageObject;
     try {
       String trimmed = messageString == null ? null : messageString.trim();
-      if (Strings.isNullOrEmpty(trimmed) || "null".equals(trimmed)) {
+      if (isUufiChannel(attributesMap)
+          && (Strings.isNullOrEmpty(trimmed) || "null".equals(trimmed))) {
         messageObject = MessageDispatcher.nullMessage();
-      } else if (trimmed.length() >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+      } else if (isUufiChannel(attributesMap)
+          && trimmed.length() >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
         messageObject = MessageDispatcher.sentinelPayload(fromString(String.class, trimmed));
       } else {
         messageObject = parseJson(messageString);

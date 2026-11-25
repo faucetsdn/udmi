@@ -53,6 +53,7 @@ public class PubSubPipeTest extends MessagePipeTestBase {
         .thenReturn(ApiFutures.immediateFuture("msg-1"));
 
     EndpointConfiguration config = new EndpointConfiguration();
+    config.name = "uufi";
     config.protocol = Protocol.PUBSUB;
     config.hostname = "test-proj";
     config.send_id = "udmi_uufi";
@@ -133,6 +134,34 @@ public class PubSubPipeTest extends MessagePipeTestBase {
       assertEquals("delete", polledSentinel.sentinelValue, "JSON string maps to sentinelValue");
       assertNull(polledSentinel.message);
       assertEquals("pubsub+client-a", polledSentinel.envelope.source);
+
+      // 4. Non-UUFI pipe preserves raw empty JSON string as message (not SentinelPayload)
+      EndpointConfiguration targetConfig = new EndpointConfiguration();
+      targetConfig.name = "target";
+      targetConfig.protocol = Protocol.PUBSUB;
+      targetConfig.hostname = "test-proj";
+      PubSubPipe targetPipe = new PubSubPipe(targetConfig) {
+        @Override
+        Publisher getPublisher(String topicName) {
+          return null;
+        }
+      };
+      try {
+        PubsubMessage deviceEmpty = PubsubMessage.newBuilder()
+            .setMessageId("102")
+            .setPublishTime(Timestamp.newBuilder().setSeconds(1700000002L).build())
+            .putAttributes("subType", "events")
+            .putAttributes("subFolder", "blobset")
+            .setData(ByteString.copyFromUtf8("\"\""))
+            .build();
+        targetPipe.receiveMessage(deviceEmpty, ack);
+        Bundle polledTarget = targetPipe.poll();
+        assertNull(polledTarget.sentinelValue,
+            "Non-UUFI device pipe must not wrap JSON string as SentinelPayload");
+        assertEquals("\"\"", polledTarget.message);
+      } finally {
+        targetPipe.shutdown();
+      }
     } finally {
       pipe.shutdown();
     }

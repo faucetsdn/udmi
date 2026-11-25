@@ -3,6 +3,7 @@ package com.google.bos.udmi.service.messaging;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.bos.udmi.service.messaging.impl.MessageDispatcherImpl;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
@@ -127,6 +128,11 @@ public interface MessageDispatcher {
   class NullMessage {
     private NullMessage() {
     }
+
+    @JsonValue
+    public Object getValue() {
+      return null;
+    }
   }
 
   /**
@@ -137,6 +143,11 @@ public interface MessageDispatcher {
 
     private SentinelPayload(String value) {
       this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+      return value;
     }
   }
 }
