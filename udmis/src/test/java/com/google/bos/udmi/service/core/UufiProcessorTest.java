@@ -6,11 +6,13 @@ import static com.google.udmi.util.JsonUtil.convertTo;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,6 +39,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import udmi.schema.Category;
 import udmi.schema.CloudModel;
+import udmi.schema.CloudModel.Auth_type;
+import udmi.schema.Credential;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Envelope;
@@ -812,6 +816,550 @@ public class UufiProcessorTest extends ProcessorTestBase {
     UufiControl progCtrl = convertTo(UufiControl.class, replyByTxn.get("UUFI:ps-prog"));
     assertEquals(Level.INFO.value(), progCtrl.control.status.level);
     assertEquals("Applying step 1/2", progCtrl.control.status.message);
+  }
+
+  /**
+   * Test that PubSub uufi -> udmi_target -> uufi_events wiring avoids spurious config/null
+   * echoes and duplicate model/system replies while still forwarding external events and
+   * external model/system broadcasts from udmi_target.
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  public void pubSubOutboundTopologyAvoidsDuplicateAcksAndConfigNullTest() {
+    terminateAndWait();
+    UdmiServicePod.resetForTest();
+    super.resetAfter();
+
+    final String psUufiIn = "ps_topo_uufi_in";
+    final String psTarget = "ps_topo_target";
+    final String psUufiOut = "ps_topo_uufi_out";
+
+    EndpointConfiguration uufiConfig = new EndpointConfiguration();
+    uufiConfig.name = "uufi";
+    uufiConfig.protocol = Protocol.LOCAL;
+    uufiConfig.hostname = TEST_NAMESPACE;
+    uufiConfig.recv_id = psUufiIn;
+    uufiConfig.send_id = psTarget;
+    uufiConfig.side_id = psUufiOut;
+    UufiProcessor uufiProc = new UufiProcessor(uufiConfig);
+    uufiProc.setPubSubProtocolForTest(true);
+
+    EndpointConfiguration eventsConfig = new EndpointConfiguration();
+    eventsConfig.name = "uufi_events";
+    eventsConfig.protocol = Protocol.LOCAL;
+    eventsConfig.hostname = TEST_NAMESPACE;
+    eventsConfig.recv_id = psTarget;
+    eventsConfig.send_id = psUufiOut;
+    UufiProcessor eventsProc = new UufiProcessor(eventsConfig);
+    eventsProc.setPubSubProtocolForTest(true);
+
+    UdmiServicePod.putComponent(ProcessorBase.IOT_ACCESS_COMPONENT, () -> provider);
+    uufiProc.activate();
+    eventsProc.activate();
+
+    EndpointConfiguration inPeerConfig = new EndpointConfiguration();
+    inPeerConfig.protocol = Protocol.LOCAL;
+    inPeerConfig.hostname = TEST_NAMESPACE;
+    inPeerConfig.send_id = psUufiIn;
+    final MessageDispatcherImpl inPeer = new MessageDispatcherImpl(inPeerConfig);
+
+    EndpointConfiguration targetPeerConfig = new EndpointConfiguration();
+    targetPeerConfig.protocol = Protocol.LOCAL;
+    targetPeerConfig.hostname = TEST_NAMESPACE;
+    targetPeerConfig.send_id = psTarget;
+    final MessageDispatcherImpl targetPeer = new MessageDispatcherImpl(targetPeerConfig);
+
+    EndpointConfiguration outPeerConfig = new EndpointConfiguration();
+    outPeerConfig.protocol = Protocol.LOCAL;
+    outPeerConfig.hostname = TEST_NAMESPACE;
+    outPeerConfig.recv_id = psUufiOut;
+    MessageDispatcherImpl outPeer = new MessageDispatcherImpl(outPeerConfig);
+    List<Entry<Envelope, Object>> uufiReplies = Collections.synchronizedList(new ArrayList<>());
+    outPeer.registerHandler(Object.class, msg -> {
+      Envelope env = outPeer.getContinuation(msg).getEnvelope();
+      uufiReplies.add(new SimpleEntry<>(env, msg));
+    });
+    outPeer.activate();
+
+    when(provider.modifyConfig(any(Envelope.class), any(Function.class))).thenAnswer(inv -> {
+      Function<Entry<Long, String>, String> munger = inv.getArgument(1);
+      return munger.apply(new SimpleEntry<>(0L, "{}"));
+    });
+
+    // 1. Inbound config/pointset write -> single Success Ack (no config/null echo)
+    Envelope cfgEnv = new Envelope();
+    cfgEnv.subType = SubType.CONFIG;
+    cfgEnv.subFolder = SubFolder.POINTSET;
+    cfgEnv.deviceRegistryId = "reg-1";
+    cfgEnv.deviceId = "dev-1";
+    cfgEnv.source = "pubsub+app";
+    cfgEnv.principal = "app@";
+    cfgEnv.transactionId = "UUFI:topo-cfg";
+    inPeer.publish(new Bundle(cfgEnv, Map.of("points", Map.of("temp", Map.of("set_value", 21)))));
+
+    // 2. Inbound model/system write -> single level-500 Control Ack (not forwarded to target)
+    Envelope modelWriteEnv = new Envelope();
+    modelWriteEnv.subType = SubType.MODEL;
+    modelWriteEnv.subFolder = SubFolder.SYSTEM;
+    modelWriteEnv.deviceRegistryId = "reg-1";
+    modelWriteEnv.deviceId = "dev-1";
+    modelWriteEnv.source = "pubsub+app";
+    modelWriteEnv.principal = "app@";
+    modelWriteEnv.transactionId = "UUFI:topo-model-write";
+    inPeer.publish(
+        new Bundle(modelWriteEnv, Map.of("software", Map.of("system", "2.0.0"))));
+
+    // 3. Externally-originated model/system broadcast on udmi_target -> forwarded once
+    Envelope extModelEnv = new Envelope();
+    extModelEnv.subType = SubType.MODEL;
+    extModelEnv.subFolder = SubFolder.SYSTEM;
+    extModelEnv.deviceRegistryId = "reg-1";
+    extModelEnv.deviceId = "dev-1";
+    extModelEnv.source = "implicit";
+    extModelEnv.transactionId = "RP:topo-ext-model";
+    targetPeer.publish(
+        new Bundle(extModelEnv, Map.of("software", Map.of("system", "2.1.0"))));
+
+    // 4. External events/pointset broadcast on udmi_target -> forwarded once
+    Envelope extEventEnv = new Envelope();
+    extEventEnv.subType = SubType.EVENTS;
+    extEventEnv.subFolder = SubFolder.POINTSET;
+    extEventEnv.deviceRegistryId = "reg-1";
+    extEventEnv.deviceId = "dev-1";
+    extEventEnv.source = "device";
+    extEventEnv.transactionId = "DEV:topo-ev";
+    targetPeer.publish(
+        new Bundle(extEventEnv, Map.of("points", Map.of("temp", Map.of("present_value", 21.5)))));
+
+    ((MessageDispatcherImpl) uufiProc.getDispatcher()).terminate();
+    ((MessageDispatcherImpl) uufiProc.getDispatcher()).awaitShutdown();
+    ((MessageDispatcherImpl) eventsProc.getDispatcher()).terminate();
+    ((MessageDispatcherImpl) eventsProc.getDispatcher()).awaitShutdown();
+    outPeer.terminate();
+    outPeer.awaitShutdown();
+    uufiProc.shutdown();
+    eventsProc.shutdown();
+
+    assertEquals(4, uufiReplies.size(),
+        "Expected config ack + model write error + external model + external event without echoes");
+    Map<String, Entry<Envelope, Object>> byTxn = new HashMap<>();
+    for (Entry<Envelope, Object> entry : uufiReplies) {
+      assertNotNull(entry.getKey().subFolder,
+          "UUFI outbound reply must never emit a null subFolder");
+      byTxn.put(entry.getKey().transactionId, entry);
+    }
+    assertEquals(4, byTxn.size(), "Expected distinct transactions without duplicate echoes");
+
+    UufiControl modelErr =
+        convertTo(UufiControl.class, byTxn.get("UUFI:topo-model-write").getValue());
+    assertNotNull(modelErr.control, "Inbound model write should return UufiControl error");
+    assertEquals(Level.ERROR.value(), modelErr.control.status.level);
+    assertNull(byTxn.get("RP:topo-ext-model").getKey().principal,
+        "External model/system broadcast should have null principal");
+    assertNull(byTxn.get("DEV:topo-ev").getKey().principal,
+        "External events/pointset broadcast should have null principal");
+  }
+
+  /**
+   * Test that inbound model/* writes over UUFI are rejected with a level-500 Control Ack
+   * and are not forwarded to the internal bus.
+   */
+  @Test
+  public void inboundModelWriteRejectedWithControlErrorTest() {
+    Envelope transport = new Envelope();
+    transport.source = "app-1";
+    transport.gatewayId = "uufi";
+    transport.deviceRegistryId = "reg-1";
+    transport.deviceId = "dev-1";
+    transport.subType = SubType.MODEL;
+    transport.subFolder = SubFolder.SYSTEM;
+
+    Map<String, Object> wrapper = new HashMap<>();
+    wrapper.put("subType", "model");
+    wrapper.put("subFolder", "system");
+    wrapper.put("deviceRegistryId", "reg-1");
+    wrapper.put("deviceId", "dev-1");
+    wrapper.put("principal", TEST_PRINCIPAL);
+    wrapper.put("transactionId", "UUFI:model-write");
+    wrapper.put("payload", Map.of("software", Map.of("system", "2.0.0")));
+
+    activeTestInstance(() -> getReverseDispatcher().publish(new Bundle(transport, wrapper)));
+
+    assertEquals(1, captured.size(),
+        "Inbound model write must emit only a Control Ack without forwarding to internal bus");
+    Envelope ackEnv = capturedEnvelopes.get(0);
+    assertEquals("uufi", ackEnv.gatewayId);
+    assertEquals(TEST_PRINCIPAL, ackEnv.principal);
+    assertEquals("UUFI:model-write", ackEnv.transactionId);
+    UufiControl ctrl = convertTo(UufiControl.class, toMap(captured.get(0)).get("payload"));
+    assertNotNull(ctrl.control, "Inbound model write must return UufiControl error");
+    assertEquals(Level.ERROR.value(), ctrl.control.status.level);
+  }
+
+  /**
+   * Test that model/cloud queries over UUFI succeed while scrubbing sensitive fields
+   * (password and credentials, including nested device_ids) and preserving non-secret metadata.
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  public void inboundModelCloudQueryScrubsSensitiveCredentialsTest() {
+    Credential cred = new Credential();
+    cred.key_data = "PRIVATE-OR-AUTH-KEY";
+
+    CloudModel childModel = new CloudModel();
+    childModel.num_id = "111222";
+    childModel.password = "nested-secret-pass";
+    childModel.credentials = List.of(cred);
+
+    CloudModel secretModel = new CloudModel();
+    secretModel.version = TEST_VERSION;
+    secretModel.auth_type = Auth_type.ES_256;
+    secretModel.num_id = "987654321";
+    secretModel.blocked = false;
+    secretModel.password = "secret-broker-pass";
+    secretModel.credentials = List.of(cred);
+    secretModel.device_ids = Map.of("child-1", childModel);
+    when(provider.fetchDevice("reg-1", "dev-1")).thenReturn(secretModel);
+
+    Envelope transport = new Envelope();
+    transport.source = "app-1";
+    transport.gatewayId = "uufi";
+    transport.deviceRegistryId = "reg-1";
+    transport.deviceId = "dev-1";
+    transport.subType = SubType.MODEL;
+    transport.subFolder = SubFolder.CLOUD;
+
+    Map<String, Object> queryWrapper = new HashMap<>();
+    queryWrapper.put("subType", "model");
+    queryWrapper.put("subFolder", "cloud");
+    queryWrapper.put("deviceRegistryId", "reg-1");
+    queryWrapper.put("deviceId", "dev-1");
+    queryWrapper.put("principal", TEST_PRINCIPAL);
+    queryWrapper.put("transactionId", "UUFI:q-cloud");
+    queryWrapper.put("payload", null);
+
+    activeTestInstance(() -> getReverseDispatcher().publish(new Bundle(transport, queryWrapper)));
+
+    assertEquals(1, captured.size(), "expected a single scrubbed model/cloud Success Ack");
+    String rawReply = stringify(captured.get(0));
+    assertFalse(rawReply.contains("secret-broker-pass"),
+        "UUFI model/cloud query must scrub device password");
+    assertFalse(rawReply.contains("nested-secret-pass"),
+        "UUFI model/cloud query must scrub nested device_ids password");
+    assertFalse(rawReply.contains("PRIVATE-OR-AUTH-KEY"),
+        "UUFI model/cloud query must scrub device credentials");
+
+    Map<String, Object> payload = toMap(toMap(captured.get(0)).get("payload"));
+    assertNull(payload.get("control"), "model/cloud query should succeed without error control");
+    assertNull(payload.get("password"), "password must be removed");
+    assertNull(payload.get("credentials"), "credentials must be removed");
+    assertEquals("987654321", payload.get("num_id"), "non-secret num_id must be preserved");
+    assertEquals("ES256", payload.get("auth_type"), "non-secret auth_type must be preserved");
+    assertNotNull(payload.get("timestamp"), "model/cloud reply should include timestamp");
+    assertNotNull(payload.get("version"), "model/cloud reply should include version");
+
+    Map<String, Object> deviceIds = (Map<String, Object>) payload.get("device_ids");
+    Map<String, Object> childMap = toMap(deviceIds.get("child-1"));
+    assertEquals("111222", childMap.get("num_id"), "nested non-secret fields must be preserved");
+    assertNull(childMap.get("password"), "nested password must be removed");
+    assertNull(childMap.get("credentials"), "nested credentials must be removed");
+  }
+
+  /**
+   * Test that registry-less MQTT topic (/uufi/c/...) cannot mutate a scoped device via
+   * inner envelope deviceRegistryId/deviceId (prevents MQTT topic-ACL bypass).
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  public void inboundUnscopedTopicWithScopedInnerEnvelopeRejectedTest() {
+    when(provider.modifyConfig(any(Envelope.class), any(Function.class))).thenAnswer(inv -> {
+      Function<Entry<Long, String>, String> munger = inv.getArgument(1);
+      return munger.apply(new SimpleEntry<>(0L, "{}"));
+    });
+
+    Envelope transport = new Envelope();
+    transport.source = "app-1";
+    transport.gatewayId = "uufi";
+    transport.subType = SubType.CONFIG;
+    transport.subFolder = SubFolder.POINTSET;
+    // Simulates /uufi/c/config/pointset where topic has no registry/device segments.
+    transport.deviceRegistryId = null;
+    transport.deviceId = null;
+
+    Map<String, Object> wrapper = new HashMap<>();
+    wrapper.put("subType", "config");
+    wrapper.put("subFolder", "pointset");
+    wrapper.put("deviceRegistryId", "reg-restricted");
+    wrapper.put("deviceId", "dev-1");
+    wrapper.put("principal", TEST_PRINCIPAL);
+    wrapper.put("transactionId", "UUFI:acl-bypass");
+    wrapper.put("payload", Map.of("points", Map.of("temp", Map.of("set_value", 99))));
+
+    activeTestInstance(() -> getReverseDispatcher().publish(new Bundle(transport, wrapper)));
+
+    verify(provider, never()).modifyConfig(any(Envelope.class), any(Function.class));
+    assertEquals(1, captured.size(), "expected UufiControl error reply for coordinate mismatch");
+    UufiControl ctrl = convertTo(UufiControl.class, toMap(captured.get(0)).get("payload"));
+    assertNotNull(ctrl.control);
+    assertEquals(Level.ERROR.value(), ctrl.control.status.level);
+  }
+
+  /**
+   * Test that non-object config write payloads fail fast with a level 500 Control Ack
+   * instead of calling modifyConfig and silently hanging when processConfigChange returns null.
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  public void inboundConfigWriteNonMapPayloadReturnsControlErrorTest() {
+    when(provider.modifyConfig(any(Envelope.class), any(Function.class))).thenReturn(null);
+
+    Envelope transport = new Envelope();
+    transport.source = "app-1";
+    transport.gatewayId = "uufi";
+    transport.deviceRegistryId = "reg-1";
+    transport.deviceId = "dev-1";
+    transport.subType = SubType.CONFIG;
+    transport.subFolder = SubFolder.POINTSET;
+
+    Map<String, Object> wrapper = new HashMap<>();
+    wrapper.put("subType", "config");
+    wrapper.put("subFolder", "pointset");
+    wrapper.put("deviceRegistryId", "reg-1");
+    wrapper.put("deviceId", "dev-1");
+    wrapper.put("principal", TEST_PRINCIPAL);
+    wrapper.put("transactionId", "UUFI:bad-cfg-type");
+    wrapper.put("payload", 123);
+
+    activeTestInstance(() -> getReverseDispatcher().publish(new Bundle(transport, wrapper)));
+
+    verify(provider, never()).modifyConfig(any(Envelope.class), any(Function.class));
+    assertEquals(1, captured.size(), "expected level 500 Control Ack instead of silent drop");
+    UufiControl ctrl = convertTo(UufiControl.class, toMap(captured.get(0)).get("payload"));
+    assertNotNull(ctrl.control);
+    assertEquals(Level.ERROR.value(), ctrl.control.status.level);
+  }
+
+  /**
+   * Test that PubSub config writes omitting deviceRegistryId/deviceId fail fast with Control Ack.
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  public void inboundPubSubConfigWriteMissingDeviceCoordsReturnsControlErrorTest() {
+    terminateAndWait();
+    UdmiServicePod.resetForTest();
+    super.resetAfter();
+
+    final String psRecv = "ps_missing_dev_in";
+    final String psSend = "ps_missing_dev_target";
+    final String sideQueue = "ps_missing_dev_out";
+
+    EndpointConfiguration config = new EndpointConfiguration();
+    config.name = "uufi";
+    config.protocol = Protocol.LOCAL;
+    config.hostname = TEST_NAMESPACE;
+    config.recv_id = psRecv;
+    config.send_id = psSend;
+    config.side_id = sideQueue;
+
+    UufiProcessor psProcessor = new UufiProcessor(config);
+    psProcessor.setPubSubProtocolForTest(true);
+    UdmiServicePod.putComponent(ProcessorBase.IOT_ACCESS_COMPONENT, () -> provider);
+    psProcessor.activate();
+
+    EndpointConfiguration inPeerConfig = new EndpointConfiguration();
+    inPeerConfig.protocol = Protocol.LOCAL;
+    inPeerConfig.hostname = TEST_NAMESPACE;
+    inPeerConfig.send_id = psRecv;
+    final MessageDispatcherImpl inPeer = new MessageDispatcherImpl(inPeerConfig);
+
+    EndpointConfiguration sidePeerConfig = new EndpointConfiguration();
+    sidePeerConfig.protocol = Protocol.LOCAL;
+    sidePeerConfig.hostname = TEST_NAMESPACE;
+    sidePeerConfig.recv_id = sideQueue;
+    MessageDispatcherImpl sidePeer = new MessageDispatcherImpl(sidePeerConfig);
+    List<Object> sideMessages = Collections.synchronizedList(new ArrayList<>());
+    sidePeer.registerHandler(Object.class, sideMessages::add);
+    sidePeer.activate();
+
+    Envelope cfgEnv = new Envelope();
+    cfgEnv.subType = SubType.CONFIG;
+    cfgEnv.subFolder = SubFolder.POINTSET;
+    cfgEnv.source = "pubsub+app";
+    cfgEnv.principal = "app@";
+    cfgEnv.transactionId = "UUFI:ps-missing-dev";
+    inPeer.publish(new Bundle(cfgEnv, Map.of("points", Map.of())));
+
+    ((MessageDispatcherImpl) psProcessor.getDispatcher()).terminate();
+    ((MessageDispatcherImpl) psProcessor.getDispatcher()).awaitShutdown();
+    sidePeer.terminate();
+    sidePeer.awaitShutdown();
+    psProcessor.shutdown();
+
+    verify(provider, never()).modifyConfig(any(Envelope.class), any(Function.class));
+    assertEquals(1, sideMessages.size(), "expected level 500 Control Ack on sidecar");
+    UufiControl ctrl = convertTo(UufiControl.class, sideMessages.get(0));
+    assertNotNull(ctrl.control);
+    assertEquals(Level.ERROR.value(), ctrl.control.status.level);
+  }
+
+  /**
+   * Test that an MQTT string sentinel that happens to be valid base64 JSON (e.g. "e30=")
+   * is not speculatively base64-decoded and applied as a config object.
+   */
+  @Test
+  @SuppressWarnings("unchecked")
+  public void inboundBase64LikeStringSentinelNotDecodedAsConfigObjectTest() {
+    when(provider.modifyConfig(any(Envelope.class), any(Function.class))).thenAnswer(inv -> {
+      Function<Entry<Long, String>, String> munger = inv.getArgument(1);
+      return munger.apply(new SimpleEntry<>(0L, "{}"));
+    });
+
+    Envelope transport = new Envelope();
+    transport.source = "app-1";
+    transport.gatewayId = "uufi";
+    transport.deviceRegistryId = "reg-1";
+    transport.deviceId = "dev-1";
+    transport.subType = SubType.CONFIG;
+    transport.subFolder = SubFolder.POINTSET;
+
+    Map<String, Object> wrapper = new HashMap<>();
+    wrapper.put("subType", "config");
+    wrapper.put("subFolder", "pointset");
+    wrapper.put("deviceRegistryId", "reg-1");
+    wrapper.put("deviceId", "dev-1");
+    wrapper.put("principal", TEST_PRINCIPAL);
+    wrapper.put("transactionId", "UUFI:b64-sentinel");
+    wrapper.put("payload", "e30=");
+
+    activeTestInstance(() -> getReverseDispatcher().publish(new Bundle(transport, wrapper)));
+
+    verify(provider, never()).modifyConfig(any(Envelope.class), any(Function.class));
+    assertEquals(1, captured.size(), "expected level 500 Control Ack for unknown string sentinel");
+    UufiControl ctrl = convertTo(UufiControl.class, toMap(captured.get(0)).get("payload"));
+    assertNotNull(ctrl.control, "base64-like string sentinel must not be applied as JSON object");
+    assertEquals(Level.ERROR.value(), ctrl.control.status.level);
+  }
+
+  /**
+   * Test that malformed UUFI JSON producing a BundleException does not reflect to UDMI-REFLECT,
+   * and returns a level-500 Control Ack when MQTT routing properties (principal/subType/subFolder)
+   * are present.
+   */
+  @Test
+  public void inboundMalformedBundleExceptionReturnsControlAckWithoutReflectingTest() {
+    Bundle malformedBundle = new Bundle();
+    malformedBundle.message = "While parsing json object";
+    malformedBundle.payload = "{not-json";
+    malformedBundle.attributesMap = new HashMap<>(Map.of(
+        "gatewayId", "uufi",
+        "deviceRegistryId", "reg-1",
+        "deviceId", "dev-1",
+        "subType", "config",
+        "subFolder", "pointset",
+        "principal", TEST_PRINCIPAL,
+        "transactionId", "UUFI:malformed-json"));
+
+    activeTestInstance(() -> getReverseDispatcher().publish(malformedBundle));
+
+    verify(provider, never()).sendCommand(any(Envelope.class), any(SubFolder.class), any());
+    assertEquals(1, captured.size(),
+        "Malformed UUFI bundle with principal/subType/subFolder should emit Control Ack");
+    Envelope ackEnv = capturedEnvelopes.get(0);
+    assertEquals(TEST_PRINCIPAL, ackEnv.principal);
+    assertEquals("UUFI:malformed-json", ackEnv.transactionId);
+    UufiControl ctrl = convertTo(UufiControl.class, toMap(captured.get(0)).get("payload"));
+    assertNotNull(ctrl.control, "Expected UufiControl error reply");
+    assertEquals(Level.ERROR.value(), ctrl.control.status.level);
+  }
+
+  /**
+   * Test that PubSub malformed bundles with only principal (minimal routing property) and
+   * null-payload Layer 1 handshakes with principal emit level-500 Control Acks on sidecar
+   * without reflecting to UDMI-REFLECT.
+   */
+  @Test
+  public void inboundPubSubMalformedBundleMinimalPrincipalAndNullHandshakeTest() {
+    terminateAndWait();
+    UdmiServicePod.resetForTest();
+    super.resetAfter();
+
+    final String psRecv = "ps_err_in";
+    final String psSend = "ps_err_target";
+    final String sideQueue = "ps_err_out";
+
+    EndpointConfiguration config = new EndpointConfiguration();
+    config.name = "uufi";
+    config.protocol = Protocol.LOCAL;
+    config.hostname = TEST_NAMESPACE;
+    config.recv_id = psRecv;
+    config.send_id = psSend;
+    config.side_id = sideQueue;
+
+    UufiProcessor psProcessor = new UufiProcessor(config);
+    psProcessor.setPubSubProtocolForTest(true);
+    UdmiServicePod.putComponent(ProcessorBase.IOT_ACCESS_COMPONENT, () -> provider);
+    psProcessor.activate();
+
+    EndpointConfiguration inPeerConfig = new EndpointConfiguration();
+    inPeerConfig.protocol = Protocol.LOCAL;
+    inPeerConfig.hostname = TEST_NAMESPACE;
+    inPeerConfig.send_id = psRecv;
+    final MessageDispatcherImpl inPeer = new MessageDispatcherImpl(inPeerConfig);
+
+    EndpointConfiguration sidePeerConfig = new EndpointConfiguration();
+    sidePeerConfig.protocol = Protocol.LOCAL;
+    sidePeerConfig.hostname = TEST_NAMESPACE;
+    sidePeerConfig.recv_id = sideQueue;
+    MessageDispatcherImpl sidePeer = new MessageDispatcherImpl(sidePeerConfig);
+    List<Entry<Envelope, Object>> sideMessages =
+        Collections.synchronizedList(new ArrayList<>());
+    sidePeer.registerHandler(Object.class, msg -> {
+      Envelope env = sidePeer.getContinuation(msg).getEnvelope();
+      sideMessages.add(new SimpleEntry<>(env, msg));
+    });
+    sidePeer.activate();
+
+    // 1. PubSub malformed BundleException carrying only minimal principal + transactionId
+    Bundle malformedBundle = new Bundle();
+    malformedBundle.message = "While parsing json object";
+    malformedBundle.payload = "{not-json";
+    malformedBundle.attributesMap = new HashMap<>(Map.of(
+        "principal", "app@",
+        "transactionId", "UUFI:ps-bad-json"));
+    inPeer.publish(malformedBundle);
+
+    // 2. PubSub null-payload Layer 1 handshake with principal
+    Envelope nullHandshake = new Envelope();
+    nullHandshake.subType = SubType.STATE;
+    nullHandshake.subFolder = SubFolder.UDMI;
+    nullHandshake.source = "pubsub+app";
+    nullHandshake.principal = "app@";
+    nullHandshake.transactionId = "UUFI:ps-null-hs";
+    inPeer.publish(new Bundle(nullHandshake, MessageDispatcher.nullMessage()));
+
+    ((MessageDispatcherImpl) psProcessor.getDispatcher()).terminate();
+    ((MessageDispatcherImpl) psProcessor.getDispatcher()).awaitShutdown();
+    sidePeer.terminate();
+    sidePeer.awaitShutdown();
+    psProcessor.shutdown();
+
+    verify(provider, never()).sendCommand(any(Envelope.class), any(SubFolder.class), any());
+    assertEquals(2, sideMessages.size(),
+        "Expected Control Acks for malformed bundle (minimal principal) and null handshake");
+    Map<String, Entry<Envelope, Object>> byTxn = new HashMap<>();
+    for (Entry<Envelope, Object> entry : sideMessages) {
+      byTxn.put(entry.getKey().transactionId, entry);
+      assertEquals("app@", entry.getKey().principal);
+    }
+    UufiControl badJsonCtrl =
+        convertTo(UufiControl.class, byTxn.get("UUFI:ps-bad-json").getValue());
+    assertNotNull(badJsonCtrl.control);
+    assertEquals(Level.ERROR.value(), badJsonCtrl.control.status.level);
+
+    UufiControl nullHsCtrl =
+        convertTo(UufiControl.class, byTxn.get("UUFI:ps-null-hs").getValue());
+    assertNotNull(nullHsCtrl.control);
+    assertEquals(Level.ERROR.value(), nullHsCtrl.control.status.level);
   }
 
   private UufiProcessor getProcessor() {
