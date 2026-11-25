@@ -55,9 +55,18 @@ fi
 echo $$ > $UDMIS_PID_FILE
 
 if [[ ${UDMIS_SKIP_PREP:-false} != true ]]; then
-    if [[ ! -f $UDMIS_DIR/build/libs/udmis-1.0-SNAPSHOT-all.jar || ! -f $UDMIS_DIR/var/deployed_version.json ]]; then
+    if [[ -n ${UDMI_NO_BUILD:-} ]]; then
+        if [[ ! -f $UDMIS_DIR/build/libs/udmis-1.0-SNAPSHOT-all.jar && ! -f /root/build/libs/udmis-1.0-SNAPSHOT-all.jar ]]; then
+            rm -f "$UDMIS_PID_FILE"
+            fail "Prebuilt artifact $UDMIS_DIR/build/libs/udmis-1.0-SNAPSHOT-all.jar not found (UDMI_NO_BUILD is set)."
+        fi
+        if [[ ! -f $UDMIS_DIR/var/deployed_version.json && ! -f /root/var/deployed_version.json ]]; then
+            rm -f "$UDMIS_PID_FILE"
+            fail "Prebuilt metadata $UDMIS_DIR/var/deployed_version.json not found (UDMI_NO_BUILD is set)."
+        fi
+    elif [[ ! -f $UDMIS_DIR/build/libs/udmis-1.0-SNAPSHOT-all.jar || ! -f $UDMIS_DIR/var/deployed_version.json ]]; then
         if [[ ! -f /root/build/libs/udmis-1.0-SNAPSHOT-all.jar ]]; then
-            $UDMI_ROOT/bin/container udmis prep --no-check || true
+            $UDMI_ROOT/bin/container udmis prep --no-check
         fi
     fi
 fi
@@ -83,8 +92,8 @@ if [[ ${ETCD_USE_SSL:-false} == true ]]; then
     export ETCD_KEY=${ETCD_KEY:-$(realpath $CERT_DIR/rsa_private.pem)}
 fi
 
-export SSL_SECRETS_DIR=$(realpath $CERT_DIR)
-mkdir -p "$ETC_DIR/log"
+mkdir -p "$CERT_DIR" "$ETC_DIR/log"
+export SSL_SECRETS_DIR=$(realpath "$CERT_DIR")
 touch "$ETC_DIR/log/mosquitto.log" 2>/dev/null || true
 export MOSQUITTO_LOG_PATH=$(realpath -m "$ETC_DIR/log/mosquitto.log")
 
@@ -123,28 +132,50 @@ fi
 
 # Wait for prerequisite services (mosquitto and etcd) if running locally
 if [[ -d "$ETC_DIR" ]]; then
-    for i in $(seq 1 150); do
+    mosquitto_ready=false
+    for i in $(seq 1 225); do
         if [[ -f "$ETC_DIR/mosquitto.ready" ]]; then
+            mosquitto_ready=true
             break
         fi
         sleep 0.2
     done
+    if [[ "$mosquitto_ready" != true ]]; then
+        echo "=== MOSQUITTO PREREQUISITE NOT READY ($ETC_DIR/mosquitto.ready missing after 45s) ===" >&2
+        [[ ! -f "$ETC_DIR/log/mosquitto.log" ]] || tail -n 50 "$ETC_DIR/log/mosquitto.log" >&2 || true
+        rm -f "$UDMIS_PID_FILE"
+        fail "Mosquitto failed to become ready ($ETC_DIR/mosquitto.ready not found)."
+    fi
 elif [[ -n "${MQTT_PORT:-}" ]]; then
+    mqtt_ready=false
     for i in $(seq 1 150); do
         if timeout 1 bash -c "</dev/tcp/127.0.0.1/${MQTT_PORT}" 2>/dev/null; then
+            mqtt_ready=true
             break
         fi
         sleep 0.2
     done
+    if [[ "$mqtt_ready" != true ]]; then
+        rm -f "$UDMIS_PID_FILE"
+        fail "MQTT broker on 127.0.0.1:${MQTT_PORT} not reachable after 30s."
+    fi
 fi
 
 if [[ -n "${ETCD_PORT:-}" ]]; then
+    etcd_ready=false
     for i in $(seq 1 150); do
         if timeout 1 bash -c "</dev/tcp/127.0.0.1/${ETCD_PORT}" 2>/dev/null || curl -sf "http://127.0.0.1:${ETCD_PORT}/health" >/dev/null 2>&1; then
+            etcd_ready=true
             break
         fi
         sleep 0.2
     done
+    if [[ "$etcd_ready" != true ]]; then
+        echo "=== ETCD PREREQUISITE NOT READY (127.0.0.1:${ETCD_PORT} unreachable after 30s) ===" >&2
+        [[ ! -f "${ETCD_LOG:-out/etcd.log}" ]] || tail -n 50 "${ETCD_LOG:-out/etcd.log}" >&2 || true
+        rm -f "$UDMIS_PID_FILE"
+        fail "etcd on 127.0.0.1:${ETCD_PORT} failed to become ready after 30s."
+    fi
 fi
 
 echo Using UDMIS_CONFIG $UDMIS_CONFIG

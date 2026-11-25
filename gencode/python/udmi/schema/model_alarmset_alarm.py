@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypeAlias
 
 from ._base import DataModel
 from .discovery_ref import RefDiscovery
@@ -33,7 +33,7 @@ class BaselineState(Enum):
     failure = 'failure'
 
 
-Tag = Optional[Any]
+Tag: TypeAlias = Optional[Any]
 
 
 @dataclass

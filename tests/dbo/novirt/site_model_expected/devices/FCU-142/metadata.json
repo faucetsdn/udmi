@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/FCU_DFVSC_DSP_GDC_HWDC_DSPZDHC",
-      "label": "FC S-14 / 15 & VAVCO S1-1-68 Clean Room"
+      "type": [
+        "HVAC/FCU_DFVSC_DSP_GDC_HWDC_DSPZDHC"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "FC S-14 / 15 & VAVCO S1-1-68 Clean Room"
+      }
     }
   },
   "cloud": {

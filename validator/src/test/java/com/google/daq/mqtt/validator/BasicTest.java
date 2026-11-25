@@ -348,4 +348,46 @@ public class BasicTest extends TestBase {
     assertTrue("Should have baseline_tolerance error", hasBaselineError);
   }
 
+  @Test
+  public void missingAndExprPointsOmittedValidation() {
+    Metadata deviceMetadata = validator.getReportingDevices().get(TestCommon.DEVICE_ID)
+        .getMetadata();
+    udmi.schema.PointPointsetModel missingModel = new udmi.schema.PointPointsetModel();
+    missingModel.type = "missing";
+    deviceMetadata.pointset.points.put("unimplemented_sensor", missingModel);
+
+    udmi.schema.PointPointsetModel exprModel = new udmi.schema.PointPointsetModel();
+    exprModel.expr = "VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor";
+    deviceMetadata.pointset.points.put("derived_sensor", exprModel);
+
+    PointsetEvents validEvents = basePointsetEvents();
+    validator.validateMessage(getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, validEvents));
+    PointsetState validState = basePointsetState();
+    validator.validateMessage(getMessageBundle(STATE_SUBTYPE, POINTSET_SUBFOLDER, validState));
+    ValidationState validReport = getValidationReport();
+    assertEquals("No error devices when missing/expr points omitted",
+        0, validReport.summary.error_devices.size());
+  }
+
+  @Test
+  public void reportedMissingPointFlaggedAsExtra() {
+    Metadata deviceMetadata = validator.getReportingDevices().get(TestCommon.DEVICE_ID)
+        .getMetadata();
+    udmi.schema.PointPointsetModel missingModel = new udmi.schema.PointPointsetModel();
+    missingModel.type = "missing";
+    deviceMetadata.pointset.points.put("unimplemented_sensor", missingModel);
+
+    PointsetEvents extraMissingEvents = basePointsetEvents();
+    extraMissingEvents.points.put("unimplemented_sensor", new PointPointsetEvents());
+    validator.validateMessage(
+        getMessageBundle(EVENTS_SUBTYPE, POINTSET_SUBFOLDER, extraMissingEvents));
+    ValidationState report = getValidationReport();
+    assertEquals("One error device when missing point is reported",
+        1, report.summary.error_devices.size());
+    ValidationEvents invalidResult = getValidationResult(TestCommon.DEVICE_ID, EVENTS_SUBTYPE,
+        POINTSET_SUBFOLDER);
+    assertTrue("Reported missing point flagged in extra",
+        invalidResult.pointset.extra.contains("unimplemented_sensor"));
+  }
+
 }

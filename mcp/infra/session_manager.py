@@ -43,12 +43,13 @@ class SessionManager:
 
     def is_port_block_available(self, base_port: int) -> bool:
         """Check if the required block of ports is available."""
-        # Check MQTT (P), etcd (P+1), influx (P+2), postgres (P+3), etcd-peer (P+1001)
+        # Check MQTT (P), etcd (P+1), influx (P+2), postgres (P+3), bridge-mqtt (P+100), etcd-peer (P+1001)
         required_ports = [
             base_port,
             base_port + 1,
             base_port + 2,
             base_port + 3,
+            base_port + 100,
             base_port + 1001,
         ]
         return all(self.is_port_available(p) for p in required_ports)
@@ -57,7 +58,7 @@ class SessionManager:
         self,
         test_id: str,
         base_min: int = 20000,
-        base_max: int = 55000,
+        base_max: int = 31000,
         block_size: int = 10,
     ) -> int:
         """Deterministically map a test_id to an available port block."""
@@ -147,19 +148,56 @@ class SessionManager:
         connection_url = f"mqtt://rocket:monkey@localhost:{mqtt_port}"
 
         # Build filter flags
+        exclude_list: List[str] = []
+        added_list: List[str] = []
         filter_flags = []
         if exclude:
             if isinstance(exclude, str):
-                exclude = [s.strip() for s in exclude.split(",") if s.strip()]
-            for svc in exclude:
+                exclude_list = [s.strip() for s in exclude.split(",") if s.strip()]
+            else:
+                exclude_list = list(exclude)
+            for svc in exclude_list:
                 filter_flags.append(f"!{svc}")
         if added:
             if isinstance(added, str):
-                added = [s.strip() for s in added.split(",") if s.strip()]
-            for svc in added:
+                added_list = [s.strip() for s in added.split(",") if s.strip()]
+            else:
+                added_list = list(added)
+            for svc in added_list:
                 filter_flags.append(f"++{svc}")
 
         filter_str = (" " + " ".join(filter_flags)) if filter_flags else ""
+        no_build_flag = " -n" if os.environ.get("UDMI_NO_BUILD") else ""
+
+        result_info: Dict[str, Any] = {
+            "status": "STARTING",
+            "test_id": test_id,
+            "session_name": session_name,
+            "connection_url": connection_url,
+            "project_spec": project_spec,
+            "windows": [],
+            "tls": {
+                "ca_cert": os.path.join(site_model_path, "reflector", "ca.crt"),
+                "client_cert": os.path.join(site_model_path, "reflector", "rsa_private.crt"),
+                "client_key": os.path.join(site_model_path, "reflector", "rsa_private.pem"),
+            },
+            "credentials": {
+                "username": "rocket",
+                "password": "monkey",
+            },
+            "ports": {
+                "mqtt": mqtt_port,
+                "etcd": etcd_port,
+                "influx": influx_port,
+                "postgres": postgres_port,
+            },
+            "exclude": exclude_list,
+            "added": added_list,
+            "site_model": site_model_path,
+            "run_dir": run_dir,
+        }
+        with open(info_path, "w", encoding="utf-8") as f:
+            json.dump(result_info, f, indent=2)
 
         # Build udmi start command
         start_cmd = (
@@ -170,7 +208,7 @@ class SessionManager:
             f"export INFLUX_PORT='{influx_port}' && "
             f"export POSTGRES_PORT='{postgres_port}' && "
             f"cd '{self.udmi_root}' && "
-            f"bin/udmi start block '{site_model_path}' '{project_spec}'{filter_str}"
+            f"bin/udmi start{no_build_flag} block '{site_model_path}' '{project_spec}'{filter_str}"
         )
 
         # Launch in background tmux session
@@ -203,10 +241,12 @@ class SessionManager:
             site_model_path=site_model_path,
             port=mqtt_port,
             timeout_seconds=timeout_seconds,
+            expect_udmis=("udmis" not in exclude_list),
+            expect_mosquitto=("mosquitto" not in exclude_list),
         )
 
         if not ready:
-            logs = self.get_test_logs(test_id, window="main", lines=60)
+            logs = self._collect_failure_diagnostics(test_id, session_name)
             self.terminate_test_setup(test_id, clean_workspace=False)
             raise TimeoutError(
                 f"Test setup '{test_id}' failed to become ready within {timeout_seconds}s.\n"
@@ -235,35 +275,8 @@ class SessionManager:
                 check=False,
             )
 
-        windows = self.list_test_windows(test_id)
-
-        result_info = {
-            "status": "READY",
-            "test_id": test_id,
-            "session_name": session_name,
-            "connection_url": connection_url,
-            "project_spec": project_spec,
-            "windows": windows,
-            "tls": {
-                "ca_cert": os.path.join(site_model_path, "reflector", "ca.crt"),
-                "client_cert": os.path.join(site_model_path, "reflector", "rsa_private.crt"),
-                "client_key": os.path.join(site_model_path, "reflector", "rsa_private.pem"),
-            },
-            "credentials": {
-                "username": "rocket",
-                "password": "monkey",
-            },
-            "ports": {
-                "mqtt": mqtt_port,
-                "etcd": etcd_port,
-                "influx": influx_port,
-                "postgres": postgres_port,
-            },
-            "exclude": exclude or [],
-            "added": added or [],
-            "site_model": site_model_path,
-            "run_dir": run_dir,
-        }
+        result_info["status"] = "READY"
+        result_info["windows"] = self.list_test_windows(test_id)
 
         with open(info_path, "w", encoding="utf-8") as f:
             json.dump(result_info, f, indent=2)
@@ -276,6 +289,45 @@ class SessionManager:
         """Terminate an active test setup and its tmux session."""
         session_name = self.sanitize_session_name(test_id)
         run_dir = os.path.join(self.instances_dir, session_name)
+        info_path = os.path.join(run_dir, "session_info.json")
+
+        saved_info: Dict[str, Any] = {}
+        if os.path.isfile(info_path):
+            try:
+                with open(info_path, "r", encoding="utf-8") as f:
+                    saved_info = json.load(f)
+            except Exception:
+                saved_info = {}
+
+        udmi_bin = os.path.join(self.udmi_root, "bin", "udmi")
+        if os.path.isdir(run_dir) and os.path.isfile(udmi_bin) and (
+            self.is_session_active(session_name)
+            or self.is_session_active("udmi_barbican")
+            or self.is_session_active("udmi_butler")
+        ):
+            env = os.environ.copy()
+            env["UDMI_ROOT"] = self.udmi_root
+            env["UDMI_RUN_DIR"] = run_dir
+            ports = saved_info.get("ports", {})
+            if ports.get("mqtt"):
+                env["MQTT_PORT"] = str(ports["mqtt"])
+            if ports.get("etcd"):
+                env["ETCD_PORT"] = str(ports["etcd"])
+            if ports.get("influx"):
+                env["INFLUX_PORT"] = str(ports["influx"])
+            if ports.get("postgres"):
+                env["POSTGRES_PORT"] = str(ports["postgres"])
+            stop_cmd = [udmi_bin, "stop"]
+            if saved_info.get("project_spec"):
+                stop_cmd.append(str(saved_info["project_spec"]))
+            subprocess.run(
+                stop_cmd,
+                cwd=self.udmi_root,
+                env=env,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                check=False,
+            )
 
         if self.is_session_active(session_name):
             subprocess.run(
@@ -383,6 +435,38 @@ class SessionManager:
         except (OSError, socket.timeout):
             return False
 
+    def _is_main_pane_dead(self, session_name: str) -> bool:
+        """Return True if the main window pane has already exited under remain-on-exit."""
+        res = subprocess.run(
+            ["tmux", "list-panes", "-t", f"{session_name}:main", "-F", "#{pane_dead}"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            check=False,
+        )
+        return res.returncode == 0 and isinstance(res.stdout, str) and res.stdout.strip() == "1"
+
+    def _collect_failure_diagnostics(self, test_id: str, session_name: str) -> str:
+        """Collect console output from the wrapper session and Barbican windows on failure."""
+        sections: List[str] = []
+        if self.is_session_active(session_name):
+            try:
+                sections.append(f"[{session_name}:main]\n" + self.get_test_logs(test_id, window="main", lines=80))
+            except Exception as exc:
+                sections.append(f"[{session_name}:main] ({exc})")
+        if self.is_session_active("udmi_barbican"):
+            for win in ("etcd", "mosquitto", "udmis"):
+                res = subprocess.run(
+                    ["tmux", "capture-pane", "-t", f"udmi_barbican:{win}", "-p", "-S", "-50"],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                    check=False,
+                )
+                if res.returncode == 0 and isinstance(res.stdout, str) and res.stdout.strip():
+                    sections.append(f"[udmi_barbican:{win}]\n{res.stdout}")
+        return "\n".join(sections) if sections else "(No active session logs available)"
+
     def _wait_for_readiness(
         self,
         session_name: str,
@@ -390,6 +474,8 @@ class SessionManager:
         site_model_path: str,
         port: int,
         timeout_seconds: int,
+        expect_udmis: bool = True,
+        expect_mosquitto: bool = True,
     ) -> bool:
         """Wait until Mosquitto, UDMIS pod_ready, and certificates are all present and ready."""
         start_time = time.time()
@@ -397,20 +483,20 @@ class SessionManager:
         ca_cert_file = os.path.join(site_model_path, "reflector", "ca.crt")
 
         while time.time() - start_time < timeout_seconds:
-            # Check if session died prematurely
-            if not self.is_session_active(session_name):
+            # Check if session or main pane died prematurely
+            if not self.is_session_active(session_name) or self._is_main_pane_dead(session_name):
                 return False
 
-            # Check Mosquitto port
-            tcp_ok = self._probe_tcp("127.0.0.1", port, timeout=0.5)
+            # Check Mosquitto port and CA certificate if mosquitto is enabled
+            if expect_mosquitto:
+                tcp_ok = self._probe_tcp("127.0.0.1", port, timeout=0.5)
+                ca_ok = os.path.isfile(ca_cert_file) and os.path.getsize(ca_cert_file) > 0
+            else:
+                tcp_ok = True
+                ca_ok = True
 
-            # Check pod_ready.txt
-            pod_ok = os.path.isfile(pod_ready_file) or os.path.isfile(
-                os.path.join(self.udmi_root, "var", "pod_ready.txt")
-            )
-
-            # Check CA certificate
-            ca_ok = os.path.isfile(ca_cert_file) and os.path.getsize(ca_cert_file) > 0
+            # Check isolated pod_ready.txt if udmis is enabled
+            pod_ok = os.path.isfile(pod_ready_file) if expect_udmis else True
 
             if tcp_ok and pod_ok and ca_ok:
                 return True

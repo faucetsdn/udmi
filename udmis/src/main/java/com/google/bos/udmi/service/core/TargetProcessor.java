@@ -4,6 +4,7 @@ import static com.google.bos.udmi.service.pod.UdmiServicePod.UDMI_VERSION;
 import static com.google.udmi.util.Common.TIMESTAMP_KEY;
 import static com.google.udmi.util.Common.VERSION_KEY;
 import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.isNotEmpty;
 import static com.google.udmi.util.JsonUtil.stringify;
 import static com.google.udmi.util.JsonUtil.stringifyTerse;
 import static java.lang.String.format;
@@ -47,6 +48,10 @@ public class TargetProcessor extends ProcessorBase {
     publish(defaultedMessage);
 
     if (deviceId == null) {
+      if (isNotEmpty(envelope.providerId)) {
+        debug("Skipping reflector forwarding for provider message: " + stringifyTerse(envelope));
+        return;
+      }
       notice("Dropping message with no deviceId: " + stringifyTerse(envelope));
       return;
     }

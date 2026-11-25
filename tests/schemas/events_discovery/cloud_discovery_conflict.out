@@ -1,0 +1,2 @@
+1 schema violations found
+  model, cloud_model, registries, devices, and device discovery fields are mutually exclusive

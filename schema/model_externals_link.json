@@ -12,7 +12,10 @@
     },
     "type": {
       "description": "Type of this device in the external model namespace",
-      "type": "string"
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "etag": {
       "description": "Etag for referencing this external entity",

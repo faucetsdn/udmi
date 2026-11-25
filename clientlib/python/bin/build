@@ -19,8 +19,8 @@ SCRIPT_ROOT=$(realpath "$(dirname "$0")")
 LIB_ROOT=$(realpath "$SCRIPT_ROOT/..")
 UDMI_ROOT=$(realpath "$SCRIPT_ROOT/../../..")
 VENV_DIR="$LIB_ROOT/venv"
-PYPROJECT_FILE="$UDMI_ROOT/pyproject.toml"
-POETRY_VERSION="2.0.1"
+PYPROJECT_FILE="$LIB_ROOT/pyproject.toml"
+POETRY_VERSION="2.5.1"
 
 # Source the common shell functions
 source "$UDMI_ROOT/etc/shell_common.sh"
@@ -53,8 +53,10 @@ echo "Virtual environment activated."
 
 # 2. Install/Upgrade Poetry
 echo "Installing Poetry v$POETRY_VERSION..."
-pip install "poetry==$POETRY_VERSION"
+pip install "poetry==$POETRY_VERSION" "dulwich>=1.2.9"
 echo "Poetry installed."
+
+cd "$LIB_ROOT"
 
 # 3. Install dependencies
 echo "Installing project dependencies with Poetry..."
@@ -63,10 +65,10 @@ echo "Dependencies installed."
 
 # 4. Build the package
 echo "Building the package..."
-"$VENV_DIR/bin/poetry" build
+"$VENV_DIR/bin/poetry" run poe build
 echo "Package built successfully."
 
 # --- Success ---
 echo "--------------------------------------------------------------"
-echo "Build complete. Artifacts are in $UDMI_ROOT/dist/"
+echo "Build complete. Artifacts are in $LIB_ROOT/dist/"
 echo "--------------------------------------------------------------"

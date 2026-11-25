@@ -260,16 +260,36 @@ fi
 # 2. If UDMIS was started, wait for its readiness sentinel before starting Butler/registrar
 if tmux_should_run_service "udmis"; then
     POD_READY=$(resolve_pod_ready_path)
+    barbican_session="udmi_barbican${TMUX_NAMESPACE:+~$TMUX_NAMESPACE}"
+    dump_barbican_diagnostics() {
+        for win in etcd mosquitto udmis; do
+            if tmux list-windows -t "$barbican_session" -F '#{window_name}' 2>/dev/null | grep -qx "$win"; then
+                echo "--- [$barbican_session:$win] pane tail ---" >&2
+                tmux capture-pane -t "$barbican_session:$win" -p -S -50 >&2 || true
+            fi
+        done
+    }
     echo "Waiting for UDMIS readiness sentinel ($POD_READY)..."
     WAITING=90
     for i in $(seq 1 $WAITING); do
         if [[ -f $POD_READY ]]; then
             break
         fi
+        for win in etcd mosquitto udmis; do
+            if tmux list-windows -t "$barbican_session" -F '#{window_name}' 2>/dev/null | grep -qx "$win"; then
+                pane_tail=$(tmux capture-pane -t "$barbican_session:$win" -p -S -20 2>/dev/null || true)
+                if echo "$pane_tail" | grep -qE "(=== \[$win\] exited with code [1-9][0-9]* ===|Pane is dead)"; then
+                    echo "=== Barbican service '$win' failed during startup ===" >&2
+                    dump_barbican_diagnostics
+                    fail "Barbican service '$win' exited with error before UDMIS became ready."
+                fi
+            fi
+        done
         sleep 1
     done
     if [[ ! -f $POD_READY ]]; then
-        echo "=== UDMIS failed to become ready within ${WAITING}s ==="
+        echo "=== UDMIS failed to become ready within ${WAITING}s ===" >&2
+        dump_barbican_diagnostics
         fail "pod_ready.txt not found."
     fi
 fi

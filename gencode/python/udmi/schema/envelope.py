@@ -51,6 +51,9 @@ class Envelope(DataModel):
     """
 
     deviceId: Optional[str] = None
+    providerId: Optional[str] = None
+    subSetKey: Optional[str] = None
+    deviceGuid: Optional[str] = None
     deviceNumId: Optional[str] = None
     deviceRegistryId: Optional[str] = None
     deviceRegistryLocation: Optional[str] = None

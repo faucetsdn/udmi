@@ -3,9 +3,9 @@
 
 from __future__ import annotations
 
-from typing import Dict, Optional
+from typing import Dict, Optional, TypeAlias
 
 from ._base import DataModel
 from .building_translation import BuildingTranslation
 
-BuildingConfig = Optional[Dict[str, BuildingTranslation]]
+BuildingConfig: TypeAlias = Optional[Dict[str, BuildingTranslation]]

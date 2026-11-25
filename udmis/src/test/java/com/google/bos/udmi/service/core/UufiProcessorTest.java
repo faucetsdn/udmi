@@ -323,6 +323,40 @@ public class UufiProcessorTest extends ProcessorTestBase {
     assertEquals(expectedSubFolders, subFolders, "sharded subfolders mismatch");
   }
 
+  @Test
+  public void outboundSystemModelPropagatesDeviceGuidTest() {
+    final String expectedGuid = "11111111-2222-3333-4444-555555555555";
+    Envelope systemEnvelope = new Envelope();
+    systemEnvelope.subType = SubType.MODEL;
+    systemEnvelope.subFolder = SubFolder.SYSTEM;
+    systemEnvelope.deviceId = "dev-1";
+    systemEnvelope.deviceRegistryId = "reg-1";
+
+    udmi.schema.SystemModel systemModel = new udmi.schema.SystemModel();
+    systemModel.guid = expectedGuid;
+
+    Envelope cloudEnvelope = new Envelope();
+    cloudEnvelope.subType = SubType.MODEL;
+    cloudEnvelope.subFolder = SubFolder.CLOUD;
+    cloudEnvelope.deviceId = "dev-2";
+    cloudEnvelope.deviceRegistryId = "reg-1";
+
+    udmi.schema.CloudModel cloudModel = new udmi.schema.CloudModel();
+    cloudModel.metadata = Map.of(
+        "udmi_metadata", "{\"system\":{\"guid\":\"" + expectedGuid + "\"}}");
+
+    activeTestInstance(() -> {
+      getReverseDispatcher().publish(new Bundle(systemEnvelope, systemModel));
+      getReverseDispatcher().publish(new Bundle(cloudEnvelope, cloudModel));
+    });
+
+    assertEquals(2, captured.size(), "captured message count");
+    assertEquals(expectedGuid, toMap(captured.get(0)).get("deviceGuid"));
+    assertEquals(expectedGuid, capturedEnvelopes.get(0).deviceGuid);
+    assertEquals(expectedGuid, toMap(captured.get(1)).get("deviceGuid"));
+    assertEquals(expectedGuid, capturedEnvelopes.get(1).deviceGuid);
+  }
+
   private UufiProcessor getProcessor() {
     return (UufiProcessor) UdmiServicePod.getComponent(UufiProcessor.class);
   }

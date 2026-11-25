@@ -107,23 +107,6 @@ chmod a+rwx "$SITE_MODEL_PATH/out" 2>/dev/null || true
 echo "Launching bridgehead services with local workspace build..."
 "$UDMI_ROOT/bin/start_bridgehead" --local "$SITE_MODEL_PATH"
 
-echo "Waiting for services to be healthy..."
-for i in {1..60}; do
-    if docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
-        echo "UDMIS is ready."
-        break
-    fi
-    echo "Waiting for UDMIS... [$i/60]"
-    sleep 5
-done
-
-if ! docker logs udmis 2>&1 | grep -q "udmis running in the background"; then
-    echo "UDMIS failed to become ready in time!"
-    echo "Dumping UDMIS logs:"
-    docker logs udmis || true
-    exit 1
-fi
-
 # Generate valid keys/certs for AHU-1 inside validator container to avoid validation errors
 docker exec validator bin/keygen CERT site_model/devices/AHU-1
 
@@ -134,8 +117,8 @@ sleep 5
 docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d"
 echo "Registrar clean completed."
 sleep 15
-docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto GAT-123"
-echo "Step 1: Registrar initial setup completed."
+"$UDMI_ROOT/bridgehead/bin/setup_device" GAT-123
+echo "Step 1: Device setup (bridgehead/bin/setup_device) completed."
 
 # 2. Start Pubber container
 docker rm -f pubber 2>/dev/null || true
@@ -162,9 +145,9 @@ sleep 30
 docker exec validator bin/registrar site_model/ //mqtt/mosquitto > out/registrar_output.txt 2>&1 || failed=1
 echo "Step 5: Ran Registrar to check results."
 
-# 6. Execute Sequencer test inside validator container
-echo "Executing Sequencer test inside validator container..."
-docker exec validator bin/sequencer -v site_model/ //mqtt/mosquitto GAT-123 system_last_update > out/sequencer_output.txt 2>&1 || failed=1
+# 6. Execute Sequencer test via bridgehead/bin/sequencer
+echo "Executing Sequencer test via bridgehead/bin/sequencer..."
+"$UDMI_ROOT/bridgehead/bin/sequencer" GAT-123 system_last_update > out/sequencer_output.txt 2>&1 || failed=1
 echo "Step 6: Sequencer test executed."
 
 echo "Verifying Management UI deployment..."
@@ -186,11 +169,18 @@ grep -q "Processed UNK-1" out/registrar_output.txt || failed=1
 echo "Verifying sequencer output..."
 cat out/sequencer_output.txt
 
-# Verify Sequencer results
+# Verify Sequencer & setup_device results and host file ownership
 grep -q "RESULT pass system system_last_update" out/sequencer_output.txt || failed=1
 grep -q "Found 0 test failures, exit code 0" out/sequencer_output.txt || failed=1
+[ -s "$SITE_MODEL_PATH/out/devices/GAT-123/endpoint.json" ] || failed=1
+[ -O "$SITE_MODEL_PATH/out/devices/GAT-123/endpoint.json" ] || failed=1
+[ -s "$SITE_MODEL_PATH/devices/GAT-123/ec_private.crt" ] || failed=1
+[ -O "$SITE_MODEL_PATH/devices/GAT-123/ec_private.crt" ] || failed=1
+jq -e '.protocol == "mqtt" and .transport == "ssl" and .port == 8883 and .client_id == "/r/ZZ-TRI-FECTA/d/GAT-123" and .topic_prefix == "/r/ZZ-TRI-FECTA/d/GAT-123" and (.auth_provider.basic.password | length == 8)' "$SITE_MODEL_PATH/out/devices/GAT-123/endpoint.json" >/dev/null || failed=1
 [ -s "$SITE_MODEL_PATH/out/sequencer_GAT-123.json" ] || failed=1
 [ -s "$SITE_MODEL_PATH/out/devices/GAT-123/results.md" ] || failed=1
+[ -O "$SITE_MODEL_PATH/out/sequencer_GAT-123.json" ] || failed=1
+[ -O "$SITE_MODEL_PATH/out/devices/GAT-123/results.md" ] || failed=1
 
 if [ $failed -eq 0 ]; then
     echo "----- Test PASSED -----"

@@ -204,12 +204,22 @@ else
     echo Completed mosquitto startup.
 fi
 
-for i in $(seq 1 50); do
+mosquitto_ctrl_ready=false
+for i in $(seq 1 100); do
     if $MOSQUITTO_CTRL listClients >/dev/null 2>&1; then
+        mosquitto_ctrl_ready=true
+        break
+    fi
+    if [[ -n "${MOSQUITTO_PID:-}" && ! -d "/proc/$MOSQUITTO_PID" ]]; then
         break
     fi
     sleep 0.2
 done
+if [[ "$mosquitto_ctrl_ready" != true ]]; then
+    mosquitto_diag
+    cat "$MOSQUITTO_LOG" 2>/dev/null || true
+    fail "mosquitto_ctrl failed to connect to mosquitto on port ${MQTT_PORT:-8883}"
+fi
 
 $MOSQUITTO_CTRL createRole service || true
 $MOSQUITTO_CTRL addRoleACL service subscribePattern '/r/+/d/+/#' allow || true

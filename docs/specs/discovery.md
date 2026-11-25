@@ -79,3 +79,21 @@ be reported:
   * `blobs`: A listing of all the data blobs that a device knows how to handle. This could
   be components like firmware updates, key rotation, etc... Some blobs will be standardized
   across the system, while others will be device-specific.
+
+## Site Model Discovery
+
+Site model discovery exports the cloud-managed device metadata models for a registry using the
+standard discovery event stream contract. Requests and emitted messages set `subFolder` to
+`discovery`, `subSetKey` to `model`, and `providerId` to the backend service identifier with
+`deviceId` omitted on the message [envelope](../messages/envelope.md).
+
+A full-site model discovery scan for a registry with `N` active devices emits a deterministic,
+ordered sequence of `events/discovery` messages sharing the same `generation` timestamp and
+`iot` family:
+
+1. **Start marker** with `event_no: 0`: Signals the start of the scan stream for `generation`.
+2. **Device model events** with `event_no: 1 .. N`: One event per active device in sorted
+   `deviceId` order, with `addr` set to the device ID and `model` populated with the device's
+   [metadata](metadata.md).
+3. **End marker** with `event_no: -(N + 1)`: Signals completion of the scan stream. When a
+   registry has zero active devices, `event_no: 0` is followed immediately by `event_no: -1`.

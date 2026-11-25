@@ -32,9 +32,10 @@ The general structure of a `pointset` block exists inside of a complete metadata
     * _{`point_name`}_: Point name.
       * `units`: Expected units designation for numeric points.
       * `values`: Expected state value mapping for multi-state points (e.g., `"0.0": "OFF"`).
-      * `type`: Expected data type for non-numeric, non-enumerated points (`"string"` or `"boolean"`).
+      * `type`: Expected data type for non-numeric, non-enumerated points (`"string"` or `"boolean"`), or `"missing"` when an expected point is intentionally absent on the physical device.
+      * `expr`: Optional expression defining a virtual or calculated point (e.g., `"CHWP-2:discharge_air_temperature_sensor"` or `"VAV-3:supply_air_flowrate_sensor - VAV-1:supply_air_flowrate_sensor"`).
 
-For the complete specification on how `units`, `values`, and `type` in `metadata.json` classify a point as **Numeric**, **Multi-state**, **String**, or **Binary** and determine its wire payload type, see the [Point Typing Specification](../specs/point_typing.md).
+For the complete specification on how `units`, `values`, `type`, and `expr` in `metadata.json` classify a point and determine its wire payload behavior, see the [Point Typing Specification](../specs/point_typing.md).
 
 ## Event
 

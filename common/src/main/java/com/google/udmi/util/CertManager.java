@@ -43,8 +43,15 @@ public class CertManager {
   private static final String BOUNCY_CASTLE_PROVIDER = "BC";
   private static final String X509_FACTORY = "X.509";
   private static final String X509_ALGORITHM = "X509";
-  private static final JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider(
-      BOUNCY_CASTLE_PROVIDER);
+  private static final JcaPEMKeyConverter converter;
+
+  static {
+    if (Security.getProvider(BOUNCY_CASTLE_PROVIDER) == null) {
+      Security.addProvider(new BouncyCastleProvider());
+    }
+    converter = new JcaPEMKeyConverter().setProvider(BOUNCY_CASTLE_PROVIDER);
+  }
+
   private static final String CA_CERT_ALIAS = "ca-certificate";
   private static final String CLIENT_CERT_ALIAS = "certificate";
   private static final String PRIVATE_KEY_ALIAS = "private-key";
@@ -56,10 +63,6 @@ public class CertManager {
   private final String caCertificate;
   private final String clientCertificate;
   private final String clientPrivateKey;
-
-  {
-    Security.addProvider(new BouncyCastleProvider());
-  }
 
   /**
    * Create a new cert manager for the given site model and configuration.

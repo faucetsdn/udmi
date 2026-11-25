@@ -356,6 +356,38 @@ class ZanzaraIotAccessProviderTest {
   }
 
   @Test
+  void testDeviceGuidPersistedOnCreateUpdateAndModify() {
+    final String guid1 = "11111111-2222-3333-4444-555555555555";
+    final String guid2 = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee";
+
+    CloudModel createModel = new CloudModel();
+    createModel.operation = ModelOperation.CREATE;
+    createModel.metadata = Map.of(
+        "udmi_metadata", "{\"system\":{\"guid\":\"" + guid1 + "\"}}");
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, createModel, null);
+    assertEquals(guid1, store.get("r/test-reg/d/test-dev:guid"));
+
+    CloudModel updateModel = new CloudModel();
+    updateModel.operation = ModelOperation.UPDATE;
+    updateModel.metadata = Map.of(
+        "udmi_metadata", "{\"system\":{\"guid\":\"" + guid2 + "\"}}");
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, updateModel, null);
+    assertEquals(guid2, store.get("r/test-reg/d/test-dev:guid"));
+
+    CloudModel unrelatedModify = new CloudModel();
+    unrelatedModify.operation = ModelOperation.MODIFY;
+    unrelatedModify.metadata = Map.of("custom_attr", "custom_val");
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, unrelatedModify, null);
+    assertEquals(guid2, store.get("r/test-reg/d/test-dev:guid"));
+
+    CloudModel clearGuidModify = new CloudModel();
+    clearGuidModify.operation = ModelOperation.MODIFY;
+    clearGuidModify.metadata = Map.of("udmi_metadata", "{\"system\":{}}");
+    provider.modelDevice(TEST_REGISTRY, TEST_DEVICE, clearGuidModify, null);
+    assertNull(store.get("r/test-reg/d/test-dev:guid"));
+  }
+
+  @Test
   void testMetadataKeyBytesDoesNotOverwriteAuthKey() {
     String existingPublicKey = "-----BEGIN PUBLIC KEY-----\nTEST_PUB_KEY\n-----END PUBLIC KEY-----";
     store.put("r/test-reg/d/test-dev:auth_key", existingPublicKey);
