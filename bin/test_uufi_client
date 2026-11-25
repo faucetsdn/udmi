@@ -26,11 +26,11 @@ while [[ (! -f $CA_CERT || ! -s $CA_CERT) && $TIMEOUT -gt 0 ]]; do
     TIMEOUT=$((TIMEOUT - 1))
 done
 
-MQTT_ARGS="-h $HOST -p $PORT -u $USER -P $PASS --cafile $CA_CERT --cert $SITE_MODEL/reflector/rsa_private.crt --key $SITE_MODEL/reflector/rsa_private.pem -i $CLIENT_ID --insecure"
+MQTT_ARGS="-h $HOST -p $PORT -u $USER -P $PASS --cafile $CA_CERT --cert $SITE_MODEL/reflector/rsa_private.crt --key $SITE_MODEL/reflector/rsa_private.pem --insecure"
 
 # 1. UUFI Handshake
 REPLY_FILE=$(mktemp)
-mosquitto_sub $MQTT_ARGS -t "/uufi/c/config/udmi" -F "%p" | while read -r line; do
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_hs_sub" -t "/uufi/c/config/udmi" -F "%p" | while read -r line; do
     echo "$line" > "$REPLY_FILE"
     REPLY_TXN=$(jq -r .payload.reply.transaction_id < "$REPLY_FILE" 2>/dev/null)
     REPLY_PRINCIPAL=$(jq -r .principal < "$REPLY_FILE" 2>/dev/null)
@@ -57,7 +57,7 @@ sleep 2
 echo "Sending UUFI handshake Step 1 (State Declaration)... (txn: $TXN_ID)"
 HANDSHAKE_STATE="{\"subType\":\"state\",\"subFolder\":\"udmi\",\"version\":\"1.5.7\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"setup\":{\"functions_ver\":9,\"transaction_id\":\"$TXN_ID\",\"msg_source\":\"$CLIENT_ID\"}}"
 echo "Handshake payload: $HANDSHAKE_STATE"
-mosquitto_pub $MQTT_ARGS -t "/uufi/c/state/udmi" -m "$HANDSHAKE_STATE"
+mosquitto_pub $MQTT_ARGS -i "${CLIENT_ID}_hs_pub" -t "/uufi/c/state/udmi" -m "$HANDSHAKE_STATE"
 
 TIMEOUT=30
 while [ $GOT_HANDSHAKE -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
@@ -82,12 +82,12 @@ STATE_REPLY_FILE=$(mktemp)
 
 echo "Subscribing to /uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset for Success Ack..."
 mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_ack_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset" -F "%p" | while read -r line; do
-    ACK_SOURCE=$(echo "$line" | jq -r .source 2>/dev/null)
-    ACK_TXN=$(echo "$line" | jq -r .transactionId 2>/dev/null)
-    ACK_PRINCIPAL=$(echo "$line" | jq -r .principal 2>/dev/null)
-    ACK_SETVAL=$(echo "$line" | jq -r .payload.points.filter_differential_pressure_setpoint.set_value 2>/dev/null)
+    ACK_SOURCE=$(echo "$line" | jq -r '.source // empty' 2>/dev/null || true)
+    ACK_TXN=$(echo "$line" | jq -r '.transactionId // empty' 2>/dev/null || true)
     if [[ "$ACK_SOURCE" == "udmis" && "$ACK_TXN" == "$CFG_TXN_ID" ]]; then
         echo "$line" > "$CFG_ACK_FILE"
+        ACK_PRINCIPAL=$(jq -r '.principal // empty' < "$CFG_ACK_FILE" 2>/dev/null || true)
+        ACK_SETVAL=$(jq -r '.payload.points.filter_differential_pressure_setpoint.set_value // empty' < "$CFG_ACK_FILE" 2>/dev/null || true)
         if [[ "$ACK_PRINCIPAL" != "$CLIENT_ID" ]]; then
             echo "ERROR: Expected principal $CLIENT_ID in config ack but got $ACK_PRINCIPAL" >&2
             exit 1
@@ -168,12 +168,12 @@ echo "Starting single-channel null-payload Query test..."
 QUERY_TXN_ID="${TXN_ID}-qry"
 QUERY_REPLY_FILE=$(mktemp)
 mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_qry_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset" -F "%p" | while read -r line; do
-    Q_SOURCE=$(echo "$line" | jq -r .source 2>/dev/null)
-    Q_TXN=$(echo "$line" | jq -r .transactionId 2>/dev/null)
-    Q_PRINCIPAL=$(echo "$line" | jq -r .principal 2>/dev/null)
-    Q_SETVAL=$(echo "$line" | jq -r .payload.points.filter_differential_pressure_setpoint.set_value 2>/dev/null)
+    Q_SOURCE=$(echo "$line" | jq -r '.source // empty' 2>/dev/null || true)
+    Q_TXN=$(echo "$line" | jq -r '.transactionId // empty' 2>/dev/null || true)
     if [[ "$Q_SOURCE" == "udmis" && "$Q_TXN" == "$QUERY_TXN_ID" ]]; then
         echo "$line" > "$QUERY_REPLY_FILE"
+        Q_PRINCIPAL=$(jq -r '.principal // empty' < "$QUERY_REPLY_FILE" 2>/dev/null || true)
+        Q_SETVAL=$(jq -r '.payload.points.filter_differential_pressure_setpoint.set_value // empty' < "$QUERY_REPLY_FILE" 2>/dev/null || true)
         if [[ "$Q_PRINCIPAL" != "$CLIENT_ID" || "$Q_SETVAL" != "42" ]]; then
             echo "ERROR: Unexpected query reply: $line" >&2
             exit 1
@@ -209,17 +209,17 @@ echo "Starting Control-Plane Error Reply test..."
 ERR_TXN_ID="${TXN_ID}-err"
 ERR_REPLY_FILE=$(mktemp)
 mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_err_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset" -F "%p" | while read -r line; do
-    E_SOURCE=$(echo "$line" | jq -r .source 2>/dev/null)
-    E_TXN=$(echo "$line" | jq -r .transactionId 2>/dev/null)
-    E_PRINCIPAL=$(echo "$line" | jq -r .principal 2>/dev/null)
-    E_LEVEL=$(echo "$line" | jq -r .payload.control.status.level 2>/dev/null)
+    E_SOURCE=$(echo "$line" | jq -r '.source // empty' 2>/dev/null || true)
+    E_TXN=$(echo "$line" | jq -r '.transactionId // empty' 2>/dev/null || true)
     if [[ "$E_SOURCE" == "udmis" && "$E_TXN" == "$ERR_TXN_ID" ]]; then
         echo "$line" > "$ERR_REPLY_FILE"
+        E_PRINCIPAL=$(jq -r '.principal // empty' < "$ERR_REPLY_FILE" 2>/dev/null || true)
+        E_LEVEL=$(jq -r '.payload.control.status.level // empty' < "$ERR_REPLY_FILE" 2>/dev/null || true)
         if [[ "$E_PRINCIPAL" != "$CLIENT_ID" || "$E_LEVEL" != "500" ]]; then
             echo "ERROR: Expected UufiControl level 500 error reply, got: $line" >&2
             exit 1
         fi
-        echo "Control-Plane Error Reply SUCCESS (level=500)!"
+        echo "Control-Plane Error Reply SUCCESS (level=500): $(cat "$ERR_REPLY_FILE")"
         kill -USR1 $$ 2>/dev/null || true
         exit 0
     fi
