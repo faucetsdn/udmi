@@ -110,7 +110,7 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
   }
 
   private static EndpointConfiguration makeSidecarConfig(EndpointConfiguration config) {
-    if (config.side_id == null) {
+    if (config.side_id == null || config.side_id.isEmpty()) {
       return null;
     }
     EndpointConfiguration sidecar = deepCopy(config);
@@ -261,6 +261,11 @@ public abstract class ProcessorBase extends ContainerBase implements SimpleHandl
   protected void sideProcess(Envelope envelope, Object message) {
     ifNotNullThen(sidecar, car -> car.withEnvelope(envelope).publish(message),
         () -> processMessage(envelope, message));
+  }
+
+  protected void publishSidecarOrMain(Envelope envelope, Object message) {
+    MessageDispatcher target = sidecar != null ? sidecar : dispatcher;
+    target.withEnvelope(envelope).publish(message);
   }
 
   private void mungeConfigDebug(Envelope attributes, Object lastConfig, String reason) {

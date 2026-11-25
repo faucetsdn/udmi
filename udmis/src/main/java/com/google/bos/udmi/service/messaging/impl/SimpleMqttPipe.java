@@ -407,8 +407,10 @@ public class SimpleMqttPipe extends MessageBase {
     }
   }
 
-  private boolean shouldRetainMessage(Bundle bundle) {
-    return bundle.envelope.subType == SubType.CONFIG;
+  static boolean shouldRetainMessage(Bundle bundle) {
+    return bundle.envelope != null
+        && bundle.envelope.subType == SubType.CONFIG
+        && !"uufi".equals(bundle.envelope.gatewayId);
   }
 
   private void subscribeToMessages() {

@@ -8,9 +8,12 @@ import static com.google.udmi.util.Common.SOURCE_KEY;
 import static com.google.udmi.util.Common.SUBFOLDER_PROPERTY_KEY;
 import static com.google.udmi.util.Common.SUBTYPE_PROPERTY_KEY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.bos.udmi.service.messaging.impl.MessageBase.Bundle;
 import com.google.common.base.Strings;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -20,6 +23,9 @@ import udmi.schema.Auth_provider;
 import udmi.schema.Basic;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
+import udmi.schema.Envelope;
+import udmi.schema.Envelope.SubFolder;
+import udmi.schema.Envelope.SubType;
 
 class SimpleMqttPipeTest extends MessagePipeTestBase {
 
@@ -139,5 +145,32 @@ class SimpleMqttPipeTest extends MessagePipeTestBase {
     }
     assertEquals(java.util.Set.of(), leakedThreads,
         "Reconnect executor thread should be terminated on shutdown");
+  }
+
+  @Test
+  public void shouldRetainMessageExcludesUufiConfig() {
+    Envelope deviceConfig = new Envelope();
+    deviceConfig.subType = SubType.CONFIG;
+    deviceConfig.subFolder = SubFolder.POINTSET;
+    assertTrue(SimpleMqttPipe.shouldRetainMessage(new Bundle(deviceConfig, Map.of())),
+        "Device config messages should be retained");
+
+    Envelope proxyConfig = new Envelope();
+    proxyConfig.subType = SubType.CONFIG;
+    proxyConfig.gatewayId = "gw-1";
+    assertTrue(SimpleMqttPipe.shouldRetainMessage(new Bundle(proxyConfig, Map.of())),
+        "Proxy device config messages should be retained");
+
+    Envelope uufiConfig = new Envelope();
+    uufiConfig.subType = SubType.CONFIG;
+    uufiConfig.subFolder = SubFolder.POINTSET;
+    uufiConfig.gatewayId = "uufi";
+    assertFalse(SimpleMqttPipe.shouldRetainMessage(new Bundle(uufiConfig, Map.of())),
+        "UUFI config messages must not be retained");
+
+    Envelope deviceEvents = new Envelope();
+    deviceEvents.subType = SubType.EVENTS;
+    assertFalse(SimpleMqttPipe.shouldRetainMessage(new Bundle(deviceEvents, Map.of())),
+        "Event messages must not be retained");
   }
 }

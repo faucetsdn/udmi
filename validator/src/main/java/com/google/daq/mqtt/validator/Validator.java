@@ -706,12 +706,16 @@ public class Validator {
     ReportingDevice device = reportingDevices.computeIfAbsent(deviceId, this::newReportingDevice);
     device.clearMessageEntries();
 
-    String schemaName = messageSchema(attributes);
+    String schemaName = messageSchema(attributes, messageObj);
     String messageTag = format("device %d/%d for %s/%s", processedDevices.size(),
         reportingDevices.size(), deviceId, schemaName);
 
     try {
       boolean isString = messageObj instanceof String;
+      if (isString && isUufiSentinelString((String) messageObj, attributes)) {
+        outputLogger.info("Accepted UUFI string sentinel for %s", messageTag);
+        return device;
+      }
 
       Map<String, Object> message = isString ? null : mapCast(messageObj);
       validateTimestamp(device, message, attributes);
@@ -795,7 +799,7 @@ public class Validator {
   public void validateDeviceMessage(ReportingDevice device, Map<String, Object> message,
       Map<String, String> attributes) {
     String schemaName = ofNullable(attributes.get(SCHEMA_NAME_KEY)).orElseGet(
-        () -> messageSchema(attributes));
+        () -> messageSchema(attributes, message));
     upgradeMessage(schemaName, message);
 
     // Assume the attributes know what they're doing when the schema name is provided explicitly.
@@ -808,7 +812,7 @@ public class Validator {
       }
     }
 
-    if (schemaMap.containsKey(schemaName) && shouldValidateMessage(attributes)) {
+    if (schemaMap.containsKey(schemaName) && shouldValidateMessage(attributes, schemaName)) {
       try {
         validateMessage(schemaMap.get(schemaName), message);
       } catch (Exception e) {
@@ -960,11 +964,29 @@ public class Validator {
     return process && !ignore;
   }
 
-  private boolean shouldValidateMessage(Map<String, String> attributes) {
+  private boolean shouldValidateMessage(Map<String, String> attributes, String schemaName) {
+    if ("control_uufi".equals(schemaName)) {
+      return true;
+    }
     String subType = attributes.get(SUBTYPE_PROPERTY_KEY);
     String category = attributes.get("category");
     boolean isConfig = CONFIG_CATEGORY.equals(category) || SubType.CONFIG.value().equals(subType);
     return !isConfig;
+  }
+
+  private boolean isUufiSentinelString(String raw, Map<String, String> attributes) {
+    if (raw == null) {
+      return false;
+    }
+    String trimmed = raw.trim();
+    boolean isJsonStringLiteral = trimmed.length() >= 2
+        && trimmed.startsWith("\"") && trimmed.endsWith("\"");
+    if (!isJsonStringLiteral) {
+      return false;
+    }
+    return "uufi".equals(attributes.get("gatewayId"))
+        || "udmis".equals(attributes.get("source"))
+        || attributes.containsKey("principal");
   }
 
   private void writeDeviceOutCapture(Object message, Map<String, String> attributes,
@@ -998,6 +1020,13 @@ public class Validator {
     File deviceDir = new File(outBaseDir, format(DEVICE_FILE_FORMAT, deviceId));
     deviceDir.mkdirs();
     return deviceDir;
+  }
+
+  private String messageSchema(Map<String, String> attributes, Object messageObj) {
+    if (messageObj instanceof Map<?, ?> messageMap && messageMap.containsKey("control")) {
+      return "control_uufi";
+    }
+    return messageSchema(attributes);
   }
 
   private String messageSchema(Map<String, String> attributes) {

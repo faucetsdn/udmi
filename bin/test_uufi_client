@@ -1,7 +1,8 @@
 #!/bin/bash -e
 
 # UUFI Test Client Logic
-# Performs: Handshake -> Config Update -> State Reply verification
+# Performs: Handshake -> Config Update (+ Same-Channel Ack & State Reply) ->
+#           Single-Channel Null Query -> Control Error Reply -> System Model Update
 
 UDMI_ROOT=$(dirname $0)/..
 cd ${UDMI_ROOT}
@@ -54,7 +55,7 @@ trap "GOT_HANDSHAKE=1" USR1
 sleep 2
 
 echo "Sending UUFI handshake Step 1 (State Declaration)... (txn: $TXN_ID)"
-HANDSHAKE_STATE="{\"subType\":\"state\",\"subFolder\":\"udmi\",\"version\":\"1.5.2\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"setup\":{\"functions_ver\":9,\"transaction_id\":\"$TXN_ID\",\"msg_source\":\"$CLIENT_ID\"}}"
+HANDSHAKE_STATE="{\"subType\":\"state\",\"subFolder\":\"udmi\",\"version\":\"1.5.7\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"setup\":{\"functions_ver\":9,\"transaction_id\":\"$TXN_ID\",\"msg_source\":\"$CLIENT_ID\"}}"
 echo "Handshake payload: $HANDSHAKE_STATE"
 mosquitto_pub $MQTT_ARGS -t "/uufi/c/state/udmi" -m "$HANDSHAKE_STATE"
 
@@ -73,16 +74,39 @@ fi
 kill $SUB_PID 2>/dev/null || true
 echo "Handshake SUCCESS"
 
-# 2. Comprehensive Exchange (Config Update -> State Reply)
+# 2. Comprehensive Exchange (Config Update -> Same-Channel Success Ack + State Reply)
 echo "Starting comprehensive exchange test..."
+CFG_TXN_ID="${TXN_ID}-cfg"
+CFG_ACK_FILE=$(mktemp)
 STATE_REPLY_FILE=$(mktemp)
-# Subscribe to the UUFI state topic for the DUT
-# UDMIS will wrap incoming state and publish it here
+
+echo "Subscribing to /uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset for Success Ack..."
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_ack_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset" -F "%p" | while read -r line; do
+    ACK_SOURCE=$(echo "$line" | jq -r .source 2>/dev/null)
+    ACK_TXN=$(echo "$line" | jq -r .transactionId 2>/dev/null)
+    ACK_PRINCIPAL=$(echo "$line" | jq -r .principal 2>/dev/null)
+    ACK_SETVAL=$(echo "$line" | jq -r .payload.points.filter_differential_pressure_setpoint.set_value 2>/dev/null)
+    if [[ "$ACK_SOURCE" == "udmis" && "$ACK_TXN" == "$CFG_TXN_ID" ]]; then
+        echo "$line" > "$CFG_ACK_FILE"
+        if [[ "$ACK_PRINCIPAL" != "$CLIENT_ID" ]]; then
+            echo "ERROR: Expected principal $CLIENT_ID in config ack but got $ACK_PRINCIPAL" >&2
+            exit 1
+        fi
+        if [[ "$ACK_SETVAL" != "42" ]]; then
+            echo "ERROR: Expected set_value 42 in config ack but got $ACK_SETVAL" >&2
+            exit 1
+        fi
+        echo "Received same-channel Config Success Ack from udmis!"
+        kill -USR1 $$ 2>/dev/null || true
+        exit 0
+    fi
+done &
+SUB_ACK_PID=$!
+
 echo "Subscribing to /uufi/r/$REGISTRY_ID/d/$DUT_ID/c/state/pointset..."
 mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/state/pointset" -F "%p" | while read -r line; do
     echo "Received UUFI state update: $line"
     echo "$line" > "$STATE_REPLY_FILE"
-    # We look for the updated point value we're about to send in config
     VALUE_STATE=$(jq -r .payload.points.filter_differential_pressure_setpoint.value_state < "$STATE_REPLY_FILE" 2>/dev/null)
     STATE_SOURCE=$(jq -r .source < "$STATE_REPLY_FILE" 2>/dev/null)
     if [[ "$VALUE_STATE" == "applied" ]]; then
@@ -97,24 +121,31 @@ mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_I
 done &
 SUB_STATE_PID=$!
 
+GOT_CFG_ACK=0
 GOT_STATE=0
+trap "GOT_CFG_ACK=1" USR1
 trap "GOT_STATE=1" USR2
 sleep 2
 
 echo "Sending UUFI-wrapped Config Update for $DUT_ID..."
-# A config update request through UUFI
-# UDMIS should unwrap this and update the actual device config
-NEW_CONFIG="{\"subType\":\"config\",\"subFolder\":\"pointset\",\"deviceId\":\"$DUT_ID\",\"deviceRegistryId\":\"$REGISTRY_ID\",\"payload\":{\"version\":\"1.5.2\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"points\":{\"filter_differential_pressure_setpoint\":{\"set_value\":42}}}}"
+NOW_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+NEW_CONFIG="{\"subType\":\"config\",\"subFolder\":\"pointset\",\"deviceId\":\"$DUT_ID\",\"deviceRegistryId\":\"$REGISTRY_ID\",\"projectId\":\"vibrant\",\"transactionId\":\"$CFG_TXN_ID\",\"publishTime\":\"$NOW_TS\",\"source\":\"$CLIENT_ID\",\"principal\":\"$CLIENT_ID\",\"payload\":{\"version\":\"1.5.7\",\"timestamp\":\"$NOW_TS\",\"points\":{\"filter_differential_pressure_setpoint\":{\"set_value\":42}}}}"
 echo "Config update payload: $NEW_CONFIG"
-mosquitto_pub $MQTT_ARGS -i "${CLIENT_ID}_pub" -t "/uufi/c/config/pointset" -m "$NEW_CONFIG"
+mosquitto_pub $MQTT_ARGS -i "${CLIENT_ID}_pub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset" -m "$NEW_CONFIG"
 
-echo "Waiting for State Update reply from $DUT_ID through UUFI..."
+echo "Waiting for Config Success Ack and State Update reply from $DUT_ID through UUFI..."
 TIMEOUT=60
-while [ $GOT_STATE -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
-    echo "Waiting for state update... ($TIMEOUT)"
+while ([ $GOT_CFG_ACK -eq 0 ] || [ $GOT_STATE -eq 0 ]) && [ $TIMEOUT -gt 0 ]; do
+    echo "Waiting for config ack ($GOT_CFG_ACK) and state update ($GOT_STATE)... ($TIMEOUT)"
     sleep 1
     TIMEOUT=$((TIMEOUT - 1))
 done
+
+if [ $GOT_CFG_ACK -eq 0 ]; then
+    echo "Timed out waiting for same-channel Config Success Ack (txn: $CFG_TXN_ID)"
+    kill $SUB_ACK_PID $SUB_STATE_PID 2>/dev/null || true
+    exit 1
+fi
 
 if [ $GOT_STATE -eq 0 ]; then
     echo "Timed out waiting for State Update reply"
@@ -125,12 +156,94 @@ if [ $GOT_STATE -eq 0 ]; then
     else
         echo "DIAGNOSTIC: No state update replies were received at all."
     fi
-    kill $SUB_STATE_PID 2>/dev/null || true
+    kill $SUB_ACK_PID $SUB_STATE_PID 2>/dev/null || true
     exit 1
 fi
 
-kill $SUB_STATE_PID 2>/dev/null || true
-echo "Comprehensive Exchange SUCCESS: Received matching state update"
+kill $SUB_ACK_PID $SUB_STATE_PID 2>/dev/null || true
+echo "Comprehensive Exchange SUCCESS: Received Config Ack and matching state update"
+
+# 2b. Single-Channel Query (payload: null)
+echo "Starting single-channel null-payload Query test..."
+QUERY_TXN_ID="${TXN_ID}-qry"
+QUERY_REPLY_FILE=$(mktemp)
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_qry_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset" -F "%p" | while read -r line; do
+    Q_SOURCE=$(echo "$line" | jq -r .source 2>/dev/null)
+    Q_TXN=$(echo "$line" | jq -r .transactionId 2>/dev/null)
+    Q_PRINCIPAL=$(echo "$line" | jq -r .principal 2>/dev/null)
+    Q_SETVAL=$(echo "$line" | jq -r .payload.points.filter_differential_pressure_setpoint.set_value 2>/dev/null)
+    if [[ "$Q_SOURCE" == "udmis" && "$Q_TXN" == "$QUERY_TXN_ID" ]]; then
+        echo "$line" > "$QUERY_REPLY_FILE"
+        if [[ "$Q_PRINCIPAL" != "$CLIENT_ID" || "$Q_SETVAL" != "42" ]]; then
+            echo "ERROR: Unexpected query reply: $line" >&2
+            exit 1
+        fi
+        echo "Single-channel Query SUCCESS!"
+        kill -USR1 $$ 2>/dev/null || true
+        exit 0
+    fi
+done &
+SUB_QRY_PID=$!
+
+GOT_QUERY=0
+trap "GOT_QUERY=1" USR1
+sleep 2
+
+NOW_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+QUERY_MSG="{\"subType\":\"config\",\"subFolder\":\"pointset\",\"deviceId\":\"$DUT_ID\",\"deviceRegistryId\":\"$REGISTRY_ID\",\"projectId\":\"vibrant\",\"transactionId\":\"$QUERY_TXN_ID\",\"publishTime\":\"$NOW_TS\",\"source\":\"$CLIENT_ID\",\"principal\":\"$CLIENT_ID\",\"payload\":null}"
+mosquitto_pub $MQTT_ARGS -i "${CLIENT_ID}_qry_pub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset" -m "$QUERY_MSG"
+
+TIMEOUT=20
+while [ $GOT_QUERY -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+done
+kill $SUB_QRY_PID 2>/dev/null || true
+if [ $GOT_QUERY -eq 0 ]; then
+    echo "Timed out waiting for single-channel Query reply (txn: $QUERY_TXN_ID)"
+    exit 1
+fi
+
+# 2c. Control-Plane Error Reply (unsupported string sentinel -> UufiControl level 500)
+echo "Starting Control-Plane Error Reply test..."
+ERR_TXN_ID="${TXN_ID}-err"
+ERR_REPLY_FILE=$(mktemp)
+mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_err_sub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset" -F "%p" | while read -r line; do
+    E_SOURCE=$(echo "$line" | jq -r .source 2>/dev/null)
+    E_TXN=$(echo "$line" | jq -r .transactionId 2>/dev/null)
+    E_PRINCIPAL=$(echo "$line" | jq -r .principal 2>/dev/null)
+    E_LEVEL=$(echo "$line" | jq -r .payload.control.status.level 2>/dev/null)
+    if [[ "$E_SOURCE" == "udmis" && "$E_TXN" == "$ERR_TXN_ID" ]]; then
+        echo "$line" > "$ERR_REPLY_FILE"
+        if [[ "$E_PRINCIPAL" != "$CLIENT_ID" || "$E_LEVEL" != "500" ]]; then
+            echo "ERROR: Expected UufiControl level 500 error reply, got: $line" >&2
+            exit 1
+        fi
+        echo "Control-Plane Error Reply SUCCESS (level=500)!"
+        kill -USR1 $$ 2>/dev/null || true
+        exit 0
+    fi
+done &
+SUB_ERR_PID=$!
+
+GOT_ERR=0
+trap "GOT_ERR=1" USR1
+sleep 2
+
+NOW_TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+BAD_SENTINEL_MSG="{\"subType\":\"config\",\"subFolder\":\"pointset\",\"deviceId\":\"$DUT_ID\",\"deviceRegistryId\":\"$REGISTRY_ID\",\"projectId\":\"vibrant\",\"transactionId\":\"$ERR_TXN_ID\",\"publishTime\":\"$NOW_TS\",\"source\":\"$CLIENT_ID\",\"principal\":\"$CLIENT_ID\",\"payload\":\"unsupported_sentinel\"}"
+mosquitto_pub $MQTT_ARGS -i "${CLIENT_ID}_err_pub" -t "/uufi/r/$REGISTRY_ID/d/$DUT_ID/c/config/pointset" -m "$BAD_SENTINEL_MSG"
+
+TIMEOUT=20
+while [ $GOT_ERR -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
+    sleep 1
+    TIMEOUT=$((TIMEOUT - 1))
+done
+kill $SUB_ERR_PID 2>/dev/null || true
+if [ $GOT_ERR -eq 0 ]; then
+    echo "Timed out waiting for Control-Plane Error Reply (txn: $ERR_TXN_ID)"
+    exit 1
+fi
 
 # 3. System Model Update Test
 echo "Starting System Model Update test..."
@@ -139,7 +252,7 @@ cp "$METADATA_FILE" "${METADATA_FILE}.bak"
 restore_metadata() {
     mv "${METADATA_FILE}.bak" "$METADATA_FILE" 2>/dev/null || true
 }
-trap "restore_metadata; kill $SUB_PID $SUB_STATE_PID 2>/dev/null || true" EXIT
+trap "restore_metadata; kill $SUB_PID $SUB_ACK_PID $SUB_STATE_PID $SUB_QRY_PID $SUB_ERR_PID 2>/dev/null || true" EXIT
 
 MODEL_REPLY_FILE=$(mktemp)
 echo "Subscribing to /uufi/r/$REGISTRY_ID/d/$DUT_ID/c/model/system..."
@@ -148,12 +261,13 @@ mosquitto_sub $MQTT_ARGS -i "${CLIENT_ID}_model_sub" -t "/uufi/r/$REGISTRY_ID/d/
     echo "$line" > "$MODEL_REPLY_FILE"
     VERSION_VAL=$(jq -r .payload.software.system_firmware < "$MODEL_REPLY_FILE" 2>/dev/null)
     MODEL_SOURCE=$(jq -r .source < "$MODEL_REPLY_FILE" 2>/dev/null)
-    if [[ "$VERSION_VAL" == "v3" ]]; then
-        if [[ "$MODEL_SOURCE" != "site_trigger" ]]; then
-            echo "ERROR: Expected source site_trigger in model update but got $MODEL_SOURCE" >&2
+    MODEL_PRINCIPAL=$(jq -r .principal < "$MODEL_REPLY_FILE" 2>/dev/null)
+    if [[ "$VERSION_VAL" == "v3" && "$MODEL_SOURCE" == "udmis" ]]; then
+        if [[ "$MODEL_PRINCIPAL" != "site_trigger" ]]; then
+            echo "ERROR: Expected principal site_trigger in model ack but got $MODEL_PRINCIPAL" >&2
             exit 1
         fi
-        echo "Found expected system_firmware version v3 in System Model with source site_trigger!"
+        echo "Found expected system_firmware version v3 acknowledged by udmis for site_trigger!"
         kill -USR1 $$ 2>/dev/null || true
         exit 0
     fi
@@ -169,7 +283,7 @@ sleep 2
 echo "Triggering System Model update using site_trigger..."
 $UDMI_ROOT/bin/site_trigger update "$SITE_MODEL" "$DUT_ID" "system_firmware" "v3" "mqtt://$USER:$PASS@$HOST:$PORT"
 
-echo "Waiting for System Model Update on the bus..."
+echo "Waiting for System Model Update Ack on the bus..."
 TIMEOUT=30
 while [ $GOT_MODEL -eq 0 ] && [ $TIMEOUT -gt 0 ]; do
     echo "Waiting for system model update... ($TIMEOUT)"
@@ -194,7 +308,7 @@ fi
 kill $SUB_MODEL_PID 2>/dev/null || true
 restore_metadata
 trap - EXIT
-echo "System Model Update SUCCESS: Received matching model update message on bus"
+echo "System Model Update SUCCESS: Received matching model update ack on bus"
 
 echo "UUFI Comprehensive Integration Test PASSED"
-rm -f "$REPLY_FILE" "$STATE_REPLY_FILE" "$MODEL_REPLY_FILE"
+rm -f "$REPLY_FILE" "$CFG_ACK_FILE" "$STATE_REPLY_FILE" "$QUERY_REPLY_FILE" "$ERR_REPLY_FILE" "$MODEL_REPLY_FILE"

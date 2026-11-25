@@ -54,6 +54,27 @@
       "send_id": "${UDMI_PREFIX}udmi_target",
       "enabled": "${BITBOX_DISCOVERY}"
     },
+    "uufi": {
+      "recv_id": "${UDMI_PREFIX}udmi_uufi-udmis",
+      "send_id": "${UDMI_PREFIX}udmi_target",
+      "side_id": "${UDMI_PREFIX}udmi_uufi",
+      "enabled": "${UDMI_UUFI}"
+    },
+    "uufi_out": {
+      "recv_id": "${UDMI_PREFIX}udmi_reflect-uufi",
+      "send_id": "${UDMI_PREFIX}udmi_uufi",
+      "enabled": "${UDMI_UUFI}"
+    },
+    "uufi_state": {
+      "recv_id": "${UDMI_PREFIX}udmi_state-uufi",
+      "send_id": "${UDMI_PREFIX}udmi_uufi",
+      "enabled": "${UDMI_UUFI}"
+    },
+    "uufi_events": {
+      "recv_id": "${UDMI_PREFIX}udmi_target-uufi",
+      "send_id": "${UDMI_PREFIX}udmi_uufi",
+      "enabled": "${UDMI_UUFI}"
+    },
     "distributor": {
       "recv_id": "#",
       "send_id": "distribute",

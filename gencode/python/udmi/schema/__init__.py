@@ -30,6 +30,7 @@ from .configuration_pod import *
 from .configuration_pod_base import *
 from .configuration_pod_bridge import *
 from .configuration_pubber import *
+from .control_uufi import *
 from .data_template import *
 from .dimension import *
 from .discovery_family import *

@@ -54,8 +54,8 @@ MCP_TOOLS = [
     {
         "name": "publish_config",
         "description": (
-            "Publish device configuration update to the UUFI bus "
-            "(subType: config) with mandatory envelope headers and QoS 1."
+            "Publish device configuration update (dict or string sentinel) to the UUFI bus "
+            "(subType: config) with mandatory envelope headers and optional Ack correlation."
         ),
         "inputSchema": {
             "type": "object",
@@ -73,8 +73,19 @@ MCP_TOOLS = [
                     "description": "Configuration subFolder (e.g. 'system', 'pointset', 'blobset')",
                 },
                 "payload": {
-                    "type": "object",
-                    "description": "UDMI-compliant configuration payload dictionary",
+                    "oneOf": [
+                        {"type": "object"},
+                        {"type": "string"},
+                    ],
+                    "description": "UDMI-compliant configuration payload dictionary or string sentinel",
+                },
+                "wait_for_ack": {
+                    "type": "boolean",
+                    "description": "Await correlated UDMIS Ack or control error reply (default: false)",
+                },
+                "timeout_sec": {
+                    "type": "number",
+                    "description": "Ack wait timeout in seconds when wait_for_ack=true (default: 15.0)",
                 },
             },
             "required": ["registry_id", "device_id", "sub_folder", "payload"],
@@ -83,8 +94,8 @@ MCP_TOOLS = [
     {
         "name": "query_state",
         "description": (
-            "Query live device state on the UUFI bus (subType: query, subFolder: state) "
-            "and await correlated state response matching transactionId."
+            "Query live device state on the UUFI bus via canonical single-channel null-payload "
+            "request on state/<sub_folder> and await correlated reply matching transactionId."
         ),
         "inputSchema": {
             "type": "object",
@@ -112,8 +123,8 @@ MCP_TOOLS = [
     {
         "name": "query_system_model",
         "description": (
-            "Query device system model on the UUFI bus (subType: query, subFolder: system) "
-            "and await correlated model/system reply."
+            "Query device system model on the UUFI bus via canonical single-channel null-payload "
+            "request on model/system and await correlated reply."
         ),
         "inputSchema": {
             "type": "object",
@@ -316,6 +327,8 @@ class UUFIMcpServer:
                 device_id=args["device_id"],
                 sub_folder=args["sub_folder"],
                 payload=args["payload"],
+                wait_for_ack=bool(args.get("wait_for_ack", False)),
+                timeout_sec=float(args.get("timeout_sec", 15.0)),
             )
         if name == "query_state":
             return self.provider.query_state(
@@ -501,6 +514,8 @@ def main():
     pub_parser.add_argument("sub_folder", help="Configuration subFolder (e.g. system, pointset)")
     pub_parser.add_argument("payload", help="JSON payload or filepath")
     pub_parser.add_argument("--project-spec", default=None, help="Target project spec")
+    pub_parser.add_argument("--wait-for-ack", action="store_true", help="Await UDMIS Ack")
+    pub_parser.add_argument("--timeout", type=float, default=15.0, help="Ack wait timeout seconds")
 
     # poll-events command
     poll_parser = subparsers.add_parser("poll-events", help="Poll inbound messages from bus")
@@ -548,7 +563,14 @@ def main():
             else:
                 print("Error: payload must be valid JSON or file path", file=sys.stderr)
                 sys.exit(1)
-        res = provider.publish_config(args.registry_id, args.device_id, args.sub_folder, payload_data)
+        res = provider.publish_config(
+            args.registry_id,
+            args.device_id,
+            args.sub_folder,
+            payload_data,
+            wait_for_ack=args.wait_for_ack,
+            timeout_sec=args.timeout,
+        )
         print(json.dumps(res, indent=2))
         provider.disconnect()
         return

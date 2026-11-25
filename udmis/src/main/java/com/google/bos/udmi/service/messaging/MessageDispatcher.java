@@ -100,6 +100,14 @@ public interface MessageDispatcher {
     return new RawString(rawString);
   }
 
+  static NullMessage nullMessage() {
+    return new NullMessage();
+  }
+
+  static SentinelPayload sentinelPayload(String value) {
+    return new SentinelPayload(value);
+  }
+
   /**
    * Marker class to indicate a string that should be applied/sent directly with no JSON or
    * map interpretation.
@@ -109,6 +117,26 @@ public interface MessageDispatcher {
 
     private RawString(String rawString) {
       this.rawString = rawString;
+    }
+  }
+
+  /**
+   * Marker class representing an explicit wire null/empty payload (used for UUFI queries).
+   * Always instantiated per-message so identityHashCode keys never collide across threads.
+   */
+  class NullMessage {
+    private NullMessage() {
+    }
+  }
+
+  /**
+   * Marker class representing a bare JSON String sentinel payload (e.g. "missing").
+   */
+  class SentinelPayload {
+    public final String value;
+
+    private SentinelPayload(String value) {
+      this.value = value;
     }
   }
 }

@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-11-24T19:00:01Z",
+  "version": "1.5.7",
+  "control": {
+    "status": {
+      "message": "Invalid extra field test",
+      "category": "system.config.parse",
+      "level": 500,
+      "timestamp": "2026-11-24T19:00:01Z"
+    },
+    "unexpected_field": true
+  },
+  "extra_root": "forbidden"
+}

@@ -7,7 +7,7 @@ paho-mqtt, TLS certificates, raw topic paths, or broker connection lifecycles.
 
 import itertools
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 import urllib.error
 import urllib.request
 
@@ -94,18 +94,21 @@ class UUFIClient:
         registry_id: str,
         device_id: str,
         sub_folder: str,
-        payload: Dict[str, Any],
+        payload: Union[Dict[str, Any], str],
+        wait_for_ack: bool = False,
+        timeout_sec: float = 15.0,
     ) -> Dict[str, Any]:
         """Publish device configuration update to the UUFI bus."""
-        return self.call_rpc(
-            "publish_config",
-            {
-                "registry_id": registry_id,
-                "device_id": device_id,
-                "sub_folder": sub_folder,
-                "payload": payload,
-            },
-        )
+        params: Dict[str, Any] = {
+            "registry_id": registry_id,
+            "device_id": device_id,
+            "sub_folder": sub_folder,
+            "payload": payload,
+        }
+        if wait_for_ack:
+            params["wait_for_ack"] = True
+            params["timeout_sec"] = timeout_sec
+        return self.call_rpc("publish_config", params)
 
     def query_state(
         self,
@@ -113,7 +116,7 @@ class UUFIClient:
         device_id: str,
         sub_folder: str = "blobset",
         timeout_sec: float = 15.0,
-    ) -> Dict[str, Any]:
+    ) -> Any:
         """Query live device state on the UUFI bus and wait for correlated state response."""
         return self.call_rpc(
             "query_state",
@@ -130,7 +133,7 @@ class UUFIClient:
         registry_id: str,
         device_id: str,
         timeout_sec: float = 15.0,
-    ) -> Dict[str, Any]:
+    ) -> Any:
         """Query device system model on the UUFI bus and wait for correlated model response."""
         return self.call_rpc(
             "query_system_model",

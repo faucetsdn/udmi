@@ -119,6 +119,7 @@ payload = {
     "transactionId": f"TXN-{os.urandom(4).hex()}",
     "publishTime": now_utc_str,
     "source": "site_trigger",
+    "principal": "site_trigger",
     "payload": {
         "version": "1.5.2",
         "timestamp": now_utc_str,

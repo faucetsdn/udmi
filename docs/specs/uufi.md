@@ -21,6 +21,33 @@ UUFI utilizes a messaging transport where Clients and Systems interact via dedic
 - **Publish (to System):** The Client publishes a UUFI-encapsulated UDMI message.
 - **Receive (from System):** The System delivers UUFI-encapsulated UDMI messages to the Client.
 
+### 1.1. Layer 2 Message-Role Truth Table
+
+Without adding any extra properties to `schema/envelope.json`, the tuple `{ source, principal, payload, control }` deterministically classifies every Layer 2 UUFI message (Layer 1 session bootstrap continues to use `/uufi/c/state/udmi` → `/uufi/c/config/udmi`):
+
+| Direction | `principal` | `payload` | `control` | Payload Schema | Role & Receiver Behavior |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Client → System** (`source != "udmis"`) | `null` | `null` | *—* | *N/A* | **NOP / Invalid**: Dropped and logged without reply. |
+| **Client → System** (`source != "udmis"`) | `null` | `!= null` | *—* | *N/A* | **Invalid (Missing Principal)**: Dropped and logged without reply (`principal` is mandatory on all client messages). |
+| **Client → System** (`source != "udmis"`) | `!= null` | `null` | *—* | *None (`null`)* | **Query (Read)**: Fetch current `(subType, subFolder)` state/config/model and reply on the **exact same channel**. |
+| **Client → System** (`source != "udmis"`) | `!= null` | `!= null` | `null` | `<subType>_<subFolder>.json` *(or `String`)* | **Write (Mutate)**: Validate and apply payload (or dispatch string sentinel to lower handler layer) and reply on the **exact same channel**. |
+| **Client → System** (`source != "udmis"`) | `!= null` | `!= null` | `!= null` | *N/A* | **Invalid (Client Control)**: Dropped and logged **without reply** (prevents control ping-pong loops). |
+| **System → Client** (`source == "udmis"`) | `null` | `null` | *—* | *N/A* | **NOP / Invalid**: Dropped and logged (System never emits a `null` payload). |
+| **System → Client** (`source == "udmis"`) | `null` | `!= null` | `null` | `<subType>_<subFolder>.json` *(or `String`)* | **Stream (Broadcast)**: Unsolicited live telemetry, state, or model update (or string sentinel) with a fresh `transactionId`. |
+| **System → Client** (`source == "udmis"`) | `null` | `!= null` | `!= null` | `control_uufi.json` | **Control Stream (Broadcast)**: Unsolicited broadcast control notice with a fresh `transactionId`. |
+| **System → Client** (`source == "udmis"`) | `!= null` | `null` | *—* | *N/A* | **NOP / Invalid**: Dropped and logged (System never emits a `null` payload). |
+| **System → Client** (`source == "udmis"`) | `!= null` | `!= null` | `null` | `<subType>_<subFolder>.json` *(or `String`)* | **Success Ack**: Applied/queried domain payload (or string sentinel from the lower layer); clears pending `transactionId`. |
+| **System → Client** (`source == "udmis"`) | `!= null` | `!= null` | `!= null` | `control_uufi.json` | **Control Ack**: Control-plane reply on `transactionId` (`status.level < 500` interim progress keeps `transactionId` open; `status.level >= 500` terminal error fails `transactionId`). |
+
+### 1.2. Control-Plane Payloads, String Sentinels & Error Channel Exclusion
+
+- **Control-Plane Discriminator (`schema/control_uufi.json`):** System control-plane replies (interim progress or terminal errors) are emitted on the **exact same resource channel** (`subType`, `subFolder`, `deviceRegistryId`, `deviceId`) with identical envelope attributes (`source: "udmis"`, matching `principal` and `transactionId`) and a payload containing the unique top-level `"control"` object conforming to `schema/control_uufi.json`.
+  - `control.status.level < 500` (e.g., `200` `INFO`, `300` `NOTICE`, `400` `WARNING`): interim progress or advisory notice; the client MUST keep the pending `transactionId` open.
+  - `control.status.level >= 500` (e.g., `500` `ERROR`): terminal failure; the client MUST close and fail the pending `transactionId`.
+  - Clients MUST NOT send payloads with a root `"control"` key; any client-originated `"control"` message is dropped without reply.
+- **String Sentinel Transport:** Because all standard UDMI message schemas (including `control_uufi.json`) are strictly JSON objects, a bare JSON `String` payload is recognized at the UUFI transport layer as a sentinel value without overloading `null`. The UUFI protocol layer safely transports string sentinels between Client and System; specific token names and semantics are defined and validated by lower handler layers (unrecognized client strings fail fast with a `status.level = 500` Control Ack).
+- **Exclusion of `events/error`:** Internal error channels (`subFolder: error` and `subType: errors`) are excluded from both inbound and outbound UUFI paths. All client-visible request failures are reported on the originating resource channel via `schema/control_uufi.json`.
+
 ## 2. Connectivity
 
 ### 2.1. Connection String
@@ -57,22 +84,20 @@ Format: `scheme://[user@]host[:port][/path]`
   - **Standardized Client ID Format:** Client IDs MUST be formatted strictly as `[/{prefix}]/{registry_id}/{client_id}`. If the registry is unknown or not applicable, the Client ID MUST be formatted as `[/{prefix}]/{client_id}`.
   - **Uniqueness and Nonces:** To ensure absolute uniqueness and prevent session hijacking or connection drops when multiple clients share a broker, implementations MAY append a random, unique alphanumeric suffix (e.g., `_sess123` or a secure random nonce) to the formatted Client ID.
 - **Project Identity:** For the MQTT transport, the `projectId` field in the envelope SHOULD be treated as a general environment or project identifier. All components within a single UUFI session MUST use a consistent `projectId` (default: `vibrant`) to avoid ambiguity in message processing.
-- **System Model Service:**
-  - **Query:** Clients publish a `query/system` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/system`.
-  - **Response (Model Reply):** System publishes the device system model to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`.
-  - **Structure:** Uses standard flat `schema/model_system.json` payloads addressed via device-scoped envelope attributes and topic paths (Section 5.1).
-- **State Query Service:**
-  - **Query:** Clients publish a `query/state` message to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/query/state`.
-  - **Response:** System immediately replies by publishing the last known cached device State report on the device's state topic `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/state/blobset` (or the corresponding state topic matching the query's subFolder).
-  - **Correlation & Timeout:** The query envelope MUST include a unique `transactionId`. The resulting state response envelope MUST copy this exact `transactionId` in its envelope metadata. If no response is received within 15 seconds, the Client SHOULD consider the state query timed out.
+- **Single-Channel Query Service (Config, State, System Model):**
+  - **Query:** Clients publish a `null`-payload request (`"payload": null` on MQTT; `"null"` or empty data on PubSub) with mandatory `principal` and `transactionId` directly on the target resource channel:
+    - System Model: `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`
+    - Cached State: `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/state/{subFolder}`
+    - Active Config: `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/config/{subFolder}`
+  - **Response:** The System replies on the **exact same channel** with `source: "udmis"`, copying the caller's `principal` and `transactionId`, returning either the matching domain payload (conforming to `<subType>_<subFolder>.json`), a lower-layer string sentinel if the target resource is absent, or a `schema/control_uufi.json` Control Ack on error. If no response is received within 15 seconds, the Client SHOULD consider the query timed out.
+  - **Retirement of `subType: query`:** Channel-switching `query/*` topics (`query/system`, `query/state`) are retired on UUFI and MUST NOT be used.
 - **Telemetry and Event Service:**
   - **Telemetry (Pointset):** Devices or clients publish pointset telemetry reports to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/events/pointset`.
   - **Discovery:** Devices or clients publish discovery reports to `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/events/discovery`.
   - **Structure:** Event payloads MUST conform strictly to their respective authoritative UDMI schemas (`schema/events_pointset.json` or `schema/events_discovery.json`) nested within the standard `payload` key for MQTT or the root of the message data object for PubSub.
-- **System Status and Error Service:**
-  - **Status Events:** The System and devices report runtime errors, command validation failures, or schema violation messages on the status channel: `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/events/status`.
-  - **Structure:** Payload MUST conform strictly to `schema/entry.json`, containing `category`, `level`, `message`, and optionally `timestamp`.
-  - **Correlation:** When status events are published in response to a failed client command, the envelope MUST copy the `transactionId` from the preceding client message to enable exact error correlation.
+- **Control-Plane Progress & Error Service:**
+  - **Same-Channel Control Replies:** The System reports request validation failures, processing errors (`status.level >= 500`), and interim progress updates (`status.level < 500`) directly on the originating resource channel using `schema/control_uufi.json` (root `"control"` block containing an `Entry` under `control.status`), copying `principal` and `transactionId` from the originating request.
+  - **Retention Prohibition:** Transient UUFI `config/*` requests, Success Acks, and Control Acks MUST NOT be published with the MQTT `retain` flag set.
 
 ### 2.3. Resource Identifier Constraints
 To ensure compatibility with MQTT topic parsing structures and PubSub attribute indexing, all identifier strings utilized in UUFI connection coordinates and paths MUST conform to the following character and length restrictions:
@@ -180,22 +205,26 @@ The System publishes a UDMI `config` message to `/uufi/c/config/udmi`.
 All messages are wrapped in a UUFI Envelope.
 
 ### Mandatory Payload Fields
-Inner JSON `payload` object MUST include:
+Inner JSON object `payload` (for Writes, Streams, Success Acks, and Control Acks) MUST include:
 - `timestamp`: RFC 3339 (minimal precision).
 - `version`: UDMI schema version.
+
+Special non-object payload forms:
+- `null` (MQTT `"payload": null`, PubSub `"null"` or empty data): signifies a single-channel **Query (Read)**.
+- Bare JSON `String`: signifies a lower-layer **String Sentinel** value transported intact without object metadata injection.
 
 ### Transport Mapping
 
 | Transport | Envelope Location | Payload Location |
 | :--- | :--- | :--- |
-| **PubSub** | Message Attributes | Message Data (JSON) |
-| **MQTT** | JSON Wrapper | Payload `payload` key |
+| **PubSub** | Message Attributes | Message Data (JSON object, `"null"`, or JSON `String`) |
+| **MQTT** | JSON Wrapper | Payload `payload` key (JSON object, `null`, or JSON `String`) |
 
 #### MQTT Constraints
-- **Envelope Consistency & Header Duplication Rule:** Senders MUST populate and duplicate all defined envelope header fields (`subType`, `subFolder`, and when applicable `deviceRegistryId`, `deviceId`) within the JSON envelope payload object across all transport mechanisms. The envelope structure MUST be identical across both MQTT and PubSub transports. For MQTT transport, omitting any of these mandatory envelope header fields from the JSON payload object, or providing envelope fields that conflict with the topic path coordinates, MUST be treated as a validation error, and the message MUST be rejected and ignored.
+- **Envelope Consistency & Header Duplication Rule:** Senders MUST populate and duplicate all defined envelope header fields (`subType`, `subFolder`, and when applicable `deviceRegistryId`, `deviceId`) within the JSON envelope payload object across all transport mechanisms. The envelope structure MUST be identical across both MQTT and PubSub transports. For MQTT transport, omitting any of these mandatory envelope header fields from the JSON payload object, or providing envelope fields that conflict with the topic path coordinates, MUST be treated as a validation error, and the message MUST be rejected.
 - **Mandatory Envelope Fields:**
-  - **Outgoing Messages:** Outgoing messages from compliant systems and verifiers MUST populate all standard envelope fields (`subType`, `subFolder`, `deviceRegistryId`, `deviceId`, `projectId`, `transactionId`, `publishTime`, `source`, `principal`, and `payload`).
-  - **Incoming Messages:** All incoming messages MUST contain all mandatory envelope fields inside the JSON payload object (`subType`, `subFolder`, `deviceRegistryId`, `deviceId`, `projectId`, `transactionId`, `publishTime`, `source`). If any required envelope fields are omitted from the JSON payload wrapper, or if they fail to match the topic path attributes, the receiver MUST reject and ignore the message.
+  - **Outgoing Messages (System → Client):** Outgoing messages MUST populate standard envelope fields (`subType`, `subFolder`, `deviceRegistryId`, `deviceId`, `projectId`, `transactionId`, `publishTime`, `source: "udmis"`, and `payload`), setting `principal` to the caller's identity on Acks and omitting `principal` on broadcast Streams.
+  - **Incoming Messages (Client → System):** All incoming client messages MUST contain mandatory envelope fields (`subType`, `subFolder`, `deviceRegistryId`, `deviceId`, `projectId`, `transactionId`, `publishTime`, `source`, and **`principal`**). Client messages omitting `principal` MUST be dropped and logged without reply. If required routing coordinates are omitted or mismatch the topic path, the System rejects the request with a `schema/control_uufi.json` Control Ack (provided `principal` is present).
 - **Nesting:** UDMI message data MUST be nested within the `payload` key.
 
 ### 4.1. Envelope Metadata and Configuration Attributes
@@ -217,7 +246,7 @@ To ensure protocol compatibility, data integrity, and protection against replay 
 - **Addressing (Topic & Envelope Attributes):**
   To ensure consistent routing and avoid parsing complexity, all system model updates, queries, and replies MUST NOT use a nested JSON registries hierarchy (such as `"registries"` or `"devices"`) inside the payload. Instead, the registry ID and device ID MUST be specified strictly as message attributes (envelope level) or MQTT topic path segments:
   - **MQTT Topic:** `[/{prefix}]/uufi/r/{deviceRegistryId}/d/{deviceId}/c/model/system`
-  - **PubSub Attributes:** Envelope attributes MUST include `deviceRegistryId` and `deviceId` (along with `subFolder` set to `"system"` and `subType` set to `"model"` or `"query"`).
+  - **PubSub Attributes:** Envelope attributes MUST include `deviceRegistryId` and `deviceId` (along with `subFolder` set to `"system"` and `subType` set to `"model"`). Queries send a `null` payload on this same channel.
 - **Payload Structure:**
   The inner message payload MUST follow the flat, unnested `schema/model_system.json` schema representing only the specified device.
 - **Prohibited Formats:** 
@@ -239,20 +268,21 @@ To report a device's actual or currently running software subsystem version, imp
 
 ## 6. UDMI to UUFI Mapping
 
-| UDMI Operation | Envelope `subType` | Envelope `subFolder` | Direction | Note |
+| UDMI Operation | Envelope `subType` | Envelope `subFolder` | Direction | Payload & Role Note |
 | :--- | :--- | :--- | :--- | :--- |
-| Handshake State | `state` | `udmi` | Publish | Standard flat format (Step 1) |
-| Handshake Config | `config` | `udmi` | Receive | Standard flat format (Step 2) |
-| Config Update | `config` | *varies* | Publish | |
-| State Event | `state` | *varies* | Receive | |
-| Telemetry | `events` | `pointset` | Receive | |
-| Discovery | `events` | `discovery` | Receive | |
-| System Model Query | `query` | `system` | Publish | Registry and device-scoped |
-| System Model Update | `model` | `system` | Publish | Registry and device-scoped |
-| System Model Reply | `model` | `system` | Receive | Registry and device-scoped |
-| State Query | `query` | `state` | Publish | |
-| Blobset Config | `config` | `blobset` | Publish | |
-| Blobset State | `state` | `blobset` | Receive | |
+| Handshake State | `state` | `udmi` | Publish | Layer 1 flat `UdmiState` (Step 1) |
+| Handshake Config | `config` | `udmi` | Receive | Layer 1 flat `UdmiConfig` (Step 2) |
+| Config Write / Ack | `config` | *varies* | Publish / Receive | Domain object (or sentinel) Write; same-channel Success Ack or `control_uufi.json` Control Ack |
+| Config Query / Reply | `config` | *varies* | Publish / Receive | `payload: null` Query; same-channel domain payload (or sentinel) Success Ack |
+| State Stream | `state` | *varies* | Receive | Broadcast Stream (`principal: null`) |
+| State Query / Reply | `state` | *varies* | Publish / Receive | `payload: null` Query; same-channel cached state (or sentinel) Success Ack |
+| Telemetry Stream | `events` | `pointset` | Receive | Broadcast Stream (`principal: null`) |
+| Discovery Stream | `events` | `discovery` | Receive | Broadcast Stream (`principal: null`) |
+| System Model Query / Reply | `model` | `system` | Publish / Receive | `payload: null` Query; same-channel `model_system.json` (or sentinel) Success Ack |
+| System Model Update / Ack | `model` | `system` | Publish / Receive | Partial-merge `model_system.json` Write; same-channel Success Ack |
+| Blobset Config / Ack | `config` | `blobset` | Publish / Receive | `config_blobset.json` Write; same-channel Success Ack or Control Ack |
+| Blobset State | `state` | `blobset` | Receive | Broadcast Stream (`principal: null`) |
+| Control Progress / Error | *matches request* | *matches request* | Receive | `control_uufi.json` (`status.level < 500` progress, `>= 500` terminal error) |
 
 ## 7. Reliability
 
@@ -720,6 +750,99 @@ This appendix references the formal JSON schemas and provides message examples f
 }
 ```
 
+### A.1.9. Single-Channel Query (`payload: null`)
+
+**PubSub Attributes** (Data is `"null"`):
+```json
+{
+  "subType": "state",
+  "subFolder": "pointset",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1",
+  "transactionId": "UUFI:sess123:005",
+  "source": "client-id",
+  "principal": "client-id@"
+}
+```
+
+**MQTT Topic:** `/uufi/r/reg-1/d/dev-1/c/state/pointset`
+```json
+{
+  "subType": "state",
+  "subFolder": "pointset",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1",
+  "projectId": "vibrant",
+  "transactionId": "UUFI:sess123:005",
+  "publishTime": "2026-11-24T19:00:00Z",
+  "source": "client-id",
+  "principal": "client-id",
+  "payload": null
+}
+```
+
+### A.1.10. Control-Plane Progress & Error Replies (`schema/control_uufi.json`)
+
+**PubSub Control Error Reply** (`projects/<proj>/topics/udmi_uufi`):
+
+Attributes:
+```json
+{
+  "subType": "config",
+  "subFolder": "pointset",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1",
+  "transactionId": "UUFI:sess123:006",
+  "source": "udmis",
+  "principal": "client-id@",
+  "publishTime": "2026-11-24T19:00:01Z"
+}
+```
+
+Data:
+```json
+{
+  "version": "1.5.7",
+  "timestamp": "2026-11-24T19:00:01Z",
+  "control": {
+    "status": {
+      "message": "Invalid pointset payload",
+      "detail": "IllegalArgumentException: ...",
+      "category": "system.config.parse",
+      "level": 500,
+      "timestamp": "2026-11-24T19:00:01Z"
+    }
+  }
+}
+```
+
+**MQTT Control Progress Reply** (`/uufi/r/reg-1/d/dev-1/c/config/pointset`):
+```json
+{
+  "subType": "config",
+  "subFolder": "pointset",
+  "deviceRegistryId": "reg-1",
+  "deviceId": "dev-1",
+  "projectId": "vibrant",
+  "transactionId": "UUFI:sess123:007",
+  "publishTime": "2026-11-24T19:00:01Z",
+  "source": "udmis",
+  "principal": "client-id",
+  "payload": {
+    "version": "1.5.7",
+    "timestamp": "2026-11-24T19:00:01Z",
+    "control": {
+      "status": {
+        "message": "Applying configuration (step 1/2)",
+        "category": "system.config.receive",
+        "level": 200,
+        "timestamp": "2026-11-24T19:00:01Z"
+      }
+    }
+  }
+}
+```
+
 ## A.2. Authoritative Schemas
 
 UUFI implementations MUST adhere to the following schemas from the UDMI repository:
@@ -727,8 +850,11 @@ UUFI implementations MUST adhere to the following schemas from the UDMI reposito
 | UUFI Component | Authoritative UDMI Schema |
 | :--- | :--- |
 | **Message Envelope** | `schema/envelope.json` |
+| **Control-Plane Reply** | `schema/control_uufi.json` |
 | **Handshake State** | `schema/state_udmi.json` |
 | **Handshake Config** | `schema/config_udmi.json` |
 | **System Model** | `schema/model_system.json` |
+| **Pointset Config** | `schema/config_pointset.json` |
+| **Discovery Config** | `schema/config_discovery.json` |
 | **Blobset Config** | `schema/config_blobset.json` |
 | **Blobset State** | `schema/state_blobset.json` |

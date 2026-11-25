@@ -29,6 +29,8 @@ class DiscoveryConfig(DataModel):
     Configuration for [discovery](../docs/specs/discovery.md)
     """
 
+    timestamp: Optional[str] = None
+    version: Optional[str] = None
     generation: Optional[str] = None
     enumerations: Optional[Enumerations] = None
     families: Optional[Dict[str, FamilyDiscoveryConfig]] = None

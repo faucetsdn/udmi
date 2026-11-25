@@ -19,6 +19,20 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class DiscoveryConfig {
 
     /**
+     * RFC 3339 UTC timestamp the configuration was generated
+     * 
+     */
+    @JsonProperty("timestamp")
+    @JsonPropertyDescription("RFC 3339 UTC timestamp the configuration was generated")
+    public Date timestamp;
+    /**
+     * Version of the UDMI schema
+     * 
+     */
+    @JsonProperty("version")
+    @JsonPropertyDescription("Version of the UDMI schema")
+    public java.lang.String version;
+    /**
      * Generational marker for controlling self-enumeration
      * 
      */
@@ -44,8 +58,10 @@ public class DiscoveryConfig {
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
-        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.enumerations == null)? 0 :this.enumerations.hashCode()));
+        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
+        result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
         return result;
     }
 
@@ -58,7 +74,7 @@ public class DiscoveryConfig {
             return false;
         }
         DiscoveryConfig rhs = ((DiscoveryConfig) other);
-        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.enumerations == rhs.enumerations)||((this.enumerations!= null)&&this.enumerations.equals(rhs.enumerations))));
+        return ((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.enumerations == rhs.enumerations)||((this.enumerations!= null)&&this.enumerations.equals(rhs.enumerations))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

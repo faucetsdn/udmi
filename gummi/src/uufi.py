@@ -13,7 +13,7 @@ import queue
 import sys
 import threading
 import time
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Union
 import uuid
 
 from mcp.uufi.client import UUFIClient
@@ -116,7 +116,9 @@ class GummiUUFIClient:
                             "sub_folder": sub_folder,
                             "timestamp": ev.get("timestamp"),
                         })
-                    elif sub_folder in ("status", "validation"):
+                    elif sub_folder in ("status", "validation") or (
+                        isinstance(payload, dict) and "control" in payload
+                    ):
                         self.broadcast_event("alert", {
                             "topic": ev.get("topic"),
                             "payload": payload,
@@ -168,7 +170,9 @@ class GummiUUFIClient:
         registry_id: str,
         device_id: str,
         sub_folder: str,
-        payload: Dict[str, Any],
+        payload: Union[Dict[str, Any], str],
+        wait_for_ack: bool = False,
+        timeout_sec: float = 15.0,
     ) -> Dict[str, Any]:
         """Publishes configuration update via the UUFI MCP client."""
         tx_id = str(uuid.uuid4())
@@ -193,8 +197,18 @@ class GummiUUFIClient:
         if not self.uufi:
             raise ConnectionError("UUFI client is not configured or unavailable")
 
-        res = self.uufi.publish_config(registry_id, device_id, sub_folder, payload)
-        if not isinstance(res, dict) or res.get("status") != "DISPATCHED":
+        if wait_for_ack:
+            res = self.uufi.publish_config(
+                registry_id,
+                device_id,
+                sub_folder,
+                payload,
+                wait_for_ack=True,
+                timeout_sec=timeout_sec,
+            )
+        else:
+            res = self.uufi.publish_config(registry_id, device_id, sub_folder, payload)
+        if not isinstance(res, dict) or res.get("status") not in ("DISPATCHED", "ACKNOWLEDGED"):
             err_msg = res.get("error") if isinstance(res, dict) else "Unknown dispatch error"
             raise RuntimeError(f"Failed to dispatch config to UUFI bus: {err_msg}")
 
@@ -209,12 +223,17 @@ class GummiUUFIClient:
             "dispatched": True,
         })
 
-        return {
-            "status": "DISPATCHED",
+        result: Dict[str, Any] = {
+            "status": res.get("status"),
             "transaction_id": tx_id,
             "topic": topic,
             "message": "Configuration successfully published to UUFI bus.",
         }
+        if "ack" in res:
+            result["ack"] = res["ack"]
+        if "progress" in res:
+            result["progress"] = res["progress"]
+        return result
 
     # --------------------------------------------------------------------------
     # Managed Rollouts Convergence

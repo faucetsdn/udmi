@@ -32,18 +32,23 @@
       "enabled": "false"
     },
     "uufi": {
+      "enabled": "true",
       "recv_id": "/uufi/#",
-      "send_id": "${UDMI_PREFIX}udmi_target"
+      "send_id": "${UDMI_PREFIX}udmi_target",
+      "side_id": ""
     },
     "uufi_out": {
+      "enabled": "true",
       "recv_id": "reflect",
       "send_id": "/uufi/#"
     },
     "uufi_state": {
+      "enabled": "true",
       "recv_id": "state/#",
       "send_id": "/uufi/#"
     },
     "uufi_events": {
+      "enabled": "true",
       "recv_id": "events/#",
       "send_id": "/uufi/#"
     }
