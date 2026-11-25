@@ -7,7 +7,7 @@
   "additionalProperties": false,
   "properties": {
     "family": {
-      "description": "Protocol family for the scan. Required for entries in `scans`, and must be absent for entries in `families` (where the family is the map key)",
+      "description": "Target protocol family for the discovery scan.",
       "type": "string",
       "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
       "examples": ["bacnet", "ipv4"]

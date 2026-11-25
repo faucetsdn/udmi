@@ -1,22 +1,12 @@
 package udmi.lib.client.manager;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
-import static com.google.udmi.util.GeneralUtils.getNow;
-import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
-import static com.google.udmi.util.GeneralUtils.ifNotNullThen;
+import static com.google.udmi.util.GeneralUtils.ifNullThen;
 import static com.google.udmi.util.GeneralUtils.ifTrueGet;
-import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.JsonUtil.isoConvert;
-import static java.lang.Math.floorMod;
 import static java.lang.String.format;
-import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
-import static java.util.function.Predicate.not;
-import static udmi.lib.client.manager.DiscoveryManager.SCAN_DURATION_SEC;
-import static udmi.lib.client.manager.DiscoveryManager.matchesTarget;
-import static udmi.lib.client.manager.DiscoveryManager.shouldEnumerate;
-import static udmi.lib.client.manager.DiscoveryScan.forFamily;
-import static udmi.lib.client.manager.DiscoveryScan.forScan;
 import static udmi.schema.Category.DISCOVERY_FAMILY_SCAN;
 import static udmi.schema.FamilyDiscoveryState.Phase.ACTIVE;
 import static udmi.schema.FamilyDiscoveryState.Phase.PENDING;
@@ -27,21 +17,19 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import udmi.lib.ProtocolFamily;
 import udmi.lib.intf.FamilyProvider;
-import udmi.lib.intf.ManagerHost;
 import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
 import udmi.schema.DiscoveryState;
@@ -53,1034 +41,700 @@ import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.Level;
 
 /**
- * Coordinates scheduling, per-family mutual exclusion, and state reporting for discovery scans
- * across both {@code discovery.families} and named {@code discovery.scans}.
- *
- * <p>All internal state transitions synchronize on a private lock that is never held across
- * provider calls ({@link FamilyProvider#startScan}, {@link FamilyProvider#stopScan}), enumeration
- * callbacks, event publication, or {@code ManagerHost} state updates.
+ * Thread-safe scheduler for legacy {@code discovery.families}, named {@code discovery.scans}, and
+ * device self-enumeration. Guarded by a single monitor; outbound publishes and state updates are
+ * collected into a per-call outbox and flushed after releasing the monitor in causal order.
  */
 public class DiscoveryScheduler {
 
-  private enum RunStage {
-    STARTING,
-    RUNNING,
-    STOPPING
-  }
+  private record ActiveRun(
+      DiscoveryScan scan,
+      String family,
+      Date generation,
+      FamilyDiscoveryState state,
+      AtomicInteger sendCount,
+      FamilyProvider provider) {}
 
-  private record ScanSchedule(Date lastRun, Date retryAt, ScheduledFuture<?> future) {
-  }
-
-  private record StartDecision(
-      ActiveRun run,
-      FamilyDiscoveryConfig config,
-      int markerEventNo,
-      boolean publishStateOnly) {
-  }
-
-  private static final class ActiveRun {
-
-    final DiscoveryScan scan;
-    final String family;
-    final Date generation;
-    final FamilyDiscoveryState state;
-    final AtomicInteger sendCount;
-    final FamilyProvider provider;
-    RunStage stage = RunStage.STARTING;
-    boolean completionRequested;
-
-    ActiveRun(DiscoveryScan scan, String family, Date generation, FamilyDiscoveryState state,
-        AtomicInteger sendCount, FamilyProvider provider) {
-      this.scan = scan;
-      this.family = family;
-      this.generation = generation;
-      this.state = state;
-      this.sendCount = sendCount;
-      this.provider = provider;
-    }
-  }
+  private record ScanSchedule(Date lastRun, Date scheduledAt, ScheduledFuture<?> future) {}
 
   private final DiscoveryManager manager;
-  private final Object lock = new Object();
-  private final Object statePublishLock = new Object();
+  private final ThreadLocal<List<Runnable>> activeOutbox = new ThreadLocal<>();
   private final Map<String, ActiveRun> activeByFamily = new HashMap<>();
   private final Map<DiscoveryScan, ScanSchedule> scanSchedules = new HashMap<>();
   private final Set<DiscoveryScan> deferredScans = new LinkedHashSet<>();
-  private final Map<String, String> configuredScanFamilies = new HashMap<>();
-  private DiscoveryState discoveryState;
+
   private DiscoveryConfig discoveryConfig;
-  private long configEpoch;
+  private DiscoveryState discoveryState;
   private boolean shuttingDown;
 
+  /**
+   * Creates a scheduler bound to the given discovery manager.
+   *
+   * @param manager owning discovery manager
+   */
   public DiscoveryScheduler(DiscoveryManager manager) {
-    this.manager = requireNonNull(manager, "manager");
+    this.manager = manager;
   }
 
   /**
-   * Returns the current discovery state under the scheduler lock.
+   * Returns the current in-memory discovery state snapshot.
    */
-  public DiscoveryState getDiscoveryState() {
-    synchronized (lock) {
-      return discoveryState;
-    }
+  public synchronized DiscoveryState getDiscoveryState() {
+    return discoveryState;
   }
 
   /**
-   * Sets the current discovery state under the scheduler lock.
+   * Replaces the in-memory discovery state (intended for test setup).
    */
-  public void setDiscoveryState(DiscoveryState discoveryState) {
-    synchronized (lock) {
-      this.discoveryState = discoveryState;
-    }
+  public synchronized void setDiscoveryState(DiscoveryState state) {
+    this.discoveryState = state;
   }
 
   /**
-   * Returns the current discovery config under the scheduler lock.
+   * Returns the current discovery config.
    */
-  public DiscoveryConfig getDiscoveryConfig() {
-    synchronized (lock) {
-      return discoveryConfig;
-    }
+  public synchronized DiscoveryConfig getDiscoveryConfig() {
+    return discoveryConfig;
   }
 
   /**
-   * Sets the current discovery config snapshot directly.
+   * Replaces the discovery config (intended for test setup).
    */
-  public void setDiscoveryConfig(DiscoveryConfig discoveryConfig) {
-    synchronized (lock) {
-      this.discoveryConfig = discoveryConfig;
-      recordConfiguredScanFamiliesLocked(discoveryConfig);
-    }
-  }
-
-  boolean hasActiveScans() {
-    synchronized (lock) {
-      return !activeByFamily.isEmpty();
-    }
-  }
-
-  boolean isFamilyActive(String family) {
-    synchronized (lock) {
-      return activeByFamily.containsKey(family);
-    }
-  }
-
-  boolean hasScanSchedules() {
-    synchronized (lock) {
-      return !scanSchedules.isEmpty();
-    }
+  public synchronized void setDiscoveryConfig(DiscoveryConfig config) {
+    this.discoveryConfig = config;
   }
 
   /**
-   * Applies an updated discovery configuration, stopping removed or replaced scans outside the
-   * scheduler lock before scheduling new scans and publishing state.
-   */
-  public void updateConfig(DiscoveryConfig discovery) {
-    List<ActiveRun> runsToStop = new ArrayList<>();
-    Set<String> affectedFamilies = new LinkedHashSet<>();
-    final long myEpoch;
-    final boolean scheduledInFirstPass;
-
-    synchronized (lock) {
-      if (shuttingDown) {
-        return;
-      }
-      this.discoveryConfig = discovery;
-      myEpoch = ++this.configEpoch;
-      if (discovery == null) {
-        detachAllActiveScansLocked(runsToStop);
-        deferredScans.clear();
-        configuredScanFamilies.clear();
-        clearAllScanSchedulesLocked();
-        this.discoveryState = null;
-        scheduledInFirstPass = true;
-      } else {
-        if (this.discoveryState == null) {
-          this.discoveryState = new DiscoveryState();
-        }
-        preStopObsoleteScansLocked(discovery, runsToStop, affectedFamilies);
-        recordConfiguredScanFamiliesLocked(discovery);
-        if (runsToStop.isEmpty()) {
-          reconcileSchedulesLocked(discovery);
-          scheduledInFirstPass = true;
-        } else {
-          scheduledInFirstPass = false;
-        }
-      }
-    }
-
-    runsToStop.forEach(run -> safeStopProvider(run.family, run.provider));
-
-    if (!runsToStop.isEmpty() || !affectedFamilies.isEmpty()) {
-      synchronized (lock) {
-        runsToStop.forEach(run -> activeByFamily.remove(run.family, run));
-        if (!scheduledInFirstPass && !shuttingDown && this.configEpoch == myEpoch
-            && this.discoveryConfig != null) {
-          reconcileSchedulesLocked(this.discoveryConfig);
-        }
-      }
-    }
-
-    if (discovery != null) {
-      updateDiscoveryEnumeration(discovery, myEpoch);
-    }
-    updateState();
-    affectedFamilies.forEach(this::startDeferredScan);
-  }
-
-  /**
-   * Stops all active scans and cancels scheduled timers during manager shutdown.
-   */
-  public void shutdown() {
-    List<ActiveRun> runsToStop = new ArrayList<>();
-    synchronized (lock) {
-      shuttingDown = true;
-      deferredScans.clear();
-      detachAllActiveScansLocked(runsToStop);
-      clearAllScanSchedulesLocked();
-    }
-    runsToStop.forEach(run -> safeStopProvider(run.family, run.provider));
-    synchronized (lock) {
-      runsToStop.forEach(run -> activeByFamily.remove(run.family, run));
-    }
-  }
-
-  /**
-   * Publishes an isolated snapshot of the current discovery state while holding the host state
-   * lock, ensuring callers observe updated discovery state synchronously and older snapshots
-   * never overwrite newer state.
-   */
-  public void updateState() {
-    ManagerHost host = manager.getHost();
-    if (host == null) {
-      publishStateLocked();
-    } else {
-      host.withStateLock(this::publishStateLocked);
-    }
-  }
-
-  private void updateStateNonBlocking() {
-    ManagerHost host = manager.getHost();
-    if (host == null) {
-      publishStateLocked();
-      return;
-    }
-    if (!host.tryWithStateLock(this::publishStateLocked)) {
-      synchronized (lock) {
-        tryScheduleFutureLocked(Date.from(manager.getScanNow()), this::updateState);
-      }
-    }
-  }
-
-  private void publishStateLocked() {
-    synchronized (statePublishLock) {
-      final Object snapshot;
-      synchronized (lock) {
-        snapshot = ofNullable((Object) deepCopy(discoveryState)).orElse(DiscoveryState.class);
-      }
-      manager.updateState(snapshot);
-    }
-  }
-
-  /**
-   * Starts a pending scan if it is still pending for the given generation.
-   */
-  public void checkDiscoveryScan(DiscoveryScan scan, Date scanGeneration) {
-    try {
-      executeStartDecision(prepareScanStart(scan, scanGeneration, true));
-    } catch (Exception e) {
-      throw new RuntimeException("While checking for discovery scan start", e);
-    }
-  }
-
-  /**
-   * Starts a discovery scan, deferring sporadic scans or failing periodic slots if its family is
-   * already active.
-   */
-  public void startDiscoveryScan(DiscoveryScan scan, Date scanGeneration) {
-    executeStartDecision(prepareScanStart(scan, scanGeneration, false));
-  }
-
-  /**
-   * Computes the start of the next periodic scan on the grid {@code generation + N * interval}.
-   * Uses {@code max(now, lastRun)} so a slight early wakeup or backward clock step never returns
-   * an already-executed slot. A future generation is the first slot; otherwise the latest grid
-   * slot up to {@code refMs} runs if it is strictly after {@code lastRun} (which defaults to
-   * device start time before any run, skipping pre-boot slots while running a fresh post-boot
-   * generation at {@code N = 0}), and otherwise the next grid slot is scheduled.
+   * Computes the next scheduled start time on the fixed interval grid. If {@code configGeneration}
+   * is at or after both {@code now} and any prior attempted slot, it runs at
+   * {@code configGeneration}; otherwise it selects the next upcoming grid slot after them.
+   *
+   * @param configGeneration base generation timestamp from config
+   * @param intervalSec positive interval in seconds
+   * @param lastRun timestamp of the most recently attempted slot, or {@code null}
+   * @param now current time
+   * @return next scheduled grid timestamp
    */
   public static Date nextPeriodicStart(
       Date configGeneration, int intervalSec, Date lastRun, Instant now) {
-    long generationMs = configGeneration.getTime();
-    long lastRunMs = lastRun.getTime();
-    long refMs = Math.max(now.toEpochMilli(), lastRunMs);
-    if (generationMs > refMs) {
+    checkArgument(intervalSec > 0, "scan_interval_sec must be positive");
+    long baseSec = configGeneration.toInstant().getEpochSecond();
+    long nowSec = now.getEpochSecond();
+    long earliestSec = lastRun == null
+        ? nowSec
+        : Math.max(nowSec, lastRun.toInstant().getEpochSecond() + 1);
+    if (baseSec >= earliestSec) {
       return configGeneration;
     }
-    long slotMs = intervalSec * 1000L;
-    long lastSlotMs = refMs - floorMod(refMs - generationMs, slotMs);
-    return new Date(lastSlotMs > lastRunMs ? lastSlotMs : lastSlotMs + slotMs);
+    long elapsedSec = earliestSec - baseSec;
+    long steps = (elapsedSec + intervalSec - 1) / intervalSec;
+    return Date.from(configGeneration.toInstant().plusSeconds(steps * intervalSec));
   }
 
-  private void updateDiscoveryEnumeration(DiscoveryConfig config, long epoch) {
-    final Date enumerationGeneration;
-    final Enumerations depths;
-    synchronized (lock) {
-      if (shuttingDown || discoveryState == null || this.configEpoch != epoch) {
+  /**
+   * Applies an updated {@link DiscoveryConfig}, reconciling self-enumeration, legacy family scans,
+   * and named scans.
+   *
+   * @param discovery updated discovery config, or {@code null} when unconfigured
+   */
+  public void updateConfig(DiscoveryConfig discovery) {
+    runLocked(outbox -> {
+      if (shuttingDown) {
         return;
       }
-      enumerationGeneration = config.generation;
-      if (enumerationGeneration == null) {
-        discoveryState.generation = null;
+      final DiscoveryConfig previousConfig = this.discoveryConfig;
+      DiscoveryState beforeState = deepCopy(discoveryState);
+      this.discoveryConfig = deepCopy(discovery);
+
+      if (discovery == null) {
+        clearAllLocked();
+        if (beforeState != null) {
+          queueStateUpdateLocked(outbox);
+        }
         return;
       }
-      if (discoveryState.generation != null
-          && !enumerationGeneration.after(discoveryState.generation)) {
+
+      if (discoveryState == null) {
+        discoveryState = new DiscoveryState();
+      }
+      final Set<String> previouslyActive = new HashSet<>(activeByFamily.keySet());
+      reconcileRemovedScansLocked(previousConfig, outbox);
+      if (discovery.families == null) {
+        discoveryState.families = null;
+      } else {
+        ifNullThen(discoveryState.families, () -> discoveryState.families = new HashMap<>());
+      }
+      if (discovery.scans == null) {
+        discoveryState.scans = null;
+      } else {
+        ifNullThen(discoveryState.scans, () -> discoveryState.scans = new HashMap<>());
+      }
+
+      updateDiscoveryEnumerationLocked(discovery, outbox);
+      ofNullable(discovery.families).ifPresent(map ->
+          map.keySet().forEach(name -> scheduleScanLocked(DiscoveryScan.forFamily(name), outbox)));
+      ofNullable(discovery.scans).ifPresent(map ->
+          map.keySet().forEach(name -> scheduleScanLocked(DiscoveryScan.forScan(name), outbox)));
+
+      if (!Objects.equals(beforeState, discoveryState)) {
+        queueStateUpdateLocked(outbox);
+      }
+      previouslyActive.stream()
+          .filter(family -> !activeByFamily.containsKey(family))
+          .forEach(family -> pollDeferredLocked(family, outbox));
+    });
+  }
+
+  /**
+   * Cancels all pending timers and stops any active scan providers.
+   */
+  public void shutdown() {
+    runLocked(outbox -> {
+      shuttingDown = true;
+      scanSchedules.values().forEach(schedule -> cancelFuture(schedule.future()));
+      scanSchedules.clear();
+      deferredScans.clear();
+      new ArrayList<>(activeByFamily.values()).forEach(run -> {
+        activeByFamily.remove(run.family(), run);
+        safeStopProvider(run.family(), run.provider());
+      });
+    });
+  }
+
+  /**
+   * Executor callback when a scheduled scan slot is reached.
+   *
+   * @param scan scan identifier
+   * @param scanGeneration scheduled slot timestamp
+   */
+  public void checkDiscoveryScan(DiscoveryScan scan, Date scanGeneration) {
+    runLocked(outbox -> onScheduledStartLocked(scan, scanGeneration, outbox));
+  }
+
+  /**
+   * Starts a discovery scan directly if it is configured, valid, and not already active.
+   *
+   * @param scan scan identifier
+   * @param scanGeneration generation timestamp for the scan run
+   */
+  public void startDiscoveryScan(DiscoveryScan scan, Date scanGeneration) {
+    runLocked(outbox -> {
+      if (!canRunScanLocked(scan)) {
         return;
       }
-      discoveryState.generation = enumerationGeneration;
-      depths = config.enumerations;
+      String family = configuredFamilyLocked(scan);
+      if (activeByFamily.containsKey(family)) {
+        deferOrSkipBusyScanLocked(scan, scanGeneration, scanSchedules.get(scan), outbox);
+        return;
+      }
+      beginActiveRunLocked(scan, scanGeneration, outbox);
+    });
+  }
+
+  synchronized boolean hasActiveScans() {
+    return !activeByFamily.isEmpty();
+  }
+
+  synchronized boolean isFamilyActive(String family) {
+    return activeByFamily.containsKey(family);
+  }
+
+  synchronized boolean hasScanSchedules() {
+    return scanSchedules.values().stream().anyMatch(schedule -> schedule.future() != null);
+  }
+
+  private void runLocked(Consumer<List<Runnable>> action) {
+    List<Runnable> current = activeOutbox.get();
+    if (current != null) {
+      synchronized (this) {
+        action.accept(current);
+      }
+      return;
     }
-    manager.info(format("Discovery enumeration at %s", isoConvert(enumerationGeneration)));
-    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-    discoveryEvent.family = ProtocolFamily.IOT;
-    discoveryEvent.generation = enumerationGeneration;
-    if (depths != null) {
+    List<Runnable> outbox = new ArrayList<>();
+    synchronized (this) {
+      activeOutbox.set(outbox);
+      try {
+        action.accept(outbox);
+      } finally {
+        activeOutbox.remove();
+      }
+    }
+    outbox.forEach(Runnable::run);
+  }
+
+  private void clearAllLocked() {
+    scanSchedules.values().forEach(schedule -> cancelFuture(schedule.future()));
+    scanSchedules.clear();
+    deferredScans.clear();
+    new ArrayList<>(activeByFamily.values()).forEach(run -> {
+      activeByFamily.remove(run.family(), run);
+      safeStopProvider(run.family(), run.provider());
+    });
+    discoveryState = null;
+  }
+
+  private void reconcileRemovedScansLocked(
+      DiscoveryConfig previousConfig, List<Runnable> outbox) {
+    List<DiscoveryScan> existing = new ArrayList<>();
+    if (discoveryState.families != null) {
+      discoveryState.families.keySet().forEach(name -> existing.add(DiscoveryScan.forFamily(name)));
+    }
+    if (discoveryState.scans != null) {
+      discoveryState.scans.keySet().forEach(name -> existing.add(DiscoveryScan.forScan(name)));
+    }
+    for (DiscoveryScan scan : existing) {
+      FamilyDiscoveryConfig nextConfig = getScanConfigLocked(scan);
+      FamilyDiscoveryConfig prevConfig = getConfigEntry(previousConfig, scan);
+      boolean familyChanged = scan.named() && prevConfig != null && nextConfig != null
+          && !Objects.equals(prevConfig.family, nextConfig.family);
+      if (nextConfig == null || familyChanged) {
+        removeScanLocked(scan, outbox);
+      }
+    }
+  }
+
+  private void removeScanLocked(DiscoveryScan scan, List<Runnable> outbox) {
+    ActiveRun activeRun = findActiveRunLocked(scan);
+    if (activeRun != null) {
+      stopActiveRunLocked(activeRun, outbox);
+    }
+    deferredScans.remove(scan);
+    ScanSchedule schedule = scanSchedules.remove(scan);
+    if (schedule != null) {
+      cancelFuture(schedule.future());
+    }
+    if (discoveryState != null) {
+      Map<String, FamilyDiscoveryState> map =
+          scan.named() ? discoveryState.scans : discoveryState.families;
+      if (map != null) {
+        map.remove(scan.name());
+      }
+    }
+  }
+
+  private void scheduleScanLocked(DiscoveryScan scan, List<Runnable> outbox) {
+    FamilyDiscoveryConfig config = getScanConfigLocked(scan);
+    if (config == null) {
+      return;
+    }
+    String invalidReason = invalidScanReasonLocked(scan);
+    if (invalidReason != null) {
+      ActiveRun activeRun = findActiveRunLocked(scan);
+      if (activeRun != null) {
+        stopActiveRunLocked(activeRun, outbox);
+      }
+      deferredScans.remove(scan);
+      ScanSchedule old = scanSchedules.remove(scan);
+      if (old != null) {
+        cancelFuture(old.future());
+      }
+      setScanErrorLocked(ensureScanStateLocked(scan), null, null, invalidReason);
+      return;
+    }
+
+    if (config.generation == null) {
+      removeScanLocked(scan, outbox);
+      return;
+    }
+
+    if (isScanActiveLocked(scan)) {
+      return;
+    }
+
+    FamilyDiscoveryState scanState = ensureScanStateLocked(scan);
+    ScanSchedule schedule = scanSchedules.get(scan);
+    Date recordedLastRun = schedule == null ? null : schedule.lastRun();
+    int interval = getScanInterval(config);
+
+    if (interval > 0) {
+      deferredScans.remove(scan);
+      Date startGen = nextPeriodicStart(
+          config.generation, interval, recordedLastRun, manager.getScanNow());
+      if (schedule != null && startGen.equals(schedule.scheduledAt())
+          && (scanState.phase == PENDING || scanState.status != null)) {
+        return;
+      }
+      if (schedule != null) {
+        cancelFuture(schedule.future());
+      }
+      final ScheduledFuture<?> future = scheduleFutureLocked(
+          startGen, () -> checkDiscoveryScan(scan, startGen));
+      scanState.phase = PENDING;
+      scanState.generation = startGen;
+      scanState.status = null;
+      scanSchedules.put(scan, new ScanSchedule(
+          recordedLastRun, future != null ? startGen : null, future));
+      return;
+    }
+
+    Date configGeneration = config.generation;
+    if (configGeneration.equals(scanState.generation)
+        && scanState.status == null
+        && ((scanState.phase == PENDING
+                && (hasArmedFuture(schedule) || deferredScans.contains(scan)))
+            || scanState.phase == STOPPED)) {
+      return;
+    }
+
+    Date baseline = ofNullable(recordedLastRun).orElse(manager.getHost().getStartTime());
+    if (!configGeneration.after(baseline)) {
+      deferredScans.remove(scan);
+      if (schedule != null) {
+        cancelFuture(schedule.future());
+        scanSchedules.put(scan, new ScanSchedule(recordedLastRun, null, null));
+      }
+      if (!Objects.equals(configGeneration, scanState.generation)) {
+        scanState.phase = STOPPED;
+        scanState.generation = configGeneration;
+        scanState.status = null;
+        scanState.active_count = null;
+      }
+      return;
+    }
+
+    deferredScans.remove(scan);
+    if (schedule != null) {
+      cancelFuture(schedule.future());
+    }
+    final ScheduledFuture<?> future = scheduleFutureLocked(
+        configGeneration, () -> checkDiscoveryScan(scan, configGeneration));
+    scanState.phase = PENDING;
+    scanState.generation = configGeneration;
+    scanState.status = null;
+    scanSchedules.put(scan, new ScanSchedule(
+        recordedLastRun, future != null ? configGeneration : null, future));
+  }
+
+  private void onScheduledStartLocked(
+      DiscoveryScan scan, Date scanGeneration, List<Runnable> outbox) {
+    if (!canRunScanLocked(scan)) {
+      return;
+    }
+    ScanSchedule schedule = scanSchedules.get(scan);
+    if (schedule == null || !scanGeneration.equals(schedule.scheduledAt())) {
+      return;
+    }
+    String family = configuredFamilyLocked(scan);
+    if (activeByFamily.containsKey(family)) {
+      deferOrSkipBusyScanLocked(scan, scanGeneration, schedule, outbox);
+      return;
+    }
+    beginActiveRunLocked(scan, scanGeneration, outbox);
+  }
+
+  private void deferOrSkipBusyScanLocked(
+      DiscoveryScan scan, Date scanGeneration, ScanSchedule schedule, List<Runnable> outbox) {
+    FamilyDiscoveryConfig config = getScanConfigLocked(scan);
+    if (schedule != null) {
+      cancelFuture(schedule.future());
+    }
+    if (getScanInterval(config) > 0) {
+      scanSchedules.put(scan, new ScanSchedule(scanGeneration, null, null));
+      scheduleScanLocked(scan, outbox);
+      queueStateUpdateLocked(outbox);
+      return;
+    }
+    Date priorLastRun = schedule == null ? null : schedule.lastRun();
+    scanSchedules.put(scan, new ScanSchedule(priorLastRun, null, null));
+    FamilyDiscoveryState scanState = ensureScanStateLocked(scan);
+    final boolean changed = scanState.phase != PENDING
+        || !Objects.equals(scanGeneration, scanState.generation)
+        || scanState.status != null;
+    scanState.phase = PENDING;
+    scanState.generation = scanGeneration;
+    scanState.status = null;
+    deferredScans.add(scan);
+    if (changed) {
+      queueStateUpdateLocked(outbox);
+    }
+  }
+
+  private void beginActiveRunLocked(
+      DiscoveryScan scan, Date scanGeneration, List<Runnable> outbox) {
+    FamilyDiscoveryConfig config = getScanConfigLocked(scan);
+    String family = configuredFamilyLocked(scan);
+    FamilyDiscoveryState scanState = ensureScanStateLocked(scan);
+    int durationSec = ofNullable(config.scan_duration_sec)
+        .orElse(DiscoveryManager.SCAN_DURATION_SEC);
+    Date stopTime = Date.from(manager.getScanNow().plusSeconds(durationSec));
+    AtomicInteger sendCount = new AtomicInteger(0);
+    FamilyProvider provider = manager.discoveryProvider(family);
+    ActiveRun run = new ActiveRun(scan, family, scanGeneration, scanState, sendCount, provider);
+
+    ScheduledFuture<?> stopFuture = scheduleFutureLocked(
+        stopTime, () -> runLocked(stopOutbox -> onScheduledStopLocked(run, stopOutbox)));
+    if (stopFuture == null) {
+      return;
+    }
+
+    deferredScans.remove(scan);
+    ScanSchedule old = scanSchedules.get(scan);
+    if (old != null) {
+      cancelFuture(old.future());
+    }
+    activeByFamily.put(family, run);
+    scanSchedules.put(scan, new ScanSchedule(scanGeneration, null, stopFuture));
+
+    scanState.generation = scanGeneration;
+    scanState.phase = ACTIVE;
+    scanState.status = null;
+    scanState.active_count = sendCount.get();
+
+    final int outboxMark = outbox.size();
+    queueMarkerEvent(outbox, scan, family, scanGeneration, sendCount);
+    queueStateUpdateLocked(outbox);
+
+    if (provider == null) {
+      manager.info(format("Discovered %s has no provider, skipping provider scan", family));
+      return;
+    }
+
+    FamilyDiscoveryConfig configCopy = deepCopy(config);
+    configCopy.depth = ofNullable(configCopy.depth)
+        .orElse(configCopy.addrs != null ? Depth.DETAILS : Depth.ENTRIES);
+    Set<String> targets = configCopy.addrs == null ? null : ImmutableSet.copyOf(configCopy.addrs);
+
+    try {
+      provider.startScan(configCopy, (deviceId, event) ->
+          handleDiscoveredDevice(run, targets, deviceId, event));
+    } catch (Exception e) {
+      manager.error(format("Error starting discovery scan %s", scan), e);
+      if (outbox.size() == outboxMark + 2) {
+        outbox.subList(outboxMark, outbox.size()).clear();
+      } else if (activeByFamily.get(family) == run) {
+        queueMarkerEvent(outbox, scan, family, scanGeneration, sendCount);
+      }
+      if (activeByFamily.remove(family, run)) {
+        cancelFuture(stopFuture);
+        if (!shuttingDown && getScanStateLocked(scan) == scanState) {
+          setScanErrorLocked(scanState, scanGeneration, null,
+              format("Error starting discovery scan %s: %s", scan, e.getMessage()));
+          int interval = getScanInterval(config);
+          if (interval > 0 && config.generation != null) {
+            Date nextSlot = nextPeriodicStart(
+                config.generation, interval, scanGeneration, manager.getScanNow());
+            final ScheduledFuture<?> retryFuture = scheduleFutureLocked(
+                nextSlot, () -> checkDiscoveryScan(scan, nextSlot));
+            scanSchedules.put(scan, new ScanSchedule(
+                scanGeneration, retryFuture != null ? nextSlot : null, retryFuture));
+          } else {
+            scanSchedules.put(scan, new ScanSchedule(scanGeneration, null, null));
+          }
+          queueStateUpdateLocked(outbox);
+        }
+        pollDeferredLocked(family, outbox);
+      }
+    }
+  }
+
+  private void handleDiscoveredDevice(
+      ActiveRun run, Set<String> targets, String deviceId, DiscoveryEvents event) {
+    String addr = event.addr;
+    String network = event.network;
+    if (addr == null && network == null) {
+      return;
+    }
+    String genIso = isoConvert(run.generation());
+    if (addr != null && !DiscoveryManager.matchesTarget(targets, addr)) {
+      manager.info(format("Discovered %s device %s for %s skipped", run.family(), addr, genIso));
+      return;
+    }
+    runLocked(outbox -> {
+      if (shuttingDown || activeByFamily.get(run.family()) != run) {
+        return;
+      }
+      int activeCount = run.sendCount().getAndIncrement();
+      run.state().active_count = activeCount;
+      manager.info(format("Discovered %s device %s %s for %s as %s",
+          run.family(), network, addr, genIso, activeCount));
+      event.event_no = activeCount;
+      queueDiscoveryEvent(outbox, run.scan(), run.family(), run.generation(), deviceId, event);
+      queueStateUpdateLocked(outbox);
+    });
+  }
+
+  private void onScheduledStopLocked(ActiveRun run, List<Runnable> outbox) {
+    if (activeByFamily.get(run.family()) != run) {
+      return;
+    }
+    stopActiveRunLocked(run, outbox);
+    if (!shuttingDown && getScanStateLocked(run.scan()) == run.state()) {
+      run.state().phase = STOPPED;
+      scheduleScanLocked(run.scan(), outbox);
+      queueStateUpdateLocked(outbox);
+    }
+    pollDeferredLocked(run.family(), outbox);
+  }
+
+  private void stopActiveRunLocked(ActiveRun run, List<Runnable> outbox) {
+    activeByFamily.remove(run.family(), run);
+    ScanSchedule current = scanSchedules.get(run.scan());
+    if (current != null && current.future() != null) {
+      cancelFuture(current.future());
+    }
+    scanSchedules.put(run.scan(), new ScanSchedule(run.generation(), null, null));
+    manager.info(format("Discovered %s stopping %s (=? %s)",
+        run.family(), isoConvert(run.generation()), isoConvert(run.state().generation)));
+    safeStopProvider(run.family(), run.provider());
+    queueMarkerEvent(outbox, run.scan(), run.family(), run.generation(), run.sendCount());
+  }
+
+  private void pollDeferredLocked(String family, List<Runnable> outbox) {
+    while (!shuttingDown && !activeByFamily.containsKey(family)) {
+      DiscoveryScan next = deferredScans.stream()
+          .filter(scan -> family.equals(configuredFamilyLocked(scan)))
+          .findFirst()
+          .orElse(null);
+      if (next == null) {
+        return;
+      }
+      deferredScans.remove(next);
+      if (!canRunScanLocked(next)) {
+        continue;
+      }
+      FamilyDiscoveryConfig config = getScanConfigLocked(next);
+      if (config.generation == null || getScanInterval(config) > 0) {
+        continue;
+      }
+      FamilyDiscoveryState scanState = getScanStateLocked(next);
+      Date scanGeneration = scanState != null && scanState.generation != null
+          ? scanState.generation
+          : config.generation;
+      beginActiveRunLocked(next, scanGeneration, outbox);
+    }
+  }
+
+  private void updateDiscoveryEnumerationLocked(DiscoveryConfig config, List<Runnable> outbox) {
+    Date enumerationGeneration = config.generation;
+    if (enumerationGeneration == null) {
+      discoveryState.generation = null;
+      return;
+    }
+    if (discoveryState.generation != null
+        && !enumerationGeneration.after(discoveryState.generation)) {
+      return;
+    }
+    discoveryState.generation = enumerationGeneration;
+    Enumerations depths = ofNullable(config.enumerations).orElseGet(Enumerations::new);
+    outbox.add(() -> {
+      manager.info(format("Discovery enumeration at %s", isoConvert(enumerationGeneration)));
+      DiscoveryEvents discoveryEvent = new DiscoveryEvents();
+      discoveryEvent.family = ProtocolFamily.IOT;
+      discoveryEvent.generation = enumerationGeneration;
       discoveryEvent.points = maybeEnumerate(depths.points,
           () -> manager.enumeratePoints(manager.getDeviceId()));
       discoveryEvent.features = maybeEnumerate(depths.features, manager::getFeatures);
       discoveryEvent.families = maybeEnumerate(depths.families,
           () -> manager.getDeviceManager().enumerateFamilies());
-    }
-    manager.getHost().publish(discoveryEvent);
+      manager.getHost().publish(discoveryEvent);
+    });
   }
 
-  private static <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
-    return ifTrueGet(shouldEnumerate(depth, Depth.ENTRIES), supplier);
+  private <K, V> Map<K, V> maybeEnumerate(Depth depth, Supplier<Map<K, V>> supplier) {
+    return ifTrueGet(DiscoveryManager.shouldEnumerate(depth, Depth.ENTRIES), supplier);
   }
 
-  private void preStopObsoleteScansLocked(DiscoveryConfig discovery, List<ActiveRun> runsToStop,
-      Set<String> affectedFamilies) {
-    Map<String, FamilyDiscoveryConfig> families =
-        ofNullable(discovery.families).orElse(Map.of());
-    Map<String, FamilyDiscoveryConfig> scans = ofNullable(discovery.scans).orElse(Map.of());
-
-    if (discoveryState.families != null) {
-      discoveryState.families.keySet().stream()
-          .filter(not(families::containsKey))
-          .toList()
-          .forEach(family -> removeDiscoveryScanLocked(
-              forFamily(family), runsToStop, affectedFamilies));
-    }
-    if (discoveryState.scans != null) {
-      discoveryState.scans.keySet().stream()
-          .filter(name -> !scans.containsKey(name)
-              || scanFamilyChangedLocked(name, scans.get(name)))
-          .toList()
-          .forEach(name -> removeDiscoveryScanLocked(
-              forScan(name), runsToStop, affectedFamilies));
-    }
-    if (discovery.families == null) {
-      discoveryState.families = null;
-    }
-    if (discovery.scans == null) {
-      discoveryState.scans = null;
-    }
-
-    families.keySet().forEach(family -> preStopIfUnrunnableLocked(
-        forFamily(family), runsToStop, affectedFamilies));
-    scans.keySet().forEach(name -> preStopIfUnrunnableLocked(
-        forScan(name), runsToStop, affectedFamilies));
+  private void queueStateUpdateLocked(List<Runnable> outbox) {
+    Object snapshot = ofNullable((Object) deepCopy(discoveryState)).orElse(DiscoveryState.class);
+    outbox.add(() -> manager.updateState(snapshot));
   }
 
-  private void preStopIfUnrunnableLocked(DiscoveryScan scan, List<ActiveRun> runsToStop,
-      Set<String> affectedFamilies) {
-    if (!isScanActiveLocked(scan)) {
-      return;
-    }
-    FamilyDiscoveryConfig scanConfig = getScanConfigLocked(scan);
-    Date rawGeneration = ifNotNullGet(scanConfig, config -> config.generation);
-    if (invalidScanReasonLocked(scan) != null || rawGeneration == null) {
-      detachActiveScanLocked(scan, runsToStop, affectedFamilies);
-    }
+  private void queueMarkerEvent(List<Runnable> outbox, DiscoveryScan scan, String family,
+      Date scanGeneration, AtomicInteger sendCount) {
+    DiscoveryEvents event = new DiscoveryEvents();
+    event.event_no = -sendCount.getAndIncrement();
+    manager.info(format("Discovered %s active %d for %s",
+        family, event.event_no, isoConvert(scanGeneration)));
+    queueDiscoveryEvent(outbox, scan, family, scanGeneration, null, event);
   }
 
-  private void reconcileSchedulesLocked(DiscoveryConfig discovery) {
-    Map<String, FamilyDiscoveryConfig> families =
-        ofNullable(discovery.families).orElse(Map.of());
-    Map<String, FamilyDiscoveryConfig> scans = ofNullable(discovery.scans).orElse(Map.of());
-
-    discoveryState.families = discovery.families == null ? null
-        : ofNullable(discoveryState.families).orElseGet(HashMap::new);
-    discoveryState.scans = discovery.scans == null ? null
-        : ofNullable(discoveryState.scans).orElseGet(HashMap::new);
-
-    families.keySet().forEach(family -> scheduleDiscoveryScanLocked(forFamily(family)));
-    scans.keySet().forEach(name -> scheduleDiscoveryScanLocked(forScan(name)));
+  private void queueDiscoveryEvent(List<Runnable> outbox, DiscoveryScan scan, String family,
+      Date generation, String deviceId, DiscoveryEvents event) {
+    event.family = family;
+    event.scan = scan.named() ? scan.name() : null;
+    event.generation = generation;
+    outbox.add(() -> {
+      manager.postDiscoveryProcess(deviceId, event);
+      manager.getHost().publish(event);
+    });
   }
 
-  private boolean scanFamilyChangedLocked(String name, FamilyDiscoveryConfig current) {
-    if (!configuredScanFamilies.containsKey(name)) {
-      return false;
-    }
-    String currentFamily = ifNotNullGet(current, config -> config.family);
-    return !Objects.equals(configuredScanFamilies.get(name), currentFamily);
-  }
-
-  private void recordConfiguredScanFamiliesLocked(DiscoveryConfig discovery) {
-    configuredScanFamilies.clear();
-    if (discovery != null && discovery.scans != null) {
-      discovery.scans.forEach((name, config) ->
-          configuredScanFamilies.put(name, ifNotNullGet(config, c -> c.family)));
-    }
-  }
-
-  private void scheduleDiscoveryScanLocked(DiscoveryScan scan) {
-    if (shuttingDown || !isScanConfiguredLocked(scan)) {
-      return;
-    }
-    String invalidReason = invalidScanReasonLocked(scan);
-    if (invalidReason != null) {
-      deferredScans.remove(scan);
-      clearScanScheduleLocked(scan);
-      recordScanFailureLocked(scan, null, invalidReason);
-      return;
-    }
-
-    FamilyDiscoveryConfig scanConfig = getScanConfigLocked(scan);
-    Date configGeneration = ifNotNullGet(scanConfig, config -> config.generation);
-    if (configGeneration == null) {
-      removeDiscoveryScanLocked(scan, null, null);
-      return;
-    }
-
-    FamilyDiscoveryState currentState = getScanStateLocked(scan);
-    if (currentState != null && currentState.phase == ACTIVE) {
-      return;
-    }
-
-    int interval = getScanIntervalLocked(scan);
-    Date startTime = manager.getHost().getStartTime();
-    FamilyDiscoveryState scanState = ensureScanStateLocked(scan);
-    ScanSchedule schedule = scanSchedules.get(scan);
-    Date recordedLastRun = ifNotNullGet(schedule, s -> s.lastRun());
-    Date lastRun = ofNullable(recordedLastRun).orElse(startTime);
-    Instant now = manager.getScanNow();
-
-    final Date startGeneration;
-    if (interval > 0) {
-      deferredScans.remove(scan);
-      startGeneration = nextPeriodicStart(configGeneration, interval, lastRun, now);
-      if (schedule != null && startGeneration.equals(schedule.retryAt())
-          && scanState.generation != null && !configGeneration.after(scanState.generation)) {
-        return;
-      }
-      schedule = clearRetryScheduleLocked(scan, schedule);
-      if (scanState.phase == PENDING && hasArmedFuture(schedule)
-          && startGeneration.equals(scanState.generation) && scanState.status == null) {
-        return;
-      }
-    } else {
-      schedule = clearRetryScheduleLocked(scan, schedule);
-      if (configGeneration.equals(scanState.generation) && scanState.status == null
-          && (scanState.phase != PENDING || hasArmedFuture(schedule)
-              || deferredScans.contains(scan))) {
-        return;
-      }
-      if (!configGeneration.after(lastRun)) {
-        if (!configGeneration.equals(scanState.generation)) {
-          cancelDiscoveryScanLocked(scan, configGeneration);
-        }
-        return;
-      }
-      startGeneration = configGeneration;
-    }
-
-    Optional<ScheduledFuture<?>> future = tryScheduleFutureLocked(
-        startGeneration, () -> checkDiscoveryScan(scan, startGeneration));
-    if (future.isEmpty()) {
-      return;
-    }
-
-    deferredScans.remove(scan);
-    cancelFuture(schedule);
-    manager.info(format("Discovery scan generation %s pending at %s", scan,
-        isoConvert(startGeneration)));
-    scanState.generation = startGeneration;
-    scanState.phase = PENDING;
-    scanState.status = null;
-    scanSchedules.put(scan, new ScanSchedule(recordedLastRun, null, future.get()));
-  }
-
-  private Optional<ScheduledFuture<?>> tryScheduleFutureLocked(Date when, Runnable task) {
-    if (shuttingDown) {
-      return Optional.empty();
-    }
-    try {
-      return Optional.of(requireNonNull(manager.scheduleFuture(when, task)));
-    } catch (RejectedExecutionException e) {
-      manager.debug(format("Skipping scheduled discovery task at %s after shutdown",
-          isoConvert(when)));
-      return Optional.empty();
-    }
-  }
-
-  private ScanSchedule clearRetryScheduleLocked(DiscoveryScan scan, ScanSchedule schedule) {
-    if (schedule == null || schedule.retryAt() == null) {
-      return schedule;
-    }
-    cancelFuture(schedule);
-    ScanSchedule updated =
-        schedule.lastRun() == null ? null : new ScanSchedule(schedule.lastRun(), null, null);
-    if (updated == null) {
-      scanSchedules.remove(scan);
-    } else {
-      scanSchedules.put(scan, updated);
-    }
-    return updated;
+  private boolean canRunScanLocked(DiscoveryScan scan) {
+    return !shuttingDown
+        && discoveryConfig != null
+        && discoveryState != null
+        && getScanConfigLocked(scan) != null
+        && invalidScanReasonLocked(scan) == null
+        && !isScanActiveLocked(scan);
   }
 
   private String invalidScanReasonLocked(DiscoveryScan scan) {
     FamilyDiscoveryConfig config = getScanConfigLocked(scan);
-    if (!scan.named()) {
-      if (config == null) {
-        return null;
-      }
-      if (config.family != null) {
-        return format("Discovery %s must not specify family %s", scan, config.family);
-      }
-    } else {
-      if (config == null || config.family == null) {
-        return format("Discovery %s missing required family", scan);
+    if (config == null) {
+      return null;
+    }
+    if (!scan.named() && config.family != null) {
+      return format("Entry in discovery.families %s must not specify family", scan.name());
+    }
+    if (scan.named()) {
+      if (config.family == null || config.family.isEmpty()) {
+        return format("Named discovery scan %s missing required family", scan.name());
       }
       if (manager.discoveryProvider(config.family) == null) {
-        return format("Discovery %s family %s is not supported", scan, config.family);
+        return format("Unsupported discovery family %s for scan %s", config.family, scan.name());
       }
     }
     if (config.scan_interval_sec != null && config.scan_interval_sec < 0) {
-      return format("Discovery %s has negative scan_interval_sec %d", scan,
-          config.scan_interval_sec);
+      return format("Scan %s has negative scan_interval_sec %d",
+          scan.name(), config.scan_interval_sec);
     }
     if (config.scan_duration_sec != null && config.scan_duration_sec < 0) {
-      return format("Discovery %s has negative scan_duration_sec %d", scan,
-          config.scan_duration_sec);
+      return format("Scan %s has negative scan_duration_sec %d",
+          scan.name(), config.scan_duration_sec);
     }
     if (config.addrs != null && config.addrs.stream().anyMatch(Objects::isNull)) {
-      return format("Discovery %s has null target address", scan);
+      return format("Scan %s contains null target address", scan.name());
     }
     return null;
   }
 
-  private boolean recordScanFailureLocked(DiscoveryScan scan, Date generation, String message) {
-    boolean wasActive = detachActiveScanLocked(scan, null, null);
-    deferredScans.remove(scan);
-    cancelScanFutureLocked(scan);
-    FamilyDiscoveryState scanState = ensureScanStateLocked(scan);
-    if (generation == null || !wasActive) {
-      scanState.active_count = null;
-    }
-    if (scanState.phase == STOPPED && Objects.equals(scanState.generation, generation)
-        && scanState.status != null && message.equals(scanState.status.message)) {
-      return false;
-    }
-    manager.info(format("Discovery scan %s failed: %s", scan, message));
-    scanState.phase = STOPPED;
-    scanState.generation = generation;
-    scanState.status = new Entry();
-    scanState.status.category = DISCOVERY_FAMILY_SCAN;
-    scanState.status.level = Level.ERROR.value();
-    scanState.status.message = message;
-    scanState.status.timestamp = getNow();
-    return true;
-  }
-
-  private void cancelDiscoveryScanLocked(DiscoveryScan scan, Date configGeneration) {
-    deferredScans.remove(scan);
-    cancelScanFutureLocked(scan);
-    FamilyDiscoveryState scanState = getScanStateLocked(scan);
-    if (scanState != null) {
-      manager.info(format("Discovery scan %s phase %s as %s", scan, STOPPED,
-          isoConvert(configGeneration)));
-      scanState.phase = STOPPED;
-      scanState.generation = configGeneration;
-      scanState.status = null;
-      scanState.active_count = null;
-    }
-  }
-
-  private void removeDiscoveryScanLocked(DiscoveryScan scan, List<ActiveRun> runsToStop,
-      Set<String> affectedFamilies) {
-    detachActiveScanLocked(scan, runsToStop, affectedFamilies);
-    deferredScans.remove(scan);
-    clearScanScheduleLocked(scan);
-    FamilyDiscoveryState removed =
-        ifNotNullGet(getScanStatesLocked(scan), states -> states.remove(scan.name()));
-    ifNotNullThen(removed, was -> manager.info(format("Discovery scan %s removed", scan)));
-  }
-
-  private boolean detachActiveScanLocked(DiscoveryScan scan, List<ActiveRun> runsToStop,
-      Set<String> affectedFamilies) {
-    Optional<ActiveRun> match = activeByFamily.values().stream()
-        .filter(run -> run.scan.equals(scan))
-        .findFirst();
-    if (match.isEmpty()) {
-      return false;
-    }
-    ActiveRun run = match.get();
-    ifNotNullThen(affectedFamilies, families -> families.add(run.family));
-    if (run.stage == RunStage.RUNNING) {
-      run.stage = RunStage.STOPPING;
-      if (runsToStop != null) {
-        runsToStop.add(run);
-      } else {
-        activeByFamily.remove(run.family, run);
-      }
-    } else if (run.stage == RunStage.STARTING) {
-      run.stage = RunStage.STOPPING;
-    }
-    return true;
-  }
-
-  private void detachAllActiveScansLocked(List<ActiveRun> runsToStop) {
-    for (ActiveRun run : activeByFamily.values()) {
-      if (run.stage == RunStage.RUNNING) {
-        run.stage = RunStage.STOPPING;
-        runsToStop.add(run);
-      } else if (run.stage == RunStage.STARTING) {
-        run.stage = RunStage.STOPPING;
-      }
-    }
-  }
-
-  private boolean isScanActiveLocked(DiscoveryScan scan) {
-    return activeByFamily.values().stream().anyMatch(run -> run.scan.equals(scan));
-  }
-
-  private StartDecision prepareScanStart(DiscoveryScan scan, Date scanGeneration,
-      boolean requirePending) {
-    synchronized (lock) {
-      if (shuttingDown || !isScanConfiguredLocked(scan) || invalidScanReasonLocked(scan) != null
-          || discoveryState == null || isScanActiveLocked(scan)) {
-        return null;
-      }
-      FamilyDiscoveryState currentState = getScanStateLocked(scan);
-      if (requirePending) {
-        if (currentState == null || currentState.phase != PENDING
-            || !scanGeneration.equals(currentState.generation)) {
-          return null;
-        }
-        detachScanFutureLocked(scan);
-      } else if (currentState != null && currentState.phase == ACTIVE) {
-        return null;
-      }
-      String family = getScanFamilyLocked(scan);
-      if (family == null) {
-        return null;
-      }
-      ActiveRun busy = activeByFamily.get(family);
-      if (busy != null) {
-        if (getScanIntervalLocked(scan) <= 0) {
-          FamilyDiscoveryState scanState = ensureScanStateLocked(scan);
-          cancelScanFutureLocked(scan);
-          final boolean changed = scanState.phase != PENDING
-              || !Objects.equals(scanState.generation, scanGeneration)
-              || scanState.status != null;
-          scanState.generation = scanGeneration;
-          scanState.phase = PENDING;
-          scanState.status = null;
-          if (deferredScans.add(scan)) {
-            manager.info(format("Discovery scan %s deferred while family %s busy with %s",
-                scan, family, busy.scan));
-          }
-          return new StartDecision(null, null, 0, changed);
-        }
-        boolean changed = failRetryablePeriodicScanLocked(scan, scanGeneration,
-            format("Discovery family %s busy with %s", family, busy.scan));
-        return new StartDecision(null, null, 0, changed);
-      }
-      return claimAndPrepareRunLocked(scan, family, scanGeneration);
-    }
-  }
-
-  private StartDecision claimAndPrepareRunLocked(DiscoveryScan scan, String family,
-      Date scanGeneration) {
-    FamilyDiscoveryConfig rawConfig = getScanConfigLocked(scan);
-    if (rawConfig == null) {
-      return null;
-    }
-    FamilyProvider provider = manager.discoveryProvider(family);
-    Date stopTime = Date.from(manager.getScanNow().plusSeconds(getScanDurationLocked(scan)));
-    FamilyDiscoveryState scanState = ensureScanStateLocked(scan);
-    AtomicInteger sendCount = new AtomicInteger();
-    ActiveRun run = new ActiveRun(scan, family, scanGeneration, scanState, sendCount, provider);
-    Optional<ScheduledFuture<?>> stopFuture =
-        tryScheduleFutureLocked(stopTime, () -> discoveryScanComplete(run));
-    if (stopFuture.isEmpty()) {
-      return null;
-    }
-    deferredScans.remove(scan);
-    cancelFuture(scanSchedules.get(scan));
-    manager.info(format("Discovery scan starting %s generation %s", scan,
-        isoConvert(scanGeneration)));
-    activeByFamily.put(family, run);
-    scanSchedules.put(scan, new ScanSchedule(scanGeneration, null, stopFuture.get()));
-    scanState.generation = scanGeneration;
-    scanState.phase = ACTIVE;
-    scanState.status = null;
-    scanState.active_count = sendCount.get();
-    int markerEventNo = -sendCount.getAndIncrement();
-    return new StartDecision(run, deepCopy(rawConfig), markerEventNo, false);
-  }
-
-  private StartDecision pollDeferredStartLocked(String family) {
-    if (shuttingDown || discoveryConfig == null || discoveryState == null
-        || activeByFamily.containsKey(family)) {
-      return null;
-    }
-    Iterator<DiscoveryScan> iterator = deferredScans.iterator();
-    while (iterator.hasNext()) {
-      DiscoveryScan candidate = iterator.next();
-      if (!isScanConfiguredLocked(candidate) || invalidScanReasonLocked(candidate) != null
-          || getScanIntervalLocked(candidate) > 0) {
-        iterator.remove();
-        continue;
-      }
-      if (!family.equals(getScanFamilyLocked(candidate))) {
-        continue;
-      }
-      FamilyDiscoveryState state = getScanStateLocked(candidate);
-      if (state == null || state.phase != PENDING || state.generation == null) {
-        iterator.remove();
-        continue;
-      }
-      iterator.remove();
-      return claimAndPrepareRunLocked(candidate, family, state.generation);
-    }
-    return null;
-  }
-
-  private void startDeferredScan(String family) {
-    final StartDecision next;
-    synchronized (lock) {
-      next = pollDeferredStartLocked(family);
-    }
-    executeStartDecision(next);
-  }
-
-  private void executeStartDecision(StartDecision decision) {
-    if (decision == null) {
+  private void setScanErrorLocked(
+      FamilyDiscoveryState state, Date generation, Integer activeCount, String message) {
+    boolean unchanged = state.phase == STOPPED
+        && Objects.equals(generation, state.generation)
+        && Objects.equals(activeCount, state.active_count)
+        && state.status != null
+        && DISCOVERY_FAMILY_SCAN.equals(state.status.category)
+        && Objects.equals(message, state.status.message);
+    if (unchanged) {
       return;
     }
-    if (decision.run() == null) {
-      ifTrueThen(decision.publishStateOnly(), this::updateState);
-      return;
+    state.phase = STOPPED;
+    state.generation = generation;
+    state.active_count = activeCount;
+    Entry status = new Entry();
+    status.category = DISCOVERY_FAMILY_SCAN;
+    status.level = Level.ERROR.value();
+    status.timestamp = Date.from(manager.getScanNow());
+    status.message = message;
+    state.status = status;
+  }
+
+  private ScheduledFuture<?> scheduleFutureLocked(Date time, Runnable task) {
+    if (shuttingDown) {
+      return null;
     }
-    ActiveRun run = decision.run();
     try {
-      publishMarkerDiscoveryEvent(run.scan, run.family, run.generation, decision.markerEventNo());
-      updateState();
-      startProviderForRun(run, decision.config());
-    } catch (RuntimeException | Error e) {
-      abortStartingRunAfterException(run, e);
+      return manager.scheduleFuture(time, task);
+    } catch (RuntimeException e) {
+      if (shuttingDown || e instanceof RejectedExecutionException
+          || (e.getMessage() != null && e.getMessage().contains("shutdown"))) {
+        manager.warn("Discovery executor unavailable, skipping schedule: " + e.getMessage());
+        return null;
+      }
       throw e;
     }
-  }
-
-  private void abortStartingRunAfterException(ActiveRun run, Throwable cause) {
-    final boolean aborted;
-    final boolean stateChanged;
-    synchronized (lock) {
-      if (activeByFamily.get(run.family) == run && run.stage == RunStage.STARTING) {
-        aborted = true;
-        run.stage = RunStage.STOPPING;
-        activeByFamily.remove(run.family, run);
-        if (isActiveStateLocked(run)) {
-          stateChanged = failScanStartErrorLocked(run.scan, run.generation,
-              format("Discovery %s failed to start: %s", run.scan, cause.getMessage()));
-        } else {
-          cancelScanFutureLocked(run.scan);
-          stateChanged = false;
-        }
-      } else {
-        aborted = false;
-        stateChanged = false;
-      }
-    }
-    if (!aborted) {
-      return;
-    }
-    try {
-      ifTrueThen(stateChanged, this::updateState);
-    } catch (RuntimeException | Error suppressed) {
-      cause.addSuppressed(suppressed);
-    }
-    try {
-      startDeferredScan(run.family);
-    } catch (RuntimeException | Error suppressed) {
-      cause.addSuppressed(suppressed);
-    }
-  }
-
-  private void startProviderForRun(ActiveRun run, FamilyDiscoveryConfig config) {
-    String generation = isoConvert(run.generation);
-    final Set<String> targets = ofNullable(config.addrs).map(ImmutableSet::copyOf).orElse(null);
-    manager.info(format("Discovered %s starting %s (=? %s)", run.scan, generation,
-        isoConvert(run.state.generation)));
-
-    config.depth = Optional.ofNullable(config.depth)
-        .orElse(config.addrs != null ? Depth.DETAILS : Depth.ENTRIES);
-
-    if (run.provider == null) {
-      manager.info(format("Discovered %s has no provider, skipping provider scan", run.scan));
-      final boolean completeNow;
-      final boolean checkDeferred;
-      synchronized (lock) {
-        if (activeByFamily.get(run.family) == run) {
-          if (run.stage == RunStage.STARTING && isActiveStateLocked(run)) {
-            run.stage = RunStage.RUNNING;
-            completeNow = run.completionRequested;
-            checkDeferred = false;
-          } else {
-            completeNow = false;
-            activeByFamily.remove(run.family, run);
-            checkDeferred = true;
-          }
-        } else {
-          completeNow = false;
-          checkDeferred = false;
-        }
-      }
-      if (completeNow) {
-        discoveryScanComplete(run);
-      } else if (checkDeferred) {
-        startDeferredScan(run.family);
-      }
-      return;
-    }
-
-    BiConsumer<String, DiscoveryEvents> publisher = (deviceId, discoveryEvent) -> {
-      String addr = discoveryEvent.addr;
-      String network = discoveryEvent.network;
-      if (addr == null && network == null) {
-        return;
-      }
-      if (addr != null && !matchesTarget(targets, addr)) {
-        manager.info(format("Discovered %s device %s for %s skipped", run.scan, addr, generation));
-        return;
-      }
-      final int activeCount;
-      synchronized (lock) {
-        if (!isActiveRunLocked(run)) {
-          return;
-        }
-        activeCount = run.sendCount.getAndIncrement();
-        run.state.active_count = activeCount;
-      }
-      manager.info(format("Discovered %s device %s %s for %s as %s", run.scan, network, addr,
-          generation, activeCount));
-      discoveryEvent.event_no = activeCount;
-      publishDiscoveryEvent(run.scan, run.family, run.generation, deviceId, discoveryEvent);
-      updateStateNonBlocking();
-    };
-
-    final boolean shouldStart;
-    final boolean checkDeferredOnAbort;
-    synchronized (lock) {
-      if (activeByFamily.get(run.family) == run && run.stage == RunStage.STARTING
-          && isActiveStateLocked(run)) {
-        shouldStart = true;
-        checkDeferredOnAbort = false;
-      } else {
-        shouldStart = false;
-        checkDeferredOnAbort = activeByFamily.remove(run.family, run);
-      }
-    }
-    if (!shouldStart) {
-      if (checkDeferredOnAbort) {
-        startDeferredScan(run.family);
-      }
-      return;
-    }
-
-    try {
-      run.provider.startScan(config, publisher);
-    } catch (Exception e) {
-      manager.error(format("Error starting discovery scan %s", run.scan), e);
-      final boolean failedCurrent;
-      synchronized (lock) {
-        if (activeByFamily.get(run.family) == run && run.stage == RunStage.STARTING
-            && isActiveStateLocked(run)) {
-          run.stage = RunStage.STOPPING;
-          activeByFamily.remove(run.family, run);
-          failedCurrent = failScanStartErrorLocked(run.scan, run.generation,
-              format("Discovery %s failed to start: %s", run.scan, e.getMessage()));
-        } else {
-          failedCurrent = false;
-          activeByFamily.remove(run.family, run);
-        }
-      }
-      ifTrueThen(failedCurrent, this::updateState);
-      startDeferredScan(run.family);
-      return;
-    }
-
-    final boolean stopAfterStart;
-    final boolean completeNow;
-    synchronized (lock) {
-      if (activeByFamily.get(run.family) == run && run.stage == RunStage.STARTING
-          && isActiveStateLocked(run)) {
-        run.stage = RunStage.RUNNING;
-        stopAfterStart = false;
-        completeNow = run.completionRequested;
-      } else {
-        run.stage = RunStage.STOPPING;
-        stopAfterStart = true;
-        completeNow = false;
-      }
-    }
-    if (stopAfterStart) {
-      safeStopProvider(run.family, run.provider);
-      synchronized (lock) {
-        activeByFamily.remove(run.family, run);
-      }
-      startDeferredScan(run.family);
-    } else if (completeNow) {
-      discoveryScanComplete(run);
-    }
-  }
-
-  private void discoveryScanComplete(ActiveRun run) {
-    final int endEventNo;
-    synchronized (lock) {
-      if (!isActiveRunLocked(run)) {
-        return;
-      }
-      if (run.stage == RunStage.STARTING) {
-        run.completionRequested = true;
-        return;
-      }
-      FamilyDiscoveryState scanState = getScanStateLocked(run.scan);
-      manager.info(format("Discovered %s stopping %s (=? %s)", run.scan,
-          isoConvert(run.generation),
-          ifNotNullGet(scanState, state -> isoConvert(state.generation))));
-      run.stage = RunStage.STOPPING;
-      endEventNo = -run.sendCount.getAndIncrement();
-    }
-
-    Throwable primaryError = null;
-    try {
-      safeStopProvider(run.family, run.provider);
-      publishMarkerDiscoveryEvent(run.scan, run.family, run.generation, endEventNo);
-    } catch (RuntimeException | Error e) {
-      primaryError = e;
-    }
-
-    final boolean completed;
-    synchronized (lock) {
-      activeByFamily.remove(run.family, run);
-      completed = !shuttingDown && isActiveStateLocked(run);
-      if (completed) {
-        detachScanFutureLocked(run.scan);
-        run.state.phase = STOPPED;
-        scheduleDiscoveryScanLocked(run.scan);
-      }
-    }
-    primaryError = runCompletionStep(primaryError, () -> ifTrueThen(completed, this::updateState));
-    primaryError = runCompletionStep(primaryError, () -> startDeferredScan(run.family));
-    if (primaryError instanceof Error err) {
-      throw err;
-    }
-    if (primaryError != null) {
-      throw new RuntimeException(
-          format("While completing discovery scan %s", run.scan), primaryError);
-    }
-  }
-
-  private static Throwable runCompletionStep(Throwable primaryError, Runnable step) {
-    try {
-      step.run();
-      return primaryError;
-    } catch (RuntimeException | Error e) {
-      if (primaryError == null) {
-        return e;
-      }
-      primaryError.addSuppressed(e);
-      return primaryError;
-    }
-  }
-
-  private boolean failScanStartErrorLocked(DiscoveryScan scan, Date scanGeneration,
-      String message) {
-    if (getScanIntervalLocked(scan) > 0) {
-      return failRetryablePeriodicScanLocked(scan, scanGeneration, message);
-    }
-    boolean changed = recordScanFailureLocked(scan, scanGeneration, message);
-    scanSchedules.put(scan, new ScanSchedule(scanGeneration, null, null));
-    return changed;
-  }
-
-  private boolean failRetryablePeriodicScanLocked(DiscoveryScan scan, Date scanGeneration,
-      String message) {
-    int interval = getScanIntervalLocked(scan);
-    Date retryGeneration = Date.from(scanGeneration.toInstant().plusSeconds(interval));
-    boolean changed = recordScanFailureLocked(scan, scanGeneration, message);
-    Optional<ScheduledFuture<?>> retryFuture = tryScheduleFutureLocked(
-        retryGeneration, () -> retryPeriodicScan(scan, retryGeneration));
-    if (retryFuture.isPresent()) {
-      scanSchedules.put(scan, new ScanSchedule(scanGeneration, retryGeneration, retryFuture.get()));
-    } else {
-      scanSchedules.put(scan, new ScanSchedule(scanGeneration, null, null));
-    }
-    return changed;
-  }
-
-  private void retryPeriodicScan(DiscoveryScan scan, Date retryGeneration) {
-    final boolean shouldRetry;
-    synchronized (lock) {
-      ScanSchedule current = scanSchedules.get(scan);
-      if (!shuttingDown && current != null && getScanStateLocked(scan) != null
-          && retryGeneration.equals(current.retryAt())) {
-        Date previousRun = current.lastRun();
-        if (previousRun == null) {
-          scanSchedules.remove(scan);
-        } else {
-          scanSchedules.put(scan, new ScanSchedule(previousRun, null, null));
-        }
-        scheduleDiscoveryScanLocked(scan);
-        shouldRetry = true;
-      } else {
-        shouldRetry = false;
-      }
-    }
-    ifTrueThen(shouldRetry, this::updateState);
-  }
-
-  private boolean isActiveRunLocked(ActiveRun run) {
-    return activeByFamily.get(run.family) == run && run.stage != RunStage.STOPPING
-        && isActiveStateLocked(run);
-  }
-
-  private boolean isActiveStateLocked(ActiveRun run) {
-    return getScanStateLocked(run.scan) == run.state && run.state.phase == ACTIVE
-        && run.generation.equals(run.state.generation);
-  }
-
-  private void publishMarkerDiscoveryEvent(DiscoveryScan scan, String family, Date scanGeneration,
-      int markerEventNo) {
-    DiscoveryEvents discoveryEvent = new DiscoveryEvents();
-    discoveryEvent.event_no = markerEventNo;
-    manager.info(format("Discovered %s active %d for %s", scan, discoveryEvent.event_no,
-        isoConvert(scanGeneration)));
-    publishDiscoveryEvent(scan, family, scanGeneration, null, discoveryEvent);
-  }
-
-  private void publishDiscoveryEvent(DiscoveryScan scan, String family, Date scanGeneration,
-      String deviceId, DiscoveryEvents discoveryEvent) {
-    discoveryEvent.family = family;
-    discoveryEvent.scan = scan.named() ? scan.name() : null;
-    discoveryEvent.generation = scanGeneration;
-    manager.postDiscoveryProcess(deviceId, discoveryEvent);
-    manager.getHost().publish(discoveryEvent);
   }
 
   private void safeStopProvider(String family, FamilyProvider provider) {
@@ -1094,81 +748,67 @@ public class DiscoveryScheduler {
     }
   }
 
-  private boolean isScanConfiguredLocked(DiscoveryScan scan) {
-    Map<String, FamilyDiscoveryConfig> scanMap = ifNotNullGet(discoveryConfig,
-        config -> scan.named() ? config.scans : config.families);
-    return scanMap != null && scanMap.containsKey(scan.name());
-  }
-
   private FamilyDiscoveryConfig getScanConfigLocked(DiscoveryScan scan) {
-    return ifNotNullGet(discoveryConfig, config ->
-        ifNotNullGet(scan.named() ? config.scans : config.families,
-            map -> map.get(scan.name())));
+    return getConfigEntry(discoveryConfig, scan);
   }
 
-  private String getScanFamilyLocked(DiscoveryScan scan) {
-    return scan.named() ? ifNotNullGet(getScanConfigLocked(scan), config -> config.family)
-        : scan.name();
+  private static FamilyDiscoveryConfig getConfigEntry(
+      DiscoveryConfig config, DiscoveryScan scan) {
+    if (config == null) {
+      return null;
+    }
+    Map<String, FamilyDiscoveryConfig> map = scan.named() ? config.scans : config.families;
+    return map == null ? null : map.get(scan.name());
   }
 
-  private int getScanIntervalLocked(DiscoveryScan scan) {
-    return ofNullable(ifNotNullGet(getScanConfigLocked(scan), c -> c.scan_interval_sec)).orElse(0);
-  }
-
-  private int getScanDurationLocked(DiscoveryScan scan) {
-    return ofNullable(ifNotNullGet(getScanConfigLocked(scan), c -> c.scan_duration_sec))
-        .orElse(SCAN_DURATION_SEC);
-  }
-
-  private Map<String, FamilyDiscoveryState> getScanStatesLocked(DiscoveryScan scan) {
-    return ifNotNullGet(discoveryState, state -> scan.named() ? state.scans : state.families);
-  }
-
-  private FamilyDiscoveryState getScanStateLocked(DiscoveryScan scan) {
-    return ifNotNullGet(getScanStatesLocked(scan), states -> states.get(scan.name()));
+  private String configuredFamilyLocked(DiscoveryScan scan) {
+    FamilyDiscoveryConfig config = getScanConfigLocked(scan);
+    return scan.named() ? (config == null ? null : config.family) : scan.name();
   }
 
   private FamilyDiscoveryState ensureScanStateLocked(DiscoveryScan scan) {
     if (discoveryState == null) {
-      return new FamilyDiscoveryState();
+      discoveryState = new DiscoveryState();
     }
-    Map<String, FamilyDiscoveryState> states = scan.named()
-        ? (discoveryState.scans != null ? discoveryState.scans
-            : (discoveryState.scans = new HashMap<>()))
-        : (discoveryState.families != null ? discoveryState.families
-            : (discoveryState.families = new HashMap<>()));
-    return states.computeIfAbsent(scan.name(), key -> new FamilyDiscoveryState());
+    if (scan.named()) {
+      ifNullThen(discoveryState.scans, () -> discoveryState.scans = new HashMap<>());
+      return discoveryState.scans.computeIfAbsent(scan.name(), k -> new FamilyDiscoveryState());
+    }
+    ifNullThen(discoveryState.families, () -> discoveryState.families = new HashMap<>());
+    return discoveryState.families.computeIfAbsent(scan.name(), k -> new FamilyDiscoveryState());
   }
 
-  private void clearScanScheduleLocked(DiscoveryScan scan) {
-    cancelFuture(scanSchedules.remove(scan));
+  private FamilyDiscoveryState getScanStateLocked(DiscoveryScan scan) {
+    if (discoveryState == null) {
+      return null;
+    }
+    Map<String, FamilyDiscoveryState> map =
+        scan.named() ? discoveryState.scans : discoveryState.families;
+    return map == null ? null : map.get(scan.name());
   }
 
-  private void cancelScanFutureLocked(DiscoveryScan scan) {
-    scanSchedules.computeIfPresent(scan, (key, cur) -> {
-      cancelFuture(cur);
-      return cur.lastRun() == null && cur.retryAt() == null
-          ? null : new ScanSchedule(cur.lastRun(), cur.retryAt(), null);
-    });
+  private ActiveRun findActiveRunLocked(DiscoveryScan scan) {
+    return activeByFamily.values().stream()
+        .filter(run -> run.scan().equals(scan))
+        .findFirst()
+        .orElse(null);
   }
 
-  private void detachScanFutureLocked(DiscoveryScan scan) {
-    scanSchedules.computeIfPresent(scan, (key, cur) ->
-        cur.lastRun() == null && cur.retryAt() == null
-            ? null : new ScanSchedule(cur.lastRun(), cur.retryAt(), null));
+  private boolean isScanActiveLocked(DiscoveryScan scan) {
+    return findActiveRunLocked(scan) != null;
   }
 
-  private void clearAllScanSchedulesLocked() {
-    List<ScanSchedule> current = List.copyOf(scanSchedules.values());
-    scanSchedules.clear();
-    current.forEach(DiscoveryScheduler::cancelFuture);
+  private static int getScanInterval(FamilyDiscoveryConfig config) {
+    return config == null ? 0 : ofNullable(config.scan_interval_sec).orElse(0);
   }
 
   private static boolean hasArmedFuture(ScanSchedule schedule) {
-    return schedule != null && schedule.future() != null;
+    return schedule != null && schedule.future() != null && !schedule.future().isCancelled();
   }
 
-  private static void cancelFuture(ScanSchedule schedule) {
-    ifNotNullThen(schedule, s -> ifNotNullThen(s.future(), future -> future.cancel(false)));
+  private static void cancelFuture(ScheduledFuture<?> future) {
+    if (future != null) {
+      future.cancel(false);
+    }
   }
 }

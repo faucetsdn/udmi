@@ -33,10 +33,7 @@ A sporadic scan is an explicit, one-off request for a device to actively scan a 
 A periodic scan is an active scan that repeats automatically at defined intervals, eliminating the need to update the configuration for every scan.
 
 * **Trigger**: Configured by providing both a `generation` timestamp and a `scan_interval_sec` parameter in `config.<scan>`. The `generation` timestamp serves as the **base time** (or initial start time) for the interval schedule.
-* **Execution Interval**: Scans occur on a fixed grid anchored at the base `generation` timestamp plus integer multiples of `scan_interval_sec` (`Ts = Tc + N * Ti`, for `N >= 0`), preventing clock drift over time:
-    * **Future `generation` (`Tc > now`)**: The first scan is scheduled at `Tc` (`N = 0`).
-    * **Current or past `generation` (`Tc <= now`)**: Let `Tl` be the latest grid slot at or before `now`. If `Tl` is strictly after both the device's start time and the most recently attempted slot of that scan entry, `Tl` runs immediately (catching up a just-elapsed `Tc` without repeating slots at or before device start time or already-attempted slots); otherwise, the next grid slot `Tl + Ti` is scheduled.
-    * **Overlapping run**: Grid slots arriving while an earlier run of the same scan entry is still `active` do not start concurrently; once the active run finishes, the next slot is selected using the `Tc <= now` rule above (running the latest elapsed slot `Tl` immediately if after the just-completed slot, and skipping any earlier elapsed slots before `Tl`).
+* **Execution Interval**: Scans run on a fixed grid anchored at the base `generation` timestamp plus integer multiples of `scan_interval_sec` (`generation` + `N * scan_interval_sec`, for `N >= 0`), preventing clock drift over time. If `generation` is in the future, the first scan is scheduled at `generation`; otherwise, the device schedules the next upcoming grid slot (and skips any slot that arrives while an earlier run is still `active`).
 * **State & Events**:
     * Unlike the sporadic scan where the state `generation` directly matches the config `generation`, in a periodic scan, the device **updates the `generation` value for each loop** to uniquely identify the current execution.
     * This loop-specific `generation` field will be greater than or equal to the base `generation` specified in the `config`.

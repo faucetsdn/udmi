@@ -3,8 +3,6 @@ package daq.pubber.impl.host;
 import daq.pubber.impl.PubberManager;
 import daq.pubber.impl.manager.PubberDeviceManager;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import udmi.lib.client.host.ProxyHost;
 import udmi.lib.client.host.PublisherHost;
 import udmi.lib.client.manager.DeviceManager;
@@ -17,7 +15,6 @@ import udmi.schema.PubberConfiguration;
 public class PubberProxyHost extends PubberManager implements ProxyHost {
 
   private final AtomicBoolean active = new AtomicBoolean();
-  private final Lock stateLock = new ReentrantLock();
   private final PubberDeviceManager deviceManager;
   private final PubberPublisherHost publisherHost;
 
@@ -46,11 +43,6 @@ public class PubberProxyHost extends PubberManager implements ProxyHost {
   @Override
   public ManagerHost getManagerHost() {
     return host;
-  }
-
-  @Override
-  public Lock getStateLock() {
-    return stateLock;
   }
 
   @Override

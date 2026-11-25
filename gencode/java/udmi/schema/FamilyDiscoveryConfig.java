@@ -19,11 +19,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class FamilyDiscoveryConfig {
 
     /**
-     * Protocol family for the scan. Required for entries in `scans`, and must be absent for entries in `families` (where the family is the map key)
+     * Target protocol family for the discovery scan.
      * 
      */
     @JsonProperty("family")
-    @JsonPropertyDescription("Protocol family for the scan. Required for entries in `scans`, and must be absent for entries in `families` (where the family is the map key)")
+    @JsonPropertyDescription("Target protocol family for the discovery scan.")
     public String family;
     /**
      * Generational marker for controlling discovery

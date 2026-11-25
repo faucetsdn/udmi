@@ -83,22 +83,19 @@ a scan name matching `^[a-z][a-z0-9]*(_[a-z0-9]+)*$`.
   `state.discovery.scans.<name>` entry. Changing the `family` of a named scan stops the old
   scan and starts a new one. Applying a config identical to the current one has no effect.
 * **Errors**: Whether two scans targeting the same family can run concurrently is up to the
-  device. When a scan's target family is busy with another active scan:
+  device. When a scan's start time arrives while its target family is already active:
   * A **sporadic** (one-time) scan remains in `phase` `pending` (with no error `status`) and
     starts automatically once the family becomes available.
-  * A **periodic** scan sets its `phase` to `stopped` with a `status` in category
-    `discovery.family.scan` at level `ERROR` (500) explaining why, and tries again at its next
-    scheduled slot.
-  When a device cannot run a named scan because it is invalid or unsupported (such as missing
-  `family` or naming an unsupported `family`), it sets that entry's `phase` to `stopped` with a
-  `status` in category `discovery.family.scan` at level `ERROR` (500) explaining why, leaving
-  other scans unaffected; such entries remain `stopped` until their config changes.
-* **Compatibility**: Legacy `config.discovery.families.<family>` entries remain supported
-  alongside `scans` in a separate namespace (so a named scan may share its name with a family).
-  A `families` entry implicitly targets its map-key family (and **must not** specify `family`—if
-  present, it is rejected with a `discovery.family.scan` `ERROR`), omits `scan` on emitted events,
-  follows the same busy-family contention rules, and keeps existing behavior for unsupported
-  families (no error `status`).
+  * A **periodic** scan skips that slot and schedules its next upcoming interval slot (`phase`
+    `pending`).
+  When a device cannot run a named scan because its configuration is invalid or unsupported
+  (such as missing `family` or naming an unsupported `family`) or fails to start, it sets that
+  entry's `phase` to `stopped` with a `status` in category `discovery.family.scan` at level
+  `ERROR` (500) explaining why, leaving other scans unaffected.
+* **Compatibility**: `config.discovery.families.<family>` remains supported as the legacy
+  single-scan-per-family form (in a separate namespace from `scans`), where the map key is the
+  target family, `family` must be omitted in config, and `scan` is omitted on emitted events.
+  New configurations should prefer `config.discovery.scans`.
 
 Example config with two named `bacnet` scans:
 
@@ -133,7 +130,7 @@ Example config with two named `bacnet` scans:
   }
 }
 ```
-Corresponding device state:
+Corresponding device state (with `bacnet_nightly` scheduled for its next `02:00Z` slot):
 
 <!--example:state/discovery_scans.json-->
 ```json

@@ -158,26 +158,10 @@ public interface PublisherHost extends ManagerHost {
   /**
    * Safely executes an action within the state lock, ensuring it is always unlocked.
    */
-  @Override
   default void withStateLock(Runnable action) {
     try {
       getStateLock().lock();
       action.run();
-    } catch (Exception e) {
-      throw new RuntimeException("While executing locked state action", e);
-    } finally {
-      getStateLock().unlock();
-    }
-  }
-
-  @Override
-  default boolean tryWithStateLock(Runnable action) {
-    if (!getStateLock().tryLock()) {
-      return false;
-    }
-    try {
-      action.run();
-      return true;
     } catch (Exception e) {
       throw new RuntimeException("While executing locked state action", e);
     } finally {

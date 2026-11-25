@@ -8,7 +8,6 @@ import static java.util.Optional.ofNullable;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import java.util.Date;
-import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -105,7 +104,7 @@ public abstract class ManagerBase implements SubBlockManager {
    */
   public ScheduledFuture<?> scheduleFuture(Date futureTime, Runnable futureTask) {
     if (executor.isShutdown()) {
-      throw new RejectedExecutionException("Executor shutdown, not scheduling");
+      throw new RuntimeException("Executor shutdown, not scheduling");
     }
     long delay = Math.max(futureTime.getTime() - getNow().getTime(), 0);
     debug(format("Scheduling future in %dms", delay));
