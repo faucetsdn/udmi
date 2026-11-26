@@ -436,15 +436,40 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     self.manager._device = self.mock_device
     self.manager._dispatcher = self.mock_dispatcher
 
+  @patch("edge.spotter.src.manager.discovery.check_raw_socket_permission")
   @patch("edge.spotter.src.manager.discovery.run_bacnet_trace_whois_rounds")
   @patch("edge.spotter.src.manager.discovery.capture_packets")
-  def test_run_trace_worker_streaming(self, mock_capture, mock_whois):
+  def test_run_trace_worker_streaming(
+      self, mock_capture, mock_whois, mock_perm
+  ):
     """Verifies gzip-compressed upload/discovery streaming, start/EOF markers, sha256, and scan_manifest."""
+    del mock_perm
     import base64
     import gzip
 
-    raw_chunks = [b"MOCK_PACKET_HEADER", b"MOCK_PACKET_BODY"]
-    mock_capture.return_value = raw_chunks
+    # Build two I-Am frames: BACnet/IP device 1001 and routed MS/TP device 2002 (plus dup of 1001)
+    def _iam_bvll(dev_id: int, ip_bytes: bytes, snet: int = None, sadr: int = None) -> bytes:
+      obj_id = (8 << 22) | dev_id
+      apdu = b"\x10\x00\xc4" + obj_id.to_bytes(4, "big") + b"\x22\x01\xe0\x91\x00\x21\x0f"
+      if snet is not None:
+        npdu = b"\x01\x08" + snet.to_bytes(2, "big") + b"\x01" + bytes([sadr])
+      else:
+        npdu = b"\x01\x00"
+      total = 10 + len(npdu) + len(apdu)
+      return b"\x81\x04" + total.to_bytes(2, "big") + ip_bytes + (47808).to_bytes(2, "big") + npdu + apdu
+
+    iam_ip_1 = _iam_bvll(1001, bytes([10, 0, 0, 11]))
+    iam_ip_dup = _iam_bvll(1001, bytes([10, 0, 0, 12]))
+    iam_mstp = _iam_bvll(2002, bytes([10, 0, 0, 20]), snet=6100, sadr=5)
+
+    def fake_capture(**kwargs):
+      on_ready = kwargs.get("on_ready")
+      if callable(on_ready):
+        on_ready()
+      yield b"MOCK_PACKET_HEADER" + iam_ip_1
+      yield iam_ip_dup + iam_mstp + b"MOCK_PACKET_BODY"
+
+    mock_capture.side_effect = fake_capture
 
     def fake_whois(**kwargs):
       kwargs["scan_round_timestamps"].append("2026-11-10T14:35:01Z")
@@ -456,10 +481,19 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
         generation="2026-11-10T14:35:00Z",
         depth=Depth.trace,
         scan_duration_sec=2,
+        trace=TraceDiscoveryConfig(
+            interface="eth0",
+            max_bytes=1048576,
+            exclude_capture_host=True,
+        ),
     )
 
-    self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
-    self.manager._run_trace_capture("bacnet", fam_config)
+    with patch(
+        "edge.spotter.src.manager.discovery.resolve_gateway_ip",
+        return_value="10.0.0.5",
+    ):
+      self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+      self.manager._run_trace_capture("bacnet", fam_config)
 
     # Expect 3 publishes on upload/discovery: start (0), data chunk (1), EOF (-2)
     self.assertEqual(self.mock_dispatcher.publish_event.call_count, 3)
@@ -472,29 +506,36 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     self.assertEqual(start_msg.family, "bacnet")
     self.assertIsNone(start_msg.data)
 
+    expected_raw = (
+        b"MOCK_PACKET_HEADER" + iam_ip_1 + iam_ip_dup + iam_mstp + b"MOCK_PACKET_BODY"
+    )
     data_ch, data_msg, _ = calls[1][0]
     self.assertEqual(data_ch, "upload/discovery")
     self.assertEqual(data_msg.event_no, 1)
     decompressed = gzip.decompress(base64.b64decode(data_msg.data))
-    self.assertEqual(decompressed, b"MOCK_PACKET_HEADERMOCK_PACKET_BODY")
+    self.assertEqual(decompressed, expected_raw)
 
     eof_ch, eof_msg, _ = calls[2][0]
     self.assertEqual(eof_ch, "upload/discovery")
     self.assertEqual(eof_msg.event_no, -2)
-    expected_sha = hashlib.sha256(
-        b"MOCK_PACKET_HEADERMOCK_PACKET_BODY"
-    ).hexdigest()
+    expected_sha = hashlib.sha256(expected_raw).hexdigest()
     self.assertEqual(eof_msg.sha256, expected_sha)
     self.assertIsNotNone(eof_msg.scan_manifest)
-    self.assertEqual(eof_msg.scan_manifest.filter, "udp port 47808")
+    self.assertEqual(
+        eof_msg.scan_manifest.filter, "(udp port 47808) and not host 10.0.0.5"
+    )
     self.assertEqual(
         eof_msg.scan_manifest.scan_round_timestamps, ["2026-11-10T14:35:01Z"]
     )
     self.assertEqual(eof_msg.scan_manifest.discovered_routed_networks, [6100])
+    self.assertEqual(eof_msg.scan_manifest.bacnet_ip_devices, 1)
+    self.assertEqual(eof_msg.scan_manifest.routed_mstp_devices, 1)
+    self.assertEqual(eof_msg.scan_manifest.duplicate_device_ids, [1001])
 
     f_state = self.manager._discovery_state.families["bacnet"]
     self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
-    self.assertEqual(f_state.active_count, 1)
+    # Q-P5: active_count tracks unique BACnet I-Am devices (1001 + 2002 = 2)
+    self.assertEqual(f_state.active_count, 2)
     self.assertEqual(f_state.status.level, 200)
     self.assertEqual(f_state.status.category, "discovery.family.scan")
     self.assertIsNotNone(f_state.status.timestamp)
@@ -510,6 +551,7 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
         trace=TraceDiscoveryConfig(
             interface="eth0",
             filter="udp port 47808",
+            max_bytes=1048576,
         ),
         scan_duration_sec=2,
     )
@@ -538,7 +580,7 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     fam_config = FamilyDiscoveryConfig(
         generation="2026-11-10T15:00:00Z",
         depth=Depth.trace,
-        trace=TraceDiscoveryConfig(interface="any", filter=""),
+        trace=TraceDiscoveryConfig(interface="eth0", filter="", max_bytes=1024),
         scan_duration_sec=1,
     )
     self.manager._config = DiscoveryConfig(families={"ether": fam_config})
@@ -552,6 +594,143 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     f_state = self.manager._discovery_state.families["ether"]
     self.assertEqual(f_state.generation, "2026-11-10T15:00:00Z")
     self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+
+  def test_trace_fail_fast_validation_and_cap_net_raw(self):
+    """Verifies G5/G8/Q-P4 fail-fast on missing interface/any/duration/max_bytes and CAP_NET_RAW."""
+    # Missing / 'any' interface
+    for bad_iface in (None, "", "any"):
+      fam_cfg = FamilyDiscoveryConfig(
+          generation="2026-11-10T15:00:00Z",
+          depth=Depth.trace,
+          trace=TraceDiscoveryConfig(interface=bad_iface, max_bytes=1024),
+          scan_duration_sec=10,
+      )
+      self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+      self.manager._run_trace_capture("bacnet", fam_cfg)
+      f_state = self.manager._discovery_state.families["bacnet"]
+      self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+      self.assertEqual(f_state.status.level, 500)
+
+    # Missing/zero max_bytes or scan_duration_sec
+    for dur, mb in ((0, 1024), (None, 1024), (10, 0), (10, None)):
+      fam_cfg = FamilyDiscoveryConfig(
+          generation="2026-11-10T15:00:00Z",
+          depth=Depth.trace,
+          trace=TraceDiscoveryConfig(interface="eth0", max_bytes=mb),
+          scan_duration_sec=dur,
+      )
+      self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+      self.manager._run_trace_capture("bacnet", fam_cfg)
+      f_state = self.manager._discovery_state.families["bacnet"]
+      self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+      self.assertEqual(f_state.status.level, 500)
+
+    # CAP_NET_RAW PermissionError fails fast with status 500 and zero uploads
+    self.mock_dispatcher.publish_event.reset_mock()
+    with patch(
+        "edge.spotter.src.manager.discovery.check_raw_socket_permission",
+        side_effect=PermissionError("CAP_NET_RAW required"),
+    ):
+      fam_cfg = FamilyDiscoveryConfig(
+          generation="2026-11-10T15:00:00Z",
+          depth=Depth.trace,
+          trace=TraceDiscoveryConfig(interface="eth0", max_bytes=1024),
+          scan_duration_sec=10,
+      )
+      self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+      self.manager._run_trace_capture("bacnet", fam_cfg)
+      f_state = self.manager._discovery_state.families["bacnet"]
+      self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+      self.assertEqual(f_state.status.level, 500)
+      self.assertIn("CAP_NET_RAW", f_state.status.message)
+      self.mock_dispatcher.publish_event.assert_not_called()
+
+  def test_capture_only_mode_rejects_active_bacnet_and_allows_trace(self):
+    """Verifies G3: capture_only rejects non-trace bacnet and allows depth='trace' without provider."""
+    from udmi.core.managers import LocalnetManager
+
+    mgr = SpotterDiscoveryManager(discovery_mode="capture_only")
+    mock_device = MagicMock()
+    localnet = LocalnetManager()  # No bacnet provider registered!
+    mock_device.get_manager.side_effect = (
+        lambda name: localnet if name == "localnet" else None
+    )
+    mgr._device = mock_device
+    mgr._dispatcher = MagicMock()
+
+    now_gen = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # 1. Non-trace BACnet config is rejected with status 500
+    cfg_active = Config(
+        discovery=DiscoveryConfig(
+            families={
+                "bacnet": FamilyDiscoveryConfig(
+                    generation=now_gen, depth=Depth.entries
+                )
+            }
+        )
+    )
+    mgr.handle_config(cfg_active)
+    f_state = mgr._discovery_state.families["bacnet"]
+    self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+    self.assertEqual(f_state.status.level, 500)
+    self.assertIn("capture_only", f_state.status.message)
+
+    # 2. Trace BACnet config is accepted into pending/active even without BacnetFamilyProvider
+    future_gen = (
+        datetime.now(timezone.utc) + timedelta(minutes=5)
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    cfg_trace = Config(
+        discovery=DiscoveryConfig(
+            families={
+                "bacnet": FamilyDiscoveryConfig(
+                    generation=future_gen,
+                    depth=Depth.trace,
+                    scan_duration_sec=30,
+                    trace=TraceDiscoveryConfig(
+                        interface="eth0", max_bytes=1048576
+                    ),
+                )
+            }
+        )
+    )
+    mgr.handle_config(cfg_trace)
+    f_state = mgr._discovery_state.families["bacnet"]
+    self.assertEqual(f_state.phase, DiscoveryPhase.pending)
+
+  @patch("edge.spotter.src.manager.discovery.check_raw_socket_permission")
+  @patch("edge.spotter.src.manager.discovery.capture_packets")
+  def test_bacnet_provider_closed_before_trace_starts(
+      self, mock_capture, mock_perm
+  ):
+    """Verifies G4: cached BAC0 client is closed before tcpdump starts."""
+    del mock_perm
+    events = []
+    mock_bacnet_prov = MagicMock()
+    mock_bacnet_prov.close.side_effect = lambda: events.append("bac0_close")
+
+    def fake_capture(**kwargs):
+      del kwargs
+      events.append("tcpdump")
+      yield b"PCAP_BYTES"
+
+    mock_capture.side_effect = fake_capture
+    mock_localnet = MagicMock()
+    mock_localnet.get_provider.side_effect = (
+        lambda fam: mock_bacnet_prov if fam == "bacnet" else None
+    )
+    self.mock_device.get_manager.side_effect = (
+        lambda name: mock_localnet if name == "localnet" else None
+    )
+
+    fam_cfg = FamilyDiscoveryConfig(
+        generation="2026-11-10T15:00:00Z",
+        depth=Depth.trace,
+        trace=TraceDiscoveryConfig(interface="eth0", max_bytes=1024),
+        scan_duration_sec=2,
+    )
+    self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+    self.manager._run_trace_capture("bacnet", fam_cfg)
+    self.assertEqual(events, ["bac0_close", "tcpdump"])
 
   @patch("edge.spotter.src.manager.discovery.check_safety_circuit_breaker")
   def test_run_scan_circuit_breaker_throttles_execution(self, mock_cb):

@@ -57,7 +57,7 @@ class TestPcapCapture(unittest.TestCase):
     mock_time.side_effect = [0.0, 5.0, 65.0]
 
     generator = capture_packets(
-        interface="any", filter_str="", max_duration_sec=60, max_bytes=1000000
+        interface="eth0", filter_str="", max_duration_sec=60, max_bytes=1000000
     )
 
     chunks = list(generator)
@@ -107,7 +107,7 @@ class TestPcapCapture(unittest.TestCase):
     mock_proc.stderr.read.return_value = b""
 
     generator = capture_packets(
-        interface="any", filter_str="", max_duration_sec=1, max_bytes=100
+        interface="eth0", filter_str="", max_duration_sec=1, max_bytes=100
     )
 
     with patch("time.time", side_effect=[0.0, 2.0, 3.0]):
@@ -131,7 +131,7 @@ class TestPcapCapture(unittest.TestCase):
     ):
       t0 = time.time()
       gen = capture_packets(
-          interface="any", filter_str="", max_duration_sec=1, max_bytes=1000
+          interface="eth0", filter_str="", max_duration_sec=1, max_bytes=1000
       )
       chunks = list(gen)
       elapsed = time.time() - t0
@@ -158,7 +158,7 @@ class TestPcapCapture(unittest.TestCase):
         ),
     ):
       gen = capture_packets(
-          interface="any", filter_str="", max_duration_sec=5, max_bytes=1000
+          interface="eth0", filter_str="", max_duration_sec=5, max_bytes=1000
       )
       chunks = list(gen)
       self.assertEqual(chunks, [b"PACKET_DATA"])
@@ -171,7 +171,7 @@ class TestPcapCapture(unittest.TestCase):
     """Verifies circuit breaker blocks capture launch before spawning."""
     mock_cb.return_value = True
     gen = capture_packets(
-        interface="any", filter_str="", max_duration_sec=5, max_bytes=1000
+        interface="eth0", filter_str="", max_duration_sec=5, max_bytes=1000
     )
     chunks = list(gen)
     self.assertEqual(chunks, [])
@@ -243,9 +243,10 @@ class TestPcapCapture(unittest.TestCase):
 
   @patch("edge.spotter.src.pcap.send_raw_bvll", return_value=True)
   def test_run_bacnet_trace_whois_rounds_and_routed_extraction(self, mock_send):
-    """Verifies 3 paced rounds of raw-socket broadcast/unicast Who-Is and I-Am-Router / SNET extraction."""
+    """Verifies 3 broadcast-only rounds spaced across T and I-Am-Router-only DNET extraction."""
     import threading
     from edge.spotter.src.pcap import (
+        extract_bacnet_trace_observations,
         extract_routed_networks_from_pcap_chunk,
         run_bacnet_trace_whois_rounds,
     )
@@ -257,6 +258,7 @@ class TestPcapCapture(unittest.TestCase):
         + (9288).to_bytes(2, "big")
     )
     # 2. BVLL Forwarded-NPDU (0x04) from router 192.168.50.12 with NPDU SNET=7700, SLEN=1, SADR=5
+    # SNET must NOT be promoted to DNET (G7: I-Am-Router-To-Network only).
     routed_snet_frame = (
         b"\x81\x04\x00\x16"
         + bytes([192, 168, 50, 12])
@@ -266,34 +268,122 @@ class TestPcapCapture(unittest.TestCase):
         + b"\x01\x05"
         + b"\x00\x05\x01\x0c\x0c"
     )
-    routers = set()
     routed = extract_routed_networks_from_pcap_chunk(
-        b"PCAP_HDR" + iam_router_frame + routed_snet_frame + b"TRAILING",
-        discovered_routers=routers,
+        b"PCAP_HDR" + iam_router_frame + routed_snet_frame + b"TRAILING"
     )
-    self.assertEqual(routed, {6100, 9288, 7700})
-    self.assertEqual(routers, {"192.168.50.12"})
+    self.assertEqual(routed, {6100, 9288})
 
+    # Verify tail-buffer carry-over across split chunk boundaries (G9)
+    split_idx = 4
+    dnets1, obs1, tail1 = extract_bacnet_trace_observations(
+        b"PCAP_HDR" + iam_router_frame[:split_idx]
+    )
+    self.assertEqual(dnets1, set())
+    self.assertEqual(obs1, [])
+    self.assertTrue(len(tail1) >= split_idx)
+    dnets2, _, tail2 = extract_bacnet_trace_observations(
+        iam_router_frame[split_idx:], tail=tail1
+    )
+    self.assertEqual(dnets2, {6100, 9288})
+    self.assertEqual(tail2, b"")
+
+    # Verify 3 rounds spaced at t = 0, T/3, 2T/3 with fake clock (G2) and broadcast-only (G7)
+    fake_now = [0.0]
+    round_start_times = []
+
+    class FakeEvent(threading.Event):
+      def wait(self, timeout=None):
+        if timeout and timeout > 0:
+          fake_now[0] += timeout
+        return self.is_set()
+
+    def record_send(**kwargs):
+      if kwargs["pdu"] == b"\x81\x0b\x00\x07\x01\x80\x00":
+        round_start_times.append(fake_now[0])
+      return True
+
+    mock_send.side_effect = record_send
     timestamps = []
-    stop_evt = threading.Event()
     run_bacnet_trace_whois_rounds(
         discovered_routed_networks={6100, 9288},
         scan_round_timestamps=timestamps,
-        stop_event=stop_evt,
-        max_duration_sec=1,
+        stop_event=FakeEvent(),
+        max_duration_sec=900,
         interface="eth0",
         src_ip="192.168.1.50",
         rounds=3,
-        discovered_routers=routers,
+        monotonic_fn=lambda: fake_now[0],
     )
     self.assertEqual(len(timestamps), 3)
-    # Per round (with 1 router and 2 DNETs):
-    # - Who-Is-Router: 1 bcast + 1 unicast = 2
-    # - Local Who-Is: 1 bcast + 1 unicast = 2
-    # - 2 DNETs: 2 * (1 bcast + 1 unicast) = 4
-    # - Global Who-Is: 1 bcast + 1 unicast = 2
-    # Total per round = 10 * 3 rounds = 30
-    self.assertEqual(mock_send.call_count, 30)
+    self.assertEqual(round_start_times, [0.0, 300.0, 600.0])
+    # Per round (broadcast-only, 2 DNETs): WIRTN (1) + local (1) + 2 DNETs (2) + global (1) = 5 * 3 = 15
+    self.assertEqual(mock_send.call_count, 15)
+
+  def test_capture_packets_rejects_any_interface(self):
+    """Verifies capture_packets fails fast when interface is 'any' or empty."""
+    for bad_iface in ("any", "ANY", "", "   "):
+      with self.assertRaises(ValueError):
+        list(
+            capture_packets(
+                interface=bad_iface,
+                filter_str="udp port 47808",
+                max_duration_sec=10,
+                max_bytes=1024,
+            )
+        )
+
+  def test_build_trace_bpf_filter_exclude_capture_host(self):
+    """Verifies exclude_capture_host appends 'not host <ip>' to BPF filter."""
+    from edge.spotter.src.pcap import build_trace_bpf_filter
+
+    self.assertEqual(
+        build_trace_bpf_filter("udp port 47808", False, "10.0.0.5"),
+        "udp port 47808",
+    )
+    self.assertEqual(
+        build_trace_bpf_filter("udp port 47808", True, "10.0.0.5"),
+        "(udp port 47808) and not host 10.0.0.5",
+    )
+    self.assertEqual(
+        build_trace_bpf_filter("", True, "10.0.0.5"),
+        "not host 10.0.0.5",
+    )
+
+  @patch("socket.socket")
+  def test_send_raw_bvll_raises_on_permission_error(self, mock_socket_cls):
+    """Verifies send_raw_bvll raises PermissionError instead of swallowing (G5)."""
+    from edge.spotter.src.pcap import build_whois_bvll, send_raw_bvll
+
+    mock_socket_cls.side_effect = PermissionError("Operation not permitted")
+    with self.assertRaises(PermissionError):
+      send_raw_bvll(pdu=build_whois_bvll(), interface="eth0")
+
+  @patch("subprocess.Popen")
+  def test_capture_packets_invokes_on_ready_after_popen(self, mock_popen):
+    """Verifies Popen is invoked before on_ready callback fires (G1)."""
+    events = []
+    mock_proc = MagicMock()
+    mock_proc.poll.return_value = 0
+    mock_proc.stdout.read.side_effect = [b"PCAP", b""]
+    mock_proc.stderr.read.return_value = b""
+
+    def fake_popen(*args, **kwargs):
+      del args, kwargs
+      events.append("popen")
+      return mock_proc
+
+    mock_popen.side_effect = fake_popen
+    chunks = list(
+        capture_packets(
+            interface="eth0",
+            filter_str="udp port 47808",
+            max_duration_sec=5,
+            max_bytes=1000,
+            on_ready=lambda: events.append("ready"),
+        )
+    )
+    self.assertEqual(chunks, [b"PCAP"])
+    self.assertEqual(events, ["popen", "ready"])
 
   @patch("subprocess.Popen")
   def test_capture_packets_raises_on_tcpdump_nonzero_exit(self, mock_popen):

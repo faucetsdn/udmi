@@ -10,7 +10,7 @@ import struct
 import subprocess
 import threading
 import time
-from typing import Iterator, List, Optional, Set
+from typing import Callable, Iterator, List, Optional, Set, Tuple
 
 try:
   from host_telemetry import check_safety_circuit_breaker
@@ -32,12 +32,52 @@ LOGGER = logging.getLogger("spotter_pcap")
 
 BACNET_UDP_PORT = 47808
 GLOBAL_BACNET_DNET = 0xFFFF
+_MAX_BVLL_LEN = 1500
+_MAX_TAIL_BYTES = _MAX_BVLL_LEN + 28
+
+
+def validate_trace_interface(interface: Optional[str]) -> str:
+  """Validates that a trace capture interface is an explicit host interface."""
+  if not interface or not str(interface).strip():
+    raise ValueError(
+        "Explicit host network interface is required for trace capture"
+    )
+  iface = str(interface).strip()
+  if iface.lower() == "any":
+    raise ValueError(
+        "Interface 'any' is not permitted for trace capture; specify an"
+        " explicit host interface"
+    )
+  return iface
+
+
+def build_trace_bpf_filter(
+    base_filter: str,
+    exclude_capture_host: bool = False,
+    gateway_ip: Optional[str] = None,
+) -> str:
+  """Constructs the effective tcpdump BPF filter, optionally excluding the capture host."""
+  base = (base_filter or "").strip()
+  if not exclude_capture_host:
+    return base
+  if not gateway_ip:
+    raise ValueError(
+        "exclude_capture_host requires a resolved capture host IPv4 address"
+    )
+  try:
+    socket.inet_aton(gateway_ip)
+  except OSError as err:
+    raise ValueError(
+        f"Invalid capture host IPv4 address for exclude_capture_host: {gateway_ip!r}"
+    ) from err
+  exclude_clause = f"not host {gateway_ip}"
+  if base:
+    return f"({base}) and {exclude_clause}"
+  return exclude_clause
 
 
 def build_whois_router_to_network_bvll(unicast: bool = False) -> bytes:
   """Builds an unconfirmed BACnet/IP BVLL Who-Is-Router-To-Network frame."""
-  # BVLL Type 0x81, Function 0x0a (Unicast) or 0x0b (Broadcast), Length 7
-  # NPDU Version 0x01, Control 0x80 (Network Layer Message), MsgType 0x00 (Who-Is-Router-To-Network)
   bvlc_func = 0x0A if unicast else 0x0B
   return bytes([0x81, bvlc_func, 0x00, 0x07, 0x01, 0x80, 0x00])
 
@@ -91,11 +131,12 @@ def _compute_udp_checksum(
 
 
 def resolve_gateway_ip(interface: Optional[str] = None) -> str:
-  """Resolves the local IPv4 address for the gateway or target capture interface."""
-  if interface and interface != "any":
+  """Resolves the local IPv4 address for the explicit target capture interface."""
+  if interface:
+    iface = validate_trace_interface(interface)
     try:
       with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
-        ifreq = struct.pack("256s", interface[:15].encode("utf-8"))
+        ifreq = struct.pack("256s", iface[:15].encode("utf-8"))
         res = fcntl.ioctl(s.fileno(), 0x8915, ifreq)  # SIOCGIFADDR
         ip = socket.inet_ntoa(res[20:24])
         if ip and ip != "0.0.0.0":
@@ -110,6 +151,12 @@ def resolve_gateway_ip(interface: Optional[str] = None) -> str:
     return "127.0.0.1"
 
 
+def check_raw_socket_permission() -> None:
+  """Verifies CAP_NET_RAW availability by opening and closing a raw UDP socket."""
+  with socket.socket(socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP):
+    pass
+
+
 def send_raw_bvll(
     pdu: bytes,
     dst_ip: str = "255.255.255.255",
@@ -118,7 +165,12 @@ def send_raw_bvll(
     dst_port: int = BACNET_UDP_PORT,
     interface: Optional[str] = None,
 ) -> bool:
-  """Transmits a BACnet BVLL frame with source port 47808 via raw socket without binding UDP 47808."""
+  """Transmits a BACnet BVLL frame with source port 47808 via raw socket without binding UDP 47808.
+
+  Raises:
+    OSError: If CAP_NET_RAW is unavailable or socket transmission fails.
+  """
+  iface = validate_trace_interface(interface) if interface is not None else None
   udp_len = 8 + len(pdu)
   header_zero_csum = struct.pack("!HHHH", src_port, dst_port, udp_len, 0)
   checksum = _compute_udp_checksum(src_ip, dst_ip, header_zero_csum + pdu)
@@ -126,70 +178,106 @@ def send_raw_bvll(
       struct.pack("!HHHH", src_port, dst_port, udp_len, checksum) + pdu
   )
 
-  try:
-    with socket.socket(
-        socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP
-    ) as raw_sock:
-      raw_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-      if interface and interface != "any" and hasattr(socket, "SO_BINDTODEVICE"):
-        raw_sock.setsockopt(
-            socket.SOL_SOCKET,
-            socket.SO_BINDTODEVICE,
-            interface.encode("utf-8") + b"\x00",
-        )
-      raw_sock.sendto(udp_frame, (dst_ip, dst_port))
-    return True
-  except OSError as err:
-    LOGGER.debug("Raw UDP transmit skipped/failed: %s", err)
-    return False
+  with socket.socket(
+      socket.AF_INET, socket.SOCK_RAW, socket.IPPROTO_UDP
+  ) as raw_sock:
+    raw_sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    if iface and hasattr(socket, "SO_BINDTODEVICE"):
+      raw_sock.setsockopt(
+          socket.SOL_SOCKET,
+          socket.SO_BINDTODEVICE,
+          iface.encode("utf-8") + b"\x00",
+      )
+    raw_sock.sendto(udp_frame, (dst_ip, dst_port))
+  return True
 
 
-def extract_routed_networks_from_pcap_chunk(
+def extract_bacnet_trace_observations(
     chunk: bytes,
-    discovered_routers: Optional[Set[str]] = None,
-) -> Set[int]:
-  """Extracts BACnet DNETs and router IPs from I-Am-Router-To-Network and NPDU SNET frames."""
-  discovered: Set[int] = set()
-  if not chunk or decode_bacnet_bvll is None:
-    return discovered
+    tail: bytes = b"",
+) -> Tuple[Set[int], List[Tuple[int, str, bool]], bytes]:
+  """Extracts I-Am-Router-To-Network DNETs and I-Am device observations from a PCAP stream chunk.
 
+  Carries incomplete trailing BVLL frames in ``tail`` across chunk boundaries.
+
+  Returns:
+    Tuple of (routed_dnets, iam_observations, next_tail) where each entry in
+    ``iam_observations`` is ``(device_id, address_key, is_routed_mstp)``.
+  """
+  discovered_dnets: Set[int] = set()
+  iam_observations: List[Tuple[int, str, bool]] = []
+  if decode_bacnet_bvll is None:
+    return discovered_dnets, iam_observations, b""
+
+  buf = (tail or b"") + (chunk or b"")
+  if not buf:
+    return discovered_dnets, iam_observations, b""
+
+  next_tail = b""
   idx = 0
-  while True:
-    pos = chunk.find(b"\x81", idx)
-    if pos < 0 or pos + 7 > len(chunk):
+  buf_len = len(buf)
+  while idx < buf_len:
+    pos = buf.find(b"\x81", idx)
+    if pos < 0:
       break
-    bvlc_func = chunk[pos + 1]
+    if pos + 4 > buf_len:
+      # Incomplete BVLL header at end of chunk; preserve with preceding IPv4/UDP header if any.
+      keep_from = max(0, pos - 28)
+      next_tail = buf[keep_from:]
+      break
+
+    bvlc_func = buf[pos + 1]
     if bvlc_func in (0x04, 0x0A, 0x0B):
-      bvlc_len = int.from_bytes(chunk[pos + 2 : pos + 4], "big")
-      if 7 <= bvlc_len <= 1500 and pos + bvlc_len <= len(chunk):
+      bvlc_len = int.from_bytes(buf[pos + 2 : pos + 4], "big")
+      if 7 <= bvlc_len <= _MAX_BVLL_LEN:
+        if pos + bvlc_len > buf_len:
+          keep_from = max(0, pos - 28)
+          next_tail = buf[keep_from:]
+          break
+
         outer_ip: Optional[str] = None
         outer_port: int = BACNET_UDP_PORT
         if (
             pos >= 28
-            and (chunk[pos - 28] >> 4) == 4
-            and chunk[pos - 19] == socket.IPPROTO_UDP
+            and (buf[pos - 28] >> 4) == 4
+            and buf[pos - 19] == socket.IPPROTO_UDP
         ):
           try:
-            outer_ip = socket.inet_ntoa(chunk[pos - 16 : pos - 12])
-            outer_port = int.from_bytes(chunk[pos - 8 : pos - 6], "big")
+            outer_ip = socket.inet_ntoa(buf[pos - 16 : pos - 12])
+            outer_port = int.from_bytes(buf[pos - 8 : pos - 6], "big")
           except OSError:
             outer_ip = None
+
         decoded = decode_bacnet_bvll(
-            chunk[pos : pos + bvlc_len],
+            buf[pos : pos + bvlc_len],
             outer_ip=outer_ip,
             outer_port=outer_port,
         )
         if decoded:
           if decoded.iam_router_networks:
-            discovered.update(decoded.iam_router_networks)
-            if discovered_routers is not None and decoded.orig_ip:
-              discovered_routers.add(decoded.orig_ip)
-          if decoded.snet is not None:
-            discovered.add(decoded.snet)
-            if discovered_routers is not None and decoded.orig_ip:
-              discovered_routers.add(decoded.orig_ip)
+            discovered_dnets.update(decoded.iam_router_networks)
+          if decoded.device_id is not None:
+            is_routed = decoded.snet is not None
+            if is_routed:
+              addr_key = f"{decoded.snet}:{decoded.sadr or ''}"
+            else:
+              ip_str = decoded.orig_ip or outer_ip or "unknown"
+              port_num = decoded.orig_port or outer_port or BACNET_UDP_PORT
+              addr_key = f"{ip_str}:{port_num}"
+            iam_observations.append((decoded.device_id, addr_key, is_routed))
+        idx = pos + bvlc_len
+        continue
     idx = pos + 1
-  return discovered
+
+  if len(next_tail) > _MAX_TAIL_BYTES:
+    next_tail = next_tail[-_MAX_TAIL_BYTES:]
+  return discovered_dnets, iam_observations, next_tail
+
+
+def extract_routed_networks_from_pcap_chunk(chunk: bytes) -> Set[int]:
+  """Extracts BACnet DNETs from I-Am-Router-To-Network frames in a PCAP chunk."""
+  dnets, _, _ = extract_bacnet_trace_observations(chunk)
+  return dnets
 
 
 def run_bacnet_trace_whois_rounds(
@@ -201,102 +289,87 @@ def run_bacnet_trace_whois_rounds(
     dst_ip: str = "255.255.255.255",
     src_ip: str = "0.0.0.0",
     rounds: int = 3,
-    discovered_routers: Optional[Set[str]] = None,
+    router_wait_sec: float = 2.0,
+    dnet_pace_sec: float = 1.0,
+    global_wait_sec: float = 15.0,
+    monotonic_fn: Callable[[], float] = time.monotonic,
+    error_out: Optional[List[BaseException]] = None,
 ) -> None:
-  """Executes paced rounds of raw-socket broadcast and unicast Who-Is-Router-To-Network and Who-Is."""
-  scale = min(1.0, max(0.02, float(max_duration_sec) / 60.0))
-  router_wait_sec = 2.0 * scale
-  dnet_pace_sec = 1.0 * scale
-  global_wait_sec = 15.0 * scale
-
-  # Brief initial startup sync so tcpdump opens its capture socket before Round 1
-  if stop_event.wait(timeout=min(0.1, 0.02 * scale)):
+  """Executes broadcast-only Who-Is rounds spaced at t = 0, T/3, 2T/3 across the capture window."""
+  if rounds <= 0:
     return
 
-  for _ in range(rounds):
-    if stop_event.is_set():
-      break
-    round_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    scan_round_timestamps.append(round_ts)
+  window_start = monotonic_fn()
+  round_spacing_sec = float(max_duration_sec) / float(rounds)
 
-    # 1. Local broadcast + unicast Who-Is-Router-To-Network
-    send_raw_bvll(
-        pdu=build_whois_router_to_network_bvll(unicast=False),
-        dst_ip=dst_ip,
-        src_ip=src_ip,
-        src_port=BACNET_UDP_PORT,
-        interface=interface,
-    )
-    for router_ip in sorted(list(discovered_routers or ())):
-      send_raw_bvll(
-          pdu=build_whois_router_to_network_bvll(unicast=True),
-          dst_ip=router_ip,
-          src_ip=src_ip,
-          src_port=BACNET_UDP_PORT,
-          interface=interface,
-      )
-    if stop_event.wait(timeout=router_wait_sec):
-      break
-
-    # 2. Local Who-Is + paced per-DNET Who-Is (broadcast and unicast to routers)
-    send_raw_bvll(
-        pdu=build_whois_bvll(dnet=None, unicast=False),
-        dst_ip=dst_ip,
-        src_ip=src_ip,
-        src_port=BACNET_UDP_PORT,
-        interface=interface,
-    )
-    for router_ip in sorted(list(discovered_routers or ())):
-      send_raw_bvll(
-          pdu=build_whois_bvll(dnet=None, unicast=True),
-          dst_ip=router_ip,
-          src_ip=src_ip,
-          src_port=BACNET_UDP_PORT,
-          interface=interface,
-      )
-
-    for dnet in sorted(list(discovered_routed_networks)):
+  try:
+    for round_idx in range(rounds):
       if stop_event.is_set():
         break
+
+      if round_idx > 0:
+        target_time = window_start + round_idx * round_spacing_sec
+        wait_sec = target_time - monotonic_fn()
+        if wait_sec > 0 and stop_event.wait(timeout=wait_sec):
+          break
+        if stop_event.is_set():
+          break
+
+      # 1. Broadcast Who-Is-Router-To-Network (record round timestamp only after send succeeds)
       send_raw_bvll(
-          pdu=build_whois_bvll(dnet=dnet, unicast=False),
+          pdu=build_whois_router_to_network_bvll(unicast=False),
           dst_ip=dst_ip,
           src_ip=src_ip,
           src_port=BACNET_UDP_PORT,
           interface=interface,
       )
-      for router_ip in sorted(list(discovered_routers or ())):
-        send_raw_bvll(
-            pdu=build_whois_bvll(dnet=dnet, unicast=True),
-            dst_ip=router_ip,
-            src_ip=src_ip,
-            src_port=BACNET_UDP_PORT,
-            interface=interface,
-        )
-      if stop_event.wait(timeout=dnet_pace_sec):
+      round_ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+      scan_round_timestamps.append(round_ts)
+
+      if router_wait_sec > 0 and stop_event.wait(timeout=router_wait_sec):
         break
 
-    if stop_event.is_set():
-      break
-
-    # 3. Global Who-Is (broadcast and unicast to routers)
-    send_raw_bvll(
-        pdu=build_whois_bvll(dnet=GLOBAL_BACNET_DNET, unicast=False),
-        dst_ip=dst_ip,
-        src_ip=src_ip,
-        src_port=BACNET_UDP_PORT,
-        interface=interface,
-    )
-    for router_ip in sorted(list(discovered_routers or ())):
+      # 2. Local broadcast Who-Is + paced per-DNET broadcast Who-Is
       send_raw_bvll(
-          pdu=build_whois_bvll(dnet=GLOBAL_BACNET_DNET, unicast=True),
-          dst_ip=router_ip,
+          pdu=build_whois_bvll(dnet=None, unicast=False),
+          dst_ip=dst_ip,
           src_ip=src_ip,
           src_port=BACNET_UDP_PORT,
           interface=interface,
       )
-    if stop_event.wait(timeout=global_wait_sec):
-      break
+
+      for dnet in sorted(list(discovered_routed_networks)):
+        if stop_event.is_set():
+          break
+        send_raw_bvll(
+            pdu=build_whois_bvll(dnet=dnet, unicast=False),
+            dst_ip=dst_ip,
+            src_ip=src_ip,
+            src_port=BACNET_UDP_PORT,
+            interface=interface,
+        )
+        if dnet_pace_sec > 0 and stop_event.wait(timeout=dnet_pace_sec):
+          break
+
+      if stop_event.is_set():
+        break
+
+      # 3. Global broadcast Who-Is
+      send_raw_bvll(
+          pdu=build_whois_bvll(dnet=GLOBAL_BACNET_DNET, unicast=False),
+          dst_ip=dst_ip,
+          src_ip=src_ip,
+          src_port=BACNET_UDP_PORT,
+          interface=interface,
+      )
+      if global_wait_sec > 0 and stop_event.wait(timeout=global_wait_sec):
+        break
+  except BaseException as err:  # pylint: disable=broad-exception-caught
+    if error_out is not None:
+      error_out.append(err)
+      stop_event.set()
+    else:
+      raise
 
 
 def capture_packets(
@@ -305,15 +378,22 @@ def capture_packets(
     max_duration_sec: int,
     max_bytes: int,
     stop_event: Optional[threading.Event] = None,
+    on_ready: Optional[Callable[[], None]] = None,
+    heartbeat_sec: Optional[float] = None,
 ) -> Iterator[bytes]:
   """Spawns tcpdump to capture packets, yielding chunks of bytes.
 
   Guarantees resource safety by:
+  - Requiring an explicit host network interface (never 'any').
+  - Invoking ``on_ready`` only after tcpdump starts listening so active probes
+    never race ahead of capture initialization.
   - Bounded polling with non-blocking I/O so idle networks do not block.
   - Concurrent stderr draining to eliminate pipe buffer deadlocks.
   - Safety circuit breaker evaluation to prevent kernel OOM termination.
   - Strict caps on duration and byte volume.
   """
+  iface = validate_trace_interface(interface)
+
   if check_safety_circuit_breaker and check_safety_circuit_breaker():
     LOGGER.warning(
         "Safety circuit breaker active: Throttling packet capture before"
@@ -324,13 +404,13 @@ def capture_packets(
   LOGGER.info(
       "Starting packet capture. Interface: %s, Filter: '%s', Duration Limit:"
       " %ss, Size Limit: %s bytes",
-      interface,
+      iface,
       filter_str,
       max_duration_sec,
       max_bytes,
   )
 
-  cmd = ["tcpdump", "-i", interface, "-w", "-", "-U"]
+  cmd = ["tcpdump", "-i", iface, "-w", "-", "-U"]
   if filter_str:
     cmd.append(filter_str)
 
@@ -343,9 +423,18 @@ def capture_packets(
   )
 
   start_time = time.time()
+  last_yield_time = start_time
   total_bytes = 0
-  stderr_chunks = []
+  stderr_chunks: List[bytes] = []
   stopped_by_limit = False
+  ready_notified = False
+
+  def _notify_ready() -> None:
+    nonlocal ready_notified
+    if not ready_notified:
+      ready_notified = True
+      if on_ready is not None:
+        on_ready()
 
   # Configure non-blocking I/O if running with real OS file descriptors
   is_real_fd = False
@@ -371,11 +460,15 @@ def capture_packets(
       if proc.stderr and not proc.stderr.closed:
         rlist.append(proc.stderr)
 
+      # Wait briefly for tcpdump's "listening on" banner on stderr before signaling ready
+      ready_deadline = start_time + min(2.0, float(max_duration_sec))
+
       while rlist:
         if stop_event is not None and stop_event.is_set():
           stopped_by_limit = True
           break
-        elapsed = time.time() - start_time
+        now = time.time()
+        elapsed = now - start_time
         if elapsed >= max_duration_sec:
           LOGGER.info(
               "Capture duration limit reached (%ss). Stopping tcpdump...",
@@ -383,6 +476,9 @@ def capture_packets(
           )
           stopped_by_limit = True
           break
+
+        if not ready_notified and now >= ready_deadline:
+          _notify_ready()
 
         remaining_time = max(0.0, max_duration_sec - elapsed)
         poll_timeout = min(0.2, remaining_time)
@@ -398,13 +494,15 @@ def capture_packets(
           stopped_by_limit = True
           break
 
-        # 1. Drain stderr to prevent pipe buffer deadlock (>64KB)
+        # 1. Drain stderr to prevent pipe buffer deadlock (>64KB) and detect readiness
         if proc.stderr in readable:
           try:
             err_chunk = proc.stderr.read(65536)
             if err_chunk:
               if len(stderr_chunks) < 16:
                 stderr_chunks.append(err_chunk)
+              if not ready_notified and b"listening on" in err_chunk.lower():
+                _notify_ready()
             elif err_chunk == b"":
               rlist.remove(proc.stderr)
           except (BlockingIOError, IOError):
@@ -418,7 +516,10 @@ def capture_packets(
             chunk = None
 
           if chunk:
+            if not ready_notified:
+              _notify_ready()
             total_bytes += len(chunk)
+            last_yield_time = time.time()
             yield chunk
             if total_bytes >= max_bytes:
               LOGGER.warning(
@@ -430,11 +531,20 @@ def capture_packets(
           elif chunk == b"":
             rlist.remove(proc.stdout)
 
+        if (
+            heartbeat_sec is not None
+            and heartbeat_sec > 0
+            and (time.time() - last_yield_time) >= heartbeat_sec
+        ):
+          last_yield_time = time.time()
+          yield b""
+
         if proc.poll() is not None and not readable:
           break
 
     else:
-      # Fallback path for mocked execution environments
+      # Fallback path for mocked execution environments: Popen has already been invoked
+      _notify_ready()
       while True:
         if stop_event is not None and stop_event.is_set():
           stopped_by_limit = True
@@ -532,4 +642,3 @@ def capture_packets(
         "Packet capture worker stopped. Total bytes captured: %s",
         total_bytes,
     )
-

@@ -20,6 +20,9 @@ class ScanManifest(DataModel):
     filter: Optional[str] = None
     scan_round_timestamps: Optional[List[str]] = None
     discovered_routed_networks: Optional[List[int]] = None
+    bacnet_ip_devices: Optional[int] = None
+    routed_mstp_devices: Optional[int] = None
+    duplicate_device_ids: Optional[List[int]] = None
 
 
 @dataclass

@@ -326,6 +326,8 @@ MCP_TOOLS = [
                 "bug_id": {"type": "string", "description": "Optional issue or ticket identifier"},
                 "conn_spec": {"type": "string", "description": "Optional UDMI connection specification (e.g. //mqtt/localhost)"},
                 "site_model": {"type": "string", "description": "Optional path to the UDMI site model directory"},
+                "interface": {"type": "string", "default": "eth0", "description": "Explicit host network interface for capture (never 'any')"},
+                "exclude_capture_host": {"type": "boolean", "default": False, "description": "Exclude capture host IP packets from BPF filter"},
             },
             "required": ["site", "gateway_id"],
         },
@@ -557,6 +559,8 @@ class ButlerMcpServer:
                 bug_id=args.get("bug_id"),
                 conn_spec=args.get("conn_spec"),
                 site_model=args.get("site_model"),
+                interface=args.get("interface", "eth0"),
+                exclude_capture_host=bool(args.get("exclude_capture_host", False)),
             )
         if name == "get_pcap_capture":
             return self.provider.get_pcap_capture(

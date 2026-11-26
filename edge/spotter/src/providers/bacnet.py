@@ -518,11 +518,12 @@ class BacnetFamilyProvider(FamilyProvider):
       publish_func(f"network-{net_num}", event)
 
   def stop_scan(self) -> None:
-    """Stops any active BACnet scan immediately."""
+    """Stops any active BACnet scan immediately and releases UDP 47808."""
     LOGGER.info("Stopping BACnet discovery scan...")
     self._cancelled.set()
     if self._scan_thread and self._scan_thread.is_alive():
       self._scan_thread.join(timeout=1.0)
+    self.close()
 
   def _matches_active_filters(self, address: Any, device_id: Any) -> bool:
     """Checks if a discovered BACnet device matches configured scope filters."""

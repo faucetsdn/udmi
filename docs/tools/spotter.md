@@ -59,12 +59,17 @@ graph TD
 Spotter processes diagnostic packet capture triggers sent declaratively over the UDMI discovery configuration channel (`config.discovery.families.<family>` with `depth: "trace"`):
 
 1. **Capture Worker & Active BACnet Trace Rounds ([pcap.py](../../edge/spotter/src/pcap.py))**:
-   - Spawns `tcpdump` with configurable interface filters (defaulting to `"udp port 47808"` for `bacnet`), enforcing strict execution bounds (maximum duration and byte quotas).
-   - For `families.bacnet` with `depth: "trace"`, skips `BAC0.lite()` socket binding so UDP port `47808` remains unbound and executes paced raw-socket (`SOCK_RAW, IPPROTO_UDP`) `Who-Is` and `Who-Is-Router-To-Network` rounds during the capture window.
-2. **Streaming MQTT Egress Transport (`upload/discovery`)**:
-   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM), `gzip`-compressed per chunk, and sequentially published as `DiscoveryUpload` chunks over the `upload/discovery` MQTT topic (`event_no = 0` start marker, `1..N` `gzip`-compressed base64 chunks, and `-(N+1)` terminal marker with uncompressed `sha256` and `scan_manifest`).
+   - Requires an explicit host network interface in `trace.interface` (never `"any"`), plus explicit positive `scan_duration_sec` and `trace.max_bytes` bounds (fail-fast with status `500` on missing or invalid values).
+   - Spawns `tcpdump` with a kernel BPF filter (defaulting to `"udp port 47808"` for `bacnet`), and waits for `tcpdump` to start listening before launching active probes. When `trace.exclude_capture_host` is `true`, appends `and not host <gateway_ip>` to the BPF filter and records the effective filter in `scan_manifest.filter`.
+   - For `families.bacnet` with `depth: "trace"`, releases any cached `BAC0` socket so UDP port `47808` remains unbound, runs a `CAP_NET_RAW` pre-flight check (failing fast with status `500` if unavailable), and executes 3 broadcast-only raw-socket (`SOCK_RAW, IPPROTO_UDP`) `Who-Is-Router-To-Network` and `Who-Is` rounds spaced across the capture window (`t = 0, T/3, 2T/3`).
+   - Decodes `I-Am` and `I-Am-Router-To-Network` frames inline during capture to populate `scan_manifest` (`bacnet_ip_devices`, `routed_mstp_devices`, `duplicate_device_ids`, `discovered_routed_networks`) and reports the unique discovered BACnet `I-Am` device count in `state.discovery.families.bacnet.active_count`.
+2. **Discovery Modes & Coexistence (`udmi.discovery.mode`)**:
+   - `"full"` (default): Enables standard active BACnet, Ether, and passive IPv4 discovery alongside `depth: "trace"` captures. Active `BAC0` clients are closed immediately at the end of every standard scan so UDP `47808` is never held open when idle.
+   - `"capture_only"`: Designed for coexistence on hosts running an external BACnet gateway (such as Mango). Skips registering `BacnetFamilyProvider` so UDP `47808` is never bound, rejects non-`trace` BACnet discovery configs with status `500`, and permits `depth: "trace"` captures.
+3. **Streaming MQTT Egress Transport (`upload/discovery`)**:
+   - **Zero-Disk Streaming**: Packets are buffered dynamically in volatile memory (RAM), flushed on size (128 KB) or time interval thresholds, `gzip`-compressed per chunk, and sequentially published as `DiscoveryUpload` chunks over the `upload/discovery` MQTT topic (`event_no = 0` start marker, `1..N` `gzip`-compressed base64 chunks, and `-(N+1)` terminal marker with uncompressed `sha256` and `scan_manifest`).
    - **Zero Secret Distribution**: Leverages the existing mTLS hardware key/certificate connection directly, avoiding external network credentials or outbound HTTP rules at the edge.
-3. **Cloud & Local PCAP Reassembly**:
+4. **Cloud & Local PCAP Reassembly**:
    - **Butler Service (`PcapUploadHandler`)**: Subscribes to `upload/discovery` (or `uufi_upload`), decompresses and reassembles chunks in order, validates the terminal `sha256` digest, and writes the `.pcap` and `scan_manifest.json` to GCS (`gs://<bucket>/<site>/<gen>.pcap`) or local disk without persisting raw chunks to PostgreSQL.
    - **Ad-hoc CLI Reassembly ([bin/reassemble_pcap](../../edge/spotter/bin/reassemble_pcap))**:
      Reassembles chunked `upload/discovery` messages (from JSON, JSONL, or `mosquitto_sub`) back into a valid `.pcap` binary capture file and `scan_manifest.json`:

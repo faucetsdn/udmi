@@ -471,7 +471,16 @@ def main():
     return bool(val)
 
   discovery_cfg = config.get("udmi", {}).get("discovery", {})
-  bacnet_enabled = is_truthy(discovery_cfg.get("bacnet", True))
+  discovery_mode = str(discovery_cfg.get("mode", "full")).strip().lower()
+  if discovery_mode not in ("full", "capture_only"):
+    raise ValueError(
+        f"Invalid udmi.discovery.mode {discovery_mode!r}: expected 'full' or"
+        " 'capture_only'"
+    )
+  bacnet_enabled = (
+      is_truthy(discovery_cfg.get("bacnet", True))
+      and discovery_mode != "capture_only"
+  )
   ether_enabled = is_truthy(discovery_cfg.get("ether", True))
   ipv4_enabled = is_truthy(discovery_cfg.get("ipv4", True))
 
@@ -518,7 +527,8 @@ def main():
     )
 
   discovery_manager = SpotterDiscoveryManager(
-      max_mem_pct=circuit_breaker_mem_pct
+      max_mem_pct=circuit_breaker_mem_pct,
+      discovery_mode=discovery_mode,
   )
 
   # Create Unified Device

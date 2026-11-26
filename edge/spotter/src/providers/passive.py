@@ -233,8 +233,6 @@ class PassiveFamilyProvider(FamilyProvider):
     self.bacnet_packets_seen = 0
     self.passive_holdoff_count = 0
     self.discovered_routed_networks: Set[int] = set()
-    self.bacnet_ip_devices_seen: Set[int] = set()
-    self.routed_mstp_devices_seen: Set[int] = set()
     self._packet_count_start: Optional[int] = None
 
   def _get_packet_counter_total(self) -> Optional[int]:
@@ -323,8 +321,6 @@ class PassiveFamilyProvider(FamilyProvider):
       self._records_published.clear()
       self.passive_holdoff_count = 0
       self.discovered_routed_networks.clear()
-      self.bacnet_ip_devices_seen.clear()
-      self.routed_mstp_devices_seen.clear()
     with self._event_lock:
       self._event_count = 0
 
@@ -490,11 +486,6 @@ class PassiveFamilyProvider(FamilyProvider):
                   bacnet_port = int(decoded.orig_port or sport or 47808)
                   snet = decoded.snet
                   sadr = decoded.sadr
-                  with self._records_lock:
-                    if snet is not None:
-                      self.routed_mstp_devices_seen.add(bacnet_id)
-                    else:
-                      self.bacnet_ip_devices_seen.add(bacnet_id)
                   LOGGER.debug(
                       "Passively observed BACnet I-Am device %d at %s:%d"
                       " (snet=%s, sadr=%s)",

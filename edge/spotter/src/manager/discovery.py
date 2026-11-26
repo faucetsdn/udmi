@@ -39,24 +39,32 @@ from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
 try:
   from host_telemetry import check_safety_circuit_breaker
   from pcap import (
+      build_trace_bpf_filter,
       capture_packets,
-      extract_routed_networks_from_pcap_chunk,
+      check_raw_socket_permission,
+      extract_bacnet_trace_observations,
       resolve_gateway_ip,
       run_bacnet_trace_whois_rounds,
+      validate_trace_interface,
   )
 except ImportError:
   from edge.spotter.src.host_telemetry import check_safety_circuit_breaker
   from edge.spotter.src.pcap import (
+      build_trace_bpf_filter,
       capture_packets,
-      extract_routed_networks_from_pcap_chunk,
+      check_raw_socket_permission,
+      extract_bacnet_trace_observations,
       resolve_gateway_ip,
       run_bacnet_trace_whois_rounds,
+      validate_trace_interface,
   )
 
 LOGGER = logging.getLogger("spotter_agent")
 
 # Clock skew tolerance (in seconds) for newly issued 'now' scan generations
 GENERATION_PAST_TOLERANCE_SEC = 15.0
+VALID_DISCOVERY_MODES = frozenset(("full", "capture_only"))
+DEFAULT_TRACE_CHUNK_FLUSH_SEC = 30.0
 
 
 def strip_none_fields(obj: Any) -> Any:
@@ -123,9 +131,22 @@ class SpotterDiscoveryManager(DiscoveryManager):
   and strict UDMI discovery phase lifecycle tracking (pending/active/stopped).
   """
 
-  def __init__(self, max_mem_pct: float = 85.0) -> None:
+  def __init__(
+      self,
+      max_mem_pct: float = 85.0,
+      discovery_mode: str = "full",
+      trace_flush_interval_sec: float = DEFAULT_TRACE_CHUNK_FLUSH_SEC,
+  ) -> None:
     super().__init__()
+    mode_norm = str(discovery_mode or "full").strip().lower()
+    if mode_norm not in VALID_DISCOVERY_MODES:
+      raise ValueError(
+          f"Invalid udmi.discovery.mode {discovery_mode!r}: expected one of"
+          f" {sorted(VALID_DISCOVERY_MODES)}"
+      )
     self.max_mem_pct = max_mem_pct
+    self.discovery_mode = mode_norm
+    self.trace_flush_interval_sec = float(trace_flush_interval_sec)
     self._start_time = datetime.now(timezone.utc)
     self._active_event_counts: Dict[str, int] = {}
     self._applied_family_configs: Dict[str, Any] = {}
@@ -320,18 +341,40 @@ class SpotterDiscoveryManager(DiscoveryManager):
 
       self._applied_family_configs[family] = copy.deepcopy(fam_config)
 
-      # Validate provider availability if device LocalnetManager is wired
-      if not self._has_registered_provider(family):
+      raw_depth = getattr(fam_config, "depth", None)
+      depth_val = str(getattr(raw_depth, "value", raw_depth) or "").lower()
+      is_trace = depth_val == "trace"
+
+      # Enforce capture_only mode for BACnet coexistence (e.g. alongside Mango)
+      if self.discovery_mode == "capture_only" and family == "bacnet" and not is_trace:
         f_state.phase = DiscoveryPhase.stopped
         f_state.generation = getattr(fam_config, "generation", None)
         f_state.status = Entry(
             category="discovery.family.scan",
             level=500,
-            message=f"No provider registered for family '{family}'",
+            message=(
+                "Active BACnet discovery is disabled in capture_only mode;"
+                " only depth='trace' is permitted"
+            ),
             timestamp=_format_generation(now_dt),
         )
         state_updated = True
         continue
+
+      # Validate provider availability if device LocalnetManager is wired
+      # Trace captures do not require an active BAC0 provider when in capture_only mode
+      if not (is_trace and family == "bacnet" and self.discovery_mode == "capture_only"):
+        if not self._has_registered_provider(family):
+          f_state.phase = DiscoveryPhase.stopped
+          f_state.generation = getattr(fam_config, "generation", None)
+          f_state.status = Entry(
+              category="discovery.family.scan",
+              level=500,
+              message=f"No provider registered for family '{family}'",
+              timestamp=_format_generation(now_dt),
+          )
+          state_updated = True
+          continue
 
       interval_sec = getattr(fam_config, "scan_interval_sec", None)
       duration_sec = getattr(fam_config, "scan_duration_sec", None)
@@ -808,6 +851,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
     whois_stop_event = threading.Event()
     self._trace_stop_events[family] = whois_stop_event
     whois_thread: Optional[threading.Thread] = None
+    whois_errors: List[BaseException] = []
 
     try:
       trace_cfg = getattr(fam_config, "trace", None)
@@ -815,38 +859,71 @@ class SpotterDiscoveryManager(DiscoveryManager):
         trace_cfg = fam_config.get("trace")
 
       if isinstance(trace_cfg, dict):
-        interface = trace_cfg.get("interface") or "any"
+        raw_interface = trace_cfg.get("interface")
         filter_str = trace_cfg.get("filter") or ""
-        max_bytes = int(trace_cfg.get("max_bytes") or (10 * 1024 * 1024))
+        raw_max_bytes = trace_cfg.get("max_bytes")
+        exclude_capture_host = bool(trace_cfg.get("exclude_capture_host", False))
       elif trace_cfg:
-        interface = getattr(trace_cfg, "interface", None) or "any"
+        raw_interface = getattr(trace_cfg, "interface", None)
         filter_str = getattr(trace_cfg, "filter", None) or ""
-        max_bytes = int(
-            getattr(trace_cfg, "max_bytes", None) or (10 * 1024 * 1024)
+        raw_max_bytes = getattr(trace_cfg, "max_bytes", None)
+        exclude_capture_host = bool(
+            getattr(trace_cfg, "exclude_capture_host", False)
         )
       else:
-        interface = "any"
+        raw_interface = None
         filter_str = ""
-        max_bytes = 10 * 1024 * 1024
+        raw_max_bytes = None
+        exclude_capture_host = False
 
+      # Fail fast on missing/invalid explicit interface, scan_duration_sec, or max_bytes
+      interface = validate_trace_interface(raw_interface)
+
+      raw_duration = getattr(fam_config, "scan_duration_sec", None)
+      if isinstance(fam_config, dict):
+        raw_duration = fam_config.get("scan_duration_sec")
+      if raw_duration is None or int(raw_duration) <= 0:
+        raise ValueError(
+            "scan_duration_sec must be explicitly set and > 0 for trace capture"
+        )
+      max_duration_sec = int(raw_duration)
+
+      if raw_max_bytes is None or int(raw_max_bytes) <= 0:
+        raise ValueError(
+            "trace.max_bytes must be explicitly set and > 0 for trace capture"
+        )
+      max_bytes = int(raw_max_bytes)
+
+      # Release any cached BAC0 client before BACnet trace so UDP 47808 stays unbound
+      if family == "bacnet":
+        localnet = getattr(self._device, "get_manager", lambda *_: None)(
+            "localnet"
+        )
+        if localnet is not None:
+          bacnet_prov = getattr(localnet, "get_provider", lambda *_: None)(
+              "bacnet"
+          )
+          if bacnet_prov is not None and callable(
+              getattr(bacnet_prov, "close", None)
+          ):
+            bacnet_prov.close()
+        # CAP_NET_RAW pre-flight check before starting capture
+        check_raw_socket_permission()
+
+      gateway_ip = resolve_gateway_ip(interface)
       if not filter_str and family == "bacnet":
         filter_str = "udp port 47808"
-
-      max_duration_sec = int(
-          getattr(fam_config, "scan_duration_sec", None)
-          or (
-              fam_config.get("scan_duration_sec")
-              if isinstance(fam_config, dict)
-              else None
-          )
-          or 60
+      effective_filter = build_trace_bpf_filter(
+          filter_str,
+          exclude_capture_host=exclude_capture_host,
+          gateway_ip=gateway_ip,
       )
 
       LOGGER.info(
           "Spawning TRACE capture worker on '%s' (filter: '%s', max_duration:"
           " %ds, max_bytes: %d)",
           interface,
-          filter_str,
+          effective_filter,
           max_duration_sec,
           max_bytes,
       )
@@ -862,12 +939,17 @@ class SpotterDiscoveryManager(DiscoveryManager):
       self.publish_upload(start_msg, "discovery")
 
       discovered_routed_networks: Set[int] = set()
-      discovered_routers: Set[str] = set()
       scan_round_timestamps: List[str] = []
-      gateway_ip = resolve_gateway_ip(interface)
+      bacnet_ip_devices: Set[int] = set()
+      routed_mstp_devices: Set[int] = set()
+      device_addrs: Dict[int, Set[str]] = {}
+      bvll_tail = b""
 
-      # 2. For BACnet trace, launch paced raw-socket Who-Is discovery rounds
-      if family == "bacnet":
+      # 2. Launch Who-Is rounds ONLY once tcpdump signals ready (G1)
+      def _start_whois_rounds() -> None:
+        nonlocal whois_thread
+        if family != "bacnet" or whois_stop_event.is_set():
+          return
         whois_thread = threading.Thread(
             target=run_bacnet_trace_whois_rounds,
             kwargs={
@@ -877,7 +959,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
                 "max_duration_sec": max_duration_sec,
                 "interface": interface,
                 "src_ip": gateway_ip,
-                "discovered_routers": discovered_routers,
+                "error_out": whois_errors,
             },
             name="BACnet-Trace-WhoIs",
             daemon=True,
@@ -891,9 +973,10 @@ class SpotterDiscoveryManager(DiscoveryManager):
       chunk_count = 0
       total_bytes = 0
       circuit_breaker_tripped = False
+      last_flush_mono = time.monotonic()
 
       def _emit_compressed_chunk(raw_bytes: bytes) -> None:
-        nonlocal chunk_count
+        nonlocal chunk_count, last_flush_mono
         sha256_hasher.update(raw_bytes)
         compressed = gzip.compress(raw_bytes)
         b64_data = base64.b64encode(compressed).decode("ascii")
@@ -907,7 +990,7 @@ class SpotterDiscoveryManager(DiscoveryManager):
             data=b64_data,
         )
         self.publish_upload(chunk_msg, "discovery")
-        f_state.active_count = chunk_count
+        last_flush_mono = time.monotonic()
         self.trigger_state_update()
         LOGGER.info(
             "Published upload/discovery chunk %d (event_no: %d, %d raw bytes ->"
@@ -918,12 +1001,19 @@ class SpotterDiscoveryManager(DiscoveryManager):
             len(compressed),
         )
 
+      heartbeat = (
+          min(1.0, self.trace_flush_interval_sec)
+          if self.trace_flush_interval_sec > 0
+          else None
+      )
       data_generator = capture_packets(
           interface=interface,
-          filter_str=filter_str,
+          filter_str=effective_filter,
           max_duration_sec=max_duration_sec,
           max_bytes=max_bytes,
           stop_event=whois_stop_event,
+          on_ready=_start_whois_rounds if family == "bacnet" else None,
+          heartbeat_sec=heartbeat,
       )
 
       try:
@@ -935,33 +1025,53 @@ class SpotterDiscoveryManager(DiscoveryManager):
             )
             circuit_breaker_tripped = True
             break
-          if not chunk:
-            continue
-          total_bytes += len(chunk)
-          if family == "bacnet":
-            routed = extract_routed_networks_from_pcap_chunk(
-                chunk, discovered_routers=discovered_routers
-            )
-            if routed:
-              discovered_routed_networks.update(routed)
-          pending_buf.extend(chunk)
-          while len(pending_buf) >= chunk_size:
-            slice_bytes = bytes(pending_buf[:chunk_size])
-            del pending_buf[:chunk_size]
-            _emit_compressed_chunk(slice_bytes)
+          if chunk:
+            total_bytes += len(chunk)
+            if family == "bacnet":
+              routed, iam_obs, bvll_tail = extract_bacnet_trace_observations(
+                  chunk, tail=bvll_tail
+              )
+              if routed:
+                discovered_routed_networks.update(routed)
+              if iam_obs:
+                for dev_id, addr_key, is_routed in iam_obs:
+                  if is_routed:
+                    routed_mstp_devices.add(dev_id)
+                  else:
+                    bacnet_ip_devices.add(dev_id)
+                  device_addrs.setdefault(dev_id, set()).add(addr_key)
+                f_state.active_count = len(
+                    bacnet_ip_devices | routed_mstp_devices
+                )
+            pending_buf.extend(chunk)
+            while len(pending_buf) >= chunk_size:
+              slice_bytes = bytes(pending_buf[:chunk_size])
+              del pending_buf[:chunk_size]
+              _emit_compressed_chunk(slice_bytes)
+          if (
+              pending_buf
+              and self.trace_flush_interval_sec > 0
+              and (time.monotonic() - last_flush_mono)
+              >= self.trace_flush_interval_sec
+          ):
+            _emit_compressed_chunk(bytes(pending_buf))
+            pending_buf.clear()
       finally:
         close_fn = getattr(data_generator, "close", None)
         if callable(close_fn):
           close_fn()
 
-      if pending_buf:
-        _emit_compressed_chunk(bytes(pending_buf))
-        pending_buf.clear()
-
-      cancelled_externally = whois_stop_event.is_set()
+      cancelled_externally = whois_stop_event.is_set() and not whois_errors
       whois_stop_event.set()
       if whois_thread and whois_thread.is_alive():
         whois_thread.join(timeout=2.0)
+
+      if whois_errors:
+        raise whois_errors[0]
+
+      if pending_buf:
+        _emit_compressed_chunk(bytes(pending_buf))
+        pending_buf.clear()
 
       if f_state.generation != generation:
         return
@@ -983,18 +1093,24 @@ class SpotterDiscoveryManager(DiscoveryManager):
 
       if total_bytes == 0:
         raise RuntimeError(
-            f"Packet capture on '{interface}' (filter: '{filter_str}') produced"
-            " 0 bytes"
+            f"Packet capture on '{interface}' (filter: '{effective_filter}')"
+            " produced 0 bytes"
         )
 
       # 4. Emit mandatory EOF marker (event_no: -(N + 1)) with sha256 and scan_manifest
       digest = sha256_hasher.hexdigest()
+      duplicate_device_ids = sorted(
+          dev_id for dev_id, addrs in device_addrs.items() if len(addrs) > 1
+      )
       manifest = ScanManifest(
           gateway_ip=gateway_ip,
           interface=interface,
-          filter=filter_str,
+          filter=effective_filter,
           scan_round_timestamps=scan_round_timestamps,
           discovered_routed_networks=sorted(discovered_routed_networks),
+          bacnet_ip_devices=len(bacnet_ip_devices),
+          routed_mstp_devices=len(routed_mstp_devices),
+          duplicate_device_ids=duplicate_device_ids,
       )
       eof_msg = DiscoveryUpload(
           timestamp=_format_generation(datetime.now(timezone.utc)),
@@ -1015,7 +1131,11 @@ class SpotterDiscoveryManager(DiscoveryManager):
 
       if f_state.generation == generation:
         f_state.phase = DiscoveryPhase.stopped
-        f_state.active_count = chunk_count
+        f_state.active_count = (
+            len(bacnet_ip_devices | routed_mstp_devices)
+            if family == "bacnet"
+            else 0
+        )
         if circuit_breaker_tripped:
           f_state.status = Entry(
               category="discovery.family.scan",

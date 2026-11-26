@@ -931,6 +931,8 @@ class ButlerProvider:
         bug_id: Optional[str] = None,
         conn_spec: Optional[str] = None,
         site_model: Optional[str] = None,
+        interface: str = "eth0",
+        exclude_capture_host: bool = False,
     ) -> Dict[str, Any]:
         """Triggers a depth: 'trace' BACnet packet capture on the target gateway and tracks reassembly."""
         generation = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -988,6 +990,8 @@ class ButlerProvider:
             max_bytes=int(max_bytes),
             site_model=site_model or os.environ.get("BUTLER_SITE_MODEL"),
             generation=generation,
+            interface=interface,
+            exclude_capture_host=bool(exclude_capture_host),
         )
 
         return {
