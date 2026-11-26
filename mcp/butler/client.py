@@ -253,6 +253,31 @@ class ButlerClient:
             params["failed_devices"] = failed_devices
         return self.call_rpc("update_rollout", params)
 
+    def analyze_bacnet_pcap(
+        self,
+        pcap_path: str,
+        capture_id: Optional[str] = None,
+        output_dir: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Analyze a BACnet/IP PCAP/PCAPNG file and cache structured + Markdown reports."""
+        params: Dict[str, Any] = {"pcap_path": pcap_path}
+        if capture_id is not None:
+            params["capture_id"] = capture_id
+        if output_dir is not None:
+            params["output_dir"] = output_dir
+        return self.call_rpc("analyze_bacnet_pcap", params)
+
+    def get_pcap_report(
+        self,
+        capture_id: str,
+        output_format: str = "json",
+    ) -> Dict[str, Any]:
+        """Retrieve a cached BACnet/IP PCAP report as JSON, Markdown, or both."""
+        return self.call_rpc(
+            "get_pcap_report",
+            {"capture_id": capture_id, "output_format": output_format},
+        )
+
     def tools_list(self) -> List[Dict[str, Any]]:
         """List all available MCP tools."""
         res = self.call_rpc("tools/list", {})

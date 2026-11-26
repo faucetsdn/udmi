@@ -310,6 +310,54 @@ MCP_TOOLS = [
             "required": ["rollout_id"],
         },
     },
+    {
+        "name": "analyze_bacnet_pcap",
+        "description": (
+            "Analyze a BACnet/IP PCAP or PCAPNG capture file, returning a health verdict, "
+            "prioritized root-cause actions with 1-based Wireshark frame evidence, coverage "
+            "and vantage-point caveats, and caching full JSON and Markdown reports."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "pcap_path": {
+                    "type": "string",
+                    "description": "Path to the .pcap or .pcapng capture file.",
+                },
+                "capture_id": {
+                    "type": "string",
+                    "description": "Optional capture identifier (defaults to filename stem).",
+                },
+                "output_dir": {
+                    "type": "string",
+                    "description": "Optional directory to write analysis.json and report.md.",
+                },
+            },
+            "required": ["pcap_path"],
+        },
+    },
+    {
+        "name": "get_pcap_report",
+        "description": (
+            "Retrieve a previously generated BACnet/IP PCAP analysis report by capture_id "
+            "in canonical JSON, action-first Markdown, or both formats."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "capture_id": {
+                    "type": "string",
+                    "description": "Capture identifier returned by analyze_bacnet_pcap.",
+                },
+                "output_format": {
+                    "type": "string",
+                    "enum": ["json", "markdown", "both"],
+                    "description": "Report format to return (default: 'json').",
+                },
+            },
+            "required": ["capture_id"],
+        },
+    },
 ]
 
 
@@ -514,6 +562,17 @@ class ButlerMcpServer:
                 status=args.get("status"),
                 converged_devices=args.get("converged_devices"),
                 failed_devices=args.get("failed_devices"),
+            )
+        if name == "analyze_bacnet_pcap":
+            return self.provider.analyze_bacnet_pcap(
+                pcap_path=args["pcap_path"],
+                capture_id=args.get("capture_id"),
+                output_dir=args.get("output_dir"),
+            )
+        if name == "get_pcap_report":
+            return self.provider.get_pcap_report(
+                capture_id=args["capture_id"],
+                output_format=args.get("output_format", "json"),
             )
         raise ValueError(f"Unknown tool or method: {name}")
 

@@ -519,6 +519,61 @@ class BacnetAnalyzerTest(unittest.TestCase):
       self.assertEqual(parsed["schema_version"], "1.0")
       self.assertEqual(parsed["metrics"]["capture"]["bacnet_frames"], 1)
       self.assertIn("555", parsed["metrics"]["device_instance_map"])
+      self.assertIn("verdict", parsed)
+      self.assertIn("prioritized_actions", parsed)
+
+  def test_report_markdown_and_bundle_generation(self):
+    base = 1700000000.0
+    pkts = [
+        (
+            base + 1.0,
+            _ipv4_udp_frame(
+                "10.0.0.10",
+                "10.0.0.255",
+                47808,
+                47808,
+                _bvlc(BVLC_ORIGINAL_BROADCAST, _npdu(_i_am_apdu(9001))),
+                ip_id=1,
+            ),
+        ),
+        (
+            base + 2.0,
+            _ipv4_udp_frame(
+                "10.0.0.11",
+                "10.0.0.255",
+                47808,
+                47808,
+                _bvlc(BVLC_ORIGINAL_BROADCAST, _npdu(_i_am_apdu(9001))),
+                ip_id=2,
+            ),
+        ),
+    ]
+    with tempfile.TemporaryDirectory() as tmp:
+      pcap = Path(tmp) / "dup.pcap"
+      rep_dir = Path(tmp) / "bundle"
+      _write_pcap(pcap, pkts)
+      proc = subprocess.run(
+          [
+              str(ROOT_DIR / "bin/analyze_pcap"),
+              str(pcap),
+              "--report-dir",
+              str(rep_dir),
+              "--capture-id",
+              "site-a-test",
+          ],
+          capture_output=True,
+          text=True,
+          check=False,
+      )
+      self.assertEqual(proc.returncode, 0, proc.stderr)
+      analysis = json.loads((rep_dir / "analysis.json").read_text(encoding="utf-8"))
+      md = (rep_dir / "report.md").read_text(encoding="utf-8")
+      self.assertEqual(analysis["capture_id"], "site-a-test")
+      self.assertEqual(analysis["verdict"]["finding_counts"]["CRITICAL"], 1)
+      self.assertIn("## Prioritized Actions to Fix", md)
+      self.assertIn("Duplicate BACnet device instance 9001", md)
+      self.assertIn("Frames: 1, 2", md)
+      self.assertIn("### Capture Recommendations", md)
 
 
 if __name__ == "__main__":

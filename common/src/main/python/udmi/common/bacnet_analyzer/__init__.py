@@ -39,6 +39,12 @@ def analyze_pcap(pcap_path: str) -> AnalysisResult:
   return AnalysisResult(metrics=metrics, findings=findings)
 
 
+from udmi.common.bacnet_analyzer.report import (  # pylint: disable=wrong-import-position
+    build_analysis_json,
+    render_markdown_report,
+    write_report_bundle,
+)
+
 __all__ = [
     "AnalysisMetrics",
     "AnalysisResult",
@@ -47,7 +53,10 @@ __all__ = [
     "Finding",
     "SegmentReassembler",
     "analyze_pcap",
+    "build_analysis_json",
     "compute_metrics",
     "decode_pcap",
     "generate_findings",
+    "render_markdown_report",
+    "write_report_bundle",
 ]

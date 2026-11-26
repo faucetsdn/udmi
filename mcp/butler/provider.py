@@ -41,6 +41,12 @@ def _format_iso(val: Any) -> Optional[str]:
         s += "Z"
     return s
 
+from udmi.common.bacnet_analyzer import (
+    analyze_pcap,
+    build_analysis_json,
+    render_markdown_report,
+    write_report_bundle,
+)
 from udmi.common.db.postgres import PostgresManager
 from udmi.common.db.influx import InfluxManager
 from udmi.common.project_spec import parse_project_spec
@@ -91,6 +97,7 @@ class ButlerProvider:
 
         # Persistent rollout state management in Butler proper (PostgreSQL)
         self.rollout_manager = RolloutManager(postgres_manager=self.pg_manager)
+        self._pcap_reports: Dict[str, Dict[str, Any]] = {}
 
     def health(self) -> Dict[str, Any]:
         """Probes relational and timeseries datastores to report abstract health status."""
@@ -920,4 +927,68 @@ class ButlerProvider:
             converged_devices=converged_devices,
             failed_devices=failed_devices,
         )
+
+    def analyze_bacnet_pcap(
+        self,
+        pcap_path: str,
+        capture_id: Optional[str] = None,
+        output_dir: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """Analyzes a BACnet/IP PCAP/PCAPNG file and caches structured + Markdown reports."""
+        if not pcap_path or not os.path.isfile(pcap_path):
+            raise FileNotFoundError(f"PCAP file not found: {pcap_path}")
+
+        result = analyze_pcap(pcap_path)
+        analysis_doc = build_analysis_json(result, capture_id=capture_id)
+        markdown = render_markdown_report(result, capture_id=capture_id)
+        resolved_id = analysis_doc["capture_id"]
+
+        entry: Dict[str, Any] = {
+            "capture_id": resolved_id,
+            "pcap_path": os.path.abspath(pcap_path),
+            "analysis": analysis_doc,
+            "markdown": markdown,
+        }
+        if output_dir:
+            entry["output_files"] = write_report_bundle(
+                result, output_dir, capture_id=resolved_id
+            )
+        self._pcap_reports[resolved_id] = entry
+
+        summary: Dict[str, Any] = {
+            "capture_id": resolved_id,
+            "verdict": analysis_doc["verdict"],
+            "prioritized_actions": analysis_doc["prioritized_actions"],
+            "coverage_and_vantage": analysis_doc["coverage_and_vantage"],
+            "capture_recommendations": analysis_doc["capture_recommendations"],
+        }
+        if "output_files" in entry:
+            summary["output_files"] = entry["output_files"]
+        return summary
+
+    def get_pcap_report(
+        self,
+        capture_id: str,
+        output_format: str = "json",
+    ) -> Dict[str, Any]:
+        """Retrieves a cached BACnet PCAP analysis report as JSON, Markdown, or both."""
+        if capture_id not in self._pcap_reports:
+            raise KeyError(
+                f"No cached PCAP analysis report for capture_id '{capture_id}'. "
+                "Run analyze_bacnet_pcap first."
+            )
+        if output_format not in ("json", "markdown", "both"):
+            raise ValueError(
+                f"Unsupported output_format '{output_format}'; expected 'json', 'markdown', or 'both'."
+            )
+        entry = self._pcap_reports[capture_id]
+        if output_format == "markdown":
+            return {"capture_id": capture_id, "markdown": entry["markdown"]}
+        if output_format == "both":
+            return {
+                "capture_id": capture_id,
+                "analysis": entry["analysis"],
+                "markdown": entry["markdown"],
+            }
+        return entry["analysis"]
 
