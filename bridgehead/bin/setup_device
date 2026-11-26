@@ -67,9 +67,9 @@ for prefix in rsa ec es; do
 done
 
 if [[ -z "$KEY_PREFIX" ]]; then
-    for existing in "$TARGET_DIR"/*_private.pem "$TARGET_DIR"/*_public.pem "$TARGET_DIR"/*_cert.pem; do
+    for existing in "$TARGET_DIR"/*_private.pem "$TARGET_DIR"/*_public.pem "$TARGET_DIR"/*_cert.pem "$TARGET_DIR"/*_private.crt; do
         if [[ -f "$existing" ]]; then
-            fail "Existing key file '$existing' found without a matching *_private.pkcs8 in '$TARGET_DIR'. Refusing to overwrite existing device keys."
+            fail "Existing key/cert file '$existing' found without a matching *_private.pkcs8 in '$TARGET_DIR'. Refusing to overwrite existing device keys or leave a mismatched certificate."
         fi
     done
 
