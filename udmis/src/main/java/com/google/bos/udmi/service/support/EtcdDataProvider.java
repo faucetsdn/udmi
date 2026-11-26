@@ -6,7 +6,6 @@ import static com.google.udmi.util.GeneralUtils.CSV_JOINER;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifNotNullGet;
 import static com.google.udmi.util.GeneralUtils.isNullOrTruthy;
-import static java.util.Optional.ofNullable;
 
 import com.google.bos.udmi.service.pod.ContainerBase;
 import com.google.udmi.util.GeneralUtils;
@@ -404,12 +403,13 @@ public class EtcdDataProvider extends ContainerBase implements IotDataProvider {
         }
         String reg = sub.substring(0, endIdx);
         char delimiter = sub.charAt(endIdx);
-        if (!ofNullable(reflectRegistry).orElse(REFLECT_BASE).equals(reg)) {
-          registries.add(reg);
-        }
+        registries.add(reg);
         nextKey = REGISTRY_PREFIX + reg + (char) (delimiter + 1);
       }
       return registries;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("While listing registries from etcd", e);
     } catch (Exception e) {
       throw new RuntimeException("While listing registries from etcd", e);
     }

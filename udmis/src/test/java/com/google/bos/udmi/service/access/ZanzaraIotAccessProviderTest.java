@@ -23,11 +23,13 @@ import com.google.bos.udmi.service.support.IotDataProvider;
 import com.google.bos.udmi.service.support.MosquittoBroker;
 import com.google.bos.udmi.service.support.QueueFullException;
 import java.lang.reflect.Field;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -68,10 +70,7 @@ class ZanzaraIotAccessProviderTest {
               ? Math.min(slashIdx, colonIdx)
               : Math.max(slashIdx, colonIdx);
           if (endIdx > 0) {
-            String reg = sub.substring(0, endIdx);
-            if (!"UDMI-REFLECT".equals(reg)) {
-              regs.add(reg);
-            }
+            regs.add(sub.substring(0, endIdx));
           }
         }
       }
@@ -414,46 +413,57 @@ class ZanzaraIotAccessProviderTest {
 
   @Test
   void testEventualConsistencyDesyncAndSync() {
-    store.put(":registries", "US-MTV-1225");
-    store.put("r/UK-LON-6PS/d/dev-1:last_state", "{}");
-    store.put("r/IN-BLR-ANANTA/d/dev-2:last_state", "{}");
-    store.put("r/UDMI-REFLECT/d/UK-LON-6PS:last_config", "{}");
+    store.put(":registries", "REG-C");
+    store.put("r/REG-B/d/dev-1:last_state", "{}");
+    store.put("r/REG-A/d/dev-2:last_state", "{}");
+    store.put("r/UDMI-REFLECT/d/REG-B:last_config", "{}");
 
-    assertEquals(Set.of("US-MTV-1225"), provider.getRegistries());
+    assertEquals(Set.of("REG-C"), provider.getRegistries());
 
     provider.syncRegistries();
 
-    assertEquals(Set.of("IN-BLR-ANANTA", "UK-LON-6PS", "US-MTV-1225"), provider.getRegistries());
-    assertEquals("IN-BLR-ANANTA,UK-LON-6PS,US-MTV-1225", store.get(":registries"));
+    assertEquals(
+        Set.of("REG-A", "REG-B", "REG-C", "UDMI-REFLECT"),
+        provider.getRegistries());
+    assertEquals(
+        "REG-A,REG-B,REG-C,UDMI-REFLECT",
+        store.get(":registries"));
   }
 
   @Test
-  void testModelEmptyRegistryPersistsCreatedAt() {
-    CloudModel cloudModel = new CloudModel();
-    cloudModel.operation = ModelOperation.CREATE;
+  void testModelEmptyRegistryPersistsAndPreservesCreatedAt() {
+    CloudModel createModel = new CloudModel();
+    createModel.operation = ModelOperation.CREATE;
 
-    provider.modelRegistry("EMPTY-REG", null, cloudModel);
+    provider.modelRegistry("EMPTY-REG", null, createModel);
 
     assertTrue(provider.getRegistries().contains("EMPTY-REG"));
-    assertNotNull(store.get("r/EMPTY-REG:created_at"));
+    String initialCreatedAt = store.get("r/EMPTY-REG:created_at");
+    assertNotNull(initialCreatedAt);
+
+    store.put("r/EMPTY-REG:created_at", "2025-01-01T00:00:00Z");
+    CloudModel updateModel = new CloudModel();
+    updateModel.operation = ModelOperation.UPDATE;
+    provider.modelRegistry("EMPTY-REG", null, updateModel);
+    assertEquals("2025-01-01T00:00:00Z", store.get("r/EMPTY-REG:created_at"));
+
+    CloudModel updateNewModel = new CloudModel();
+    updateNewModel.operation = ModelOperation.UPDATE;
+    provider.modelRegistry("EMPTY-UPDATE-REG", null, updateNewModel);
+    assertTrue(provider.getRegistries().contains("EMPTY-UPDATE-REG"));
+    assertNotNull(store.get("r/EMPTY-UPDATE-REG:created_at"));
   }
 
   @Test
-  void testSaveStateAndUpdateConfigTrackRegistryExcludingReflect() {
+  void testSaveStateAndUpdateConfigDoNotTrackRegistries() {
     provider.saveState("STATE-REG", "dev-1", "{\"timestamp\":\"2026-08-28T05:15:00Z\"}");
-    assertTrue(provider.getRegistries().contains("STATE-REG"));
+    assertFalse(provider.getRegistries().contains("STATE-REG"));
 
     Envelope configEnv = new Envelope();
     configEnv.deviceRegistryId = "CFG-REG";
     configEnv.deviceId = "dev-2";
     provider.updateConfig(configEnv, "{}", null);
-    assertTrue(provider.getRegistries().contains("CFG-REG"));
-
-    Envelope reflectEnv = new Envelope();
-    reflectEnv.deviceRegistryId = "UDMI-REFLECT";
-    reflectEnv.deviceId = "CFG-REG";
-    provider.updateConfig(reflectEnv, "{}", null);
-    assertFalse(provider.getRegistries().contains("UDMI-REFLECT"));
+    assertFalse(provider.getRegistries().contains("CFG-REG"));
   }
 
   @Test
@@ -468,6 +478,123 @@ class ZanzaraIotAccessProviderTest {
     assertThrows(RuntimeException.class,
         () -> provider.modelDevice("FAIL-REG", TEST_DEVICE, cloudModel, null));
     assertFalse(store.containsKey("r/FAIL-REG/c/active:" + TEST_DEVICE));
+  }
+
+  @Test
+  void testAddRegistryToDatabaseRetriesOnCasContention() {
+    AtomicInteger casCalls = new AtomicInteger();
+    when(mockDatabase.ref()).thenAnswer(inv -> new FakeDataRef(store) {
+      @Override
+      public boolean updateIfMatch(String key, String expected, Map<String, String> puts,
+          Set<String> deletes) {
+        if ("registries".equals(key) && casCalls.getAndIncrement() == 0) {
+          store.put(":registries", "CONCURRENT-REG");
+          return false;
+        }
+        return super.updateIfMatch(key, expected, puts, deletes);
+      }
+    });
+
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    provider.modelRegistry("NEW-REG", null, cloudModel);
+
+    assertEquals(2, casCalls.get());
+    assertEquals(Set.of("CONCURRENT-REG", "NEW-REG"), provider.getRegistries());
+    assertEquals("CONCURRENT-REG,NEW-REG", store.get(":registries"));
+  }
+
+  @Test
+  void testSyncRegistriesRetriesOnCasContention() {
+    store.put(":registries", "REG-A");
+    store.put("r/REG-B:created_at", "2026-08-28T00:00:00Z");
+
+    AtomicInteger casCalls = new AtomicInteger();
+    when(mockDatabase.ref()).thenAnswer(inv -> new FakeDataRef(store) {
+      @Override
+      public boolean updateIfMatch(String key, String expected, Map<String, String> puts,
+          Set<String> deletes) {
+        if ("registries".equals(key) && casCalls.getAndIncrement() == 0) {
+          store.put(":registries", "REG-A,REG-CONCURRENT");
+          return false;
+        }
+        return super.updateIfMatch(key, expected, puts, deletes);
+      }
+    });
+
+    provider.syncRegistries();
+
+    assertEquals(2, casCalls.get());
+    assertEquals(Set.of("REG-A", "REG-B", "REG-CONCURRENT"), provider.getRegistries());
+    assertEquals("REG-A,REG-B,REG-CONCURRENT", store.get(":registries"));
+  }
+
+  @Test
+  void testSyncRegistriesFailsWhenCasRetriesExhausted() {
+    store.put("r/REG-B:created_at", "2026-08-28T00:00:00Z");
+
+    when(mockDatabase.ref()).thenAnswer(inv -> new FakeDataRef(store) {
+      @Override
+      public boolean updateIfMatch(String key, String expected, Map<String, String> puts,
+          Set<String> deletes) {
+        if ("registries".equals(key)) {
+          return false;
+        }
+        return super.updateIfMatch(key, expected, puts, deletes);
+      }
+    });
+
+    RuntimeException ex = assertThrows(RuntimeException.class, () -> provider.syncRegistries());
+    assertTrue(ex.getCause() instanceof ConcurrentModificationException);
+  }
+
+  @Test
+  void testSyncRegistriesPropagatesListFailureAndRecovers() {
+    store.put("r/RECOVER-REG:created_at", "2026-08-28T00:00:00Z");
+    when(mockDatabase.listRegistries())
+        .thenThrow(new RuntimeException("Transient etcd outage"))
+        .thenReturn(Set.of("RECOVER-REG"));
+
+    assertThrows(RuntimeException.class, () -> provider.syncRegistries());
+    assertTrue(provider.getRegistries().isEmpty());
+
+    provider.syncRegistries();
+    assertEquals(Set.of("RECOVER-REG"), provider.getRegistries());
+  }
+
+  @Test
+  void testSyncRegistriesIsNoOpWhenAlreadySynced() {
+    store.put(":registries", "REG-A,REG-B");
+    store.put("r/REG-A:created_at", "2026-08-28T00:00:00Z");
+    store.put("r/REG-B:created_at", "2026-08-28T00:00:00Z");
+
+    AtomicInteger casCalls = new AtomicInteger();
+    when(mockDatabase.ref()).thenAnswer(inv -> new FakeDataRef(store) {
+      @Override
+      public boolean updateIfMatch(String key, String expected, Map<String, String> puts,
+          Set<String> deletes) {
+        casCalls.incrementAndGet();
+        return super.updateIfMatch(key, expected, puts, deletes);
+      }
+    });
+
+    provider.syncRegistries();
+    assertEquals(0, casCalls.get());
+  }
+
+  @Test
+  void testSyncRegistriesRepairsExternalResetDespiteKnownCache() {
+    CloudModel cloudModel = new CloudModel();
+    cloudModel.operation = ModelOperation.CREATE;
+    provider.modelRegistry("CACHED-REG", null, cloudModel);
+    assertEquals(Set.of("CACHED-REG"), provider.getRegistries());
+
+    store.remove(":registries");
+    assertTrue(provider.getRegistries().isEmpty());
+
+    provider.syncRegistries();
+    assertEquals(Set.of("CACHED-REG"), provider.getRegistries());
+    assertEquals("CACHED-REG", store.get(":registries"));
   }
 
 

@@ -2,6 +2,7 @@ package com.google.bos.udmi.service.access;
 
 import static com.google.api.client.util.Preconditions.checkState;
 import static com.google.bos.udmi.service.pod.UdmiServicePod.getComponent;
+import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.GeneralUtils.ifTrueThen;
 import static com.google.udmi.util.GeneralUtils.sortedMapCollector;
 import static com.google.udmi.util.JsonUtil.isoConvert;
@@ -282,7 +283,13 @@ public class DynamicIotAccessProvider extends IotAccessBase {
 
   @Override
   public void syncRegistries() {
-    getProviders().values().forEach(provider -> provider.syncRegistries());
+    getProviders().forEach((name, provider) -> {
+      try {
+        provider.syncRegistries();
+      } catch (Exception e) {
+        error("While syncing registries for provider %s: %s", name, friendlyStackTrace(e));
+      }
+    });
   }
 
   @Override

@@ -2,6 +2,8 @@ package com.google.bos.udmi.service.support;
 
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -179,15 +181,15 @@ class EtcdDataProviderTest {
   @Test
   void testListRegistriesKeyJumpHandlesPrefixCollisionsAndReflect() {
     NavigableMap<String, String> etcdKeys = new TreeMap<>();
-    etcdKeys.put(":registries", "US-MTV-1");
+    etcdKeys.put(":registries", "SITE-1");
     etcdKeys.put("/r/EMPTY-REG:created_at", "2026-08-28T00:00:00Z");
-    etcdKeys.put("/r/UDMI-REFLECT/d/US-MTV-1:last_config", "{}");
-    etcdKeys.put("/r/US-MTV-1/c/active:dev-1", "2026-08-28T00:00:00Z");
-    etcdKeys.put("/r/US-MTV-1/d/dev-1:last_state", "{}");
-    etcdKeys.put("/r/US-MTV-1/d/dev-2:last_state", "{}");
-    etcdKeys.put("/r/US-MTV-1:created_at", "2026-08-28T00:00:00Z");
-    etcdKeys.put("/r/US-MTV-1015/d/dev-1:last_state", "{}");
-    etcdKeys.put("/r/US-MTV-1015:created_at", "2026-08-28T00:00:00Z");
+    etcdKeys.put("/r/SITE-1/c/active:dev-1", "2026-08-28T00:00:00Z");
+    etcdKeys.put("/r/SITE-1/d/dev-1:last_state", "{}");
+    etcdKeys.put("/r/SITE-1/d/dev-2:last_state", "{}");
+    etcdKeys.put("/r/SITE-1:created_at", "2026-08-28T00:00:00Z");
+    etcdKeys.put("/r/SITE-1015/d/dev-1:last_state", "{}");
+    etcdKeys.put("/r/SITE-1015:created_at", "2026-08-28T00:00:00Z");
+    etcdKeys.put("/r/UDMI-REFLECT/d/SITE-1:last_config", "{}");
 
     KV mockKv = mock(KV.class);
     when(mockKv.get(any(ByteSequence.class), any(GetOption.class))).thenAnswer(inv -> {
@@ -216,7 +218,7 @@ class EtcdDataProviderTest {
     EtcdDataProvider provider = new EtcdDataProvider(iotAccess, mockKv);
 
     Set<String> registries = provider.listRegistries();
-    assertEquals(Set.of("EMPTY-REG", "US-MTV-1", "US-MTV-1015"), registries);
+    assertEquals(Set.of("EMPTY-REG", "SITE-1", "SITE-1015", "UDMI-REFLECT"), registries);
 
     ArgumentCaptor<ByteSequence> keyCaptor = ArgumentCaptor.forClass(ByteSequence.class);
     verify(mockKv, times(7)).get(keyCaptor.capture(), any(GetOption.class));
@@ -227,11 +229,66 @@ class EtcdDataProviderTest {
         List.of(
             "/r/",
             "/r/EMPTY-REG;",
-            "/r/UDMI-REFLECT0",
-            "/r/US-MTV-10",
-            "/r/US-MTV-10150",
-            "/r/US-MTV-1015;",
-            "/r/US-MTV-1;"),
+            "/r/SITE-10",
+            "/r/SITE-10150",
+            "/r/SITE-1015;",
+            "/r/SITE-1;",
+            "/r/UDMI-REFLECT0"),
         queriedKeys);
+  }
+
+  @Test
+  void testListRegistriesEmptyAndMalformedKeys() {
+    NavigableMap<String, String> etcdKeys = new TreeMap<>();
+    etcdKeys.put("/r//orphan", "v");
+    etcdKeys.put("/r/:orphan", "v");
+    etcdKeys.put("/r/MALFORMED", "v");
+    etcdKeys.put("/r/VALID-REG:created_at", "2026-08-28T00:00:00Z");
+
+    KV mockKv = mock(KV.class);
+    when(mockKv.get(any(ByteSequence.class), any(GetOption.class))).thenAnswer(inv -> {
+      ByteSequence startSeq = inv.getArgument(0);
+      GetOption opt = inv.getArgument(1);
+      String startKey = new String(startSeq.getBytes(), StandardCharsets.UTF_8);
+      String endKey = new String(opt.getEndKey().get().getBytes(), StandardCharsets.UTF_8);
+      String match = etcdKeys.subMap(startKey, true, endKey, false).keySet().stream()
+          .findFirst()
+          .orElse(null);
+      GetResponse response = mock(GetResponse.class);
+      if (match == null) {
+        when(response.getKvs()).thenReturn(List.of());
+      } else {
+        KeyValue kv = mock(KeyValue.class);
+        when(kv.getKey()).thenReturn(
+            ByteSequence.from(match.getBytes(StandardCharsets.UTF_8)));
+        when(response.getKvs()).thenReturn(List.of(kv));
+      }
+      return completedFuture(response);
+    });
+
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.provider = IotProvider.ETCD;
+    iotAccess.options = "enabled=false";
+    EtcdDataProvider provider = new EtcdDataProvider(iotAccess, mockKv);
+
+    assertEquals(Set.of("VALID-REG"), provider.listRegistries());
+
+    etcdKeys.clear();
+    assertTrue(provider.listRegistries().isEmpty());
+  }
+
+  @Test
+  void testListRegistriesPropagatesEtcdFailure() {
+    KV mockKv = mock(KV.class);
+    CompletableFuture<GetResponse> failedFuture = new CompletableFuture<>();
+    failedFuture.completeExceptionally(new RuntimeException("Simulated etcd failure"));
+    when(mockKv.get(any(ByteSequence.class), any(GetOption.class))).thenReturn(failedFuture);
+
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.provider = IotProvider.ETCD;
+    iotAccess.options = "enabled=false";
+    EtcdDataProvider provider = new EtcdDataProvider(iotAccess, mockKv);
+
+    assertThrows(RuntimeException.class, provider::listRegistries);
   }
 }

@@ -214,5 +214,25 @@ class DynamicIotAccessProviderTest extends MessageTestCore {
     verify(mockZanzaraProvider).syncRegistries();
     verify(mockPubSubProvider).syncRegistries();
   }
+
+  @Test
+  void testSyncRegistriesIsolatesProviderFailure() {
+    IotAccessProvider mockZanzaraProvider = mock(IotAccessProvider.class);
+    when(mockZanzaraProvider.isEnabled()).thenReturn(true);
+    org.mockito.Mockito.doThrow(new RuntimeException("Simulated etcd timeout"))
+        .when(mockZanzaraProvider).syncRegistries();
+    UdmiServicePod.putComponent("zanzara", () -> mockZanzaraProvider);
+
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.project_id = "implicit,zanzara,pubsub";
+    DynamicIotAccessProvider provider = new DynamicIotAccessProvider(iotAccess);
+    provider.activate();
+
+    provider.syncRegistries();
+
+    verify(mockImplicitProvider).syncRegistries();
+    verify(mockZanzaraProvider).syncRegistries();
+    verify(mockPubSubProvider).syncRegistries();
+  }
 }
 
