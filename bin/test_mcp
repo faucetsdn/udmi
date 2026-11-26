@@ -66,6 +66,10 @@ PYTHONPATH="common/src/main/python:butler:.:${PYTHONPATH:-}" python3 -m unittest
 echo "Step 1d: Verifying UUFI MCP JSON-RPC protocol, provider, and messaging..."
 PYTHONPATH="common/src/main/python:.:${PYTHONPATH:-}" python3 -m unittest discover -s tests -p "test_mcp_uufi.py"
 
+# 1e. Test BACnet/IP PCAP analyzer unit tests
+echo "Step 1e: Verifying BACnet/IP PCAP analyzer codec, metrics, and findings..."
+PYTHONPATH="common/src/main/python:.:${PYTHONPATH:-}" python3 -m unittest discover -s tests -p "test_bacnet_analyzer.py"
+
 # 2. Test CLI ensure command
 echo "Step 2: Starting test infrastructure via CLI (bin/test_setup ensure)..."
 CONN_INFO=$(bin/test_setup ensure "$TEST_ID" "$SITE_MODEL" --json)
