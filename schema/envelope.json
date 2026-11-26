@@ -100,7 +100,8 @@
         "query",
         "reply",
         "model",
-        "propose"
+        "propose",
+        "download"
       ]
     }
   },

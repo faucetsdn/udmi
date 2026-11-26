@@ -35,6 +35,7 @@ from .dimension import *
 from .discovery_family import *
 from .discovery_feature import *
 from .discovery_ref import *
+from .download_blobset import *
 from .entry import *
 from .envelope import *
 from .equipment_translation import *

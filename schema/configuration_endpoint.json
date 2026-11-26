@@ -257,6 +257,23 @@
         "display": "show",
         "style": "bold"
       }
+    },
+    "key_bytes": {
+      "description": "PEM-encoded private key material delivered ephemerally over non-retained QoS 0 download/blobset during cloud-controlled key rotation",
+      "type": "string",
+      "$presentation": {
+        "display": "hide"
+      }
+    },
+    "expiry": {
+      "description": "Timestamp when the provisioned credential or endpoint expires",
+      "type": "string",
+      "format": "date-time",
+      "examples": ["2019-01-17T14:02:29.364Z"],
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
     }
   },
   "required": [

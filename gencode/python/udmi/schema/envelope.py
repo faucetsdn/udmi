@@ -42,6 +42,7 @@ class SubType(Enum):
     reply = 'reply'
     model = 'model'
     propose = 'propose'
+    download = 'download'
 
 
 @dataclass

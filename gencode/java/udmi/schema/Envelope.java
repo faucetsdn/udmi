@@ -185,7 +185,8 @@ public class Envelope {
         QUERY("query"),
         REPLY("reply"),
         MODEL("model"),
-        PROPOSE("propose");
+        PROPOSE("propose"),
+        DOWNLOAD("download");
         private final String value;
         private final static Map<String, Envelope.SubType> CONSTANTS = new HashMap<String, Envelope.SubType>();
 
