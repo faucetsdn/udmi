@@ -34,6 +34,7 @@ import org.jetbrains.annotations.Nullable;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.IotAccess;
+import udmi.schema.IotAccess.IotProvider;
 import udmi.schema.UdmiState;
 
 /**
@@ -51,15 +52,25 @@ public abstract class IotAccessBase extends ContainerBase implements IotAccessPr
   private static final Duration REGISTRY_REFRESH = Duration.ofMinutes(10);
   private static final Duration REGISTRY_BACKOFF = Duration.ofMinutes(1);
   final Map<String, String> options;
+  private final IotProvider provider;
   final Map<Entry<String, String>, Object> configLocks = new MapMaker().weakValues().makeMap();
   private final AtomicReference<Instant> lastRegistryFetch =
       new AtomicReference<>(Instant.ofEpochSecond(0));
   private CompletableFuture<Map<String, String>> registryRegions;
   private DistributorPipe distributor;
 
+  /**
+   * Create a base IoT access provider instance from configuration.
+   */
   public IotAccessBase(IotAccess iotAccess) {
     super(iotAccess.name, 0, null);
     options = parseOptions(iotAccess);
+    provider = iotAccess.provider;
+  }
+
+  @Override
+  public String getProviderId(String registryId) {
+    return provider != null ? provider.value() : null;
   }
 
   private static Instant getBackoff(String registryId, String deviceId) {

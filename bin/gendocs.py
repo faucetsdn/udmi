@@ -4,6 +4,36 @@ import sys
 
 from json_schema_for_humans.generate import generate_from_filename
 from json_schema_for_humans.generation_configuration import GenerationConfiguration
+import json_schema_for_humans.schema.intermediate_representation as ir
+from json_schema_for_humans.schema.schema_node import SchemaNode
+
+# Work around json-schema-for-humans missing indirect cross-file $ref cycles
+# (events_discovery.json <-> metadata.json) by walking the full ancestor chain.
+# pylint: disable=protected-access,invalid-name
+orig_has_ref_to_parent = ir._has_reference_to_parent
+orig_node_is_parent = SchemaNode.node_is_parent
+
+
+def _has_reference_to_parent(referenced_schema_path, anchor_part, current_node):
+  node = current_node
+  while node:
+    if orig_has_ref_to_parent(referenced_schema_path, anchor_part, node):
+      return True
+    node = node.parent
+  return False
+
+
+def _node_is_parent(self, node_to_check):
+  node = self
+  while node:
+    if orig_node_is_parent(node, node_to_check):
+      return True
+    node = node.parent
+  return False
+
+
+ir._has_reference_to_parent = _has_reference_to_parent
+SchemaNode.node_is_parent = _node_is_parent
 
 config = GenerationConfiguration(copy_css=True,
                                  expand_buttons=True,

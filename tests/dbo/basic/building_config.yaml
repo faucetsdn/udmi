@@ -4,13 +4,16 @@
   connections:
     c773b86d-b0c0-46fc-bd3f-d726fadd5f1e: FEEDS
   translation:
+    discharge_air_temperature_sensor: MISSING
     zone_air_temperature_sensor:
       present_value: points.zone_air_temperature_sensor.present_value
       units:
         key: pointset.points.zone_air_temperature_sensor.units
         values:
           degrees_celsius: degC
-  type: HVAC/VAV_SD_CSP
+  type:
+  - HVAC/VAV_SD_CSP
+  - HVAC/DMP
 547a33c5-0ce4-4dfb-9924-5169a3475c89:
   cloud_device_id: '2541901344105618'
   code: VAV-3

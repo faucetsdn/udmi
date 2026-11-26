@@ -5,6 +5,7 @@ import static com.google.udmi.util.GeneralUtils.decodeBase64;
 import static com.google.udmi.util.GeneralUtils.deepCopy;
 import static com.google.udmi.util.GeneralUtils.friendlyStackTrace;
 import static com.google.udmi.util.JsonUtil.convertTo;
+import static com.google.udmi.util.JsonUtil.fromString;
 import static com.google.udmi.util.JsonUtil.toMap;
 import static com.google.udmi.util.JsonUtil.toObject;
 
@@ -213,13 +214,20 @@ public class UufiProcessor extends ProcessorBase {
 
     Object outboundMessage = message;
 
+    if (envelope.deviceGuid == null && message instanceof SystemModel systemModel) {
+      envelope.deviceGuid = systemModel.guid;
+    } else if (envelope.deviceGuid == null && message instanceof CloudModel cloudModel) {
+      envelope.deviceGuid = catchToNull(() -> fromString(
+          Metadata.class, cloudModel.metadata.get("udmi_metadata")).system.guid);
+    }
+
     if (envelope.subFolder == SubFolder.SYSTEM && message instanceof CloudModel) {
       CloudModel cloudModel = (CloudModel) message;
       String metadataStr = (cloudModel.metadata != null)
           ? cloudModel.metadata.get("udmi_metadata") : null;
       SystemModel systemModel = null;
       if (metadataStr != null) {
-        Metadata metadata = convertTo(Metadata.class, metadataStr);
+        Metadata metadata = fromString(Metadata.class, metadataStr);
         systemModel = metadata.system;
       }
       if (systemModel == null) {
@@ -246,6 +254,7 @@ public class UufiProcessor extends ProcessorBase {
     uufiEnvelope.subFolder = envelope.subFolder;
     uufiEnvelope.deviceRegistryId = envelope.deviceRegistryId;
     uufiEnvelope.deviceId = envelope.deviceId;
+    uufiEnvelope.deviceGuid = envelope.deviceGuid;
     uufiEnvelope.source = "udmis"; // Set udmis source
     uufiEnvelope.principal = envelope.principal;
     uufiEnvelope.gatewayId = "uufi";

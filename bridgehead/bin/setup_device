@@ -1,0 +1,123 @@
+#!/bin/bash -e
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+UDMI_ROOT=$(realpath "$SCRIPT_DIR/../..")
+INVOCATION_DIR="$PWD"
+
+source "$UDMI_ROOT/etc/shell_common.sh"
+source "$SCRIPT_DIR/common.sh"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: bridgehead/bin/$(basename "$0") <DEVICE_ID>"
+    echo ""
+    echo "Onboards or refreshes a device for UDMI Bridgehead by generating its"
+    echo "CA-signed client certificate (if missing), registering it via registrar"
+    echo "in etcd and Mosquitto, writing site_model/out/devices/<DEVICE_ID>/endpoint.json,"
+    echo "and printing the host file paths to copy onto the device."
+    echo ""
+    echo "Arguments:"
+    echo "  <DEVICE_ID>             Target device ID defined under site_model/devices/."
+    echo "  -h, --help              Show this help message and exit."
+    echo ""
+    echo "Environment Variables:"
+    echo "  HOST_IP                 Override broker IP written into endpoint.json (default: from bridgehead/.env)."
+    echo "  SITE_MODEL_PATH         Override host site model path (default: active validator container mount)."
+    echo ""
+    echo "Examples:"
+    echo "  bridgehead/bin/$(basename "$0") AHU-1"
+    echo "  bridgehead/bin/$(basename "$0") GAT-123"
+    exit 0
+fi
+
+if [[ $# -ne 1 ]]; then
+    fail "Expected exactly one <DEVICE_ID> argument. Run 'bridgehead/bin/$(basename "$0") --help' for usage."
+fi
+
+if [[ "$1" == -* ]]; then
+    fail "Unknown option '$1'. Run 'bridgehead/bin/$(basename "$0") --help' for usage."
+fi
+
+DEVICE_ID="$1"
+
+require_bridgehead_ready
+resolve_bridgehead_device "$DEVICE_ID"
+trap fix_bridgehead_permissions EXIT
+
+SITE_CONFIG="$SITE_MODEL_PATH/cloud_iot_config.json"
+[[ -f "$SITE_CONFIG" ]] || fail "Site config '$SITE_CONFIG' not found."
+REGISTRY_ID=$(jq -r '.registry_id // empty' "$SITE_CONFIG")
+[[ -n "$REGISTRY_ID" ]] || fail "registry_id not defined in '$SITE_CONFIG'."
+
+CA_FILE="$SITE_MODEL_PATH/reflector/ca.crt"
+[[ -f "$CA_FILE" ]] || fail "Broker CA certificate '$CA_FILE' not found."
+
+if [[ -z "${HOST_IP:-}" && -f "$UDMI_ROOT/bridgehead/.env" ]]; then
+    HOST_IP=$(grep -E '^HOST_IP=' "$UDMI_ROOT/bridgehead/.env" | tail -n 1 | cut -d= -f2- || true)
+fi
+[[ -n "${HOST_IP:-}" ]] || fail "HOST_IP is not set in environment or '$UDMI_ROOT/bridgehead/.env'."
+
+KEY_PREFIX=""
+for prefix in rsa ec es; do
+    if [[ -f "$SITE_MODEL_PATH/devices/$TARGET_ID/${prefix}_private.pkcs8" ]]; then
+        KEY_PREFIX="$prefix"
+        break
+    fi
+done
+if [[ -z "$KEY_PREFIX" ]]; then
+    fail "No *_private.pkcs8 key found in '$SITE_MODEL_PATH/devices/$TARGET_ID/'. Generate device keys first (e.g., docker exec validator bin/keygen RS256 site_model/devices/$TARGET_ID)."
+fi
+
+PKCS8_FILE="$SITE_MODEL_PATH/devices/$TARGET_ID/${KEY_PREFIX}_private.pkcs8"
+PEM_FILE="$SITE_MODEL_PATH/devices/$TARGET_ID/${KEY_PREFIX}_private.pem"
+CRT_FILE="$SITE_MODEL_PATH/devices/$TARGET_ID/${KEY_PREFIX}_private.crt"
+[[ -f "$PEM_FILE" ]] || fail "Matching PEM private key '$PEM_FILE' not found."
+
+if [[ ! -f "$CRT_FILE" ]]; then
+    echo "=== Generating CA-signed client certificate for '$TARGET_ID' ==="
+    docker exec -e HOST_IP="$HOST_IP" validator bin/keygen CERT "site_model/devices/$TARGET_ID"
+    fix_bridgehead_permissions
+    [[ -f "$CRT_FILE" ]] || fail "Failed to generate client certificate '$CRT_FILE'."
+fi
+
+echo "=== Registering device '$DEVICE_ID' in Bridgehead ==="
+if [[ "$TARGET_ID" != "$DEVICE_ID" ]]; then
+    docker exec validator bin/registrar site_model/ //mqtt/mosquitto "$TARGET_ID" "$DEVICE_ID"
+else
+    docker exec validator bin/registrar site_model/ //mqtt/mosquitto "$DEVICE_ID"
+fi
+fix_bridgehead_permissions
+
+HASH_PASS=$(sha256sum < "$PKCS8_FILE")
+CLIENT_PASS="${HASH_PASS:0:8}"
+CLIENT_ID="/r/${REGISTRY_ID}/d/${TARGET_ID}"
+TOPIC_PREFIX="/r/${REGISTRY_ID}/d/${DEVICE_ID}"
+
+ENDPOINT_OUT="$SITE_MODEL_PATH/out/devices/$DEVICE_ID/endpoint.json"
+mkdir -p "$(dirname "$ENDPOINT_OUT")"
+jq -n \
+    --arg hostname "$HOST_IP" \
+    --arg client_id "$CLIENT_ID" \
+    --arg topic_prefix "$TOPIC_PREFIX" \
+    --arg password "$CLIENT_PASS" \
+    '{
+      protocol: "mqtt",
+      transport: "ssl",
+      hostname: $hostname,
+      port: 8883,
+      client_id: $client_id,
+      topic_prefix: $topic_prefix,
+      auth_provider: {
+        basic: {
+          username: $client_id,
+          password: $password
+        }
+      }
+    }' > "$ENDPOINT_OUT"
+
+echo ""
+echo "=== Device Endpoint Bundle (Host Paths) ==="
+echo "  endpoint.json : $ENDPOINT_OUT"
+echo "  CA cert       : $CA_FILE"
+echo "  Client cert   : $CRT_FILE"
+echo "  Client key    : $PEM_FILE"
+echo "=== Endpoint configured for device '$DEVICE_ID' on Bridgehead ($HOST_IP:8883) ==="

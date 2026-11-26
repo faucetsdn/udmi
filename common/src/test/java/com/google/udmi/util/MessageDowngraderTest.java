@@ -2,6 +2,7 @@ package com.google.udmi.util;
 
 import static java.lang.Boolean.TRUE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
@@ -9,10 +10,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.ISO8601DateFormat;
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import org.junit.Test;
+import udmi.schema.Config;
+import udmi.schema.FamilyLocalnetConfig;
+import udmi.schema.FamilyLocalnetModel;
+import udmi.schema.GatewayConfig;
+import udmi.schema.LocalnetConfig;
 import udmi.schema.State;
 import udmi.schema.StateSystemOperation;
 import udmi.schema.SystemState;
@@ -61,6 +69,64 @@ public class MessageDowngraderTest {
     assertEquals("version node", simpleConfig.get("version"), OLD_VERSION);
     assertTrue("families", !simpleConfig.get("localnet").has("families"));
     assertTrue("subsystem", simpleConfig.get("localnet").has("subsystem"));
+  }
+
+  @Test
+  public void downgradeGatewayTargetWithoutLocalnet() {
+    Config config = new Config();
+    config.version = SchemaVersion.CURRENT.key();
+    config.gateway = new GatewayConfig();
+    config.gateway.target = new FamilyLocalnetModel();
+    config.gateway.target.family = "bacnet";
+    config.gateway.target.addr = "12345";
+    MessageDowngrader downgrader = new MessageDowngrader(CONFIG_SCHEMA, config, null);
+    Map<String, Object> downgraded = downgrader.downgrade(SchemaVersion.VERSION_1_4_1);
+    Map<String, Object> families =
+        GeneralUtils.getSubMap(GeneralUtils.getSubMap(downgraded, "localnet"), "families");
+    assertEquals("12345", GeneralUtils.getSubMap(families, "bacnet").get("addr"));
+  }
+
+  @Test
+  public void downgradeGatewayTargetEdgeCases() {
+    Config networksOnly = new Config();
+    networksOnly.version = SchemaVersion.CURRENT.key();
+    networksOnly.localnet = new LocalnetConfig();
+    networksOnly.localnet.networks = new HashMap<>(Map.of("modbus_1", new FamilyLocalnetConfig()));
+    networksOnly.gateway = new GatewayConfig();
+    networksOnly.gateway.target = new FamilyLocalnetModel();
+    networksOnly.gateway.target.family = "modbus";
+    Map<String, Object> noAddrDowngrade =
+        new MessageDowngrader(CONFIG_SCHEMA, networksOnly, null)
+            .downgrade(SchemaVersion.VERSION_1_4_1);
+    Map<String, Object> modbusFamily = GeneralUtils.getSubMap(
+        GeneralUtils.getSubMap(GeneralUtils.getSubMap(noAddrDowngrade, "localnet"), "families"),
+        "modbus");
+    assertNull("omitted target.addr should stay absent", modbusFamily.get("addr"));
+
+    ObjectNode nullFamiliesNode = OBJECT_MAPPER.createObjectNode();
+    nullFamiliesNode.put("version", SchemaVersion.CURRENT.key());
+    nullFamiliesNode.putObject("localnet").putNull("families");
+    ObjectNode targetNode = nullFamiliesNode.putObject("gateway").putObject("target");
+    targetNode.put("family", "bacnet");
+    targetNode.put("addr", "99");
+    Map<String, Object> nullNodeDowngrade =
+        new MessageDowngrader(CONFIG_SCHEMA, nullFamiliesNode, null)
+            .downgrade(SchemaVersion.VERSION_1_4_1);
+    Map<String, Object> bacnetFamily = GeneralUtils.getSubMap(
+        GeneralUtils.getSubMap(GeneralUtils.getSubMap(nullNodeDowngrade, "localnet"), "families"),
+        "bacnet");
+    assertEquals("99", bacnetFamily.get("addr"));
+
+    Config noFamilyConfig = new Config();
+    noFamilyConfig.version = SchemaVersion.CURRENT.key();
+    noFamilyConfig.gateway = new GatewayConfig();
+    noFamilyConfig.gateway.target = new FamilyLocalnetModel();
+    noFamilyConfig.gateway.target.addr = "42";
+    Map<String, Object> noFamilyDowngrade =
+        new MessageDowngrader(CONFIG_SCHEMA, noFamilyConfig, null)
+            .downgrade(SchemaVersion.VERSION_1_4_1);
+    assertNull("omitted target.family should not create localnet",
+        noFamilyDowngrade.get("localnet"));
   }
 
   private JsonNode getSimpleTestConfig(String filename) {

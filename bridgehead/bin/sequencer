@@ -1,0 +1,96 @@
+#!/bin/bash -e
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+UDMI_ROOT=$(realpath "$SCRIPT_DIR/../..")
+INVOCATION_DIR="$PWD"
+
+source "$UDMI_ROOT/etc/shell_common.sh"
+source "$SCRIPT_DIR/common.sh"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: bridgehead/bin/$(basename "$0") [-v|-vv] [-a] [-x] [-s serial_no] <DEVICE_ID> [TEST_NAMES...]"
+    echo ""
+    echo "Runs the UDMI Sequencer against the target device inside the Bridgehead"
+    echo "validator container, restores host file ownership of generated outputs,"
+    echo "and prints the resulting host report paths."
+    echo ""
+    echo "Options / Arguments:"
+    echo "  -v                      Enable DEBUG logging and save message traces (default)."
+    echo "  -vv                     Enable TRACE logging."
+    echo "  -a                      Include ALPHA stage sequences (min_stage=ALPHA)."
+    echo "  -x                      Execute only ALPHA stage sequences (min_stage==ALPHA)."
+    echo "  -s <serial_no>          Explicit serial number override for the device."
+    echo "  <DEVICE_ID>             Target device ID defined under site_model/devices/."
+    echo "  [TEST_NAMES...]         (Optional) Specific sequence test names to run."
+    echo "  -h, --help              Show this help message and exit."
+    echo ""
+    echo "Examples:"
+    echo "  bridgehead/bin/$(basename "$0") GAT-123                     # Run full sequencer suite"
+    echo "  bridgehead/bin/$(basename "$0") GAT-123 system_last_update  # Run specific sequence test"
+    echo "  bridgehead/bin/$(basename "$0") -vv -a AHU-1 writeback"
+    exit 0
+fi
+
+SEQ_FLAGS=()
+HAS_VERBOSE=false
+
+while [[ $# -gt 0 && "$1" == -* ]]; do
+    case "$1" in
+        -v|-vv)
+            HAS_VERBOSE=true
+            SEQ_FLAGS+=("$1")
+            shift
+            ;;
+        -a|-x)
+            SEQ_FLAGS+=("$1")
+            shift
+            ;;
+        -s)
+            [[ $# -ge 2 ]] || fail "Option -s requires a <serial_no> argument."
+            SEQ_FLAGS+=("-s" "$2")
+            shift 2
+            ;;
+        *)
+            fail "Unknown option '$1'. Run 'bridgehead/bin/$(basename "$0") --help' for usage."
+            ;;
+    esac
+done
+
+if [[ "$HAS_VERBOSE" != "true" ]]; then
+    SEQ_FLAGS=("-v" "${SEQ_FLAGS[@]}")
+fi
+
+if [[ $# -lt 1 ]]; then
+    fail "Missing required <DEVICE_ID> argument. Run 'bridgehead/bin/$(basename "$0") --help' for usage."
+fi
+
+DEVICE_ID="$1"
+shift
+
+require_bridgehead_ready
+resolve_bridgehead_device "$DEVICE_ID"
+trap fix_bridgehead_permissions EXIT
+
+echo "=== Running sequencer for device '$DEVICE_ID' ==="
+SEQ_EXIT=0
+docker exec validator bin/sequencer "${SEQ_FLAGS[@]}" site_model/ //mqtt/mosquitto "$DEVICE_ID" "$@" || SEQ_EXIT=$?
+
+fix_bridgehead_permissions
+
+RESULT_LOG="$SITE_MODEL_PATH/out/devices/$DEVICE_ID/RESULT.log"
+RESULTS_MD="$SITE_MODEL_PATH/out/devices/$DEVICE_ID/results.md"
+RESULTS_JSON="$SITE_MODEL_PATH/out/sequencer_${DEVICE_ID}.json"
+
+echo ""
+echo "=== Sequencer Reports (Host Paths) ==="
+[[ -f "$RESULT_LOG" ]] && echo "  RESULT.log : $RESULT_LOG"
+[[ -f "$RESULTS_MD" ]] && echo "  results.md : $RESULTS_MD"
+[[ -f "$RESULTS_JSON" ]] && echo "  JSON report: $RESULTS_JSON"
+
+if [[ $SEQ_EXIT -ne 0 ]] || \
+   ! docker exec validator grep -q "Found 0 test failures, exit code 0" /root/out/sequencer.log 2>/dev/null || \
+   grep -q "^RESULT fail " "$RESULT_LOG" 2>/dev/null; then
+    fail "Sequencer run failed for device '$DEVICE_ID'. See reports above for details."
+fi
+
+echo "=== Sequencer run PASSED for device '$DEVICE_ID' ==="

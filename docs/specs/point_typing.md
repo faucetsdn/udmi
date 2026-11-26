@@ -16,11 +16,15 @@ Every point declared under `pointset.points.<point_name>` in a device's `metadat
 | **Multi-state** | `values` is defined; `units` and `type` are omitted | `string` (raw value key in `values`) | `"0.0"`, `"1.0"`, `"1"`, `"2"` | `0`, `1.0`, `true`, `"OFF"`, `"OCCUPIED"` |
 | **String** | `type` is `"string"`; `units` and `values` are omitted | `string` (arbitrary string literal) | `"v2.4.1"`, `"NONE"`, `"A1-04"` | `21.5`, `100`, `true`, `false` |
 | **Binary** | `type` is `"boolean"`; `units` and `values` are omitted | `boolean` (`true` or `false`) | `true`, `false` | `0`, `1`, `"true"`, `"ON"` |
-| *Invalid* | Two or more of `units`, `values`, and `type` are defined, or all three are omitted | *Validation Error* | N/A | N/A |
+| **Missing** | `type` is `"missing"`; `units`, `values`, and `expr` are omitted | *Omitted* (model-only; stripped from `config`, not reported in `events` or `state`) | N/A | Any reported point entry |
+| **Expression** | `expr` is defined; at most one of `units`, `values`, or `type` (`"string"` / `"boolean"`) is defined | *Omitted* (virtual/calculated expression; stripped from `config`, not reported directly by device) | N/A | N/A |
+| *Invalid* | Two or more of `units`, `values`, and `type` are defined, or all are omitted without `expr` | *Validation Error* | N/A | N/A |
 
 ```mermaid
 flowchart TD
-    A["Point definition in metadata.json<br/>pointset.points.&lt;point_name&gt;"] --> B{"Is exactly one of 'units',<br/>'values', or 'type' defined?"}
+    A["Point definition in metadata.json<br/>pointset.points.&lt;point_name&gt;"] --> EX{"Is 'expr' defined with<br/>no 'units', 'values', or 'type'?"}
+    EX -- Yes --> EXPR["Type: EXPRESSION<br/>Model-only virtual/calculated point"]
+    EX -- No --> B{"Is exactly one of 'units',<br/>'values', or 'type' defined?"}
     B -- No --> ERR["Validation Error:<br/>Exactly one of 'units', 'values', or 'type' must be defined"]
     B -- Yes --> C{"Is 'units' defined?"}
     C -- Yes --> NUM["Type: NUMERIC<br/>Wire Payload: JSON number"]
@@ -29,15 +33,16 @@ flowchart TD
     D -- No --> E{"What is the value of 'type'?"}
     E -- "string" --> STR["Type: STRING<br/>Wire Payload: JSON string (literal)"]
     E -- "boolean" --> BIN["Type: BINARY<br/>Wire Payload: JSON boolean (true / false)"]
+    E -- "missing" --> MISS["Type: MISSING<br/>Model-only absent point"]
 ```
 
 ### Mutual Exclusivity and Model Constraints
 
-1. **Exact-One Requirement (Mutual Exclusivity)**: Every point definition in `metadata.json` MUST specify **at most one** and **at least one** of `units`, `values`, or `type`. Specifying two or more of these fields—or omitting all three—is a site model validation error.
+1. **Exact-One Requirement (Mutual Exclusivity)**: Every physical point definition in `metadata.json` (where `expr` is omitted) MUST specify **at most one** and **at least one** of `units`, `values`, or `type`. Points defining `expr` MAY omit all three (an expression-only point) or specify at most one non-missing type specifier (`units`, `values`, or `type` equal to `"string"` or `"boolean"`). Specifying two or more of `units`, `values`, and `type` is always a site model validation error.
 2. **Field Definitions**:
    * When `units` is present, it MUST be a non-empty string designating the unit of measure (or an explicit dimensionless unit designator such as `"no-units"`).
    * When `values` is present, it MUST be a non-empty object mapping at least two raw device values to canonical state strings.
-   * When `type` is present, it MUST be set to either `"string"` (designating a **String** point) or `"boolean"` (designating a **Binary** point).
+   * When `type` is present, it MUST be set to `"string"` (**String** point), `"boolean"` (**Binary** point), or `"missing"` (**Missing** model-only point). A `"missing"` point MUST NOT specify `ref`, `expr`, `writable`, `baseline_value`, or numeric-only fields, is stripped when generating `config`, and is excluded from expected points in `state` and `events` validation.
 
 ---
 

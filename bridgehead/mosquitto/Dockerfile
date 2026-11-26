@@ -1,4 +1,4 @@
-ARG UDMIS_BASE_IMAGE=ghcr.io/faucetsdn/udmi:udmis-latest
+ARG UDMIS_BASE_IMAGE=ghcr.io/faucetsdn/udmi/udmis:latest
 FROM ${UDMIS_BASE_IMAGE} AS udmi 
 FROM eclipse-mosquitto:latest
 

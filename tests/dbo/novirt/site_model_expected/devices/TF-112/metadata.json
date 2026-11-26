@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/FAN_SS_DSP",
-      "label": "TF S-11 Elevator Closet Rm 31345"
+      "type": [
+        "HVAC/FAN_SS_DSP"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "TF S-11 Elevator Closet Rm 31345"
+      }
     }
   },
   "cloud": {

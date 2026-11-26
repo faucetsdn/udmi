@@ -10,8 +10,16 @@
   },
   "externals": {
     "dbo": {
-      "type": "HVAC/WEATHER_OA",
-      "label": "Outside Air Conditions"
+      "type": [
+        "HVAC/WEATHER_OA"
+      ]
+    }
+  },
+  "localnet": {
+    "families": {
+      "bacnet": {
+        "name": "Outside Air Conditions"
+      }
     }
   },
   "cloud": {

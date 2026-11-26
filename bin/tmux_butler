@@ -20,7 +20,7 @@ case "$TMUX_ACTION" in
         ;;
     clean)
         echo "Purging Butler runtime state..."
-        rm -f "$UDMI_ROOT/var/butler.pid" "$UDMI_ROOT/out/butler.log" "$UDMI_ROOT/out/influx.log" "$UDMI_ROOT/out/postgres.log"
+        rm -f "${BUTLER_PID_FILE:-$UDMI_ROOT/var/butler.pid}" "${BUTLER_LOG:-$UDMI_ROOT/out/butler.log}" "${INFLUX_LOG:-$UDMI_ROOT/out/influx.log}" "${POSTGRES_LOG:-$UDMI_ROOT/out/postgres.log}"
         rm -f "$TMUX_SITE_MODEL"/out/devices/*/metadata_mod.json "$TMUX_SITE_MODEL"/out/devices/*/persistent_data.json
         ;;
     status)
@@ -37,7 +37,7 @@ case "$TMUX_ACTION" in
         $UDMI_ROOT/bin/start_influx stop >/dev/null 2>&1 || true
         $UDMI_ROOT/bin/start_postgresql stop >/dev/null 2>&1 || true
         echo "Purging Butler runtime state..."
-        rm -f "$UDMI_ROOT/var/butler.pid" "$UDMI_ROOT/out/butler.log" "$UDMI_ROOT/out/influx.log" "$UDMI_ROOT/out/postgres.log"
+        rm -f "${BUTLER_PID_FILE:-$UDMI_ROOT/var/butler.pid}" "${BUTLER_LOG:-$UDMI_ROOT/out/butler.log}" "${INFLUX_LOG:-$UDMI_ROOT/out/influx.log}" "${POSTGRES_LOG:-$UDMI_ROOT/out/postgres.log}"
         ;&
     start)
         tmux_stop_session "$SESSION_NAME"
@@ -72,7 +72,7 @@ case "$TMUX_ACTION" in
                         break
                     fi
                     udmis_pane=$(tmux capture-pane -t "$barbican_session:udmis" -p -S -20 2>/dev/null || true)
-                    if echo "$udmis_pane" | grep -qE "(=== \[udmis\] exited with code [^0]|Pane is dead)"; then
+                    if echo "$udmis_pane" | grep -qE "(=== \[udmis\] exited with code [1-9][0-9]* ===|Pane is dead)"; then
                         echo "=== UDMIS window in '$barbican_session' failed during startup ===" >&2
                         tmux capture-pane -t "$barbican_session:udmis" -p -S -50 >&2 || true
                         fail "UDMIS startup failed in '$barbican_session'."
@@ -102,7 +102,7 @@ case "$TMUX_ACTION" in
                     registrar_done=true
                     break
                 fi
-                if echo "$pane_out" | grep -qE "(=== \[registrar\] exited with code [^0]|Pane is dead)"; then
+                if echo "$pane_out" | grep -qE "(=== \[registrar\] exited with code [1-9][0-9]* ===|Pane is dead)"; then
                     echo "=== Initial registrar run in '$SESSION_NAME' failed ===" >&2
                     tmux capture-pane -t "$SESSION_NAME:registrar" -p -S -50 >&2 || true
                     fail "Initial registrar run in '$SESSION_NAME' failed."
