@@ -1,0 +1,96 @@
+#!/bin/bash -e
+
+SCRIPT_DIR=$(dirname "$(realpath "$0")")
+UDMI_ROOT=$(realpath "$SCRIPT_DIR/../..")
+INVOCATION_DIR="$PWD"
+
+source "$UDMI_ROOT/etc/shell_common.sh"
+source "$SCRIPT_DIR/common.sh"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+    echo "Usage: bridgehead/bin/$(basename "$0")"
+    echo ""
+    echo "Performs a fast warm clean-state reset of a running Bridgehead stack"
+    echo "without restarting containers:"
+    echo "  1. Purges all device registrations, configs, states, and extras in"
+    echo "     etcd and Mosquitto via 'bin/registrar ... -x -d'."
+    echo "  2. Clears retained MQTT /config messages for all site model devices."
+    echo "  3. Clears generated session outputs under site_model/out/."
+    echo ""
+    echo "Preserves all device/reflector keys, certificates, metadata.json, and"
+    echo "bridgehead/.env. Follow with 'bridgehead/bin/setup_device <DEVICE_ID>'"
+    echo "before testing the next device."
+    echo ""
+    echo "Options:"
+    echo "  -h, --help              Show this help message and exit."
+    exit 0
+fi
+
+if [[ $# -ne 0 ]]; then
+    fail "Unexpected argument '$1'. Run 'bridgehead/bin/$(basename "$0") --help' for usage."
+fi
+
+require_bridgehead_ready
+resolve_bridgehead_site_model
+trap fix_bridgehead_permissions EXIT
+
+SITE_CONFIG="$SITE_MODEL_PATH/cloud_iot_config.json"
+[[ -f "$SITE_CONFIG" ]] || fail "Site config '$SITE_CONFIG' not found."
+REGISTRY_ID=$(docker exec -i validator jq -r '.registry_id // empty' < "$SITE_CONFIG")
+[[ -n "$REGISTRY_ID" ]] || fail "registry_id not defined in '$SITE_CONFIG'."
+
+echo "=== Waiting for validator initialization to settle ==="
+VALIDATOR_SETTLED=false
+for _ in {1..60}; do
+    if docker exec validator sh -c '(ps ax 2>/dev/null || ps) | grep -F "tail -f /dev/null" | grep -v grep >/dev/null' && \
+       ! docker exec validator sh -c '(ps ax 2>/dev/null || ps) | grep -E "bin/registrar|Dispatcher registrar" | grep -v grep >/dev/null'; then
+        VALIDATOR_SETTLED=true
+        break
+    fi
+    sleep 2
+done
+[[ "$VALIDATOR_SETTLED" == "true" ]] || fail "Timed out waiting for validator container initialization to settle."
+
+echo "=== Purging Bridgehead device registrations and state (etcd + Mosquitto) ==="
+docker exec validator bin/registrar site_model/ //mqtt/mosquitto -x -d
+
+echo "=== Purging remaining etcd device state for registry '$REGISTRY_ID' ==="
+docker exec udmis etcdctl --endpoints=http://etcd:2379 del --prefix "/r/${REGISTRY_ID}/d/" >/dev/null
+docker exec udmis etcdctl --endpoints=http://etcd:2379 del --prefix "/r/${REGISTRY_ID}/c/devices:" >/dev/null
+
+echo "=== Clearing retained MQTT /config messages for registry '$REGISTRY_ID' ==="
+if [[ -d "$SITE_MODEL_PATH/devices" ]]; then
+    DEVICE_IDS=()
+    for dev_dir in "$SITE_MODEL_PATH/devices"/*; do
+        [[ -d "$dev_dir" ]] || continue
+        DEVICE_IDS+=("$(basename "$dev_dir")")
+    done
+    if [[ ${#DEVICE_IDS[@]} -gt 0 ]]; then
+        docker exec mosquitto sh -e -c '
+            reg="$1"
+            shift
+            for dev in "$@"; do
+                mosquitto_pub -h localhost -p 8883 \
+                    -u "$SERV_USER" -P "$SERV_PASS" \
+                    --cafile /etc/mosquitto/certs/ca.crt \
+                    --cert /etc/mosquitto/certs/rsa_private.crt \
+                    --key /etc/mosquitto/certs/rsa_private.pem \
+                    -r -n -t "/r/${reg}/d/${dev}/config"
+            done
+        ' _ "$REGISTRY_ID" "${DEVICE_IDS[@]}"
+    fi
+fi
+
+echo "=== Clearing generated session outputs ($SITE_MODEL_PATH/out) ==="
+docker exec validator sh -e -c '
+    if [ -d /root/site_model/out ]; then
+        for entry in /root/site_model/out/* /root/site_model/out/.[!.]* /root/site_model/out/..?*; do
+            if [ -e "$entry" ] || [ -L "$entry" ]; then
+                rm -rf "$entry"
+            fi
+        done
+    fi
+'
+fix_bridgehead_permissions
+
+echo "=== Bridgehead warm reset complete (site model credentials preserved) ==="

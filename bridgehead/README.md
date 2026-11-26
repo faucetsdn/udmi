@@ -28,8 +28,11 @@ The repository provides the `bin/start_bridgehead` helper script to automate pre
 
 3. **Start Bridgehead Services:**
     ```bash
-    # Standard start (using pre-built ghcr.io images):
+    # Standard start (using pre-built ghcr.io latest images):
     bin/start_bridgehead
+
+    # Pin to a specific UDMI release tag (e.g., 1.5.6):
+    bin/start_bridgehead --version 1.5.6 path/to/udmi_site_model
 
     # Local workspace build (builds images directly from local source code):
     bin/start_bridgehead --local
@@ -38,11 +41,13 @@ The repository provides the `bin/start_bridgehead` helper script to automate pre
     bin/start_bridgehead --local path/to/udmi_site_model
     ```
 
+    *Note: When switching `--version` tags, run `bin/stop_bridgehead --clean` first to clear runtime state from the previous version.*
+
 #### What `bin/start_bridgehead` Automates:
 - Creates required host data directories under `bridgehead/var/`.
 - Verifies site model availability and auto-generates missing X.509 reflector certificates (`rsa_private.crt`, `ca.crt`).
 - Generates a default `.env` configuration file with host IP detection and random tokens if `.env` does not already exist.
-- Pulls missing base images, builds container images (including packaging `bridgeheadManager.war` inside the `udmis` image), launches all services via `docker compose`, and waits until the `udmis` service is initialized and ready.
+- Pulls missing base images (or validates/pulls the pinned `--version <tag>` images from `ghcr.io/faucetsdn/udmi/`), builds container images (including packaging `bridgeheadManager.war` inside the `udmis` image), launches all services via `docker compose`, and waits until the `udmis` service is initialized and ready.
 
 ---
 
@@ -179,7 +184,15 @@ If onboarding an unconfigured physical device (or refreshing device registration
 ```bash
 bridgehead/bin/setup_device AHU-1
 ```
-This generates any missing CA-signed client certificate, registers the device via `registrar` in `etcd` and Mosquitto, writes `site_model/out/devices/<DEVICE_ID>/endpoint.json`, and prints the 4 host files (`endpoint.json`, `reflector/ca.crt`, `*_private.crt`, `*_private.pem`) to copy onto the device.
+This generates any missing keypair (from `cloud.auth_type` in `metadata.json` when no keys exist) and CA-signed client certificate, registers the device via `registrar` in `etcd` and Mosquitto, writes `site_model/out/devices/<DEVICE_ID>/endpoint.json`, and prints the 4 host files (`endpoint.json`, `reflector/ca.crt`, `*_private.crt`, `*_private.pem`) to copy onto the device.
+
+#### Optional: Fast Warm Reset Between Runs (`bridgehead/bin/reset`)
+
+To clear `etcd` device state/registrations, retained MQTT `/config` messages, discovery `extras/`, and generated `site_model/out/` outputs without restarting containers (preserving all device/reflector keys, certificates, `metadata.json`, and `bridgehead/.env`):
+```bash
+bridgehead/bin/reset
+```
+Follow with `bridgehead/bin/setup_device <DEVICE_ID>` before testing the next device.
 
 ### Direct Container Execution
 
@@ -277,8 +290,12 @@ To gracefully stop and remove the containers:
 # Recommended: Using helper script
 bin/stop_bridgehead
 
-# Stop services and remove Docker compose volumes:
+# Stop services and remove Docker compose named volumes:
 bin/stop_bridgehead -v
+
+# Cold clean-state reset (stops services, removes volumes/orphans, and wipes
+# bridgehead/var/ runtime state without sudo; preserves .env and site_model credentials):
+bin/stop_bridgehead --clean
 
 # Alternative: Direct Docker Compose command (from bridgehead/ directory)
 docker compose down
