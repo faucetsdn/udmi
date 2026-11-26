@@ -15,7 +15,8 @@ Spotter runs as a single unified process using the UDMI Python Client Library (`
    - **`EtherFamilyProvider`**: Performs Layer-2 Ethernet / ARP, nmap XML host parsing, and ICMP ping sweeps.
    - **`PassiveFamilyProvider`**: Listens for passive broadcast network traffic, decodes BACnet/IP `BVLL` (`Forwarded-NPDU` real controller IP/port behind `BBMD` routers) and `NPDU` (`SNET`/`SADR` routed `MS/TP` frames and `I-Am-Router-To-Network` `DNET` lists), and extracts discovered device metadata.
 2. **`SpotterDiscoveryManager`**:
-   - Manages scheduled and on-demand discovery sweeps.
+   - Manages scheduled and on-demand discovery sweeps across both `config.discovery.families.<family>` and named scans (`config.discovery.scans.<name>`), reporting per-scan status in `state.discovery.scans.<name>` and tagging emitted `events/discovery` and `upload/discovery` payloads with `scan`.
+   - Enforces a process-wide non-blocking per-family exclusivity lock for `bacnet` (shared across standard active scans and `depth: "trace"` captures), skipping overlapping runs with status `500` until the active run completes.
    - Streams live remote packet capture traces (`upload/discovery`) buffered in volatile memory with circuit-breaker protection (zero-disk streaming).
 3. **`SpotterSystemManager`**:
    - Collects host metrics (CPU load, memory, OS distribution) and emits periodic telemetry (`events/system`).

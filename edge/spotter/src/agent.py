@@ -159,21 +159,22 @@ def validate_discovery_config(payload: Dict[str, Any]) -> Dict[str, Any]:
     return payload
   discovery = payload.get("discovery")
   if isinstance(discovery, dict):
-    families = discovery.get("families")
-    if isinstance(families, dict):
-      for fam_name, fam_conf in families.items():
-        if isinstance(fam_conf, dict) and fam_conf.get("depth") is not None:
-          raw_depth = fam_conf["depth"]
-          depth_str = getattr(raw_depth, "value", raw_depth)
-          if (
-              not isinstance(depth_str, str)
-              or depth_str not in VALID_UDMI_DEPTHS
-          ):
-            raise ValueError(
-                f"Invalid discovery depth {raw_depth!r} for family"
-                f" '{fam_name}'. Allowed canonical UDMI depths:"
-                f" {sorted(VALID_UDMI_DEPTHS)}"
-            )
+    for section_name in ("families", "scans"):
+      section_map = discovery.get(section_name)
+      if isinstance(section_map, dict):
+        for entry_name, entry_conf in section_map.items():
+          if isinstance(entry_conf, dict) and entry_conf.get("depth") is not None:
+            raw_depth = entry_conf["depth"]
+            depth_str = getattr(raw_depth, "value", raw_depth)
+            if (
+                not isinstance(depth_str, str)
+                or depth_str not in VALID_UDMI_DEPTHS
+            ):
+              raise ValueError(
+                  f"Invalid discovery depth {raw_depth!r} for"
+                  f" {section_name}/{entry_name}. Allowed canonical UDMI"
+                  f" depths: {sorted(VALID_UDMI_DEPTHS)}"
+              )
     enumerations = discovery.get("enumerations")
     if isinstance(enumerations, dict):
       for enum_field, enum_val in enumerations.items():
@@ -487,20 +488,25 @@ def main():
   localnet_manager = LocalnetManager()
   ip_cfg = config.get("ip", {})
   subnet_filter = ip_cfg.get("subnet_filter")
+  provider_factories = {}
 
   if bacnet_enabled:
     bacnet_cfg = config.get("bacnet", {})
     bacnet_ip = bacnet_cfg.get("ip")
     bacnet_port = bacnet_cfg.get("port")
     bacnet_dev_id = int(bacnet_cfg.get("device_id") or BACNET_DEVICE_ID)
-    localnet_manager.register_provider(
-        "bacnet",
-        BacnetFamilyProvider(
-            bacnet_ip=bacnet_ip,
-            bacnet_port=bacnet_port,
-            bacnet_device_id=bacnet_dev_id,
-        ),
-    )
+
+    def _make_bacnet_provider(
+        _ip=bacnet_ip, _port=bacnet_port, _dev_id=bacnet_dev_id
+    ):
+      return BacnetFamilyProvider(
+          bacnet_ip=_ip,
+          bacnet_port=_port,
+          bacnet_device_id=_dev_id,
+      )
+
+    provider_factories["bacnet"] = _make_bacnet_provider
+    localnet_manager.register_provider("bacnet", _make_bacnet_provider())
 
   if ether_enabled:
     ether_cfg = config.get("ether", {})
@@ -509,26 +515,29 @@ def main():
     except (ValueError, TypeError):
       ping_concurrency = 4
     ether_subnet = ether_cfg.get("ip") or subnet_filter
-    localnet_manager.register_provider(
-        "ether",
-        EtherFamilyProvider(
-            ping_concurrency=ping_concurrency,
-            subnet_filter=ether_subnet,
-        ),
-    )
+
+    def _make_ether_provider(_conc=ping_concurrency, _sub=ether_subnet):
+      return EtherFamilyProvider(
+          ping_concurrency=_conc,
+          subnet_filter=_sub,
+      )
+
+    provider_factories["ether"] = _make_ether_provider
+    localnet_manager.register_provider("ether", _make_ether_provider())
 
   if ipv4_enabled:
     interface = ip_cfg.get("interface")
-    localnet_manager.register_provider(
-        "ipv4",
-        PassiveFamilyProvider(
-            interface=interface, subnet_filter=subnet_filter
-        ),
-    )
+
+    def _make_passive_provider(_iface=interface, _sub=subnet_filter):
+      return PassiveFamilyProvider(interface=_iface, subnet_filter=_sub)
+
+    provider_factories["ipv4"] = _make_passive_provider
+    localnet_manager.register_provider("ipv4", _make_passive_provider())
 
   discovery_manager = SpotterDiscoveryManager(
       max_mem_pct=circuit_breaker_mem_pct,
       discovery_mode=discovery_mode,
+      provider_factories=provider_factories,
   )
 
   # Create Unified Device

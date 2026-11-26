@@ -5,8 +5,10 @@ import dataclasses
 import ipaddress
 import logging
 import os
+import signal
 import socket
 import subprocess
+import tempfile
 import threading
 import time
 from typing import Any, Callable, Dict, Iterator, List, Optional
@@ -275,6 +277,21 @@ def _resolve_nmap_targets(
     else:
       resolved.append(str(ipaddress.ip_address(target_str)))
   return resolved
+
+
+def _signal_process_group(proc: Any, sig: int) -> None:
+  """Sends a signal to a subprocess's process group, falling back to proc methods."""
+  pid = getattr(proc, "pid", None)
+  if isinstance(pid, int) and pid > 0:
+    try:
+      os.killpg(os.getpgid(pid), sig)
+      return
+    except (OSError, ProcessLookupError):
+      pass
+  if sig == signal.SIGKILL:
+    proc.kill()
+  else:
+    proc.terminate()
 
 
 class EtherFamilyProvider(FamilyProvider):
@@ -679,8 +696,23 @@ class EtherFamilyProvider(FamilyProvider):
 
     cmd = ["/usr/bin/nmap"]
     if depth in ("system", "details", "parts", "refs"):
-      cmd.extend(["--script", "banner", "-sV"])
-    cmd.extend(["-p-", "-T4", "--max-hostgroup", "32", "-oX", "-"])
+      cmd.extend(["--script", "banner", "-sV", "-O"])
+
+    tmp_xml = tempfile.NamedTemporaryFile(
+        prefix="spotter_nmap_", suffix=".xml", delete=False
+    )
+    xml_path = tmp_xml.name
+    tmp_xml.close()
+    cmd.extend([
+        "-p-",
+        "-T4",
+        "--max-hostgroup",
+        "32",
+        "--stats-every",
+        "60s",
+        "-oX",
+        xml_path,
+    ])
     cmd.extend(nmap_targets)
 
     try:
@@ -690,6 +722,7 @@ class EtherFamilyProvider(FamilyProvider):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             encoding="utf-8",
+            start_new_session=True,
         )
         self._active_proc = proc
 
@@ -698,26 +731,26 @@ class EtherFamilyProvider(FamilyProvider):
       with proc:
         while True:
           if self._cancelled.is_set():
-            LOGGER.info("Nmap scan cancelled; terminating subprocess.")
-            proc.terminate()
+            LOGGER.info("Nmap scan cancelled; terminating process group.")
+            _signal_process_group(proc, signal.SIGTERM)
             try:
               proc.wait(timeout=2.0)
             except subprocess.TimeoutExpired:
-              proc.kill()
+              _signal_process_group(proc, signal.SIGKILL)
             return
           if deadline and time.time() >= deadline:
             LOGGER.info(
                 "Nmap scan reached scan_duration_sec deadline; flushing"
-                " completed hosts and terminating subprocess."
+                " completed hosts and terminating process group."
             )
             timed_out = True
-            proc.terminate()
+            _signal_process_group(proc, signal.SIGTERM)
             try:
               rem_stdout, _ = proc.communicate(timeout=2.0)
               if rem_stdout:
                 stdout_chunks.append(rem_stdout)
             except subprocess.TimeoutExpired:
-              proc.kill()
+              _signal_process_group(proc, signal.SIGKILL)
             break
           wait_sec = (
               min(1.0, max(0.01, deadline - time.time()))
@@ -727,6 +760,9 @@ class EtherFamilyProvider(FamilyProvider):
           try:
             stdout, _ = proc.communicate(timeout=wait_sec)
             if stdout:
+              for line in stdout.splitlines():
+                if "Stats:" in line or "Timing:" in line:
+                  LOGGER.info("nmap progress: %s", line.strip())
               stdout_chunks.append(stdout)
             break
           except subprocess.TimeoutExpired as exc:
@@ -736,6 +772,9 @@ class EtherFamilyProvider(FamilyProvider):
                   if isinstance(exc.output, bytes)
                   else str(exc.output)
               )
+              for line in chunk.splitlines():
+                if "Stats:" in line or "Timing:" in line:
+                  LOGGER.info("nmap progress: %s", line.strip())
               stdout_chunks.append(chunk)
             continue
 
@@ -747,9 +786,16 @@ class EtherFamilyProvider(FamilyProvider):
               f"Nmap process failed with exit code {proc.returncode}"
           )
 
-        full_stdout = "".join(stdout_chunks)
-        if full_stdout:
-          hosts = parse_nmap_xml(full_stdout, allow_partial=timed_out)
+        xml_content = ""
+        if os.path.exists(xml_path):
+          with open(xml_path, "r", encoding="utf-8", errors="replace") as f:
+            xml_content = f.read()
+        if not xml_content:
+          # Fallback for mocked Popen tests returning XML directly on stdout
+          xml_content = "".join(stdout_chunks)
+
+        if xml_content:
+          hosts = parse_nmap_xml(xml_content, allow_partial=timed_out)
           self._publish_nmap_hosts(
               hosts,
               depth,
@@ -764,6 +810,12 @@ class EtherFamilyProvider(FamilyProvider):
     except Exception as err:  # pylint: disable=broad-exception-caught
       LOGGER.error("Nmap scan failed: %s", err)
       raise
+    finally:
+      try:
+        if os.path.exists(xml_path):
+          os.unlink(xml_path)
+      except OSError:
+        pass
 
   def enumerate_refs(self, addr: str) -> Dict[str, RefDiscovery]:
     """Enumerates references for target address (unused for ether)."""
