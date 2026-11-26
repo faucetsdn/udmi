@@ -20,3 +20,4 @@ class DiscoveryState(DataModel):
     version: Optional[str] = None
     generation: Optional[str] = None
     families: Optional[Dict[str, FamilyDiscoveryState]] = None
+    scans: Optional[Dict[str, FamilyDiscoveryState]] = None

@@ -12,6 +12,7 @@ import static udmi.lib.client.manager.DiscoveryManager.shouldEnumerate;
 import com.google.common.collect.ImmutableMap;
 import com.google.udmi.util.SiteModel;
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -45,11 +46,9 @@ public class PubberProviderBase extends ManagerBase {
   private final String family;
   private final LocalnetManager localnetHost;
   private String selfAddr;
-  private boolean enumerate;
-  private BiConsumer<String, DiscoveryEvents> publisher;
-  private Map<String, Metadata> allDevices;
+  private volatile Map<String, Metadata> allDevices = Map.of();
+  private volatile Consumer<String> resultPublisher = deviceId -> {};
   private SiteModel siteModel;
-  private FamilyDiscoveryConfig config;
 
   /**
    * Create a new instance of a generic family provider.
@@ -60,42 +59,53 @@ public class PubberProviderBase extends ManagerBase {
     localnetHost = ((LocalnetManager) host);
   }
 
-  protected void startScan(FamilyDiscoveryConfig config,
-      BiConsumer<String, DiscoveryEvents> publisher) {
-    this.config = config;
-    this.publisher = publisher;
-    this.enumerate = config.addrs != null || shouldEnumerate(config.depth, Depth.DETAILS);
+  public boolean supportsDiscoveryScan() {
+    return true;
+  }
 
-    if (config.depth == Depth.BUCKETS) {
-      allDevices = new LinkedHashMap<>();
+  protected void startScan(FamilyDiscoveryConfig scanConfig,
+      BiConsumer<String, DiscoveryEvents> scanPublisher) {
+    final boolean scanEnumerate =
+        scanConfig.addrs != null || shouldEnumerate(scanConfig.depth, Depth.DETAILS);
+    final Map<String, Metadata> scanDevices;
+    if (scanConfig.depth == Depth.BUCKETS) {
+      Map<String, Metadata> bucketDevices = new LinkedHashMap<>();
       Set<String> seenNetworks = new HashSet<>();
       siteModel.allMetadata().entrySet().stream()
-          .filter(this::isValidTargetDevice)
+          .filter(entry -> isValidTargetDevice(entry, scanConfig))
           .forEach(entry -> {
             String network = getFamilyNetwork(entry.getKey());
             if (nonNull(network) && seenNetworks.add(network)) {
-              allDevices.put(entry.getKey(), entry.getValue());
+              bucketDevices.put(entry.getKey(), entry.getValue());
             }
           });
+      scanDevices = Collections.unmodifiableMap(bucketDevices);
     } else {
-      allDevices = siteModel.allMetadata().entrySet().stream()
-          .filter(this::isValidTargetDevice)
-          .collect(toMap(Entry::getKey, Entry::getValue));
+      scanDevices = Collections.unmodifiableMap(siteModel.allMetadata().entrySet().stream()
+          .filter(entry -> isValidTargetDevice(entry, scanConfig))
+          .collect(toMap(e -> e.getKey(), e -> e.getValue())));
     }
+    this.allDevices = scanDevices;
+    this.resultPublisher = deviceId -> {
+      debug(format("Sending %s result for %s %s", family, deviceId, getFamilyAddr(deviceId)));
+      scanPublisher.accept(deviceId,
+          augmentSend(deviceId, scanConfig, scanDevices, scanEnumerate));
+    };
   }
 
-  private DiscoveryEvents augmentSend(String deviceId, boolean enumerate) {
+  private DiscoveryEvents augmentSend(String deviceId, FamilyDiscoveryConfig scanConfig,
+      Map<String, Metadata> scanDevices, boolean enumerate) {
     DiscoveryEvents event = new DiscoveryEvents();
     event.network = getFamilyNetwork(deviceId);
-    event.families = getDiscoveredFamilies(deviceId);
-    if (shouldEnumerate(config.depth, Depth.ENTRIES)) {
+    event.families = getDiscoveredFamilies(deviceId, scanConfig);
+    if (shouldEnumerate(scanConfig.depth, Depth.ENTRIES)) {
       event.addr = getFamilyAddr(deviceId);
     }
-    if (shouldEnumerate(config.depth, Depth.SYSTEM)) {
-      event.system = getDiscoveredSystem(deviceId);
+    if (shouldEnumerate(scanConfig.depth, Depth.SYSTEM)) {
+      event.system = getDiscoveredSystem(scanDevices.get(deviceId));
     }
     try {
-      event.refs = ifTrueGet(enumerate, () -> getDiscoveredRefs(getAllDevices().get(deviceId)));
+      event.refs = ifTrueGet(enumerate, () -> getDiscoveredRefs(scanDevices.get(deviceId)));
     } catch (Exception e) {
       event.status = new udmi.schema.Entry();
       event.status.level = Level.ERROR.value();
@@ -103,11 +113,12 @@ public class PubberProviderBase extends ManagerBase {
     return event;
   }
 
-  private Map<String, FamilyDiscovery> getDiscoveredFamilies(String deviceId) {
+  private Map<String, FamilyDiscovery> getDiscoveredFamilies(
+      String deviceId, FamilyDiscoveryConfig scanConfig) {
     if (!BACNET.equals(family)) {
       return null;
     }
-    if (config.depth == Depth.BUCKETS) {
+    if (scanConfig.depth == Depth.BUCKETS) {
       FamilyDiscovery ipv4 = new FamilyDiscovery();
       ipv4.port = BACNET_IPV4_PORT;
       return Map.of("ipv4", ipv4);
@@ -130,8 +141,7 @@ public class PubberProviderBase extends ManagerBase {
     return discovered;
   }
 
-  private SystemDiscoveryData getDiscoveredSystem(String deviceId) {
-    Metadata metadata = getAllDevices().get(deviceId);
+  private SystemDiscoveryData getDiscoveredSystem(Metadata metadata) {
     SystemDiscoveryData system = new SystemDiscoveryData();
     system.name = catchToNull(() -> metadata.system.physical_tag.asset.name);
     system.serial_no = catchToNull(() -> metadata.system.serial_no);
@@ -152,7 +162,7 @@ public class PubberProviderBase extends ManagerBase {
     return ofNullable(points).orElse(ImmutableMap.of()).entrySet().stream()
         .filter(point -> nonNull(point.getValue().ref))
         .map(this::pointsetToRef)
-        .collect(toMap(Entry::getKey, Entry::getValue));
+        .collect(toMap(e -> e.getKey(), e -> e.getValue()));
   }
 
   private Entry<String, RefDiscovery> pointsetToRef(Entry<String, PointPointsetModel> e) {
@@ -180,10 +190,12 @@ public class PubberProviderBase extends ManagerBase {
     addStateMapEntry();
   }
 
-  private boolean isValidTargetDevice(Entry<String, Metadata> entry) {
+  private boolean isValidTargetDevice(
+      Entry<String, Metadata> entry, FamilyDiscoveryConfig scanConfig) {
     String deviceId = entry.getKey();
     return nonNull(getFamilyAddr(deviceId))
-        && (config.networks == null || config.networks.contains(getFamilyNetwork(deviceId)));
+        && (scanConfig.networks == null
+            || scanConfig.networks.contains(getFamilyNetwork(deviceId)));
   }
 
   private void addStateMapEntry() {
@@ -193,11 +205,7 @@ public class PubberProviderBase extends ManagerBase {
   }
 
   protected Consumer<String> getResultPublisher() {
-    return deviceId -> {
-      debug(format("Sending %s result for %s "
-          + "%s", family, deviceId, getFamilyAddr(deviceId)));
-      publisher.accept(deviceId, augmentSend(deviceId, enumerate));
-    };
+    return resultPublisher;
   }
 
   private String getFamilyNetwork(String deviceId) {

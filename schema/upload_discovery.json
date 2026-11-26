@@ -25,6 +25,11 @@
       "description": "Protocol family identifier for the trace capture (e.g. bacnet, ether, ipv4)",
       "type": "string"
     },
+    "scan": {
+      "description": "Name of the configured scan in `config.discovery.scans` that produced this upload",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$"
+    },
     "event_no": {
       "description": "0 for start marker, 1..N for gzip-compressed data chunks, and required -(N+1) for stream termination",
       "type": "integer"

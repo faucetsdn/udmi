@@ -50,6 +50,13 @@ public class DiscoveryUpload {
     @JsonPropertyDescription("Protocol family identifier for the trace capture (e.g. bacnet, ether, ipv4)")
     public String family;
     /**
+     * Name of the configured scan in `config.discovery.scans` that produced this upload
+     * 
+     */
+    @JsonProperty("scan")
+    @JsonPropertyDescription("Name of the configured scan in `config.discovery.scans` that produced this upload")
+    public String scan;
+    /**
      *  0 for start marker, 1..N for gzip-compressed data chunks, and required -(N+1) for stream termination
      * (Required)
      * 
@@ -89,6 +96,7 @@ public class DiscoveryUpload {
         result = ((result* 31)+((this.data == null)? 0 :this.data.hashCode()));
         result = ((result* 31)+((this.sha256 == null)? 0 :this.sha256 .hashCode()));
         result = ((result* 31)+((this.event_no == null)? 0 :this.event_no.hashCode()));
+        result = ((result* 31)+((this.scan == null)? 0 :this.scan.hashCode()));
         result = ((result* 31)+((this.family == null)? 0 :this.family.hashCode()));
         result = ((result* 31)+((this.version == null)? 0 :this.version.hashCode()));
         result = ((result* 31)+((this.timestamp == null)? 0 :this.timestamp.hashCode()));
@@ -104,7 +112,7 @@ public class DiscoveryUpload {
             return false;
         }
         DiscoveryUpload rhs = ((DiscoveryUpload) other);
-        return (((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_manifest == rhs.scan_manifest)||((this.scan_manifest!= null)&&this.scan_manifest.equals(rhs.scan_manifest))))&&((this.data == rhs.data)||((this.data!= null)&&this.data.equals(rhs.data))))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.event_no == rhs.event_no)||((this.event_no!= null)&&this.event_no.equals(rhs.event_no))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
+        return ((((((((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.scan_manifest == rhs.scan_manifest)||((this.scan_manifest!= null)&&this.scan_manifest.equals(rhs.scan_manifest))))&&((this.data == rhs.data)||((this.data!= null)&&this.data.equals(rhs.data))))&&((this.sha256 == rhs.sha256)||((this.sha256 != null)&&this.sha256 .equals(rhs.sha256))))&&((this.event_no == rhs.event_no)||((this.event_no!= null)&&this.event_no.equals(rhs.event_no))))&&((this.scan == rhs.scan)||((this.scan!= null)&&this.scan.equals(rhs.scan))))&&((this.family == rhs.family)||((this.family!= null)&&this.family.equals(rhs.family))))&&((this.version == rhs.version)||((this.version!= null)&&this.version.equals(rhs.version))))&&((this.timestamp == rhs.timestamp)||((this.timestamp!= null)&&this.timestamp.equals(rhs.timestamp))));
     }
 
 }

@@ -39,6 +39,8 @@ y tests/schemas/events_discovery/enumeration.json
 y tests/schemas/events_discovery/continuous.json
 y tests/schemas/events_discovery/discovery.json
 y tests/schemas/events_discovery/implicit.json
+y tests/schemas/events_discovery/scan_named.json
+y tests/schemas/events_discovery/scan_named_errors.json
 y tests/schemas/events_system/metrics.json
 y tests/schemas/events_system/errors.json
 y tests/schemas/events_system/example.json
@@ -61,6 +63,8 @@ y tests/schemas/state/continuous.json
 y tests/schemas/state/periodic.json
 y tests/schemas/state/scan_bad.json
 y tests/schemas/state/discovery.json
+y tests/schemas/state/discovery_scans.json
+y tests/schemas/state/discovery_scans_errors.json
 y tests/schemas/state/example.json
 y tests/schemas/state/endpoint_reconfiguration_failed.json
 y tests/schemas/state/endpoint_reconfiguration.json
@@ -78,6 +82,8 @@ y tests/schemas/config/proxy.json
 y tests/schemas/config/continuous.json
 y tests/schemas/config/periodic.json
 y tests/schemas/config/discovery.json
+y tests/schemas/config/discovery_scans.json
+y tests/schemas/config/discovery_scans_errors.json
 y tests/schemas/config/example.json
 y tests/schemas/config/endpoint_reconfiguration.json
 y tests/schemas/config/fcu.json

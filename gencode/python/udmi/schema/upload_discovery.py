@@ -35,6 +35,7 @@ class DiscoveryUpload(DataModel):
     version: Optional[str] = None
     generation: Optional[str] = None
     family: Optional[str] = None
+    scan: Optional[str] = None
     event_no: Optional[int] = None
     data: Optional[str] = None
     sha256: Optional[str] = None

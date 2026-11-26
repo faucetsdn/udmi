@@ -39,13 +39,21 @@ public class DiscoveryConfig {
     @JsonProperty("families")
     @JsonPropertyDescription("Address family configs for discovery scans.")
     public Map<String, FamilyDiscoveryConfig> families;
+    /**
+     * Named discovery scan configs, keyed by scan name. Each entry must specify its `family`.
+     * 
+     */
+    @JsonProperty("scans")
+    @JsonPropertyDescription("Named discovery scan configs, keyed by scan name. Each entry must specify its `family`.")
+    public Map<String, FamilyDiscoveryConfig> scans;
 
     @Override
     public int hashCode() {
         int result = 1;
         result = ((result* 31)+((this.generation == null)? 0 :this.generation.hashCode()));
-        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
         result = ((result* 31)+((this.enumerations == null)? 0 :this.enumerations.hashCode()));
+        result = ((result* 31)+((this.families == null)? 0 :this.families.hashCode()));
+        result = ((result* 31)+((this.scans == null)? 0 :this.scans.hashCode()));
         return result;
     }
 
@@ -58,7 +66,7 @@ public class DiscoveryConfig {
             return false;
         }
         DiscoveryConfig rhs = ((DiscoveryConfig) other);
-        return ((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.enumerations == rhs.enumerations)||((this.enumerations!= null)&&this.enumerations.equals(rhs.enumerations))));
+        return (((((this.generation == rhs.generation)||((this.generation!= null)&&this.generation.equals(rhs.generation)))&&((this.enumerations == rhs.enumerations)||((this.enumerations!= null)&&this.enumerations.equals(rhs.enumerations))))&&((this.families == rhs.families)||((this.families!= null)&&this.families.equals(rhs.families))))&&((this.scans == rhs.scans)||((this.scans!= null)&&this.scans.equals(rhs.scans))));
     }
 
 }
