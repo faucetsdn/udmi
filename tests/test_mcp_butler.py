@@ -691,6 +691,89 @@ class TestMapperIntegrationWithButlerMcp(unittest.TestCase):
             self.assertEqual(unk_meta["localnet"]["families"]["vendor"]["addr"], "0x68")
             self.assertEqual(unk_meta["localnet"]["families"]["bacnet"]["addr"], "10022")
 
+    def test_bacnet_pcap_mcp_tools_end_to_end(self):
+        import socket
+        import struct
+        import tempfile
+        from pathlib import Path
+        from mcp.butler.server import ButlerMcpServer
+
+        def _make_i_am_pkt(src_ip: str, dev_inst: int, ip_id: int) -> bytes:
+            obj_id = (8 << 22) | (dev_inst & 0x3FFFFF)
+            apdu = bytes([0x10, 0x00, 0xC4]) + struct.pack("!I", obj_id)
+            npdu = bytes([0x01, 0x00]) + apdu
+            bvlc = struct.pack("!BBH", 0x81, 0x0B, 4 + len(npdu)) + npdu
+            udp = struct.pack("!HHHH", 47808, 47808, 8 + len(bvlc), 0) + bvlc
+            ip = struct.pack(
+                "!BBHHHBBH4s4s",
+                0x45, 0, 20 + len(udp), ip_id, 0, 64, 17, 0,
+                socket.inet_aton(src_ip), socket.inet_aton("10.0.0.255"),
+            )
+            eth = b"\x00\x11\x22\x33\x44\x55\x66\x77\x88\x99\xaa\xbb\x08\x00"
+            return eth + ip + udp
+
+        with tempfile.TemporaryDirectory() as tmp:
+            pcap_path = Path(tmp) / "dup_test.pcap"
+            out_dir = Path(tmp) / "reports"
+            buf = bytearray(struct.pack("<IHHiIII", 0xA1B2C3D4, 2, 4, 0, 0, 65535, 1))
+            for idx, src_ip in enumerate(("10.0.0.10", "10.0.0.11"), start=1):
+                raw = _make_i_am_pkt(src_ip, 4242, idx)
+                buf += struct.pack("<IIII", 1700000000 + idx, 0, len(raw), len(raw))
+                buf += raw
+            pcap_path.write_bytes(bytes(buf))
+
+            provider = ButlerProvider(pg_manager=MagicMock(), influx_manager=MagicMock())
+            server = ButlerMcpServer(provider=provider)
+
+            tools_resp = server.handle_request({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
+            tool_names = [t["name"] for t in tools_resp["result"]["tools"]]
+            self.assertIn("analyze_bacnet_pcap", tool_names)
+            self.assertIn("get_pcap_report", tool_names)
+
+            analyze_resp = server.handle_request({
+                "jsonrpc": "2.0",
+                "id": 2,
+                "method": "tools/call",
+                "params": {
+                    "name": "analyze_bacnet_pcap",
+                    "arguments": {
+                        "pcap_path": str(pcap_path),
+                        "capture_id": "cap-4242",
+                        "output_dir": str(out_dir),
+                    },
+                },
+            })
+            summary = json.loads(analyze_resp["result"]["content"][0]["text"])
+            self.assertEqual(summary["capture_id"], "cap-4242")
+            self.assertEqual(summary["verdict"]["finding_counts"]["CRITICAL"], 1)
+            self.assertTrue((out_dir / "analysis.json").is_file())
+            self.assertTrue((out_dir / "report.md").is_file())
+
+            md_resp = server.handle_request({
+                "jsonrpc": "2.0",
+                "id": 3,
+                "method": "tools/call",
+                "params": {
+                    "name": "get_pcap_report",
+                    "arguments": {"capture_id": "cap-4242", "output_format": "markdown"},
+                },
+            })
+            md_payload = json.loads(md_resp["result"]["content"][0]["text"])
+            self.assertIn("Duplicate BACnet device instance 4242", md_payload["markdown"])
+
+            json_resp = server.handle_request({
+                "jsonrpc": "2.0",
+                "id": 4,
+                "method": "tools/call",
+                "params": {
+                    "name": "get_pcap_report",
+                    "arguments": {"capture_id": "cap-4242", "output_format": "json"},
+                },
+            })
+            full_doc = json.loads(json_resp["result"]["content"][0]["text"])
+            self.assertEqual(full_doc["schema_version"], "1.0")
+            self.assertEqual(full_doc["findings"][0]["cause_key"], "duplicate_device_instance:4242")
+
 
 if __name__ == "__main__":
     unittest.main()
