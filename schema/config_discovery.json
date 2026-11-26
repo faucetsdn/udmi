@@ -43,11 +43,11 @@
     "scans": {
       "description": "Named discovery scan configs, keyed by scan name. Each entry must specify its `family`.",
       "type": "object",
-      "existingJavaType": "java.util.Map<String, FamilyDiscoveryConfig>",
+      "existingJavaType": "java.util.Map<String, ScanDiscoveryConfig>",
       "additionalProperties": false,
       "patternProperties": {
         "^[a-z][a-z0-9]*(_[a-z0-9]+)*$": {
-          "$ref": "file:config_discovery_family.json"
+          "$ref": "file:config_discovery_scan.json"
         }
       }
     }

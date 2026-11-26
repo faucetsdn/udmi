@@ -16,7 +16,7 @@ from udmi.schema import (
     Config,
     DiscoveryConfig,
     DiscoveryEvents,
-    FamilyDiscoveryConfig,
+    ScanDiscoveryConfig,
     State,
     TraceDiscoveryConfig,
 )
@@ -94,13 +94,13 @@ class TestNamedScansAndExclusivity(unittest.TestCase):
     cfg = Config(
         discovery=DiscoveryConfig(
             scans={
-                "ether_ping": FamilyDiscoveryConfig(
+                "ether_ping": ScanDiscoveryConfig(
                     family="ether", generation=future_gen, depth=Depth.entries
                 ),
-                "missing_fam": FamilyDiscoveryConfig(
+                "missing_fam": ScanDiscoveryConfig(
                     generation=future_gen, depth=Depth.entries
                 ),
-                "Bad-Name": FamilyDiscoveryConfig(
+                "Bad-Name": ScanDiscoveryConfig(
                     family="ether", generation=future_gen, depth=Depth.entries
                 ),
             }
@@ -128,7 +128,7 @@ class TestNamedScansAndExclusivity(unittest.TestCase):
     cfg2 = Config(
         discovery=DiscoveryConfig(
             scans={
-                "ether_ping": FamilyDiscoveryConfig(
+                "ether_ping": ScanDiscoveryConfig(
                     family="ether", generation=future_gen, depth=Depth.entries
                 ),
             }
@@ -156,10 +156,10 @@ class TestNamedScansAndExclusivity(unittest.TestCase):
     cfg = Config(
         discovery=DiscoveryConfig(
             scans={
-                "quick_ping": FamilyDiscoveryConfig(
+                "quick_ping": ScanDiscoveryConfig(
                     family="ether", generation=now_gen, depth=Depth.entries
                 ),
-                "deep_scan": FamilyDiscoveryConfig(
+                "deep_scan": ScanDiscoveryConfig(
                     family="ether", generation=now_gen, depth=Depth.system
                 ),
             }
@@ -213,10 +213,10 @@ class TestNamedScansAndExclusivity(unittest.TestCase):
 
     mgr = self._make_manager(provider_factories={"bacnet": _bacnet_factory})
     now_gen = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    cfg_a = FamilyDiscoveryConfig(
+    cfg_a = ScanDiscoveryConfig(
         family="bacnet", generation=now_gen, depth=Depth.entries
     )
-    cfg_b = FamilyDiscoveryConfig(
+    cfg_b = ScanDiscoveryConfig(
         family="bacnet", generation=now_gen, depth=Depth.system
     )
     mgr.handle_config(
@@ -265,7 +265,7 @@ class TestNamedScansAndExclusivity(unittest.TestCase):
     mock_capture.return_value = [b"PCAP_BYTES"]
     mgr = self._make_manager(discovery_mode="capture_only")
     now_gen = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    trace_cfg = FamilyDiscoveryConfig(
+    trace_cfg = ScanDiscoveryConfig(
         family="bacnet",
         generation=now_gen,
         depth=Depth.trace,

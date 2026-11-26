@@ -50,6 +50,7 @@ import udmi.schema.FeatureDiscovery;
 import udmi.schema.Level;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
+import udmi.schema.ScanDiscoveryConfig;
 
 /**
  * Unit tests for {@link DiscoveryScheduler} and {@link DiscoveryManager}.
@@ -109,9 +110,9 @@ public class DiscoveryManagerTest {
 
   @Test
   public void namedAndFamilyScanEventAttribution() {
-    FamilyDiscoveryConfig vendorCfg = oneShotScan(null);
+    FamilyDiscoveryConfig vendorCfg = oneShotFamily();
     vendorCfg.generation = Date.from(START_TIME.plusSeconds(40));
-    FamilyDiscoveryConfig filtered = oneShotScan(BACNET);
+    ScanDiscoveryConfig filtered = oneShotScan(BACNET);
     filtered.addrs = List.of("1042");
     manager.updateConfig(discovery(
         Map.of(VENDOR, vendorCfg),
@@ -167,11 +168,11 @@ public class DiscoveryManagerTest {
 
   @Test
   public void sporadicScansDeferFifoWhileFamilyBusy() {
-    FamilyDiscoveryConfig first = oneShotScan(BACNET);
+    ScanDiscoveryConfig first = oneShotScan(BACNET);
     first.generation = Date.from(START_TIME.plusSeconds(10));
-    FamilyDiscoveryConfig second = oneShotScan(BACNET);
+    ScanDiscoveryConfig second = oneShotScan(BACNET);
     second.generation = Date.from(START_TIME.plusSeconds(20));
-    FamilyDiscoveryConfig third = oneShotScan(BACNET);
+    ScanDiscoveryConfig third = oneShotScan(BACNET);
     third.generation = Date.from(START_TIME.plusSeconds(30));
 
     manager.updateConfig(discovery(null, Map.of(
@@ -201,9 +202,9 @@ public class DiscoveryManagerTest {
   public void periodicScanSkipsBusySlotAndSchedulesNextSlot() {
     Date blockerGen = Date.from(START_TIME.plusSeconds(10));
     Date nightlyBase = Date.from(START_TIME.plusSeconds(20));
-    FamilyDiscoveryConfig blocker = oneShotScan(BACNET);
+    ScanDiscoveryConfig blocker = oneShotScan(BACNET);
     blocker.generation = blockerGen;
-    FamilyDiscoveryConfig nightly = periodicScan(BACNET, 60);
+    ScanDiscoveryConfig nightly = periodicScan(BACNET, 60);
     nightly.generation = nightlyBase;
 
     manager.updateConfig(discovery(null, Map.of("blocker", blocker, "nightly", nightly)));
@@ -250,7 +251,7 @@ public class DiscoveryManagerTest {
 
   @Test
   public void removingGenerationOrIntervalTerminatesPeriodicScan() {
-    FamilyDiscoveryConfig nightly = periodicScan(BACNET, 3600);
+    ScanDiscoveryConfig nightly = periodicScan(BACNET, 3600);
     nightly.generation = Date.from(START_TIME.plusSeconds(30));
     manager.updateConfig(discovery(null, Map.of("nightly", nightly)));
     int startIdx = 0;
@@ -263,7 +264,7 @@ public class DiscoveryManagerTest {
     assertEquals(STOPPED, scanState("nightly").phase);
 
     // Remove generation: cancels pending schedule and removes scan entry.
-    FamilyDiscoveryConfig noGen = new FamilyDiscoveryConfig();
+    ScanDiscoveryConfig noGen = new ScanDiscoveryConfig();
     noGen.family = BACNET;
     noGen.scan_interval_sec = 3600;
     manager.updateConfig(discovery(null, Map.of("nightly", noGen)));
@@ -292,10 +293,10 @@ public class DiscoveryManagerTest {
   @Test
   public void legacyFamiliesValidationAndCompatibility() {
     // Separate namespaces allow the same key name ("bacnet") in families and scans.
-    FamilyDiscoveryConfig zigbeeCfg = oneShotScan(null);
+    FamilyDiscoveryConfig zigbeeCfg = oneShotFamily();
     zigbeeCfg.generation = Date.from(START_TIME.plusSeconds(40));
     manager.updateConfig(discovery(
-        Map.of(BACNET, oneShotScan(null), "zigbee", zigbeeCfg),
+        Map.of(BACNET, oneShotFamily(), "zigbee", zigbeeCfg),
         Map.of(BACNET, oneShotScan(VENDOR))));
 
     // Legacy unsupported family does not error and still transitions cleanly.
@@ -306,18 +307,15 @@ public class DiscoveryManagerTest {
     assertEquals(ACTIVE, manager.getDiscoveryState().families.get("zigbee").phase);
     assertNotNull(manager.getDiscoveryState().families.get(BACNET));
 
-    // Specifying .family inside families.<family> is rejected.
-    manager.updateConfig(discovery(Map.of(BACNET, oneShotScan(BACNET)), null));
-    assertScanError(manager.getDiscoveryState().families.get(BACNET), "must not specify family");
   }
 
   @Test
   public void negativeTimersAndNullAddrRejected() {
-    FamilyDiscoveryConfig negInterval = oneShotScan(BACNET);
+    ScanDiscoveryConfig negInterval = oneShotScan(BACNET);
     negInterval.scan_interval_sec = -1;
-    FamilyDiscoveryConfig negDuration = oneShotScan(BACNET);
+    ScanDiscoveryConfig negDuration = oneShotScan(BACNET);
     negDuration.scan_duration_sec = -5;
-    FamilyDiscoveryConfig nullAddr = oneShotScan(BACNET);
+    ScanDiscoveryConfig nullAddr = oneShotScan(BACNET);
     nullAddr.addrs = Arrays.asList("1000", null);
 
     manager.updateConfig(discovery(null, Map.of(
@@ -338,7 +336,7 @@ public class DiscoveryManagerTest {
     manager.runFuture(0);
     assertEquals(ACTIVE, scanState("adhoc").phase);
 
-    FamilyDiscoveryConfig switched = oneShotScan(VENDOR);
+    ScanDiscoveryConfig switched = oneShotScan(VENDOR);
     switched.generation = Date.from(START_TIME.plusSeconds(60));
     manager.updateConfig(discovery(null, Map.of("adhoc", switched)));
 
@@ -352,16 +350,16 @@ public class DiscoveryManagerTest {
 
   @Test
   public void removingScanOrClearingDiscoveryStopsProviderAndCleansState() {
-    FamilyDiscoveryConfig vendorCfg = oneShotScan(null);
+    FamilyDiscoveryConfig vendorCfg = oneShotFamily();
     vendorCfg.generation = Date.from(START_TIME.plusSeconds(40));
-    FamilyDiscoveryConfig adhocCfg = oneShotScan(BACNET);
+    ScanDiscoveryConfig adhocCfg = oneShotScan(BACNET);
     manager.updateConfig(discovery(
         Map.of(VENDOR, vendorCfg),
         Map.of("adhoc", adhocCfg)));
     manager.runFuture(findFutureIndex(adhocCfg.generation));
     manager.runFuture(findFutureIndex(vendorCfg.generation));
 
-    manager.updateConfig(discovery(Map.of(VENDOR, oneShotScan(null)), null));
+    manager.updateConfig(discovery(Map.of(VENDOR, oneShotFamily()), null));
     verify(bacnetProvider).stopScan();
     assertNull(manager.getDiscoveryState().scans);
     assertFalse(manager.sawEmptyScansMap);
@@ -379,9 +377,9 @@ public class DiscoveryManagerTest {
 
   @Test
   public void identicalConfigIsNoOp() {
-    FamilyDiscoveryConfig active = oneShotScan(VENDOR);
+    ScanDiscoveryConfig active = oneShotScan(VENDOR);
     active.generation = Date.from(START_TIME.plusSeconds(10));
-    FamilyDiscoveryConfig nightly = periodicScan(BACNET, 3600);
+    ScanDiscoveryConfig nightly = periodicScan(BACNET, 3600);
     nightly.generation = Date.from(START_TIME.plusSeconds(60));
     DiscoveryConfig cfg = discovery(null, Map.of(
         "active", active,
@@ -408,9 +406,9 @@ public class DiscoveryManagerTest {
     doThrow(new RuntimeException("boom stop")).when(vendorProvider).stopScan();
 
     Date nightlyGen = Date.from(START_TIME.plusSeconds(30));
-    FamilyDiscoveryConfig nightly = periodicScan(BACNET, 3600);
+    ScanDiscoveryConfig nightly = periodicScan(BACNET, 3600);
     nightly.generation = nightlyGen;
-    FamilyDiscoveryConfig vendorScan = oneShotScan(VENDOR);
+    ScanDiscoveryConfig vendorScan = oneShotScan(VENDOR);
     vendorScan.generation = Date.from(START_TIME.plusSeconds(45));
 
     manager.updateConfig(discovery(null, Map.of(
@@ -471,7 +469,7 @@ public class DiscoveryManagerTest {
       assertNull(pubberManager.discoveryProvider("ipv4"));
       assertEquals(bacnetRealCapable, pubberManager.discoveryProvider(BACNET));
 
-      FamilyDiscoveryConfig scan = oneShotScan(BACNET);
+      ScanDiscoveryConfig scan = oneShotScan(BACNET);
       pubberManager.updateConfig(discovery(null, Map.of("adhoc", scan)));
       pubberManager.getDiscoveryScheduler().startDiscoveryScan(forScan("adhoc"), scan.generation);
       assertEquals(ACTIVE, pubberManager.getDiscoveryState().scans.get("adhoc").phase);
@@ -538,22 +536,28 @@ public class DiscoveryManagerTest {
 
   private static DiscoveryConfig discovery(
       Map<String, FamilyDiscoveryConfig> families,
-      Map<String, FamilyDiscoveryConfig> scans) {
+      Map<String, ScanDiscoveryConfig> scans) {
     DiscoveryConfig config = new DiscoveryConfig();
     config.families = families == null ? null : new HashMap<>(families);
     config.scans = scans == null ? null : new HashMap<>(scans);
     return config;
   }
 
-  private static FamilyDiscoveryConfig oneShotScan(String family) {
+  private static FamilyDiscoveryConfig oneShotFamily() {
     FamilyDiscoveryConfig config = new FamilyDiscoveryConfig();
+    config.generation = Date.from(START_TIME.plusSeconds(30));
+    return config;
+  }
+
+  private static ScanDiscoveryConfig oneShotScan(String family) {
+    ScanDiscoveryConfig config = new ScanDiscoveryConfig();
     config.family = family;
     config.generation = Date.from(START_TIME.plusSeconds(30));
     return config;
   }
 
-  private static FamilyDiscoveryConfig periodicScan(String family, int intervalSec) {
-    FamilyDiscoveryConfig config = new FamilyDiscoveryConfig();
+  private static ScanDiscoveryConfig periodicScan(String family, int intervalSec) {
+    ScanDiscoveryConfig config = new ScanDiscoveryConfig();
     config.family = family;
     config.generation = Date.from(START_TIME);
     config.scan_interval_sec = intervalSec;

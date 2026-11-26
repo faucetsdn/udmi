@@ -9,6 +9,7 @@ from typing import Dict, Optional
 from ._base import DataModel
 from .common import Depth
 from .config_discovery_family import FamilyDiscoveryConfig
+from .config_discovery_scan import ScanDiscoveryConfig
 
 
 @dataclass
@@ -32,4 +33,4 @@ class DiscoveryConfig(DataModel):
     generation: Optional[str] = None
     enumerations: Optional[Enumerations] = None
     families: Optional[Dict[str, FamilyDiscoveryConfig]] = None
-    scans: Optional[Dict[str, FamilyDiscoveryConfig]] = None
+    scans: Optional[Dict[str, ScanDiscoveryConfig]] = None
