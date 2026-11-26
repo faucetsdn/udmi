@@ -169,6 +169,11 @@ public class DynamicIotAccessProvider extends IotAccessBase {
   }
 
   @Override
+  public String getProviderId(String registryId) {
+    return getRegistryProvider(registryId, null).getProviderId(registryId);
+  }
+
+  @Override
   public Set<String> getRegistries() {
     return getProviders().values().stream().map(IotAccessProvider::getRegistries)
         .collect(HashSet::new, HashSet::addAll, HashSet::addAll);

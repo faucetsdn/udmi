@@ -1,5 +1,6 @@
 package com.google.bos.udmi.service.access;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -173,5 +174,26 @@ class DynamicIotAccessProviderTest extends MessageTestCore {
 
     verify(mockZanzaraProvider).modifyConfig(eq(envelope), any());
     verify(mockImplicitProvider, never()).modifyConfig(any(), any());
+  }
+
+  @Test
+  void testGetProviderIdDelegatesToResolvedRegistryProvider() {
+    IotAccessProvider mockZanzaraProvider = mock(IotAccessProvider.class);
+    when(mockZanzaraProvider.isEnabled()).thenReturn(true);
+    when(mockZanzaraProvider.supportsRegistryOperations()).thenReturn(true);
+    when(mockZanzaraProvider.fetchRegistryMetadata(TEST_REGISTRY, "udmi_provisioned"))
+        .thenReturn("2025-01-01T00:00:00Z");
+    when(mockZanzaraProvider.getProviderId(TEST_REGISTRY)).thenReturn("zanzara");
+    UdmiServicePod.putComponent("zanzara", () -> mockZanzaraProvider);
+
+    IotAccess iotAccess = new IotAccess();
+    iotAccess.project_id = "implicit,zanzara,pubsub";
+    DynamicIotAccessProvider provider = new DynamicIotAccessProvider(iotAccess);
+    provider.activate();
+
+    provider.setProviderAffinity("UDMI-REFLECT", TEST_REGISTRY, "pubsub+zanzara");
+
+    assertEquals("zanzara", provider.getProviderId(TEST_REGISTRY));
+    verify(mockZanzaraProvider).getProviderId(TEST_REGISTRY);
   }
 }
