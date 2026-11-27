@@ -71,6 +71,7 @@ public class CronProcessor extends ProcessorBase {
       srcEnvelope = new Envelope();
       srcEnvelope.subType = SubType.fromValue(parts[0]);
       srcEnvelope.subFolder = SubFolder.fromValue(parts[1]);
+      srcEnvelope.subSetKey = config.subSetKey;
       srcEnvelope.deviceRegistryId = ifTrueGet(parts.length >= 3, () -> parts[2]);
       srcEnvelope.deviceId = ifTrueGet(parts.length >= 4, () -> parts[3]);
 
