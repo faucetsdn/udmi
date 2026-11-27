@@ -18,3 +18,4 @@ class TraceDiscoveryConfig(DataModel):
     interface: Optional[str] = None
     filter: Optional[str] = None
     max_bytes: Optional[int] = None
+    exclude_capture_host: Optional[bool] = False

@@ -135,8 +135,7 @@ public class Envelope {
         POINTSET("pointset"),
         VALIDATION("validation"),
         BLOBSET("blobset"),
-        MONITORING("monitoring"),
-        STREAMS("streams");
+        MONITORING("monitoring");
         private final String value;
         private final static Map<String, Envelope.SubFolder> CONSTANTS = new HashMap<String, Envelope.SubFolder>();
 
@@ -185,7 +184,8 @@ public class Envelope {
         QUERY("query"),
         REPLY("reply"),
         MODEL("model"),
-        PROPOSE("propose");
+        PROPOSE("propose"),
+        UPLOAD("upload");
         private final String value;
         private final static Map<String, Envelope.SubType> CONSTANTS = new HashMap<String, Envelope.SubType>();
 

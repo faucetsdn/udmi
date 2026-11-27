@@ -37,13 +37,21 @@ public class TraceDiscoveryConfig {
     @JsonProperty("max_bytes")
     @JsonPropertyDescription("Maximum byte volume cap for trace collection to prevent exhaustion")
     public Integer max_bytes;
+    /**
+     * Exclude packets to or from the capture host IP address from the capture filter
+     * 
+     */
+    @JsonProperty("exclude_capture_host")
+    @JsonPropertyDescription("Exclude packets to or from the capture host IP address from the capture filter")
+    public Boolean exclude_capture_host = false;
 
     @Override
     public int hashCode() {
         int result = 1;
-        result = ((result* 31)+((this._interface == null)? 0 :this._interface.hashCode()));
         result = ((result* 31)+((this.filter == null)? 0 :this.filter.hashCode()));
+        result = ((result* 31)+((this.exclude_capture_host == null)? 0 :this.exclude_capture_host.hashCode()));
         result = ((result* 31)+((this.max_bytes == null)? 0 :this.max_bytes.hashCode()));
+        result = ((result* 31)+((this._interface == null)? 0 :this._interface.hashCode()));
         return result;
     }
 
@@ -56,7 +64,7 @@ public class TraceDiscoveryConfig {
             return false;
         }
         TraceDiscoveryConfig rhs = ((TraceDiscoveryConfig) other);
-        return ((((this._interface == rhs._interface)||((this._interface!= null)&&this._interface.equals(rhs._interface)))&&((this.filter == rhs.filter)||((this.filter!= null)&&this.filter.equals(rhs.filter))))&&((this.max_bytes == rhs.max_bytes)||((this.max_bytes!= null)&&this.max_bytes.equals(rhs.max_bytes))));
+        return (((((this.filter == rhs.filter)||((this.filter!= null)&&this.filter.equals(rhs.filter)))&&((this.exclude_capture_host == rhs.exclude_capture_host)||((this.exclude_capture_host!= null)&&this.exclude_capture_host.equals(rhs.exclude_capture_host))))&&((this.max_bytes == rhs.max_bytes)||((this.max_bytes!= null)&&this.max_bytes.equals(rhs.max_bytes))))&&((this._interface == rhs._interface)||((this._interface!= null)&&this._interface.equals(rhs._interface))));
     }
 
 }

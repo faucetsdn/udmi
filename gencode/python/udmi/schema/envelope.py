@@ -26,7 +26,6 @@ class SubFolder(Enum):
     validation = 'validation'
     blobset = 'blobset'
     monitoring = 'monitoring'
-    streams = 'streams'
 
 
 class SubType(Enum):
@@ -42,6 +41,7 @@ class SubType(Enum):
     reply = 'reply'
     model = 'model'
     propose = 'propose'
+    upload = 'upload'
 
 
 @dataclass

@@ -16,6 +16,11 @@
     "ca_file": "../../sites/udmi_site_model/reflector/ca.crt",
     "algorithm": "RS256"
   },
+  "udmi": {
+    "discovery": {
+      "mode": "full"
+    }
+  },
   "bacnet": {
     "ip": "127.0.0.1"
   }

@@ -44,7 +44,6 @@ from .events_alarmset_alarm import *
 from .events_discovery import *
 from .events_pointset import *
 from .events_pointset_point import *
-from .events_streams import *
 from .events_system import *
 from .events_udmi import *
 from .events_validation import *
@@ -102,3 +101,4 @@ from .state_validation_capability import *
 from .state_validation_feature import *
 from .state_validation_schema import *
 from .state_validation_sequence import *
+from .upload_discovery import *
