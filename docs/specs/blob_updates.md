@@ -148,11 +148,11 @@ Instead, the cloud controls credential/key rotation by specifying a `download://
 
 ### Transport & Security Guarantees
 * **QoS 0 & Non-Retained**: Both the publisher and device subscriber **must** use **MQTT QoS 0** with `retain = false` on `{topic_prefix}/download/blobset` so the broker never persists unacknowledged secret payloads to durable session disk.
-* **Integrity & Expiry**: Each entry in `download/blobset` (`blobs.<key>`) conforms to [`EndpointConfiguration`](../../schema/configuration_endpoint.json), supporting `expiry` (`date-time`), `auth_provider` (`basic`/`jwt`), and ephemeral `key_bytes` (PEM private key). The device verifies the canonical JSON SHA-256 digest against `config.blobset.blobs.<key>.sha256` and rejects expired payloads before applying.
+* **Integrity & Expiry**: Each entry in `download/blobset` (`blobs.<key>`) conforms to [`EndpointConfiguration`](../../schema/configuration_endpoint.json), supporting `expiry` (`date-time`), `auth_provider` (`basic`/`jwt`), and ephemeral `key_bytes` (`PEM` private key). The device verifies the canonical JSON SHA-256 digest against `config.blobset.blobs.<key>.sha256` and rejects expired payloads before applying.
 
 ### Handshake Flow
 1. **Config Notification**: Cloud publishes `config.blobset.blobs._iot_endpoint_config` with `phase: "final"`, `generation`, `sha256`, and `url: "download://_iot_endpoint_config"`.
 2. **Download Request (`phase: "apply"`)**: Seeing a new `generation` with a `download://` URL, the device publishes `state.blobset.blobs._iot_endpoint_config.phase = "apply"` with the matching `generation`.
 3. **Ephemeral Delivery**: Cloud publishes a [`BlobsetDownload`](../../schema/download_blobset.json) message over QoS 0 non-retained `download/blobset` containing `blobs._iot_endpoint_config`.
-4. **Verification, Application & Ack (`phase: "final"`)**: The device verifies `sha256` and `expiry`, atomically rotates the private key (if `key_bytes` is provided, backing up the previous key and stripping `key_bytes` from persisted endpoint JSON), acknowledges `phase: "final"`, and reconnects.
+4. **Verification, Application & Acknowledgment (`phase: "final"`)**: The device verifies `sha256` and `expiry`, atomically rotates the private key (if `key_bytes` is provided, backing up the previous key and stripping `key_bytes` from persisted endpoint JSON), acknowledges `phase: "final"`, and reconnects.
 

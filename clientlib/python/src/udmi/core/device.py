@@ -459,7 +459,7 @@ class Device:
             self._publish_state(bypass_throttle=True, blocking=True)
             return
 
-        # If cloud provisioned rotated private key material, write it atomically and strip before persistence
+        # Write cloud-provisioned private key atomically and strip before persistence.
         endpoint_to_apply = copy.deepcopy(new_endpoint)
         if endpoint_to_apply.key_bytes:
             target_key_path = (
