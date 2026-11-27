@@ -394,6 +394,13 @@
       "section": "cloud_iot_config",
       "type": "string"
     },
+    "reflector_endpoint.subSetKey": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Optional snake-case key scoping a logical subset of messages within a subFolder"
+    },
     "reflector_endpoint.enabled": {
       "display": "show",
       "style": "bold",
@@ -576,6 +583,13 @@
       "style": "bold",
       "section": "cloud_iot_config",
       "type": "string"
+    },
+    "device_endpoint.subSetKey": {
+      "display": "show",
+      "style": "bold",
+      "section": "cloud_iot_config",
+      "type": "string",
+      "description": "Optional snake-case key scoping a logical subset of messages within a subFolder"
     },
     "device_endpoint.enabled": {
       "display": "show",

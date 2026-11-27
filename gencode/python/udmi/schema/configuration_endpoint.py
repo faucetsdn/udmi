@@ -61,6 +61,7 @@ class EndpointConfiguration(DataModel):
     side_id: Optional[str] = None
     gatewayId: Optional[str] = None
     deviceId: Optional[str] = None
+    subSetKey: Optional[str] = None
     enabled: Optional[str] = None
     noConfigAck: Optional[bool] = None
     capacity: Optional[int] = None

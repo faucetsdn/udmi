@@ -10,7 +10,8 @@ class RawFallbackHandler(BaseHandler):
     """Saves arbitrary UDMI messages into udmi_messages table as JSONB."""
 
     def can_handle(self, sub_folder: Optional[str], sub_type: Optional[str], payload: Dict[str, Any]) -> bool:
-        return True
+        del sub_folder, payload
+        return sub_type != "upload"
 
     def process_message(
         self,
@@ -19,6 +20,13 @@ class RawFallbackHandler(BaseHandler):
         postgres_manager: PostgresManager,
         influx_manager: InfluxManager,
     ) -> Dict[str, Any]:
+        del influx_manager
+        if envelope.get("subType") == "upload":
+            return {
+                "target": "none",
+                "table": None,
+                "count": 0,
+            }
         row = {
             "project_id": envelope.get("projectId"),
             "registry_id": envelope.get("deviceRegistryId"),

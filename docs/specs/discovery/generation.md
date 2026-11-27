@@ -4,7 +4,9 @@
 
 The `generation` field is a core mechanism in UDMI discovery and enumeration processes. It is used to trigger, track, and correlate discovery scans and self-enumeration requests. The `generation` value is an RFC 3339 formatted date-time string.
 
-Depending on the context (e.g., self-enumeration vs. family scanning, sporadic vs. periodic), the `generation` field behaves differently. This document summarizes these different use cases and expectations.
+Depending on the context (e.g., self-enumeration vs. network scanning, sporadic vs. periodic), the `generation` field behaves differently. This document summarizes these different use cases and expectations.
+
+Throughout this document, `<scan>` refers to an individual scan entry in either `discovery.scans.<name>` ([named scans](../discovery.md#named-scans)) or `discovery.families.<family>` within `config` or `state`.
 
 ## 1. Passive Scanning
 
@@ -18,9 +20,9 @@ A passive scan monitors the network without actively sending out probes. It oper
 
 A sporadic scan is an explicit, one-off request for a device to actively scan a network family for other devices.
 
-* **Trigger**: Initiated by setting the `generation` field in the target family configuration (`config.discovery.families.<family>.generation`) to a new timestamp (which must be after the device's last start time and different from the previous scan generation).
+* **Trigger**: Initiated by setting the `generation` field in the scan configuration (`config.<scan>.generation`) to a new timestamp (which must be after the device's last start time and different from the previous scan generation).
 * **State**:
-    * When the scan is scheduled or waiting to start, the family `state` block reports a `phase` of `pending` and its `generation` will match the `config`'s `generation`.
+    * When the scan is scheduled or waiting to start, `state.<scan>` reports a `phase` of `pending` and its `generation` will match the `config`'s `generation`.
     * When the scan begins, the `phase` changes to `active`.
     * Once the scan completes, the `phase` changes to `stopped` (or the active indicator is removed). Ideally, the state retains the `generation` field to indicate the timestamp of the last scan performed.
 * **Events**: Each discovery event produced as a result of this scan will include the matching `generation` value, securely correlating the discovered devices with the specific scan trigger.
@@ -30,19 +32,19 @@ A sporadic scan is an explicit, one-off request for a device to actively scan a 
 
 A periodic scan is an active scan that repeats automatically at defined intervals, eliminating the need to update the configuration for every scan.
 
-* **Trigger**: Configured by providing both a `generation` timestamp and a `scan_interval_sec` parameter in the family configuration. The `generation` timestamp serves as the **base time** (or initial start time) for the interval schedule.
-* **Execution Interval**: Scans occur at scheduled intervals strictly determined by the base `generation` timestamp plus increments of the `scan_interval_sec` (i.e., `Ts = Tc + N * Ti`). This ensures there is no clock drift over time.
+* **Trigger**: Configured by providing both a `generation` timestamp and a `scan_interval_sec` parameter in `config.<scan>`. The `generation` timestamp serves as the **base time** (or initial start time) for the interval schedule.
+* **Execution Interval**: Scans run on a fixed grid anchored at the base `generation` timestamp plus integer multiples of `scan_interval_sec` (`generation` + `N * scan_interval_sec`, for `N >= 0`), preventing clock drift over time. If `generation` is in the future, the first scan is scheduled at `generation`; otherwise, the device schedules the next upcoming grid slot (and skips any slot that arrives while an earlier run is still `active`).
 * **State & Events**:
     * Unlike the sporadic scan where the state `generation` directly matches the config `generation`, in a periodic scan, the device **updates the `generation` value for each loop** to uniquely identify the current execution.
     * This loop-specific `generation` field will be greater than or equal to the base `generation` specified in the `config`.
-    * This unique `generation` timestamp is reported in the `state` block during the scan and attached to all discovery events produced during that loop.
+    * This unique `generation` timestamp is reported in `state.<scan>` during the scan and attached to all discovery events produced during that loop.
 * **Termination**: The recurring loop terminates when either the `generation` field or the `scan_interval_sec` parameter is removed from the `config`.
 
 ## 4. Self Enumeration
 
 Self-enumeration is an explicit request for a single, already-registered device to describe its own capabilities (points, features, etc.), rather than scanning the network for other devices.
 
-* **Trigger**: Initiated by setting the `generation` parameter in the root `discovery` block (`config.discovery.generation`), as opposed to a specific family block.
+* **Trigger**: Initiated by setting the `generation` parameter in the root `discovery` block (`config.discovery.generation`), as opposed to a specific scan entry.
 * **State**: The `state.discovery` block reflects the `generation` currently being processed.
 * **Events**: Generated discovery events contain the corresponding `generation` value. Because these events originate from the device itself rather than a proxy scan, they do not include a `family` block; the identity is determined from the message envelope.
 
@@ -51,6 +53,6 @@ Self-enumeration is an explicit request for a single, already-registered device 
 | Mode | Location in `config` | Trigger / Role | `state` Behavior | `events` Behavior |
 | --- | --- | --- | --- | --- |
 | **Passive Scan** | N/A | None required. | No `generation`. | No `generation`. |
-| **Active Sporadic** | `families.<family>.generation` | Explicit timestamp triggers a one-off scan. | Matches `config.generation`. Retained after stop. | Matches `config.generation`. |
-| **Active Periodic** | `families.<family>.generation` + `scan_interval_sec` | Base timestamp for calculating the schedule. | Updates every loop to a new, unique timestamp `≥ config.generation`. | Matches the current loop's updated `generation`. |
+| **Active Sporadic** | `<scan>.generation` | Explicit timestamp triggers a one-off scan. | Matches `config.generation`. Retained after stop. | Matches `config.generation`. |
+| **Active Periodic** | `<scan>.generation` + `scan_interval_sec` | Base timestamp for calculating the schedule. | Updates every loop to a new, unique timestamp `≥ config.generation`. | Matches the current loop's updated `generation`. |
 | **Self Enumeration** | `discovery.generation` | Explicit timestamp triggers self-reporting. | Matches `config.generation`. | Matches `config.generation`. |

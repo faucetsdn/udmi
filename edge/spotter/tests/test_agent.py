@@ -13,8 +13,8 @@ from edge.spotter.src.agent import build_endpoint_config
 from edge.spotter.src.agent import calculate_local_password
 from edge.spotter.src.agent import load_config
 from edge.spotter.src.agent import merge_dicts
-from edge.spotter.src.agent import normalize_discovery_config
 from edge.spotter.src.agent import resolve_config_path
+from edge.spotter.src.agent import validate_discovery_config
 from edge.spotter.src.agent import wait_for_broker_readiness
 from edge.spotter.src.manager.discovery import SpotterDiscoveryManager
 from edge.spotter.src.manager.system import SpotterSystemManager
@@ -22,9 +22,12 @@ from udmi.schema import Config
 from udmi.schema import Depth
 from udmi.schema import DiscoveryConfig
 from udmi.schema import DiscoveryEvents
+from udmi.schema import Enumerations
+from udmi.schema import FamilyDiscovery
 from udmi.schema import FamilyDiscoveryConfig
 from udmi.schema import FamilyDiscoveryState
 from udmi.schema import Protocol
+from udmi.schema import State
 from udmi.schema import SystemConfig
 from udmi.schema import TraceDiscoveryConfig
 from udmi.schema.state_discovery_family import Phase as DiscoveryPhase
@@ -37,12 +40,10 @@ class TestAgentConfig(unittest.TestCase):
     # pylint: disable=consider-using-with
     self.test_dir = tempfile.TemporaryDirectory()
 
-    # Create a mock private key
     self.key_file = os.path.join(self.test_dir.name, "rsa_private.pem")
     with open(self.key_file, "wb") as f:
       f.write(b"MOCK PRIVATE KEY DATA")
 
-    # Create pkcs8 version as well
     self.pkcs8_file = os.path.join(self.test_dir.name, "rsa_private.pkcs8")
     with open(self.pkcs8_file, "wb") as f:
       f.write(b"MOCK PKCS8 KEY DATA")
@@ -186,93 +187,81 @@ class TestAgentConfig(unittest.TestCase):
     self.assertEqual(result["nested"]["k2"], "v2_new")
     self.assertEqual(result["nested"]["k3"], "v3")
 
-  def test_normalize_discovery_config_legacy_depths(self):
-    """Verifies legacy discovery depths normalize to schema enums."""
+  def test_validate_discovery_config_canonical_depths(self):
+    """Verifies canonical UDMI discovery depths pass validation."""
     payload = {
-        "timestamp": "2026-09-11T08:00:00Z",
+        "timestamp": "2026-11-10T08:00:00Z",
         "version": "1.5.7",
         "discovery": {
             "families": {
-                "ether": {"generation": "gen-1", "depth": "ping"},
-                "nmap": {"generation": "gen-2", "depth": "ports"},
-                "services_scan": {"generation": "gen-3", "depth": "services"},
-                "bacnet": {"generation": "gen-4", "depth": "system"},
+                "bacnet": {"generation": "gen-1", "depth": "buckets"},
+                "ether": {"generation": "gen-2", "depth": "entries"},
+                "ipv4": {"generation": "gen-3", "depth": "details"},
             },
             "enumerations": {
-                "families": "ping",
-                "devices": "ports",
-                "points": "services",
+                "families": "entries",
+                "devices": "details",
+                "points": "parts",
+                "features": "system",
             },
         },
     }
 
-    normalized = normalize_discovery_config(payload)
-
-    # Families normalized
+    validated = validate_discovery_config(payload)
+    parsed = Config.from_dict(validated)
     self.assertEqual(
-        normalized["discovery"]["families"]["ether"]["depth"], "entries"
+        parsed.discovery.families["bacnet"].depth, Depth.buckets
     )
-    self.assertEqual(
-        normalized["discovery"]["families"]["nmap"]["depth"], "details"
-    )
-    self.assertEqual(
-        normalized["discovery"]["families"]["services_scan"]["depth"], "parts"
-    )
-    self.assertEqual(
-        normalized["discovery"]["families"]["bacnet"]["depth"], "system"
-    )
-
-    # Enumerations normalized
-    self.assertEqual(
-        normalized["discovery"]["enumerations"]["families"], "entries"
-    )
-    self.assertEqual(
-        normalized["discovery"]["enumerations"]["devices"], "details"
-    )
-    self.assertEqual(
-        normalized["discovery"]["enumerations"]["points"], "parts"
-    )
-
-    # Verifies that Config.from_dict() parses cleanly without ValueError
-    parsed = Config.from_dict(normalized)
     self.assertEqual(
         parsed.discovery.families["ether"].depth, Depth.entries
     )
     self.assertEqual(
-        parsed.discovery.families["nmap"].depth, Depth.details
-    )
-    self.assertEqual(
-        parsed.discovery.families["services_scan"].depth, Depth.parts
-    )
-    self.assertEqual(
-        parsed.discovery.families["bacnet"].depth, Depth.system
+        parsed.discovery.families["ipv4"].depth, Depth.details
     )
 
-  def test_normalize_discovery_config_edge_cases(self):
-    """Verifies normalize_discovery_config handles non-dicts and case."""
-    # Non-dict inputs are preserved without error
-    self.assertIsNone(normalize_discovery_config(None))
-    self.assertEqual(normalize_discovery_config("not-a-dict"), "not-a-dict")
+  def test_validate_discovery_config_rejects_legacy_non_canonical_depths(self):
+    """Verifies non-canonical depths ('ping', 'ports', 'services') fail fast."""
+    self.assertIsNone(validate_discovery_config(None))
+    self.assertEqual(validate_discovery_config("not-a-dict"), "not-a-dict")
 
-    # Case insensitivity and unrecognized depths
-    payload = {
-        "discovery": {
+    for legacy_depth in ("ping", "ports", "services", "custom_depth"):
+      fam_payload = {
+          "discovery": {"families": {"ether": {"depth": legacy_depth}}}
+      }
+      with self.assertRaises(ValueError):
+        validate_discovery_config(fam_payload)
+
+      enum_payload = {
+          "discovery": {"enumerations": {"families": legacy_depth}}
+      }
+      with self.assertRaises(ValueError):
+        validate_discovery_config(enum_payload)
+
+  def test_datamodel_to_json_strips_none_fields(self):
+    """Verifies serialized UDMI payloads omit None fields for schema validity."""
+    event = DiscoveryEvents(
+        timestamp="2026-11-10T12:00:00Z",
+        version="1.5.7",
+        generation="2026-11-10T12:00:00Z",
+        family="bacnet",
+        addr="1234",
+        event_no=1,
+        families={"ipv4": FamilyDiscovery(addr="192.168.1.10", port=47808)},
+    )
+    serialized = json.loads(event.to_json())
+    self.assertEqual(
+        serialized,
+        {
+            "timestamp": "2026-11-10T12:00:00Z",
+            "version": "1.5.7",
+            "generation": "2026-11-10T12:00:00Z",
+            "family": "bacnet",
+            "addr": "1234",
+            "event_no": 1,
             "families": {
-                "ether": {"depth": "PING"},
-                "nmap": {"depth": "Ports"},
-                "custom": {"depth": "custom_depth"},
-            }
-        }
-    }
-    normalized = normalize_discovery_config(payload)
-    self.assertEqual(
-        normalized["discovery"]["families"]["ether"]["depth"], "entries"
-    )
-    self.assertEqual(
-        normalized["discovery"]["families"]["nmap"]["depth"], "details"
-    )
-    self.assertEqual(
-        normalized["discovery"]["families"]["custom"]["depth"], "custom_depth"
+                "ipv4": {"addr": "192.168.1.10", "port": 47808}
+            },
+        },
     )
 
   def test_load_config_with_configs_dir_overlay(self):
@@ -305,13 +294,18 @@ class TestAgentConfig(unittest.TestCase):
     self.assertEqual(merged["ether"]["ping_concurrency"], 10)
     self.assertEqual(merged["ip"]["subnet_filter"], "10.0.0.0/24")
 
+    # Corrupted overlay fails fast
+    bad_overlay = os.path.join(extra_dir, "02-corrupt.json")
+    with open(bad_overlay, "w", encoding="utf-8") as f:
+      f.write("{invalid json")
+    with self.assertRaises(ValueError):
+      load_config(base_config_path)
+
   def test_resolve_config_path_container_remapping(self):
     """Verifies resolve_config_path handles container volume remapping."""
-    # 1. Relative path
     res = resolve_config_path("/app/config", "certs/key.pem")
     self.assertEqual(res, "/app/config/certs/key.pem")
 
-    # 2. Existing file
     test_file = os.path.join(self.test_dir.name, "test.pem")
     with open(test_file, "w", encoding="utf-8") as f:
       f.write("key")
@@ -319,28 +313,35 @@ class TestAgentConfig(unittest.TestCase):
         resolve_config_path(self.test_dir.name, test_file), test_file
     )
 
-    # 3. Missing host path remapped to container base_dir
     non_existent_host_path = "/opt/discovery_node/configs/test.pem"
     remapped = resolve_config_path(self.test_dir.name, non_existent_host_path)
     self.assertEqual(remapped, test_file)
 
   def test_metrics_rate_sec_default_and_override(self):
-    """Verifies system metrics rate default and dynamic update."""
+    """Verifies system metrics rate default, RFC 3339 last_start, and startup event."""
     # pylint: disable=protected-access
-    # 1. Default initialization (300s, 85% memory threshold)
     mgr_default = SpotterSystemManager()
     self.assertEqual(mgr_default._metrics_rate_sec, 300)
     self.assertEqual(mgr_default.max_mem_pct, 85.0)
 
-    # 2. Custom initialization override
     mgr_custom = SpotterSystemManager(max_mem_pct=75.0, metrics_rate_sec=15)
     self.assertEqual(mgr_custom._metrics_rate_sec, 15)
     self.assertEqual(mgr_custom.max_mem_pct, 75.0)
 
-    # 3. Dynamic update via UDMI Config message
     config_update = Config(system=SystemConfig(metrics_rate_sec=60))
     mgr_custom.handle_config(config_update)
     self.assertEqual(mgr_custom._metrics_rate_sec, 60)
+
+    state = State()
+    mgr_custom.update_state(state)
+    self.assertTrue(state.system.operation.last_start.endswith("Z"))
+    self.assertIn("T", state.system.operation.last_start)
+
+    mgr_custom.publish_event = MagicMock()
+    mgr_custom._publish_startup_event()
+    startup_evt, channel = mgr_custom.publish_event.call_args[0]
+    self.assertEqual(channel, "system")
+    self.assertEqual(startup_evt.logentries[0].category, "system.base.ready")
 
   @patch("edge.spotter.src.manager.system.get_cpu_and_memory_metrics")
   def test_spotter_system_manager_publish_metrics(self, mock_metrics):
@@ -431,41 +432,113 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     self.mock_device = MagicMock()
     self.mock_dispatcher = MagicMock()
     self.mock_device.dispatcher = self.mock_dispatcher
+    self.mock_device.get_manager.return_value = None
     self.manager._device = self.mock_device
     self.manager._dispatcher = self.mock_dispatcher
 
+  @patch("edge.spotter.src.manager.discovery.check_raw_socket_permission")
+  @patch("edge.spotter.src.manager.discovery.run_bacnet_trace_whois_rounds")
   @patch("edge.spotter.src.manager.discovery.capture_packets")
-  def test_run_trace_worker_streaming(self, mock_capture):
-    """Verifies packet streaming chunk emission during trace capture."""
-    mock_capture.return_value = [b"MOCK_PACKET_HEADER", b"MOCK_PACKET_BODY"]
+  def test_run_trace_worker_streaming(
+      self, mock_capture, mock_whois, mock_perm
+  ):
+    """Verifies gzip-compressed upload/discovery streaming, start/EOF markers, sha256, and scan_manifest."""
+    del mock_perm
+    import base64
+    import gzip
+
+    # Build two I-Am frames: BACnet/IP device 1001 and routed MS/TP device 2002 (plus dup of 1001)
+    def _iam_bvll(dev_id: int, ip_bytes: bytes, snet: int = None, sadr: int = None) -> bytes:
+      obj_id = (8 << 22) | dev_id
+      apdu = b"\x10\x00\xc4" + obj_id.to_bytes(4, "big") + b"\x22\x01\xe0\x91\x00\x21\x0f"
+      if snet is not None:
+        npdu = b"\x01\x08" + snet.to_bytes(2, "big") + b"\x01" + bytes([sadr])
+      else:
+        npdu = b"\x01\x00"
+      total = 10 + len(npdu) + len(apdu)
+      return b"\x81\x04" + total.to_bytes(2, "big") + ip_bytes + (47808).to_bytes(2, "big") + npdu + apdu
+
+    iam_ip_1 = _iam_bvll(1001, bytes([10, 0, 0, 11]))
+    iam_ip_dup = _iam_bvll(1001, bytes([10, 0, 0, 12]))
+    iam_mstp = _iam_bvll(2002, bytes([10, 0, 0, 20]), snet=6100, sadr=5)
+
+    def fake_capture(**kwargs):
+      on_ready = kwargs.get("on_ready")
+      if callable(on_ready):
+        on_ready()
+      yield b"MOCK_PACKET_HEADER" + iam_ip_1
+      yield iam_ip_dup + iam_mstp + b"MOCK_PACKET_BODY"
+
+    mock_capture.side_effect = fake_capture
+
+    def fake_whois(**kwargs):
+      kwargs["scan_round_timestamps"].append("2026-11-10T14:35:01Z")
+      kwargs["discovered_routed_networks"].add(6100)
+
+    mock_whois.side_effect = fake_whois
 
     fam_config = FamilyDiscoveryConfig(
-        generation="2026-07-08T14:35:00Z",
+        generation="2026-11-10T14:35:00Z",
         depth=Depth.trace,
-        trace=TraceDiscoveryConfig(
-            interface="any",
-            filter="udp port 47808",
-        ),
         scan_duration_sec=2,
+        trace=TraceDiscoveryConfig(
+            interface="eth0",
+            max_bytes=1048576,
+            exclude_capture_host=True,
+        ),
     )
 
-    self.manager._discovery_state.families["ether"] = MagicMock()
-    self.manager._run_trace_capture("ether", fam_config)
+    with patch(
+        "edge.spotter.src.manager.discovery.resolve_gateway_ip",
+        return_value="10.0.0.5",
+    ):
+      self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+      self.manager._run_trace_capture("bacnet", fam_config)
 
-    self.assertTrue(self.mock_dispatcher.publish_event.called)
-    call_args = self.mock_dispatcher.publish_event.call_args[0]
-    channel = call_args[0]
-    event_model = call_args[1]
+    # Expect 3 publishes on upload/discovery: start (0), data chunk (1), EOF (-2)
+    self.assertEqual(self.mock_dispatcher.publish_event.call_count, 3)
+    calls = self.mock_dispatcher.publish_event.call_args_list
 
-    self.assertEqual(channel, "events/streams")
-    self.assertEqual(event_model.event_no, 0)
-    self.assertEqual(event_model.chunk_index, 0)
-    self.assertEqual(event_model.total_chunks, 1)
-    self.assertIn("trace-ether-", event_model.session_id)
+    start_ch, start_msg, _ = calls[0][0]
+    self.assertEqual(start_ch, "upload/discovery")
+    self.assertEqual(start_msg.event_no, 0)
+    self.assertEqual(start_msg.generation, "2026-11-10T14:35:00Z")
+    self.assertEqual(start_msg.family, "bacnet")
+    self.assertIsNone(start_msg.data)
 
-    f_state = self.manager._discovery_state.families["ether"]
+    expected_raw = (
+        b"MOCK_PACKET_HEADER" + iam_ip_1 + iam_ip_dup + iam_mstp + b"MOCK_PACKET_BODY"
+    )
+    data_ch, data_msg, _ = calls[1][0]
+    self.assertEqual(data_ch, "upload/discovery")
+    self.assertEqual(data_msg.event_no, 1)
+    decompressed = gzip.decompress(base64.b64decode(data_msg.data))
+    self.assertEqual(decompressed, expected_raw)
+
+    eof_ch, eof_msg, _ = calls[2][0]
+    self.assertEqual(eof_ch, "upload/discovery")
+    self.assertEqual(eof_msg.event_no, -2)
+    expected_sha = hashlib.sha256(expected_raw).hexdigest()
+    self.assertEqual(eof_msg.sha256, expected_sha)
+    self.assertIsNotNone(eof_msg.scan_manifest)
+    self.assertEqual(
+        eof_msg.scan_manifest.filter, "(udp port 47808) and not host 10.0.0.5"
+    )
+    self.assertEqual(
+        eof_msg.scan_manifest.scan_round_timestamps, ["2026-11-10T14:35:01Z"]
+    )
+    self.assertEqual(eof_msg.scan_manifest.discovered_routed_networks, [6100])
+    self.assertEqual(eof_msg.scan_manifest.bacnet_ip_devices, 1)
+    self.assertEqual(eof_msg.scan_manifest.routed_mstp_devices, 1)
+    self.assertEqual(eof_msg.scan_manifest.duplicate_device_ids, [1001])
+
+    f_state = self.manager._discovery_state.families["bacnet"]
     self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+    # Q-P5: active_count tracks unique BACnet I-Am devices (1001 + 2002 = 2)
+    self.assertEqual(f_state.active_count, 2)
     self.assertEqual(f_state.status.level, 200)
+    self.assertEqual(f_state.status.category, "discovery.family.scan")
+    self.assertIsNotNone(f_state.status.timestamp)
 
   @patch("edge.spotter.src.manager.discovery.capture_packets")
   def test_run_trace_worker_failure(self, mock_capture):
@@ -473,38 +546,41 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     mock_capture.side_effect = RuntimeError("Network interface down")
 
     fam_config = FamilyDiscoveryConfig(
-        generation="2026-07-08T14:35:00Z",
+        generation="2026-11-10T14:35:00Z",
         depth=Depth.trace,
         trace=TraceDiscoveryConfig(
             interface="eth0",
             filter="udp port 47808",
+            max_bytes=1048576,
         ),
         scan_duration_sec=2,
     )
 
-    self.manager._discovery_state.families["ether"] = MagicMock()
+    self.manager._discovery_state.families["ether"] = FamilyDiscoveryState()
     self.manager._run_trace_capture("ether", fam_config)
 
     f_state = self.manager._discovery_state.families["ether"]
     self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
     self.assertEqual(f_state.status.level, 500)
+    self.assertEqual(f_state.status.category, "discovery.family.scan")
     self.assertIn("Network interface down", f_state.status.message)
 
   @patch("edge.spotter.src.manager.discovery.capture_packets")
   def test_run_scan_trace_cleans_up_active_providers(self, mock_capture):
-    """Verifies provider eviction and active state reset after trace scan."""
+    """Verifies provider eviction and phase reset after trace scan."""
     mock_capture.return_value = [b"TRACE_DATA"]
     mock_provider = MagicMock()
     self.manager._active_providers.append(mock_provider)
 
-    old_state = FamilyDiscoveryState(generation="old-gen")
-    old_state.active = True
+    old_state = FamilyDiscoveryState(
+        generation="old-gen", phase=DiscoveryPhase.active
+    )
     self.manager._discovery_state.families["ether"] = old_state
 
     fam_config = FamilyDiscoveryConfig(
-        generation="new-gen-2026",
+        generation="2026-11-10T15:00:00Z",
         depth=Depth.trace,
-        trace=TraceDiscoveryConfig(interface="any", filter=""),
+        trace=TraceDiscoveryConfig(interface="eth0", filter="", max_bytes=1024),
         scan_duration_sec=1,
     )
     self.manager._config = DiscoveryConfig(families={"ether": fam_config})
@@ -516,9 +592,145 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     mock_provider.stop_scan.assert_not_called()
 
     f_state = self.manager._discovery_state.families["ether"]
-    self.assertFalse(f_state.active)
-    self.assertEqual(f_state.generation, "new-gen-2026")
+    self.assertEqual(f_state.generation, "2026-11-10T15:00:00Z")
     self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+
+  def test_trace_fail_fast_validation_and_cap_net_raw(self):
+    """Verifies G5/G8/Q-P4 fail-fast on missing interface/any/duration/max_bytes and CAP_NET_RAW."""
+    # Missing / 'any' interface
+    for bad_iface in (None, "", "any"):
+      fam_cfg = FamilyDiscoveryConfig(
+          generation="2026-11-10T15:00:00Z",
+          depth=Depth.trace,
+          trace=TraceDiscoveryConfig(interface=bad_iface, max_bytes=1024),
+          scan_duration_sec=10,
+      )
+      self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+      self.manager._run_trace_capture("bacnet", fam_cfg)
+      f_state = self.manager._discovery_state.families["bacnet"]
+      self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+      self.assertEqual(f_state.status.level, 500)
+
+    # Missing/zero max_bytes or scan_duration_sec
+    for dur, mb in ((0, 1024), (None, 1024), (10, 0), (10, None)):
+      fam_cfg = FamilyDiscoveryConfig(
+          generation="2026-11-10T15:00:00Z",
+          depth=Depth.trace,
+          trace=TraceDiscoveryConfig(interface="eth0", max_bytes=mb),
+          scan_duration_sec=dur,
+      )
+      self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+      self.manager._run_trace_capture("bacnet", fam_cfg)
+      f_state = self.manager._discovery_state.families["bacnet"]
+      self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+      self.assertEqual(f_state.status.level, 500)
+
+    # CAP_NET_RAW PermissionError fails fast with status 500 and zero uploads
+    self.mock_dispatcher.publish_event.reset_mock()
+    with patch(
+        "edge.spotter.src.manager.discovery.check_raw_socket_permission",
+        side_effect=PermissionError("CAP_NET_RAW required"),
+    ):
+      fam_cfg = FamilyDiscoveryConfig(
+          generation="2026-11-10T15:00:00Z",
+          depth=Depth.trace,
+          trace=TraceDiscoveryConfig(interface="eth0", max_bytes=1024),
+          scan_duration_sec=10,
+      )
+      self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+      self.manager._run_trace_capture("bacnet", fam_cfg)
+      f_state = self.manager._discovery_state.families["bacnet"]
+      self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+      self.assertEqual(f_state.status.level, 500)
+      self.assertIn("CAP_NET_RAW", f_state.status.message)
+      self.mock_dispatcher.publish_event.assert_not_called()
+
+  def test_capture_only_mode_rejects_active_bacnet_and_allows_trace(self):
+    """Verifies G3: capture_only rejects non-trace bacnet and allows depth='trace' without provider."""
+    from udmi.core.managers import LocalnetManager
+
+    mgr = SpotterDiscoveryManager(discovery_mode="capture_only")
+    mock_device = MagicMock()
+    localnet = LocalnetManager()  # No bacnet provider registered!
+    mock_device.get_manager.side_effect = (
+        lambda name: localnet if name == "localnet" else None
+    )
+    mgr._device = mock_device
+    mgr._dispatcher = MagicMock()
+
+    now_gen = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # 1. Non-trace BACnet config is rejected with status 500
+    cfg_active = Config(
+        discovery=DiscoveryConfig(
+            families={
+                "bacnet": FamilyDiscoveryConfig(
+                    generation=now_gen, depth=Depth.entries
+                )
+            }
+        )
+    )
+    mgr.handle_config(cfg_active)
+    f_state = mgr._discovery_state.families["bacnet"]
+    self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+    self.assertEqual(f_state.status.level, 500)
+    self.assertIn("capture_only", f_state.status.message)
+
+    # 2. Trace BACnet config is accepted into pending/active even without BacnetFamilyProvider
+    future_gen = (
+        datetime.now(timezone.utc) + timedelta(minutes=5)
+    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    cfg_trace = Config(
+        discovery=DiscoveryConfig(
+            families={
+                "bacnet": FamilyDiscoveryConfig(
+                    generation=future_gen,
+                    depth=Depth.trace,
+                    scan_duration_sec=30,
+                    trace=TraceDiscoveryConfig(
+                        interface="eth0", max_bytes=1048576
+                    ),
+                )
+            }
+        )
+    )
+    mgr.handle_config(cfg_trace)
+    f_state = mgr._discovery_state.families["bacnet"]
+    self.assertEqual(f_state.phase, DiscoveryPhase.pending)
+
+  @patch("edge.spotter.src.manager.discovery.check_raw_socket_permission")
+  @patch("edge.spotter.src.manager.discovery.capture_packets")
+  def test_bacnet_provider_closed_before_trace_starts(
+      self, mock_capture, mock_perm
+  ):
+    """Verifies G4: cached BAC0 client is closed before tcpdump starts."""
+    del mock_perm
+    events = []
+    mock_bacnet_prov = MagicMock()
+    mock_bacnet_prov.close.side_effect = lambda: events.append("bac0_close")
+
+    def fake_capture(**kwargs):
+      del kwargs
+      events.append("tcpdump")
+      yield b"PCAP_BYTES"
+
+    mock_capture.side_effect = fake_capture
+    mock_localnet = MagicMock()
+    mock_localnet.get_provider.side_effect = (
+        lambda fam: mock_bacnet_prov if fam == "bacnet" else None
+    )
+    self.mock_device.get_manager.side_effect = (
+        lambda name: mock_localnet if name == "localnet" else None
+    )
+
+    fam_cfg = FamilyDiscoveryConfig(
+        generation="2026-11-10T15:00:00Z",
+        depth=Depth.trace,
+        trace=TraceDiscoveryConfig(interface="eth0", max_bytes=1024),
+        scan_duration_sec=2,
+    )
+    self.manager._discovery_state.families["bacnet"] = FamilyDiscoveryState()
+    self.manager._run_trace_capture("bacnet", fam_cfg)
+    self.assertEqual(events, ["bac0_close", "tcpdump"])
 
   @patch("edge.spotter.src.manager.discovery.check_safety_circuit_breaker")
   def test_run_scan_circuit_breaker_throttles_execution(self, mock_cb):
@@ -533,9 +745,9 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     self.assertNotIn(mock_provider, self.manager._active_providers)
 
     f_state = self.manager._discovery_state.families["bacnet"]
-    self.assertFalse(f_state.active)
     self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
     self.assertEqual(f_state.status.level, 400)
+    self.assertEqual(f_state.status.category, "discovery.family.scan")
     self.assertIn(
         "Scan throttled by safety circuit breaker", f_state.status.message
     )
@@ -548,22 +760,27 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     """Verifies trace capture throttling when circuit breaker trips."""
     mock_cb.return_value = True
     fam_config = FamilyDiscoveryConfig(
-        generation="gen-trace", depth=Depth.trace, scan_duration_sec=5
+        generation="2026-11-10T15:00:00Z",
+        depth=Depth.trace,
+        scan_duration_sec=5,
     )
 
     self.manager._run_trace_capture("bacnet", fam_config)
 
     mock_capture.assert_not_called()
     f_state = self.manager._discovery_state.families["bacnet"]
-    self.assertFalse(f_state.active)
     self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
     self.assertEqual(f_state.status.level, 400)
+    self.assertEqual(f_state.status.category, "discovery.family.scan")
     self.assertIn("throttled by safety circuit breaker", f_state.status.message)
 
   def test_handle_config_marks_new_generation_as_pending(self):
     """Verifies new generation in discovery config marks phase as pending."""
+    gen_str = (datetime.now(timezone.utc) + timedelta(seconds=5)).strftime(
+        "%Y-%m-%dT%H:%M:%SZ"
+    )
     fam_cfg = FamilyDiscoveryConfig(
-        generation="2026-09-14T13:00:00Z",
+        generation=gen_str,
         depth=Depth.system,
     )
     config = Config(discovery=DiscoveryConfig(families={"bacnet": fam_cfg}))
@@ -573,8 +790,60 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     f_state = self.manager._discovery_state.families.get("bacnet")
     self.assertIsNotNone(f_state)
     self.assertEqual(f_state.phase, DiscoveryPhase.pending)
-    self.assertEqual(f_state.generation, "2026-09-14T13:00:00Z")
+    self.assertEqual(f_state.generation, gen_str)
     self.mock_device.trigger_state_update.assert_called()
+
+  def test_stale_past_generation_rejected_as_stopped(self):
+    """Verifies sporadic scan scheduled in the distant past never starts."""
+    stale_gen = "2020-10-18T12:02:01Z"
+    fam_cfg = FamilyDiscoveryConfig(
+        generation=stale_gen,
+        depth=Depth.system,
+    )
+    config = Config(discovery=DiscoveryConfig(families={"bacnet": fam_cfg}))
+
+    self.manager.handle_config(config)
+
+    f_state = self.manager._discovery_state.families.get("bacnet")
+    self.assertIsNotNone(f_state)
+    self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
+    self.assertEqual(f_state.generation, stale_gen)
+    self.assertFalse(self.manager._should_scan("bacnet", fam_cfg))
+
+  def test_self_enumeration_lifecycle(self):
+    """Verifies self-enumeration generation tracking and event emission."""
+    gen_str = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    config = Config(
+        discovery=DiscoveryConfig(
+            generation=gen_str,
+            enumerations=Enumerations(
+                families=Depth.entries,
+                features=Depth.entries,
+                points=Depth.buckets,
+            ),
+        )
+    )
+    self.manager.handle_config(config)
+
+    self.assertEqual(self.manager._discovery_state.generation, gen_str)
+    self.assertTrue(self.mock_dispatcher.publish_event.called)
+    call_args = self.mock_dispatcher.publish_event.call_args[0]
+    channel = call_args[0]
+    evt = call_args[1]
+    self.assertEqual(channel, "events/discovery")
+    self.assertEqual(evt.generation, gen_str)
+    self.assertIsNotNone(evt.families)
+    self.assertIsNotNone(evt.features)
+    self.assertIn("discovery.scan", evt.features)
+    self.assertIn("enumeration.families", evt.features)
+    self.assertIn("enumeration.features", evt.features)
+    self.assertNotIn("discovery_scan", evt.features)
+    self.assertIsNone(evt.points)
+
+    # Clearing generation resets state.discovery.generation
+    clear_cfg = Config(discovery=DiscoveryConfig(generation=None))
+    self.manager.handle_config(clear_cfg)
+    self.assertIsNone(self.manager._discovery_state.generation)
 
   def test_update_family_state_transitions_active_and_stopped(self):
     """Verifies that _update_family_state transitions active/stopped phases."""
@@ -595,7 +864,6 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     )
     self.manager._config = DiscoveryConfig(families={"bacnet": fam_cfg})
 
-    # _should_scan must return False because generation is in the future
     self.assertFalse(self.manager._should_scan("bacnet", fam_cfg))
     f_state = self.manager._discovery_state.families.get("bacnet")
     self.assertIsNotNone(f_state)
@@ -603,8 +871,8 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     self.assertEqual(f_state.generation, future_gen_str)
 
   def test_past_generation_triggers_when_due(self):
-    """Verifies that past/due generation timestamps trigger scanning."""
-    past_time = datetime.now(timezone.utc) - timedelta(seconds=10)
+    """Verifies that recent past/due generation timestamps trigger scanning."""
+    past_time = datetime.now(timezone.utc) - timedelta(seconds=5)
     past_gen_str = past_time.strftime("%Y-%m-%dT%H:%M:%SZ")
     fam_cfg = FamilyDiscoveryConfig(
         generation=past_gen_str,
@@ -616,7 +884,7 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
 
   def test_trace_generation_triggers_when_due(self):
     """Verifies that trace capture triggers when due after config update."""
-    past_time = datetime.now(timezone.utc) - timedelta(seconds=10)
+    past_time = datetime.now(timezone.utc) - timedelta(seconds=5)
     past_gen_str = past_time.strftime("%Y-%m-%dT%H:%M:%SZ")
     fam_cfg = FamilyDiscoveryConfig(
         generation=past_gen_str,
@@ -626,10 +894,8 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     config = Config(discovery=DiscoveryConfig(families={"ether": fam_cfg}))
     self.manager.handle_config(config)
 
-    # After handle_config, the scan is pending and due, so _should_scan is True
     self.assertTrue(self.manager._should_scan("ether", fam_cfg))
 
-    # Once the scan runs and stops, it should not trigger again
     f_state = self.manager._discovery_state.families.get("ether")
     self.assertIsNotNone(f_state)
     f_state.phase = DiscoveryPhase.stopped
@@ -638,35 +904,32 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
   def test_recurring_interval_advances_generation_and_pending(self):
     """Verifies recurring interval advances generation and marks pending."""
     fam_cfg = FamilyDiscoveryConfig(
-        generation="2026-09-14T10:00:00Z",
+        generation="2026-11-10T10:00:00Z",
         scan_interval_sec=300,
         depth=Depth.system,
     )
     self.manager._config = DiscoveryConfig(families={"bacnet": fam_cfg})
     f_state = FamilyDiscoveryState(
-        generation="2026-09-14T10:00:00Z",
+        generation="2026-11-10T10:00:00Z",
         phase=DiscoveryPhase.active,
     )
     self.manager._discovery_state.families["bacnet"] = f_state
 
-    # When scan finishes, _update_family_state advances generation by 300s
     self.manager._update_family_state("bacnet", False)
 
-    self.assertFalse(f_state.active)
     self.assertEqual(f_state.phase, DiscoveryPhase.pending)
-    self.assertEqual(f_state.generation, "2026-09-14T10:05:00Z")
+    self.assertEqual(f_state.generation, "2026-11-10T10:05:00Z")
     self.assertEqual(f_state.active_count, 0)
 
   def test_active_count_increments_on_scan_results(self):
     """Verifies active_count dynamically tracks discovered devices in state."""
     f_state = FamilyDiscoveryState(
-        generation="2026-09-14T10:00:00Z",
+        generation="2026-11-10T10:00:00Z",
         phase=DiscoveryPhase.active,
         active_count=0,
     )
     self.manager._discovery_state.families["bacnet"] = f_state
 
-    # Start marker (event_no: 0) should not increment active_count
     start_evt = DiscoveryEvents(family="bacnet", event_no=0)
     self.manager._handle_scan_result("self", start_evt)
     self.assertEqual(f_state.active_count, 0)
@@ -674,12 +937,12 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     evt1 = DiscoveryEvents(family="bacnet", addr="dev-1")
     self.manager._handle_scan_result("dev-1", evt1)
     self.assertEqual(f_state.active_count, 1)
+    self.assertEqual(evt1.generation, "2026-11-10T10:00:00Z")
 
     evt2 = DiscoveryEvents(family="bacnet", addr="dev-2", event_no=2)
     self.manager._handle_scan_result("dev-2", evt2)
     self.assertEqual(f_state.active_count, 2)
 
-    # Finish marker (event_no: -3) should not increment active_count
     finish_evt = DiscoveryEvents(family="bacnet", event_no=-3)
     self.manager._handle_scan_result("self", finish_evt)
     self.assertEqual(f_state.active_count, 2)
@@ -691,7 +954,7 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     self.manager._active_providers.append(mock_provider)
 
     fam_cfg = FamilyDiscoveryConfig(
-        generation="2026-09-14T10:00:00Z", depth=Depth.system
+        generation="2026-11-10T10:00:00Z", depth=Depth.system
     )
     self.manager._config = DiscoveryConfig(families={"bacnet": fam_cfg})
 
@@ -699,16 +962,13 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
 
     f_state = self.manager._discovery_state.families.get("bacnet")
     self.assertIsNotNone(f_state)
-    self.assertFalse(f_state.active)
     self.assertEqual(f_state.phase, DiscoveryPhase.stopped)
     self.assertIsNotNone(f_state.status)
     self.assertEqual(f_state.status.level, 500)
-    self.assertEqual(f_state.status.category, "discovery.error")
+    self.assertEqual(f_state.status.category, "discovery.family.scan")
+    self.assertIsNotNone(f_state.status.timestamp)
     self.assertIn("BACnet socket failure", f_state.status.message)
 
 
 if __name__ == "__main__":
   unittest.main()
-
-
-
