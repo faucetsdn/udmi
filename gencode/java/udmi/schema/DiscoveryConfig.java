@@ -45,7 +45,7 @@ public class DiscoveryConfig {
      */
     @JsonProperty("scans")
     @JsonPropertyDescription("Named discovery scan configs, keyed by scan name. Each entry must specify its `family`.")
-    public Map<String, ScanDiscoveryConfig> scans;
+    public Map<String, FamilyDiscoveryConfig> scans;
 
     @Override
     public int hashCode() {

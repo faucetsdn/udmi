@@ -1,0 +1,613 @@
+/*
+ * Styles for the UDMI device testing results pages rendered by results.js.
+ * Matches GitHub Primer typography and colors used by the Jekyll Markdown docs.
+ */
+
+:root {
+  --text: #1f2328;
+  --text-muted: #59636e;
+  --link: #0969da;
+  --border: #d1d9e0;
+  --border-muted: #e6eaef;
+  --surface: #ffffff;
+  --surface-subtle: #f6f8fa;
+  --surface-hover: #eef2f6;
+  --highlight: #ddf4ff;
+  --pass: #1a7f37;
+  --error-text: #82071e;
+  --error-surface: #ffebe9;
+  --error-border: #ffb8b0;
+  --stage-unstable: #9a6700;
+  --label-width: 248px;
+  --device-width: 104px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+}
+
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+h1,
+h2 {
+  margin: 0 0 16px;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--border-muted);
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+h1 {
+  font-size: 2em;
+}
+
+h2 {
+  margin-top: 32px;
+  font-size: 1.5em;
+}
+
+p {
+  margin: 0 0 16px;
+}
+
+.container {
+  max-width: 1012px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* The results pages use the width of the window for the results table. */
+.wide .container {
+  max-width: 1680px;
+  padding-right: 24px;
+  padding-left: 24px;
+}
+
+.page-header {
+  padding-top: 24px;
+}
+
+main {
+  padding-bottom: 48px;
+}
+
+.breadcrumb {
+  margin: 0 0 16px;
+}
+
+.lead,
+.help {
+  max-width: 48rem;
+}
+
+.help {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.error {
+  max-width: 48rem;
+  padding: 12px 16px;
+  border: 1px solid var(--error-border);
+  border-radius: 6px;
+  background: var(--error-surface);
+  color: var(--error-text);
+  overflow-wrap: anywhere;
+}
+
+/* Summary, legend and filters */
+
+.summary {
+  margin-bottom: 12px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-left: auto;
+}
+
+.control {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.controls select,
+.controls input {
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+}
+
+.controls input {
+  width: 14em;
+  max-width: 100%;
+}
+
+.count {
+  min-width: 8em;
+  color: var(--text-muted);
+}
+
+/* Status icons */
+
+.status {
+  display: inline-block;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  background: center / contain no-repeat;
+  vertical-align: middle;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.status-pass {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='10' fill='%231a7f37'/%3E%3Cpath d='M5.6 10.4l3 3 5.8-6.4' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.status-fail {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='10' fill='%23cf222e'/%3E%3Cpath d='M6.6 6.6l6.8 6.8m0-6.8l-6.8 6.8' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.status-skip {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='10' fill='%23bf8700'/%3E%3Cpath d='M5.5 10h9' fill='none' stroke='%23fff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+.status-untested {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='8.5' fill='none' stroke='%238c959f' stroke-width='1.5' stroke-dasharray='3 2.34'/%3E%3C/svg%3E");
+}
+
+/* Results table */
+
+.matrix-wrap {
+  width: fit-content;
+  max-width: 100%;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.matrix {
+  border-spacing: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.matrix th,
+.matrix td {
+  padding: 6px 8px;
+  border-right: 1px solid var(--border-muted);
+  border-bottom: 1px solid var(--border-muted);
+  background: var(--surface);
+}
+
+.matrix tr > :last-child {
+  border-right: 0;
+}
+
+.matrix tbody:last-child tr:last-child > * {
+  border-bottom: 0;
+}
+
+.matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  width: var(--device-width);
+  min-width: var(--device-width);
+  max-width: var(--device-width);
+  border-bottom-color: var(--border);
+  font-weight: 400;
+  text-align: center;
+  vertical-align: top;
+}
+
+.matrix thead th.corner {
+  left: 0;
+  z-index: 3;
+  width: var(--label-width);
+  min-width: var(--label-width);
+  max-width: var(--label-width);
+  border-right-color: var(--border);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-align: left;
+  vertical-align: bottom;
+}
+
+.device a {
+  display: block;
+  color: inherit;
+}
+
+.device-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  margin-bottom: 6px;
+}
+
+.device-image img {
+  max-width: 100%;
+  max-height: 44px;
+  object-fit: contain;
+}
+
+.device-make,
+.device-model {
+  display: -webkit-box;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+}
+
+.device-make {
+  font-weight: 600;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+.device-model {
+  color: var(--text-muted);
+  font-size: 12px;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.matrix tbody th[scope="row"] {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  width: var(--label-width);
+  min-width: var(--label-width);
+  max-width: var(--label-width);
+  border-right-color: var(--border);
+  font-weight: 400;
+  text-align: left;
+}
+
+.test-link {
+  color: inherit;
+  text-decoration: underline dotted var(--border);
+  text-underline-offset: 3px;
+}
+
+.test-link:hover {
+  color: var(--link);
+  text-decoration: underline;
+}
+
+.matrix .group th {
+  padding: 5px 0;
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+/* Keeps the name of the bucket in view while the table is scrolled sideways. */
+.matrix .group span {
+  position: sticky;
+  left: 0;
+  display: inline-block;
+  padding: 0 8px;
+}
+
+.matrix td {
+  width: var(--device-width);
+  min-width: var(--device-width);
+  max-width: var(--device-width);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.matrix .detail > * {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.score-text {
+  display: block;
+  color: var(--text);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.score-bar {
+  display: block;
+  height: 4px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border-muted);
+}
+
+.score-fill {
+  display: block;
+  height: 100%;
+  background: var(--pass);
+}
+
+.matrix .col-hover {
+  background: var(--surface-subtle);
+}
+
+.matrix tbody tr:not(.group):hover > * {
+  background: var(--surface-hover);
+}
+
+/* The stage of a test: amber unless the feature is stable. */
+.stage {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 6px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--stage-unstable);
+  font-size: 11px;
+  line-height: 16px;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+.stage-stable {
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+/* Device details */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  scroll-margin-top: 16px;
+}
+
+.card:target {
+  border-color: var(--link);
+  box-shadow: 0 0 0 3px var(--highlight);
+}
+
+.card-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.card-image {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  padding: 4px;
+  border: 1px solid var(--border-muted);
+  border-radius: 6px;
+}
+
+.card-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.card-title {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.card h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.3;
+}
+
+.card-model {
+  margin: 2px 0 0;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.device-id {
+  flex: none;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.card dl {
+  display: grid;
+  grid-template-columns: minmax(0, 10em) minmax(0, 1fr);
+  gap: 4px 12px;
+  margin: 0;
+}
+
+.card dt {
+  color: var(--text-muted);
+}
+
+.card dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.card h4 {
+  margin: 12px 0 4px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.card-notes {
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.card-back {
+  align-self: flex-start;
+  margin-top: auto;
+  padding-top: 12px;
+  font-size: 12px;
+}
+
+/* Small screens */
+
+@media (max-width: 640px) {
+  :root {
+    --label-width: 156px;
+    --device-width: 88px;
+  }
+
+  .wide .container {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  h1 {
+    font-size: 1.6em;
+  }
+
+  .controls {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .control {
+    flex: 1 1 100%;
+  }
+
+  .control label {
+    white-space: nowrap;
+  }
+
+  .controls select,
+  .controls input {
+    flex: 1;
+    width: auto;
+  }
+
+  .stage {
+    margin-left: 0;
+  }
+}
+
+/* The device headings are too tall to pin to the top of a short window. */
+@media (max-height: 560px) {
+  .matrix thead th {
+    position: static;
+  }
+
+  .matrix thead th.corner {
+    position: sticky;
+  }
+}
+
+@media print {
+  .controls,
+  .card-back {
+    display: none;
+  }
+
+  .matrix-wrap {
+    max-height: none;
+    overflow: visible;
+  }
+
+  .matrix thead th,
+  .matrix tbody th[scope="row"],
+  .matrix .group span {
+    position: static;
+  }
+}

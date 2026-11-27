@@ -1,6 +1,4 @@
-5 schema violations found
-  $.discovery.families.bacnet: property 'family' is not defined in the schema and the schema does not allow additional properties
+3 schema violations found
   $.discovery.scans.bacnet_adhoc.family: does not match the regex pattern ^[a-z][a-z0-9]*(_[a-z0-9]+)*$
   $.discovery.scans.bacnet_adhoc: property 'extra_field' is not defined in the schema and the schema does not allow additional properties
-  $.discovery.scans.missing_family: required property 'family' not found
   $.discovery.scans: property 'Bacnet-Nightly' is not defined in the schema and the schema does not allow additional properties

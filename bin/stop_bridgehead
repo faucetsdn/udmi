@@ -1,28 +1,71 @@
 #!/bin/bash -e
 
-UDMI_ROOT=$(dirname $(realpath $0))/..
+UDMI_ROOT=$(dirname "$(realpath "$0")")/..
 INVOCATION_DIR="$PWD"
 
-source $UDMI_ROOT/etc/shell_common.sh
+source "$UDMI_ROOT/etc/shell_common.sh"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
-    echo "Usage: $(basename $0) [-v|--volumes] [docker-compose-options...]"
+    echo "Usage: $(basename "$0") [--clean] [-v|--volumes] [docker-compose-options...]"
     echo ""
     echo "Stops the UDMI Bridgehead architecture services using Docker Compose."
     echo ""
     echo "Options / Arguments:"
+    echo "  --clean                 Stop containers, remove Docker volumes/orphans, and wipe"
+    echo "                          all Bridgehead runtime state under bridgehead/var/ without"
+    echo "                          sudo (preserves bridgehead/.env and site_model credentials)."
     echo "  -v, --volumes           Remove named volumes declared in the volumes section of the Compose file."
     echo "  -h, --help              Show this help message and exit."
     echo ""
     echo "Examples:"
-    echo "  $(basename $0)                             # Stop containers"
-    echo "  $(basename $0) -v                          # Stop containers and remove volumes"
+    echo "  $(basename "$0")                             # Stop containers"
+    echo "  $(basename "$0") -v                          # Stop containers and remove volumes"
+    echo "  $(basename "$0") --clean                     # Stop containers and wipe bridgehead/var/ runtime state"
     exit 0
 fi
 
+CLEAN_STATE=false
+COMPOSE_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --clean)
+            CLEAN_STATE=true
+            shift
+            ;;
+        *)
+            COMPOSE_ARGS+=("$1")
+            shift
+            ;;
+    esac
+done
+
 cd "$UDMI_ROOT/bridgehead"
 
-echo "Stopping bridgehead services..."
-docker compose down "$@"
+if [[ "$CLEAN_STATE" == "true" ]]; then
+    if [[ "$(docker inspect -f '{{.State.Running}}' validator 2>/dev/null || true)" == "true" ]]; then
+        docker exec validator chown -RH "$(id -u):$(id -g)" /root/site_model/ 2>/dev/null || true
+    fi
 
-echo "=== Bridgehead deployment stopped successfully ==="
+    echo "Stopping bridgehead services and removing volumes..."
+    docker compose down -v --remove-orphans "${COMPOSE_ARGS[@]}"
+
+    VAR_DIR="$UDMI_ROOT/bridgehead/var"
+    if [[ -d "$VAR_DIR" ]]; then
+        echo "Cleaning Bridgehead runtime state ($VAR_DIR)..."
+        docker run --rm --user 0:0 -v "$VAR_DIR:/cleanup_var" postgres:16-alpine \
+            /bin/sh -e -c '
+                for entry in /cleanup_var/* /cleanup_var/.[!.]* /cleanup_var/..?*; do
+                    if [ -e "$entry" ] || [ -L "$entry" ]; then
+                        rm -rf "$entry"
+                    fi
+                done
+            '
+        rmdir "$VAR_DIR"
+    fi
+    echo "=== Bridgehead deployment stopped and runtime state cleaned ==="
+else
+    echo "Stopping bridgehead services..."
+    docker compose down "${COMPOSE_ARGS[@]}"
+    echo "=== Bridgehead deployment stopped successfully ==="
+fi

@@ -17,6 +17,7 @@ class FamilyDiscoveryConfig(DataModel):
     Configuration for [discovery](../docs/specs/discovery.md)
     """
 
+    family: Optional[str] = None
     generation: Optional[str] = None
     scan_interval_sec: Optional[int] = None
     scan_duration_sec: Optional[int] = None
