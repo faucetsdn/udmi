@@ -100,10 +100,12 @@ if [[ ! -d "$SITE_MODEL_PATH" ]]; then
     fail "Site model directory '$SITE_MODEL_PATH' does not exist."
 fi
 
+# Verify Docker CLI, daemon access, and Compose plugin before modifying host state
 if ! command -v docker >/dev/null 2>&1; then
     fail "Docker CLI ('docker') is not installed or not in PATH. Install Docker Engine and the Docker Compose plugin."
 fi
 
+# Capture stderr only on failure; discard normal stdout
 if ! DOCKER_INFO_ERR=$(docker info 2>&1 >/dev/null); then
     echo "$DOCKER_INFO_ERR" >&2
     fail "Cannot connect to the Docker daemon. Ensure Docker is running and your user is in the 'docker' group (run 'sudo groupadd -f docker && sudo usermod -aG docker \"\$USER\"', then log out and log back in so 'docker info' succeeds without sudo)."

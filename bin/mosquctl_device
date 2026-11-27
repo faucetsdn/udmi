@@ -29,6 +29,7 @@ for prefix in rsa ec es; do
 done
 
 if [[ -z "$key_file" ]]; then
+    # Protect existing public keys/certs (e.g., hardware-only DUTs) from auto-keygen overwrite
     for existing in "$device_dir"/*_public.pem "$device_dir"/*_cert.pem "$device_dir"/*_private.pem "$device_dir"/*_private.crt; do
         if [[ -f "$existing" ]]; then
             fail "Existing key/cert file '$existing' found without a matching *_private.pkcs8 in '$device_dir'. Refusing to overwrite existing device keys or leave a mismatched certificate."
