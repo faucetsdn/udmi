@@ -236,8 +236,8 @@ class LocalDevice implements SiteDevice {
   public void initialize() {
     prepareOutDir();
     populatePointUrls();
-    ifTrueThen(deviceKind == DeviceKind.LOCAL && metadata != null, this::validateMetadata);
     configure();
+    ifTrueThen(isLocalKind() && metadata != null, this::validateMetadata);
   }
 
   private void populatePointUrls() {
@@ -674,6 +674,10 @@ class LocalDevice implements SiteDevice {
 
   private boolean isExtraKind() {
     return deviceKind == DeviceKind.EXTRA;
+  }
+
+  private boolean isLocalKind() {
+    return deviceKind == DeviceKind.LOCAL;
   }
 
   String getGatewayId() {

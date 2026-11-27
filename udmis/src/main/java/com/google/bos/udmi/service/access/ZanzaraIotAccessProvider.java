@@ -523,8 +523,6 @@ public class ZanzaraIotAccessProvider extends IotAccessBase {
     requireNull(cloudModel.metadata_str, "unexpected metadata_str content");
     properties.put(METADATA_STR_KEY, stringifyTerse(cloudModel.metadata));
     properties.put(GUID_PROPERTY, extractDeviceGuid(cloudModel.metadata));
-    ifNotNullThen(ifNotNullGet(cloudModel.metadata, metadata -> metadata.get("key_bytes")),
-        keyBytes -> properties.put(AUTH_KEY_PROPERTY, keyBytes));
     properties.put(BLOCKED_PROPERTY, booleanString(cloudModel.blocked));
     ifNotNullThen(cloudModel.num_id, id -> properties.put(NUM_ID_PROPERTY, id));
     ifNotNullThen(cloudModel.auth_type,

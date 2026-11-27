@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import udmi.schema.CloudModel;
+import udmi.schema.Credential.Key_format;
 import udmi.schema.ExecutionConfiguration;
 import udmi.schema.FamilyLocalnetModel;
 import udmi.schema.LocalnetModel;
@@ -522,6 +523,39 @@ public class RegistrarTest {
       assertNull(deviceId + " generated config.localnet should be null when families is omitted",
           device.deviceConfigObject().localnet);
     }
+  }
+
+  @Test
+  public void credentialsPreservedOnSettingsErrorTest() {
+    Registrar registrar = getRegistrar(ImmutableList.of());
+    registrar.execute(() -> {
+      Map<String, LocalDevice> localDevices = registrar.getWorkingDevices();
+      Metadata metadata = localDevices.get(GATEWAY_ID).getMetadata();
+      PointPointsetModel blankUnitsPoint = new PointPointsetModel();
+      blankUnitsPoint.units = "";
+      metadata.pointset.points.put("bad_blank_units_point", blankUnitsPoint);
+    });
+
+    LocalDevice gateway = registrar.getWorkingDevices().get(GATEWAY_ID);
+    assertTrue("Gateway should record settings error for blank units",
+        gateway.hasCategory(ExceptionCategory.settings));
+    assertEquals("Gateway settings should still load public key credentials",
+        1, gateway.getSettings().credentials.size());
+    assertEquals("Gateway credential format should be ES256",
+        Key_format.ES_256, gateway.getSettings().credentials.get(0).key_format);
+
+    List<CloudModel> pushedModels = registrar.getMockActions().stream()
+        .filter(action -> GATEWAY_ID.equals(action.deviceId)
+            && (action.action == UPDATE_DEVICE_ACTION || action.action == CREATE_DEVICE_ACTION))
+        .map(action -> (CloudModel) action.data)
+        .toList();
+    assertEquals("Gateway should be pushed to IoT provider once", 1, pushedModels.size());
+    assertNotNull("Pushed CloudModel credentials must not be null",
+        pushedModels.get(0).credentials);
+    assertEquals("Pushed CloudModel must retain public key credentials",
+        1, pushedModels.get(0).credentials.size());
+    assertEquals("Pushed CloudModel credential format should be ES256",
+        Key_format.ES_256, pushedModels.get(0).credentials.get(0).key_format);
   }
 
   private Boolean isNotBlocking(MockAction action) {
