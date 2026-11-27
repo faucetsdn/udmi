@@ -37,6 +37,73 @@ def load_csv_map(site_model_dir: Path):
           csv_map[num_id] = dev_id
   return csv_map
 
+NUMERIC_ONLY_POINT_FIELDS = (
+    "units_reported",
+    "range_min",
+    "range_max",
+    "baseline_tolerance",
+    "cov_increment",
+)
+
+MISSING_DISALLOWED_POINT_FIELDS = (
+    "units",
+    "values",
+    "ref",
+    "expr",
+    "writable",
+    "baseline_value",
+    "translation",
+) + NUMERIC_ONLY_POINT_FIELDS
+
+
+def _clear_point_fields(pt_udmi: dict, fields):
+  for field in fields:
+    pt_udmi.pop(field, None)
+
+
+def _is_numeric_baseline(value) -> bool:
+  return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def _apply_point_units(pt_udmi: dict, units_values: dict):
+  udmi_unit = next(iter(units_values))
+  if not isinstance(udmi_unit, str) or not udmi_unit.strip():
+    return
+  pt_udmi["units"] = udmi_unit
+  _clear_point_fields(pt_udmi, ("values", "type"))
+  if "baseline_value" in pt_udmi and not _is_numeric_baseline(
+      pt_udmi["baseline_value"]
+  ):
+    pt_udmi.pop("baseline_value", None)
+  raw_unit = units_values[udmi_unit]
+  if isinstance(raw_unit, str) and raw_unit != udmi_unit:
+    pt_udmi["units_reported"] = raw_unit
+  else:
+    pt_udmi.pop("units_reported", None)
+
+
+def _apply_point_states(pt_udmi: dict, states: dict) -> bool:
+  val_map = {}
+  for k, v in states.items():
+    if isinstance(v, list):
+      for item in v:
+        val_map[str(item)] = k
+    elif isinstance(v, dict):
+      continue
+    else:
+      val_map[str(v)] = k
+  if len(val_map) < 2:
+    return False
+  pt_udmi["values"] = val_map
+  _clear_point_fields(pt_udmi, ("units", "type") + NUMERIC_ONLY_POINT_FIELDS)
+  if "baseline_value" in pt_udmi and (
+      not isinstance(pt_udmi["baseline_value"], str)
+      or pt_udmi["baseline_value"] not in val_map
+  ):
+    pt_udmi.pop("baseline_value", None)
+  return True
+
+
 def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
   """Merges a DBO config file into the given UDMI site model."""
   timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -313,29 +380,20 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
                 if pv not in ("present_value",
                               f"points.{pt_name}.present_value"):
                   pt_udmi["ref"] = pv
+                  if pt_udmi.get("type") == "missing":
+                    pt_udmi.pop("type", None)
+              states_applied = False
+              if "states" in pt_dbo and isinstance(pt_dbo["states"], dict):
+                states_applied = _apply_point_states(pt_udmi, pt_dbo["states"])
               if (
-                  "units" in pt_dbo
+                  not states_applied
+                  and "units" in pt_dbo
                   and isinstance(pt_dbo["units"], dict)
                   and "values" in pt_dbo["units"]
                   and isinstance(pt_dbo["units"]["values"], dict)
+                  and pt_dbo["units"]["values"]
               ):
-                udmi_unit = list(pt_dbo["units"]["values"].keys())[0]
-                pt_udmi["units"] = udmi_unit
-                raw_unit = pt_dbo["units"]["values"][udmi_unit]
-                if raw_unit != udmi_unit:
-                  pt_udmi["units_reported"] = raw_unit
-              if "states" in pt_dbo and isinstance(pt_dbo["states"], dict):
-                val_map = {}
-                for k, v in pt_dbo["states"].items():
-                  if isinstance(v, list):
-                    for item in v:
-                      val_map[str(item)] = k
-                  elif isinstance(v, dict):
-                    continue
-                  else:
-                    val_map[str(v)] = k
-                if val_map:
-                  pt_udmi["values"] = val_map
+                _apply_point_units(pt_udmi, pt_dbo["units"]["values"])
 
               # Clean up pt_dbo before storing to avoid redundancy
               clean_pt_dbo = pt_dbo.copy()
@@ -358,17 +416,22 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
                   clean_pt_dbo["units"] = u
 
               # States are already in UDMI values field, so redundant
-              if "states" in clean_pt_dbo:
+              if states_applied and "states" in clean_pt_dbo:
                 del clean_pt_dbo["states"]
 
               if clean_pt_dbo:
                 pt_udmi["translation"] = clean_pt_dbo
+                if pt_udmi.get("type") == "missing":
+                  pt_udmi.pop("type", None)
             elif isinstance(pt_dbo, str):
               if pt_dbo == "MISSING":
                 pt_udmi["type"] = "missing"
+                _clear_point_fields(pt_udmi, MISSING_DISALLOWED_POINT_FIELDS)
               elif pt_dbo not in ("present_value",
                                   f"points.{pt_name}.present_value"):
                 pt_udmi["ref"] = pt_dbo
+                if pt_udmi.get("type") == "missing":
+                  pt_udmi.pop("type", None)
 
         if "links" in entity and isinstance(entity["links"], dict):
           for target_guid, link_map in entity["links"].items():
@@ -379,6 +442,8 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
               for local_pt, remote_pt in link_map.items():
                 pt_udmi = points.setdefault(local_pt, {})
                 pt_udmi["expr"] = f"{target_id}:{remote_pt}"
+                if pt_udmi.get("type") == "missing":
+                  pt_udmi.pop("type", None)
 
       with open(metadata_path, "w", encoding="utf-8") as f:
         json.dump(metadata, f, indent=2)
