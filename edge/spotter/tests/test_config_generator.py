@@ -119,20 +119,20 @@ class TestConfigGenerator(unittest.TestCase):
     self.assertEqual(config["bacnet"]["ip"], "192.168.1.5")
 
   def test_generate_spotter_config_bacnet_ip_from_metadata(self):
-    """Verifies bacnet IP extraction from device metadata.json."""
+    """Verifies bacnet IP and device_id extraction from device metadata.json."""
     device_dir = os.path.join(self.site_path, "devices", "DSN-1")
     metadata = {
         "localnet": {
             "families": {
                 "bacnet": {
-                    "ip": "10.0.0.42"
+                    "ip": "10.0.0.42",
+                    "addr": "291842",
                 }
             }
         }
     }
-    with open(
-        os.path.join(device_dir, "metadata.json"), "w", encoding="utf-8"
-    ) as f:
+    metadata_file = os.path.join(device_dir, "metadata.json")
+    with open(metadata_file, "w", encoding="utf-8") as f:
       json.dump(metadata, f)
 
     config = generate_spotter_config(
@@ -141,6 +141,16 @@ class TestConfigGenerator(unittest.TestCase):
         device_id="DSN-1",
     )
     self.assertEqual(config["bacnet"]["ip"], "10.0.0.42")
+    self.assertEqual(config["bacnet"]["device_id"], 291842)
+
+    with open(metadata_file, "w", encoding="utf-8") as f:
+      f.write("{corrupted_json")
+    with self.assertRaises(ValueError):
+      generate_spotter_config(
+          site_path=self.site_path,
+          project_spec="//mqtt/localhost:18883",
+          device_id="DSN-1",
+      )
 
 
 if __name__ == "__main__":

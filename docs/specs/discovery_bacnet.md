@@ -2,7 +2,7 @@
 
 # BACnet Discovery Specification
 
-This document specifies how an on-premise UDMI discovery node (Spotter / Gateway) performs **active BACnet discovery** (`config.discovery.families.bacnet`) and formats the resulting [`events_discovery`](../../schema/events_discovery.json) messages across each valid scan `depth`.
+This document specifies how an on-premise UDMI discovery node (Spotter / Gateway) performs **active BACnet discovery** (via a [named scan](discovery.md#named-scans) in `config.discovery.scans.<name>` with `family: bacnet`, or `config.discovery.families.bacnet`) and formats the resulting [`events_discovery`](../../schema/events_discovery.json) messages across each valid scan `depth`.
 
 For static BACnet URI addressing rules (`bacnet://<device_id>/<object_type>/<object_instance>[#property_identifier]`), see the [BACnet Specification](bacnet.md) and [Family Providers Specification](family_providers.md). For general, protocol-agnostic discovery scheduling (`generation`, `scan_interval_sec`, `scan_duration_sec`), see [Discovery](discovery.md) and [Discovery Generation](discovery/generation.md).
 
@@ -12,14 +12,15 @@ For static BACnet URI addressing rules (`bacnet://<device_id>/<object_type>/<obj
 
 ## 1. Active Scan `depth` Levels
 
-A BACnet active discovery scan is controlled by `config.discovery.families.bacnet.depth`. There are **4 valid active scan depth levels**, ordered cumulatively from coarsest network topology discovery to full object property enumeration:
+A BACnet active discovery scan is controlled by the `depth` of the active scan configuration (`config.discovery.scans.<name>` or `config.discovery.families.bacnet`). There are **4 cumulative enumeration depth levels** (`buckets`, `entries`, `system`, `details`) emitted over `events/discovery`, plus the diagnostic **`trace`** depth emitted over `upload/discovery`:
 
-| Ordinal | `depth` Value | Scope | BACnet Service / Property Operations | Cumulative `events_discovery` Payload Fields |
+| Ordinal | `depth` Value | Scope | BACnet Service / Property Operations | Output Channel & Payload Fields |
 | :--- | :--- | :--- | :--- | :--- |
-| **1** | **`buckets`** | Available BACnet networks & UDP ports | `Who-Is-Router-To-Network` / `I-Am-Router-To-Network` + BACnet/IP UDP port probe (`47808` / `0xBAC0`, etc.) | Base envelope + `family: "bacnet"` + `network` + `families.ipv4.port` |
-| **2** | **`entries`** | Discovered BACnet devices & MAC/IP bindings | `Who-Is` / `I-Am` (global, network-filtered, or unicast `addrs`) | `buckets` + `addr` (Device Instance) + per-device `families` (`ipv4` `addr`/`port`, `ethmac`, `mstp`) |
-| **3** | **`system`** | Device Object (`DO/0`) identity properties | `ReadPropertyMultiple` on `device,<addr>` (`object-name`, `vendor-name`, `model-name`, `serial-number`, etc.) | `entries` + `system` (`name`, `description`, `serial_no`, `hardware`, `ancillary`) |
-| **4** | **`details`** | BACnet object references & properties | `ReadProperty` / `ReadPropertyMultiple` on `device,<addr>` `object-list` + per-object `(object-type, instance)` properties | `system` + `refs` map (`"<TYPE>/<INSTANCE>"` $\rightarrow$ populated `RefDiscovery` fields: `name`, `description`, `type`, `units`, `possible_values`, `writable`, `ancillary`) |
+| **1** | **`buckets`** | Available BACnet networks & UDP ports | `Who-Is-Router-To-Network` / `I-Am-Router-To-Network` + BACnet/IP UDP port probe (`47808` / `0xBAC0`, etc.) | `events/discovery`: Base envelope + `family: "bacnet"` (+ `scan` when produced by a named scan) + `network` + `families.ipv4.port` |
+| **2** | **`entries`** | Discovered BACnet devices & MAC/IP bindings | `Who-Is` / `I-Am` (global, network-filtered, or unicast `addrs`) | `events/discovery`: `buckets` + `addr` (Device Instance) + per-device `families` (`ipv4` `addr`/`port`, `ethmac`, `mstp`) |
+| **3** | **`system`** | Device Object (`DO/0`) identity properties | `ReadPropertyMultiple` on `device,<addr>` (`object-name`, `vendor-name`, `model-name`, `serial-number`, etc.) | `events/discovery`: `entries` + `system` (`name`, `description`, `serial_no`, `hardware`, `ancillary`) |
+| **4** | **`details`** | BACnet object references & properties | `ReadProperty` / `ReadPropertyMultiple` on `device,<addr>` `object-list` + per-object `(object-type, instance)` properties | `events/discovery`: `system` + `refs` map (`"<TYPE>/<INSTANCE>"` $\rightarrow$ populated `RefDiscovery` fields: `name`, `description`, `type`, `units`, `possible_values`, `writable`, `ancillary`) |
+| **5** | **`trace`** | Raw BACnet packet capture (PCAP) | `tcpdump` capture (`udp port 47808`) + paced raw-socket `Who-Is-Router-To-Network` and `Who-Is` rounds | `upload/discovery`: [`DiscoveryUpload`](../../schema/upload_discovery.json) chunks (`event_no = 0`, `1..N` `gzip`-compressed base64 `data`, `-(N+1)` with `sha256` + `scan_manifest`) |
 
 Each level is strictly additive: requesting a deeper level produces all fields required by the preceding level plus the additional fields defined for that depth.
 
@@ -27,7 +28,7 @@ Each level is strictly additive: requesting a deeper level produces all fields r
 
 ## 2. Scan Targeting & Scope Filters
 
-Before executing the depth-specific operations below, the discovery node scopes the BACnet probe using `config.discovery.families.bacnet`:
+Before executing the depth-specific operations below, the discovery node scopes the BACnet probe using the active scan configuration (`config.discovery.scans.<name>` or `config.discovery.families.bacnet`):
 
 * **`networks`** (Optional `string[]` of 16-bit BACnet network numbers, `"1"`..`"65534"`): Restricts `Who-Is` broadcasts and device enumeration (`entries` and above) to the specified BACnet network numbers (`DNET`). If omitted, all reachable networks are scanned.
 * **`addrs`** (Optional `string[]` of BACnet Device Object Instance numbers or ranges): Restricts discovery to the specified BACnet device instances. Each string element in `addrs` MUST be either:

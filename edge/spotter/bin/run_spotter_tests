@@ -47,6 +47,12 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
         fi
     fi
     export CONTAINER_ENGINE
+    if [[ ! -f "${WORKSPACE_DIR}/sites/udmi_site_model/reflector/ca.crt" ]]; then
+        "${WORKSPACE_DIR}/bin/setup_ca" "${WORKSPACE_DIR}/sites/udmi_site_model" localhost >/dev/null
+    fi
+    if [[ ! -f "${WORKSPACE_DIR}/sites/udmi_site_model/devices/AHU-1/rsa_private.crt" ]]; then
+        "${WORKSPACE_DIR}/bin/keygen" CERT "${WORKSPACE_DIR}/sites/udmi_site_model/devices/AHU-1" >/dev/null
+    fi
     ${CONTAINER_ENGINE} build -t udmi-spotter:latest -f "${WORKSPACE_DIR}/edge/spotter/container/Dockerfile" "${WORKSPACE_DIR}" >/dev/null
 
     echo "--- Step 4: Running Container Lifecycle Integration Tests (test_container) ---"
@@ -70,9 +76,14 @@ if [[ "$MODE" == "integration" || "$MODE" == "all" ]]; then
 
     if ${CONTAINER_ENGINE} network inspect parity-spotter-net >/dev/null 2>&1 || ${CONTAINER_ENGINE} network create --subnet=192.168.12.0/24 --gateway=192.168.12.254 parity-spotter-net >/dev/null 2>&1; then
         echo "--- Step 8: Running Discovery Parity Tests (test_parity) ---"
-        echo "Building legacy discovery node container and simulated BACnet device image..."
-        "${WORKSPACE_DIR}/misc/discoverynode/bin/build_container" test-discovery_node >/dev/null
-        bash "${WORKSPACE_DIR}/misc/discoverynode/testing/docker/bacnet_device/build.sh" >/dev/null
+        if ! ${CONTAINER_ENGINE} image inspect test-discovery_node:latest >/dev/null 2>&1; then
+            echo "Building legacy discovery node container..."
+            "${WORKSPACE_DIR}/misc/discoverynode/bin/build_container" test-discovery_node >/dev/null
+        fi
+        if ! ${CONTAINER_ENGINE} image inspect test-bacnet-device:latest >/dev/null 2>&1; then
+            echo "Building simulated BACnet device image..."
+            bash "${WORKSPACE_DIR}/misc/discoverynode/testing/docker/bacnet_device/build.sh" >/dev/null
+        fi
         (
             cd "${WORKSPACE_DIR}"
             PYTHONPATH=clientlib/python/src:gencode/python:. "${SPOTTER_PYTHON}" "${SCRIPT_DIR}/test_parity"

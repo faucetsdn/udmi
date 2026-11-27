@@ -56,6 +56,59 @@ class DispatcherTests(unittest.TestCase):
         self.assertEqual(res["target"], "postgres")
         self.assertEqual(res["table"], "udmi_messages")
 
+    def test_dispatch_pcap_upload_skips_raw_fallback(self):
+        import base64
+        import gzip
+        import hashlib
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            self.dispatcher.handlers[0].archive_dir = tmpdir
+            raw_pcap = b"\xa1\xb2\xc3\xd4" + b"\x00" * 20
+            b64_chunk = base64.b64encode(gzip.compress(raw_pcap)).decode("ascii")
+            digest = hashlib.sha256(raw_pcap).hexdigest()
+
+            env = {
+                "deviceRegistryId": "ZZ-TRI-FECTA",
+                "deviceId": "DSN-1",
+                "subType": "upload",
+                "subFolder": "discovery",
+            }
+            self.dispatcher.dispatch(
+                env,
+                {"generation": "2026-11-10T12:00:00Z", "family": "bacnet", "event_no": 0},
+            )
+            self.dispatcher.dispatch(
+                env,
+                {
+                    "generation": "2026-11-10T12:00:00Z",
+                    "family": "bacnet",
+                    "event_no": 1,
+                    "data": b64_chunk,
+                },
+            )
+            res = self.dispatcher.dispatch(
+                env,
+                {
+                    "generation": "2026-11-10T12:00:00Z",
+                    "family": "bacnet",
+                    "event_no": -2,
+                    "sha256": digest,
+                    "scan_manifest": {
+                        "gateway_ip": "192.168.1.50",
+                        "interface": "eth0",
+                        "filter": "udp port 47808",
+                        "scan_round_timestamps": ["2026-11-10T12:00:01Z"],
+                    },
+                },
+            )
+            self.assertEqual(res["status"], "COMPLETED")
+            self.assertEqual(res["sha256"], digest)
+            self.assertTrue(os.path.exists(res["local_pcap_path"]))
+            # Verify raw_fallback never wrote chunk blobs into udmi_messages
+            for call in self.mock_pg.insert_row.call_args_list:
+                self.assertNotEqual(call[0][0], "udmi_messages")
+
 
 if __name__ == "__main__":
     unittest.main()

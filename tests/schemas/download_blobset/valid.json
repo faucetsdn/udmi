@@ -1,0 +1,13 @@
+{
+  "timestamp": "2026-05-04T12:30:01Z",
+  "version": "1.5.7",
+  "blobs": {
+    "_iot_endpoint_config": {
+      "protocol": "mqtt",
+      "hostname": "mqtt.example.com",
+      "port": 8883,
+      "client_id": "/r/ZZ-TRI-FECTA/d/DSN-1",
+      "expiry": "2026-06-04T12:30:01Z"
+    }
+  }
+}

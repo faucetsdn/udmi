@@ -18,6 +18,11 @@
       "description": "Maximum byte volume cap for trace collection to prevent exhaustion",
       "type": "integer",
       "minimum": 0
+    },
+    "exclude_capture_host": {
+      "description": "Exclude packets to or from the capture host IP address from the capture filter",
+      "type": "boolean",
+      "default": false
     }
   }
 }

@@ -375,6 +375,7 @@ public class MqttToPubSubBridge {
     String mqttBrokerUrl = commandLine.getOptionValue("mqtt_broker_url", "tcp://localhost:1883");
     String gcpProjectId = commandLine.getOptionValue("gcp_project_id");
     String pubsubTopicId = commandLine.getOptionValue("pubsub_topic_id");
+    String uploadPubsubTopicId = commandLine.getOptionValue("upload_pubsub_topic_id");
     String mqttClientId = commandLine.getOptionValue("mqtt_client_id");
     String mqttSessionExpiryInterval = commandLine.getOptionValue("mqtt_session_expiry_interval");
     String mqttKeepAliveInterval = commandLine.getOptionValue("mqtt_keep_alive_interval", "15");
@@ -408,6 +409,7 @@ public class MqttToPubSubBridge {
     }
 
     Publisher publisher = null;
+    Publisher uploadPublisher = null;
     IMqttClient mqttClient = null;
     EtcdDataProvider etcdProvider = null;
     MqttToPubSubBridge bridge = null;
@@ -417,6 +419,9 @@ public class MqttToPubSubBridge {
     try {
       etcdProvider = createEtcdProvider(etcdTarget, etcdOptions);
       publisher = createPublisher(gcpProjectId, pubsubTopicId);
+      if (uploadPubsubTopicId != null && !uploadPubsubTopicId.isEmpty()) {
+        uploadPublisher = createPublisher(gcpProjectId, uploadPubsubTopicId);
+      }
 
       // Initialize MQTT Client
       mqttClient =
@@ -450,11 +455,17 @@ public class MqttToPubSubBridge {
       final MqttToPubSubBridge finalBridge = bridge;
       final IMqttClient finalMqttClient = mqttClient;
       final Publisher finalPublisher = publisher;
+      final Publisher finalUploadPublisher = uploadPublisher;
       final EtcdDataProvider finalEtcdProvider = etcdProvider;
 
       Runnable shutdownTask = () -> {
         if (isShuttingDown.compareAndSet(false, true)) {
-          gracefulShutdown(finalBridge, finalMqttClient, finalPublisher, finalEtcdProvider);
+          gracefulShutdown(
+              finalBridge,
+              finalMqttClient,
+              finalPublisher,
+              finalEtcdProvider,
+              finalUploadPublisher);
         }
       };
 
@@ -467,7 +478,8 @@ public class MqttToPubSubBridge {
       bridge.startPeriodicReconnect(mqttClient, reconnectIntervalSec);
 
       // Set up MQTT Message Callback
-      bridge.setupBridgeFromCommandLine(mqttClient, publisher, etcdProvider, commandLine);
+      bridge.setupBridgeFromCommandLine(
+          mqttClient, publisher, etcdProvider, commandLine, uploadPublisher);
 
       // Keep the application running
       while (!bridge.isTripped()) {
@@ -490,7 +502,7 @@ public class MqttToPubSubBridge {
       System.exit(1);
     } finally {
       if (isShuttingDown.compareAndSet(false, true)) {
-        gracefulShutdown(bridge, mqttClient, publisher, etcdProvider);
+        gracefulShutdown(bridge, mqttClient, publisher, etcdProvider, uploadPublisher);
       }
       if (shutdownHook != null) {
         try {
@@ -511,6 +523,8 @@ public class MqttToPubSubBridge {
     options.addOption(null, "mqtt_subscription_topic", true, "MQTT subscription topic.");
     options.addOption(null, "gcp_project_id", true, "Google Cloud Project ID.");
     options.addOption(null, "pubsub_topic_id", true, "Google Cloud Pub/Sub topic ID.");
+    options.addOption(null, "upload_pubsub_topic_id", true,
+        "Dedicated Google Cloud Pub/Sub topic ID for upload/# channel (e.g. udmi_upload).");
     options.addOption(null, "mqtt_client_id", true, "MQTT client ID.");
     options.addOption(null, "mqtt_session_expiry_interval", true,
         "MQTT session expiry interval (seconds).");
@@ -597,21 +611,23 @@ public class MqttToPubSubBridge {
    * (subscription topic, source attribute, shared subscription, and subType omission) from the
    * parsed command line.
    *
-   * @param mqttClient   The MQTT client.
-   * @param publisher    The Pub/Sub publisher.
-   * @param etcdProvider The etcd provider used to look up device numeric ids.
-   * @param commandLine  The parsed command line.
+   * @param mqttClient      The MQTT client.
+   * @param publisher       The Pub/Sub publisher.
+   * @param etcdProvider    The etcd provider used to look up device numeric ids.
+   * @param commandLine     The parsed command line.
+   * @param uploadPublisher The dedicated upload Pub/Sub publisher, or null to use publisher.
    * @throws MqttException If an MQTT error occurs.
    */
   void setupBridgeFromCommandLine(IMqttClient mqttClient, Publisher publisher,
-      EtcdDataProvider etcdProvider, CommandLine commandLine) throws MqttException {
+      EtcdDataProvider etcdProvider, CommandLine commandLine, Publisher uploadPublisher)
+      throws MqttException {
     String mqttSubscriptionTopic =
         commandLine.getOptionValue("mqtt_subscription_topic", "/r/+/d/#");
     String sourceAttribute = commandLine.getOptionValue("source_attribute", "zanzara");
     String sharedSubscription = commandLine.getOptionValue("shared_subscription");
     boolean omitSubtype = commandLine.hasOption("omit_subtype");
     setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute,
-        sharedSubscription, omitSubtype);
+        sharedSubscription, omitSubtype, uploadPublisher);
   }
 
   /**
@@ -625,7 +641,7 @@ public class MqttToPubSubBridge {
   public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider) throws MqttException {
     setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, "zanzara", null,
-        false);
+        false, null);
   }
 
   /**
@@ -641,7 +657,7 @@ public class MqttToPubSubBridge {
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute)
       throws MqttException {
     setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute, null,
-        false);
+        false, null);
   }
 
   /**
@@ -661,6 +677,40 @@ public class MqttToPubSubBridge {
   public void setupBridge(IMqttClient mqttClient, Publisher publisher,
       String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
       String sharedSubscription, boolean omitSubtype)
+      throws MqttException {
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute,
+        sharedSubscription, omitSubtype, null);
+  }
+
+  /**
+   * Sets up the bridge between MQTT and Pub/Sub with optional dedicated upload publisher.
+   */
+  public void setupBridge(IMqttClient mqttClient, Publisher publisher,
+      String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
+      String sharedSubscription, Publisher uploadPublisher)
+      throws MqttException {
+    setupBridge(mqttClient, publisher, mqttSubscriptionTopic, etcdProvider, sourceAttribute,
+        sharedSubscription, false, uploadPublisher);
+  }
+
+  /**
+   * Sets up the bridge between MQTT and Pub/Sub with all message-handling options.
+   *
+   * @param mqttClient            The MQTT client.
+   * @param publisher             The Pub/Sub publisher.
+   * @param mqttSubscriptionTopic The MQTT topic to subscribe to.
+   * @param etcdProvider          The etcd provider used to look up device numeric ids.
+   * @param sourceAttribute       The value of the source attribute.
+   * @param sharedSubscription    The shared subscription name, or null for a plain subscription.
+   * @param omitSubtype           If true, never set subType and only set subFolder for
+   *                              events/ topics.
+   * @param uploadPublisher       The dedicated publisher for upload/ topics, or null to use
+   *                              publisher.
+   * @throws MqttException If an MQTT error occurs.
+   */
+  public void setupBridge(IMqttClient mqttClient, Publisher publisher,
+      String mqttSubscriptionTopic, EtcdDataProvider etcdProvider, String sourceAttribute,
+      String sharedSubscription, boolean omitSubtype, Publisher uploadPublisher)
       throws MqttException {
 
     final String actualSubscriptionTopic;
@@ -821,8 +871,14 @@ public class MqttToPubSubBridge {
                   PubsubMessage pubsubMessage =
                       pubsubMessageBuilder.putAllAttributes(attributes).build();
 
+                  Publisher targetPublisher =
+                      (uploadPublisher != null && topicSuffix != null
+                          && "upload".equals(Splitter.on('/').splitToList(topicSuffix).get(0)))
+                          ? uploadPublisher
+                          : publisher;
+
                   // Publish with 5x retry + exponential backoff
-                  publishWithRetry(publisher, pubsubMessage, message, messageKey,
+                  publishWithRetry(targetPublisher, pubsubMessage, message, messageKey,
                       topic, mqttClient, 1);
                   publishInitiated = true;
                 } catch (Exception e) {
@@ -1125,6 +1181,11 @@ public class MqttToPubSubBridge {
 
   static void gracefulShutdown(MqttToPubSubBridge bridge, IMqttClient mqttClient,
       Publisher publisher, EtcdDataProvider etcdProvider) {
+    gracefulShutdown(bridge, mqttClient, publisher, etcdProvider, null);
+  }
+
+  static void gracefulShutdown(MqttToPubSubBridge bridge, IMqttClient mqttClient,
+      Publisher publisher, EtcdDataProvider etcdProvider, Publisher uploadPublisher) {
     logger.info("Initiating graceful shutdown of MqttToPubSubBridge...");
     // 1. Signal bridge to ignore newly arriving MQTT messages
     if (bridge != null) {
@@ -1142,7 +1203,7 @@ public class MqttToPubSubBridge {
       }
     }
 
-    // 3. Shut down Pub/Sub publisher and await pending publish futures
+    // 3. Shut down Pub/Sub publishers and await pending publish futures
     if (publisher != null) {
       try {
         publisher.shutdown();
@@ -1152,6 +1213,17 @@ public class MqttToPubSubBridge {
         logger.debug("Pub/Sub Publisher shut down.");
       } catch (Exception e) {
         logger.warn("Error shutting down Pub/Sub publisher", e);
+      }
+    }
+    if (uploadPublisher != null) {
+      try {
+        uploadPublisher.shutdown();
+        if (!uploadPublisher.awaitTermination(10, TimeUnit.SECONDS)) {
+          logger.warn("Upload Pub/Sub publisher did not terminate within 10 seconds");
+        }
+        logger.debug("Upload Pub/Sub Publisher shut down.");
+      } catch (Exception e) {
+        logger.warn("Error shutting down upload Pub/Sub publisher", e);
       }
     }
 

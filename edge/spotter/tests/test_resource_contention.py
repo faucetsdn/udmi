@@ -75,8 +75,14 @@ class TestResourceContention(unittest.TestCase):
           max_duration_sec=1,
           max_bytes=1024,
       )
-      # Drain generator chunks
-      _ = list(gen)
+      try:
+        # Drain generator chunks
+        _ = list(gen)
+      except RuntimeError as err:
+        # On unprivileged hosts without CAP_NET_RAW, tcpdump exits non-zero;
+        # verify the fail-fast error message and confirm pipe FDs are still
+        # closed cleanly in capture_packets' finally block.
+        self.assertIn("tcpdump failed", str(err))
 
     fd_after = get_current_fd_count()
     fd_diff = fd_after - fd_before

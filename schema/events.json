@@ -14,9 +14,6 @@
     },
     "discovery": {
       "$ref": "file:events_discovery.json#"
-    },
-    "streams": {
-      "$ref": "file:events_streams.json#"
     }
   }
 }
