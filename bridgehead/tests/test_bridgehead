@@ -107,6 +107,46 @@ mkdir -p out
 echo "Cloning test site model..."
 clone_site_model "$SITE_MODEL_PATH"
 
+# Verify Docker preflight fails fast without retries or creating bridgehead/var
+DOCKER_PREFLIGHT_OUT=$(DOCKER_HOST="unix:///nonexistent/bridgehead_test_docker.sock" "$UDMI_ROOT/bin/start_bridgehead" "$SITE_MODEL_PATH" 2>&1) && { echo "ERROR: start_bridgehead should fail when Docker daemon is unreachable"; exit 1; } || true
+echo "$DOCKER_PREFLIGHT_OUT" | grep -q "Cannot connect to the Docker daemon" || { echo "ERROR: start_bridgehead missing Docker daemon preflight error"; echo "$DOCKER_PREFLIGHT_OUT"; exit 1; }
+! echo "$DOCKER_PREFLIGHT_OUT" | grep -q "retrying in 2s" || { echo "ERROR: start_bridgehead retried instead of failing fast on Docker preflight"; echo "$DOCKER_PREFLIGHT_OUT"; exit 1; }
+[ ! -d "$BRIDGEHEAD_DIR/var" ] || { echo "ERROR: start_bridgehead created bridgehead/var before Docker preflight"; exit 1; }
+
+# Verify bin/mosquctl_device refuses to overwrite existing public key / cert files when *_private.pkcs8 is absent
+assert_mosquctl_refuses_overwrite() {
+    local site_dir="$1" device_id="$2" sentinel_file="$3"
+    local sentinel_path="$site_dir/devices/$device_id/$sentinel_file"
+    local sha_before out
+    sha_before=$(sha256sum "$sentinel_path" | awk '{print $1}')
+
+    if out=$("$UDMI_ROOT/bin/mosquctl_device" "$site_dir" "$device_id" 2>&1); then
+        echo "ERROR: mosquctl_device should fail when only $sentinel_file exists"
+        return 1
+    fi
+    grep -q "Refusing to overwrite existing device keys" <<< "$out" || {
+        echo "ERROR: missing overwrite guard error for $sentinel_file"; echo "$out"; return 1;
+    }
+    [ "$(sha256sum "$sentinel_path" | awk '{print $1}')" = "$sha_before" ] || {
+        echo "ERROR: mosquctl_device overwrote $sentinel_file"; return 1;
+    }
+    [ ! -e "$site_dir/devices/$device_id/rsa_private.pkcs8" ] || {
+        echo "ERROR: mosquctl_device generated rsa_private.pkcs8 for $device_id"; return 1;
+    }
+}
+
+(
+    tmp_site=$(mktemp -d)
+    trap 'rm -rf "$tmp_site"' EXIT
+    mkdir -p "$tmp_site/devices/DUT-PUB" "$tmp_site/devices/DUT-CERT"
+    echo '{"registry_id": "TEST-REG"}' > "$tmp_site/cloud_iot_config.json"
+    printf '%s\n' "-----BEGIN PUBLIC KEY-----" "SENTINEL-PUBKEY" "-----END PUBLIC KEY-----" > "$tmp_site/devices/DUT-PUB/rsa_public.pem"
+    printf '%s\n' "-----BEGIN CERTIFICATE-----" "SENTINEL-CERT" "-----END CERTIFICATE-----" > "$tmp_site/devices/DUT-CERT/rsa_cert.pem"
+
+    assert_mosquctl_refuses_overwrite "$tmp_site" DUT-PUB rsa_public.pem
+    assert_mosquctl_refuses_overwrite "$tmp_site" DUT-CERT rsa_cert.pem
+)
+
 mkdir -p "$SITE_MODEL_PATH/out"
 chmod a+rwx "$SITE_MODEL_PATH/out" 2>/dev/null || true
 

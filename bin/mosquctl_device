@@ -19,15 +19,26 @@ site_config=$site_path/cloud_iot_config.json
 registry_id=$(jq -r .registry_id $site_config)
 
 # Find the private key file
-if [[ -f $site_path/devices/$device_id/rsa_private.pkcs8 ]]; then
-    key_file=$site_path/devices/$device_id/rsa_private.pkcs8
-elif [[ -f $site_path/devices/$device_id/ec_private.pkcs8 ]]; then
-    key_file=$site_path/devices/$device_id/ec_private.pkcs8
-else
+device_dir="$site_path/devices/$device_id"
+key_file=""
+for prefix in rsa ec es; do
+    if [[ -f "$device_dir/${prefix}_private.pkcs8" ]]; then
+        key_file="$device_dir/${prefix}_private.pkcs8"
+        break
+    fi
+done
+
+if [[ -z "$key_file" ]]; then
+    # Protect existing public keys/certs (e.g., hardware-only DUTs) from auto-keygen overwrite
+    for existing in "$device_dir"/*_public.pem "$device_dir"/*_cert.pem "$device_dir"/*_private.pem "$device_dir"/*_private.crt; do
+        if [[ -f "$existing" ]]; then
+            fail "Existing key/cert file '$existing' found without a matching *_private.pkcs8 in '$device_dir'. Refusing to overwrite existing device keys or leave a mismatched certificate."
+        fi
+    done
     warn "No private key found for device $device_id, generating..."
-    mkdir -p $site_path/devices/$device_id
-    $UDMI_ROOT/bin/keygen RS256 $site_path/devices/$device_id
-    key_file=$site_path/devices/$device_id/rsa_private.pkcs8
+    mkdir -p "$device_dir"
+    "$UDMI_ROOT/bin/keygen" RS256 "$device_dir"
+    key_file="$device_dir/rsa_private.pkcs8"
 fi
 
 ns_prefix=""
