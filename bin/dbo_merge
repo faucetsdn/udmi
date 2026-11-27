@@ -13,12 +13,104 @@ except ImportError:
   from yaml import SafeLoader as Loader
 import yaml
 
+BDNS_DEVICE_ID_RE = re.compile(r"^[A-Z]{2,6}-[1-9][0-9]*\Z")
+
+
 def sanitize_id(id_str) -> str:
-  """Sanitizes a string for use as a UDMI device_id."""
+  """Sanitizes a string for use as a UDMI identifier."""
   # Replace non-alphanumeric with underscores, strip leading/trailing
   # underscores.
   s = re.sub(r"[^a-zA-Z0-9_-]+", "_", str(id_str))
   return s.strip("_")[:64]
+
+
+def _is_facility(entity) -> bool:
+  if not isinstance(entity, dict):
+    return False
+  etype = entity.get("type", "")
+  if isinstance(etype, list):
+    return any(
+        isinstance(item, str) and item.startswith("FACILITIES/")
+        for item in etype
+    )
+  return isinstance(etype, str) and etype.startswith("FACILITIES/")
+
+
+def _extract_bdns_prefix(entity: dict) -> str:
+  """Derives a 2-6 uppercase letter BDNS type prefix from a DBO entity."""
+  candidates = []
+  etype = entity.get("type")
+  if isinstance(etype, list):
+    etype = next((item for item in etype if isinstance(item, str)), None)
+  if isinstance(etype, str) and etype:
+    type_part = etype.split("/", 1)[-1]
+    candidates.append(type_part.split("_", 1)[0])
+  code = entity.get("code")
+  if isinstance(code, str) and ":" in code:
+    parts = code.split(":")
+    if len(parts) >= 2:
+      candidates.append(parts[1])
+  for candidate in candidates:
+    letters = re.sub(r"[^A-Za-z]+", "", candidate).upper()
+    if 2 <= len(letters) <= 6:
+      return letters
+  return "DEV"
+
+
+def _scan_existing_devices(devices_dir: Path):
+  """Scans existing device dirs for names, GUIDs, and unreadable dirs."""
+  existing_dirs = set()
+  guid_to_existing_id = {}
+  existing_id_to_guid = {}
+  unreadable_dirs = set()
+  if not devices_dir.is_dir():
+    return (
+        existing_dirs,
+        guid_to_existing_id,
+        existing_id_to_guid,
+        unreadable_dirs,
+    )
+  for dev_dir in sorted(devices_dir.iterdir()):
+    if not dev_dir.is_dir():
+      continue
+    dev_id = dev_dir.name
+    existing_dirs.add(dev_id)
+    metadata_path = dev_dir / "metadata.json"
+    if not metadata_path.is_file():
+      continue
+    try:
+      with open(metadata_path, "r", encoding="utf-8") as f:
+        metadata = json.load(f)
+    except (OSError, json.JSONDecodeError):
+      unreadable_dirs.add(dev_id)
+      continue
+    if not isinstance(metadata, dict):
+      unreadable_dirs.add(dev_id)
+      continue
+    system = metadata.get("system")
+    guid = system.get("guid") if isinstance(system, dict) else None
+    if not (isinstance(guid, str) and guid):
+      externals = metadata.get("externals")
+      dbo = externals.get("dbo") if isinstance(externals, dict) else None
+      guid = dbo.get("ext_id") if isinstance(dbo, dict) else None
+    if isinstance(guid, str) and guid:
+      guid_to_existing_id.setdefault(guid, dev_id)
+      existing_id_to_guid[dev_id] = guid
+  return (
+      existing_dirs,
+      guid_to_existing_id,
+      existing_id_to_guid,
+      unreadable_dirs,
+  )
+
+
+def _allocate_bdns_id(prefix: str, reserved_ids: set) -> str:
+  counter = 1
+  while True:
+    candidate = f"{prefix}-{counter}"
+    if candidate not in reserved_ids:
+      return candidate
+    counter += 1
 
 def load_csv_map(site_model_dir: Path):
   """Loads device_num_id -> device_id map from discovery.csv if it exists."""
@@ -57,9 +149,11 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
     # First pass: map every GUID to a unique ID
     guid_to_id = {}
     used_ids = set()
+    existing_dirs, guid_to_existing_id, existing_id_to_guid, unreadable_dirs = (
+        _scan_existing_devices(devices_dir)
+    )
 
-    # Priority 1: CSV-mapped devices (don't sanitize these, assume they are
-    # authoritative)
+    # Priority 1: CSV-mapped devices (authoritative)
     for guid, entity in config.items():
       if guid == "CONFIG_METADATA" or not isinstance(entity, dict):
         continue
@@ -69,30 +163,74 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
         guid_to_id[guid] = dev_id
         used_ids.add(dev_id)
 
-    # Priority 2: Code (with sanitization and collision handling)
-    # This now applies to ALL entities including FACILITIES
+    # Priority 2: Existing site-model devices already linked by system.guid
     for guid, entity in config.items():
       if (
           guid == "CONFIG_METADATA"
           or not isinstance(entity, dict)
           or guid in guid_to_id
+          or _is_facility(entity)
       ):
         continue
+      existing_id = guid_to_existing_id.get(guid)
+      if existing_id and existing_id not in used_ids:
+        guid_to_id[guid] = existing_id
+        used_ids.add(existing_id)
 
+    # Priority 3: FACILITIES entities keep sanitized codes (in externals)
+    for guid, entity in config.items():
+      if (
+          guid == "CONFIG_METADATA"
+          or not isinstance(entity, dict)
+          or guid in guid_to_id
+          or not _is_facility(entity)
+      ):
+        continue
       code = entity.get("code")
-      if code:
-        base_id = sanitize_id(code)
-      else:
-        base_id = sanitize_id(str(guid))
-
+      base_id = sanitize_id(code) if code else sanitize_id(str(guid))
       dev_id = base_id
       counter = 2
       while dev_id in used_ids:
         dev_id = f"{base_id}_{counter}"
         counter += 1
-
       guid_to_id[guid] = dev_id
       used_ids.add(dev_id)
+
+    # Priority 4: Remaining devices get BDNS IDs (^[A-Z]{2,6}-[1-9][0-9]*$)
+    unmatched_devices = [
+        (guid, entity)
+        for guid, entity in config.items()
+        if guid != "CONFIG_METADATA"
+        and isinstance(entity, dict)
+        and guid not in guid_to_id
+    ]
+    unmatched_devices.sort(
+        key=lambda item: (str(item[1].get("code") or ""), str(item[0]))
+    )
+
+    # Preserve codes that are already valid BDNS IDs before allocating new IDs
+    still_unmatched = []
+    for guid, entity in unmatched_devices:
+      code = entity.get("code")
+      if (
+          isinstance(code, str)
+          and BDNS_DEVICE_ID_RE.fullmatch(code)
+          and code not in used_ids
+          and code not in unreadable_dirs
+          and existing_id_to_guid.get(code) in (None, guid)
+      ):
+        guid_to_id[guid] = code
+        used_ids.add(code)
+      else:
+        still_unmatched.append((guid, entity))
+
+    reserved_device_ids = used_ids | existing_dirs
+    for guid, entity in still_unmatched:
+      prefix = _extract_bdns_prefix(entity)
+      dev_id = _allocate_bdns_id(prefix, reserved_device_ids)
+      guid_to_id[guid] = dev_id
+      used_ids.add(dev_id)
+      reserved_device_ids.add(dev_id)
 
     facilities = {}
     merged_devices = 0
@@ -108,26 +246,14 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       if not isinstance(connections, dict):
         continue
       target_id = guid_to_id.get(target_guid, str(target_guid))
-      target_etype = target_entity.get("type", "")
-      is_target_facility = (
-          isinstance(target_etype, str)
-          and target_etype.startswith("FACILITIES/")
-      )
+      is_target_facility = _is_facility(target_entity)
 
       for source_guid, rel_data in list(connections.items()):
         if isinstance(source_guid, (list, tuple)):
           continue
         source_id = guid_to_id.get(source_guid, str(source_guid))
         source_entity = config.get(source_guid)
-        source_type = (
-            source_entity.get("type")
-            if isinstance(source_entity, dict)
-            else None
-        )
-        if (
-            isinstance(source_type, str)
-            and source_type.startswith("FACILITIES/")
-        ):
+        if _is_facility(source_entity):
           continue
 
         rel_entry = None
@@ -158,8 +284,7 @@ def merge_dbo_config(yaml_file: Path, site_model_dir: Path):
       if guid == "CONFIG_METADATA" or not isinstance(entity, dict):
         continue
 
-      etype = entity.get("type", "")
-      if isinstance(etype, str) and etype.startswith("FACILITIES/"):
+      if _is_facility(entity):
         facilities[guid] = entity
         continue
 
