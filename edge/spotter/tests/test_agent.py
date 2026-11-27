@@ -653,7 +653,7 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
     mock_device = MagicMock()
     localnet = LocalnetManager()  # No bacnet provider registered!
     mock_device.get_manager.side_effect = (
-        lambda name: localnet if name == "localnet" else None
+        lambda mgr_cls: localnet if mgr_cls is LocalnetManager else None
     )
     mgr._device = mock_device
     mgr._dispatcher = MagicMock()
@@ -714,12 +714,14 @@ class TestSpotterDiscoveryManager(unittest.TestCase):
       yield b"PCAP_BYTES"
 
     mock_capture.side_effect = fake_capture
+    from udmi.core.managers.localnet_manager import LocalnetManager
+
     mock_localnet = MagicMock()
     mock_localnet.get_provider.side_effect = (
         lambda fam: mock_bacnet_prov if fam == "bacnet" else None
     )
     self.mock_device.get_manager.side_effect = (
-        lambda name: mock_localnet if name == "localnet" else None
+        lambda mgr_cls: mock_localnet if mgr_cls is LocalnetManager else None
     )
 
     fam_cfg = FamilyDiscoveryConfig(

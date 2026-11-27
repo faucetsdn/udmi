@@ -78,9 +78,9 @@ cleanup() {
     docker exec udmis chown -RH $(id -u):$(id -g) /root/site_model/ /root/udmi/var/etcd/ 2>/dev/null || true
     docker exec mosquitto chown -RH $(id -u):$(id -g) /site_model/ /mosquitto/data/ 2>/dev/null || true
     
-    echo "Stopping docker-compose services..."
-    "$UDMI_ROOT/bin/stop_bridgehead" || docker compose down
-    rm -rf "$SITE_MODEL_PATH" var/mosquitto/data var/etcd 2>/dev/null || true
+    echo "Stopping docker-compose services and cleaning runtime state..."
+    "$UDMI_ROOT/bin/stop_bridgehead" --clean || docker compose down -v
+    rm -rf "$SITE_MODEL_PATH" 2>/dev/null || true
     
     # Restore .env if backup exists
     if [ -f .env.bak ]; then
@@ -90,11 +90,17 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Clean up existing containers and data
+# Clean up existing containers and runtime state
 docker rm -f $(docker ps -aq) 2>/dev/null || true
 docker network rm $(docker network ls -q) 2>/dev/null || true
-"$UDMI_ROOT/bin/stop_bridgehead" -v 2>/dev/null || docker compose down -v --remove-orphans 2>/dev/null || true
-rm -rf var/mosquitto/data var/etcd "$SITE_MODEL_PATH" 2>/dev/null || true
+"$UDMI_ROOT/bin/stop_bridgehead" --clean 2>/dev/null || docker compose down -v --remove-orphans 2>/dev/null || true
+[ ! -d "$BRIDGEHEAD_DIR/var" ] || { echo "ERROR: bridgehead/var still exists after stop_bridgehead --clean"; exit 1; }
+rm -rf "$SITE_MODEL_PATH" 2>/dev/null || true
+
+# Verify CLI fail-fast validation for version pinning and warm reset
+! "$UDMI_ROOT/bin/start_bridgehead" --local --version latest "$SITE_MODEL_PATH" >/dev/null 2>&1 || { echo "ERROR: --local --version should fail"; exit 1; }
+! "$UDMI_ROOT/bin/start_bridgehead" --version >/dev/null 2>&1 || { echo "ERROR: missing --version arg should fail"; exit 1; }
+! "$UDMI_ROOT/bridgehead/bin/reset" unexpected_arg >/dev/null 2>&1 || { echo "ERROR: reset with extra arg should fail"; exit 1; }
 
 mkdir -p out
 
@@ -113,9 +119,13 @@ docker exec validator bin/keygen CERT site_model/devices/AHU-1
 echo "Executing discovery sequence..."
 sleep 5
 
-# 1. Registrar setup
-docker exec validator /bin/bash -c "bin/registrar site_model/ //mqtt/mosquitto -x -d"
-echo "Registrar clean completed."
+# 1. Warm clean-state reset and device setup
+touch "$SITE_MODEL_PATH/out/stale_marker.txt"
+"$UDMI_ROOT/bridgehead/bin/reset"
+[ ! -e "$SITE_MODEL_PATH/out/stale_marker.txt" ] || { echo "ERROR: bridgehead/bin/reset did not clear stale out/ file"; exit 1; }
+[ -f "$SITE_MODEL_PATH/devices/AHU-1/rsa_private.crt" ] || { echo "ERROR: bridgehead/bin/reset removed device certificate"; exit 1; }
+[ -f "$SITE_MODEL_PATH/reflector/ca.crt" ] || { echo "ERROR: bridgehead/bin/reset removed reflector CA certificate"; exit 1; }
+echo "Warm reset (bridgehead/bin/reset) completed."
 sleep 15
 "$UDMI_ROOT/bridgehead/bin/setup_device" GAT-123
 echo "Step 1: Device setup (bridgehead/bin/setup_device) completed."

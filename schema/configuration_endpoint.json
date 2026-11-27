@@ -133,6 +133,15 @@
         "style": "bold"
       }
     },
+    "subSetKey": {
+      "description": "Optional snake-case key scoping a logical subset of messages within a subFolder",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(_[a-z0-9]+)*$",
+      "$presentation": {
+        "display": "show",
+        "style": "bold"
+      }
+    },
     "enabled": {
       "description": "Indicator if this endpoint should be active (null or non-empty)",
       "type": "string",

@@ -4,7 +4,7 @@
 
 require_bridgehead_ready() {
     local container
-    for container in udmis validator; do
+    for container in mosquitto udmis validator; do
         if [[ "$(docker inspect -f '{{.State.Running}}' "$container" 2>/dev/null || true)" != "true" ]]; then
             fail "Container '$container' is not running. Start Bridgehead first with: bin/start_bridgehead [site_model_path]"
         fi
@@ -17,9 +17,7 @@ require_bridgehead_ready() {
     fi
 }
 
-resolve_bridgehead_device() {
-    local device_id="$1"
-
+resolve_bridgehead_site_model() {
     if [[ -z "${SITE_MODEL_PATH:-}" ]]; then
         SITE_MODEL_PATH=$(docker inspect -f '{{range .Mounts}}{{if eq .Destination "/root/site_model"}}{{.Source}}{{end}}{{end}}' validator 2>/dev/null || true)
     fi
@@ -34,11 +32,24 @@ resolve_bridgehead_device() {
     fi
     SITE_MODEL_PATH=$(realpath -m "$SITE_MODEL_PATH")
 
+    if [[ ! -d "$SITE_MODEL_PATH" ]]; then
+        fail "Site model directory '$SITE_MODEL_PATH' does not exist."
+    fi
+}
+
+resolve_bridgehead_device() {
+    local device_id="$1"
+
+    resolve_bridgehead_site_model
+
     if [[ ! -d "$SITE_MODEL_PATH/devices/$device_id" ]]; then
         fail "Device '$device_id' not found in site model directory '$SITE_MODEL_PATH/devices/$device_id'."
     fi
 
-    GATEWAY_ID=$(jq -r '.gateway.gateway_id // empty' "$SITE_MODEL_PATH/devices/$device_id/metadata.json" 2>/dev/null || true)
+    GATEWAY_ID=""
+    if [[ -f "$SITE_MODEL_PATH/devices/$device_id/metadata.json" ]]; then
+        GATEWAY_ID=$(docker exec -i validator jq -r '.gateway.gateway_id // empty' < "$SITE_MODEL_PATH/devices/$device_id/metadata.json" 2>/dev/null || true)
+    fi
     TARGET_ID="${GATEWAY_ID:-$device_id}"
     if [[ ! -d "$SITE_MODEL_PATH/devices/$TARGET_ID" ]]; then
         fail "Target gateway '$TARGET_ID' for device '$device_id' not found in '$SITE_MODEL_PATH/devices/$TARGET_ID'."

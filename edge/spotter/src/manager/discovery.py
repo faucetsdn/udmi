@@ -896,8 +896,13 @@ class SpotterDiscoveryManager(DiscoveryManager):
 
       # Release any cached BAC0 client before BACnet trace so UDP 47808 stays unbound
       if family == "bacnet":
-        localnet = getattr(self._device, "get_manager", lambda *_: None)(
-            "localnet"
+        # pylint: disable=import-outside-toplevel
+        from udmi.core.managers.localnet_manager import LocalnetManager
+
+        localnet = (
+            self._device.get_manager(LocalnetManager)
+            if self._device and hasattr(self._device, "get_manager")
+            else None
         )
         if localnet is not None:
           bacnet_prov = getattr(localnet, "get_provider", lambda *_: None)(
