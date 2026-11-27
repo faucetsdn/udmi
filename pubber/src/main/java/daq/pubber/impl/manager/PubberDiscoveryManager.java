@@ -1,5 +1,6 @@
 package daq.pubber.impl.manager;
 
+import static com.google.udmi.util.GeneralUtils.catchToNull;
 
 import com.google.udmi.util.SiteModel;
 import daq.pubber.impl.PubberFeatures;
@@ -8,10 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 import udmi.lib.client.manager.DeviceManager;
 import udmi.lib.client.manager.DiscoveryManager;
+import udmi.lib.client.manager.DiscoveryScheduler;
+import udmi.lib.intf.FamilyProvider;
 import udmi.lib.intf.ManagerHost;
-import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
-import udmi.schema.DiscoveryState;
+import udmi.schema.FamilyDiscoveryModel;
 import udmi.schema.FeatureDiscovery;
 import udmi.schema.PointPointsetModel;
 import udmi.schema.PubberConfiguration;
@@ -22,8 +24,7 @@ import udmi.schema.PubberConfiguration;
 public class PubberDiscoveryManager extends PubberManager implements DiscoveryManager {
 
   private final PubberDeviceManager deviceManager;
-  private DiscoveryState discoveryState;
-  private DiscoveryConfig discoveryConfig;
+  private final DiscoveryScheduler discoveryScheduler = new DiscoveryScheduler(this);
 
   private SiteModel siteModel;
 
@@ -39,23 +40,30 @@ public class PubberDiscoveryManager extends PubberManager implements DiscoveryMa
   }
 
   @Override
-  public DiscoveryState getDiscoveryState() {
-    return discoveryState;
+  public DiscoveryScheduler getDiscoveryScheduler() {
+    return discoveryScheduler;
   }
 
   @Override
-  public void setDiscoveryState(DiscoveryState discoveryState) {
-    this.discoveryState = discoveryState;
+  public FamilyProvider discoveryProvider(String family) {
+    FamilyProvider provider = DiscoveryManager.super.discoveryProvider(family);
+    if (provider == null) {
+      return null;
+    }
+    if (siteModel != null) {
+      Map<String, FamilyDiscoveryModel> configured =
+          catchToNull(() -> siteModel.getMetadata(getDeviceId()).discovery.families);
+      if (configured == null || !configured.containsKey(family)) {
+        return null;
+      }
+    }
+    return provider;
   }
 
   @Override
-  public DiscoveryConfig getDiscoveryConfig() {
-    return discoveryConfig;
-  }
-
-  @Override
-  public void setDiscoveryConfig(DiscoveryConfig discoveryConfig) {
-    this.discoveryConfig = discoveryConfig;
+  public void shutdown() {
+    shutdownDiscoveryScans();
+    super.shutdown();
   }
 
   @Override
