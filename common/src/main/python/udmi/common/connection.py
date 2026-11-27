@@ -161,13 +161,15 @@ class MessageConnection:
         return client
 
     def get_default_subscribe_topics(self) -> List[str]:
-        """Returns standard topic filters for consuming device events and state."""
+        """Returns standard topic filters for consuming device events, state, and uploads."""
         return [
             f"/r/{self.actual_registry}/d/+/#",
             "/r/+/d/+/#",
             "/uufi/#",
             "events/#",
             "state/#",
+            "upload/#",
+            "/devices/+/upload/#",
         ]
 
     def subscribe_mqtt(

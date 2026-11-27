@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Spotter Field Parity Verification Tool.
+"""Spotter Specification Compliance & Field Parity Verification Tool.
 
-Compares BACnet discovery outputs between the legacy discoverynode and the new
-Spotter node. Supports both direct live testbed execution (automated sequential
+Compares BACnet discovery outputs between the legacy discoverynode and the
+Spotter node while enforcing strict UDMI specification compliance on Spotter
+payloads. Supports both direct live testbed execution (automated sequential
 scans) and offline file diffing of captured discovery events.
 """
 
@@ -10,11 +11,21 @@ import argparse
 import difflib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
+
+
+CAMEL_TO_HYPHEN_RE = re.compile(r"([a-z0-9])([A-Z])")
+BACNET_REF_RE = re.compile(r"^([A-Z]{2,4})/(0|[1-9][0-9]*)(#[_a-z]+)?$")
+
+
+def camel_to_hyphen(val: str) -> str:
+  """Converts camelCase strings (e.g. analogInput) to hyphenated lowercase."""
+  return CAMEL_TO_HYPHEN_RE.sub(r"\1-\2", val).lower()
 
 
 def remove_none_fields(d: Any) -> Any:
@@ -24,6 +35,17 @@ def remove_none_fields(d: Any) -> Any:
   if isinstance(d, list):
     return [remove_none_fields(v) for v in d if v is not None]
   return d
+
+
+def has_null_fields(d: Any) -> bool:
+  """Returns True if any dictionary key or list element has a None value."""
+  if d is None:
+    return True
+  if isinstance(d, dict):
+    return any(v is None or has_null_fields(v) for v in d.values())
+  if isinstance(d, list):
+    return any(v is None or has_null_fields(v) for v in d)
+  return False
 
 
 def clean_event(event: Dict[str, Any]) -> Dict[str, Any]:
@@ -45,7 +67,157 @@ def clean_event(event: Dict[str, Any]) -> Dict[str, Any]:
   return evt
 
 
-def load_events_from_file(filepath: str) -> List[Dict[str, Any]]:
+def normalize_legacy_event(event: Dict[str, Any]) -> Dict[str, Any]:
+  """Normalizes known legacy discoverynode spec violations to canonical UDMI.
+
+  Allows semantic comparison of discovered devices and points against Spotter's
+  strict UDMI specification-compliant output.
+  """
+  evt = clean_event(event)
+  if evt.get("event_no", 0) <= 0:
+    return evt
+
+  # 1. Normalize families.ipv4.port (omitted by legacy discoverynode)
+  families = evt.get("families")
+  if isinstance(families, dict):
+    ipv4 = families.get("ipv4")
+    if isinstance(ipv4, dict) and ipv4.get("addr") and "port" not in ipv4:
+      ipv4["port"] = 47808
+
+  # 2. Normalize system.ancillary -> system.name/description and hyphenated keys
+  system = evt.get("system")
+  if isinstance(system, dict):
+    ancillary = system.get("ancillary")
+    if isinstance(ancillary, dict):
+      if "name" in ancillary and "name" not in system:
+        system["name"] = ancillary.pop("name")
+      else:
+        ancillary.pop("name", None)
+      if "description" in ancillary and "description" not in system:
+        system["description"] = ancillary.pop("description")
+      else:
+        ancillary.pop("description", None)
+      if "firmware" in ancillary and "firmware-revision" not in ancillary:
+        ancillary["firmware-revision"] = ancillary.pop("firmware")
+      if (
+          "application_version" in ancillary
+          and "application-software-version" not in ancillary
+      ):
+        ancillary["application-software-version"] = ancillary.pop(
+            "application_version"
+        )
+
+  # 3. Normalize colon-delimited refs ("AI:0" -> "AI/0") and point metadata
+  refs = evt.get("refs")
+  if isinstance(refs, dict):
+    normalized_refs = {}
+    for ref_key, ref_val in refs.items():
+      norm_key = ref_key.replace(":", "/", 1) if ":" in ref_key else ref_key
+      if isinstance(ref_val, dict):
+        ref_copy = dict(ref_val)
+        if isinstance(ref_copy.get("type"), str):
+          ref_copy["type"] = camel_to_hyphen(ref_copy["type"])
+        if "writable" not in ref_copy:
+          rtype = ref_copy.get("type", "")
+          ref_copy["writable"] = ("output" in rtype) or ("value" in rtype)
+        if "possible_values" not in ref_copy and ref_copy.get("type", "").startswith("binary-"):
+          ref_copy["possible_values"] = ["inactive", "active"]
+        ref_anc = ref_copy.get("ancillary")
+        if isinstance(ref_anc, dict) and "present_value" in ref_anc:
+          pv = ref_anc.pop("present_value")
+          if isinstance(pv, str):
+            try:
+              pv = int(pv) if pv.isdigit() else float(pv)
+            except ValueError:
+              pass
+          ref_anc["present-value"] = pv
+        normalized_refs[norm_key] = ref_copy
+      else:
+        normalized_refs[norm_key] = ref_val
+    evt["refs"] = normalized_refs
+
+  return evt
+
+
+def validate_spotter_spec_compliance(
+    raw_events: List[Dict[str, Any]],
+) -> List[str]:
+  """Validates that Spotter discovery events strictly adhere to the UDMI spec."""
+  violations: List[str] = []
+  for idx, evt in enumerate(raw_events):
+    if has_null_fields(evt):
+      violations.append(f"Event #{idx} contains explicit null fields")
+    event_no = evt.get("event_no")
+    if not isinstance(event_no, int):
+      violations.append(f"Event #{idx} missing integer event_no")
+      continue
+    if event_no <= 0:
+      continue
+
+    if evt.get("family") == "bacnet":
+      families = evt.get("families", {})
+      ipv4 = families.get("ipv4")
+      mstp = families.get("mstp")
+      if isinstance(ipv4, dict):
+        if not isinstance(ipv4.get("port"), int):
+          violations.append(
+              f"Event #{idx} (addr={evt.get('addr')}) missing integer"
+              " families.ipv4.port"
+          )
+      elif not isinstance(mstp, dict) and not evt.get("network"):
+        violations.append(
+            f"Event #{idx} (addr={evt.get('addr')}) missing families.ipv4 or"
+            " families.mstp"
+        )
+
+      system = evt.get("system")
+      if isinstance(system, dict):
+        anc = system.get("ancillary", {})
+        if isinstance(anc, dict):
+          for legacy_key in (
+              "name",
+              "description",
+              "firmware",
+              "application_version",
+          ):
+            if legacy_key in anc:
+              violations.append(
+                  f"Event #{idx} has non-standard key '{legacy_key}' in"
+                  " system.ancillary"
+              )
+
+      refs = evt.get("refs")
+      if isinstance(refs, dict):
+        for ref_key, ref_val in refs.items():
+          if not BACNET_REF_RE.match(ref_key):
+            violations.append(
+                f"Event #{idx} has non-canonical BACnet ref key '{ref_key}'"
+                " (expected '<TYPE>/<INSTANCE>')"
+            )
+          if isinstance(ref_val, dict):
+            rtype = ref_val.get("type", "")
+            if rtype and rtype != rtype.lower():
+              violations.append(
+                  f"Event #{idx} ref '{ref_key}' has non-hyphenated type"
+                  f" '{rtype}'"
+              )
+            if not isinstance(ref_val.get("writable"), bool):
+              violations.append(
+                  f"Event #{idx} ref '{ref_key}' missing boolean 'writable'"
+              )
+            ref_anc = ref_val.get("ancillary", {})
+            if isinstance(ref_anc, dict) and "present_value" in ref_anc:
+              violations.append(
+                  f"Event #{idx} ref '{ref_key}' uses underscore"
+                  " 'present_value' instead of 'present-value'"
+              )
+
+  return violations
+
+
+def load_events_from_file(
+    filepath: str, include_raw: bool = False
+) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
   """Loads discovery events from JSON array, JSONL, or mosquitto_sub logs."""
   if not os.path.isfile(filepath):
     raise FileNotFoundError(f"Event file not found: {filepath}")
@@ -54,55 +226,55 @@ def load_events_from_file(filepath: str) -> List[Dict[str, Any]]:
     content = f.read().strip()
 
   if not content:
-    return []
+    return ([], []) if include_raw else []  # type: ignore[return-value]
 
+  raw_events: List[Dict[str, Any]] = []
   # Attempt 1: Full JSON array
   if content.startswith("["):
     try:
       data = json.loads(content)
       if isinstance(data, list):
-        return [clean_event(e) for e in data if isinstance(e, dict)]
+        raw_events = [e for e in data if isinstance(e, dict)]
     except json.JSONDecodeError:
       pass
 
   # Attempt 2: Line-delimited JSON or mosquitto_sub topic-payload lines
-  events = []
-  for line in content.splitlines():
-    line = line.strip()
-    if not line:
-      continue
-    # Check for mosquitto_sub prefix (e.g. "/r/.../events/discovery { ... }")
-    if " " in line and line.startswith("/") and "{" in line:
-      _, json_str = line.split(" ", 1)
-      line = json_str.strip()
+  if not raw_events:
+    for line in content.splitlines():
+      line = line.strip()
+      if not line:
+        continue
+      if " " in line and line.startswith("/") and "{" in line:
+        _, json_str = line.split(" ", 1)
+        line = json_str.strip()
 
-    try:
-      parsed = json.loads(line)
-      if isinstance(parsed, dict):
-        events.append(clean_event(parsed))
-    except json.JSONDecodeError:
-      continue
+      try:
+        parsed = json.loads(line)
+        if isinstance(parsed, dict):
+          raw_events.append(parsed)
+      except json.JSONDecodeError:
+        continue
 
-  return events
+  cleaned = [clean_event(e) for e in raw_events]
+  if include_raw:
+    return cleaned, raw_events
+  return cleaned  # type: ignore[return-value]
 
 
 def extract_summary(events: List[Dict[str, Any]]) -> Dict[str, Any]:
   """Extracts high-level summary metrics from a sequence of discovery events."""
   start_events = [e for e in events if e.get("event_no") == 0]
-  stop_events = [e for e in events if e.get("event_no") == -1]
+  stop_events = [
+      e
+      for e in events
+      if isinstance(e.get("event_no"), int) and e.get("event_no", 0) < 0
+  ]
   discovered_devices = {}
 
   for e in events:
     event_no = e.get("event_no")
-    if event_no not in (0, -1):
-      # Identification key: addr, id, or device hash
-      dev_key = str(event_no)
-      if "families" in e and isinstance(e["families"], dict):
-        for fam, f_data in e["families"].items():
-          if isinstance(f_data, dict) and "addr" in f_data:
-            addr_val = f_data["addr"]
-            dev_key = f"{fam}:{addr_val}"
-            break
+    if isinstance(event_no, int) and event_no > 0:
+      dev_key = f"{e.get('family', 'unknown')}:{e.get('addr', event_no)}"
       discovered_devices[dev_key] = e
 
   return {
@@ -116,14 +288,23 @@ def extract_summary(events: List[Dict[str, Any]]) -> Dict[str, Any]:
 def compare_events(
     legacy_events: List[Dict[str, Any]],
     spotter_events: List[Dict[str, Any]],
+    raw_spotter_events: List[Dict[str, Any]] | None = None,
     verbose: bool = False,
 ) -> bool:
-  """Performs deep parity comparison between legacy and Spotter discovery."""
-  legacy_summary = extract_summary(legacy_events)
+  """Performs UDMI spec validation and semantic parity comparison."""
+  normalized_legacy = [normalize_legacy_event(e) for e in legacy_events]
+  # For comparison against legacy (which lacks ethmac ARP resolution when run on
+  # different sockets), compare canonical fields while validating Spotter spec.
+  legacy_summary = extract_summary(normalized_legacy)
   spotter_summary = extract_summary(spotter_events)
+  spec_violations = (
+      validate_spotter_spec_compliance(raw_spotter_events)
+      if raw_spotter_events is not None
+      else validate_spotter_spec_compliance(spotter_events)
+  )
 
   print("\n" + "=" * 64)
-  print("           UDMI DISCOVERY NODE PARITY VERIFICATION REPORT")
+  print("     UDMI SPOTTER SPEC COMPLIANCE & PARITY VERIFICATION REPORT")
   print("=" * 64)
 
   print("\n[1] Event Volume & Sequencing:")
@@ -140,7 +321,7 @@ def compare_events(
   has_stop_leg = legacy_summary["has_stop_event"]
   has_stop_spt = spotter_summary["has_stop_event"]
   print(
-      f"    - Stop Event (event_no: -1): Legacy={has_stop_leg} | "
+      f"    - Stop Event (event_no < 0): Legacy={has_stop_leg} | "
       f"Spotter={has_stop_spt}"
   )
 
@@ -169,15 +350,21 @@ def compare_events(
         f"{len(extra_in_spotter)} ({extra_str})"
     )
 
-  # Deep payload diff on matched events
+  # Deep payload diff on matched events (ignoring ethmac if legacy omitted it)
   attribute_mismatches = 0
   for dev in sorted(matched_devices):
-    leg_dev = legacy_summary["devices"][dev]
-    spt_dev = spotter_summary["devices"][dev]
+    leg_dev = json.loads(json.dumps(legacy_summary["devices"][dev]))
+    spt_dev = json.loads(json.dumps(spotter_summary["devices"][dev]))
+    if (
+        isinstance(spt_dev.get("families"), dict)
+        and "ethmac" in spt_dev["families"]
+        and "ethmac" not in leg_dev.get("families", {})
+    ):
+      spt_dev["families"].pop("ethmac", None)
     if leg_dev != spt_dev:
       attribute_mismatches += 1
       if verbose:
-        print(f"\n    [!] Attribute diff on device \"{dev}\":")
+        print(f'\n    [!] Attribute diff on device "{dev}":')
         leg_str = json.dumps(leg_dev, indent=2, sort_keys=True).splitlines()
         spt_str = json.dumps(spt_dev, indent=2, sort_keys=True).splitlines()
         diff = difflib.unified_diff(
@@ -186,31 +373,39 @@ def compare_events(
         for line in diff:
           print(f"        {line}")
 
-  print("\n[3] Payload Attribute Integrity:")
+  print("\n[3] UDMI Specification Compliance & Attribute Integrity:")
+  print(f"    - Spotter Spec Violations  : {len(spec_violations)}")
+  for v in spec_violations:
+    print(f"      * {v}")
   print(f"    - Attribute Mismatches     : {attribute_mismatches}")
 
-  # Final Parity Verdict
   is_parity = (
       legacy_summary["has_start_event"] == spotter_summary["has_start_event"]
       and legacy_summary["has_stop_event"] == spotter_summary["has_stop_event"]
       and len(missing_in_spotter) == 0
+      and len(spec_violations) == 0
       and attribute_mismatches == 0
       and len(legacy_events) > 0
   )
 
   print("\n" + "=" * 64)
   if is_parity:
-    print("VERDICT: [PASS] FUNCTIONAL PARITY ACHIEVED!")
-    print("Spotter produces identical telemetry payloads and sequencing.")
+    print("VERDICT: [PASS] SPEC COMPLIANCE & FUNCTIONAL PARITY ACHIEVED!")
+    print("Spotter produces UDMI spec-compliant discovery payloads.")
   else:
-    print("VERDICT: [FAIL] DISCOVERY PARITY NOT ACHIEVED.")
+    print("VERDICT: [FAIL] VERIFICATION FAILED.")
     if len(legacy_events) == 0:
       print("Reason: No events were collected to compare.")
+    elif spec_violations:
+      print(
+          f"Reason: Spotter had {len(spec_violations)} UDMI specification"
+          " violations."
+      )
     elif missing_in_spotter:
       num_missing = len(missing_in_spotter)
       print(
           f"Reason: Spotter failed to discover {num_missing} devices found by "
-          f"legacy."
+          "legacy."
       )
     elif attribute_mismatches > 0:
       print(
@@ -234,7 +429,7 @@ def run_live_parity(
   spotter_output = os.path.join(output_dir, "spotter_discovery.jsonl")
 
   if not os.path.isfile(config_file):
-    print(f"ERROR: Config file not found at \"{config_file}\".")
+    print(f'ERROR: Config file not found at "{config_file}".')
     return False
 
   with open(config_file, "r", encoding="utf-8") as f:
@@ -248,9 +443,15 @@ def run_live_parity(
   ca_file = mqtt_cfg.get("ca_file", "")
   topic = f"/r/{registry_id}/d/{device_id}/events/discovery"
 
-  # Build mosquitto_sub command base
   sub_cmd = [
-      "mosquitto_sub", "-h", str(host), "-p", str(port), "-t", topic, "-v"
+      "mosquitto_sub",
+      "-h",
+      str(host),
+      "-p",
+      str(port),
+      "-t",
+      topic,
+      "-v",
   ]
   if ca_file and os.path.isfile(ca_file):
     sub_cmd.extend(["--cafile", ca_file])
@@ -285,10 +486,16 @@ def run_live_parity(
         check=False,
     )
     if res.stdout.strip() == "active":
+      if os.geteuid() != 0:
+        raise RuntimeError(
+            f"Systemd service '{svc_candidate}' is active, but"
+            " compare_field_parity is running as non-root. Stop the service"
+            " or run as root."
+        )
       active_service = svc_candidate
       print(f"Stopping systemd service '{active_service}'...")
       subprocess.run(
-          ["sudo", "systemctl", "stop", active_service], check=False
+          ["systemctl", "stop", active_service], check=False
       )
       time.sleep(2)
       break
@@ -299,7 +506,10 @@ def run_live_parity(
       if shutil.which("podman") and not shutil.which("docker")
       else "docker"
   )
-  print(f"\n--- Phase 3: Launching Spotter Node ({spotter_image}) via {engine} ---")
+  print(
+      f"\n--- Phase 3: Launching Spotter Node ({spotter_image}) via {engine}"
+      " ---"
+  )
   config_dir = os.path.dirname(os.path.abspath(config_file))
   config_basename = os.path.basename(config_file)
   container_cmd = [
@@ -358,26 +568,32 @@ def run_live_parity(
         check=False,
     )
 
-    # Restore Legacy Service if it was running
-    if active_service:
+    if active_service and os.geteuid() == 0:
       print(f"Restoring legacy '{active_service}' service...")
       subprocess.run(
-          ["sudo", "systemctl", "start", active_service], check=False
+          ["systemctl", "start", active_service], check=False
       )
 
   # Step 6: Evaluate Parity
   print("\n--- Phase 6: Analyzing & Comparing Collected Events ---")
-  legacy_events = load_events_from_file(legacy_output)
-  spotter_events = load_events_from_file(spotter_output)
-  return compare_events(legacy_events, spotter_events, verbose=verbose)
+  legacy_events, _ = load_events_from_file(legacy_output, include_raw=True)
+  spotter_events, raw_spotter = load_events_from_file(
+      spotter_output, include_raw=True
+  )
+  return compare_events(
+      legacy_events,
+      spotter_events,
+      raw_spotter_events=raw_spotter,
+      verbose=verbose,
+  )
 
 
 def main():
   """Main CLI entrypoint for field parity comparison."""
   parser = argparse.ArgumentParser(
       description=(
-          "Verify BACnet discovery parity between legacy discoverynode and"
-          " Spotter."
+          "Verify UDMI discovery spec compliance and functional parity between"
+          " legacy discoverynode and Spotter."
       )
   )
   parser.add_argument(
@@ -423,10 +639,15 @@ def main():
   args = parser.parse_args()
 
   if args.diff:
-    legacy_events = load_events_from_file(args.diff[0])
-    spotter_events = load_events_from_file(args.diff[1])
+    legacy_events, _ = load_events_from_file(args.diff[0], include_raw=True)
+    spotter_events, raw_spotter = load_events_from_file(
+        args.diff[1], include_raw=True
+    )
     success = compare_events(
-        legacy_events, spotter_events, verbose=args.verbose
+        legacy_events,
+        spotter_events,
+        raw_spotter_events=raw_spotter,
+        verbose=args.verbose,
     )
   else:
     success = run_live_parity(
@@ -442,4 +663,3 @@ def main():
 
 if __name__ == "__main__":
   main()
-

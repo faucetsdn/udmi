@@ -189,6 +189,31 @@ Stores device metadata blocks, physical coordinates, network interface bindings,
 
 ---
 
+### Table: `udmi_pcap_captures` (PCAP Trace Reassembly & Archival Status)
+Tracks chunked `upload/discovery` packet capture reassembly progress, SHA-256 verification digests, scan manifests, and archived `.pcap` / `scan_manifest.json` URIs (without storing raw PCAP chunk bytes in PostgreSQL).
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `SERIAL PRIMARY KEY` | Auto-incrementing row ID |
+| `site` | `VARCHAR(255) NOT NULL` | Site / device registry identifier |
+| `device_id` | `VARCHAR(255) NOT NULL` | Gateway / Spotter device identifier |
+| `family` | `VARCHAR(50) NOT NULL` | Protocol family (e.g. `bacnet`) |
+| `generation` | `VARCHAR(64) NOT NULL` | Discovery trace generation timestamp |
+| `status` | `VARCHAR(50)` | Reassembly lifecycle status (`PENDING`, `RECEIVING`, `COMPLETED`, `FAILED`) |
+| `chunks_received` | `INTEGER` | Number of data chunks received (`1..N`) |
+| `expected_chunks` | `INTEGER` | Total expected chunks `N` derived from terminal `event_no = -(N + 1)` |
+| `expected_sha256` | `VARCHAR(64)` | Expected SHA-256 hex digest from terminal EOF message |
+| `actual_sha256` | `VARCHAR(64)` | Computed SHA-256 hex digest of reassembled `.pcap` bytes |
+| `total_bytes` | `BIGINT` | Total uncompressed `.pcap` size in bytes |
+| `pcap_uri` | `TEXT` | Resolved GCS (`gs://...`) or local file URI for the `.pcap` artifact |
+| `manifest_uri` | `TEXT` | Resolved GCS (`gs://...`) or local file URI for `scan_manifest.json` |
+| `scan_manifest` | `JSONB` | Structured `ScanManifest` metadata from terminal EOF message |
+| `bug_id` | `VARCHAR(64)` | Optional issue or ticket identifier associated with the capture |
+| `error_message` | `TEXT` | Diagnostic error message if status is `FAILED` |
+| `updated_at` | `TIMESTAMP WITH TIME ZONE` | Last status update timestamp (`DEFAULT CURRENT_TIMESTAMP`) |
+
+---
+
 ## 3. InfluxDB Time-Series Schema
 
 InfluxDB v2 ingests numeric, boolean, and textual point telemetry from `events/pointset` messages.
