@@ -107,6 +107,32 @@ mkdir -p out
 echo "Cloning test site model..."
 clone_site_model "$SITE_MODEL_PATH"
 
+# Verify Docker preflight fails fast without retries or creating bridgehead/var
+DOCKER_PREFLIGHT_OUT=$(DOCKER_HOST="unix:///nonexistent/bridgehead_test_docker.sock" "$UDMI_ROOT/bin/start_bridgehead" "$SITE_MODEL_PATH" 2>&1) && { echo "ERROR: start_bridgehead should fail when Docker daemon is unreachable"; exit 1; } || true
+echo "$DOCKER_PREFLIGHT_OUT" | grep -q "Cannot connect to the Docker daemon" || { echo "ERROR: start_bridgehead missing Docker daemon preflight error"; echo "$DOCKER_PREFLIGHT_OUT"; exit 1; }
+! echo "$DOCKER_PREFLIGHT_OUT" | grep -q "retrying in 2s" || { echo "ERROR: start_bridgehead retried instead of failing fast on Docker preflight"; echo "$DOCKER_PREFLIGHT_OUT"; exit 1; }
+[ ! -d "$BRIDGEHEAD_DIR/var" ] || { echo "ERROR: start_bridgehead created bridgehead/var before Docker preflight"; exit 1; }
+
+# Verify bin/mosquctl_device refuses to overwrite existing public key / cert files when *_private.pkcs8 is absent
+MOSQ_GUARD_DIR=$(mktemp -d)
+mkdir -p "$MOSQ_GUARD_DIR/devices/DUT-PUB" "$MOSQ_GUARD_DIR/devices/DUT-CERT"
+echo '{"registry_id": "TEST-REG"}' > "$MOSQ_GUARD_DIR/cloud_iot_config.json"
+printf '%s\n' "-----BEGIN PUBLIC KEY-----" "SENTINEL-PUBKEY" "-----END PUBLIC KEY-----" > "$MOSQ_GUARD_DIR/devices/DUT-PUB/rsa_public.pem"
+printf '%s\n' "-----BEGIN CERTIFICATE-----" "SENTINEL-CERT" "-----END CERTIFICATE-----" > "$MOSQ_GUARD_DIR/devices/DUT-CERT/rsa_cert.pem"
+PUB_SHA_BEFORE=$(sha256sum "$MOSQ_GUARD_DIR/devices/DUT-PUB/rsa_public.pem" | awk '{print $1}')
+CERT_SHA_BEFORE=$(sha256sum "$MOSQ_GUARD_DIR/devices/DUT-CERT/rsa_cert.pem" | awk '{print $1}')
+
+MOSQ_PUB_OUT=$("$UDMI_ROOT/bin/mosquctl_device" "$MOSQ_GUARD_DIR" DUT-PUB 2>&1) && { echo "ERROR: mosquctl_device should fail on public-key-only device"; rm -rf "$MOSQ_GUARD_DIR"; exit 1; } || true
+echo "$MOSQ_PUB_OUT" | grep -q "Refusing to overwrite existing device keys" || { echo "ERROR: mosquctl_device missing overwrite guard error for rsa_public.pem"; echo "$MOSQ_PUB_OUT"; rm -rf "$MOSQ_GUARD_DIR"; exit 1; }
+[ "$(sha256sum "$MOSQ_GUARD_DIR/devices/DUT-PUB/rsa_public.pem" | awk '{print $1}')" = "$PUB_SHA_BEFORE" ] || { echo "ERROR: mosquctl_device overwrote rsa_public.pem"; rm -rf "$MOSQ_GUARD_DIR"; exit 1; }
+[ ! -e "$MOSQ_GUARD_DIR/devices/DUT-PUB/rsa_private.pkcs8" ] || { echo "ERROR: mosquctl_device generated rsa_private.pkcs8 for public-key-only device"; rm -rf "$MOSQ_GUARD_DIR"; exit 1; }
+
+MOSQ_CERT_OUT=$("$UDMI_ROOT/bin/mosquctl_device" "$MOSQ_GUARD_DIR" DUT-CERT 2>&1) && { echo "ERROR: mosquctl_device should fail on cert-only device"; rm -rf "$MOSQ_GUARD_DIR"; exit 1; } || true
+echo "$MOSQ_CERT_OUT" | grep -q "Refusing to overwrite existing device keys" || { echo "ERROR: mosquctl_device missing overwrite guard error for rsa_cert.pem"; echo "$MOSQ_CERT_OUT"; rm -rf "$MOSQ_GUARD_DIR"; exit 1; }
+[ "$(sha256sum "$MOSQ_GUARD_DIR/devices/DUT-CERT/rsa_cert.pem" | awk '{print $1}')" = "$CERT_SHA_BEFORE" ] || { echo "ERROR: mosquctl_device overwrote rsa_cert.pem"; rm -rf "$MOSQ_GUARD_DIR"; exit 1; }
+[ ! -e "$MOSQ_GUARD_DIR/devices/DUT-CERT/rsa_private.pkcs8" ] || { echo "ERROR: mosquctl_device generated rsa_private.pkcs8 for cert-only device"; rm -rf "$MOSQ_GUARD_DIR"; exit 1; }
+rm -rf "$MOSQ_GUARD_DIR"
+
 mkdir -p "$SITE_MODEL_PATH/out"
 chmod a+rwx "$SITE_MODEL_PATH/out" 2>/dev/null || true
 
