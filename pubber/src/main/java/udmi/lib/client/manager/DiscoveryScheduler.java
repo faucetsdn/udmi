@@ -39,7 +39,6 @@ import udmi.schema.Enumerations.Depth;
 import udmi.schema.FamilyDiscoveryConfig;
 import udmi.schema.FamilyDiscoveryState;
 import udmi.schema.Level;
-import udmi.schema.ScanDiscoveryConfig;
 
 /**
  * Thread-safe scheduler for legacy {@code discovery.families}, named {@code discovery.scans}, and
@@ -285,8 +284,8 @@ public class DiscoveryScheduler {
       discoveryState.scans.keySet().forEach(name -> existing.add(DiscoveryScan.forScan(name)));
     }
     for (DiscoveryScan scan : existing) {
-      ScanDiscoveryConfig nextConfig = getScanConfigLocked(scan);
-      ScanDiscoveryConfig prevConfig = getConfigEntry(previousConfig, scan);
+      FamilyDiscoveryConfig nextConfig = getScanConfigLocked(scan);
+      FamilyDiscoveryConfig prevConfig = getConfigEntry(previousConfig, scan);
       boolean familyChanged = scan.named() && prevConfig != null && nextConfig != null
           && !Objects.equals(prevConfig.family, nextConfig.family);
       if (nextConfig == null || familyChanged) {
@@ -315,7 +314,7 @@ public class DiscoveryScheduler {
   }
 
   private void scheduleScanLocked(DiscoveryScan scan, List<Runnable> outbox) {
-    ScanDiscoveryConfig config = getScanConfigLocked(scan);
+    FamilyDiscoveryConfig config = getScanConfigLocked(scan);
     if (config == null) {
       return;
     }
@@ -426,7 +425,7 @@ public class DiscoveryScheduler {
 
   private void deferOrSkipBusyScanLocked(
       DiscoveryScan scan, Date scanGeneration, ScanSchedule schedule, List<Runnable> outbox) {
-    ScanDiscoveryConfig config = getScanConfigLocked(scan);
+    FamilyDiscoveryConfig config = getScanConfigLocked(scan);
     if (schedule != null) {
       cancelFuture(schedule.future());
     }
@@ -453,7 +452,7 @@ public class DiscoveryScheduler {
 
   private void beginActiveRunLocked(
       DiscoveryScan scan, Date scanGeneration, List<Runnable> outbox) {
-    ScanDiscoveryConfig config = getScanConfigLocked(scan);
+    FamilyDiscoveryConfig config = getScanConfigLocked(scan);
     String family = configuredFamilyLocked(scan);
     FamilyDiscoveryState scanState = ensureScanStateLocked(scan);
     int durationSec = ofNullable(config.scan_duration_sec)
@@ -491,7 +490,7 @@ public class DiscoveryScheduler {
       return;
     }
 
-    FamilyDiscoveryConfig configCopy = toFamilyConfig(config);
+    FamilyDiscoveryConfig configCopy = deepCopy(config);
     configCopy.depth = ofNullable(configCopy.depth)
         .orElse(configCopy.addrs != null ? Depth.DETAILS : Depth.ENTRIES);
     Set<String> targets = configCopy.addrs == null ? null : ImmutableSet.copyOf(configCopy.addrs);
@@ -594,7 +593,7 @@ public class DiscoveryScheduler {
       if (!canRunScanLocked(next)) {
         continue;
       }
-      ScanDiscoveryConfig config = getScanConfigLocked(next);
+      FamilyDiscoveryConfig config = getScanConfigLocked(next);
       if (config.generation == null || getScanInterval(config) > 0) {
         continue;
       }
@@ -671,9 +670,12 @@ public class DiscoveryScheduler {
   }
 
   private String invalidScanReasonLocked(DiscoveryScan scan) {
-    ScanDiscoveryConfig config = getScanConfigLocked(scan);
+    FamilyDiscoveryConfig config = getScanConfigLocked(scan);
     if (config == null) {
       return null;
+    }
+    if (!scan.named() && config.family != null) {
+      return format("Entry in discovery.families %s must not specify family", scan.name());
     }
     if (scan.named()) {
       if (config.family == null || config.family.isEmpty()) {
@@ -746,52 +748,21 @@ public class DiscoveryScheduler {
     }
   }
 
-  private ScanDiscoveryConfig getScanConfigLocked(DiscoveryScan scan) {
+  private FamilyDiscoveryConfig getScanConfigLocked(DiscoveryScan scan) {
     return getConfigEntry(discoveryConfig, scan);
   }
 
-  private static ScanDiscoveryConfig getConfigEntry(
+  private static FamilyDiscoveryConfig getConfigEntry(
       DiscoveryConfig config, DiscoveryScan scan) {
     if (config == null) {
       return null;
     }
-    if (scan.named()) {
-      return config.scans == null ? null : config.scans.get(scan.name());
-    }
-    FamilyDiscoveryConfig familyConfig =
-        config.families == null ? null : config.families.get(scan.name());
-    return familyConfig == null ? null : toScanConfig(scan.name(), familyConfig);
-  }
-
-  private static ScanDiscoveryConfig toScanConfig(String family, FamilyDiscoveryConfig source) {
-    ScanDiscoveryConfig scan = new ScanDiscoveryConfig();
-    scan.family = family;
-    scan.generation = source.generation;
-    scan.scan_interval_sec = source.scan_interval_sec;
-    scan.scan_duration_sec = source.scan_duration_sec;
-    scan.addrs = source.addrs;
-    scan.networks = source.networks;
-    scan.passive_sec = source.passive_sec;
-    scan.depth = source.depth;
-    scan.trace = source.trace;
-    return scan;
-  }
-
-  private static FamilyDiscoveryConfig toFamilyConfig(ScanDiscoveryConfig source) {
-    FamilyDiscoveryConfig copy = new FamilyDiscoveryConfig();
-    copy.generation = deepCopy(source.generation);
-    copy.scan_interval_sec = source.scan_interval_sec;
-    copy.scan_duration_sec = source.scan_duration_sec;
-    copy.addrs = deepCopy(source.addrs);
-    copy.networks = deepCopy(source.networks);
-    copy.passive_sec = source.passive_sec;
-    copy.depth = source.depth;
-    copy.trace = deepCopy(source.trace);
-    return copy;
+    Map<String, FamilyDiscoveryConfig> map = scan.named() ? config.scans : config.families;
+    return map == null ? null : map.get(scan.name());
   }
 
   private String configuredFamilyLocked(DiscoveryScan scan) {
-    ScanDiscoveryConfig config = getScanConfigLocked(scan);
+    FamilyDiscoveryConfig config = getScanConfigLocked(scan);
     return scan.named() ? (config == null ? null : config.family) : scan.name();
   }
 
@@ -827,7 +798,7 @@ public class DiscoveryScheduler {
     return findActiveRunLocked(scan) != null;
   }
 
-  private static int getScanInterval(ScanDiscoveryConfig config) {
+  private static int getScanInterval(FamilyDiscoveryConfig config) {
     return config == null ? 0 : ofNullable(config.scan_interval_sec).orElse(0);
   }
 

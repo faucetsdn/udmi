@@ -86,7 +86,6 @@ import udmi.schema.FeatureDiscovery;
 import udmi.schema.Level;
 import udmi.schema.Metadata;
 import udmi.schema.PointPointsetModel;
-import udmi.schema.ScanDiscoveryConfig;
 
 /**
  * Validation tests for discovery scan and enumeration capabilities.
@@ -754,7 +753,7 @@ public class DiscoverySequences extends SequenceBase {
     getConfigFamily(scanFamily).generation = familyGeneration;
     Date generation = SemanticDate.describe("scan generation",
         cleanInstantDate(Instant.now().minusSeconds(1)));
-    ScanDiscoveryConfig namedScan = new ScanDiscoveryConfig();
+    FamilyDiscoveryConfig namedScan = new FamilyDiscoveryConfig();
     namedScan.generation = generation;
     namedScan.depth = ENTRIES;
     namedScan.scan_duration_sec = SCAN_DURATION_SEC;
