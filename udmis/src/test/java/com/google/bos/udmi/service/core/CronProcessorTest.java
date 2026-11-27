@@ -37,13 +37,16 @@ import org.junit.jupiter.api.Test;
 import udmi.lib.ProtocolFamily;
 import udmi.schema.CloudModel;
 import udmi.schema.CloudQuery;
+import udmi.schema.DiscoveryConfig;
 import udmi.schema.DiscoveryEvents;
+import udmi.schema.DiscoveryState;
 import udmi.schema.EndpointConfiguration;
 import udmi.schema.EndpointConfiguration.Protocol;
 import udmi.schema.Enumerations.Depth;
 import udmi.schema.Envelope;
 import udmi.schema.Envelope.SubFolder;
 import udmi.schema.Envelope.SubType;
+import udmi.schema.FamilyDiscoveryState.Phase;
 import udmi.schema.PodConfiguration;
 import udmi.schema.UdmiConfig;
 
@@ -71,6 +74,12 @@ public class CronProcessorTest extends ProcessorTestBase {
           "subType", SubType.CONFIG,
           "subFolder", SubFolder.UDMI,
           "messageClass", UdmiConfig.class
+      ),
+      "model_discovery", ImmutableMap.of(
+          "subType", SubType.CONFIG,
+          "subFolder", SubFolder.DISCOVERY,
+          "subSetKey", ModelDiscoveryHandler.MODEL_SUBSET_KEY,
+          "messageClass", DiscoveryConfig.class
       )
   );
 
@@ -97,6 +106,7 @@ public class CronProcessorTest extends ProcessorTestBase {
   private CronProcessor createTestCronProcessor(String name, EndpointConfiguration rawConfig) {
     EndpointConfiguration config = deepCopy(rawConfig);
     config.name = name;
+    config.enabled = "true";
     config.protocol = Protocol.LOCAL;
     config.hostname = TEST_NAMESPACE;
     config.recv_id = TEST_SOURCE;
@@ -107,7 +117,10 @@ public class CronProcessorTest extends ProcessorTestBase {
 
     // Register reverse dispatcher to receive published messages from the cron processor
     MessageDispatcherImpl reverseDispatcher = getReverseDispatcher();
-    reverseDispatcher.registerHandler(Object.class, captured::add);
+    reverseDispatcher.registerHandler(Object.class, message -> {
+      captured.add(message);
+      capturedEnvelopes.add(reverseDispatcher.getContinuation(message).getEnvelope());
+    });
     reverseDispatcher.activate();
 
     if (UdmiServicePod.maybeGetComponent(IOT_ACCESS_COMPONENT) == null) {
@@ -151,6 +164,7 @@ public class CronProcessorTest extends ProcessorTestBase {
 
   private void verifyCronFlow(String cronName, EndpointConfiguration config) {
     captured.clear();
+    capturedEnvelopes.clear();
     UdmiServicePod.resetForTest();
     super.resetAfter();
     dispatcher = null;
@@ -186,6 +200,16 @@ public class CronProcessorTest extends ProcessorTestBase {
       } else if (publishedMessage instanceof UdmiConfig udmiConfig) {
         assertNotNull(udmiConfig.timestamp,
             "Timestamp must be set for UdmiConfig in " + cronName);
+      } else if (publishedMessage instanceof DiscoveryConfig discoveryConfig) {
+        assertNotNull(discoveryConfig.families, "Families must be set for " + cronName);
+        assertNotNull(discoveryConfig.families.get(ProtocolFamily.IOT),
+            "IoT family config must be set for " + cronName);
+        assertNotNull(discoveryConfig.families.get(ProtocolFamily.IOT).generation,
+            "IoT generation must be set for " + cronName);
+      }
+      if (golden.containsKey("subSetKey")) {
+        assertEquals(golden.get("subSetKey"), capturedEnvelopes.get(0).subSetKey,
+            "subSetKey mismatch for cron " + cronName);
       }
     }
 
@@ -231,6 +255,70 @@ public class CronProcessorTest extends ProcessorTestBase {
     assertTrue(payloadCrons.containsKey("reglist"), "Expected reglist cron in prod_pod.json");
     assertTrue(payloadCrons.containsKey("regdive"), "Expected regdive cron in prod_pod.json");
     assertTrue(payloadCrons.containsKey("sendgroot"), "Expected sendgroot cron in prod_pod.json");
+    assertTrue(payloadCrons.containsKey("model_discovery"),
+        "Expected model_discovery cron in prod_pod.json");
+  }
+
+  /**
+   * Test model_discovery cron flow specifically (config/discovery with subSetKey=model).
+   */
+  @Test
+  public void testModelDiscoveryCronFlow() {
+    EndpointConfiguration config = prodPodConfig.crons.get("model_discovery");
+    assertNotNull(config, "model_discovery cron must exist in prod_pod.json");
+    assertEquals(86400, config.periodic_sec, "model_discovery should run daily");
+    assertEquals("${UDMI_MODEL_DISCOVERY}", config.enabled,
+        "model_discovery should be gated by UDMI_MODEL_DISCOVERY");
+    verifyCronFlow("model_discovery", config);
+
+    Envelope outEnvelope = capturedEnvelopes.get(0);
+    assertEquals(SubType.CONFIG, outEnvelope.subType);
+    assertEquals(SubFolder.DISCOVERY, outEnvelope.subFolder);
+    assertEquals(ModelDiscoveryHandler.MODEL_SUBSET_KEY, outEnvelope.subSetKey);
+    assertNull(outEnvelope.deviceRegistryId, "project-wide cron omits deviceRegistryId");
+    assertNull(outEnvelope.deviceId, "project-wide cron omits deviceId");
+    DiscoveryConfig discoveryConfig = (DiscoveryConfig) captured.get(0);
+    assertTrue(ModelDiscoveryHandler.isModelDiscoveryConfig(outEnvelope, discoveryConfig),
+        "Emitted cron message must satisfy ModelDiscoveryHandler.isModelDiscoveryConfig");
+  }
+
+  /**
+   * Test that model_discovery cron is disabled by default when UDMI_MODEL_DISCOVERY is unset.
+   */
+  @Test
+  public void testModelDiscoveryCronDisabledByDefault() {
+    EndpointConfiguration config = deepCopy(prodPodConfig.crons.get("model_discovery"));
+    config.name = "model_discovery";
+    config.protocol = Protocol.LOCAL;
+    config.hostname = TEST_NAMESPACE;
+    config.recv_id = TEST_SOURCE;
+    config.send_id = TEST_DESTINATION;
+
+    CronProcessor processor = (CronProcessor) getProcessor(config, CronProcessor.class);
+    assertFalse(processor.isEnabled(),
+        "model_discovery cron should be disabled when UDMI_MODEL_DISCOVERY is unset");
+  }
+
+  /**
+   * Integration test verifying that the model_discovery cron triggers ControlProcessor and
+   * ModelDiscoveryHandler end-to-end (ACTIVE + start + 2 devices + end + STOPPED).
+   */
+  @Test
+  public void testModelDiscoverySystemIntegrationOutput() throws Exception {
+    List<Object> targetOutputs = Collections.synchronizedList(new ArrayList<>());
+    List<String> commandsSent = Collections.synchronizedList(new ArrayList<>());
+
+    runCronSystemIntegration("model_discovery", targetOutputs, commandsSent);
+
+    assertEquals(6, targetOutputs.size(),
+        "Expected ACTIVE + start + 2 devices + end + STOPPED for model_discovery");
+    long stoppedCount = targetOutputs.stream()
+        .filter(DiscoveryState.class::isInstance)
+        .map(DiscoveryState.class::cast)
+        .filter(s -> Phase.STOPPED == s.families.get(ProtocolFamily.IOT).phase
+            && Integer.valueOf(2).equals(s.families.get(ProtocolFamily.IOT).active_count))
+        .count();
+    assertEquals(1, stoppedCount, "Expected final STOPPED state with active_count=2");
   }
 
   /**
@@ -468,6 +556,7 @@ public class CronProcessorTest extends ProcessorTestBase {
 
     // 1. Setup mock IoT Access provider with realistic registries, devices, and connections
     IotAccessBase mockIot = mock(IotAccessBase.class);
+    when(mockIot.getProviderId(any())).thenReturn("zanzara");
     when(mockIot.getRegistries()).thenReturn(ImmutableSet.of(TEST_REGISTRY));
     when(mockIot.getActiveConnections()).thenReturn(
         ImmutableSet.of(Map.entry(TEST_REGISTRY, "AHU-1")));
@@ -522,6 +611,7 @@ public class CronProcessorTest extends ProcessorTestBase {
     assertNotNull(rawCronConfig, "Cron config not found for " + cronName);
     EndpointConfiguration cronConfig = deepCopy(rawCronConfig);
     cronConfig.name = cronName;
+    cronConfig.enabled = "true";
     cronConfig.protocol = Protocol.LOCAL;
     cronConfig.hostname = TEST_NAMESPACE;
     cronConfig.recv_id = "cron_dummy_" + cronName;
@@ -538,7 +628,8 @@ public class CronProcessorTest extends ProcessorTestBase {
     // 7. Wait for asynchronous message propagation through the pipeline
     long timeoutMs = 3000;
     long start = System.currentTimeMillis();
-    int expectedMinCount = "regdive".equals(cronName) ? 2 : 1;
+    int expectedMinCount = "model_discovery".equals(cronName) ? 6
+        : ("regdive".equals(cronName) ? 2 : 1);
     while (targetOutputs.size() < expectedMinCount
         && (System.currentTimeMillis() - start) < timeoutMs) {
       Thread.sleep(50);
