@@ -209,6 +209,7 @@ cat <<EOF > "$TEST_DIR/config_payload.json"
         "depth": "trace",
         "scan_duration_sec": 4,
         "trace": {
+          "interface": "eth0",
           "max_bytes": 100000
         }
       }
